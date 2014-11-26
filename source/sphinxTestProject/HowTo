@@ -1,0 +1,45 @@
+HowTo to set up a sphinx project:
+
+---
+
+execute "sphinx-quickstart" with the following parameters:
+
+Root path for the documentation [.]:                                                    <ENTER>
+Separate source and build directories (y/N) [n]:                                        y
+Name prefix for templates and static dir [_]:                                           .
+Project name:                                                                           some_project_name
+Author name(s):                                                                         something
+Project version:                                                                        version.major.minor
+Project release [0.0.1]:                                                                <ENTER>
+Source file suffix [.rst]:                                                              <ENTER> 
+Name of your master document (without suffix) [index]:                                  <ENTER>
+autodoc: automatically insert docstrings from modules (y/N) [n]:                        y
+doctest: automatically test code snippets in doctest blocks (y/N) [n]:                  n
+intersphinx: link between Sphinx documentation of different projects (y/N) [n]:         y
+todo: write “todo” entries that can be shown or hidden on build (y/N) [n]:              n       
+coverage: checks for documentation coverage (y/N) [n]:                                  n
+pngmath: include math, rendered as PNG images (y/N) [n]:                                n
+jsmath: include math, rendered in the browser by JSMath (y/N) [n]:                      n       
+ifconfig: conditional inclusion of content based on config values (y/N) [n]:            y       
+Create Makefile? (Y/n) [y]:                                                             n       
+Create Windows command file? (Y/n) [y]:                                                 n
+
+---
+
+execute "sphinx-build -b html source-dir target-dir"
+
+source-dir: the directory where the conf.py resides
+target-dir: arbitrary directory where the documenation is going to be stored
+
+---
+
+an .rst file has to created that list every module and file that should be in the documentation
+
+the .rst files can either be created manually or generated via:
+
+sphinx-apidoc project_trunk --full -o doc -H 'project_name' -A 'auther' -V '0.1'
+
+where:
+project_trunk is the root directory of the source code 
+doc is the folder, where the .rst files are going to be stored
+
