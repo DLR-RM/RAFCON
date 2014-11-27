@@ -1,10 +1,10 @@
-.. an_example_pypi_project documentation master file, created by
-   sphinx-quickstart on Wed Nov 26 11:22:22 2014.
+.. SphinxTestProject documentation master file, created by
+   sphinx-quickstart on Wed Nov 26 17:42:10 2014.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to an_example_pypi_project's documentation!
-===================================================
+Welcome to SphinxTestProject's documentation!
+=============================================
 
 Contents:
 

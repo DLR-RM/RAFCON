@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/sphinxTestDotNames.iml" filepath="$PROJECT_DIR$/.idea/sphinxTestDotNames.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/pycharmSphinxTest.iml" filepath="$PROJECT_DIR$/.idea/pycharmSphinxTest.iml" />
     </modules>
   </component>
 </project>
