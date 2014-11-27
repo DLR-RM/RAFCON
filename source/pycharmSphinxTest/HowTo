@@ -1,4 +1,21 @@
+#################################
+How to get the project running:
+#################################
+
+Pycharm unfortunately does not support relative paths (like in eclipse ECLIPSE_HOME, PARENT_LOC, PROJECT_LOC and WORKSPACE_LOC)
+
+Thus we have to use system environment variables (that are working only in some setting fields of a pycharm project :-( )
+
+The runconfiguration expects a Variable called SPHINX_TEST_PROJECT_PATH to point at the directory where the HowTo resides.
+
+Thus:
+1. export SPHINX_TEST_PROJECT_PATH=/your/path/to/project
+2. start pycharm
+3. start "createDocumentation"
+
+#################################
 HowTo to set up a sphinx project:
+#################################
 
 ---
 

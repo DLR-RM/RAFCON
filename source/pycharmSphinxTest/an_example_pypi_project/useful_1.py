@@ -29,7 +29,7 @@ def public_fn_with_googley_docstring(name, state=None):
 
     A really great idea.  A way you might use me is
 
-    print public_fn_with_googley_docstring(name='foo', state=None)
+    >>> print public_fn_with_googley_docstring(name='foo', state=None)
     0
 
     BTW, this always returns 0.  **NEVER** use with :class:`MyPublicClass`.
@@ -88,9 +88,9 @@ class MyPublicClass(object):
 
         This really should have a full function definition, but I am too lazy.
 
-        print get_foobar(10, 20)
+        >>> print get_foobar(10, 20)
         30
-        print get_foobar('a', 'b')
+        >>> print get_foobar('a', 'b')
         ab
 
         Isn't that what you want?
@@ -108,6 +108,6 @@ class MyPublicClass(object):
 
 
 if __name__ == '__main__':
-    print "checkpoint"
-    test = MyPublicClass(3)
-    print "hallo"
+    print "checkpoint 0"
+    test = MyPublicClass(1)
+    print "checkpoint 1"
