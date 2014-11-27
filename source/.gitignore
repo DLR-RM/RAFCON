@@ -57,3 +57,16 @@ docs/_build/
 
 # PyBuilder
 target/
+
+#
+# This part is responsible for not need Sphinx files (for documentation)
+#
+
+*.build/
+*.doctrees/
+*.idea
+.buildinfo
+_build
+_static
+_templates
+
