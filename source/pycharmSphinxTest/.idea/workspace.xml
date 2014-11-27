@@ -23,7 +23,7 @@
       <file leaf-file-name="useful_1.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/an_example_pypi_project/useful_1.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="74" column="0" selection-start="1642" selection-end="1642" vertical-scroll-proportion="0.56734693" vertical-offset="832" max-vertical-offset="1770">
+            <state line="74" column="0" selection-start="1642" selection-end="1642" vertical-scroll-proportion="0.4265306" vertical-offset="901" max-vertical-offset="1770">
               <folding />
             </state>
           </provider>
@@ -48,8 +48,8 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/an_example_pypi_project/useful_1.py" />
         <option value="$PROJECT_DIR$/.buildinfo" />
+        <option value="$PROJECT_DIR$/an_example_pypi_project/useful_1.py" />
       </list>
     </option>
   </component>
@@ -138,7 +138,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="options.lastSelected" value="pyconsole" />
+    <property name="options.lastSelected" value="preferences.keymap" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.searchVisible" value="true" />
@@ -146,6 +146,7 @@
     <property name="restartRequiresConfirmation" value="true" />
     <property name="last_opened_file_path" value="/" />
     <property name="FullScreen" value="false" />
+    <property name="LayoutCode.rearrangeEntriesPython" value="false" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -386,14 +387,14 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-3" y="0" width="1926" height="1060" extended-state="0" />
-    <editor active="false" />
+    <frame x="-3" y="0" width="1926" height="1060" extended-state="1" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908705" sideWeight="0.4997367" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32124352" sideWeight="0.49947917" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24960506" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.23275408" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.23275408" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.23275408" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.45116773" sideWeight="0.5002633" order="7" side_tool="true" content_ui="tabs" />
@@ -650,7 +651,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/an_example_pypi_project/useful_1.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="74" column="0" selection-start="1642" selection-end="1642" vertical-scroll-proportion="0.56734693" vertical-offset="832" max-vertical-offset="1770">
+        <state line="74" column="0" selection-start="1642" selection-end="1642" vertical-scroll-proportion="0.4265306" vertical-offset="901" max-vertical-offset="1770">
           <folding />
         </state>
       </provider>
