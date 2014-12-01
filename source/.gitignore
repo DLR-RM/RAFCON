@@ -62,11 +62,16 @@ target/
 # This part is responsible for not need Sphinx files (for documentation)
 #
 
-*.build/
-*.doctrees/
-*.idea
 .buildinfo
-_build
-_static
-_templates
+.build
+.static
+.templates
+documentation
+
+#
+# This part is responsible for pycharm project files
+#
+
+**/.idea/*
+!**/.idea/runConfigurations
 
