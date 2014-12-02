@@ -1,6 +1,7 @@
 *~
 ~$$*
-documents/*.pdf
+**/*.pdf
+!documents/paper/*.pdf
 .~*
 
 workspace.xml
