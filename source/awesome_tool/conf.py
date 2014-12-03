@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# SphinxTestProject documentation build configuration file, created by
-# sphinx-quickstart on Wed Nov 26 17:42:10 2014.
+# FlowControl documentation build configuration file, created by
+# sphinx-quickstart on Wed Dec  3 08:27:40 2014.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -47,8 +47,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'SphinxTestProject'
-copyright = u'2014, Sebastian Brunner'
+project = u'FlowControl'
+copyright = u'2014, DLR'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -64,7 +64,7 @@ release = '0.0.1'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'en'
+language = None
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -197,7 +197,7 @@ html_static_path = ['.static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'SphinxTestProjectdoc'
+htmlhelp_basename = 'FlowControldoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -219,8 +219,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'SphinxTestProject.tex', u'SphinxTestProject Documentation',
-   u'Sebastian Brunner', 'manual'),
+  ('index', 'FlowControl.tex', u'FlowControl Documentation',
+   u'DLR', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -249,8 +249,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'sphinxtestproject', u'SphinxTestProject Documentation',
-     [u'Sebastian Brunner'], 1)
+    ('index', 'flowcontrol', u'FlowControl Documentation',
+     [u'DLR'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -263,8 +263,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'SphinxTestProject', u'SphinxTestProject Documentation',
-   u'Sebastian Brunner', 'SphinxTestProject', 'One line description of project.',
+  ('index', 'FlowControl', u'FlowControl Documentation',
+   u'DLR', 'FlowControl', 'One line description of project.',
    'Miscellaneous'),
 ]
 
