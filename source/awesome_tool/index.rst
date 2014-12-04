@@ -11,6 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   mvc/mvc.rst
+
 
 
 Indices and tables
