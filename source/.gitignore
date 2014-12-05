@@ -66,7 +66,10 @@ target/
 .build
 .static
 .templates
-documentation
+#documentation
+**/awesome_tool/documentation/*
+!**/awesome_tool/documentation/raw
+**/pycharmSphinxTest/documentation/*
 
 #
 # This part is responsible for pycharm project files
