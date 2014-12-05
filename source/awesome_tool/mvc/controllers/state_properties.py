@@ -32,6 +32,8 @@ class StatePropertiesController(Controller):
         """
         view['window1'].connect('destroy', gtk.main_quit)
 
+        view['state_properties_view'].set_model(self.model)
+
     def register_adapters(self):
         """Adapters should be registered in this method call
 
@@ -119,6 +121,9 @@ class StatePropertiesController(Controller):
             one, it can be determined whether the value was successfully changed or not.
 
         """
-        logger.error("test")
+
         logger.debug("after_state_change -- Attribute: %s, after: %s, desired: %s, returned: %s",
                      info.method_name, model.state.__getattribute__(info.method_name), info.args[1], info.result)
+
+        if model.state.__getattribute__(info.method_name) == info.args[1]:
+            self.model.update_attributes()
