@@ -2,7 +2,7 @@
 import sys
 import gtk
 import logging
-from support import log
+from utils import log
 from models import StateModel
 from controllers import StatePropertiesController
 from views import StatePropertiesView

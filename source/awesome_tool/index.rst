@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   mvc/mvc.rst
+   documentation/raw/awesome_tool.rst
 
 
 

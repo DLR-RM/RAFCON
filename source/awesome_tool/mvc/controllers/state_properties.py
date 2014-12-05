@@ -1,5 +1,5 @@
 
-from support import log
+from utils import log
 logger = log.get_logger(__name__)
 
 import gtk
