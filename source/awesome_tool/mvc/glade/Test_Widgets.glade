@@ -40,50 +40,6 @@
       </row>
     </data>
   </object>
-  <object class="GtkListStore" id="state_properties">
-    <columns>
-      <!-- column-name key -->
-      <column type="gchararray"/>
-      <!-- column-name value -->
-      <column type="gchararray"/>
-      <!-- column-name editable -->
-      <column type="gboolean"/>
-      <!-- column-name display -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">id</col>
-        <col id="1" translatable="yes">0</col>
-        <col id="2">False</col>
-        <col id="3" translatable="yes">ID</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">name</col>
-        <col id="1" translatable="yes">MyState</col>
-        <col id="2">True</col>
-        <col id="3" translatable="yes">Name</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">description</col>
-        <col id="1" translatable="yes">This is my state!</col>
-        <col id="2">True</col>
-        <col id="3" translatable="yes">Description</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">type</col>
-        <col id="1" translatable="yes">ContainerState</col>
-        <col id="2">True</col>
-        <col id="3" translatable="yes">Type</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">is_final</col>
-        <col id="1" translatable="yes">0</col>
-        <col id="2">True</col>
-        <col id="3" translatable="yes">Is end state?</col>
-      </row>
-    </data>
-  </object>
   <object class="GtkWindow" id="window1">
     <property name="visible">True</property>
     <property name="title" translatable="yes">My Window</property>
@@ -128,10 +84,6 @@
             <child>
               <object class="GtkTreeView" id="state_properties_view">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="model">state_properties</property>
-                <property name="headers_clickable">False</property>
-                <property name="search_column">0</property>
                 <child>
                   <object class="GtkTreeViewColumn" id="property_column">
                     <property name="resizable">True</property>
@@ -139,7 +91,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="property_renderer"/>
                       <attributes>
-                        <attribute name="text">3</attribute>
+                        <attribute name="text">2</attribute>
                       </attributes>
                     </child>
                   </object>
@@ -151,6 +103,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="value_renderer"/>
                       <attributes>
+                        <attribute name="editable">3</attribute>
                         <attribute name="text">1</attribute>
                       </attributes>
                     </child>
