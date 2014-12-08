@@ -11,11 +11,12 @@
 import threading
 from gtkmvc import Observable
 
+
 from utils import log
 logger = log.get_logger(__name__)
 from outcome import Outcome
 from script import Script
-from statemachine_status import StatemachineStatus
+from statemachine_status import StateMachineStatus
 
 state_id_counter = 0
 
@@ -33,7 +34,7 @@ class State(threading.Thread, Observable):
 
     """A class for representing a state in the state machine
 
-    It inherits from Observable to make a change of its fields observable (for example for the MVC architecture).
+    It inherits from Observable to make a change of its fields observable.
 
     :ivar _state_id: the id of the state
     :ivar _name: the name of the state
@@ -219,7 +220,7 @@ class State(threading.Thread, Observable):
     @state_status.setter
     @Observable.observed
     def state_status(self, state_status):
-        if not isinstance(state_status, StatemachineStatus):
+        if not isinstance(state_status, StateMachineStatus):
             raise TypeError("state_status must be of type StatemachineStatus")
         self._state_status = state_status
 

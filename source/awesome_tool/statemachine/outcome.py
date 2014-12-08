@@ -1,5 +1,5 @@
 """
-.. module:: transition
+.. module:: outcome
    :platform: Unix, Windows
    :synopsis: A module for representing an outcome of a state
 

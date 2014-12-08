@@ -1,5 +1,5 @@
 """
-.. module:: transition
+.. module:: validity_checker
    :platform: Unix, Windows
    :synopsis: A module implementing a generic validity check for a statemachine
 
@@ -40,18 +40,16 @@ class ValidityChecker(Observable):
         else:
             self._strategy_instance = vc_implementations.AggressiveVC()
 
-
-    def check(self, cState):
+    def check(self, c_state):
         """The interface function to trigger the check of a container state
 
-        :param cState: the container class to  be checked
+        :param c_state: the container class to  be checked
 
         """
         #TODO: deferred import: can this be somehow solved otherwise???
         import statemachine.container_state as smcs
 
-        if not isinstance(cState, smcs.ContainerState):
+        if not isinstance(c_state, smcs.ContainerState):
             raise TypeError("Check() can only be applied onto ContainerStates")
-        print "Check the validity of the container state with id %s " % str(cState._state_id)
-        return self._strategy_instance.check(cState)
-
+        print "Check the validity of the container state with id %s " % str(c_state.state_id())
+        return self._strategy_instance.check(c_state)

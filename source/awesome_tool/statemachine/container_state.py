@@ -17,7 +17,7 @@ from transition import Transition
 from outcome import Outcome
 from data_flow import DataFlow
 from scope_variable import ScopeVariable
-import validity_checker.validity_checker
+import validity_check.validity_checker
 
 
 class ContainerState(State, Observable):
@@ -30,11 +30,11 @@ class ContainerState(State, Observable):
     :ivar _scope: common scope of container:
     :ivar _current_state: currently active state of the container:
     :ivar _scoped_keys: keys of all variables that can be accessed by each child state:
-    :ivar _validity_checker: reference to an object that checks the validity of this container state:
+    :ivar _v_checker: reference to an object that checks the validity of this container state:
 
     """
 
-    def __init__(self, states=None, transitions=None, data_flows=None, scope=None, scoped_keys=None, validity_checker=None):
+    def __init__(self, states=None, transitions=None, data_flows=None, scope=None, scoped_keys=None, v_checker=None):
 
         State.__init__(self)
 
@@ -44,7 +44,7 @@ class ContainerState(State, Observable):
         self._scope = scope
         self._current_state = None
         self._scoped_keys = scoped_keys
-        self._validity_checker = validity_checker
+        self._v_checker = v_checker
 
     def run(self):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
@@ -213,15 +213,15 @@ class ContainerState(State, Observable):
         self._scoped_keys = scoped_keys
 
     @property
-    def validity_checker(self):
-        """Property for the _validity_checker field
+    def v_checker(self):
+        """Property for the _v_checker field
 
         """
-        return self._validity_checker
+        return self._v_checker
 
-    @validity_checker.setter
+    @v_checker.setter
     @Observable.observed
-    def validity_checker(self, validity_checker):
-        if not isinstance(validity_checker, validity_checker.validity_checker.ValidityChecker):
-            raise TypeError("validity_checker must be of type ValidityChecker")
-        self._validity_checker = validity_checker
+    def v_checker(self, v_checker):
+        if not isinstance(v_checker, validity_check.validity_checker.ValidityChecker):
+            raise TypeError("validity_check must be of type ValidityChecker")
+        self._v_checker = v_checker

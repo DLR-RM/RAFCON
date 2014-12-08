@@ -1,5 +1,5 @@
 """
-.. module:: transition
+.. module:: scope_variable
    :platform: Unix, Windows
    :synopsis: A module for representing a scoped variable in a container state
 

@@ -1,5 +1,5 @@
 """
-.. module:: transition
+.. module:: vc_strategy
    :platform: Unix, Windows
    :synopsis: A module implementing a strategy pattern for choosing the correct validity check strategy
 
@@ -22,5 +22,5 @@ class VCStrategy():
     def __init__(self):
         pass
 
-    def check(self, cState):
+    def check(self, container_state):
         raise NotImplementedError("The check() function has to be implemented!")

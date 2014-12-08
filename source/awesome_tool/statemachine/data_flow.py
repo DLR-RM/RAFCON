@@ -1,5 +1,5 @@
 """
-.. module:: transition
+.. module:: data_flow
    :platform: Unix, Windows
    :synopsis: A module to represent a data flow connection in the statemachine
 
