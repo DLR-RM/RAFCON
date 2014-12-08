@@ -1,5 +1,9 @@
-awesome_tool.mvc package
-========================
+
+.. toctree::
+   :maxdepth: 4
+
+Model-View-Controller (mvc)
+===========================
 
 Subpackages
 -----------
@@ -13,10 +17,10 @@ Subpackages
 Submodules
 ----------
 
-awesome_tool.mvc.main module
-----------------------------
+mvc.main module
+---------------
 
-.. automodule:: awesome_tool.mvc.main
+.. automodule:: mvc.main
     :members:
     :undoc-members:
     :show-inheritance:
@@ -25,7 +29,9 @@ awesome_tool.mvc.main module
 Module contents
 ---------------
 
-.. automodule:: awesome_tool.mvc
+.. automodule:: mvc
     :members:
     :undoc-members:
     :show-inheritance:
+
+

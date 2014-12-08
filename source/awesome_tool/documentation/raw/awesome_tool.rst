@@ -8,7 +8,7 @@ Subpackages
 
     awesome_tool.mvc
     awesome_tool.statemachine
-    awesome_tool.support
+    awesome_tool.utils
 
 Submodules
 ----------

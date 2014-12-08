@@ -1,22 +1,28 @@
-awesome_tool.mvc.models package
-===============================
+MVC Models (mvc.models)
+=======================
 
 Submodules
 ----------
 
-awesome_tool.mvc.models.state module
-------------------------------------
+None yet.
 
-.. automodule:: awesome_tool.mvc.models.state
+
+StateModel (in state)
+---------------------
+
+.. automodule:: mvc.models.state
     :members:
     :undoc-members:
     :show-inheritance:
+    :platform: Unix, Windows
+    :synopsis: This model class manages a State
+.. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
 
 
 Module contents
 ---------------
 
-.. automodule:: awesome_tool.mvc.models
+.. automodule:: mvc.models
     :members:
     :undoc-members:
     :show-inheritance:

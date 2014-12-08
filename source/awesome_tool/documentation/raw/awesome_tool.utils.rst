@@ -7,7 +7,7 @@ Submodules
 awesome_tool.support.log module
 -------------------------------
 
-.. automodule:: awesome_tool.support.log
+.. automodule:: awesome_tool.utils.log
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ awesome_tool.support.log module
 Module contents
 ---------------
 
-.. automodule:: awesome_tool.support
+.. automodule:: awesome_tool.utils
     :members:
     :undoc-members:
     :show-inheritance:
