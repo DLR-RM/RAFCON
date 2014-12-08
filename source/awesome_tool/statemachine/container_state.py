@@ -1,7 +1,7 @@
 """
 .. module:: container_state
    :platform: Unix, Windows
-   :synopsis: A module to represent a generic container state in the statemachine
+   :synopsis: A module to represent a generic container state in the state machine
 
 .. moduleauthor:: Sebastian Brunner
 
@@ -34,17 +34,17 @@ class ContainerState(State, Observable):
 
     """
 
-    def __init__(self):
+    def __init__(self, states=None, transitions=None, data_flows=None, scope=None, scoped_keys=None, validity_checker=None):
 
         State.__init__(self)
 
-        self._states = None
-        self._transitions = None
-        self._data_flows = None
-        self._scope = None
+        self._states = states
+        self._transitions = transitions
+        self._data_flows = data_flows
+        self._scope = scope
         self._current_state = None
-        self._scoped_keys = None
-        self._validity_checker = None
+        self._scoped_keys = scoped_keys
+        self._validity_checker = validity_checker
 
     def run(self):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
@@ -110,7 +110,7 @@ class ContainerState(State, Observable):
         logger.debug("Return state for specific transition")
 
 #########################################################################
-# Properties for all class field that must be observed by the gtkmvc
+# Properties for all class fields that must be observed by gtkmvc
 #########################################################################
 
     @property

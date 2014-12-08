@@ -15,6 +15,7 @@ from utils import log
 logger = log.get_logger(__name__)
 from outcome import Outcome
 from script import Script
+from statemachine_status import StatemachineStatus
 
 state_id_counter = 0
 
@@ -30,7 +31,7 @@ def generate_id():
 
 class State(threading.Thread, Observable):
 
-    """A class for representing a state in the statemachine
+    """A class for representing a state in the state machine
 
     It inherits from Observable to make a change of its fields observable (for example for the MVC architecture).
 
@@ -47,18 +48,19 @@ class State(threading.Thread, Observable):
 
     """
 
-    def __init__(self):
+    def __init__(self, name=None, input_keys=None, output_keys=None, outcomes=None,
+                 sm_status=None):
         Observable.__init__(self)
         threading.Thread.__init__(self)
 
         self._state_id = generate_id()
-        self._name = "Untitled"
-        self._input_keys = None
-        self._output_keys = None
-        self._outcomes = None
+        self._name = name
+        self._input_keys = input_keys
+        self._output_keys = output_keys
+        self._outcomes = outcomes
         self._is_start = None
         self._is_final = None
-        self._sm_status = None
+        self._sm_status = sm_status
         self._state_status = None
         self._script = None
 
@@ -72,7 +74,7 @@ class State(threading.Thread, Observable):
         logger.debug("Starting state with id %s" % self._state_id)
 
 #########################################################################
-# Properties for all class field that must be observed by the gtkmvc
+# Properties for all class fields that must be observed by gtkmvc
 #########################################################################
 
     @property
@@ -203,7 +205,8 @@ class State(threading.Thread, Observable):
     @sm_status.setter
     @Observable.observed
     def sm_status(self, sm_status):
-        #TODO: add checks
+        if not isinstance(sm_status, int):
+            raise TypeError("Name must be of type int")
         self._sm_status = sm_status
 
     @property
@@ -216,7 +219,8 @@ class State(threading.Thread, Observable):
     @state_status.setter
     @Observable.observed
     def state_status(self, state_status):
-        #TODO: add checks
+        if not isinstance(state_status, StatemachineStatus):
+            raise TypeError("Name must be of type StatemachineStatus")
         self._state_status = state_status
 
     @property
