@@ -63,7 +63,7 @@ class ScopeVariable(Observable):
     @Observable.observed
     def from_state(self, from_state):
         if not isinstance(from_state, numpy.uint32):
-            raise TypeError("ID must be of type numpy.uint32")
+            raise TypeError("from_state must be of type numpy.uint32")
 
         self._from_state = from_state
 
@@ -78,7 +78,7 @@ class ScopeVariable(Observable):
     @Observable.observed
     def from_key(self, from_key):
         if not isinstance(from_key, str):
-            raise TypeError("ID must be of type str")
+            raise TypeError("from_key must be of type str")
 
         self._from_key = from_key
 
@@ -93,7 +93,7 @@ class ScopeVariable(Observable):
     @Observable.observed
     def result(self, to_state):
         if isinstance(to_state, getattr(sys.modules[__name__], self._result_type)):
-            raise TypeError("ID must be of type %s" % self._result_type)
+            raise TypeError("result must be of type %s" % self._result_type)
         self._timestamp = generate_time_stamp()
         self._result = to_state
 
@@ -108,7 +108,7 @@ class ScopeVariable(Observable):
     @Observable.observed
     def result_type(self, result_type):
         if not isinstance(result_type, str):
-            raise TypeError("ID must be of type str")
+            raise TypeError("result_type must be of type str")
         self._result_type = result_type
 
     @property
@@ -124,5 +124,5 @@ class ScopeVariable(Observable):
     @Observable.observed
     def timestamp(self, timestamp):
         if not isinstance(timestamp, float):
-            raise TypeError("ID must be of type float")
+            raise TypeError("timestamp must be of type float")
         self._timestamp = timestamp

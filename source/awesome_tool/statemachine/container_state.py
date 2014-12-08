@@ -17,7 +17,7 @@ from transition import Transition
 from outcome import Outcome
 from data_flow import DataFlow
 from scope_variable import ScopeVariable
-from validity_checker import ValidityChecker
+import validity_checker.validity_checker
 
 
 class ContainerState(State, Observable):
@@ -124,10 +124,10 @@ class ContainerState(State, Observable):
     @Observable.observed
     def states(self, states):
         if not isinstance(states, (list, tuple)):
-            raise TypeError("Name must be of type list or tuple")
+            raise TypeError("states must be of type list or tuple")
         for s in states:
             if not isinstance(s, State):
-                raise TypeError("Name must be of type State")
+                raise TypeError("element of states must be of type State")
         self._states = states
 
     @property
@@ -141,10 +141,10 @@ class ContainerState(State, Observable):
     @Observable.observed
     def transitions(self, transitions):
         if not isinstance(transitions, (list, tuple)):
-            raise TypeError("Name must be of type list or tuple")
+            raise TypeError("transitions must be of type list or tuple")
         for t in transitions:
             if not isinstance(t, Transition):
-                raise TypeError("Name must be of type Transition")
+                raise TypeError("element of transitions must be of type Transition")
         self._transitions = transitions
 
     @property
@@ -158,10 +158,10 @@ class ContainerState(State, Observable):
     @Observable.observed
     def data_flows(self, data_flows):
         if not isinstance(data_flows, (list, tuple)):
-            raise TypeError("Name must be of type list or tuple")
+            raise TypeError("data_flows must be of type list or tuple")
         for df in data_flows:
             if not isinstance(df, DataFlow):
-                raise TypeError("Name must be of type DataFlow")
+                raise TypeError("element of data_flows must be of type DataFlow")
         self._data_flows = data_flows
 
     @property
@@ -175,10 +175,10 @@ class ContainerState(State, Observable):
     @Observable.observed
     def scope(self, scope):
         if not isinstance(scope, (list, tuple)):
-            raise TypeError("Name must be of type list or tuple")
+            raise TypeError("scope must be of type list or tuple")
         for s in scope:
             if not isinstance(s, ScopeVariable):
-                raise TypeError("Name must be of type ScopeVariable")
+                raise TypeError("element of scope must be of type ScopeVariable")
         self._scope = scope
 
     @property
@@ -192,7 +192,7 @@ class ContainerState(State, Observable):
     @Observable.observed
     def current_state(self, current_state):
         if not isinstance(current_state, State):
-            raise TypeError("Name must be of type State")
+            raise TypeError("current_state must be of type State")
         self._current_state = current_state
 
     @property
@@ -206,10 +206,10 @@ class ContainerState(State, Observable):
     @Observable.observed
     def scoped_keys(self, scoped_keys):
         if not isinstance(scoped_keys, (list, tuple)):
-            raise TypeError("Name must be of type list or tuple")
+            raise TypeError("scoped_keys must be of type list or tuple")
         for s in scoped_keys:
             if not isinstance(s, str):
-                raise TypeError("Name must be of type str")
+                raise TypeError("element of scoped_keys must be of type str")
         self._scoped_keys = scoped_keys
 
     @property
@@ -222,6 +222,6 @@ class ContainerState(State, Observable):
     @validity_checker.setter
     @Observable.observed
     def validity_checker(self, validity_checker):
-        if not isinstance(validity_checker, ValidityChecker):
-            raise TypeError("Name must be of type ValidityChecker")
+        if not isinstance(validity_checker, validity_checker.validity_checker.ValidityChecker):
+            raise TypeError("validity_checker must be of type ValidityChecker")
         self._validity_checker = validity_checker

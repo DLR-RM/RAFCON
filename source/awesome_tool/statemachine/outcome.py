@@ -46,7 +46,7 @@ class Outcome(Observable):
     @Observable.observed
     def outcome_id(self, outcome_id):
         if not isinstance(outcome_id, numpy.uint32):
-            raise TypeError("ID must be of type numpy.uint32")
+            raise TypeError("outcome_id must be of type numpy.uint32")
 
         self._outcome_id = outcome_id
 
@@ -61,7 +61,7 @@ class Outcome(Observable):
     @Observable.observed
     def name(self, name):
         if not isinstance(name, str):
-            raise TypeError("ID must be of type str")
+            raise TypeError("name must be of type str")
 
         self._name = name
 

@@ -127,10 +127,10 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def input_keys(self, input_keys):
         if not isinstance(input_keys, (list, tuple)):
-            raise TypeError("Name must be of type list or tuple")
+            raise TypeError("input_keys must be of type list or tuple")
         for key in input_keys:
             if not isinstance(key, str):
-                raise TypeError("Name must be of type str")
+                raise TypeError("element of input_keys must be of type str")
         self._input_keys = input_keys
 
     @property
@@ -144,10 +144,10 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def output_keys(self, output_keys):
         if not isinstance(output_keys, (list, tuple)):
-            raise TypeError("Name must be of type list or tuple")
+            raise TypeError("output_keys must be of type list or tuple")
         for key in output_keys:
             if not isinstance(key, str):
-                raise TypeError("Name must be of type str")
+                raise TypeError("element of output_keys must be of type str")
         self._output_keys = output_keys
 
     @property
@@ -161,10 +161,10 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def outcomes(self, outcomes):
         if not isinstance(outcomes, (list, tuple)):
-            raise TypeError("Name must be of type list or tuple")
+            raise TypeError("outcomes must be of type list or tuple")
         for o in outcomes:
             if not isinstance(o, Outcome):
-                raise TypeError("Name must be of type list or tuple")
+                raise TypeError("element of outcomes must be of type list or tuple")
         self._outcomes = outcomes
 
     @property
@@ -178,7 +178,7 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def is_start(self, is_start):
         if not isinstance(is_start, bool):
-            raise TypeError("Name must be of type bool")
+            raise TypeError("is_start must be of type bool")
         self._is_start = is_start
 
     @property
@@ -192,7 +192,7 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def is_final(self, is_final):
         if not isinstance(is_final, bool):
-            raise TypeError("Name must be of type bool")
+            raise TypeError("is_final must be of type bool")
         self._is_final = is_final
 
     @property
@@ -206,7 +206,7 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def sm_status(self, sm_status):
         if not isinstance(sm_status, int):
-            raise TypeError("Name must be of type int")
+            raise TypeError("sm_status must be of type int")
         self._sm_status = sm_status
 
     @property
@@ -220,7 +220,7 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def state_status(self, state_status):
         if not isinstance(state_status, StatemachineStatus):
-            raise TypeError("Name must be of type StatemachineStatus")
+            raise TypeError("state_status must be of type StatemachineStatus")
         self._state_status = state_status
 
     @property
@@ -234,5 +234,5 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def script(self, script):
         if not isinstance(script, Script):
-            raise TypeError("Name must be of type Script")
+            raise TypeError("script must be of type Script")
         self._script = script

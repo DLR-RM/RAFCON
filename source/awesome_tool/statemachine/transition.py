@@ -55,7 +55,7 @@ class Transition(Observable):
     @Observable.observed
     def from_state(self, from_state):
         if not isinstance(from_state, numpy.uint32):
-            raise TypeError("ID must be of type numpy.uint32")
+            raise TypeError("from_state must be of type numpy.uint32")
 
         self._from_state = from_state
 
@@ -70,7 +70,7 @@ class Transition(Observable):
     @Observable.observed
     def from_outcome(self, from_outcome):
         if not isinstance(from_outcome, int):
-            raise TypeError("ID must be of type int")
+            raise TypeError("from_outcome must be of type int")
 
         self._from_outcome = from_outcome
 
@@ -85,7 +85,7 @@ class Transition(Observable):
     @Observable.observed
     def to_state(self, to_state):
         if not isinstance(to_state, numpy.uint32):
-            raise TypeError("ID must be of type numpy.uint32")
+            raise TypeError("to_state must be of type numpy.uint32")
 
         self._to_state = to_state
 
@@ -100,6 +100,6 @@ class Transition(Observable):
     @Observable.observed
     def to_outcome(self, to_outcome):
         if not isinstance(to_outcome, int):
-            raise TypeError("ID must be of type int")
+            raise TypeError("to_outcome must be of type int")
 
         self._to_outcome = to_outcome
