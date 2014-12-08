@@ -32,6 +32,10 @@ class StatePropertiesController(Controller):
         """
         view['window1'].connect('destroy', gtk.main_quit)
 
+        view['state_properties_view'].set_model(self.model.list_store)
+
+        view['value_renderer'].connect('edited', self.__property_edited)
+
     def register_adapters(self):
         """Adapters should be registered in this method call
 
@@ -40,14 +44,20 @@ class StatePropertiesController(Controller):
         """
         self.adapt(self.__state_property_adapter("name", "input_name"))
 
+    def __property_edited(self, _, row, value):
+        outcome = self.model.update_row(row, value)
+        if type(outcome) != bool:
+            logger.warning("Invalid value: %s" % outcome)
+
     def __state_property_adapter(self, attr_name, label, view=None, value_error=None):
         """Helper method returning an adapter for a state property
 
         The method creates a custom adapter connecting a widget/label in the View with an attribute of the state model.
+
         :param attr_name: The name of the attribute
         :param label: The label of the widget element
         :param view: A reference to the view containing the widget. If left out, the view of the controller is used.
-        :param value_error: An optional function handling a value_error exception. By default a debug message is
+        :param val_error_fun: An optional function handling a value_error exception. By default a debug message is
             print out and the widget value is updated to the previous value.
         :return: The custom created adapter, which can be used in :func:`register_adapter`
         """
@@ -55,9 +65,7 @@ class StatePropertiesController(Controller):
             view = self.view
 
         if value_error is None:
-            def value_error(adapt, prop_name, value):
-                print "Error:", adapt, prop_name, value
-                adapt.update_widget()
+            value_error = self._value_error
 
         adapter = UserClassAdapter(self.model, "state",
                                    getter=lambda state: state.__getattribute__(attr_name),
@@ -65,6 +73,11 @@ class StatePropertiesController(Controller):
                                    value_error=value_error)
         adapter.connect_widget(view[label])
         return adapter
+
+    @staticmethod
+    def _value_error(adapt, prop_name, value):
+        logger.warning("Invalid value '{val:s}' for key '{prop:s}'.".format(val=value, prop=prop_name))
+        adapt.update_widget()  # Update widget values with values from model
 
     @Controller.observe("state", before=True)
     def before_state_change(self, model, _, info):
@@ -119,6 +132,29 @@ class StatePropertiesController(Controller):
             one, it can be determined whether the value was successfully changed or not.
 
         """
-        logger.error("test")
+
         logger.debug("after_state_change -- Attribute: %s, after: %s, desired: %s, returned: %s",
                      info.method_name, model.state.__getattribute__(info.method_name), info.args[1], info.result)
+
+        if model.state.__getattribute__(info.method_name) == info.args[1]:  # Change was successful
+
+            if self.view is None:  # View hasn't been created, yet
+                self.model.update_attributes()
+
+            # If the view has been created, store the current selection of the table and restore the selection,
+            # after the table has been updated. This is needed, as the selection is lost when the table is cleared.
+            else:
+                view = self.view['state_properties_view']
+
+                selection = view.get_selection()
+                (paths, _) = selection.get_selected_rows()
+                selected_paths = []
+                for path in paths:
+                    if selection.path_is_selected(path.path):
+                        selected_paths.append(path.path)
+
+                self.model.update_attributes()
+
+                for path in selected_paths:
+                    selection.select_path(path)
+

@@ -1,11 +1,11 @@
-awesome_tool.utils package
-==========================
+awesome_tool.support package
+============================
 
 Submodules
 ----------
 
-awesome_tool.utils.log module
------------------------------
+awesome_tool.support.log module
+-------------------------------
 
 .. automodule:: awesome_tool.utils.log
     :members:

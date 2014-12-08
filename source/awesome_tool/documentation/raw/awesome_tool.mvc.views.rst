@@ -1,22 +1,27 @@
-awesome_tool.mvc.views package
-==============================
+MVC Views (in mvc.views)
+========================
 
 Submodules
 ----------
 
-awesome_tool.mvc.views.state_properties module
-----------------------------------------------
+None yet.
 
-.. automodule:: awesome_tool.mvc.views.state_properties
+StatePropertiesView (in state_properties)
+-----------------------------------------
+
+.. automodule:: mvc.views.state_properties
     :members:
     :undoc-members:
     :show-inheritance:
+    :platform: Unix, Windows
+    :synopsis: View showing the properties of a state in a table/list
+.. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
 
 
 Module contents
 ---------------
 
-.. automodule:: awesome_tool.mvc.views
+.. automodule:: mvc.views
     :members:
     :undoc-members:
     :show-inheritance:
