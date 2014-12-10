@@ -9,11 +9,9 @@
 """
 
 import threading
-
 from gtkmvc import Observable
 
 from utils import log
-
 logger = log.get_logger(__name__)
 from outcome import Outcome
 from script import Script
@@ -40,15 +38,17 @@ class State(threading.Thread, Observable):
 
     """
 
-    def __init__(self, state_id=None, name=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None):
+    def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None):
         Observable.__init__(self)
         threading.Thread.__init__(self)
 
+        self._name = name
         if state_id is None:
-            self._state_id = generate_state_id()
+            self._state_id = state_id_generator()
+            print "This is the state_id of the new state"
+            print self._state_id
         else:
             self._state_id = state_id
-        self._name = name
 
         if not input_keys is None and not isinstance(input_keys, dict):
             raise TypeError("input_keys must be of type list or tuple")
@@ -64,22 +64,27 @@ class State(threading.Thread, Observable):
 
         self._is_start = None
         self._is_final = None
-        self._sm_status = sm_status
+        if sm_status is None:
+            self._sm_status = StateMachineStatus()
+        else:
+            self._sm_status = sm_status
+
         self._state_status = None
         self._script = None
-
         logger.debug("State with id %s initialized" % self._state_id)
 
     def add_input_key(self, name):
         """Add a new input key to the state
 
         """
+        #TODO: implement
         self._input_keys[name] = 0
 
     def add_output_key(self, name):
         """Add a new output key to the state
 
         """
+        #TODO: implement
         self._output_keys[name] = 0
 
     def add_outcome(self, name, outcome_id=None):
@@ -92,12 +97,12 @@ class State(threading.Thread, Observable):
         self._outcomes[outcome_id] = outcome
         return outcome_id
 
-    def run(self):
+    def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
 
         TODO: Should be filled with code, that should be executed for each state derivative
         """
-        logger.debug("Starting state with id %s" % self._state_id)
+        raise NotImplementedError("The State.run() function has to be implemented!")
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -153,7 +158,7 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def input_keys(self, input_keys):
         if not isinstance(input_keys, dict):
-            raise TypeError("input_keys must be of type list or tuple")
+            raise TypeError("input_keys must be of type dict")
         for key in input_keys:
             if not isinstance(key, str):
                 raise TypeError("element of input_keys must be of type str")
@@ -170,7 +175,7 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def output_keys(self, output_keys):
         if not isinstance(output_keys, dict):
-            raise TypeError("output_keys must be of type list or tuple")
+            raise TypeError("output_keys must be of type dict")
         for key in output_keys:
             if not isinstance(key, str):
                 raise TypeError("element of output_keys must be of type str")
@@ -187,7 +192,7 @@ class State(threading.Thread, Observable):
     @Observable.observed
     def outcomes(self, outcomes):
         if not isinstance(outcomes, (list, tuple)):
-            raise TypeError("outcomes must be of type list or tuple")
+            raise TypeError("outcomes must be of type dict")
         for o in outcomes:
             if not isinstance(o, Outcome):
                 raise TypeError("element of outcomes must be of type list or tuple")

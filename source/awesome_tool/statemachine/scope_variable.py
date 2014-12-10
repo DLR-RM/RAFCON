@@ -28,23 +28,23 @@ class ScopeVariable(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _from_state: the source state of the data flow connection
-    :ivar _from_key: the data key of the source state
-    :ivar _result: the target state of the data flow connection
-    :ivar _type: specifies the type of the _result variable; the setter of _result will only allow assignments that
+    :ivar _key_name: the key of the source state
+    :ivar _from_state: the state that wrote to the scope variable last
+    :ivar _value: the target state of the data flow connection
+    :ivar _value_type: specifies the type of the _result variable; the setter of _result will only allow assignments that
                 satisfies the type constraint
     :ivar _timestamp: the data key of the target state
 
     """
 
-    def __init__(self, from_state=None, from_key=None, result=None, type=None):
+    def __init__(self, key_name=None, value_type=None, from_state=None, value=None):
 
         Observable.__init__(self)
 
+        self._key_name = key_name
+        self._value_type = type
         self._from_state = from_state
-        self._from_key = from_key
-        self._result = result
-        self._result_type = type
+        self._value = value
         self._timestamp = generate_time_stamp()
 
 
@@ -83,33 +83,33 @@ class ScopeVariable(Observable):
         self._from_key = from_key
 
     @property
-    def result(self):
-        """Property for the _result field
+    def value(self):
+        """Property for the _value field
 
         """
-        return self._result
+        return self._value
 
-    @result.setter
+    @value.setter
     @Observable.observed
-    def result(self, to_state):
-        if isinstance(to_state, getattr(sys.modules[__name__], self._result_type)):
-            raise TypeError("result must be of type %s" % self._result_type)
+    def value(self, value):
+        if isinstance(value, getattr(sys.modules[__name__], self._value_type)):
+            raise TypeError("result must be of type %s" % self._value_type)
         self._timestamp = generate_time_stamp()
-        self._result = to_state
+        self._value = value
 
     @property
-    def result_type(self):
-        """Property for the _result_type field
+    def value_type(self):
+        """Property for the _value_type field
 
         """
-        return self._result_type
+        return self._value_type
 
-    @result_type.setter
+    @value_type.setter
     @Observable.observed
-    def result_type(self, result_type):
-        if not isinstance(result_type, str):
+    def value_type(self, value_type):
+        if not isinstance(value_type, str):
             raise TypeError("result_type must be of type str")
-        self._result_type = result_type
+        self._value_type = value_type
 
     @property
     def timestamp(self):
