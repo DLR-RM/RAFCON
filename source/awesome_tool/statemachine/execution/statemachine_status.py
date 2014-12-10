@@ -19,11 +19,13 @@ class StateMachineStatus(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _state_id: the id of the state
-    :ivar _name: the name of the state
-    :ivar _input_keys: holds the input data keys of the state
-    :ivar _output_keys: holds the output data keys of the state
-
+    :ivar _status: the status of the statemachine (i.e. running, paused, stopped)
+    :ivar _is_stepping: flag if the state machine is in step mode (i.e. requires the operator to trigger each transition
+                        separately)
+    :ivar _is_forward_run: flag if the state machine is executed forward
+    :ivar _dependency_tree: when starting the state machine from an arbitrary child state, a dependency tree is
+                            calculated and stored here
+    :ivar _thread_histories: set of threads that are currently executing inside the state machine
 
     """
 
@@ -39,16 +41,14 @@ class StateMachineStatus(Observable):
         self._dependency_tree = None
         self._thread_histories = []
 
-    def set_history(self, hid, execution_history):
+    def set_thread_history(self, hid, execution_history):
         if not isinstance(execution_history, ExecutionHistory):
             raise TypeError("execution_history must be of type ExecutionHistory")
         self._thread_histories[hid] = execution_history
 
-
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
-
 
     @property
     def status(self):

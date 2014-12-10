@@ -9,15 +9,15 @@
 """
 
 import threading
+
 from gtkmvc import Observable
-from mercurial.discovery import outgoing
 
 from utils import log
+
 logger = log.get_logger(__name__)
 from outcome import Outcome
 from script import Script
-from statemachine_status import StateMachineStatus
-from config import *
+from statemachine.execution.statemachine_status import StateMachineStatus
 from utils.id_generator import *
 
 

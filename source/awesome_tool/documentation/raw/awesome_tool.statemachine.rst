@@ -8,6 +8,7 @@ Subpackages
 .. toctree::
 
     awesome_tool.statemachine.validity_check
+    awesome_tool.statemachine.execution
 
 Submodules
 ----------
@@ -24,14 +25,6 @@ data_flow module
 ----------------
 
 .. automodule:: awesome_tool.statemachine.data_flow
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-execution_history module
-------------------------
-
-.. automodule:: awesome_tool.statemachine.execution_history
     :members:
     :undoc-members:
     :show-inheritance:
@@ -64,14 +57,6 @@ state module
 ------------
 
 .. automodule:: awesome_tool.statemachine.state
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-statemachine_status module
---------------------------
-
-.. automodule:: awesome_tool.statemachine.statemachine_status
     :members:
     :undoc-members:
     :show-inheritance:
