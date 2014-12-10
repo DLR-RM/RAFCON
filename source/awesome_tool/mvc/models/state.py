@@ -10,7 +10,7 @@ class StateModel(ModelMT):
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
-    :param sm.State state: The state to be managed
+    :param State state: The state to be managed
      """
 
     state = None
@@ -22,7 +22,7 @@ class StateModel(ModelMT):
     _table.add_column(ColumnDescriptor(1, 'value', str))
     _table.add_column(ColumnDescriptor(2, 'name', str))
     _table.add_column(ColumnDescriptor(3, 'editable', bool))
-    _table.add_row(AttributesRowDescriptor(0, 'id', 'ID', editable=True))
+    _table.add_row(AttributesRowDescriptor(0, 'state_id', 'ID', editable=True))
     _table.add_row(AttributesRowDescriptor(1, 'name', 'Name'))
 
     def __init__(self, state):
