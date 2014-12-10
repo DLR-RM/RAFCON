@@ -18,6 +18,9 @@ class Outcome(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
+    As the name of an outcome can be changes without modifying the transitions the primary key of an outcome is its
+    id and not its name.
+
     :ivar _outcome_id: the id of the outcome, must be unique on one hierarchy level
     :ivar _name: the human readable name of the outcome
 

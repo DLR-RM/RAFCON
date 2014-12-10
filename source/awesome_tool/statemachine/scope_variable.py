@@ -32,7 +32,7 @@ class ScopeVariable(Observable):
     :ivar _from_key: the data key of the source state
     :ivar _result: the target state of the data flow connection
     :ivar _type: specifies the type of the _result variable; the setter of _result will only allow assignments that
-    satisfies the type constraint
+                satisfies the type constraint
     :ivar _timestamp: the data key of the target state
 
     """

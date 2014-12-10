@@ -3,7 +3,7 @@
    :platform: Unix, Windows
    :synopsis: A module to represent one branch of the history of a state machine execution
 
-.. moduleauthor::
+.. moduleauthor:: TODO
 
 
 """

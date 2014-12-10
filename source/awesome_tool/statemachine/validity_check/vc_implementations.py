@@ -3,7 +3,7 @@
    :platform: Unix, Windows
    :synopsis: A module defining different validity check class for checking the correctness of a container state
 
-.. moduleauthor::
+.. moduleauthor:: TODO
 
 """
 

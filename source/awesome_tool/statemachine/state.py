@@ -10,24 +10,15 @@
 
 import threading
 from gtkmvc import Observable
-
+from mercurial.discovery import outgoing
 
 from utils import log
 logger = log.get_logger(__name__)
 from outcome import Outcome
 from script import Script
 from statemachine_status import StateMachineStatus
-
-state_id_counter = 0
-
-
-def generate_id():
-    """
-        TODO: replace this by a more sophisticated id generation routine
-    """
-    global state_id_counter
-    state_id_counter += 1
-    return state_id_counter
+from config import *
+from utils.id_generator import *
 
 
 class State(threading.Thread, Observable):
@@ -49,16 +40,28 @@ class State(threading.Thread, Observable):
 
     """
 
-    def __init__(self, name=None, input_keys=None, output_keys=None, outcomes=None,
-                 sm_status=None):
+    def __init__(self, state_id=None, name=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None):
         Observable.__init__(self)
         threading.Thread.__init__(self)
 
-        self._state_id = generate_id()
+        if state_id is None:
+            self._state_id = generate_state_id()
+        else:
+            self._state_id = state_id
         self._name = name
+
+        if not input_keys is None and not isinstance(input_keys, dict):
+            raise TypeError("input_keys must be of type list or tuple")
         self._input_keys = input_keys
+
+        if not output_keys is None and not isinstance(output_keys, dict):
+            raise TypeError("output_keys must be of type list or tuple")
         self._output_keys = output_keys
+
+        if not outcomes is None and not isinstance(outcomes, dict):
+            raise TypeError("outcomes must be of type list or tuple")
         self._outcomes = outcomes
+
         self._is_start = None
         self._is_final = None
         self._sm_status = sm_status
@@ -66,6 +69,28 @@ class State(threading.Thread, Observable):
         self._script = None
 
         logger.debug("State with id %s initialized" % self._state_id)
+
+    def add_input_key(self, name):
+        """Add a new input key to the state
+
+        """
+        self._input_keys[name] = 0
+
+    def add_output_key(self, name):
+        """Add a new output key to the state
+
+        """
+        self._output_keys[name] = 0
+
+    def add_outcome(self, name, outcome_id=None):
+        """Add a new outcome to the state
+
+        """
+        if outcome_id is None:
+            outcome_id = generate_outcome_id()
+        outcome = Outcome(outcome_id, name)
+        self._outcomes[outcome_id] = outcome
+        return outcome_id
 
     def run(self):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
@@ -127,7 +152,7 @@ class State(threading.Thread, Observable):
     @input_keys.setter
     @Observable.observed
     def input_keys(self, input_keys):
-        if not isinstance(input_keys, (list, tuple)):
+        if not isinstance(input_keys, dict):
             raise TypeError("input_keys must be of type list or tuple")
         for key in input_keys:
             if not isinstance(key, str):
@@ -144,7 +169,7 @@ class State(threading.Thread, Observable):
     @output_keys.setter
     @Observable.observed
     def output_keys(self, output_keys):
-        if not isinstance(output_keys, (list, tuple)):
+        if not isinstance(output_keys, dict):
             raise TypeError("output_keys must be of type list or tuple")
         for key in output_keys:
             if not isinstance(key, str):

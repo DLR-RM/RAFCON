@@ -18,6 +18,9 @@ from outcome import Outcome
 from data_flow import DataFlow
 from scope_variable import ScopeVariable
 import validity_check.validity_checker
+from utils.id_generator import *
+from config import *
+
 
 
 class ContainerState(State, Observable):
@@ -108,6 +111,55 @@ class ContainerState(State, Observable):
         if not isinstance(transition, Transition):
             raise TypeError("ID must be of type Transition")
         logger.debug("Return state for specific transition")
+
+    def add_state(self, name, state_id=None):
+        """Adds a state to the container state
+
+        :param name: the name of the new state
+
+        """
+        #TODO: implement
+        if not state_id:
+            state_id = state_id_generator(STATE_ID_LENGTH)
+        state_id = 0
+        return state_id
+
+    def add_transition(self, from_state, from_outcome, to_state, to_outcome):
+        """Adds a transition to the container state
+
+        Note: Either the toState or the toOutcome needs to be "None"
+
+        :param from_state: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :param to_state: The target state of the transition
+        :param to_outcome: The target outcome of a container state
+        """
+        #TODO: implement
+        transition_id = 0
+        return transition_id
+
+    def add_data_flow(self, from_state, from_key, to_state, to_key):
+        """Adds a data_flow to the container state
+
+        :param from_state: The source state of the data_flow
+        :param from_key: The output_key of the source state
+        :param to_state: The target state of the data_flow
+        :param to_key: The input_key of the target state
+
+        """
+        #TODO: implement
+        data_flow_id = 0
+        return data_flow_id
+
+    def add_scoped_key(self, name):
+        """Adds a data_flow to the container state
+
+        :param name: The name of the scoped key
+
+        """
+        #TODO: implement
+        key_id = 0
+        return key_id
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
