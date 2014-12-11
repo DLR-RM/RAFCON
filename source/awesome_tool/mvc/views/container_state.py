@@ -2,6 +2,7 @@
 from gtkmvc import View
 
 from mvc.views.transition_list import TransitionListView
+from views.data_flow_list import DataFlowListView
 
 class ContainerStateView(View):
 
@@ -12,10 +13,9 @@ class ContainerStateView(View):
         View.__init__(self)
 
         self.transition_list_view = TransitionListView()
-        # for i in iter(self.transition_list_view):
-        #     print i
-       # print "top", self.transition_list_view.get_top_widget()
+        self.data_flow_list_view = DataFlowListView()
+
         self['transition_scroller'].add(self.transition_list_view.get_top_widget())
-        #self.show()
+        self['data_flow_scroller'].add(self.data_flow_list_view.get_top_widget())
 
     pass

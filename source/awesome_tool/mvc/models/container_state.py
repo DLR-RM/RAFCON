@@ -17,8 +17,8 @@ class ContainerStateModel(StateModel):
     transitions = []
     data_flows = []
 
-    transition_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually TransitionModel, but this is not supported
-    # by GTK
+    transition_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually Transition, but this is not supported by GTK
+    data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually DataFlow, but this is not supported by GTK
 
     __observables__ = ("container_state", "states", "transitions", "data_flows")
 
@@ -47,4 +47,5 @@ class ContainerStateModel(StateModel):
 
         for data_flow in container_state.data_flows:
             self.data_flows.append(data_flow)
+            self.data_flow_list_store.append([data_flow])
 

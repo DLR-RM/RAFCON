@@ -10,6 +10,7 @@ from views.transition_list import TransitionListView
 from statemachine.states.state import State
 from statemachine.states.container_state import ContainerState
 from statemachine.transition import Transition
+from statemachine.data_flow import DataFlow
 
 
 def setup_path():
@@ -52,7 +53,10 @@ def main(*args, **kargs):
     #
     trans1 = Transition(state1.state_id, 1, state2.state_id, 2)
     trans2 = Transition(state2.state_id, 1, state3.state_id, 3)
-    ctr_state = ContainerState(states=[state1, state2, state3], transitions=[trans1, trans2])
+    data_flow1 = DataFlow(state1.state_id, "success", state2.state_id, None)
+    data_flow2 = DataFlow(state2.state_id, "success", state3.state_id, None)
+    ctr_state = ContainerState(states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,
+                                                                                                          data_flow2])
     ctr_state.name = "Container"
     ctr_model = ContainerStateModel(ctr_state)
     # prop_view2 = StatePropertiesView()
