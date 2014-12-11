@@ -5,6 +5,9 @@
   <object class="GtkWindow" id="container_state_widget">
     <property name="visible">True</property>
     <property name="title" translatable="yes">Container State</property>
+    <property name="window_position">center</property>
+    <property name="default_width">440</property>
+    <property name="default_height">250</property>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
@@ -61,9 +64,14 @@
               </packing>
             </child>
             <child>
-              <object class="GtkTreeView" id="data_flow_view">
+              <object class="GtkScrolledWindow" id="data_flow_scroller">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <child>
+                  <placeholder/>
+                </child>
               </object>
               <packing>
                 <property name="position">1</property>
@@ -80,12 +88,23 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkScrolledWindow" id="scrolledwindow5">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel" id="label4">
+              <object class="GtkLabel" id="todo">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">page 3</property>
+                <property name="label" translatable="yes">[TODO]</property>
               </object>
               <packing>
                 <property name="position">2</property>
