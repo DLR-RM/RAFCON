@@ -48,7 +48,7 @@ class ContainerState(State, Observable):
         self._data_flows = data_flows
         self._start_state = start_state
         self._scope_variables = scope_variables
-        self._scoped_results = None
+        self._scoped_results = {}
         self._v_checker = v_checker
         self._current_state = None
         self._transitions_cv = Condition()

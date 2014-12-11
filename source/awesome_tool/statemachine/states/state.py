@@ -19,6 +19,52 @@ from statemachine.execution.statemachine_status import StateMachineStatus
 from utils.id_generator import *
 
 
+class DataPort():
+
+    """A class for representing a data ports in a state
+
+    :ivar _name: the name of the data port
+    :ivar _data_type: the value type of the port
+
+    """
+    def __init__(self, name, value_type):
+        self._name = name
+        self._data_type = value_type
+
+#########################################################################
+# Properties for all class fields that must be observed by gtkmvc
+#########################################################################
+
+    @property
+    def name(self):
+        """Property for the _name field
+
+        """
+        return self._name
+
+    @name.setter
+    @Observable.observed
+    def name(self, name):
+        if not isinstance(name, str):
+            raise TypeError("ID must be of type str")
+        self._name = name
+
+    @property
+    def data_type(self):
+        """Property for the _data_type field
+
+        """
+        return self._data_type
+
+    @data_type.setter
+    @Observable.observed
+    def data_type(self, data_type):
+        #TODO: check for python data type
+        if not isinstance(data_type, str):
+            raise TypeError("ID must be of type str")
+        self._data_type = data_type
+
+
 class State(threading.Thread, Observable):
 
     """A class for representing a state in the state machine
@@ -38,7 +84,8 @@ class State(threading.Thread, Observable):
 
     """
 
-    def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None):
+    def __init__(self, name=None, state_id=None, input_data_ports={}, output_data_ports={}, outcomes={}, sm_status=None):
+
         Observable.__init__(self)
         threading.Thread.__init__(self)
 
@@ -50,13 +97,13 @@ class State(threading.Thread, Observable):
         else:
             self._state_id = state_id
 
-        if not input_keys is None and not isinstance(input_keys, dict):
+        if not input_data_ports is None and not isinstance(input_data_ports, dict):
             raise TypeError("input_keys must be of type list or tuple")
-        self._input_keys = input_keys
+        self._input_data_ports = input_data_ports
 
-        if not output_keys is None and not isinstance(output_keys, dict):
+        if not output_data_ports is None and not isinstance(output_data_ports, dict):
             raise TypeError("output_keys must be of type list or tuple")
-        self._output_keys = output_keys
+        self._output_data_ports = output_data_ports
 
         if not outcomes is None and not isinstance(outcomes, dict):
             raise TypeError("outcomes must be of type list or tuple")
@@ -73,19 +120,17 @@ class State(threading.Thread, Observable):
         self._script = None
         logger.debug("State with id %s initialized" % self._state_id)
 
-    def add_input_key(self, name):
-        """Add a new input key to the state
+    def add_input_key(self, name, data_type):
+        """Add a new input data port to the state
 
         """
-        #TODO: implement
-        self._input_keys[name] = 0
+        self._input_data_ports[name] = DataPort(name, data_type)
 
-    def add_output_key(self, name):
-        """Add a new output key to the state
+    def add_output_key(self, name, data_type):
+        """Add a new output data port to the state
 
         """
-        #TODO: implement
-        self._output_keys[name] = 0
+        self._output_data_ports[name] = DataPort(name, data_type)
 
     def add_outcome(self, name, outcome_id=None):
         """Add a new outcome to the state
@@ -103,6 +148,30 @@ class State(threading.Thread, Observable):
         TODO: Should be filled with code, that should be executed for each state derivative
         """
         raise NotImplementedError("The State.run() function has to be implemented!")
+
+    def check_input_data_type(self, input_data):
+        """Check the input data types of the state
+
+        """
+        for key, value in self.input_data_ports.iteritems():
+            #check for primitive data types
+            if not str(type(input_data[key]).__name__) == value.data_type:
+                #check for classes
+                if not isinstance(input_data[key], getattr(sys.modules[__name__], value.data_type)):
+                    raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
+                    exit()
+
+    def check_output_data_type(self, output_data):
+        """Check the output data types of the state
+
+        """
+        for key, value in self.output_data_ports.iteritems():
+            #check for primitive data types
+            if not str(type(output_data[key]).__name__) == value.data_type:
+                #check for classes
+                if not isinstance(output_data[key], getattr(sys.modules[__name__], value.data_type)):
+                    raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
+                    exit()
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -148,38 +217,38 @@ class State(threading.Thread, Observable):
         self._name = name
 
     @property
-    def input_keys(self):
-        """Property for the _input_keys field
+    def input_data_ports(self):
+        """Property for the _input_data_ports field
 
         """
-        return self._input_keys
+        return self._input_data_ports
 
-    @input_keys.setter
+    @input_data_ports.setter
     @Observable.observed
-    def input_keys(self, input_keys):
-        if not isinstance(input_keys, dict):
+    def input_data_ports(self, input_data_ports):
+        if not isinstance(input_data_ports, dict):
             raise TypeError("input_keys must be of type dict")
-        for key in input_keys:
-            if not isinstance(key, str):
-                raise TypeError("element of input_keys must be of type str")
-        self._input_keys = input_keys
+        for key in input_data_ports:
+            if not isinstance(key, DataPort):
+                raise TypeError("element of input_keys must be of type DataPort")
+        self._input_data_ports = input_data_ports
 
     @property
-    def output_keys(self):
-        """Property for the _output_keys field
+    def output_data_ports(self):
+        """Property for the _output_data_ports field
 
         """
-        return self._output_keys
+        return self._output_data_ports
 
-    @output_keys.setter
+    @output_data_ports.setter
     @Observable.observed
-    def output_keys(self, output_keys):
-        if not isinstance(output_keys, dict):
+    def output_data_ports(self, output_data_ports):
+        if not isinstance(output_data_ports, dict):
             raise TypeError("output_keys must be of type dict")
-        for key in output_keys:
-            if not isinstance(key, str):
-                raise TypeError("element of output_keys must be of type str")
-        self._output_keys = output_keys
+        for key in output_data_ports:
+            if not isinstance(key, DataPort):
+                raise TypeError("element of output_keys must be of type DataPort")
+        self._output_data_ports = output_data_ports
 
     @property
     def outcomes(self):

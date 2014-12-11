@@ -4,6 +4,22 @@ states package
 Submodules
 ----------
 
+state module
+------------
+
+.. automodule:: awesome_tool.statemachine.states.state
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+container_state module
+----------------------
+
+.. automodule:: awesome_tool.statemachine.states.container_state
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 barrier_concurrency module
 --------------------------
 

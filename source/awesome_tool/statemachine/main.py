@@ -5,6 +5,7 @@ from states.execution_state import ExecutionState
 if __name__ == '__main__':
     state1 = ExecutionState("MyFirstState")
     state1.add_outcome("MyFirstOutcome", 5)
+    state1.add_output_key("MyFirstDataOutpuPort", "float")
     #state2 = ExecutionState()
     #state2.start()
 

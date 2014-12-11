@@ -38,10 +38,18 @@ class HierarchyState(ContainerState):
 
     def get_inputs_for_state(self, state):
         result_dict = {}
-        #TODO: implement
-        for key, value in state.input_keys.iteritems():
-            #check all data flows for the input keys of the state and remap the values into result_dict
-            pass
+        for input_key, value in state.input_data_ports.iteritems():
+            # for all input keys fetch the correct data_flow connection and read data into the result_dict
+            for data_flow_key, data_flow in self.data_flows.iteritems():
+                if data_flow.to_key is input_key:
+                    if data_flow.to_state is state:
+                        #data comes from scope variable of parent
+                        if data_flow.from_state is self:
+                            result_dict[input_key] = self.scope_variables[data_flow.from_key].value()
+                        else:  # data comes from result from neighbouring state
+                            #primary key for scoped_results is key+state_id
+                            result_dict[input_key] =\
+                                self.scoped_results[data_flow.from_key+data_flow.from_state.state_id].value()
         return result_dict
 
     def get_outputs_for_state(self, state):
@@ -49,21 +57,22 @@ class HierarchyState(ContainerState):
 
         """
         result_dict = {}
-        for key, value in state.output_keys.iteritems():
+        for key, value in state.output_data_ports.iteritems():
             result_dict[key] = None
         return result_dict
 
     def add_dict_to_scope_variables(self, dictionary):
         for key, value in dictionary.iteritems():
-            self.scope_variables[key] = ScopedVariable(key, value)
+            self.scope_variables[key] = ScopedVariable(key, value, None, self)
 
-    def add_dict_to_scoped_results(self, dictionary):
+    def add_dict_to_scoped_results(self, dictionary, state):
         for key, value in dictionary.iteritems():
-            self.scope_variables[key] = ScopedResult(key, value)
+            #primary key for scoped_results is key+state_id
+            self.scoped_results[key+state.state_id] = ScopedResult(key, value, str(type(value)), state)
 
     def get_state_for_transition(self, transition):
-        #if not isinstance(transition, Transition):
-        #    raise TypeError("transition must be of type Transition")
+        if not isinstance(transition, Transition):
+            raise TypeError("transition must be of type Transition")
         if transition.to_state is None:
             return self
         else:
@@ -95,7 +104,7 @@ class HierarchyState(ContainerState):
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)
                 outcome = state.run(inputs=state_input, outputs=state_output)
-                self.add_dict_to_scoped_results(state_output)
+                self.add_dict_to_scoped_results(state_output, state)
                 # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
                 transition = self.get_transition_for_outcome(state, outcome)
 
@@ -106,12 +115,16 @@ class HierarchyState(ContainerState):
                 state = self.get_state_for_transition(transition)
 
             self.exit(transition)
+
             #write output data back to the dictionary
-            for key, value in outputs_data.iteritems():
-                #check all data flows for the output keys of the state and remap the values into the output_data
-                #TODO: implement
-                pass
-                #kwargs["outputs"][key] = self.scope_variables[key].value()
+            for output_key, value in outputs_data.iteritems():
+                for data_flow_key, data_flow in self.data_flows.iteritems():
+                    if data_flow.to_state is self:
+                        if data_flow.from_state is self:
+                            kwargs["outputs"][output_key] = self.scope_variables[output_key].value()
+                        else:
+                            #primary key for scoped_results is key+state_id
+                            kwargs["outputs"][output_key] = self.scoped_results[output_key+data_flow.from_state.state_id].value()
             return transition.to_outcome
 
         except RuntimeError:

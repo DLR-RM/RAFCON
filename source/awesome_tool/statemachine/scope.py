@@ -9,10 +9,11 @@
 """
 
 from gtkmvc import Observable
-import numpy
 import sys
 import time
 import datetime
+
+from statemachine.states.state import State
 
 
 def generate_time_stamp():
@@ -29,7 +30,8 @@ class ScopedVariable(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _key: the key of scope variable
+    :ivar _name: the name of the scope variable
+    :ivar _key: the key for the scope variable
     :ivar _from_state: the state that wrote to the scope variable last
     :ivar _value: the current value of the scope variable
     :ivar _value_type: specifies the type of the _value; the setter of _value will only allow assignments that
@@ -47,25 +49,29 @@ class ScopedVariable(Observable):
         self._value_type = value_type
         self._from_state = from_state
         self._timestamp = generate_time_stamp()
+        # for storage purpose inside the container states
+        self._primary_key = key+from_state.state_id
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
 
     @property
-    def key(self):
-        """Property for the _key field
+    def name(self):
+        """Property for the _name field
 
         """
-        return self._key
+        return self._name
 
-    @key.setter
+    @name.setter
     @Observable.observed
-    def key(self, key):
-        if not isinstance(key, str):
-            raise TypeError("from_key must be of type str")
+    def name(self, name):
+        if not isinstance(name, str):
+            raise TypeError("name must be of type str")
+        self._name = name
+        #update key
+        self._primary_key = self._name+self._from_state.state_id
 
-        self._key = key
 
     @property
     def value(self):
@@ -77,8 +83,12 @@ class ScopedVariable(Observable):
     @value.setter
     @Observable.observed
     def value(self, value):
-        if isinstance(value, getattr(sys.modules[__name__], self._value_type)):
-            raise TypeError("result must be of type %s" % str(self._value_type))
+
+        #check for primitive data types
+        if not str(type(value).__name__) == self._value_type:
+            #check for classes
+            if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
+                raise TypeError("result must be of type %s" % str(self._value_type))
         self._timestamp = generate_time_stamp()
         self._value = value
 
@@ -106,10 +116,11 @@ class ScopedVariable(Observable):
     @from_state.setter
     @Observable.observed
     def from_state(self, from_state):
-        if not isinstance(from_state, numpy.uint32):
-            raise TypeError("from_state must be of type numpy.uint32")
-
+        if not isinstance(from_state, State):
+            raise TypeError("from_state must be of type State")
         self._from_state = from_state
+        #update key
+        self._primary_key = self._name+self._from_state.state_id
 
     @property
     def timestamp(self):

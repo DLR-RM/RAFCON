@@ -14,14 +14,6 @@ Subpackages
 Submodules
 ----------
 
-container_state module
-----------------------
-
-.. automodule:: awesome_tool.statemachine.container_state
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 data_flow module
 ----------------
 
@@ -52,15 +44,7 @@ script module
 .. automodule:: awesome_tool.statemachine.script
     :members:
     :undoc-members:
-    :show-inheritance:
-
-state module
-------------
-
-.. automodule:: awesome_tool.statemachine.state
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    :show-inheritance
 
 transition module
 -----------------
