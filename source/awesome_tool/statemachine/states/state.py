@@ -13,8 +13,8 @@ from gtkmvc import Observable
 
 from utils import log
 logger = log.get_logger(__name__)
-from outcome import Outcome
-from script import Script
+from statemachine.outcome import Outcome
+from statemachine.script import Script
 from statemachine.execution.statemachine_status import StateMachineStatus
 from utils.id_generator import *
 

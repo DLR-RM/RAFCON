@@ -11,15 +11,16 @@
 from utils import log
 logger = log.get_logger(__name__)
 from gtkmvc import Observable
+from threading import Condition
 
-from state import State
-from transition import Transition
-from outcome import Outcome
-from data_flow import DataFlow
-from scope_variable import ScopeVariable
-import validity_check.validity_checker
+from statemachine.states.state import State
+from statemachine.transition import Transition
+from statemachine.outcome import Outcome
+from statemachine.data_flow import DataFlow
+from statemachine.scope import ScopedVariable, ScopedResult
+import statemachine.validity_check.validity_checker
 from utils.id_generator import *
-from config import *
+from statemachine.config import *
 
 
 class ContainerState(State, Observable):
@@ -38,8 +39,7 @@ class ContainerState(State, Observable):
     """
 
     def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None,
-                 states={}, transitions={}, data_flows={}, start_state=None, scope={},
-                 scoped_keys=None, v_checker=None):
+                 states={}, transitions={}, data_flows={}, start_state=None, scope_variables={}, v_checker=None):
 
         State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status)
 
@@ -47,10 +47,11 @@ class ContainerState(State, Observable):
         self._transitions = transitions
         self._data_flows = data_flows
         self._start_state = start_state
-        self._scope = scope
-        self._current_state = None
-        self._scoped_keys = scoped_keys
+        self._scope_variables = scope_variables
+        self._scoped_results = None
         self._v_checker = v_checker
+        self._current_state = None
+        self._transitions_cv = Condition()
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
@@ -163,7 +164,7 @@ class ContainerState(State, Observable):
         :param name: The name of the scoped key
 
         """
-        self._scope[name] = ScopeVariable(name, value_type)
+        self._scope_variables[name] = ScopedVariable(name, value_type)
 
     def set_start_state(self, state_id):
         """Adds a data_flow to the container state
@@ -244,21 +245,38 @@ class ContainerState(State, Observable):
         self._start_state = start_state
 
     @property
-    def scope(self):
-        """Property for the _scope field
+    def scope_variables(self):
+        """Property for the _scope_variables field
 
         """
-        return self._scope
+        return self._scope_variables
 
-    @scope.setter
+    @scope_variables.setter
     @Observable.observed
-    def scope(self, scope):
-        if not isinstance(scope, dict):
-            raise TypeError("scope must be of type list or tuple")
-        for s in scope:
-            if not isinstance(s, ScopeVariable):
+    def scope_variables(self, scope_variables):
+        if not isinstance(scope_variables, dict):
+            raise TypeError("scope_variables must be of type dict")
+        for s in scope_variables:
+            if not isinstance(s, ScopedVariable):
                 raise TypeError("element of scope must be of type ScopeVariable")
-        self._scope = scope
+        self._scope_variables = scope_variables
+
+    @property
+    def scoped_results(self):
+        """Property for the _scoped_results field
+
+        """
+        return self._scoped_results
+
+    @scoped_results.setter
+    @Observable.observed
+    def scoped_results(self, scoped_results):
+        if not isinstance(scoped_results, dict):
+            raise TypeError("scoped_results must be of type dict")
+        for s in scoped_results:
+            if not isinstance(s, ScopedResult):
+                raise TypeError("element of scoped_keys must be of type ScopedResult")
+        self._scoped_results = scoped_results
 
     @property
     def current_state(self):
@@ -273,23 +291,6 @@ class ContainerState(State, Observable):
         if not isinstance(current_state, State):
             raise TypeError("current_state must be of type State")
         self._current_state = current_state
-
-    @property
-    def scoped_keys(self):
-        """Property for the _scoped_keys field
-
-        """
-        return self._scoped_keys
-
-    @scoped_keys.setter
-    @Observable.observed
-    def scoped_keys(self, scoped_keys):
-        if not isinstance(scoped_keys, (list, tuple)):
-            raise TypeError("scoped_keys must be of type list or tuple")
-        for s in scoped_keys:
-            if not isinstance(s, str):
-                raise TypeError("element of scoped_keys must be of type str")
-        self._scoped_keys = scoped_keys
 
     @property
     def v_checker(self):

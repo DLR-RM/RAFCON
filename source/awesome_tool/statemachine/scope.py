@@ -1,7 +1,7 @@
 """
 .. module:: scope_variable
    :platform: Unix, Windows
-   :synopsis: A module for representing a scoped variable in a container state
+   :synopsis: A module for organizing the scoped variables in a container state
 
 .. moduleauthor:: Sebastian Brunner
 
@@ -18,69 +18,54 @@ import datetime
 def generate_time_stamp():
     return time.time()
 
+
 def get_human_readable_time(timestamp):
     return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 
-class ScopeVariable(Observable):
+class ScopedVariable(Observable):
 
     """A class for representing a scoped variable in a container state
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _key_name: the key of the source state
+    :ivar _key: the key of scope variable
     :ivar _from_state: the state that wrote to the scope variable last
-    :ivar _value: the target state of the data flow connection
-    :ivar _value_type: specifies the type of the _result variable; the setter of _result will only allow assignments that
+    :ivar _value: the current value of the scope variable
+    :ivar _value_type: specifies the type of the _value; the setter of _value will only allow assignments that
                 satisfies the type constraint
-    :ivar _timestamp: the data key of the target state
+    :ivar _timestamp: the timestamp when the variable was written to las
 
     """
 
-    def __init__(self, key_name=None, value_type=None, from_state=None, value=None):
+    def __init__(self, key=None, value=None, value_type=None, from_state=None):
 
         Observable.__init__(self)
 
-        self._key_name = key_name
-        self._value_type = type
-        self._from_state = from_state
+        self._key = key
         self._value = value
+        self._value_type = value_type
+        self._from_state = from_state
         self._timestamp = generate_time_stamp()
-
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
 
     @property
-    def from_state(self):
-        """Property for the _from_state field
+    def key(self):
+        """Property for the _key field
 
         """
-        return self._from_state
+        return self._key
 
-    @from_state.setter
+    @key.setter
     @Observable.observed
-    def from_state(self, from_state):
-        if not isinstance(from_state, numpy.uint32):
-            raise TypeError("from_state must be of type numpy.uint32")
-
-        self._from_state = from_state
-
-    @property
-    def from_key(self):
-        """Property for the _from_key field
-
-        """
-        return self._from_key
-
-    @from_key.setter
-    @Observable.observed
-    def from_key(self, from_key):
-        if not isinstance(from_key, str):
+    def key(self, key):
+        if not isinstance(key, str):
             raise TypeError("from_key must be of type str")
 
-        self._from_key = from_key
+        self._key = key
 
     @property
     def value(self):
@@ -93,7 +78,7 @@ class ScopeVariable(Observable):
     @Observable.observed
     def value(self, value):
         if isinstance(value, getattr(sys.modules[__name__], self._value_type)):
-            raise TypeError("result must be of type %s" % self._value_type)
+            raise TypeError("result must be of type %s" % str(self._value_type))
         self._timestamp = generate_time_stamp()
         self._value = value
 
@@ -112,6 +97,21 @@ class ScopeVariable(Observable):
         self._value_type = value_type
 
     @property
+    def from_state(self):
+        """Property for the _from_state field
+
+        """
+        return self._from_state
+
+    @from_state.setter
+    @Observable.observed
+    def from_state(self, from_state):
+        if not isinstance(from_state, numpy.uint32):
+            raise TypeError("from_state must be of type numpy.uint32")
+
+        self._from_state = from_state
+
+    @property
     def timestamp(self):
         """Property for the _timestamp field
 
@@ -126,3 +126,22 @@ class ScopeVariable(Observable):
         if not isinstance(timestamp, float):
             raise TypeError("timestamp must be of type float")
         self._timestamp = timestamp
+
+
+class ScopedResult(ScopedVariable):
+
+    """A class for representing a scoped result in a container state
+
+    It inherits from ScopeVariable as it needs the same fields.
+
+    :ivar _key: the key of the result
+    :ivar _from_state: the source state of the result
+    :ivar _value: the current value of the result (newer results will overwrite the value)
+    :ivar _value_type: specifies the type of the _result variable; the setter of _result will only allow assignments that
+                satisfies the type constraint
+    :ivar _timestamp: the data key of the target state
+
+    """
+    def __init__(self, key=None, value=None, value_type=None, from_state=None):
+
+        ScopedVariable.__init__(self, key, value, value_type, from_state)

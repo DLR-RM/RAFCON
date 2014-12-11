@@ -8,7 +8,7 @@
 
 """
 
-from statemachine.container_state import ContainerState
+from statemachine.states.container_state import ContainerState
 
 class ConcurrencyState(ContainerState):
 

@@ -1,6 +1,6 @@
 
 from gtkmvc import ModelMT
-from statemachine import State
+from statemachine.states.state import State
 from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
 from gtk import ListStore
 

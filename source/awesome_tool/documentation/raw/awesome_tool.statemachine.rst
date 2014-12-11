@@ -38,10 +38,10 @@ outcome module
     :undoc-members:
     :show-inheritance:
 
-scope_variable module
----------------------
+scope module
+------------
 
-.. automodule:: awesome_tool.statemachine.scope_variable
+.. automodule:: awesome_tool.statemachine.scope
     :members:
     :undoc-members:
     :show-inheritance:

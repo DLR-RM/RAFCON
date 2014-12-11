@@ -8,7 +8,7 @@
 
 """
 
-from statemachine.state import State
+from statemachine.states.state import State
 from utils import log
 logger = log.get_logger(__name__)
 

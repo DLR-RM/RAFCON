@@ -9,6 +9,7 @@
 """
 
 from gtkmvc import Observable
+
 import vc_strategy
 import vc_implementations
 
@@ -47,7 +48,7 @@ class ValidityChecker(Observable):
 
         """
         #TODO: deferred import: can this be somehow solved otherwise???
-        import statemachine.container_state as smcs
+        import statemachine.states.container_state as smcs
 
         if not isinstance(c_state, smcs.ContainerState):
             raise TypeError("Check() can only be applied onto ContainerStates")

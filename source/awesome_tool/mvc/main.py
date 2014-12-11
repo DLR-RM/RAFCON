@@ -7,7 +7,9 @@ from models import StateModel, ContainerStateModel
 from controllers import StatePropertiesController, ContainerStateController
 from views import StatePropertiesView, ContainerStateView
 from views.transition_list import TransitionListView
-from statemachine import State, ContainerState, Transition
+from statemachine.states.state import State
+from statemachine.states.container_state import ContainerState
+from statemachine.transition import Transition
 
 
 def setup_path():

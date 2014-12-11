@@ -1,6 +1,6 @@
 
 from gtkmvc import ModelMT
-from statemachine import Transition
+from statemachine.transition import Transition
 
 
 class TransitionModel(ModelMT):

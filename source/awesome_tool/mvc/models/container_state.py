@@ -1,6 +1,6 @@
 import gobject
-from statemachine import ContainerState
-from models import StateModel
+from statemachine.states.container_state import ContainerState
+from mvc.models.state import StateModel
 from gtk import ListStore
 
 

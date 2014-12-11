@@ -1,7 +1,7 @@
 
 from gtkmvc import View
 
-from views.transition_list import TransitionListView
+from mvc.views.transition_list import TransitionListView
 
 class ContainerStateView(View):
 

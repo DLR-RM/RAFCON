@@ -5,7 +5,7 @@ logger = log.get_logger(__name__)
 import gtk
 from gtkmvc import Controller
 from gtkmvc.adapters import UserClassAdapter
-from controllers.transition_list import TransitionListController
+from mvc.controllers.transition_list import TransitionListController
 
 
 class ContainerStateController(Controller):
