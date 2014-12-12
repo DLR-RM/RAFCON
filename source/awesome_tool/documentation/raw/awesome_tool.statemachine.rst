@@ -44,12 +44,20 @@ script module
 .. automodule:: awesome_tool.statemachine.script
     :members:
     :undoc-members:
-    :show-inheritance
+    :show-inheritance:
 
 transition module
 -----------------
 
 .. automodule:: awesome_tool.statemachine.transition
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+id_generator module
+-------------------
+
+.. automodule:: awesome_tool.statemachine.id_generator
     :members:
     :undoc-members:
     :show-inheritance:

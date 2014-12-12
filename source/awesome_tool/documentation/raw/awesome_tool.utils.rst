@@ -11,15 +11,7 @@ log module
     :members:
     :undoc-members:
     :show-inheritance:
-
-id_generator module
--------------------
-
-.. automodule:: awesome_tool.utils.id_generator
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+    
 Module contents
 ---------------
 

@@ -45,11 +45,11 @@ class HierarchyState(ContainerState):
                     if data_flow.to_state is state:
                         #data comes from scope variable of parent
                         if data_flow.from_state is self:
-                            result_dict[input_key] = self.scope_variables[data_flow.from_key].value()
+                            result_dict[input_key] = self.scope_variables[data_flow.from_key].value
                         else:  # data comes from result from neighbouring state
                             #primary key for scoped_results is key+state_id
                             result_dict[input_key] =\
-                                self.scoped_results[data_flow.from_key+data_flow.from_state.state_id].value()
+                                self.scoped_results[data_flow.from_key+data_flow.from_state.state_id].value
         return result_dict
 
     def get_outputs_for_state(self, state):
@@ -82,16 +82,16 @@ class HierarchyState(ContainerState):
 
         #initialize data structures
         input_data = kwargs["inputs"]
-        outputs_data = kwargs["outputs"]
+        output_data = kwargs["outputs"]
         if not isinstance(input_data, dict):
             raise TypeError("states must be of type dict")
-        if not isinstance(outputs_data, dict):
+        if not isinstance(output_data, dict):
             raise TypeError("states must be of type dict")
         self.scope_variables = {}
         self.scoped_results = {}
 
+        self.check_input_data_type(input_data)
         self.add_dict_to_scope_variables(input_data)
-        self.add_dict_to_scope_variables(outputs_data)
 
         try:
             logger.debug("Starting hierarchy state with id %s" % self._state_id)
@@ -117,7 +117,7 @@ class HierarchyState(ContainerState):
             self.exit(transition)
 
             #write output data back to the dictionary
-            for output_key, value in outputs_data.iteritems():
+            for output_key, value in output_data.iteritems():
                 for data_flow_key, data_flow in self.data_flows.iteritems():
                     if data_flow.to_state is self:
                         if data_flow.from_state is self:
@@ -125,6 +125,9 @@ class HierarchyState(ContainerState):
                         else:
                             #primary key for scoped_results is key+state_id
                             kwargs["outputs"][output_key] = self.scoped_results[output_key+data_flow.from_state.state_id].value()
+
+            self.check_output_data_type(output_data)
+
             return transition.to_outcome
 
         except RuntimeError:

@@ -9,17 +9,20 @@
 """
 
 import threading
+import sys
+
 from gtkmvc import Observable
 
 from utils import log
+
 logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome
 from statemachine.script import Script
 from statemachine.execution.statemachine_status import StateMachineStatus
-from utils.id_generator import *
+from statemachine.id_generator import *
 
 
-class DataPort():
+class DataPort(Observable):
 
     """A class for representing a data ports in a state
 
@@ -27,9 +30,14 @@ class DataPort():
     :ivar _data_type: the value type of the port
 
     """
-    def __init__(self, name, value_type):
-        self._name = name
-        self._data_type = value_type
+    def __init__(self, name, data_type):
+
+        Observable.__init__(self)
+
+        self._name = None
+        self.name = name
+        self._data_type = None
+        self.data_type = data_type
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -59,9 +67,12 @@ class DataPort():
     @data_type.setter
     @Observable.observed
     def data_type(self, data_type):
-        #TODO: check for python data type
         if not isinstance(data_type, str):
-            raise TypeError("ID must be of type str")
+            raise TypeError("data_type must be of type str")
+        if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
+            if not getattr(sys.modules[__name__], data_type):
+                raise TypeError("" + data_type + " is not a valid python data type")
+                exit()
         self._data_type = data_type
 
 
@@ -98,15 +109,15 @@ class State(threading.Thread, Observable):
             self._state_id = state_id
 
         if not input_data_ports is None and not isinstance(input_data_ports, dict):
-            raise TypeError("input_keys must be of type list or tuple")
+            raise TypeError("input_keys must be of type dict")
         self._input_data_ports = input_data_ports
 
         if not output_data_ports is None and not isinstance(output_data_ports, dict):
-            raise TypeError("output_keys must be of type list or tuple")
+            raise TypeError("output_keys must be of type dict")
         self._output_data_ports = output_data_ports
 
         if not outcomes is None and not isinstance(outcomes, dict):
-            raise TypeError("outcomes must be of type list or tuple")
+            raise TypeError("outcomes must be of type dict")
         self._outcomes = outcomes
 
         self._is_start = None

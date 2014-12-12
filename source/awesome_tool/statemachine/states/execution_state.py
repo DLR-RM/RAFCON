@@ -15,6 +15,7 @@ from utils import log
 logger = log.get_logger(__name__)
 
 from statemachine.outcome import Outcome
+from statemachine.script import Script
 
 
 class ExecutionState(State):
@@ -24,13 +25,23 @@ class ExecutionState(State):
     This kind of state does not have any child states.
     """
 
-    def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None):
+    def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None, path=None,
+                 filename=None):
 
         State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status)
+        self.script = Script(path, filename)
 
-    def _execute(self,execute_inputs, execute_outputs):
+    def print_state_information(self):
+        print "Name of the state: " + self.name
+        print "Id of the state: " + self.state_id
 
-        execute_outputs["MyFirstDataOutpuPort"] = 10.0
+    def _execute(self, execute_inputs, execute_outputs):
+
+        self.script.load_and_build_module()
+        self.script.execute(self, execute_inputs, execute_outputs)
+        exit()
+
+        execute_outputs["MyFirstDataOutputPort"] = 10.0
         #TODO: implement
         #call execute of script here
         outcome = self._outcomes[5]
@@ -54,18 +65,12 @@ class ExecutionState(State):
             outcome = self._execute(input_data, output_data)
 
             #check output data
-            for key, value in self.output_data_ports.iteritems():
-                #if outputs_data[key]:  # exception for None value?
-                #check for primitive data types
-                if not str(type(output_data[key]).__name__) == value.data_type:
-                    #check for classes
-                    if not isinstance(output_data[key], getattr(sys.modules[__name__], value.data_type)):
-                        raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
-                        exit()
+            self.check_output_data_type(output_data)
 
+            for key, value in self.output_data_ports.iteritems():
                 kwargs["outputs"][key] = output_data[key]
 
-            self.check_output_data_type(output_data)
+
 
             return outcome
 

@@ -18,8 +18,7 @@ from statemachine.transition import Transition
 from statemachine.outcome import Outcome
 from statemachine.data_flow import DataFlow
 from statemachine.scope import ScopedVariable, ScopedResult
-import statemachine.validity_check.validity_checker
-from utils.id_generator import *
+from statemachine.id_generator import *
 from statemachine.config import *
 
 
@@ -153,8 +152,8 @@ class ContainerState(State, Observable):
         :param to_key: The input_key of the target state
 
         """
-        #TODO: implement
-        data_flow_id = 0
+        data_flow_id = generate_data_flow_id()
+        self.data_flows[data_flow_id] = DataFlow(from_state, from_key, to_state, to_key)
         return data_flow_id
 
     #Primary key is the name of scoped_key.

@@ -8,7 +8,13 @@
 
 """
 
+import os
+import imp
+import sys
+
 from gtkmvc import Observable
+
+from statemachine.id_generator import *
 
 
 class Script(Observable):
@@ -23,6 +29,17 @@ class Script(Observable):
 
     """
 
+    EMPTY_SCRIPT = """
+def entry(self):
+    pass
+
+def execute(self):
+    return 0
+
+def exit(self):
+    pass
+"""
+
     def __init__(self, path=None, filename=None):
 
         Observable.__init__(self)
@@ -30,6 +47,9 @@ class Script(Observable):
         self._path = path
         self._filename = filename
         self._compiled_module = None
+        self._script_id = generate_script_id()
+
+        self.script = Script.EMPTY_SCRIPT
 
     def load_module(self):
         """Loads the module given by the path and the filename
@@ -44,6 +64,45 @@ class Script(Observable):
         """
         #TODO: implement
         pass
+
+    def execute(self, state, inputs={}, outputs={}):
+        return self._compiled_module.execute(state, inputs, outputs)
+
+    def load_and_build_module(self):
+        """Builds the module given by the path and the filename
+
+        """
+        script_path = os.path.join(self.path, self.filename)
+
+        try:
+            script_file = open(script_path, 'r')
+        except:
+            raise IOError("File could not be opened!")
+
+        self.script = script_file.read()
+        #print self.script
+
+        module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
+        #print module_name
+
+        # here is the pretty way for loading a module
+        tmp_module = imp.new_module(module_name)
+
+        sys.modules[module_name] = tmp_module
+
+        # maybe subsitute some variables in the script
+
+        code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
+
+        try:
+            exec code in tmp_module.__dict__
+        except:
+            raise IOError("Something went wrong during compilation of the module")
+
+        # return the module
+        self._compiled_module = tmp_module
+
+        script_file.close()
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

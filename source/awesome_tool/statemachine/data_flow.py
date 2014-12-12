@@ -34,6 +34,9 @@ class DataFlow(Observable):
         self._to_state = to_state
         self._to_key = to_key
 
+    def __str__(self):
+        return "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s" % (self._from_state, self._from_key,
+                                                                                      self._to_state, self._to_key)
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
