@@ -10,11 +10,10 @@
 
 import threading
 import sys
-
 from gtkmvc import Observable
+import Queue
 
 from utils import log
-
 logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome
 from statemachine.script import Script
@@ -103,8 +102,6 @@ class State(threading.Thread, Observable):
         self._name = name
         if state_id is None:
             self._state_id = state_id_generator()
-            print "This is the state_id of the new state"
-            print self._state_id
         else:
             self._state_id = state_id
 
@@ -119,6 +116,7 @@ class State(threading.Thread, Observable):
 
         self._is_start = None
         self._is_final = None
+
         if sm_status is None:
             self._sm_status = StateMachineStatus()
         else:
@@ -126,6 +124,14 @@ class State(threading.Thread, Observable):
 
         self._state_status = None
         self.script = Script(path, filename)
+
+        self._input_data = {}
+        self._output_data = {}
+        self._preempted = False
+        self._concurrency_queue = None
+        self._concurrency_queue_id = None
+        self._final_outcome = None
+
         logger.debug("State with id %s initialized" % self._state_id)
 
     def add_input_key(self, name, data_type):
@@ -351,3 +357,88 @@ class State(threading.Thread, Observable):
         if not isinstance(script, Script):
             raise TypeError("script must be of type Script")
         self._script = script
+
+    @property
+    def input_data(self):
+        """Property for the _input_data field
+
+        """
+        return self._input_data
+
+    @input_data.setter
+    @Observable.observed
+    def input_data(self, input_data):
+        if not isinstance(input_data, dict):
+            raise TypeError("input_data must be of type dict")
+        self._input_data = input_data
+
+    @property
+    def output_data(self):
+        """Property for the _output_data field
+
+        """
+        return self._output_data
+
+    @output_data.setter
+    @Observable.observed
+    def output_data(self, output_data):
+        if not isinstance(output_data, dict):
+            raise TypeError("output_data must be of type script")
+        self._output_data = output_data
+
+    @property
+    def preempted(self):
+        """Property for the _preempted field
+
+        """
+        return self._preempted
+
+    @preempted.setter
+    @Observable.observed
+    def preempted(self, preempted):
+        if not isinstance(preempted, bool):
+            raise TypeError("preempted must be of type bool")
+        self._preempted = preempted
+
+    @property
+    def concurrency_queue(self):
+        """Property for the _concurrency_queue field
+
+        """
+        return self._concurrency_queue
+
+    @concurrency_queue.setter
+    @Observable.observed
+    def concurrency_queue(self, concurrency_queue):
+        if not isinstance(concurrency_queue, Queue):
+            if concurrency_queue is None:
+                raise TypeError("concurrency_queue must be of type Queue or None")
+        self._concurrency_queue = concurrency_queue
+
+    @property
+    def concurrency_queue_id(self):
+        """Property for the _concurrency_queue_id field
+
+        """
+        return self._concurrency_queue_id
+
+    @concurrency_queue_id .setter
+    @Observable.observed
+    def concurrency_queue_id(self, concurrency_queue_id):
+        if not isinstance(concurrency_queue_id, int):
+            raise TypeError("concurrency_queue_id must be of type int")
+        self._concurrency_queue_id   = concurrency_queue_id
+
+    @property
+    def final_outcome(self):
+        """Property for the _final_outcome field
+
+        """
+        return self._final_outcome
+
+    @final_outcome .setter
+    @Observable.observed
+    def final_outcome(self, final_outcome):
+        if not isinstance(final_outcome, Outcome):
+            raise TypeError("final_outcome must be of type Outcome")
+        self._final_outcome = final_outcome

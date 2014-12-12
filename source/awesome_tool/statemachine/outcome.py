@@ -33,6 +33,9 @@ class Outcome(Observable):
         self._outcome_id = outcome_id
         self._name = name
 
+    def __str__(self):
+        return "Outcome - outcome_id: %s, name: %s" % (self._outcome_id, self._name)
+
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc

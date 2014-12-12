@@ -35,10 +35,12 @@ class Transition(Observable):
         self._to_state = to_state
         self._to_outcome = to_outcome
 
-        logger.debug("Transition with from state %s and from outcome %s initialized" %
-                     (self._from_state, self._from_outcome))
+        logger.debug(self.__str__())
 
-
+    def __str__(self):
+        return "Transition - from_state: %s, from_outcome: %s, to_state: %s, to_outcome: %s" % (self._from_state,
+                                                                                       self._from_outcome,
+                                                                                       self._to_state, self._to_outcome)
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc

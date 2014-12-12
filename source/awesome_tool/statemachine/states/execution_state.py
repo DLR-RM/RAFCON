@@ -42,13 +42,12 @@ class ExecutionState(State):
         outcome_id = self.script.execute(self, execute_inputs, execute_outputs)
         return self.outcomes[outcome_id]
 
-    def run(self, *args, **kwargs):
-
+    def run(self):
         try:
 
             #initialize data structures
-            input_data = kwargs["inputs"]
-            output_data = kwargs["outputs"]
+            input_data = self.input_data
+            output_data = self.output_data
             if not isinstance(input_data, dict):
                 raise TypeError("states must be of type dict")
             if not isinstance(output_data, dict):
@@ -62,10 +61,12 @@ class ExecutionState(State):
             #check output data
             self.check_output_data_type(output_data)
 
-            for key, value in self.output_data_ports.iteritems():
-                kwargs["outputs"][key] = output_data[key]
+            if self.concurrency_queue:
+                self.concurrency_queue.put(self.queue_id)
 
-            return outcome
+            self.final_outcome = outcome
+            return
 
         except RuntimeError:
-            return Outcome("aborted")
+            self.final_outcome = Outcome(1, "aborted")
+            return

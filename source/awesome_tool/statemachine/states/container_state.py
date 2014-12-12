@@ -42,6 +42,7 @@ class ContainerState(State, Observable):
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
                  v_checker=None, path=None, filename=None):
 
+        logger.debug("Creating new container state")
         State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename)
 
         self._states = None
@@ -61,10 +62,8 @@ class ContainerState(State, Observable):
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
 
-        Should be filled with code, that should be executed for each container_state derivative. Right now only debug
-        statements.
+        Should be filled with code, that should be executed for each container_state derivative.
         """
-        #logger.debug("Start container state with id %s", self._state_id)
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 
     def enter(self):
@@ -77,16 +76,12 @@ class ContainerState(State, Observable):
         self.script.load_and_build_module()
         self.script.enter(self, self.scoped_variables)
 
-    def exit(self, transition):
+    def exit(self):
         """Called on exiting the container state
 
         Clean up code for the state and its variables is executed here. This method calls the custom exit function
         provided by a python script.
-
-        :param transition: The exit transition of the state
         """
-        if not isinstance(transition, Transition):
-            raise TypeError("ID must be of type Transition")
         logger.debug("Calling exit() script of container state with id %s", self._state_id)
         self.script.load_and_build_module()
         self.script.exit(self, self.scoped_variables)
@@ -100,7 +95,7 @@ class ContainerState(State, Observable):
         if not isinstance(state, State):
             raise TypeError("ID must be of type State")
         if not isinstance(outcome, Outcome):
-            raise TypeError("ID must be of type Outcome")
+            raise TypeError("outcome must be of type Outcome")
         logger.debug("Return transition for a specific child state and its specific outcome")
         result_transition = None
         for key, transition in self.transitions.iteritems():
@@ -180,6 +175,80 @@ class ContainerState(State, Observable):
 
         """
         self._start_state = self._states[state_id]
+
+    def get_start_state(self):
+        """Get the start state of the container state
+
+        """
+        if self._sm_status.dependency_tree is None:
+            return self._start_state
+        else:
+            #do start with state provided by the dependency tree
+            pass
+
+    def get_inputs_for_state(self, state):
+        """Get all input data of an state
+
+        :param state: the state of which the input data is determined
+
+        """
+        result_dict = {}
+        for input_key, value in state.input_data_ports.iteritems():
+            # for all input keys fetch the correct data_flow connection and read data into the result_dict
+            for data_flow_key, data_flow in self.data_flows.iteritems():
+                if data_flow.to_key is input_key:
+                    if data_flow.to_state is state:
+                        #data comes from scope variable of parent
+                        if data_flow.from_state is self:
+                            result_dict[input_key] = self.scoped_variables[data_flow.from_key].value
+                        else:  # data comes from result from neighbouring state
+                            #primary key for scoped_results is key+state_id
+                            result_dict[input_key] =\
+                                self.scoped_results[data_flow.from_key+data_flow.from_state.state_id].value
+        return result_dict
+
+    def get_outputs_for_state(self, state):
+        """Return empty output dictionary for a state
+
+        """
+        result_dict = {}
+        for key, value in state.output_data_ports.iteritems():
+            result_dict[key] = None
+        return result_dict
+
+    def add_dict_to_scope_variables(self, dictionary):
+        """Add a dictionary to the scope variables
+
+        :param dictionary: The dictionary that is added to the scope variables
+
+        """
+        for key, value in dictionary.iteritems():
+            self.scoped_variables[key] = ScopedVariable(key, value, None, self)
+
+    def add_dict_to_scoped_results(self, dictionary, state):
+        """Add a dictionary to the scoped result values
+
+        :param dictionary: The dictionary that is added to the scoped results
+        :param state: The state to which the output-dictionary belongs
+
+        """
+        for key, value in dictionary.iteritems():
+            #primary key for scoped_results is key+state_id
+            self.scoped_results[key+state.state_id] = ScopedResult(key, value, str(type(value)), state)
+
+    def get_state_for_transition(self, transition):
+        """Calculate the target state of a transition
+
+        :param dictionary: The dictionary that is added to the scope variables
+
+        """
+        if not isinstance(transition, Transition):
+            raise TypeError("transition must be of type Transition")
+        #the to_state is None when the transition connects an outcome of a child state to the outcome of a parent state
+        if transition.to_state is None:
+            return self
+        else:
+            return self.states[transition.to_state]
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
