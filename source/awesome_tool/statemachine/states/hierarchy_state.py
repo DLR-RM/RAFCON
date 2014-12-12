@@ -24,13 +24,14 @@ class HierarchyState(ContainerState):
     """
 
     def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None,
-                 states={}, transitions={}, data_flows={}, start_state=None, scope_variables={}, v_checker=None):
+                 states={}, transitions={}, data_flows={}, start_state=None, scoped_variables={}, v_checker=None,
+                 path=None, filename=None):
 
         ContainerState.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, states, transitions,
-                                data_flows, start_state, scope_variables, v_checker)
+                                data_flows, start_state, scoped_variables, v_checker, path, filename)
 
     def get_start_state(self):
-        if self._sm_status._dependency_tree is None:
+        if self._sm_status.dependency_tree is None:
             return self._start_state
         else:
             #do start with state provided by the dependency tree

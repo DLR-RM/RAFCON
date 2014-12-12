@@ -38,15 +38,16 @@ class ContainerState(State, Observable):
     """
 
     def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None,
-                 states={}, transitions={}, data_flows={}, start_state=None, scope_variables={}, v_checker=None):
+                 states={}, transitions={}, data_flows={}, start_state=None, scoped_variables={}, v_checker=None,
+                 path=None, filename=None):
 
-        State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status)
+        State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename)
 
         self._states = states
         self._transitions = transitions
         self._data_flows = data_flows
         self._start_state = start_state
-        self._scope_variables = scope_variables
+        self._scoped_variables = scoped_variables
         self._scoped_results = {}
         self._v_checker = v_checker
         self._current_state = None
@@ -65,24 +66,25 @@ class ContainerState(State, Observable):
         """Called on entering the container state
 
         Here initializations of scoped variables and modules that are supposed to be used by the children take place.
-        This method calls the custom entry fucntion provided by a python script.
+        This method calls the custom entry function provided by a python script.
         """
-        #TODO: impolement
         logger.debug("Calling enter() script of container state with id %s", self._state_id)
+        self.script.load_and_build_module()
+        self.script.enter(self, self.scoped_variables)
 
     def exit(self, transition):
         """Called on exiting the container state
 
-        Clean up code for the state and its variables is executed here. This method calls the custom exit fucntion
+        Clean up code for the state and its variables is executed here. This method calls the custom exit function
         provided by a python script.
 
         :param transition: The exit transition of the state
-
         """
-        #TODO: impolement
         if not isinstance(transition, Transition):
             raise TypeError("ID must be of type Transition")
         logger.debug("Calling exit() script of container state with id %s", self._state_id)
+        self.script.load_and_build_module()
+        self.script.exit(self, self.scoped_variables)
 
     def get_transition_for_outcome(self, state, outcome):
         """Determines the next transition of a state.
@@ -163,7 +165,7 @@ class ContainerState(State, Observable):
         :param name: The name of the scoped key
 
         """
-        self._scope_variables[name] = ScopedVariable(name, value_type)
+        self._scoped_variables[name] = ScopedVariable(name, value_type)
 
     def set_start_state(self, state_id):
         """Adds a data_flow to the container state
@@ -244,21 +246,21 @@ class ContainerState(State, Observable):
         self._start_state = start_state
 
     @property
-    def scope_variables(self):
-        """Property for the _scope_variables field
+    def scoped_variables(self):
+        """Property for the _scoped_variables field
 
         """
-        return self._scope_variables
+        return self._scoped_variables
 
-    @scope_variables.setter
+    @scoped_variables.setter
     @Observable.observed
-    def scope_variables(self, scope_variables):
-        if not isinstance(scope_variables, dict):
+    def scoped_variables(self, scoped_variables):
+        if not isinstance(scoped_variables, dict):
             raise TypeError("scope_variables must be of type dict")
-        for s in scope_variables:
+        for s in scoped_variables:
             if not isinstance(s, ScopedVariable):
                 raise TypeError("element of scope must be of type ScopeVariable")
-        self._scope_variables = scope_variables
+        self._scoped_variables = scoped_variables
 
     @property
     def scoped_results(self):

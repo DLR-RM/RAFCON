@@ -10,7 +10,7 @@ if __name__ == '__main__':
     #state2 = ExecutionState()
     #state2.start()
 
-    state3 = HierarchyState()
+    state3 = HierarchyState("MyFirstHierarchyState", path="../../test_scripts", filename="test_hierarchy_module.py")
     state3.add_state(state1)
     state3.add_outcome("Container_Outcome", 6)
     state3.add_transition(state1.state_id, 5, None, 6)

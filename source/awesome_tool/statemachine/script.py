@@ -68,9 +68,15 @@ def exit(self):
     def execute(self, state, inputs={}, outputs={}):
         return self._compiled_module.execute(state, inputs, outputs)
 
+    def enter(self, state, scoped_variables={}):
+        return self._compiled_module.enter(state, scoped_variables)
+
+    def exit(self, state, scoped_variables={}):
+        return self._compiled_module.exit(state, scoped_variables)
+
     def load_and_build_module(self):
         """Builds the module given by the path and the filename
-
+                    exit()
         """
         script_path = os.path.join(self.path, self.filename)
 

@@ -8,8 +8,6 @@
 
 """
 
-import sys
-
 from statemachine.states.state import State
 from utils import log
 logger = log.get_logger(__name__)
@@ -28,24 +26,22 @@ class ExecutionState(State):
     def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None, path=None,
                  filename=None):
 
-        State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status)
-        self.script = Script(path, filename)
+        State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename)
 
     def print_state_information(self):
+        """Prints information about the state
+
+        """
         print "Name of the state: " + self.name
         print "Id of the state: " + self.state_id
 
     def _execute(self, execute_inputs, execute_outputs):
+        """Calls the custom execute function of the script.py of the state
 
+        """
         self.script.load_and_build_module()
-        self.script.execute(self, execute_inputs, execute_outputs)
-        exit()
-
-        execute_outputs["MyFirstDataOutputPort"] = 10.0
-        #TODO: implement
-        #call execute of script here
-        outcome = self._outcomes[5]
-        return outcome
+        outcome_id = self.script.execute(self, execute_inputs, execute_outputs)
+        return self.outcomes[outcome_id]
 
     def run(self, *args, **kwargs):
 
@@ -69,8 +65,6 @@ class ExecutionState(State):
 
             for key, value in self.output_data_ports.iteritems():
                 kwargs["outputs"][key] = output_data[key]
-
-
 
             return outcome
 

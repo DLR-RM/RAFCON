@@ -95,7 +95,8 @@ class State(threading.Thread, Observable):
 
     """
 
-    def __init__(self, name=None, state_id=None, input_data_ports={}, output_data_ports={}, outcomes={}, sm_status=None):
+    def __init__(self, name=None, state_id=None, input_data_ports={}, output_data_ports={}, outcomes={}, sm_status=None,
+                 path=None, filename=None):
 
         Observable.__init__(self)
         threading.Thread.__init__(self)
@@ -128,7 +129,7 @@ class State(threading.Thread, Observable):
             self._sm_status = sm_status
 
         self._state_status = None
-        self._script = None
+        self.script = Script(path, filename)
         logger.debug("State with id %s initialized" % self._state_id)
 
     def add_input_key(self, name, data_type):
@@ -170,7 +171,6 @@ class State(threading.Thread, Observable):
                 #check for classes
                 if not isinstance(input_data[key], getattr(sys.modules[__name__], value.data_type)):
                     raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
-                    exit()
 
     def check_output_data_type(self, output_data):
         """Check the output data types of the state
@@ -182,7 +182,6 @@ class State(threading.Thread, Observable):
                 #check for classes
                 if not isinstance(output_data[key], getattr(sys.modules[__name__], value.data_type)):
                     raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
-                    exit()
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
