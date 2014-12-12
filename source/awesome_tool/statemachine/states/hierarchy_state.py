@@ -23,9 +23,9 @@ class HierarchyState(ContainerState):
     The hierarchy state holds several child states, that be hierarchy states themselves
     """
 
-    def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None,
-                 states={}, transitions={}, data_flows={}, start_state=None, scoped_variables={}, v_checker=None,
-                 path=None, filename=None):
+    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None,
+                 states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
+                 v_checker=None, path=None, filename=None):
 
         ContainerState.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, states, transitions,
                                 data_flows, start_state, scoped_variables, v_checker, path, filename)
@@ -46,7 +46,7 @@ class HierarchyState(ContainerState):
                     if data_flow.to_state is state:
                         #data comes from scope variable of parent
                         if data_flow.from_state is self:
-                            result_dict[input_key] = self.scope_variables[data_flow.from_key].value
+                            result_dict[input_key] = self.scoped_variables[data_flow.from_key].value
                         else:  # data comes from result from neighbouring state
                             #primary key for scoped_results is key+state_id
                             result_dict[input_key] =\
@@ -64,7 +64,7 @@ class HierarchyState(ContainerState):
 
     def add_dict_to_scope_variables(self, dictionary):
         for key, value in dictionary.iteritems():
-            self.scope_variables[key] = ScopedVariable(key, value, None, self)
+            self.scoped_variables[key] = ScopedVariable(key, value, None, self)
 
     def add_dict_to_scoped_results(self, dictionary, state):
         for key, value in dictionary.iteritems():
@@ -88,7 +88,7 @@ class HierarchyState(ContainerState):
             raise TypeError("states must be of type dict")
         if not isinstance(output_data, dict):
             raise TypeError("states must be of type dict")
-        self.scope_variables = {}
+        self.scoped_variables = {}
         self.scoped_results = {}
 
         self.check_input_data_type(input_data)
@@ -122,10 +122,11 @@ class HierarchyState(ContainerState):
                 for data_flow_key, data_flow in self.data_flows.iteritems():
                     if data_flow.to_state is self:
                         if data_flow.from_state is self:
-                            kwargs["outputs"][output_key] = self.scope_variables[output_key].value()
+                            kwargs["outputs"][output_key] = self.scoped_variables[output_key].value()
                         else:
                             #primary key for scoped_results is key+state_id
-                            kwargs["outputs"][output_key] = self.scoped_results[output_key+data_flow.from_state.state_id].value()
+                            kwargs["outputs"][output_key] =\
+                                self.scoped_results[output_key+data_flow.from_state.state_id].value()
 
             self.check_output_data_type(output_data)
 

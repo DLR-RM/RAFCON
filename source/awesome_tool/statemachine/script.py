@@ -48,22 +48,7 @@ def exit(self):
         self._filename = filename
         self._compiled_module = None
         self._script_id = generate_script_id()
-
         self.script = Script.EMPTY_SCRIPT
-
-    def load_module(self):
-        """Loads the module given by the path and the filename
-
-        """
-        #TODO: implement
-        pass
-
-    def build_module(self):
-        """Builds the module given by the path and the filename
-
-        """
-        #TODO: implement
-        pass
 
     def execute(self, state, inputs={}, outputs={}):
         return self._compiled_module.execute(state, inputs, outputs)
@@ -75,8 +60,7 @@ def exit(self):
         return self._compiled_module.exit(state, scoped_variables)
 
     def load_and_build_module(self):
-        """Builds the module given by the path and the filename
-                    exit()
+        """Loads and builds the module given by the path and the filename
         """
         script_path = os.path.join(self.path, self.filename)
 

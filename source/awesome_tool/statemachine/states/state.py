@@ -72,7 +72,6 @@ class DataPort(Observable):
         if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
             if not getattr(sys.modules[__name__], data_type):
                 raise TypeError("" + data_type + " is not a valid python data type")
-                exit()
         self._data_type = data_type
 
 
@@ -95,8 +94,8 @@ class State(threading.Thread, Observable):
 
     """
 
-    def __init__(self, name=None, state_id=None, input_data_ports={}, output_data_ports={}, outcomes={}, sm_status=None,
-                 path=None, filename=None):
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+                 sm_status=None, path=None, filename=None):
 
         Observable.__init__(self)
         threading.Thread.__init__(self)
@@ -109,17 +108,14 @@ class State(threading.Thread, Observable):
         else:
             self._state_id = state_id
 
-        if not input_data_ports is None and not isinstance(input_data_ports, dict):
-            raise TypeError("input_keys must be of type dict")
-        self._input_data_ports = input_data_ports
+        self._input_data_ports = None
+        self.input_data_ports = input_data_ports
 
-        if not output_data_ports is None and not isinstance(output_data_ports, dict):
-            raise TypeError("output_keys must be of type dict")
-        self._output_data_ports = output_data_ports
+        self._output_data_ports = None
+        self.output_data_ports = output_data_ports
 
-        if not outcomes is None and not isinstance(outcomes, dict):
-            raise TypeError("outcomes must be of type dict")
-        self._outcomes = outcomes
+        self._outcomes = None
+        self.outcomes = outcomes
 
         self._is_start = None
         self._is_final = None
@@ -236,12 +232,15 @@ class State(threading.Thread, Observable):
     @input_data_ports.setter
     @Observable.observed
     def input_data_ports(self, input_data_ports):
-        if not isinstance(input_data_ports, dict):
-            raise TypeError("input_keys must be of type dict")
-        for key in input_data_ports:
-            if not isinstance(key, DataPort):
-                raise TypeError("element of input_keys must be of type DataPort")
-        self._input_data_ports = input_data_ports
+        if input_data_ports is None:
+            self._input_data_ports = {}
+        else:
+            if not isinstance(input_data_ports, dict):
+                raise TypeError("input_keys must be of type dict")
+            for key in input_data_ports:
+                if not isinstance(key, DataPort):
+                    raise TypeError("element of input_keys must be of type DataPort")
+            self._input_data_ports = input_data_ports
 
     @property
     def output_data_ports(self):
@@ -253,12 +252,15 @@ class State(threading.Thread, Observable):
     @output_data_ports.setter
     @Observable.observed
     def output_data_ports(self, output_data_ports):
-        if not isinstance(output_data_ports, dict):
-            raise TypeError("output_keys must be of type dict")
-        for key in output_data_ports:
-            if not isinstance(key, DataPort):
-                raise TypeError("element of output_keys must be of type DataPort")
-        self._output_data_ports = output_data_ports
+        if output_data_ports is None:
+            self._output_data_ports = {}
+        else:
+            if not isinstance(output_data_ports, dict):
+                raise TypeError("output_keys must be of type dict")
+            for key in output_data_ports:
+                if not isinstance(key, DataPort):
+                    raise TypeError("element of output_keys must be of type DataPort")
+            self._output_data_ports = output_data_ports
 
     @property
     def outcomes(self):
@@ -270,12 +272,15 @@ class State(threading.Thread, Observable):
     @outcomes.setter
     @Observable.observed
     def outcomes(self, outcomes):
-        if not isinstance(outcomes, (list, tuple)):
-            raise TypeError("outcomes must be of type dict")
-        for o in outcomes:
-            if not isinstance(o, Outcome):
-                raise TypeError("element of outcomes must be of type list or tuple")
-        self._outcomes = outcomes
+        if outcomes is None:
+            self._outcomes = {}
+        else:
+            if not isinstance(outcomes, dict):
+                raise TypeError("outcomes must be of type dict")
+            for o in outcomes:
+                if not isinstance(o, Outcome):
+                    raise TypeError("element of outcomes must be of type list or tuple")
+            self._outcomes = outcomes
 
     @property
     def is_start(self):

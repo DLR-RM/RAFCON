@@ -13,7 +13,6 @@ from utils import log
 logger = log.get_logger(__name__)
 
 from statemachine.outcome import Outcome
-from statemachine.script import Script
 
 
 class ExecutionState(State):
@@ -23,8 +22,8 @@ class ExecutionState(State):
     This kind of state does not have any child states.
     """
 
-    def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None, path=None,
-                 filename=None):
+    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None,
+                 path=None, filename=None):
 
         State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename)
 

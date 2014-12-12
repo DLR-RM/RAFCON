@@ -20,6 +20,7 @@ from statemachine.data_flow import DataFlow
 from statemachine.scope import ScopedVariable, ScopedResult
 from statemachine.id_generator import *
 from statemachine.config import *
+from statemachine.validity_check.validity_checker import ValidityChecker
 
 
 class ContainerState(State, Observable):
@@ -37,17 +38,21 @@ class ContainerState(State, Observable):
 
     """
 
-    def __init__(self, name=None, state_id=None, input_keys={}, output_keys={}, outcomes={}, sm_status=None,
-                 states={}, transitions={}, data_flows={}, start_state=None, scoped_variables={}, v_checker=None,
-                 path=None, filename=None):
+    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None,
+                 states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
+                 v_checker=None, path=None, filename=None):
 
         State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename)
 
-        self._states = states
-        self._transitions = transitions
-        self._data_flows = data_flows
+        self._states = None
+        self.states = states
+        self._transitions = None
+        self.transitions = transitions
+        self._data_flows = None
+        self.data_flows = data_flows
         self._start_state = start_state
-        self._scoped_variables = scoped_variables
+        self._scoped_variables = None
+        self.scoped_variables = scoped_variables
         self._scoped_results = {}
         self._v_checker = v_checker
         self._current_state = None
@@ -190,12 +195,15 @@ class ContainerState(State, Observable):
     @states.setter
     @Observable.observed
     def states(self, states):
-        if not isinstance(states, dict):
-            raise TypeError("states must be of type dict")
-        for s in states:
-            if not isinstance(s, State):
-                raise TypeError("element of states must be of type State")
-        self._states = states
+        if states is None:
+            self._states = {}
+        else:
+            if not isinstance(states, dict):
+                raise TypeError("states must be of type dict")
+            for s in states:
+                if not isinstance(s, State):
+                    raise TypeError("element of states must be of type State")
+            self._states = states
 
     @property
     def transitions(self):
@@ -207,12 +215,15 @@ class ContainerState(State, Observable):
     @transitions.setter
     @Observable.observed
     def transitions(self, transitions):
-        if not isinstance(transitions, dict):
-            raise TypeError("transitions must be of type dict")
-        for t in transitions:
-            if not isinstance(t, Transition):
-                raise TypeError("element of transitions must be of type Transition")
-        self._transitions = transitions
+        if transitions is None:
+            self._transitions = {}
+        else:
+            if not isinstance(transitions, dict):
+                raise TypeError("transitions must be of type dict")
+            for t in transitions:
+                if not isinstance(t, Transition):
+                    raise TypeError("element of transitions must be of type Transition")
+            self._transitions = transitions
 
     @property
     def data_flows(self):
@@ -224,12 +235,15 @@ class ContainerState(State, Observable):
     @data_flows.setter
     @Observable.observed
     def data_flows(self, data_flows):
-        if not isinstance(data_flows, dict):
-            raise TypeError("data_flows must be of type dict")
-        for df in data_flows:
-            if not isinstance(df, DataFlow):
-                raise TypeError("element of data_flows must be of type DataFlow")
-        self._data_flows = data_flows
+        if data_flows is None:
+            self._data_flows = {}
+        else:
+            if not isinstance(data_flows, dict):
+                raise TypeError("data_flows must be of type dict")
+            for df in data_flows:
+                if not isinstance(df, DataFlow):
+                    raise TypeError("element of data_flows must be of type DataFlow")
+            self._data_flows = data_flows
 
     @property
     def start_state(self):
@@ -255,12 +269,15 @@ class ContainerState(State, Observable):
     @scoped_variables.setter
     @Observable.observed
     def scoped_variables(self, scoped_variables):
-        if not isinstance(scoped_variables, dict):
-            raise TypeError("scope_variables must be of type dict")
-        for s in scoped_variables:
-            if not isinstance(s, ScopedVariable):
-                raise TypeError("element of scope must be of type ScopeVariable")
-        self._scoped_variables = scoped_variables
+        if scoped_variables is None:
+            self._scoped_variables = {}
+        else:
+            if not isinstance(scoped_variables, dict):
+                raise TypeError("scope_variables must be of type dict")
+            for s in scoped_variables:
+                if not isinstance(s, ScopedVariable):
+                    raise TypeError("element of scope must be of type ScopeVariable")
+            self._scoped_variables = scoped_variables
 
     @property
     def scoped_results(self):
@@ -303,6 +320,6 @@ class ContainerState(State, Observable):
     @v_checker.setter
     @Observable.observed
     def v_checker(self, v_checker):
-        if not isinstance(v_checker, validity_check.validity_checker.ValidityChecker):
+        if not isinstance(v_checker, ValidityChecker):
             raise TypeError("validity_check must be of type ValidityChecker")
         self._v_checker = v_checker
