@@ -50,14 +50,14 @@ def exit(self):
         self._script_id = generate_script_id()
         self.script = Script.EMPTY_SCRIPT
 
-    def execute(self, state, inputs={}, outputs={}):
-        return self._compiled_module.execute(state, inputs, outputs)
+    def execute(self, state, inputs={}, outputs={}, external_modules={}):
+        return self._compiled_module.execute(state, inputs, outputs, external_modules)
 
-    def enter(self, state, scoped_variables={}):
-        return self._compiled_module.enter(state, scoped_variables)
+    def enter(self, state, scoped_variables={}, external_modules={}):
+        return self._compiled_module.enter(state, scoped_variables, external_modules)
 
-    def exit(self, state, scoped_variables={}):
-        return self._compiled_module.exit(state, scoped_variables)
+    def exit(self, state, scoped_variables={}, external_modules={}):
+        return self._compiled_module.exit(state, scoped_variables, external_modules)
 
     def load_and_build_module(self):
         """Loads and builds the module given by the path and the filename
@@ -80,7 +80,7 @@ def exit(self):
 
         sys.modules[module_name] = tmp_module
 
-        # maybe subsitute some variables in the script
+        # maybe substitute some variables in the script
 
         code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
 

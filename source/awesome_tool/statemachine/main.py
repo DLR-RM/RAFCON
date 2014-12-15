@@ -5,6 +5,10 @@ from states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
+from state_machine_manager import StateMachineManager
+from external_modules.external_module import ExternalModule
+import singleton
+
 
 def concurrency_barrier_test():
     state1 = ExecutionState("FirstState", path="../../test_scripts", filename="concurrence_barrier1.py")
@@ -30,6 +34,7 @@ def concurrency_barrier_test():
     state3.output_data = output_data
     state3.start()
     state3.join()
+
 
 def concurrency_preemption_test():
     state1 = ExecutionState("FirstState", path="../../test_scripts", filename="concurrence_preemption1.py")
@@ -79,8 +84,46 @@ def hierarchy_test():
     state3.join()
     #print "joined thread"
 
+
+def state_machine_manager_test():
+    state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
+    state1.add_outcome("MyFirstOutcome", 3)
+    state1.add_input_key("MyFirstDataInputPort", "str")
+    state1.add_output_key("MyFirstDataOutputPort", "float")
+
+    input_data = {"MyFirstDataInputPort": "input_string"}
+    output_data = {"MyFirstDataOutputPort": None}
+    state1.input_data = input_data
+    state1.output_data = output_data
+
+    sm = StateMachineManager(state1)
+    sm.start()
+
+
+def external_modules_test():
+    state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="external_module_test_state.py")
+    state1.add_outcome("MyFirstOutcome", 3)
+    state1.add_input_key("MyFirstDataInputPort", "str")
+    state1.add_output_key("MyFirstDataOutputPort", "float")
+
+    input_data = {"MyFirstDataInputPort": "input_string"}
+    output_data = {"MyFirstDataOutputPort": None}
+    state1.input_data = input_data
+    state1.output_data = output_data
+
+    em = ExternalModule(name="em1", module_name="external_module_test", class_name="TestModule")
+    singleton.external_module_manager.add_external_module(em)
+    singleton.external_module_manager.external_modules["em1"].connect([])
+    singleton.external_module_manager.external_modules["em1"].start()
+
+    sm = StateMachineManager(state1)
+    sm.start()
+
+
 if __name__ == '__main__':
 
     #hierarchy_test()
     #concurrency_test()
-    concurrency_preemption_test()
+    #concurrency_preemption_test()
+    #state_machine_manager_test()
+    external_modules_test()

@@ -87,9 +87,15 @@ class State(threading.Thread, Observable):
     :ivar _outcomes: holds the state outcomes, which are the connection points for transitions
     :ivar _is_start: indicates if this state is a start state of a hierarchy
     :ivar _is_final: indicates if this state is a end state of a hierarchy
-    :ivar _sm_status: reference to the status of the statemachine
+    :ivar _sm_status: reference to the status of the state machine
     :ivar _state_status: holds the status of the state
     :ivar _script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
+    :ivar _input_data: the input data of the state
+    :ivar _output_data: the output data of the state
+    :ivar _preempted: a flag to show if the state was preempted from outside
+    :ivar _concurrency_queue: a queue to signal a preemptive concurrency state, that the execution of the state
+                                finished
+    :ivar _final_outcome: the final outcome of a state, when it finished execution
 
     """
 
@@ -129,7 +135,6 @@ class State(threading.Thread, Observable):
         self._output_data = {}
         self._preempted = False
         self._concurrency_queue = None
-        self._concurrency_queue_id = None
         self._final_outcome = None
 
         logger.debug("State with id %s initialized" % self._state_id)
@@ -419,20 +424,6 @@ class State(threading.Thread, Observable):
                 #concurrency_queue is None
                 pass
         self._concurrency_queue = concurrency_queue
-
-    @property
-    def concurrency_queue_id(self):
-        """Property for the _concurrency_queue_id field
-
-        """
-        return self._concurrency_queue_id
-
-    @concurrency_queue_id .setter
-    @Observable.observed
-    def concurrency_queue_id(self, concurrency_queue_id):
-        if not isinstance(concurrency_queue_id, int):
-            raise TypeError("concurrency_queue_id must be of type int")
-        self._concurrency_queue_id   = concurrency_queue_id
 
     @property
     def final_outcome(self):

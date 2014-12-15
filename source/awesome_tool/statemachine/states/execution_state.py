@@ -11,8 +11,9 @@
 from statemachine.states.state import State
 from utils import log
 logger = log.get_logger(__name__)
-
 from statemachine.outcome import Outcome
+import singleton
+
 
 
 class ExecutionState(State):
@@ -31,15 +32,17 @@ class ExecutionState(State):
         """Prints information about the state
 
         """
-        print "Name of the state: " + self.name
+        print "---  \nState information of state: %s" % self.name
         print "Id of the state: " + self.state_id
+        print "---"
 
     def _execute(self, execute_inputs, execute_outputs):
         """Calls the custom execute function of the script.py of the state
 
         """
         self.script.load_and_build_module()
-        outcome_id = self.script.execute(self, execute_inputs, execute_outputs)
+        outcome_id = self.script.execute(self, execute_inputs, execute_outputs,
+                                         singleton.external_module_manager.external_modules)
         return self.outcomes[outcome_id]
 
     def run(self):
