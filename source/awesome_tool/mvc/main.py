@@ -5,7 +5,7 @@ import logging
 from utils import log
 from models import StateModel, ContainerStateModel
 from controllers import StatePropertiesController, ContainerStateController
-from views import StatePropertiesView, ContainerStateView
+from views import StatePropertiesView, ContainerStateView, GraphicalEditorView
 from views.transition_list import TransitionListView
 from statemachine.states.state import State
 from statemachine.states.container_state import ContainerState
@@ -55,10 +55,10 @@ def main(*args, **kargs):
     trans2 = Transition(state2.state_id, 1, state3.state_id, 3)
     data_flow1 = DataFlow(state1.state_id, "success", state2.state_id, None)
     data_flow2 = DataFlow(state2.state_id, "success", state3.state_id, None)
-    ctr_state = ContainerState(states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,
-                                                                                                          data_flow2])
-    ctr_state.name = "Container"
-    ctr_model = ContainerStateModel(ctr_state)
+    #ctr_state = ContainerState(states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,
+    #                                                                                                      data_flow2])
+    #ctr_state.name = "Container"
+    #ctr_model = ContainerStateModel(ctr_state)
     # prop_view2 = StatePropertiesView()
     # prop_ctrl2 = StatePropertiesController(prop_model2, prop_view2)
     #
@@ -66,11 +66,12 @@ def main(*args, **kargs):
     # my_state2.name = "ContainerState"
     # logger.debug("changed attribute")
 
-    ctr_view = ContainerStateView()
-    # for i in iter(ctr_view):
-    #     print i
-    ContainerStateController(ctr_model, ctr_view)
-    #TransitionListView()
+    #ctr_view = ContainerStateView()
+
+    #ContainerStateController(ctr_model, ctr_view)
+
+    GraphicalEditorView()
+
     gtk.main()
     logger.debug("after gtk main")
 
