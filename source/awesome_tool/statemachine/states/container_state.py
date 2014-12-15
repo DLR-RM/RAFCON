@@ -120,6 +120,14 @@ class ContainerState(State, Observable):
         self._states[state_id] = state
         return state_id
 
+    def remove_state(self, state_id):
+        """Remove a state from the container state.
+
+        :param state_id: the id of the state to remove
+
+        """
+        self._states.pop(state_id, None)
+
     def add_state(self, state):
         """Adds a state to the container state.
 
@@ -127,7 +135,6 @@ class ContainerState(State, Observable):
 
         """
         self._states[state.state_id] = state
-        return
 
     #Primary key is transition_id.
     def add_transition(self, from_state, from_outcome, to_state, to_outcome):
@@ -144,6 +151,14 @@ class ContainerState(State, Observable):
         self._transitions[transition_id] = Transition(from_state, from_outcome, to_state, to_outcome)
         return transition_id
 
+    def remove_transition(self, transition_id):
+        """Removes a transition from the container state
+
+        :param transition_id: the id of the transition to remove
+
+        """
+        self._transitions.pop(transition_id, None)
+
     #Primary key is data_flow_id.
     def add_data_flow(self, from_state, from_key, to_state, to_key):
         """Adds a data_flow to the container state
@@ -158,6 +173,14 @@ class ContainerState(State, Observable):
         self.data_flows[data_flow_id] = DataFlow(from_state, from_key, to_state, to_key)
         return data_flow_id
 
+    def remove_data_flow(self, data_flow_id):
+        """ Removes a data flow from the container state
+
+        :param data_flow_id: the id of the data_flow to remove
+
+        """
+        self.data_flows.pop(data_flow_id, None)
+
     #Primary key is the name of scoped_key.
     def add_scoped_key(self, name, value_type):
         """Adds a data_flow to the container state
@@ -166,6 +189,13 @@ class ContainerState(State, Observable):
 
         """
         self._scoped_variables[name] = ScopedVariable(name, value_type)
+
+    def remove_scoped_key(self, name):
+        """Remove a scoped key from the container state
+
+        :param name: the name of the scoped key to remove
+
+        """
 
     def set_start_state(self, state):
         """Adds a data_flow to the container state
@@ -238,7 +268,7 @@ class ContainerState(State, Observable):
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
 
-        :param dictionary: The dictionary that is added to the scope variables
+        :param transition: The transition of which the target state is determined
 
         """
         if not isinstance(transition, Transition):

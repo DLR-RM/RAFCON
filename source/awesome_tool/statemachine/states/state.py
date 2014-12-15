@@ -142,17 +142,42 @@ class State(threading.Thread, Observable):
     def add_input_key(self, name, data_type):
         """Add a new input data port to the state
 
+        :param name: the name of the new input data port
+        :param data_type: the type of the new input data port
+
         """
         self._input_data_ports[name] = DataPort(name, data_type)
+
+    def remove_input_key(self, name):
+        """Remove an input data port from the state
+
+        :param name: the name or the output data port to remove
+
+        """
+        self._input_data_ports.pop(name, None)
 
     def add_output_key(self, name, data_type):
         """Add a new output data port to the state
 
+        :param name: the name of the new output data port
+        :param data_type: the type of the new output data port
+
         """
         self._output_data_ports[name] = DataPort(name, data_type)
 
+    def remove_output_key(self, name):
+        """Remove an output data port from the state
+
+        :param name: the name of the output data port to remove
+
+        """
+        self._output_data_ports.pop(name, None)
+
     def add_outcome(self, name, outcome_id=None):
         """Add a new outcome to the state
+
+        :param name: the name of the outcome to add
+        :param outcome_id: the optional outcome_id of the new outcome
 
         """
         if outcome_id is None:
@@ -160,6 +185,14 @@ class State(threading.Thread, Observable):
         outcome = Outcome(outcome_id, name)
         self._outcomes[outcome_id] = outcome
         return outcome_id
+
+    def remove_outcome(self, outcome_id):
+        """Remove an outcome from the state
+
+        :param outcome_id: the id of the outcome to remove
+
+        """
+        self._outcomes.pop(outcome_id, None)
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
