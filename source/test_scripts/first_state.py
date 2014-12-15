@@ -4,4 +4,4 @@ def execute(self, inputs, outputs):
     print outputs
     outputs["MyFirstDataOutputPort"] = 10.0
     self.print_state_information()
-    return 5
+    return 3

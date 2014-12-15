@@ -62,7 +62,7 @@ class ExecutionState(State):
             self.check_output_data_type(output_data)
 
             if self.concurrency_queue:
-                self.concurrency_queue.put(self.queue_id)
+                self.concurrency_queue.put(self.state_id)
 
             self.final_outcome = outcome
             return

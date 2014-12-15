@@ -167,14 +167,13 @@ class ContainerState(State, Observable):
         """
         self._scoped_variables[name] = ScopedVariable(name, value_type)
 
-    def set_start_state(self, state_id):
+    def set_start_state(self, state):
         """Adds a data_flow to the container state
 
-        :param state_id: The state_id of the state (that was already added to the container)
-                        that will be the start state
+        :param state: The state (that was already added to the container) that will be the start state
 
         """
-        self._start_state = self._states[state_id]
+        self._start_state = state
 
     def get_start_state(self):
         """Get the start state of the container state

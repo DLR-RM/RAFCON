@@ -45,11 +45,15 @@ class BarrierConcurrencyState(ConcurrencyState):
             self.enter()
 
             #start all threads
-            for state in self.states:
+            for key, state in self.states.iteritems():
+                state_input = self.get_inputs_for_state(state)
+                state_output = self.get_outputs_for_state(state)
+                state.input_data = state_input
+                state.output_data = state_output
                 state.start()
 
             #wait for all threads
-            for state in self.states:
+            for key, state in self.states.iteritems():
                 state.join()
 
             #write output data back to the dictionary
@@ -64,6 +68,8 @@ class BarrierConcurrencyState(ConcurrencyState):
                                 self.scoped_results[output_key+data_flow.from_state.state_id].value()
 
             self.check_output_data_type(output_data)
+
+            self.exit()
 
             if self.preempted:
                 self.final_outcome = Outcome(2, "preempted")

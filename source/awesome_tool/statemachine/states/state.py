@@ -280,6 +280,8 @@ class State(threading.Thread, Observable):
     def outcomes(self, outcomes):
         if outcomes is None:
             self._outcomes = {}
+            self.add_outcome("aborted", 1)
+            self.add_outcome("preempted", 2)
         else:
             if not isinstance(outcomes, dict):
                 raise TypeError("outcomes must be of type dict")
@@ -410,9 +412,12 @@ class State(threading.Thread, Observable):
     @concurrency_queue.setter
     @Observable.observed
     def concurrency_queue(self, concurrency_queue):
-        if not isinstance(concurrency_queue, Queue):
-            if concurrency_queue is None:
+        if not isinstance(concurrency_queue, Queue.Queue):
+            if not concurrency_queue is None:
                 raise TypeError("concurrency_queue must be of type Queue or None")
+            else:
+                #concurrency_queue is None
+                pass
         self._concurrency_queue = concurrency_queue
 
     @property

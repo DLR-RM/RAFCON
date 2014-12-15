@@ -46,22 +46,27 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             self.enter()
 
             #infinite Queue size
-            concurrency_queue = Queue(maxsize=0)
+            concurrency_queue = Queue.Queue(maxsize=0)
 
             queue_ids = 0
-            for state in self.states:
+            for key, state in self.states.iteritems():
                 state.concurrency_queue = concurrency_queue
                 state.concurrency_queue_id = queue_ids
                 queue_ids +=1
+
+                state_input = self.get_inputs_for_state(state)
+                state_output = self.get_outputs_for_state(state)
+                state.input_data = state_input
+                state.output_data = state_output
                 state.start()
 
             finished_thread_id = concurrency_queue.get()
             self.states[finished_thread_id].join()
 
-            for state in self.states:
+            for key, state in self.states.iteritems():
                 state.preempted = True
 
-            for state in self.states:
+            for key, state in self.states.iteritems():
                 state.join()
 
             #write output data back to the dictionary
@@ -78,9 +83,11 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             self.check_output_data_type(output_data)
 
             #reset concurrency queue and preempted flag for all child states
-            for state in self.states:
+            for key, state in self.states.iteritems():
                 state.concurrency_queue = None
                 state.preempted = False
+
+            self.exit()
 
             if self.preempted:
                 self.final_outcome = Outcome(2, "preempted")
