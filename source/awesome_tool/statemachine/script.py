@@ -15,6 +15,7 @@ import sys
 from gtkmvc import Observable
 
 from statemachine.id_generator import *
+import statemachine.singleton
 
 
 class Script(Observable):
@@ -37,6 +38,8 @@ def execute(self):
     return 0
 
 def exit(self):
+def exit(self):
+def exit(self):
     pass
 """
 
@@ -50,14 +53,20 @@ def exit(self):
         self._script_id = generate_script_id()
         self.script = Script.EMPTY_SCRIPT
 
-    def execute(self, state, inputs={}, outputs={}, external_modules={}):
-        return self._compiled_module.execute(state, inputs, outputs, external_modules)
+    def execute(self, state, inputs={}, outputs={}):
+        return self._compiled_module.execute(state, inputs, outputs,
+                                             statemachine.singleton.external_module_manager.external_modules,
+                                             statemachine.singleton.global_variable_manager)
 
-    def enter(self, state, scoped_variables={}, external_modules={}):
-        return self._compiled_module.enter(state, scoped_variables, external_modules)
+    def enter(self, state, scoped_variables={}):
+        return self._compiled_module.enter(state, scoped_variables,
+                                           statemachine.singleton.external_module_manager.external_modules,
+                                           statemachine.singleton.global_variable_manager)
 
-    def exit(self, state, scoped_variables={}, external_modules={}):
-        return self._compiled_module.exit(state, scoped_variables, external_modules)
+    def exit(self, state, scoped_variables={}):
+        return self._compiled_module.exit(state, scoped_variables,
+                                          statemachine.singleton.external_module_manager.external_modules,
+                                          statemachine.singleton.global_variable_manager)
 
     def load_and_build_module(self):
         """Loads and builds the module given by the path and the filename

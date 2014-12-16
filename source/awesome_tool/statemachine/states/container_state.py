@@ -20,7 +20,6 @@ from statemachine.scope import ScopedVariable, ScopedResult
 from statemachine.id_generator import *
 from statemachine.config import *
 from statemachine.validity_check.validity_checker import ValidityChecker
-from statemachine.singleton import *
 
 
 class ContainerState(State, Observable):
@@ -74,7 +73,7 @@ class ContainerState(State, Observable):
         """
         logger.debug("Calling enter() script of container state with id %s", self._state_id)
         self.script.load_and_build_module()
-        self.script.enter(self, self.scoped_variables, external_module_manager.external_modules)
+        self.script.enter(self, self.scoped_variables)
 
     def exit(self):
         """Called on exiting the container state
@@ -84,7 +83,7 @@ class ContainerState(State, Observable):
         """
         logger.debug("Calling exit() script of container state with id %s", self._state_id)
         self.script.load_and_build_module()
-        self.script.exit(self, self.scoped_variables, external_module_manager.external_modules)
+        self.script.exit(self, self.scoped_variables)
 
     def get_transition_for_outcome(self, state, outcome):
         """Determines the next transition of a state.

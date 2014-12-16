@@ -1,6 +1,6 @@
 import time
 
-def execute(self, inputs, outputs):
+def execute(self, inputs, outputs, external_modules, gvm):
     print "concurrence_barrier1: Hello world"
     print inputs
     print outputs

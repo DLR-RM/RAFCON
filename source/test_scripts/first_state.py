@@ -1,4 +1,4 @@
-def execute(self, inputs, outputs, external_modules):
+def execute(self, inputs, outputs, external_modules, gvm):
     print "Hello world: Execute"
     print inputs
     print outputs

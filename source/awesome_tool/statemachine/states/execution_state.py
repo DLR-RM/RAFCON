@@ -12,8 +12,6 @@ from statemachine.states.state import State
 from utils import log
 logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome
-import singleton
-
 
 
 class ExecutionState(State):
@@ -41,8 +39,7 @@ class ExecutionState(State):
 
         """
         self.script.load_and_build_module()
-        outcome_id = self.script.execute(self, execute_inputs, execute_outputs,
-                                         singleton.external_module_manager.external_modules)
+        outcome_id = self.script.execute(self, execute_inputs, execute_outputs)
         return self.outcomes[outcome_id]
 
     def run(self):

@@ -59,3 +59,6 @@ def state_id_generator(size=6, chars=string.ascii_uppercase + string.digits):
         new_state_id = ''.join(random.choice(chars) for x in range(size))
     used_state_ids.append(new_state_id)
     return new_state_id
+
+def global_variable_id_generator(size=10, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for x in range(size))

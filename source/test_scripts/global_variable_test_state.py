@@ -4,5 +4,5 @@ def execute(self, inputs, outputs, external_modules, gvm):
     print outputs
     outputs["MyFirstDataOutputPort"] = 10.0
     self.print_state_information()
-    external_modules["em1"].instance.custom_function()
+    print "This is the value of the varX global variable: " + str(gvm.get_variable("varX"))
     return 3
