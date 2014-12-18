@@ -11,6 +11,7 @@ from OpenGL.GLU import *
 OpenGL.FULL_LOGGING = True
 # Also in productive code, set the previous statement to false and activate the next one
 # OpenGL.ERROR_LOGGING = False
+from OpenGL.GLUT import *
 
 import gtk
 import gtk.gtkgl
@@ -61,6 +62,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Set OpenGL-capability to the drawing area
         self.set_gl_capability(glconfig)
+
+        glutInit([])
 
         # Connect the relevant signals.
         self.connect_after('realize',   self._realize)
@@ -154,3 +157,22 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glColor3f(0.9, 0.9, 0.9)
 
         glRectf(0, 0, width, height)
+
+        self._write_string(name, 10, height - 10, 20)
+
+
+    def _write_string(self, string, pos_x, pos_y, height):
+        glColor3f(0, 0.5, 0.5)
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        pos_y = pos_y - height
+        glTranslatef(pos_x, pos_y, 0)
+        font_height = 119.5  # According to https://www.opengl.org/resources/libraries/glut/spec3/node78.html
+        scale_factor = height / font_height
+        glScalef(scale_factor, scale_factor, scale_factor)
+        for c in string:
+            #glTranslatef(0, 0, 0)
+            glutStrokeCharacter(GLUT_STROKE_ROMAN, ord(c))
+            width = glutStrokeWidth(GLUT_STROKE_ROMAN, ord(c))
+
+        glPopMatrix()
