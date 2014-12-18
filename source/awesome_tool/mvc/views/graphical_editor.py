@@ -63,28 +63,31 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.set_gl_capability(glconfig)
 
         # Connect the relevant signals.
-        self.connect_after('realize',   self._on_realize)
-        self.connect('configure_event', self._on_configure_event)
-        self.connect('expose_event',    self._on_expose_event)
+        self.connect_after('realize',   self._realize)
+        self.connect('configure_event', self._configure)
+        #self.connect('expose_event',    self.expose)
 
-    def _on_realize(self, *args):
-        # Obtain a reference to the OpenGL drawable
-        # and rendering context.
-        # gldrawable = self.get_gl_drawable()
-        # glcontext = self.get_gl_context()
 
-        glClearColor(0, 1, 0, 0.5)
-
-        logger.debug("realize")
-
-    def _on_configure_event(self, *args):
+    def _realize(self, *args):
         # Obtain a reference to the OpenGL drawable
         # and rendering context.
         gldrawable = self.get_gl_drawable()
         glcontext = self.get_gl_context()
 
-        logger.debug("configure")
+        glClearColor(33./255, 49./255, 92./255, 1)
+        #glClearColor(0, 1, 0, 1)
 
+        logger.debug("realize")
+
+        #self.configure()
+
+    def _configure(self, *args):
+        # Obtain a reference to the OpenGL drawable
+        # and rendering context.
+        gldrawable = self.get_gl_drawable()
+        glcontext = self.get_gl_context()
+        #glClearColor(0, 1, 0, 1)
+        logger.debug("configure")
         # OpenGL begin
         if not gldrawable.gl_begin(glcontext):
             return False
@@ -94,7 +97,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         aspect = self.allocation.width/float(self.allocation.height)
-        print aspect
+
         if self.allocation.width <= self.allocation.height:
             glOrtho(-100, 100, -100/aspect, 100/aspect, 1, -1)
         else:
@@ -108,7 +111,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return False
 
-    def _on_expose_event(self, *args):
+    def expose_init(self, *args):
         # Obtain a reference to the OpenGL drawable
         # and rendering context.
         gldrawable = self.get_gl_drawable()
@@ -118,12 +121,21 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         if not gldrawable.gl_begin(glcontext):
             return False
 
-        logger.debug("expose")
+        logger.debug("expose_init")
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        glColor4f(1, 0, 0, 0.5)
-        glRectf(-25, 25, 25, -25)
+        #glColor4f(1, 0, 0, 0.5)
+        #glRectf(-25, 25, 25, -25)
+
+
+        return False
+
+    def expose_finish(self, *args):
+        # Obtain a reference to the OpenGL drawable
+        # and rendering context.
+        gldrawable = self.get_gl_drawable()
+        glcontext = self.get_gl_context()
 
         if gldrawable.is_double_buffered():
             gldrawable.swap_buffers()
@@ -133,4 +145,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # OpenGL end
         gldrawable.gl_end()
 
-        return False
+        logger.debug("expose_finish")
+
+    def draw_container(self, name, width, height, activated=False):
+        if activated:
+            glColor3f(1, 1, 1)
+        else:
+            glColor3f(0.9, 0.9, 0.9)
+
+        glRectf(0, 0, width, height)
