@@ -25,7 +25,9 @@ class GraphicalEditorController(Controller):
         """
         Controller.__init__(self, model, view)
 
-        view.editor.connect('expose_event',    self._on_expose_event)
+        view.editor.connect('expose_event', self._on_expose_event)
+        view.editor.connect('button-press-event', self._on_mouse_press)
+        view.editor.connect('button-release-event', self._on_mouse_release)
 
 
     def register_view(self, view):
@@ -37,13 +39,28 @@ class GraphicalEditorController(Controller):
         """Adapters should be registered in this method call
         """
 
-
     def _on_expose_event(self, *args):
+        box1 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
         self.view.editor.expose_init(args)
-
         self.draw_state(self.model)
-
         self.view.editor.expose_finish(args)
+        box2 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
+
+        # Calculate viewport offset from desired one
+        # If too big, configure and redraw
+        diff = sum(map(lambda i1, i2: abs(i1 - i2), box1, box2))
+        if diff > 5:
+            self.view.editor.emit("configure_event", None)
+            self.view.editor.emit("expose_event", None)
+
+
+    def _on_mouse_press(self, widget, event):
+        if event.button == 1:
+            print 'press', event
+            selection = self._find_selection(event.x, event.y)
+
+    def _on_mouse_release(self, widget, event):
+        print 'release', event
 
     def draw_state(self, state, pos_x=0, pos_y=0, width=100, height=100, depth=1):
         assert isinstance(state, StateModel)
@@ -64,16 +81,23 @@ class GraphicalEditorController(Controller):
         pos_x = state.meta['gui']['editor']['pos_x']
         pos_y = state.meta['gui']['editor']['pos_y']
 
-        self.view.editor.draw_container(state.state.name, pos_x, pos_y, width, height)
+        id = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height)
+        state.meta['gui']['editor']['id'] = id
+
+        if depth == 1:
+            margin = min(width, height) / 10.0
+            self.view.editor.left = pos_x - margin
+            self.view.editor.right = pos_x + width + margin
+            self.view.editor.bottom = pos_y - margin
+            self.view.editor.top = pos_x + height + margin
 
         if isinstance(state, ContainerStateModel) and depth < self.max_depth:
             # iterate over child states, transitions and data flows
 
             state_ctr = 0
             margin = width / float(25)
-            print "Depth", depth, "Num childen = ", len(state.states), "ID", state.state.state_id
-            for state in state.states:
-                print "Child", state
+
+            for child_state in state.states:
                 state_ctr += 1
 
                 child_width = width / float(5)
@@ -82,23 +106,66 @@ class GraphicalEditorController(Controller):
                 child_pos_x = pos_x + state_ctr * margin
                 child_pos_y = pos_y + height - child_height - state_ctr * margin
 
-                self.draw_state(state, child_pos_x, child_pos_y, child_width, child_height, depth + 1)
-                # if not state.meta['gui']['editor']['width']:
-                #     state.meta['gui']['editor']['width'] =
-                # if not state.meta['gui']['editor']['height']:
-                #     state.meta['gui']['editor']['height'] = container_height / float(5)
-                #
-                # width = state.meta['gui']['editor']['width']
-                # height = state.meta['gui']['editor']['height']
-                #
-                # if not state.meta['gui']['editor']['pos_x'] or not state.meta['gui']['editor']['pos_y']:
-                #     state_ctr += 1
-                #
-                #     state.meta['gui']['editor']['pos_x'] = container_pos_x + state_ctr * margin
-                #     state.meta['gui']['editor']['pos_y'] = container_pos_y + container_height - height - \
-                #                                            state_ctr * margin
-                #
-                # pos_x = state.meta['gui']['editor']['pos_x']
-                # pos_y = state.meta['gui']['editor']['pos_y']
-                # print 'pos_x', pos_x, 'pos y', pos_y, 'height', height, 'width', width
-                # self.view.editor.draw_container(state.state.name, pos_x, pos_y, width, height, True)
+                self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height, depth + 1)
+
+            for transition in state.transitions:
+                pass
+
+            for data_flow in state.data_flows:
+                pass
+
+    def _find_selection(self, pos_x, pos_y):
+        # e.g. sets render mode to GL_SELECT
+        self.view.editor.prepare_selection(pos_x, pos_y)
+        # draw again
+        self.view.editor.expose_init()
+        self.draw_state(self.model)
+        self.view.editor.expose_finish()
+        # get result
+        hits = self.view.editor.find_selection()
+
+        # extract ids
+        selected_ids = map(lambda hit: hit[2][1], hits)
+
+        states = []
+        transitions = []
+        data_flows = []
+        self._selection_ids_to_models(selected_ids, self.model, states, transitions, data_flows)
+
+        print states
+        print transitions
+        print data_flows
+
+    def _selection_ids_to_models(self, ids, search_state, sel_states, sel_transitions, sel_data_flows):
+        # Check whether the id of teh current state matches an id in the selected ids
+        if search_state.meta['gui']['editor']['id'] and search_state.meta['gui']['editor']['id'] in ids:
+            # if so, add the state to the list of selected states
+            sel_states.append(search_state)
+            # remove the id from the list to fasten up further searches
+            ids.remove(search_state.meta['gui']['editor']['id'])
+
+        # Return if there is nothing more to find
+        if len(ids) == 0:
+            return
+
+        # If it is a container state, check its transitions, data flows and child states
+        if isinstance(search_state, ContainerStateModel):
+
+            for state in search_state.states:
+                self._selection_ids_to_models(ids, state, sel_states, sel_transitions, sel_data_flows)
+
+            if len(ids) == 0:
+                return
+
+            for transition in search_state.transitions:
+                if transition.meta['gui']['editor']['id'] and transition.meta['gui']['editor']['id'] in ids:
+                    sel_transitions.append(transition)
+                    ids.remove(transition.meta['gui']['editor']['id'])
+
+            if len(ids) == 0:
+                return
+
+            for data_flow in search_state.data_flows:
+                if data_flow.meta['gui']['editor']['id'] and data_flow.meta['gui']['editor']['id'] in ids:
+                    sel_data_flows.append(data_flow)
+                    ids.remove(data_flow.meta['gui']['editor']['id'])
