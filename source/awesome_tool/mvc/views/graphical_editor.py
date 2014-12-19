@@ -171,9 +171,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         logger.debug("expose_finish")
 
-    def draw_state(self, name, pos_x, pos_y, width, height, activated=False):
-        if activated:
-            glColor4f(random(), random(), 1, 0.8)
+    def draw_state(self, name, pos_x, pos_y, width, height, active=False):
+        if active:
+            glColor4f(0.7, 0, 0, 0.8)
         else:
             glColor4f(random(), 0.9, 0.9, 0.8)
 

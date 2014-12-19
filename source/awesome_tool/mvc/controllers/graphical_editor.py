@@ -25,6 +25,8 @@ class GraphicalEditorController(Controller):
         """
         Controller.__init__(self, model, view)
 
+        self.selection = None
+
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
@@ -50,14 +52,24 @@ class GraphicalEditorController(Controller):
         # If too big, configure and redraw
         diff = sum(map(lambda i1, i2: abs(i1 - i2), box1, box2))
         if diff > 5:
-            self.view.editor.emit("configure_event", None)
-            self.view.editor.emit("expose_event", None)
+            self.redraw()
+
+    def redraw(self):
+        self.view.editor.emit("configure_event", None)
+        self.view.editor.emit("expose_event", None)
 
 
     def _on_mouse_press(self, widget, event):
         if event.button == 1:
             print 'press', event
-            selection = self._find_selection(event.x, event.y)
+            new_selection = self._find_selection(event.x, event.y)
+            if new_selection != self.selection:
+                if self.selection != None:
+                    self.selection.meta['gui']['selected'] = False
+                self.selection = new_selection
+                if self.selection != None:
+                    self.selection.meta['gui']['selected'] = True
+                self.redraw()
 
     def _on_mouse_release(self, widget, event):
         print 'release', event
@@ -81,7 +93,9 @@ class GraphicalEditorController(Controller):
         pos_x = state.meta['gui']['editor']['pos_x']
         pos_y = state.meta['gui']['editor']['pos_y']
 
-        id = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height)
+        active = state.meta['gui']['selected']
+
+        id = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height, active)
         state.meta['gui']['editor']['id'] = id
 
         if depth == 1:
@@ -126,46 +140,48 @@ class GraphicalEditorController(Controller):
 
         # extract ids
         selected_ids = map(lambda hit: hit[2][1], hits)
+        print selected_ids
+        (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0)
+        print selection, selection_depth
+        return selection
 
-        states = []
-        transitions = []
-        data_flows = []
-        self._selection_ids_to_models(selected_ids, self.model, states, transitions, data_flows)
-
-        print states
-        print transitions
-        print data_flows
-
-    def _selection_ids_to_models(self, ids, search_state, sel_states, sel_transitions, sel_data_flows):
-        # Check whether the id of teh current state matches an id in the selected ids
-        if search_state.meta['gui']['editor']['id'] and search_state.meta['gui']['editor']['id'] in ids:
-            # if so, add the state to the list of selected states
-            sel_states.append(search_state)
-            # remove the id from the list to fasten up further searches
-            ids.remove(search_state.meta['gui']['editor']['id'])
+    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth):
+        # Only the element which is furthest down in the hierarchy is selected
+        if search_state_depth > selection_depth:
+            # Check whether the id of the current state matches an id in the selected ids
+            if search_state.meta['gui']['editor']['id'] and search_state.meta['gui']['editor']['id'] in ids:
+                print "possible selection", search_state
+                # if so, add the state to the list of selected states
+                selection = search_state
+                selection_depth = search_state_depth
+                # remove the id from the list to fasten up further searches
+                ids.remove(search_state.meta['gui']['editor']['id'])
 
         # Return if there is nothing more to find
         if len(ids) == 0:
-            return
+            return selection, selection_depth
 
         # If it is a container state, check its transitions, data flows and child states
         if isinstance(search_state, ContainerStateModel):
 
             for state in search_state.states:
-                self._selection_ids_to_models(ids, state, sel_states, sel_transitions, sel_data_flows)
+                (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
+                                                                            selection, selection_depth)
 
-            if len(ids) == 0:
-                return
+            if len(ids) == 0 or search_state_depth < selection_depth:
+                return selection, selection_depth
 
             for transition in search_state.transitions:
                 if transition.meta['gui']['editor']['id'] and transition.meta['gui']['editor']['id'] in ids:
-                    sel_transitions.append(transition)
+                    selection = transition
                     ids.remove(transition.meta['gui']['editor']['id'])
 
             if len(ids) == 0:
-                return
+                return selection, selection_depth
 
             for data_flow in search_state.data_flows:
                 if data_flow.meta['gui']['editor']['id'] and data_flow.meta['gui']['editor']['id'] in ids:
-                    sel_data_flows.append(data_flow)
+                    selection = data_flow
                     ids.remove(data_flow.meta['gui']['editor']['id'])
+
+        return selection, selection_depth

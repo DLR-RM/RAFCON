@@ -1,6 +1,7 @@
 
 from gtkmvc import ModelMT
 from statemachine.transition import Transition
+from utils.vividict import Vividict
 
 
 class TransitionModel(ModelMT):
@@ -15,13 +16,17 @@ class TransitionModel(ModelMT):
 
     __observables__ = ("transition",)
 
-    def __init__(self, transition):
+    def __init__(self, transition, meta=None):
         """Constructor
         """
 
         ModelMT.__init__(self)  # pass columns as separate parameters
-        
+
         assert isinstance(transition, Transition)
 
         self.transition = transition
-        return
+
+        if isinstance(meta, Vividict):
+            self.meta = meta
+        else:
+            self.meta = Vividict()

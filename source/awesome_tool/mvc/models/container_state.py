@@ -3,6 +3,8 @@ from statemachine.states.container_state import ContainerState
 from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.state import State
 from mvc.models.state import StateModel
+from mvc.models.transition import TransitionModel
+from mvc.models.data_flow import DataFlowModel
 from gtk import ListStore
 
 from utils import log
@@ -55,11 +57,11 @@ class ContainerStateModel(StateModel):
                 logger.error(state)
 
 
-        for transition in container_state.transitions:
-            self.transitions.append(transition)
+        for transition in container_state.transitions.itervalues():
+            self.transitions.append(TransitionModel(transition))
             self.transition_list_store.append([transition])
 
-        for data_flow in container_state.data_flows:
-            self.data_flows.append(data_flow)
+        for data_flow in container_state.data_flows.itervalues():
+            self.data_flows.append(DataFlowModel(data_flow))
             self.data_flow_list_store.append([data_flow])
 
