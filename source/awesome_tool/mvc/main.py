@@ -3,10 +3,10 @@ import sys
 import gtk
 import logging
 from utils import log
-from models import StateModel, ContainerStateModel
-from controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController
-from views import StatePropertiesView, ContainerStateView, GraphicalEditorView
-from views.transition_list import TransitionListView
+from mvc.models import StateModel, ContainerStateModel
+from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController
+from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView
+from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State
 from statemachine.states.container_state import ContainerState
 from statemachine.transition import Transition
@@ -46,8 +46,11 @@ def main(*args, **kargs):
 
     state1 = State('State1')
     state2 = State('State2')
-    state3 = State('State3')
-    logger.warn(state1)
+    state3 = ContainerState(name='State3')
+    print "State3 ID", state3.state_id
+    state4 = State('Nested')
+    state3.add_state(state4)
+
     # prop_model = StateModel(my_state)
     # prop_view = StatePropertiesView()
     # prop_ctrl = StatePropertiesController(prop_model, prop_view)
@@ -57,6 +60,7 @@ def main(*args, **kargs):
     data_flow1 = DataFlow(state1.state_id, "success", state2.state_id, None)
     data_flow2 = DataFlow(state2.state_id, "success", state3.state_id, None)
     ctr_state = ContainerState(name="Container")
+    print "Ctr ID", ctr_state.state_id
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
@@ -67,7 +71,9 @@ def main(*args, **kargs):
         # states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,
         #                                                                                                   data_flow2])
     ctr_state.name = "Container"
+
     ctr_model = ContainerStateModel(ctr_state)
+    print "Ctr", len(ctr_state.states), "state3", len(state3.states)
     # prop_view2 = StatePropertiesView()
     # prop_ctrl2 = StatePropertiesController(prop_model2, prop_view2)
     #

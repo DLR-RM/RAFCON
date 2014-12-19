@@ -2,6 +2,8 @@
 from utils import log
 logger = log.get_logger(__name__)
 
+from random import random
+
 import OpenGL
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -77,6 +79,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         gldrawable = self.get_gl_drawable()
         glcontext = self.get_gl_context()
 
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glClearColor(33./255, 49./255, 92./255, 1)
         #glClearColor(0, 1, 0, 1)
 
@@ -150,15 +154,16 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         logger.debug("expose_finish")
 
-    def draw_container(self, name, width, height, activated=False):
+    def draw_container(self, name, pos_x, pos_y, width, height, activated=False):
         if activated:
-            glColor3f(1, 1, 1)
+            glColor4f(random(), random(), 1, 0.8)
         else:
-            glColor3f(0.9, 0.9, 0.9)
+            glColor4f(random(), 0.9, 0.9, 0.8)
 
-        glRectf(0, 0, width, height)
+        glRectf(pos_x, pos_y, pos_x + width, pos_y + height)
 
-        self._write_string(name, 10, height - 10, 20)
+        margin = min(width, height) / float(10)
+        self._write_string(name, pos_x + margin, pos_y + height - margin, height / float(5))
 
 
     def _write_string(self, string, pos_x, pos_y, height):

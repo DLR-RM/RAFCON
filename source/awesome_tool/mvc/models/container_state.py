@@ -17,7 +17,7 @@ class ContainerStateModel(StateModel):
     :param ContainerState container_state: The container state to be managed
      """
 
-    container_state = None
+    #container_state = None
     states = []
     transitions = []
     data_flows = []
@@ -25,7 +25,7 @@ class ContainerStateModel(StateModel):
     transition_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually Transition, but this is not supported by GTK
     data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually DataFlow, but this is not supported by GTK
 
-    __observables__ = ("container_state", "states", "transitions", "data_flows")
+    __observables__ = ("states", "transitions", "data_flows")
 
     def __init__(self, container_state):
         """Constructor
@@ -34,15 +34,18 @@ class ContainerStateModel(StateModel):
         assert isinstance(container_state, ContainerState)
 
         StateModel.__init__(self, container_state)
+        self.states = []
+        self.transitions = []
+        self.data_flows = []
 
-        self.container_state = container_state
+        #self.state = container_state
 
         # Create model for each child class
         states = container_state.states
         for state in states.itervalues():
             # Create hierarchy
             if isinstance(state, ContainerState):
-                self.states.append(ContainerState(state))
+                self.states.append(ContainerStateModel(state))
             # elif isinstance(state, HierarchyState):
             #     self.states.append(ContainerState(state))
             elif isinstance(state, State):
