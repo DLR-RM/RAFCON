@@ -25,16 +25,18 @@ class StateModel(ModelMT):
     _table.add_row(AttributesRowDescriptor(0, 'state_id', 'ID', editable=True))
     _table.add_row(AttributesRowDescriptor(1, 'name', 'Name'))
 
-    def __init__(self, state, meta=Vividict()):
+    def __init__(self, state, meta=None):
         """Constructor
         """
 
         ModelMT.__init__(self)  # pass columns as separate parameters
         assert isinstance(state, State)
-        assert isinstance(meta, dict)
 
         self.state = state
-        self.meta = meta
+        if isinstance(meta, Vividict):
+            self.meta = meta
+        else:
+            self.meta = Vividict()
         self.list_store = ListStore(*self._table.get_column_types())
         self.update_attributes()
         return
