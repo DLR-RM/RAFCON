@@ -29,13 +29,13 @@ class ContainerStateModel(StateModel):
 
     __observables__ = ("states", "transitions", "data_flows")
 
-    def __init__(self, container_state):
+    def __init__(self, container_state, parent=None, meta=None):
         """Constructor
         """
 
         assert isinstance(container_state, ContainerState)
 
-        StateModel.__init__(self, container_state)
+        StateModel.__init__(self, container_state, parent, meta)
         self.states = {}
         self.transitions = []
         self.data_flows = []
@@ -47,11 +47,11 @@ class ContainerStateModel(StateModel):
         for state in states.itervalues():
             # Create hierarchy
             if isinstance(state, ContainerState):
-                self.states[state.state_id] = ContainerStateModel(state)
+                self.states[state.state_id] = ContainerStateModel(state, parent=self)
             # elif isinstance(state, HierarchyState):
             #     self.states.append(ContainerState(state))
             elif isinstance(state, State):
-                self.states[state.state_id] = StateModel(state)
+                self.states[state.state_id] = StateModel(state, parent=self)
             else:
                 logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
                 logger.error(state)

@@ -94,8 +94,30 @@ class GraphicalEditorController(Controller):
         rel_y_motion = -(event.y - self.mouse_move_start_pos[1])
         if self.selection is not None and isinstance(self.selection, StateModel):
             conversion = self.view.editor.pixel_to_size_ratio()
-            self.selection.meta['gui']['editor']['pos_x'] = self.selection_start_pos[0] + rel_x_motion / conversion
-            self.selection.meta['gui']['editor']['pos_y'] = self.selection_start_pos[1] + rel_y_motion / conversion
+
+            new_pos_x = self.selection_start_pos[0] + rel_x_motion / conversion
+            new_pos_y = self.selection_start_pos[1] + rel_y_motion / conversion
+
+            cur_width = self.selection.meta['gui']['editor']['width']
+            cur_height = self.selection.meta['gui']['editor']['height']
+
+            if new_pos_x < self.selection.parent.meta['gui']['editor']['pos_x']:
+                new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x']
+            elif new_pos_x + cur_width > self.selection.parent.meta['gui']['editor']['pos_x'] + \
+                                         self.selection.parent.meta['gui']['editor']['width']:
+                new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x'] + \
+                            self.selection.parent.meta['gui']['editor']['width'] - cur_width
+
+            if new_pos_y < self.selection.parent.meta['gui']['editor']['pos_y']:
+                new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y']
+            elif new_pos_y + cur_height > self.selection.parent.meta['gui']['editor']['pos_y'] + \
+                                         self.selection.parent.meta['gui']['editor']['height']:
+                new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y'] + \
+                            self.selection.parent.meta['gui']['editor']['height'] - cur_height
+
+            self.selection.meta['gui']['editor']['pos_x'] = new_pos_x
+            self.selection.meta['gui']['editor']['pos_y'] = new_pos_y
+
             self.redraw()
 
     def draw_state(self, state, pos_x=0, pos_y=0, width=100, height=100, depth=1):
