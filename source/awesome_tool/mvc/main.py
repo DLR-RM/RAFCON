@@ -50,6 +50,9 @@ def main(*args, **kargs):
     print "State3 ID", state3.state_id
     state4 = State('Nested')
     state3.add_state(state4)
+    state1.add_outcome('Success')
+    state3.add_outcome('Branch1')
+    state3.add_outcome('Branch2')
 
     # prop_model = StateModel(my_state)
     # prop_view = StatePropertiesView()
@@ -64,9 +67,10 @@ def main(*args, **kargs):
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
-    ctr_state.add_transition(state1.state_id, 1, state2.state_id, None)
-    ctr_state.add_transition(state2.state_id, 1, state3.state_id, None)
-    ctr_state.add_transition(state3.state_id, 1, ctr_state.state_id, None)
+    ctr_state.add_transition(state1.state_id, 3, state2.state_id, None)
+    ctr_state.add_transition(state2.state_id, 2, state3.state_id, None)
+    ctr_state.add_transition(state3.state_id, 2, None, 2)
+    ctr_state.add_transition(state1.state_id, 1, None, 1)
     # ctr_state.transitions = [trans1, trans2]
     # ctr_state.data_flows = [data_flow1, data_flow2]
         # states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,

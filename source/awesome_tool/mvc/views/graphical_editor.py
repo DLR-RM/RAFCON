@@ -2,6 +2,7 @@
 from utils import log
 logger = log.get_logger(__name__)
 
+from math import sin, cos, pi
 from random import random
 
 import OpenGL
@@ -129,9 +130,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         aspect = self.allocation.width/float(self.allocation.height)
 
         if self.allocation.width <= self.allocation.height:
-            glOrtho(self.left, self.right, self.bottom/aspect, self.top/aspect, -100, 0)
+            glOrtho(self.left, self.right, self.bottom/aspect, self.top/aspect, -10, 0)
         else:
-            glOrtho(self.left*aspect, self.right*aspect, self.bottom, self.top, -100, 0)
+            glOrtho(self.left*aspect, self.right*aspect, self.bottom, self.top, -10, 0)
 
     def pixel_to_size_ratio(self):
         width = self.right - self.left
@@ -180,7 +181,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         #logger.debug("expose_finish")
 
-    def draw_state(self, name, pos_x, pos_y, width, height, active=False, depth=0):
+    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0, active=False, depth=0):
         # "Generate" unique ID for each object
         id = self.name_counter
         self.name_counter += 1
@@ -204,11 +205,32 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glVertex3f(pos_x, pos_y + height, depth)
             glEnd()
 
+        # Every state has at least the default outcomes "aborted" and "preempted"
+        num_outcomes = max(0, len(outcomes))
+        if num_outcomes < 2:
+            logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
+        i = 0
+        outcome_pos = {}
+        for key in outcomes:
+            if key == 1:
+                glColor3f(0.8, 0, 0)
+            elif key == 2:
+                glColor3f(0.1, 0.1, 0.7)
+            else:
+                glColor3f(0.4, 0.4, 0.4)
+
+            outcome_x = pos_x + width
+            outcome_y = pos_y + height / (num_outcomes + 1) * (i + 1)
+            outcome_pos[key] = (outcome_x, outcome_y)
+            i += 1
+            self._draw_circle(outcome_x, outcome_y, depth + 0.1, min(5, height/15.0, height/(2*num_outcomes+3)), 15)
+
+
         margin = min(width, height) / 8.0
-        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, depth=depth+0.2)
+        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, depth=depth+0.01)
 
         glPopName()
-        return id
+        return (id, outcome_pos)
 
     def draw_transition(self, name, from_pos_x, from_pos_y, to_pos_x, to_pos_y, active=False, depth=0):
         # "Generate" unique ID for each object
@@ -245,7 +267,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         for c in string:
             #glTranslatef(0, 0, 0)
             glutStrokeCharacter(GLUT_STROKE_ROMAN, ord(c))
-            width = glutStrokeWidth(GLUT_STROKE_ROMAN, ord(c))
+            #width = glutStrokeWidth(GLUT_STROKE_ROMAN, ord(c))
 
         glPopMatrix()
 
@@ -264,7 +286,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         self._apply_ortogonal_view()
 
-    def find_selection(self):
+    @staticmethod
+    def find_selection():
         hits = glRenderMode(GL_RENDER)
 
         glMatrixMode(GL_PROJECTION)
@@ -291,3 +314,14 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glLineWidth(line_width_range[1])
             return
         glLineWidth(round(width / line_width_granularity) * line_width_granularity)
+
+    @staticmethod
+    def _draw_circle(pos_x, pos_y, depth, radius, segments=10):
+        glBegin(GL_LINE_LOOP)
+        segments = max(4, segments)
+        for i in range(0, segments):
+            angle = 2 * pi / segments * i
+            x = pos_x + cos(angle) * radius
+            y = pos_y + sin(angle) * radius
+            glVertex3f(x, y, depth)
+        glEnd()
