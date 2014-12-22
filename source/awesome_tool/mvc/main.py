@@ -64,8 +64,9 @@ def main(*args, **kargs):
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
-    ctr_state.add_transition(state1, 1, state2, None)
-    ctr_state.add_transition(state2, 1, state3, None)
+    ctr_state.add_transition(state1.state_id, 1, state2.state_id, None)
+    ctr_state.add_transition(state2.state_id, 1, state3.state_id, None)
+    ctr_state.add_transition(state3.state_id, 1, ctr_state.state_id, None)
     # ctr_state.transitions = [trans1, trans2]
     # ctr_state.data_flows = [data_flow1, data_flow2]
         # states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,

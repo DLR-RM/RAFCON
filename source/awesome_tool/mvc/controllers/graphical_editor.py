@@ -1,14 +1,14 @@
-
 import OpenGL
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from utils import log
+
 logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel
-#from models.container_state import ContainerStateModel
+# from models.container_state import ContainerStateModel
 
 class GraphicalEditorController(Controller):
     """Controller handling the graphical editor
@@ -62,20 +62,19 @@ class GraphicalEditorController(Controller):
         self.view.editor.emit("configure_event", None)
         self.view.editor.emit("expose_event", None)
 
-
     def _on_mouse_press(self, widget, event):
         if event.button == 1:
             #print 'press', event
             self.mouse_move_start_pos = (event.x, event.y)
             new_selection = self._find_selection(event.x, event.y)
             if new_selection != self.selection:
-                if self.selection != None:
+                if self.selection is not None:
                     self.selection.meta['gui']['selected'] = False
                 self.selection = new_selection
-                if self.selection != None:
+                if self.selection is not None:
                     self.selection.meta['gui']['selected'] = True
                 self.redraw()
-            if self.selection != None and isinstance(self.selection, StateModel):
+            if self.selection is not None and isinstance(self.selection, StateModel):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
 
@@ -92,7 +91,6 @@ class GraphicalEditorController(Controller):
             self.selection.meta['gui']['editor']['pos_x'] = self.selection_start_pos[0] + rel_x_motion / conversion
             self.selection.meta['gui']['editor']['pos_y'] = self.selection_start_pos[1] + rel_y_motion / conversion
             self.redraw()
-
 
 
     def draw_state(self, state, pos_x=0, pos_y=0, width=100, height=100, depth=1):
@@ -116,7 +114,7 @@ class GraphicalEditorController(Controller):
 
         active = state.meta['gui']['selected']
 
-        id = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height, active)
+        id = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height, active, depth)
         state.meta['gui']['editor']['id'] = id
 
         if depth == 1:
@@ -144,7 +142,33 @@ class GraphicalEditorController(Controller):
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height, depth + 1)
 
             for transition in state.transitions:
-                pass
+                from_state_id = transition.transition.from_state
+                to_state_id = transition.transition.to_state
+                from_state = None
+                to_state = None
+                for child_state in state.states:
+                    if child_state.state.state_id == from_state_id:
+                        from_state = child_state
+                    if child_state.state.state_id == to_state_id:
+                        to_state = child_state
+
+                assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
+                    id=from_state_id)
+
+                # TODO: Take into account the outcome
+
+                from_x = from_state.meta['gui']['editor']['pos_x'] + from_state.meta['gui']['editor']['width'] / 2
+                from_y = from_state.meta['gui']['editor']['pos_y'] + from_state.meta['gui']['editor']['height'] / 2
+                if to_state is None:  # Transition goes back to parent
+                    to_x = state.meta['gui']['editor']['pos_x'] + state.meta['gui']['editor']['width']
+                    to_y = state.meta['gui']['editor']['pos_y']# + state.meta['gui']['editor']['height']
+                else:
+                    to_x = to_state.meta['gui']['editor']['pos_x'] + to_state.meta['gui']['editor']['width'] / 2
+                    to_y = to_state.meta['gui']['editor']['pos_y'] + to_state.meta['gui']['editor']['height'] / 2
+
+                active = transition.meta['gui']['selected']
+                id = self.view.editor.draw_transition("Transition", from_x, from_y, to_x, to_y, active, depth + 0.5)
+                transition.meta['gui']['editor']['id'] = id
 
             for data_flow in state.data_flows:
                 pass
@@ -160,10 +184,15 @@ class GraphicalEditorController(Controller):
         hits = self.view.editor.find_selection()
 
         # extract ids
-        selected_ids = map(lambda hit: hit[2][1], hits)
-        #print selected_ids
-        (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0)
-        #print selection, selection_depth
+        selection = None
+        try:
+            selected_ids = map(lambda hit: hit[2][1], hits)
+            print selected_ids
+            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0)
+            print selection, selection_depth
+        except Exception as e:
+            logger.error("Error while finding selection: {err:s}".format(err=e))
+            pass
         return selection
 
     def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth):
@@ -192,7 +221,9 @@ class GraphicalEditorController(Controller):
             if len(ids) == 0 or search_state_depth < selection_depth:
                 return selection, selection_depth
 
+            print "searching transitions"
             for transition in search_state.transitions:
+                print transition.meta['gui']['editor']['id']
                 if transition.meta['gui']['editor']['id'] and transition.meta['gui']['editor']['id'] in ids:
                     selection = transition
                     ids.remove(transition.meta['gui']['editor']['id'])

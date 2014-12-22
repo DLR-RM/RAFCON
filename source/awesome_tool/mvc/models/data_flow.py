@@ -1,6 +1,6 @@
 
 from gtkmvc import ModelMT
-from statemachine import DataFlow
+from statemachine.data_flow import DataFlow
 from utils.vividict import Vividict
 
 
