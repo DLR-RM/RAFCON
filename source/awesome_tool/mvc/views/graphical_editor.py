@@ -88,7 +88,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         gldrawable = self.get_gl_drawable()
         glcontext = self.get_gl_context()
 
+        glEnable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
+        glEnable(GL_LINE_SMOOTH)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glClearColor(33./255, 49./255, 92./255, 1)
         #glClearColor(0, 1, 0, 1)
@@ -127,9 +129,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         aspect = self.allocation.width/float(self.allocation.height)
 
         if self.allocation.width <= self.allocation.height:
-            glOrtho(self.left, self.right, self.bottom/aspect, self.top/aspect, 1, -1)
+            glOrtho(self.left, self.right, self.bottom/aspect, self.top/aspect, -100, 0)
         else:
-            glOrtho(self.left*aspect, self.right*aspect, self.bottom, self.top, 1, -1)
+            glOrtho(self.left*aspect, self.right*aspect, self.bottom, self.top, -100, 0)
 
     def pixel_to_size_ratio(self):
         width = self.right - self.left
@@ -178,30 +180,56 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         #logger.debug("expose_finish")
 
-    def draw_state(self, name, pos_x, pos_y, width, height, active=False):
-        if active:
-            glColor4f(0.7, 0, 0, 0.8)
-        else:
-            glColor4f(0.9, 0.9, 0.9, 0.8)
-
+    def draw_state(self, name, pos_x, pos_y, width, height, active=False, depth=0):
+        #depth = 1000 - depth
         id = self.name_counter
         self.name_counter += 1
         glPushName(id)
-        glRectf(pos_x, pos_y, pos_x + width, pos_y + height)
+        #glRectf(pos_x, pos_y, pos_x + width, pos_y + height)
+        self._set_closest_line_width(1.5)
+        for type in (GL_POLYGON, GL_LINE_LOOP):
+            if type == GL_POLYGON:
+                if active:
+                    glColor4f(0.7, 0, 0, 0.8)
+                else:
+                    glColor4f(0.9, 0.9, 0.9, 0.8)
+            else:
+                glColor4f(0.2, 0.2, 0.2, 1)
+            glBegin(type)
+            glVertex3f(pos_x, pos_y, depth)
+            glVertex3f(pos_x + width, pos_y, depth)
+            glVertex3f(pos_x + width, pos_y + height, depth)
+            glVertex3f(pos_x, pos_y + height, depth)
+            glEnd()
 
         margin = min(width, height) / 8.0
-        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0)
+        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, depth=depth+0.2)
 
         glPopName()
         return id
 
+    def draw_transition(self, name, from_pos_x, from_pos_y, to_pos_x, to_pos_y, active=False, depth=0):
+        #depth = 1000 - depth
+        self._set_closest_line_width(4)
 
-    def _write_string(self, string, pos_x, pos_y, height):
+        if active:
+            glColor4f(0.7, 0, 0, 0.8)
+        else:
+            glColor4f(0.6, 0.6, 0.6, 0.8)
+
+
+        glBegin(GL_LINES)
+        glVertex3f(from_pos_x, from_pos_y, depth)
+        glVertex3f(to_pos_x, to_pos_y, depth)
+        glEnd()
+
+    def _write_string(self, string, pos_x, pos_y, height, line_width=1, depth=0):
         glColor3f(0, 0.5, 0.5)
+        self._set_closest_line_width(line_width)
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         pos_y = pos_y - height
-        glTranslatef(pos_x, pos_y, 0)
+        glTranslatef(pos_x, pos_y, depth)
         font_height = 119.5  # According to https://www.opengl.org/resources/libraries/glut/spec3/node78.html
         scale_factor = height / font_height
         glScalef(scale_factor, scale_factor, scale_factor)
@@ -227,8 +255,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         self._apply_ortogonal_view()
 
-        # draw...
-
     def find_selection(self):
         hits = glRenderMode(GL_RENDER)
 
@@ -237,3 +263,22 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glMatrixMode(GL_MODELVIEW)
 
         return hits
+
+    @staticmethod
+    def _set_closest_line_width(width):
+        """Sets the line width to the closest supported one
+
+        Not all line widths are supported. This function queries both minimum and maximum as well as the step size of
+        the line width and calculates the width, which is closest to the given one. This width is then set.
+        :param width: The desired line width
+        """
+        line_width_range = glGetFloatv(GL_LINE_WIDTH_RANGE)
+        line_width_granularity = glGetFloatv(GL_LINE_WIDTH_GRANULARITY)
+
+        if width < line_width_range[0]:
+            glLineWidth(line_width_range[0])
+            return
+        if width > line_width_range[1]:
+            glLineWidth(line_width_range[1])
+            return
+        glLineWidth(round(width / line_width_granularity) * line_width_granularity)

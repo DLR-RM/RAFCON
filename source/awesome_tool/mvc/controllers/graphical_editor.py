@@ -1,14 +1,14 @@
-
 import OpenGL
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from utils import log
+
 logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel
-#from models.container_state import ContainerStateModel
+# from models.container_state import ContainerStateModel
 
 class GraphicalEditorController(Controller):
     """Controller handling the graphical editor
@@ -94,7 +94,6 @@ class GraphicalEditorController(Controller):
             self.redraw()
 
 
-
     def draw_state(self, state, pos_x=0, pos_y=0, width=100, height=100, depth=1):
         assert isinstance(state, StateModel)
 
@@ -116,7 +115,7 @@ class GraphicalEditorController(Controller):
 
         active = state.meta['gui']['selected']
 
-        id = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height, active)
+        id = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height, active, depth)
         state.meta['gui']['editor']['id'] = id
 
         if depth == 1:
@@ -144,7 +143,32 @@ class GraphicalEditorController(Controller):
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height, depth + 1)
 
             for transition in state.transitions:
-                pass
+                from_state_id = transition.transition.from_state
+                to_state_id = transition.transition.to_state
+                from_state = None
+                to_state = None
+                for child_state in state.states:
+                    if child_state.state.state_id == from_state_id:
+                        from_state = child_state
+                    if child_state.state.state_id == to_state_id:
+                        to_state = child_state
+
+                assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
+                    id=from_state_id)
+
+                # TODO: Take into account the outcome
+
+                from_x = from_state.meta['gui']['editor']['pos_x'] + from_state.meta['gui']['editor']['width'] / 2
+                from_y = from_state.meta['gui']['editor']['pos_y'] + from_state.meta['gui']['editor']['height'] / 2
+                if to_state is None:  # Transition goes back to parent
+                    to_x = state.meta['gui']['editor']['pos_x'] + state.meta['gui']['editor']['width']
+                    to_y = state.meta['gui']['editor']['pos_y']# + state.meta['gui']['editor']['height']
+                else:
+                    to_x = to_state.meta['gui']['editor']['pos_x'] + to_state.meta['gui']['editor']['width'] / 2
+                    to_y = to_state.meta['gui']['editor']['pos_y'] + to_state.meta['gui']['editor']['height'] / 2
+
+                active = transition.meta['gui']['selected']
+                self.view.editor.draw_transition("Transition", from_x, from_y, to_x, to_y, active, depth + 0.5)
 
             for data_flow in state.data_flows:
                 pass
