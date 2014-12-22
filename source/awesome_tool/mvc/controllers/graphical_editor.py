@@ -46,82 +46,132 @@ class GraphicalEditorController(Controller):
         pass
 
     def _on_expose_event(self, *args):
+        """Redraw the graphical editor
+
+        This method is called typically when the editor window is resized or something triggers are redraw. This
+        controller class handles the logic for redrawing, while the corresponding view handles the design.
+        :param args: console arguments, not used
+        """
+
+        # Store the current outer editor coordinates
         box1 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
+        # Prepare the drawing process
         self.view.editor.expose_init(args)
+        # The whole logic of drawing is triggered by calling the root state to be drawn
         self.draw_state(self.model)
+        # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
+        # Store the current outer editor coordinates again
         box2 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
 
-        # Calculate viewport offset from desired one
+        # Calculate coordinates offset between pre and post drawing
         # If too big, configure and redraw
         diff = sum(map(lambda i1, i2: abs(i1 - i2), box1, box2))
         if diff > 5:
-            self.redraw()
+            self._redraw()
 
-    def redraw(self):
+    def _redraw(self):
+        """Force the graphical editor to be redrawn
+
+        First triggers the configure event to cause the perspective to be updated, then trigger teh actual expose
+        event to redraw.
+        """
         self.view.editor.emit("configure_event", None)
         self.view.editor.emit("expose_event", None)
 
     def _on_mouse_press(self, widget, event):
-        if event.button == 1:
+        """Triggered when the mouse is pressed
+
+        Different actions can result from a mouse click, e. g. selecting or drag'n'drop
+        :param widget: The widget beneath the mouse when the click was done
+        :param event: Information about the event, e. g. x and y coordinate
+        """
+        if event.button == 1:  # Left mouse button
             # print 'press', event
+
+            # Store the coordinates of the event
             self.mouse_move_start_pos = (event.x, event.y)
+
+            # Check if something was selected
             new_selection = self._find_selection(event.x, event.y)
+
+            # Check whether a state, a transition or data flow was clicked on
+            # If so, set the meta data of the object to "object selected" and redraw to highlight the object
+            # If the object was previously selected, remove the selection
             if new_selection != self.selection:
                 if self.selection is not None:
                     self.selection.meta['gui']['selected'] = False
                 self.selection = new_selection
                 if self.selection is not None:
                     self.selection.meta['gui']['selected'] = True
-                self.redraw()
+            #else:
+                #self.selection.meta['gui']['selected'] = False
+                #self.selection = None
+
+            # If a state was clicked on, store the click coordinates for the drag'ndrop movement
             if self.selection is not None and isinstance(self.selection, StateModel):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
 
+            self._redraw()
+
     def _on_mouse_release(self, widget, event):
+        """Triggered when a mouse button is being released
+
+        :param widget: The widget beneath the mouse when the release was done
+        :param event: Information about the event, e. g. x and y coordinate
+        Not used so far
+        """
         # print 'release', event
         pass
 
     def _on_mouse_motion(self, widget, event):
+        """Triggered when the mouse is moved while being pressed
+
+        When a state is selected, this causes a drag'n'drop movement
+        :param widget: The widget beneath the mouse when the click was done
+        :param event: Information about the event, e. g. x and y coordinate
+        """
         if self.selection is None:
             return
         if not isinstance(self.selection, StateModel):
             return
-        if self.selection == self.model:
-            return
+        # Can the root container be moved?
+        # if self.selection == self.model:
+        # return
         # print 'motion', event
         rel_x_motion = event.x - self.mouse_move_start_pos[0]
         rel_y_motion = -(event.y - self.mouse_move_start_pos[1])
         if self.selection is not None and isinstance(self.selection, StateModel):
-            conversion = self.view.editor.pixel_to_size_ratio()
-
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
+
+            # Translate the mouse movement to OpenGL coordinates
+            conversion = self.view.editor.pixel_to_size_ratio()
             new_pos_x = self.selection_start_pos[0] + rel_x_motion / conversion
             new_pos_y = self.selection_start_pos[1] + rel_y_motion / conversion
 
             cur_width = self.selection.meta['gui']['editor']['width']
             cur_height = self.selection.meta['gui']['editor']['height']
 
-            if new_pos_x < self.selection.parent.meta['gui']['editor']['pos_x']:
-                new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x']
-            elif new_pos_x + cur_width > self.selection.parent.meta['gui']['editor']['pos_x'] + \
-                                         self.selection.parent.meta['gui']['editor']['width']:
-                new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x'] + \
-                            self.selection.parent.meta['gui']['editor']['width'] - cur_width
+            # Keep the state within its container state
+            if self.selection.parent is not None:
+                if new_pos_x < self.selection.parent.meta['gui']['editor']['pos_x']:
+                    new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x']
+                elif new_pos_x + cur_width > self.selection.parent.meta['gui']['editor']['pos_x'] + \
+                        self.selection.parent.meta['gui']['editor']['width']:
+                    new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x'] + \
+                        self.selection.parent.meta['gui']['editor']['width'] - cur_width
 
-            if new_pos_y < self.selection.parent.meta['gui']['editor']['pos_y']:
-                new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y']
-            elif new_pos_y + cur_height > self.selection.parent.meta['gui']['editor']['pos_y'] + \
-                                         self.selection.parent.meta['gui']['editor']['height']:
-                new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y'] + \
-                            self.selection.parent.meta['gui']['editor']['height'] - cur_height
+                if new_pos_y < self.selection.parent.meta['gui']['editor']['pos_y']:
+                    new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y']
+                elif new_pos_y + cur_height > self.selection.parent.meta['gui']['editor']['pos_y'] + \
+                        self.selection.parent.meta['gui']['editor']['height']:
+                    new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y'] + \
+                        self.selection.parent.meta['gui']['editor']['height'] - cur_height
 
             self.selection.meta['gui']['editor']['pos_x'] = new_pos_x
             self.selection.meta['gui']['editor']['pos_y'] = new_pos_y
-
-            diff_x = new_pos_x - old_pos_x
-            diff_y = new_pos_y - old_pos_y
 
             def move_child_states(state, diff_x, diff_y):
                 for child_state in state.states.itervalues():
@@ -130,14 +180,29 @@ class GraphicalEditorController(Controller):
                     if isinstance(child_state, ContainerStateModel):
                         move_child_states(child_state, diff_x, diff_y)
 
+            # Move all child states in accordance with the state, to keep their relative position
             if isinstance(self.selection, ContainerStateModel):
+                diff_x = new_pos_x - old_pos_x
+                diff_y = new_pos_y - old_pos_y
                 move_child_states(self.selection, diff_x, diff_y)
 
-            self.redraw()
+            self._redraw()
 
-    def draw_state(self, state, pos_x=0, pos_y=0, width=100, height=100, depth=1):
+    def draw_state(self, state, pos_x=0.0, pos_y=0.0, width=100.0, height=100.0, depth=1):
+        """Draws a (container) state with all its content
+
+        Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
+        done in the view, which is called from this method with the appropriate arguments.
+        :param state: The state to be drawn
+        :param pos_x: The default x position if there is no position stored
+        :param pos_y: The default y position if there is no position stored
+        :param width: The default width if there is no size stored
+        :param height: The default height if there is no size stored
+        :param depth: The hierarchy level of the state
+        """
         assert isinstance(state, StateModel)
 
+        # Use default values if no size information is stored
         if not state.meta['gui']['editor']['width']:
             state.meta['gui']['editor']['width'] = width
         if not state.meta['gui']['editor']['height']:
@@ -146,6 +211,8 @@ class GraphicalEditorController(Controller):
         width = state.meta['gui']['editor']['width']
         height = state.meta['gui']['editor']['height']
 
+        # Use default values if no size information is stored
+        # Here the possible case of pos_x and posy_y == 0 must be handled
         if not state.meta['gui']['editor']['pos_x'] and state.meta['gui']['editor']['pos_x'] != 0:
             state.meta['gui']['editor']['pos_x'] = pos_x
         if not state.meta['gui']['editor']['pos_y'] and state.meta['gui']['editor']['pos_y'] != 0:
@@ -154,13 +221,18 @@ class GraphicalEditorController(Controller):
         pos_x = state.meta['gui']['editor']['pos_x']
         pos_y = state.meta['gui']['editor']['pos_y']
 
+        # Was the state selected?
         active = state.meta['gui']['selected']
 
+        # Call the drawing method of the view
+        # The view returns the id of the state in OpenGL and the positions of the outcomes
         (id, outcome_pos) = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height,
                                                         state.state.outcomes, active, depth)
         state.meta['gui']['editor']['id'] = id
         state.meta['gui']['editor']['outcome_pos'] = outcome_pos
 
+        # If the state is the root container, fit the dimensions of the OpenGL coordinates so that the whole
+        # container fits in the viewport
         if depth == 1:
             margin = min(width, height) / 10.0
             self.view.editor.left = pos_x - margin
@@ -168,13 +240,16 @@ class GraphicalEditorController(Controller):
             self.view.editor.bottom = pos_y - margin
             self.view.editor.top = pos_y + height + margin
 
+        # If the state is a container state, we also have to draw its transitions and data flows as well as
+        # recursively its child states
         if isinstance(state, ContainerStateModel) and depth < self.max_depth:
-            # iterate over child states, transitions and data flows
 
             state_ctr = 0
             margin = width / float(25)
 
             for child_state in state.states.itervalues():
+                # Caluclate default positions for teh child states
+                # Make the inset from the top left corner
                 state_ctr += 1
 
                 child_width = width / float(5)
@@ -187,6 +262,7 @@ class GraphicalEditorController(Controller):
                                 depth + (1.0 / len(state.states)) + 0.5)
 
             for transition in state.transitions:
+                # Get id and references to the from and to state
                 from_state_id = transition.transition.from_state
                 to_state_id = transition.transition.to_state
                 from_state = None
@@ -201,22 +277,26 @@ class GraphicalEditorController(Controller):
                     id=from_state_id)
 
                 try:
+                    # Set the from coordinates to the outcome coordinates received earlier
                     from_x = state.states[from_state_id].meta['gui']['editor']['outcome_pos'][
                         transition.transition.from_outcome][0]
                     from_y = state.states[from_state_id].meta['gui']['editor']['outcome_pos'][
                         transition.transition.from_outcome][1]
                 except Exception as e:
                     logger.error("""Outcome position was not found. \
-                            maybe the outcome for teh transition was not found: {err}""".format(err=e))
+                            maybe the outcome for the transition was not found: {err}""".format(err=e))
                     continue
 
                 if to_state is None:  # Transition goes back to parent
+                    # Set the to coordinates to the outcome coordinates received earlier
                     to_x = state.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][0]
                     to_y = state.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][1]
                 else:
+                    # Set the to coordinates to the center of the next state
                     to_x = to_state.meta['gui']['editor']['pos_x'] + to_state.meta['gui']['editor']['width'] / 2
                     to_y = to_state.meta['gui']['editor']['pos_y'] + to_state.meta['gui']['editor']['height'] / 2
 
+                # Let the view draw the transition and store the returned OpenGl object id
                 active = transition.meta['gui']['selected']
                 id = self.view.editor.draw_transition("Transition", from_x, from_y, to_x, to_y, active, depth + 0.5)
                 transition.meta['gui']['editor']['id'] = id
@@ -247,6 +327,17 @@ class GraphicalEditorController(Controller):
         return selection
 
     def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth):
+        """Searches recursively for objects with the given ids
+
+        The method searches recursively and compares all stored ids with the given ones. It finally returns the
+        object with the biggest depth (furthest nested)
+        :param ids: The ids to search for
+        :param search_state: The state to search in
+        :param search_state_depth: The depth the search state is in
+        :param selection: The currently found object
+        :param selection_depth: The depth of the currently found object
+        :return: The selected object and its depth
+        """
         # Only the element which is furthest down in the hierarchy is selected
         if search_state_depth > selection_depth:
             # Check whether the id of the current state matches an id in the selected ids
