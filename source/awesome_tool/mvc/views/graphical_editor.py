@@ -103,7 +103,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         gldrawable = self.get_gl_drawable()
         glcontext = self.get_gl_context()
         #glClearColor(0, 1, 0, 1)
-        logger.debug("configure")
+        #logger.debug("configure")
         # OpenGL begin
         if not gldrawable.gl_begin(glcontext):
             return False
@@ -131,6 +131,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         else:
             glOrtho(self.left*aspect, self.right*aspect, self.bottom, self.top, 1, -1)
 
+    def pixel_to_size_ratio(self):
+        width = self.right - self.left
+        if self.allocation.width > self.allocation.height:
+            width *= self.allocation.width/float(self.allocation.height)
+        display_width = self.allocation.width
+        return display_width / float(width)
+
     def expose_init(self, *args):
         # Obtain a reference to the OpenGL drawable
         # and rendering context.
@@ -141,7 +148,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         if not gldrawable.gl_begin(glcontext):
             return False
 
-        logger.debug("expose_init")
+        #logger.debug("expose_init")
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -169,13 +176,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # OpenGL end
         gldrawable.gl_end()
 
-        logger.debug("expose_finish")
+        #logger.debug("expose_finish")
 
     def draw_state(self, name, pos_x, pos_y, width, height, active=False):
         if active:
             glColor4f(0.7, 0, 0, 0.8)
         else:
-            glColor4f(random(), 0.9, 0.9, 0.8)
+            glColor4f(0.9, 0.9, 0.9, 0.8)
 
         id = self.name_counter
         self.name_counter += 1
@@ -208,7 +215,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     def prepare_selection(self, pos_x, pos_y):
         glSelectBuffer(64)
         viewport = glGetInteger(GL_VIEWPORT)
-        print viewport
 
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
@@ -225,7 +231,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
     def find_selection(self):
         hits = glRenderMode(GL_RENDER)
-        print hits
 
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()

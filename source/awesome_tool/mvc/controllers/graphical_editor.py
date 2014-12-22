@@ -26,10 +26,14 @@ class GraphicalEditorController(Controller):
         Controller.__init__(self, model, view)
 
         self.selection = None
+        self.selection_start_pos = (0, 0)
+        self.mouse_move_start_pos = (0, 0)
 
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
+        # Only called when the mouse is clicked while moving
+        view.editor.connect('motion-notify-event', self._on_mouse_motion)
 
 
     def register_view(self, view):
@@ -61,7 +65,8 @@ class GraphicalEditorController(Controller):
 
     def _on_mouse_press(self, widget, event):
         if event.button == 1:
-            print 'press', event
+            #print 'press', event
+            self.mouse_move_start_pos = (event.x, event.y)
             new_selection = self._find_selection(event.x, event.y)
             if new_selection != self.selection:
                 if self.selection != None:
@@ -70,9 +75,25 @@ class GraphicalEditorController(Controller):
                 if self.selection != None:
                     self.selection.meta['gui']['selected'] = True
                 self.redraw()
+            if self.selection != None and isinstance(self.selection, StateModel):
+                self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
+                                            self.selection.meta['gui']['editor']['pos_y'])
 
     def _on_mouse_release(self, widget, event):
-        print 'release', event
+        #print 'release', event
+        pass
+
+    def _on_mouse_motion(self, widget, event):
+        #print 'motion', event
+        rel_x_motion = event.x - self.mouse_move_start_pos[0]
+        rel_y_motion = -(event.y - self.mouse_move_start_pos[1])
+        if self.selection is not None and isinstance(self.selection, StateModel):
+            conversion = self.view.editor.pixel_to_size_ratio()
+            self.selection.meta['gui']['editor']['pos_x'] = self.selection_start_pos[0] + rel_x_motion / conversion
+            self.selection.meta['gui']['editor']['pos_y'] = self.selection_start_pos[1] + rel_y_motion / conversion
+            self.redraw()
+
+
 
     def draw_state(self, state, pos_x=0, pos_y=0, width=100, height=100, depth=1):
         assert isinstance(state, StateModel)
@@ -85,9 +106,9 @@ class GraphicalEditorController(Controller):
         width = state.meta['gui']['editor']['width']
         height = state.meta['gui']['editor']['height']
 
-        if not state.meta['gui']['editor']['pos_x']:
+        if not state.meta['gui']['editor']['pos_x'] and state.meta['gui']['editor']['pos_x'] != 0:
             state.meta['gui']['editor']['pos_x'] = pos_x
-        if not state.meta['gui']['editor']['pos_y']:
+        if not state.meta['gui']['editor']['pos_y'] and state.meta['gui']['editor']['pos_y'] != 0:
             state.meta['gui']['editor']['pos_y'] = pos_y
 
         pos_x = state.meta['gui']['editor']['pos_x']
@@ -140,9 +161,9 @@ class GraphicalEditorController(Controller):
 
         # extract ids
         selected_ids = map(lambda hit: hit[2][1], hits)
-        print selected_ids
+        #print selected_ids
         (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0)
-        print selection, selection_depth
+        #print selection, selection_depth
         return selection
 
     def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth):
@@ -150,7 +171,7 @@ class GraphicalEditorController(Controller):
         if search_state_depth > selection_depth:
             # Check whether the id of the current state matches an id in the selected ids
             if search_state.meta['gui']['editor']['id'] and search_state.meta['gui']['editor']['id'] in ids:
-                print "possible selection", search_state
+                #print "possible selection", search_state
                 # if so, add the state to the list of selected states
                 selection = search_state
                 selection_depth = search_state_depth
