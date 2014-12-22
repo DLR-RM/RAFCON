@@ -1,6 +1,7 @@
 
 from gtkmvc import ModelMT
 from statemachine import DataFlow
+from utils.vividict import Vividict
 
 
 class DataFlowModel(ModelMT):
@@ -15,7 +16,7 @@ class DataFlowModel(ModelMT):
 
     __observables__ = ("data_flow",)
 
-    def __init__(self, data_flow):
+    def __init__(self, data_flow, meta=None):
         """Constructor
         """
 
@@ -24,4 +25,8 @@ class DataFlowModel(ModelMT):
         assert isinstance(data_flow, DataFlow)
 
         self.data_flow = data_flow
-        return
+
+        if isinstance(meta, Vividict):
+            self.meta = meta
+        else:
+            self.meta = Vividict()
