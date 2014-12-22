@@ -95,6 +95,8 @@ class GraphicalEditorController(Controller):
         if self.selection is not None and isinstance(self.selection, StateModel):
             conversion = self.view.editor.pixel_to_size_ratio()
 
+            old_pos_x = self.selection.meta['gui']['editor']['pos_x']
+            old_pos_y = self.selection.meta['gui']['editor']['pos_y']
             new_pos_x = self.selection_start_pos[0] + rel_x_motion / conversion
             new_pos_y = self.selection_start_pos[1] + rel_y_motion / conversion
 
@@ -117,6 +119,19 @@ class GraphicalEditorController(Controller):
 
             self.selection.meta['gui']['editor']['pos_x'] = new_pos_x
             self.selection.meta['gui']['editor']['pos_y'] = new_pos_y
+
+            diff_x = new_pos_x - old_pos_x
+            diff_y = new_pos_y - old_pos_y
+
+            def move_child_states(state, diff_x, diff_y):
+                for child_state in state.states.itervalues():
+                    child_state.meta['gui']['editor']['pos_x'] += diff_x
+                    child_state.meta['gui']['editor']['pos_y'] += diff_y
+                    if isinstance(child_state, ContainerStateModel):
+                        move_child_states(child_state, diff_x, diff_y)
+
+            if isinstance(self.selection, ContainerStateModel):
+                move_child_states(self.selection, diff_x, diff_y)
 
             self.redraw()
 
