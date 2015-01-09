@@ -58,7 +58,7 @@ class ContainerStateModel(StateModel):
 
 
         for transition in container_state.transitions.itervalues():
-            self.transitions.append(TransitionModel(transition))
+            self.transitions.append(TransitionModel(transition, self))
             self.transition_list_store.append([transition])
 
         for data_flow in container_state.data_flows.itervalues():

@@ -16,7 +16,7 @@ class TransitionModel(ModelMT):
 
     __observables__ = ("transition",)
 
-    def __init__(self, transition, meta=None):
+    def __init__(self, transition, parent, meta=None):
         """Constructor
         """
 
@@ -25,6 +25,7 @@ class TransitionModel(ModelMT):
         assert isinstance(transition, Transition)
 
         self.transition = transition
+        self.parent = parent
 
         if isinstance(meta, Vividict):
             self.meta = meta

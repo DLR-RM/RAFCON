@@ -124,7 +124,6 @@ class GraphicalEditorController(Controller):
                 click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                 logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
-                    print waypoint
                     if waypoint[0] is not None and waypoint[1] is not None:
                         if abs(waypoint[0] - click[0]) < close_threshold and \
                            abs(waypoint[1] - click[1]) < close_threshold:
@@ -215,6 +214,19 @@ class GraphicalEditorController(Controller):
         new_pos_x = self.selection_start_pos[0] + rel_x_motion / conversion
         new_pos_y = self.selection_start_pos[1] + rel_y_motion / conversion
 
+        def limit_pos_to_state(state, pos_x, pos_y, width=0, height=0):
+            if state is not None:
+                if pos_x < state.meta['gui']['editor']['pos_x']:
+                    pos_x = state.meta['gui']['editor']['pos_x']
+                elif pos_x + width > state.meta['gui']['editor']['pos_x'] + state.meta['gui']['editor']['width']:
+                    pos_x = state.meta['gui']['editor']['pos_x'] + state.meta['gui']['editor']['width'] - width
+
+                if pos_y < state.meta['gui']['editor']['pos_y']:
+                    pos_y = state.meta['gui']['editor']['pos_y']
+                elif pos_y + height > state.meta['gui']['editor']['pos_y'] + state.meta['gui']['editor']['height']:
+                    pos_y = state.meta['gui']['editor']['pos_y'] + state.meta['gui']['editor']['height'] - height
+            return pos_x, pos_y
+
         if self.selection is not None and isinstance(self.selection, StateModel):
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
@@ -223,20 +235,8 @@ class GraphicalEditorController(Controller):
             cur_height = self.selection.meta['gui']['editor']['height']
 
             # Keep the state within its container state
-            if self.selection.parent is not None:
-                if new_pos_x < self.selection.parent.meta['gui']['editor']['pos_x']:
-                    new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x']
-                elif new_pos_x + cur_width > self.selection.parent.meta['gui']['editor']['pos_x'] + \
-                        self.selection.parent.meta['gui']['editor']['width']:
-                    new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x'] + \
-                                self.selection.parent.meta['gui']['editor']['width'] - cur_width
-
-                if new_pos_y < self.selection.parent.meta['gui']['editor']['pos_y']:
-                    new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y']
-                elif new_pos_y + cur_height > self.selection.parent.meta['gui']['editor']['pos_y'] + \
-                        self.selection.parent.meta['gui']['editor']['height']:
-                    new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y'] + \
-                                self.selection.parent.meta['gui']['editor']['height'] - cur_height
+            new_pos_x, new_pos_y = limit_pos_to_state(self.selection.parent, new_pos_x, new_pos_y,
+                                                      cur_width, cur_height)
 
             self.selection.meta['gui']['editor']['pos_x'] = new_pos_x
             self.selection.meta['gui']['editor']['pos_y'] = new_pos_y
@@ -258,8 +258,8 @@ class GraphicalEditorController(Controller):
             self._redraw()
 
         if self.selected_waypoint is not None:
-            #old_pos_x = self.selection.meta['gui']['editor']['pos_x']
-            #old_pos_y = self.selection.meta['gui']['editor']['pos_y']
+            # Keep the waypoint within its container state
+            new_pos_x, new_pos_y = limit_pos_to_state(self.selection.parent, new_pos_x, new_pos_y)
             self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
             self._redraw()
 
@@ -471,7 +471,6 @@ class GraphicalEditorController(Controller):
             return sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
         epsilon = 1
-        print 'dist', (distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end))
         if -epsilon < (
                         distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end)) < epsilon:
             return True
