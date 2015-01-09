@@ -120,7 +120,7 @@ class GraphicalEditorController(Controller):
                                             self.selection.meta['gui']['editor']['pos_y'])
 
             if self.selection is not None and isinstance(self.selection, TransitionModel):
-                close_threshold = 5
+                close_threshold = 2
                 click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                 logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
@@ -137,7 +137,6 @@ class GraphicalEditorController(Controller):
 
             # Check if something was selected
             click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
-            print 'event {0:.1f} - {1:.1f} -- click {2:.1f} - {3:.1f}'.format(event.x, event.y, click[0], click[1])
             clicked_model = self._find_selection(event.x, event.y)
 
             if isinstance(clicked_model, TransitionModel):
@@ -146,7 +145,7 @@ class GraphicalEditorController(Controller):
                 # If it was on a transition, a waypoint is added to that position
                 waypoint_removed = False
 
-                close_threshold = 5
+                close_threshold = 2
                 logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for waypoint in transition_model.meta['gui']['editor']['waypoints']:
                     if waypoint[0] is not None and waypoint[1] is not None:
@@ -242,10 +241,17 @@ class GraphicalEditorController(Controller):
             self.selection.meta['gui']['editor']['pos_y'] = new_pos_y
 
             def move_child_states(state, diff_x, diff_y):
+                # Move waypoints
+                if isinstance(state, ContainerStateModel):
+                    for transition in state.transitions:
+                        for i, waypoint in enumerate(transition.meta['gui']['editor']['waypoints']):
+                            new_pos = (waypoint[0] + diff_x, waypoint[1] + diff_y)
+                            transition.meta['gui']['editor']['waypoints'][i] = new_pos
+                # Move child states
                 for child_state in state.states.itervalues():
                     child_state.meta['gui']['editor']['pos_x'] += diff_x
                     child_state.meta['gui']['editor']['pos_y'] += diff_y
-                    # TODO: move waypoints
+
                     if isinstance(child_state, ContainerStateModel):
                         move_child_states(child_state, diff_x, diff_y)
 
