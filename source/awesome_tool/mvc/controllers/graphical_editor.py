@@ -7,7 +7,8 @@ from utils import log
 logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
-from mvc.models import ContainerStateModel, StateModel
+from mvc.models import ContainerStateModel, StateModel, TransitionModel
+from math import sqrt
 # from models.container_state import ContainerStateModel
 
 
@@ -28,6 +29,7 @@ class GraphicalEditorController(Controller):
         self.selection = None
         self.selection_start_pos = (0, 0)
         self.mouse_move_start_pos = (0, 0)
+        self.last_button_pressed = -1
 
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
@@ -86,6 +88,10 @@ class GraphicalEditorController(Controller):
         :param widget: The widget beneath the mouse when the click was done
         :param event: Information about the event, e. g. x and y coordinate
         """
+
+        self.last_button_pressed = event.button
+        self.selected_waypoint = None  # reset
+
         if event.button == 1:  # Left mouse button
             # print 'press', event
 
@@ -104,16 +110,75 @@ class GraphicalEditorController(Controller):
                 self.selection = new_selection
                 if self.selection is not None:
                     self.selection.meta['gui']['selected'] = True
-            #else:
-                #self.selection.meta['gui']['selected'] = False
-                #self.selection = None
+                    # else:
+                    #self.selection.meta['gui']['selected'] = False
+                    #self.selection = None
 
             # If a state was clicked on, store the click coordinates for the drag'ndrop movement
             if self.selection is not None and isinstance(self.selection, StateModel):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
 
+            if self.selection is not None and isinstance(self.selection, TransitionModel):
+                close_threshold = 5
+                click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+                logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
+                for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
+                    print waypoint
+                    if waypoint[0] is not None and waypoint[1] is not None:
+                        if abs(waypoint[0] - click[0]) < close_threshold and \
+                           abs(waypoint[1] - click[1]) < close_threshold:
+                            self.selected_waypoint = (self.selection.meta['gui']['editor']['waypoints'], i)
+                            self.selection_start_pos = (waypoint[0], waypoint[1])
+                            break
+
             self._redraw()
+
+        if event.button == 3:  # right mouse button
+
+            # Check if something was selected
+            click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+            print 'event {0:.1f} - {1:.1f} -- click {2:.1f} - {3:.1f}'.format(event.x, event.y, click[0], click[1])
+            clicked_model = self._find_selection(event.x, event.y)
+
+            if isinstance(clicked_model, TransitionModel):
+                transition_model = clicked_model
+                # If the right click was on a waypoint of transition, the waypoint is removed
+                # If it was on a transition, a waypoint is added to that position
+                waypoint_removed = False
+
+                close_threshold = 5
+                logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
+                for waypoint in transition_model.meta['gui']['editor']['waypoints']:
+                    if waypoint[0] is not None and waypoint[1] is not None:
+                        if abs(waypoint[0] - click[0]) < close_threshold and \
+                                        abs(waypoint[1] - click[1]) < close_threshold:
+                            # del transition_model.meta['waypoints'][key]
+                            transition_model.meta['gui']['editor']['waypoints'].remove(waypoint)
+                            waypoint_removed = True
+                            logger.debug('Transition waypoint removed')
+                            self._redraw()
+                            break
+
+                if not waypoint_removed:
+                    # Add waypoint
+                    if isinstance(transition_model.meta['gui']['editor']['waypoints'], dict):
+                        logger.warn("Transition waypoints was of type dict, expected list")
+                        transition_model.meta['gui']['editor']['waypoints'] = transition_model.meta['waypoints'].items()
+                    num = len(transition_model.meta['gui']['editor']['waypoints'])
+
+                    points = [(transition_model.meta['gui']['editor']['from_pos_x'],
+                               transition_model.meta['gui']['editor']['from_pos_y'])]
+                    points.extend(transition_model.meta['gui']['editor']['waypoints'])
+                    points.append((transition_model.meta['gui']['editor']['to_pos_x'],
+                                   transition_model.meta['gui']['editor']['to_pos_y']))
+                    for i in range(len(points) - 1):
+                        if self._point_on_line(click, points[i], points[i + 1]):
+                            transition_model.meta['gui']['editor']['waypoints'].insert(i, (click[0], click[1]))
+
+                    logger.debug('Transition waypoint added at {0:.1f} - {1:.1f}'.format(click[0], click[1]))
+                    self._redraw()
+
 
     def _on_mouse_release(self, widget, event):
         """Triggered when a mouse button is being released
@@ -134,22 +199,25 @@ class GraphicalEditorController(Controller):
         """
         if self.selection is None:
             return
-        if not isinstance(self.selection, StateModel):
+        if not isinstance(self.selection, StateModel) and not isinstance(self.selection, TransitionModel):
+            return
+        if self.last_button_pressed != 1:
             return
         # Can the root container be moved?
-        # if self.selection == self.model:
-        # return
-        # print 'motion', event
+        if self.selection == self.model:
+            return
+
         rel_x_motion = event.x - self.mouse_move_start_pos[0]
         rel_y_motion = -(event.y - self.mouse_move_start_pos[1])
+
+        # Translate the mouse movement to OpenGL coordinates
+        conversion = self.view.editor.pixel_to_size_ratio()
+        new_pos_x = self.selection_start_pos[0] + rel_x_motion / conversion
+        new_pos_y = self.selection_start_pos[1] + rel_y_motion / conversion
+
         if self.selection is not None and isinstance(self.selection, StateModel):
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
-
-            # Translate the mouse movement to OpenGL coordinates
-            conversion = self.view.editor.pixel_to_size_ratio()
-            new_pos_x = self.selection_start_pos[0] + rel_x_motion / conversion
-            new_pos_y = self.selection_start_pos[1] + rel_y_motion / conversion
 
             cur_width = self.selection.meta['gui']['editor']['width']
             cur_height = self.selection.meta['gui']['editor']['height']
@@ -161,14 +229,14 @@ class GraphicalEditorController(Controller):
                 elif new_pos_x + cur_width > self.selection.parent.meta['gui']['editor']['pos_x'] + \
                         self.selection.parent.meta['gui']['editor']['width']:
                     new_pos_x = self.selection.parent.meta['gui']['editor']['pos_x'] + \
-                        self.selection.parent.meta['gui']['editor']['width'] - cur_width
+                                self.selection.parent.meta['gui']['editor']['width'] - cur_width
 
                 if new_pos_y < self.selection.parent.meta['gui']['editor']['pos_y']:
                     new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y']
                 elif new_pos_y + cur_height > self.selection.parent.meta['gui']['editor']['pos_y'] + \
                         self.selection.parent.meta['gui']['editor']['height']:
                     new_pos_y = self.selection.parent.meta['gui']['editor']['pos_y'] + \
-                        self.selection.parent.meta['gui']['editor']['height'] - cur_height
+                                self.selection.parent.meta['gui']['editor']['height'] - cur_height
 
             self.selection.meta['gui']['editor']['pos_x'] = new_pos_x
             self.selection.meta['gui']['editor']['pos_y'] = new_pos_y
@@ -177,6 +245,7 @@ class GraphicalEditorController(Controller):
                 for child_state in state.states.itervalues():
                     child_state.meta['gui']['editor']['pos_x'] += diff_x
                     child_state.meta['gui']['editor']['pos_y'] += diff_y
+                    # TODO: move waypoints
                     if isinstance(child_state, ContainerStateModel):
                         move_child_states(child_state, diff_x, diff_y)
 
@@ -187,6 +256,13 @@ class GraphicalEditorController(Controller):
                 move_child_states(self.selection, diff_x, diff_y)
 
             self._redraw()
+
+        if self.selected_waypoint is not None:
+            #old_pos_x = self.selection.meta['gui']['editor']['pos_x']
+            #old_pos_y = self.selection.meta['gui']['editor']['pos_y']
+            self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
+            self._redraw()
+
 
     def draw_state(self, state, pos_x=0.0, pos_y=0.0, width=100.0, height=100.0, depth=1):
         """Draws a (container) state with all its content
@@ -296,10 +372,21 @@ class GraphicalEditorController(Controller):
                     to_x = to_state.meta['gui']['editor']['pos_x'] + to_state.meta['gui']['editor']['width'] / 2
                     to_y = to_state.meta['gui']['editor']['pos_y'] + to_state.meta['gui']['editor']['height'] / 2
 
+                waypoints = []
+                for waypoint in transition.meta['gui']['editor']['waypoints']:
+                    waypoints.append((waypoint[0], waypoint[1]))
+
+
                 # Let the view draw the transition and store the returned OpenGl object id
                 active = transition.meta['gui']['selected']
-                id = self.view.editor.draw_transition("Transition", from_x, from_y, to_x, to_y, active, depth + 0.5)
+                line_width = min(width, height) / 25.0
+                id = self.view.editor.draw_transition("Transition", from_x, from_y, to_x, to_y, line_width, waypoints,
+                                                      active, depth + 0.5)
                 transition.meta['gui']['editor']['id'] = id
+                transition.meta['gui']['editor']['from_pos_x'] = from_x
+                transition.meta['gui']['editor']['from_pos_y'] = from_y
+                transition.meta['gui']['editor']['to_pos_x'] = to_x
+                transition.meta['gui']['editor']['to_pos_y'] = to_y
 
             for data_flow in state.data_flows:
                 pass
@@ -377,3 +464,16 @@ class GraphicalEditorController(Controller):
                     ids.remove(data_flow.meta['gui']['editor']['id'])
 
         return selection, selection_depth
+
+    @staticmethod
+    def _point_on_line(point, line_start, line_end):
+        def distance(a, b):
+            return sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+
+        epsilon = 1
+        print 'dist', (distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end))
+        if -epsilon < (
+                        distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end)) < epsilon:
+            return True
+
+        return False
