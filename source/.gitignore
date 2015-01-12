@@ -78,3 +78,10 @@ target/
 **/.idea/*
 !**/.idea/runConfigurations
 
+#
+# This part is responsible for generated files while storing a statemachine
+#
+
+test_scripts/stored_statemachine
+
+
