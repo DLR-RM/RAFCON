@@ -150,7 +150,17 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         conversion = self.pixel_to_size_ratio()
         viewport = glGetInteger(GL_VIEWPORT)
         window = (pos[0], viewport[3] - pos[1] + viewport[1])  # Screen to window coordinates
-        opengl = (window[0] / float(conversion) + self.left, window[1] / float(conversion) + self.bottom)  # Window to
+
+        left = self.left
+        bottom = self.bottom
+        aspect = self.allocation.width/float(self.allocation.height)
+        if self.allocation.width <= self.allocation.height:
+            bottom = self.bottom/aspect
+        else:
+            left = self.left*aspect
+
+
+        opengl = (window[0] / float(conversion) + left, window[1] / float(conversion) + bottom)  # Window to
         # OpenGL
         # coordinates
         return opengl
