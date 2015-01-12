@@ -146,6 +146,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return False
 
+    def screen_to_opengl_coordinates(self, pos):
+        conversion = self.pixel_to_size_ratio()
+        viewport = glGetInteger(GL_VIEWPORT)
+        window = (pos[0], viewport[3] - pos[1] + viewport[1])  # Screen to window coordinates
+        opengl = (window[0] / float(conversion) + self.left, window[1] / float(conversion) + self.bottom)  # Window to
+        # OpenGL
+        # coordinates
+        return opengl
+
     def pixel_to_size_ratio(self):
         """Calculates the ratio between pixel and OpenGL distances
 
@@ -269,7 +278,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPopName()
         return (id, outcome_pos)
 
-    def draw_transition(self, name, from_pos_x, from_pos_y, to_pos_x, to_pos_y, active=False, depth=0):
+    def draw_transition(self, name, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
+                        depth=0):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified transition.
@@ -287,7 +297,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.name_counter += 1
 
         glPushName(id)
-        self._set_closest_line_width(4)
+        self._set_closest_line_width(width)
 
         # TODO: Show name of the transition
 
@@ -296,11 +306,20 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         else:
             glColor4f(0.6, 0.6, 0.6, 0.8)
 
-        # Draw the transitions as simple straight line
-        glBegin(GL_LINES)
-        glVertex3f(from_pos_x, from_pos_y, depth)
-        glVertex3f(to_pos_x, to_pos_y, depth)
+        points = [(from_pos_x, from_pos_y)]
+        points.extend(waypoints)
+        points.append((to_pos_x, to_pos_y))
+
+        # Draw the transitions as simple straight line connecting start- way- and endpoints
+        glBegin(GL_LINE_STRIP)
+        for point in points:
+            glVertex3f(point[0], point[1], depth)
         glEnd()
+
+        self._set_closest_line_width(width / 1.5)
+        for waypoint in waypoints:
+            self._draw_circle(waypoint[0], waypoint[1], depth + 1, width / 8.)
+
         glPopName()
 
         return id
