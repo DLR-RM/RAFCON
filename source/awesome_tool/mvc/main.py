@@ -45,6 +45,8 @@ def main(*args, **kargs):
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
     state1 = State('State1')
+    state1.add_input_data_port("my_input", "int", 0)
+    state1.add_output_data_port("my_output", "int")
     state2 = State('State2')
     state3 = ContainerState(name='State3')
     state4 = State('Nested')

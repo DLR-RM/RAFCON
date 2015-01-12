@@ -2,7 +2,8 @@
 from utils import log
 logger = log.get_logger(__name__)
 
-from math import sin, cos, pi
+from math import sin, cos, pi, floor
+import itertools
 
 import OpenGL
 from OpenGL.GL import *
@@ -20,6 +21,58 @@ import gtk
 import gtk.gtkgl
 import gtk.gdkgl
 from gtkmvc import View
+
+
+class Color:
+    def __init__(self, r, g, b, a=1):
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+
+    @property
+    def r(self):
+        return self._r
+
+    @property
+    def g(self):
+        return self._g
+
+    @property
+    def b(self):
+        return self._b
+
+    @property
+    def a(self):
+        return self._a
+
+    @r.setter
+    def r(self, r):
+        self._r = self._check_range(r)
+
+    @g.setter
+    def g(self, g):
+        self._g = self._check_range(g)
+
+    @b.setter
+    def b(self, b):
+        self._b = self._check_range(b)
+
+    @a.setter
+    def a(self, a):
+        self._a = self._check_range(a)
+
+    @staticmethod
+    def _check_range(c):
+        if c < 0:
+            return 0
+        if c > 1:
+            return 1
+
+    def set(self):
+        """Set the color as current OpenGL color
+        """
+        glColor4f(self.r, self.g, self.b, self.a)
 
 
 class GraphicalEditorView(View):
@@ -66,6 +119,12 @@ class GraphicalEditorView(View):
 
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
+
+    border_color = Color(0.2, 0.2, 0.2, 1)
+    state_color = Color(0.9, 0.9, 0.9, 0.8)
+    state_active_color = Color(0.7, 0, 0, 0.8)
+    transition_color = Color(0.6, 0.6, 0.6, 0.8)
+    transition_active_color = Color(0.7, 0, 0, 0.8)
 
     def __init__(self, glconfig):
         """The graphical editor manages the OpenGL functions.
@@ -149,7 +208,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     def screen_to_opengl_coordinates(self, pos):
         conversion = self.pixel_to_size_ratio()
         viewport = glGetInteger(GL_VIEWPORT)
-        window = (pos[0], viewport[3] - pos[1] + viewport[1])  # Screen to window coordinates
+
+        # Screen to window coordinates
+        window = (pos[0], viewport[3] - pos[1] + viewport[1])
 
         left = self.left
         bottom = self.bottom
@@ -159,10 +220,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         else:
             left = self.left*aspect
 
-
-        opengl = (window[0] / float(conversion) + left, window[1] / float(conversion) + bottom)  # Window to
-        # OpenGL
-        # coordinates
+        # Window to OpenGL coordinates
+        opengl = (window[0] / float(conversion) + left, window[1] / float(conversion) + bottom)
         return opengl
 
     def pixel_to_size_ratio(self):
@@ -221,7 +280,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         #logger.debug("expose_finish")
 
-    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0, active=False, depth=0):
+    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0, inputs={}, outputs={}, active=False, depth=0):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified (container) state.
@@ -242,21 +301,17 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self._set_closest_line_width(1.5)
 
         # First draw the face of the rectangular, then the outline
-        for type in (GL_POLYGON, GL_LINE_LOOP):
-            if type == GL_POLYGON:
-                if active:
-                    glColor4f(0.7, 0, 0, 0.8)
-                else:
-                    glColor4f(0.9, 0.9, 0.9, 0.8)
-            else:
-                glColor4f(0.2, 0.2, 0.2, 1)
-            glBegin(type)
-            glVertex3f(pos_x, pos_y, depth)
-            glVertex3f(pos_x + width, pos_y, depth)
-            glVertex3f(pos_x + width, pos_y + height, depth)
-            glVertex3f(pos_x, pos_y + height, depth)
-            glEnd()
+        fill_color = self.state_color
+        if active:
+            fill_color = self.state_active_color
 
+        self._draw_rect(pos_x, pos_x + width, pos_y, pos_y + width, fill_color, self.border_color, depth)
+
+        # Put the name of the state in the upper left corner of the state
+        margin = min(width, height) / 8.0
+        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, depth=depth+0.01)
+
+        # Draw outcomes as circle on the right side of the state
         # Every state has at least the default outcomes "aborted" and "preempted"
         num_outcomes = max(0, len(outcomes))
         if num_outcomes < 2:
@@ -279,15 +334,63 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             outcome_x = pos_x + width
             outcome_y = pos_y + height / (num_outcomes + 1) * (i + 1)
             outcome_pos[key] = (outcome_x, outcome_y)
-            self._draw_circle(outcome_x, outcome_y, depth + 0.1, min(5, height/15.0, height/(2*num_outcomes+3)), 15)
+            self._draw_circle(outcome_x, outcome_y, depth + 0.1, min(5, height/15.0, height/(2*num_outcomes+3)), 16)
             i += 1
 
-        # Put the name of the state in the upper left corner of teh state
-        margin = min(width, height) / 8.0
-        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, depth=depth+0.01)
+        # Draw input and output data ports
+        num_ports = len(inputs) + len(outputs)
+        if num_ports > 0:
+            max_num_chr = -1
+            max_name_width = 0
+            max_allowed_name_width = 0.5 * width
+            str_height = height / 12.0
+            margin = height / 32.0
+
+            # Determine the maximum width of all port labels
+            for port_name in itertools.chain(inputs, outputs):
+                str_width = self._string_width(port_name, str_height)
+                if str_width > max_name_width:
+                    max_name_width = str_width
+
+            # Restrict the port labels to half the size of the state
+            if max_name_width > max_allowed_name_width:
+                chr_width = self._string_width('__________', str_height) / 10.0
+                max_num_chr = floor(max_allowed_name_width / chr_width)
+
+            fill_color = self.state_color
+            if active:
+                fill_color = self.state_active_color
+
+            port_width = min(max_name_width, max_allowed_name_width)
+            port_pos_left_x = pos_x + (width - port_width) / 2
+            port_pos_right_x = port_pos_left_x + port_width
+            port_pos_bottom_y = pos_y - num_ports * (str_height + margin)
+            self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos_y,
+                            fill_color, self.border_color, depth)
+
+            output_num = 0
+            for port in inputs.itervalues():
+                port_name = port.name
+                if max_num_chr > -1 and len(port_name) > max_num_chr:
+                    port_name = port_name[0:int(max_num_chr)-2] + '~'
+                self._write_string(port_name, port_pos_left_x + margin/2., pos_y - margin/2. - output_num *
+                                   (str_height + margin),
+                                   str_height, 1,
+                                   depth+0.01)
+                output_num += 1
+
+            for port in outputs.itervalues():
+                port_name = port.name
+                if max_num_chr > -1 and len(port_name) > max_num_chr:
+                    port_name = port_name[0:int(max_num_chr)-2] + '~'
+                self._write_string(port_name, port_pos_left_x + margin/2., pos_y - margin/2. - output_num *
+                                   (str_height + margin), str_height, 1, depth+0.01)
+                output_num += 1
+
+
 
         glPopName()
-        return (id, outcome_pos)
+        return id, outcome_pos, {}, {}
 
     def draw_transition(self, name, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
                         depth=0):
@@ -313,9 +416,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # TODO: Show name of the transition
 
         if active:
-            glColor4f(0.7, 0, 0, 0.8)
+            self.transition_active_color.set()
         else:
-            glColor4f(0.6, 0.6, 0.6, 0.8)
+            self.transition_color.set()
 
         points = [(from_pos_x, from_pos_y)]
         points.extend(waypoints)
@@ -335,7 +438,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return id
 
-    def _write_string(self, string, pos_x, pos_y, height, line_width=1, depth=0):
+    def _write_string(self, string, pos_x, pos_y, height, stroke_width=1, depth=0):
         """Write a string
 
         Writes a string with a simple OpenGL method in the given size at the given position
@@ -343,11 +446,11 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param pos_x: x starting position
         :param pos_y: y starting position
         :param height: desired height
-        :param line_width: thickness of the letters
+        :param stroke_width: thickness of the letters
         :param depth: the Z layer
         """
         glColor3f(0, 0.5, 0.5)
-        self._set_closest_line_width(line_width)
+        self._set_closest_line_width(stroke_width)
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         pos_y = pos_y - height
@@ -361,6 +464,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             #width = glutStrokeWidth(GLUT_STROKE_ROMAN, ord(c))
 
         glPopMatrix()
+
+    @staticmethod
+    def _string_width(string, height):
+        width = 0
+        for c in string:
+            width += glutStrokeWidth(GLUT_STROKE_ROMAN, ord(c))
+        font_height = 119.5  # According to https://www.opengl.org/resources/libraries/glut/spec3/node78.html
+        scale_factor = height / font_height
+        return width * scale_factor
 
     def prepare_selection(self, pos_x, pos_y):
         """Prepares the selection rendering
@@ -419,6 +531,20 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glLineWidth(round(width / line_width_granularity) * line_width_granularity)
 
     @staticmethod
+    def _draw_rect(left_x, right_x, bottom_y, top_y, fill_color, border_color, depth):
+        for type in (GL_POLYGON, GL_LINE_LOOP):
+            if type == GL_POLYGON:
+                fill_color.set()
+            else:
+                border_color.set()
+            glBegin(type)
+            glVertex3f(left_x, bottom_y, depth)
+            glVertex3f(right_x, bottom_y, depth)
+            glVertex3f(right_x, top_y, depth)
+            glVertex3f(left_x, top_y, depth)
+            glEnd()
+
+    @staticmethod
     def _draw_circle(pos_x, pos_y, depth, radius, segments=10):
         """Draws a circle
 
@@ -447,3 +573,4 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glOrtho(self.left, self.right, self.bottom/aspect, self.top/aspect, -10, 0)
         else:
             glOrtho(self.left*aspect, self.right*aspect, self.bottom, self.top, -10, 0)
+

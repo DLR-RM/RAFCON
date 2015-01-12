@@ -111,7 +111,7 @@ class GraphicalEditorController(Controller):
                 if self.selection is not None:
                     self.selection.meta['gui']['selected'] = True
                     # else:
-                    #self.selection.meta['gui']['selected'] = False
+                    # self.selection.meta['gui']['selected'] = False
                     #self.selection = None
 
             # If a state was clicked on, store the click coordinates for the drag'ndrop movement
@@ -126,7 +126,7 @@ class GraphicalEditorController(Controller):
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
                     if waypoint[0] is not None and waypoint[1] is not None:
                         if abs(waypoint[0] - click[0]) < close_threshold and \
-                           abs(waypoint[1] - click[1]) < close_threshold:
+                                        abs(waypoint[1] - click[1]) < close_threshold:
                             self.selected_waypoint = (self.selection.meta['gui']['editor']['waypoints'], i)
                             self.selection_start_pos = (waypoint[0], waypoint[1])
                             break
@@ -307,9 +307,12 @@ class GraphicalEditorController(Controller):
         active = state.meta['gui']['selected']
 
         # Call the drawing method of the view
-        # The view returns the id of the state in OpenGL and the positions of the outcomes
-        (id, outcome_pos) = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height,
-                                                        state.state.outcomes, active, depth)
+        # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
+        (id, outcome_pos, input_pos, output_pos) = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width,
+                                                                               height, state.state.outcomes,
+                                                                               state.state.input_data_ports,
+                                                                               state.state.output_data_ports, active,
+                                                                               depth)
         state.meta['gui']['editor']['id'] = id
         state.meta['gui']['editor']['outcome_pos'] = outcome_pos
 
@@ -478,7 +481,8 @@ class GraphicalEditorController(Controller):
 
         epsilon = 1
         if -epsilon < (
-                        distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end)) < epsilon:
+                        distance(line_start, point) + distance(point, line_end) - distance(line_start,
+                                                                                           line_end)) < epsilon:
             return True
 
         return False
