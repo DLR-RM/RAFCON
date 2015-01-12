@@ -12,9 +12,10 @@ from gtkmvc import Observable
 from utils import log
 logger = log.get_logger(__name__)
 import numpy
+import yaml
 
 
-class Transition(Observable):
+class Transition(Observable, yaml.YAMLObject):
     """A class for representing a transition in the state machine
 
     It inherits from Observable to make a change of its fields observable.
@@ -27,13 +28,22 @@ class Transition(Observable):
 
     """
 
+    yaml_tag = u'!Transition'
+
     def __init__(self, from_state=None, from_outcome=None, to_state=None, to_outcome=None):
         Observable.__init__(self)
 
-        self._from_state = from_state
-        self._from_outcome = from_outcome
-        self._to_state = to_state
-        self._to_outcome = to_outcome
+        self._from_state = None
+        self.from_state = from_state
+
+        self._from_outcome = None
+        self.from_outcome = from_outcome
+
+        self._to_state = None
+        self.to_state = to_state
+
+        self._to_outcome = None
+        self.to_outcome = to_outcome
 
         logger.debug(self.__str__())
 
@@ -41,6 +51,27 @@ class Transition(Observable):
         return "Transition - from_state: %s, from_outcome: %s, to_state: %s, to_outcome: %s" % (self._from_state,
                                                                                        self._from_outcome,
                                                                                        self._to_state, self._to_outcome)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = {
+            'from_state': data.from_state,
+            'from_outcome': data.from_outcome,
+            'to_state': data.to_state,
+            'to_outcome': data.to_outcome
+        }
+        print dict_representation
+        node = dumper.represent_mapping(u'!Transition', dict_representation)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node)
+        from_state = dict_representation['from_state']
+        from_outcome = dict_representation['from_outcome']
+        to_state = dict_representation['to_state']
+        to_outcome = dict_representation['to_outcome']
+        return Transition(from_state, from_outcome, to_state, to_outcome)
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
@@ -56,8 +87,8 @@ class Transition(Observable):
     @from_state.setter
     @Observable.observed
     def from_state(self, from_state):
-        if not isinstance(from_state, numpy.uint32):
-            raise TypeError("from_state must be of type numpy.uint32")
+        if not isinstance(from_state, str):
+            raise TypeError("from_state must be of type str")
 
         self._from_state = from_state
 
@@ -86,8 +117,9 @@ class Transition(Observable):
     @to_state.setter
     @Observable.observed
     def to_state(self, to_state):
-        if not isinstance(to_state, numpy.uint32):
-            raise TypeError("to_state must be of type numpy.uint32")
+        if not to_state is None:
+            if not isinstance(to_state, str):
+                raise TypeError("to_state must be of type str")
 
         self._to_state = to_state
 
@@ -101,7 +133,8 @@ class Transition(Observable):
     @to_outcome.setter
     @Observable.observed
     def to_outcome(self, to_outcome):
-        if not isinstance(to_outcome, int):
-            raise TypeError("to_outcome must be of type int")
+        if not to_outcome is None:
+            if not isinstance(to_outcome, int):
+                raise TypeError("to_outcome must be of type int")
 
         self._to_outcome = to_outcome

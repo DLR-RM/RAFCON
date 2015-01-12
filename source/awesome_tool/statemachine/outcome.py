@@ -10,9 +10,10 @@
 
 from gtkmvc import Observable
 import numpy
+import yaml
 
 
-class Outcome(Observable):
+class Outcome(Observable, yaml.YAMLObject):
 
     """A class for representing an outcome of a state
 
@@ -26,15 +27,37 @@ class Outcome(Observable):
 
     """
 
+    yaml_tag = u'!Outcome'
+
     def __init__(self, outcome_id=None, name=None):
 
         Observable.__init__(self)
 
-        self._outcome_id = outcome_id
-        self._name = name
+        self._outcome_id = None
+        self.outcome_id = outcome_id
+
+        self._name = None
+        self.name = name
 
     def __str__(self):
         return "Outcome - outcome_id: %s, name: %s" % (self._outcome_id, self._name)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = {
+            'outcome_id': data.outcome_id,
+            'name': data.name,
+        }
+        print dict_representation
+        node = dumper.represent_mapping(u'!Outcome', dict_representation)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node)
+        outcome_id = dict_representation['outcome_id']
+        name = dict_representation['name']
+        return Outcome(outcome_id, name)
 
 
 #########################################################################
@@ -51,8 +74,8 @@ class Outcome(Observable):
     @outcome_id.setter
     @Observable.observed
     def outcome_id(self, outcome_id):
-        if not isinstance(outcome_id, numpy.uint32):
-            raise TypeError("outcome_id must be of type numpy.uint32")
+        if not isinstance(outcome_id, int):
+            raise TypeError("outcome_id must be of type int")
 
         self._outcome_id = outcome_id
 

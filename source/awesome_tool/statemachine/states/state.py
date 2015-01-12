@@ -12,6 +12,8 @@ import threading
 import sys
 from gtkmvc import Observable
 import Queue
+from enum import Enum
+import yaml
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -21,15 +23,16 @@ from statemachine.execution.statemachine_status import StateMachineStatus
 from statemachine.id_generator import *
 
 
-class DataPort(Observable):
+class DataPort(Observable, yaml.YAMLObject):
 
+    #TODO: should the value of the data port be stored here as well?
     """A class for representing a data ports in a state
 
     :ivar _name: the name of the data port
     :ivar _data_type: the value type of the port
 
     """
-    def __init__(self, name, data_type):
+    def __init__(self, name=None, data_type=None):
 
         Observable.__init__(self)
 
@@ -37,6 +40,29 @@ class DataPort(Observable):
         self.name = name
         self._data_type = None
         self.data_type = data_type
+
+    def __str__(self):
+        return "DataPort: \n name: %s \n data_type: %s " % (self.name, self.data_type)
+
+    yaml_tag = u'!DataPort'
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = {
+            'name': data.name,
+            'data_type': data.data_type
+        }
+        print dict_representation
+        node = dumper.represent_mapping(u'!DataPort', dict_representation)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node)
+        name = dict_representation['name']
+        data_type = dict_representation['data_type']
+        return DataPort(name, data_type)
+
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -74,7 +100,10 @@ class DataPort(Observable):
         self._data_type = data_type
 
 
-class State(threading.Thread, Observable):
+StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY')
+
+
+class State(threading.Thread, Observable, yaml.YAMLObject):
 
     """A class for representing a state in the state machine
 
@@ -96,6 +125,7 @@ class State(threading.Thread, Observable):
     :ivar _concurrency_queue: a queue to signal a preemptive concurrency state, that the execution of the state
                                 finished
     :ivar _final_outcome: the final outcome of a state, when it finished execution
+    :ivar _state_type: the type of the container state (i.e. hierarchy, concurrency etc.)
 
     """
 
@@ -136,6 +166,7 @@ class State(threading.Thread, Observable):
         self._preempted = False
         self._concurrency_queue = None
         self._final_outcome = None
+        self._state_type = None
 
         logger.debug("State with id %s initialized" % self._state_id)
 
@@ -223,6 +254,9 @@ class State(threading.Thread, Observable):
                 if not isinstance(output_data[key], getattr(sys.modules[__name__], value.data_type)):
                     raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
 
+    def __str__(self):
+        return "Common state values:\nstate_id: %s\nname: %s" % (self.state_id, self.name)
+
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
@@ -280,10 +314,10 @@ class State(threading.Thread, Observable):
             self._input_data_ports = {}
         else:
             if not isinstance(input_data_ports, dict):
-                raise TypeError("input_keys must be of type dict")
-            for key in input_data_ports:
-                if not isinstance(key, DataPort):
-                    raise TypeError("element of input_keys must be of type DataPort")
+                raise TypeError("input_data_ports must be of type dict")
+            for key, value in input_data_ports.iteritems():
+                if not isinstance(value, DataPort):
+                    raise TypeError("element of input_data_ports must be of type DataPort")
             self._input_data_ports = input_data_ports
 
     @property
@@ -300,10 +334,10 @@ class State(threading.Thread, Observable):
             self._output_data_ports = {}
         else:
             if not isinstance(output_data_ports, dict):
-                raise TypeError("output_keys must be of type dict")
-            for key in output_data_ports:
-                if not isinstance(key, DataPort):
-                    raise TypeError("element of output_keys must be of type DataPort")
+                raise TypeError("output_data_ports must be of type dict")
+            for key, value in output_data_ports.iteritems():
+                if not isinstance(value, DataPort):
+                    raise TypeError("element of output_data_ports must be of type DataPort")
             self._output_data_ports = output_data_ports
 
     @property
@@ -318,14 +352,15 @@ class State(threading.Thread, Observable):
     def outcomes(self, outcomes):
         if outcomes is None:
             self._outcomes = {}
+            self.add_outcome("success", 0)
             self.add_outcome("aborted", 1)
             self.add_outcome("preempted", 2)
         else:
             if not isinstance(outcomes, dict):
                 raise TypeError("outcomes must be of type dict")
-            for o in outcomes:
-                if not isinstance(o, Outcome):
-                    raise TypeError("element of outcomes must be of type list or tuple")
+            for key, value in outcomes.iteritems():
+                if not isinstance(value, Outcome):
+                    raise TypeError("element of outcomes must be of type Outcome")
             self._outcomes = outcomes
 
     @property
@@ -471,3 +506,18 @@ class State(threading.Thread, Observable):
         if not isinstance(final_outcome, Outcome):
             raise TypeError("final_outcome must be of type Outcome")
         self._final_outcome = final_outcome
+
+    @property
+    def state_type(self):
+        """Property for the _state_type field
+
+        """
+        return self._state_type
+
+    @state_type.setter
+    @Observable.observed
+    def state_type(self, state_type):
+        if not state_type is None:
+            if not isinstance(state_type, StateType):
+                raise TypeError("state_type must be of type StateType")
+        self._state_type = state_type

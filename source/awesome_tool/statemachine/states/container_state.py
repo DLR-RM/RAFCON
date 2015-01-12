@@ -9,6 +9,7 @@
 """
 from gtkmvc import Observable
 from threading import Condition
+import yaml
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -37,12 +38,12 @@ class ContainerState(State, Observable):
 
     """
 
-    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None, sm_status=None,
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
                  v_checker=None, path=None, filename=None):
 
         logger.debug("Creating new container state")
-        State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, path, filename)
 
         self._states = None
         self.states = states
@@ -50,13 +51,17 @@ class ContainerState(State, Observable):
         self.transitions = transitions
         self._data_flows = None
         self.data_flows = data_flows
-        self._start_state = start_state
+        self._start_state = None
+        self.start_state = start_state
         self._scoped_variables = None
         self.scoped_variables = scoped_variables
         self._scoped_results = {}
         self._v_checker = v_checker
         self._current_state = None
         self._transitions_cv = Condition()
+
+    def __str__(self):
+        return "state type: %s\n%s" % (self.state_type, State.__str__(self))
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
@@ -119,14 +124,6 @@ class ContainerState(State, Observable):
         self._states[state_id] = state
         return state_id
 
-    def remove_state(self, state_id):
-        """Remove a state from the container state.
-
-        :param state_id: the id of the state to remove
-
-        """
-        self._states.pop(state_id, None)
-
     def add_state(self, state):
         """Adds a state to the container state.
 
@@ -134,6 +131,14 @@ class ContainerState(State, Observable):
 
         """
         self._states[state.state_id] = state
+
+    def remove_state(self, state_id):
+        """Remove a state from the container state.
+
+        :param state_id: the id of the state to remove
+
+        """
+        self._states.pop(state_id, None)
 
     #Primary key is transition_id.
     def add_transition(self, from_state, from_outcome, to_state, to_outcome):
@@ -196,22 +201,22 @@ class ContainerState(State, Observable):
 
         """
 
-    def set_start_state(self, state):
+    def set_start_state(self, state_id):
         """Adds a data_flow to the container state
 
         :param state: The state (that was already added to the container) that will be the start state
 
         """
-        self._start_state = state
+        self._start_state = state_id
 
     def get_start_state(self):
         """Get the start state of the container state
 
         """
         if self._sm_status.dependency_tree is None:
-            return self._start_state
+            return self.states[self.start_state]
         else:
-            #do start with state provided by the dependency tree
+            #TODO: do start with state provided by the dependency tree
             pass
 
     def get_inputs_for_state(self, state):
@@ -222,17 +227,22 @@ class ContainerState(State, Observable):
         """
         result_dict = {}
         for input_key, value in state.input_data_ports.iteritems():
+            print "input_key: %s - value: %s" % (str(input_key), str(value))
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
             for data_flow_key, data_flow in self.data_flows.iteritems():
-                if data_flow.to_key is input_key:
-                    if data_flow.to_state is state:
+                print "data_flow_key: %s - data_flow: %s" % (str(data_flow_key), str(data_flow))
+                if data_flow.to_key == input_key:
+                    print "Check0"
+                    if data_flow.to_state == state.state_id:
+                        print state.state_id
                         #data comes from scope variable of parent
-                        if data_flow.from_state is self:
+                        if data_flow.from_state == self.state_id:
                             result_dict[input_key] = self.scoped_variables[data_flow.from_key].value
                         else:  # data comes from result from neighbouring state
                             #primary key for scoped_results is key+state_id
+                            print "Check"
                             result_dict[input_key] =\
-                                self.scoped_results[data_flow.from_key+data_flow.from_state.state_id].value
+                                self.scoped_results[data_flow.from_key+data_flow.from_state].value
         return result_dict
 
     def get_outputs_for_state(self, state):
@@ -278,6 +288,24 @@ class ContainerState(State, Observable):
         else:
             return self.states[transition.to_state]
 
+    def get_container_state_yaml_dict(data):
+        dict_representation = {
+            'name': data.name,
+            'state_id': data.state_id,
+            'state_type': str(data.state_type),
+            'input_data_ports': data.input_data_ports,
+            'output_data_ports': data.output_data_ports,
+            'outcomes': data.outcomes,
+            'path': data.script.path,
+            'filename': data.script.filename,
+            'transitions': data.transitions,
+            'data_flows': data.data_flows,
+            'start_state': data.start_state,
+            'scoped_variables': data.scoped_variables
+        }
+        return dict_representation
+
+
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
@@ -317,8 +345,8 @@ class ContainerState(State, Observable):
         else:
             if not isinstance(transitions, dict):
                 raise TypeError("transitions must be of type dict")
-            for t in transitions:
-                if not isinstance(t, Transition):
+            for key, value in transitions.iteritems():
+                if not isinstance(value, Transition):
                     raise TypeError("element of transitions must be of type Transition")
             self._transitions = transitions
 
@@ -337,8 +365,8 @@ class ContainerState(State, Observable):
         else:
             if not isinstance(data_flows, dict):
                 raise TypeError("data_flows must be of type dict")
-            for df in data_flows:
-                if not isinstance(df, DataFlow):
+            for key, value in data_flows.iteritems():
+                if not isinstance(value, DataFlow):
                     raise TypeError("element of data_flows must be of type DataFlow")
             self._data_flows = data_flows
 
@@ -352,8 +380,9 @@ class ContainerState(State, Observable):
     @start_state.setter
     @Observable.observed
     def start_state(self, start_state):
-        if not isinstance(start_state, State):
-            raise TypeError("start_state must be of type list or State")
+        if not start_state is None:
+            if not isinstance(start_state, str):
+                raise TypeError("start_state must be of type str")
         self._start_state = start_state
 
     @property

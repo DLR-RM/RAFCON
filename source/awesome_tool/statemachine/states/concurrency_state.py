@@ -24,6 +24,7 @@ class ConcurrencyState(ContainerState):
 
         ContainerState.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, states, transitions,
                                 data_flows, start_state, scoped_variables, v_checker, path, filename)
+        self.state_type = None
 
     def run(self, *args, **kwargs):
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")

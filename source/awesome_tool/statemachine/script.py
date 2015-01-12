@@ -11,6 +11,7 @@
 import os
 import imp
 import sys
+import yaml
 
 from gtkmvc import Observable
 
@@ -18,7 +19,7 @@ from statemachine.id_generator import *
 import statemachine.singleton
 
 
-class Script(Observable):
+class Script(Observable, yaml.YAMLObject):
 
     """A class for representing the script file for each state in a state machine
 
@@ -42,6 +43,8 @@ def exit(self):
 def exit(self):
     pass
 """
+
+    yaml_tag = u'!Script'
 
     def __init__(self, path=None, filename=None):
 
@@ -102,6 +105,21 @@ def exit(self):
         self._compiled_module = tmp_module
 
         script_file.close()
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = {
+            'path': data.path,
+            'filename': data.filename,
+        }
+        print dict_representation
+        node = dumper.represent_mapping(u'!Script', dict_representation)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        #TODO:implement
+        return None
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

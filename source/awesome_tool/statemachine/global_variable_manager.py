@@ -12,6 +12,9 @@ from gtkmvc import Observable
 from threading import Lock
 from id_generator import *
 
+from utils import log
+logger = log.get_logger(__name__)
+
 
 class GlobalVariableManager(Observable):
 
@@ -46,7 +49,7 @@ class GlobalVariableManager(Observable):
         # --- release variable
         self.unlock_variable(key, access_key)
         self.__dictionary_lock.release()
-        print "Variable %s was set to %s" % (key, str(value))
+        logger.debug("Global variable %s was set to %s" % (key, str(value)))
 
     def get_variable(self, key):
         """Fetches the value of a global variable

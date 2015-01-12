@@ -8,21 +8,27 @@
 
 """
 
+import yaml
+
 from utils import log
 logger = log.get_logger(__name__)
-
 from statemachine.outcome import Outcome
 from concurrency_state import ConcurrencyState
+from container_state import ContainerState
+from statemachine.states.state import StateType
 
 
-class BarrierConcurrencyState(ConcurrencyState):
+class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
-    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None,
+    yaml_tag = u'!BarrierConcurrencyState'
+
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None, sm_status=None,
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
                  v_checker=None, path=None, filename=None):
 
-        ConcurrencyState.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, states,
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, states,
                                   transitions, data_flows, start_state, scoped_variables, v_checker, path, filename)
+        self.state_type = StateType.BARRIER_CONCURRENCY
 
     def run(self):
 
@@ -81,3 +87,29 @@ class BarrierConcurrencyState(ConcurrencyState):
         except RuntimeError:
             state.final_outcome = Outcome(1, "aborted")
             return
+
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = ContainerState.get_container_state_yaml_dict(data)
+        print dict_representation
+        node = dumper.represent_mapping(u'!BarrierConcurrencyState', dict_representation)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node, deep=True)
+        return BarrierConcurrencyState(name=dict_representation['name'],
+                              state_id=dict_representation['state_id'],
+                              input_data_ports=dict_representation['input_data_ports'],
+                              output_data_ports=dict_representation['output_data_ports'],
+                              outcomes=dict_representation['outcomes'],
+                              sm_status=None,
+                              states=None,
+                              transitions=dict_representation['transitions'],
+                              data_flows=dict_representation['data_flows'],
+                              start_state=dict_representation['start_state'],
+                              scoped_variables=dict_representation['scoped_variables'],
+                              v_checker=None,
+                              path=dict_representation['path'],
+                              filename=dict_representation['filename'])

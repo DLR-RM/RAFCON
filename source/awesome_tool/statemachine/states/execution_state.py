@@ -8,23 +8,28 @@
 
 """
 
-from statemachine.states.state import State
+import yaml
+
+from statemachine.states.state import State, StateType
 from utils import log
 logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome
 
 
-class ExecutionState(State):
+class ExecutionState(State, yaml.YAMLObject):
 
     """A class to represent a state for executing arbitrary functions
 
     This kind of state does not have any child states.
     """
 
+    yaml_tag = u'!ExecutionState'
+
     def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None,
                  path=None, filename=None):
 
         State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename)
+        self.state_type = StateType.EXECUTION
 
     def print_state_information(self):
         """Prints information about the state
@@ -70,3 +75,36 @@ class ExecutionState(State):
         except RuntimeError:
             self.final_outcome = Outcome(1, "aborted")
             return
+
+    def __str__(self):
+        return "state type: %s\n%s" % (self.state_type, State.__str__(self))
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = {
+            'name': data.name,
+            'state_id': data.state_id,
+            'state_type': str(data.state_type),
+            'input_data_ports': data.input_data_ports,
+            'output_data_ports': data.output_data_ports,
+            'outcomes': data.outcomes,
+            'path': data.script.path,
+            'filename': data.script.filename
+        }
+        print dict_representation
+        node = dumper.represent_mapping(u'!ExecutionState', dict_representation)
+        return node
+
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node, deep=True)
+        name = dict_representation['name']
+        state_id = dict_representation['state_id']
+        state_type = dict_representation['state_type']
+        input_data_ports = dict_representation['input_data_ports']
+        output_data_ports = dict_representation['output_data_ports']
+        outcomes = dict_representation['outcomes']
+        path = dict_representation['path']
+        filename = dict_representation['filename']
+        return ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, None, path, filename)

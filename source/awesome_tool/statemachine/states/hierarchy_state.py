@@ -7,28 +7,31 @@
 
 
 """
+import yaml
 
 from statemachine.states.container_state import ContainerState
 from utils import log
 logger = log.get_logger(__name__)
-import time
-
 from statemachine.outcome import Outcome
+from statemachine.states.state import StateType
 
 
-class HierarchyState(ContainerState):
+class HierarchyState(ContainerState, yaml.YAMLObject):
 
     """A class tto represent a hierarchy state for the state machine
 
     The hierarchy state holds several child states, that can be container states again
     """
 
-    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None,
+    yaml_tag = u'!HierarchyState'
+
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None, sm_status=None,
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
                  v_checker=None, path=None, filename=None):
 
-        ContainerState.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, states, transitions,
+        ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, states, transitions,
                                 data_flows, start_state, scoped_variables, v_checker, path, filename)
+        self.state_type = StateType.HIERARCHY
 
     def run(self):
 
@@ -54,6 +57,7 @@ class HierarchyState(ContainerState):
 
             while not state is self:
                 state_input = self.get_inputs_for_state(state)
+                print state_input
                 state_output = self.get_outputs_for_state(state)
                 state.input_data = state_input
                 state.output_data = state_output
@@ -106,3 +110,28 @@ class HierarchyState(ContainerState):
         except RuntimeError:
             self.final_outcome = Outcome(1, "aborted")
             return
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = ContainerState.get_container_state_yaml_dict(data)
+        print dict_representation
+        node = dumper.represent_mapping(u'!HierarchyState', dict_representation)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node, deep=True)
+        return HierarchyState(name=dict_representation['name'],
+                              state_id=dict_representation['state_id'],
+                              input_data_ports=dict_representation['input_data_ports'],
+                              output_data_ports=dict_representation['output_data_ports'],
+                              outcomes=dict_representation['outcomes'],
+                              sm_status=None,
+                              states=None,
+                              transitions=dict_representation['transitions'],
+                              data_flows=dict_representation['data_flows'],
+                              start_state=dict_representation['start_state'],
+                              scoped_variables=dict_representation['scoped_variables'],
+                              v_checker=None,
+                              path=dict_representation['path'],
+                              filename=dict_representation['filename'])
