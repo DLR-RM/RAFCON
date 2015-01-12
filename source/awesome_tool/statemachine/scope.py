@@ -40,38 +40,44 @@ class ScopedVariable(Observable):
 
     """
 
-    def __init__(self, key=None, value=None, value_type=None, from_state=None):
+    def __init__(self, key_name=None, value=None, value_type=None, from_state=None):
 
         Observable.__init__(self)
 
-        self._key = key
-        self._value = value
-        self._value_type = value_type
-        self._from_state = from_state
+        self._value_type = None
+        self.value_type = value_type
+        self._value = None
+        self.value = value
+
+        self._from_state = None
+        self._key_name = None
+        self.from_state = from_state
+        self.key_name = key_name
+
         self._timestamp = generate_time_stamp()
-        # for storage purpose inside the container states
-        self._primary_key = key+from_state.state_id
+        # for storage purpose inside the container states (generated from key_name and from_state.state_id
+        self._primary_key = None
+
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
 
     @property
-    def name(self):
-        """Property for the _name field
+    def key_name(self):
+        """Property for the _key_name field
 
         """
-        return self._name
+        return self._key_name
 
-    @name.setter
+    @key_name.setter
     @Observable.observed
-    def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError("name must be of type str")
-        self._name = name
+    def key_name(self, key_name):
+        if not isinstance(key_name, str):
+            raise TypeError("key_name must be of type str")
+        self._key_name = key_name
         #update key
-        self._primary_key = self._name+self._from_state.state_id
-
+        self._primary_key = self._key_name+self.from_state.state_id
 
     @property
     def value(self):
@@ -86,6 +92,7 @@ class ScopedVariable(Observable):
 
         #check for primitive data types
         if not str(type(value).__name__) == self._value_type:
+            print self._value_type
             #check for classes
             if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
                 raise TypeError("result must be of type %s" % str(self._value_type))
@@ -116,11 +123,13 @@ class ScopedVariable(Observable):
     @from_state.setter
     @Observable.observed
     def from_state(self, from_state):
-        if not isinstance(from_state, State):
-            raise TypeError("from_state must be of type State")
+        if not from_state is None:
+            if not isinstance(from_state, State):
+                raise TypeError("from_state must be of type State")
+            if not self.key_name is None:  #this will just happen in __init__ when key_name is not yet initialized
+                #update key
+                self._primary_key = self.key_name+self._from_state.state_id
         self._from_state = from_state
-        #update key
-        self._primary_key = self._name+self._from_state.state_id
 
     @property
     def timestamp(self):

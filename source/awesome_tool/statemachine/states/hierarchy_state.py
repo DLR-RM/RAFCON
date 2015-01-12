@@ -44,7 +44,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             raise TypeError("states must be of type dict")
         self.scoped_variables = {}
         self.scoped_results = {}
-
         self.check_input_data_type(input_data)
         self.add_dict_to_scope_variables(input_data)
 
@@ -57,7 +56,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             while not state is self:
                 state_input = self.get_inputs_for_state(state)
-                print state_input
+                #print state_input
                 state_output = self.get_outputs_for_state(state)
                 state.input_data = state_input
                 state.output_data = state_output

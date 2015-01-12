@@ -103,7 +103,8 @@ class ContainerState(State, Observable):
         logger.debug("Return transition for a specific child state and its specific outcome")
         result_transition = None
         for key, transition in self.transitions.iteritems():
-            if transition.from_state is state.state_id and transition.from_outcome is outcome.outcome_id:
+            #print "outcome: key: %s transition: %s" % (str(key), str(transition))
+            if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
         if result_transition is None:
             logger.debug("No transition found!")
@@ -130,6 +131,10 @@ class ContainerState(State, Observable):
         :param state: the state that is going to be added
 
         """
+        if state.state_id in self._states:
+            print "This should never happen: For adding a new state to a container state, the new state must have" \
+                  " a state_id that does not already exist in the container state!"
+            exit()
         self._states[state.state_id] = state
 
     def remove_state(self, state_id):
@@ -227,20 +232,20 @@ class ContainerState(State, Observable):
         """
         result_dict = {}
         for input_key, value in state.input_data_ports.iteritems():
-            print "input_key: %s - value: %s" % (str(input_key), str(value))
+            #print "input_key: %s - value: %s" % (str(input_key), str(value))
+            # at first load all default values
+            result_dict[input_key] = value.default_value
+            #print result_dict
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
             for data_flow_key, data_flow in self.data_flows.iteritems():
-                print "data_flow_key: %s - data_flow: %s" % (str(data_flow_key), str(data_flow))
+                #print "data_flow_key: %s - data_flow: %s" % (str(data_flow_key), str(data_flow))
                 if data_flow.to_key == input_key:
-                    print "Check0"
                     if data_flow.to_state == state.state_id:
-                        print state.state_id
                         #data comes from scope variable of parent
                         if data_flow.from_state == self.state_id:
                             result_dict[input_key] = self.scoped_variables[data_flow.from_key].value
                         else:  # data comes from result from neighbouring state
                             #primary key for scoped_results is key+state_id
-                            print "Check"
                             result_dict[input_key] =\
                                 self.scoped_results[data_flow.from_key+data_flow.from_state].value
         return result_dict
@@ -261,7 +266,7 @@ class ContainerState(State, Observable):
 
         """
         for key, value in dictionary.iteritems():
-            self.scoped_variables[key] = ScopedVariable(key, value, None, self)
+            self.scoped_variables[key] = ScopedVariable(key, value, type(value).__name__, self)
 
     def add_dict_to_scoped_results(self, dictionary, state):
         """Add a dictionary to the scoped result values
@@ -272,7 +277,7 @@ class ContainerState(State, Observable):
         """
         for key, value in dictionary.iteritems():
             #primary key for scoped_results is key+state_id
-            self.scoped_results[key+state.state_id] = ScopedResult(key, value, str(type(value)), state)
+            self.scoped_results[key+state.state_id] = ScopedResult(key, value, type(value).__name__, state)
 
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition

@@ -32,7 +32,7 @@ class DataPort(Observable, yaml.YAMLObject):
     :ivar _data_type: the value type of the port
 
     """
-    def __init__(self, name=None, data_type=None):
+    def __init__(self, name=None, data_type=None, default_value=None):
 
         Observable.__init__(self)
 
@@ -40,9 +40,13 @@ class DataPort(Observable, yaml.YAMLObject):
         self.name = name
         self._data_type = None
         self.data_type = data_type
+        self._default_value = None
+        self.default_value = default_value
+
 
     def __str__(self):
-        return "DataPort: \n name: %s \n data_type: %s " % (self.name, self.data_type)
+        return "DataPort: \n name: %s \n data_type: %s \n default_value: %s " % (self.name, self.data_type,
+                                                                                 self.default_value)
 
     yaml_tag = u'!DataPort'
 
@@ -50,7 +54,8 @@ class DataPort(Observable, yaml.YAMLObject):
     def to_yaml(cls, dumper, data):
         dict_representation = {
             'name': data.name,
-            'data_type': data.data_type
+            'data_type': data.data_type,
+            'default_value': data.default_value
         }
         print dict_representation
         node = dumper.represent_mapping(u'!DataPort', dict_representation)
@@ -61,7 +66,8 @@ class DataPort(Observable, yaml.YAMLObject):
         dict_representation = loader.construct_mapping(node)
         name = dict_representation['name']
         data_type = dict_representation['data_type']
-        return DataPort(name, data_type)
+        default_value = dict_representation['default_value']
+        return DataPort(name, data_type, default_value)
 
 
 #########################################################################
@@ -79,7 +85,7 @@ class DataPort(Observable, yaml.YAMLObject):
     @Observable.observed
     def name(self, name):
         if not isinstance(name, str):
-            raise TypeError("ID must be of type str")
+            raise TypeError("name must be of type str")
         self._name = name
 
     @property
@@ -99,6 +105,24 @@ class DataPort(Observable, yaml.YAMLObject):
                 raise TypeError("" + data_type + " is not a valid python data type")
         self._data_type = data_type
 
+    @property
+    def default_value(self):
+        """Property for the _default_value field
+
+        """
+        return self._default_value
+
+    @default_value.setter
+    @Observable.observed
+    def default_value(self, default_value):
+        if not default_value is None:
+            #check for primitive data types
+            if not str(type(default_value).__name__) == self.data_type:
+                #check for classes
+                if not isinstance(default_value, getattr(sys.modules[__name__], self.data_type)):
+                    raise TypeError("Input of execute function must be of type %s" % str(self.data_type))
+        self._default_value = default_value
+
 
 StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY')
 
@@ -111,16 +135,16 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
     :ivar _state_id: the id of the state
     :ivar _name: the name of the state
-    :ivar _input_keys: holds the input data keys of the state
-    :ivar _output_keys: holds the output data keys of the state
+    :ivar _input_data_ports: holds the input data keys of the state
+    :ivar _output_data_ports: holds the output data keys of the state
     :ivar _outcomes: holds the state outcomes, which are the connection points for transitions
     :ivar _is_start: indicates if this state is a start state of a hierarchy
     :ivar _is_final: indicates if this state is a end state of a hierarchy
     :ivar _sm_status: reference to the status of the state machine
     :ivar _state_status: holds the status of the state
     :ivar _script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
-    :ivar _input_data: the input data of the state
-    :ivar _output_data: the output data of the state
+    :ivar _input_data: the input data of the state during execution
+    :ivar _output_data: the output data of the state during execution
     :ivar _preempted: a flag to show if the state was preempted from outside
     :ivar _concurrency_queue: a queue to signal a preemptive concurrency state, that the execution of the state
                                 finished
@@ -147,6 +171,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         self._output_data_ports = None
         self.output_data_ports = output_data_ports
 
+        self.__used_outcome_ids = []
         self._outcomes = None
         self.outcomes = outcomes
 
@@ -170,16 +195,17 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
         logger.debug("State with id %s initialized" % self._state_id)
 
-    def add_input_key(self, name, data_type):
+    def add_input_data_port(self, name, data_type, default_value=None):
         """Add a new input data port to the state
 
         :param name: the name of the new input data port
         :param data_type: the type of the new input data port
+        :param default_value: the default value of the data port
 
         """
-        self._input_data_ports[name] = DataPort(name, data_type)
+        self._input_data_ports[name] = DataPort(name, data_type, default_value)
 
-    def remove_input_key(self, name):
+    def remove_input_data_port(self, name):
         """Remove an input data port from the state
 
         :param name: the name or the output data port to remove
@@ -187,16 +213,17 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """
         self._input_data_ports.pop(name, None)
 
-    def add_output_key(self, name, data_type):
+    def add_output_data_port(self, name, data_type, default_value=None):
         """Add a new output data port to the state
 
         :param name: the name of the new output data port
         :param data_type: the type of the new output data port
+        :param default_value: the default value of the data port
 
         """
-        self._output_data_ports[name] = DataPort(name, data_type)
+        self._output_data_ports[name] = DataPort(name, data_type, default_value)
 
-    def remove_output_key(self, name):
+    def remove_output_data_port(self, name):
         """Remove an output data port from the state
 
         :param name: the name of the output data port to remove
@@ -213,6 +240,12 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """
         if outcome_id is None:
             outcome_id = generate_outcome_id()
+        if name in self._outcomes:
+            logger.error("Two outcomes cannot have the same names")
+            return
+        if outcome_id in self.__used_outcome_ids:
+            logger.error("Two outcomes cannot have the same outcome_ids")
+            return
         outcome = Outcome(outcome_id, name)
         self._outcomes[outcome_id] = outcome
         return outcome_id
@@ -223,6 +256,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         :param outcome_id: the id of the outcome to remove
 
         """
+        self.__used_outcome_ids.remove(outcome_id)
         self._outcomes.pop(outcome_id, None)
 
     def run(self, *args, **kwargs):
@@ -362,6 +396,14 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
                 if not isinstance(value, Outcome):
                     raise TypeError("element of outcomes must be of type Outcome")
             self._outcomes = outcomes
+            #check if aborted and preempted exists
+            if not "success" in outcomes:
+                self.add_outcome("success", 0)
+            if not "aborted" in outcomes:
+                self.add_outcome("aborted", 1)
+            if not "preempted" in outcomes:
+                self.add_outcome("preempted", 2)
+
 
     @property
     def is_start(self):

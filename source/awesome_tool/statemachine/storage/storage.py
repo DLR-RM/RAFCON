@@ -61,20 +61,20 @@ class Storage():
         yaml.dump(yaml.load(statemachine_content), f, indent=4)
         f.close()
         # add root state recursively
-        self.save_state_recursively(root_state)
+        self.save_state_recursively(root_state, self.base_path)
 
     def save_state_recursively(self, root_state, base_path=None):
-        if not base_path is None:
-            tmp_base_path = os.path.join(base_path, str(root_state.state_id))
-        else:
-            tmp_base_path = os.path.join(self.base_path, str(root_state.state_id))
+        #print "Save state %s recursively" % str(root_state.state_id)
+        tmp_base_path = os.path.join(base_path, str(root_state.state_id))
 
         self._create_path(tmp_base_path)
         self.save_file_as_yaml(root_state, os.path.join(tmp_base_path, self.META_FILE))
 
         #create yaml files for all children
         if not root_state.state_type is StateType.EXECUTION:
+            #print "length of root state: %s" % len(root_state.states)
             for key, state in root_state.states.iteritems():
+                #print "tmp_base_path: %s" % str(tmp_base_path)
                 self.save_state_recursively(state, tmp_base_path)
 
     def load_statemachine_from_yaml(self):
@@ -92,7 +92,7 @@ class Storage():
         return root_state
 
     def load_state_recursively(self, root_state, base_path=None):
-        print "Path of next state to add: %s" % base_path
+        #print "Path of next state to add: %s" % base_path
         state = self.load_file_from_yaml_abs(os.path.join(base_path, self.META_FILE))
         root_state.add_state(state)
         for p in os.listdir(base_path):

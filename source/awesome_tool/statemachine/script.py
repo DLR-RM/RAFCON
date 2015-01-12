@@ -50,8 +50,10 @@ def exit(self):
 
         Observable.__init__(self)
 
-        self._path = path
-        self._filename = filename
+        self._path = None
+        self.path = path
+        self._filename = None
+        self.filename = filename
         self._compiled_module = None
         self._script_id = generate_script_id()
         self.script = Script.EMPTY_SCRIPT
@@ -135,8 +137,9 @@ def exit(self):
     @path.setter
     @Observable.observed
     def path(self, path):
-        if not isinstance(path, str):
-            raise TypeError("path must be of type str")
+        if not path is None:
+            if not isinstance(path, str):
+                raise TypeError("path must be of type str")
 
         self._path = path
 
@@ -150,8 +153,9 @@ def exit(self):
     @filename.setter
     @Observable.observed
     def filename(self, filename):
-        if not isinstance(filename, str):
-            raise TypeError("filename must be of type str")
+        if not filename is None:
+            if not isinstance(filename, str):
+                raise TypeError("filename must be of type str")
 
         self._filename = filename
 

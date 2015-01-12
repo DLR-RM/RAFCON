@@ -52,6 +52,7 @@ class ExecutionState(State, yaml.YAMLObject):
 
             #initialize data structures
             input_data = self.input_data
+            #print input_data
             output_data = self.output_data
             if not isinstance(input_data, dict):
                 raise TypeError("states must be of type dict")
