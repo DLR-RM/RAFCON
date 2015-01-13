@@ -62,6 +62,14 @@ id_generator module
     :undoc-members:
     :show-inheritance:
 
+library_manager module
+----------------------
+
+.. automodule:: awesome_tool.statemachine.library_manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 main module
 -----------
 

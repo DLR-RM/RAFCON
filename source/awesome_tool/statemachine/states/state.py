@@ -271,22 +271,25 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
         """
         for key, value in self.input_data_ports.iteritems():
-            #check for primitive data types
-            if not str(type(input_data[key]).__name__) == value.data_type:
-                #check for classes
-                if not isinstance(input_data[key], getattr(sys.modules[__name__], value.data_type)):
-                    raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
+            if not input_data[key] is None:
+                #print "key: %s, value: %s" % (str(key), str(value))
+                #check for primitive data types
+                if not str(type(input_data[key]).__name__) == value.data_type:
+                    #check for classes
+                    if not isinstance(input_data[key], getattr(sys.modules[__name__], value.data_type)):
+                        raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
 
     def check_output_data_type(self, output_data):
         """Check the output data types of the state
 
         """
         for key, value in self.output_data_ports.iteritems():
-            #check for primitive data types
-            if not str(type(output_data[key]).__name__) == value.data_type:
-                #check for classes
-                if not isinstance(output_data[key], getattr(sys.modules[__name__], value.data_type)):
-                    raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
+            if not output_data[key] is None:
+                #check for primitive data types
+                if not str(type(output_data[key]).__name__) == value.data_type:
+                    #check for classes
+                    if not isinstance(output_data[key], getattr(sys.modules[__name__], value.data_type)):
+                        raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
 
     def __str__(self):
         return "Common state values:\nstate_id: %s\nname: %s" % (self.state_id, self.name)

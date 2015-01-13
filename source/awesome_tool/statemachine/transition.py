@@ -11,7 +11,6 @@
 from gtkmvc import Observable
 from utils import log
 logger = log.get_logger(__name__)
-import numpy
 import yaml
 
 
