@@ -123,6 +123,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     border_color = Color(0.2, 0.2, 0.2, 1)
     state_color = Color(0.9, 0.9, 0.9, 0.8)
     state_active_color = Color(0.7, 0, 0, 0.8)
+    state_name_color = Color(0.2, 0.2, 0.2, 1)
+    state_port_name_color = Color(0.2, 0.2, 0.2, 1)
     transition_color = Color(0.6, 0.6, 0.6, 0.8)
     transition_active_color = Color(0.7, 0, 0, 0.8)
 
@@ -309,7 +311,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Put the name of the state in the upper left corner of the state
         margin = min(width, height) / 8.0
-        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, depth=depth+0.01)
+        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, self.state_name_color,
+                           depth=depth+0.01)
 
         # Draw outcomes as circle on the right side of the state
         # Every state has at least the default outcomes "aborted" and "preempted"
@@ -344,7 +347,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             max_name_width = 0
             max_allowed_name_width = 0.5 * width
             str_height = height / 12.0
-            margin = height / 32.0
+            margin = height / 20.0
 
             # Determine the maximum width of all port labels
             for port_name in itertools.chain(inputs, outputs):
@@ -362,8 +365,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 fill_color = self.state_active_color
 
             port_width = min(max_name_width, max_allowed_name_width)
-            port_pos_left_x = pos_x + (width - port_width) / 2
-            port_pos_right_x = port_pos_left_x + port_width
+            port_pos_left_x = pos_x + (width - port_width - margin) / 2
+            port_pos_right_x = port_pos_left_x + port_width + margin
             port_pos_bottom_y = pos_y - num_ports * (str_height + margin)
             self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos_y,
                             fill_color, self.border_color, depth)
@@ -375,7 +378,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                     port_name = port_name[0:int(max_num_chr)-2] + '~'
                 self._write_string(port_name, port_pos_left_x + margin/2., pos_y - margin/2. - output_num *
                                    (str_height + margin),
-                                   str_height, 1,
+                                   str_height, self.state_port_name_color, 1,
                                    depth+0.01)
                 output_num += 1
 
@@ -384,7 +387,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 if max_num_chr > -1 and len(port_name) > max_num_chr:
                     port_name = port_name[0:int(max_num_chr)-2] + '~'
                 self._write_string(port_name, port_pos_left_x + margin/2., pos_y - margin/2. - output_num *
-                                   (str_height + margin), str_height, 1, depth+0.01)
+                                   (str_height + margin), str_height, self.state_port_name_color, 1, depth+0.01)
                 output_num += 1
 
 
@@ -438,7 +441,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return id
 
-    def _write_string(self, string, pos_x, pos_y, height, stroke_width=1, depth=0):
+    def _write_string(self, string, pos_x, pos_y, height, color, stroke_width=1, depth=0):
         """Write a string
 
         Writes a string with a simple OpenGL method in the given size at the given position
@@ -449,7 +452,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param stroke_width: thickness of the letters
         :param depth: the Z layer
         """
-        glColor3f(0, 0.5, 0.5)
+        color.set()
         self._set_closest_line_width(stroke_width)
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
