@@ -102,6 +102,8 @@ class Storage(Observable):
 
     def save_script_file_for_state(self, state, path):
         shutil.copyfile(os.path.join(state.script.path, state.script.filename), os.path.join(path, self.SCRIPT_FILE))
+        state.script.path = path
+        state.script.filename = self.SCRIPT_FILE
 
     def save_state_recursively(self, root_state, parent_path=None):
         #print "Save state %s recursively" % str(root_state.state_id)

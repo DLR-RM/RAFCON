@@ -61,6 +61,7 @@ class ContainerState(State, Observable):
         self._scoped_data = {}
         self._v_checker = v_checker
         self._current_state = None
+        #condition variable to wait for not connected states
         self._transitions_cv = Condition()
 
     def __str__(self):
@@ -161,6 +162,9 @@ class ContainerState(State, Observable):
         """
         transition_id = generate_transition_id()
         self._transitions[transition_id] = Transition(from_state, from_outcome, to_state, to_outcome)
+        self._transitions_cv.acquire()
+        self._transitions_cv.notify_all()
+        self._transitions_cv.release()
         return transition_id
 
     def remove_transition(self, transition_id):

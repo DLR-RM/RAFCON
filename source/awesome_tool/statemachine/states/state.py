@@ -141,7 +141,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     :ivar _is_start: indicates if this state is a start state of a hierarchy
     :ivar _is_final: indicates if this state is a end state of a hierarchy
     :ivar _sm_status: reference to the status of the state machine
-    :ivar _state_status: holds the status of the state
+    :ivar _state_status: holds the status of the state during runtime
     :ivar _script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
     :ivar _input_data: the input data of the state during execution
     :ivar _output_data: the output data of the state during execution
