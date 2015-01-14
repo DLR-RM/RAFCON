@@ -2,7 +2,7 @@
 from utils import log
 logger = log.get_logger(__name__)
 
-from math import sin, cos, pi, floor
+from math import sin, cos, pi, floor, ceil
 import itertools
 
 import OpenGL
@@ -311,7 +311,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Put the name of the state in the upper left corner of the state
         margin = min(width, height) / 8.0
-        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, self.state_name_color,
+        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, self.state_name_color, False,
                            depth=depth+0.01)
 
         # Draw outcomes as circle on the right side of the state
@@ -345,20 +345,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         if num_ports > 0:
             max_num_chr = -1
             max_name_width = 0
-            max_allowed_name_width = 0.5 * width
+            margin = height / 10.0
+            max_allowed_name_width = 0.7 * width - margin
             str_height = height / 12.0
-            margin = height / 20.0
 
             # Determine the maximum width of all port labels
             for port_name in itertools.chain(inputs, outputs):
                 str_width = self._string_width(port_name, str_height)
                 if str_width > max_name_width:
                     max_name_width = str_width
-
-            # Restrict the port labels to half the size of the state
-            if max_name_width > max_allowed_name_width:
-                chr_width = self._string_width('__________', str_height) / 10.0
-                max_num_chr = floor(max_allowed_name_width / chr_width)
 
             fill_color = self.state_color
             if active:
@@ -371,23 +366,28 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos_y,
                             fill_color, self.border_color, depth)
 
+            def draw_port(port, num, is_input):
+                port_name = port.name
+                trim_len = len(port_name)
+                while trim_len > 1:
+                    if self._string_width(port_name[0:trim_len-1], str_height) <= port_width:
+                        break
+                    trim_len -= 1
+                if trim_len < len(port_name):
+                    port_name = port_name[0:trim_len-2] + '~'
+
+                string_pos_x = port_pos_left_x + margin/2.
+                if not is_input:
+                    string_pos_x += port_width
+                self._write_string(port_name, string_pos_x, pos_y - margin/2. - num * (str_height + margin),
+                                   str_height, self.state_port_name_color, 1.5, not is_input, depth+0.01)
             output_num = 0
             for port in inputs.itervalues():
-                port_name = port.name
-                if max_num_chr > -1 and len(port_name) > max_num_chr:
-                    port_name = port_name[0:int(max_num_chr)-2] + '~'
-                self._write_string(port_name, port_pos_left_x + margin/2., pos_y - margin/2. - output_num *
-                                   (str_height + margin),
-                                   str_height, self.state_port_name_color, 1,
-                                   depth+0.01)
+                draw_port(port, output_num, True)
                 output_num += 1
 
             for port in outputs.itervalues():
-                port_name = port.name
-                if max_num_chr > -1 and len(port_name) > max_num_chr:
-                    port_name = port_name[0:int(max_num_chr)-2] + '~'
-                self._write_string(port_name, port_pos_left_x + margin/2., pos_y - margin/2. - output_num *
-                                   (str_height + margin), str_height, self.state_port_name_color, 1, depth+0.01)
+                draw_port(port, output_num, False)
                 output_num += 1
 
 
@@ -441,7 +441,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return id
 
-    def _write_string(self, string, pos_x, pos_y, height, color, stroke_width=1, depth=0):
+    def _write_string(self, string, pos_x, pos_y, height, color, stroke_width=1, align_right=False, depth=0):
         """Write a string
 
         Writes a string with a simple OpenGL method in the given size at the given position
@@ -457,7 +457,11 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         pos_y = pos_y - height
-        glTranslatef(pos_x, pos_y, depth)
+        if not align_right:
+            glTranslatef(pos_x, pos_y, depth)
+        else:
+            width = self._string_width(string, height)
+            glTranslatef(pos_x - width, pos_y, depth)
         font_height = 119.5  # According to https://www.opengl.org/resources/libraries/glut/spec3/node78.html
         scale_factor = height / font_height
         glScalef(scale_factor, scale_factor, scale_factor)

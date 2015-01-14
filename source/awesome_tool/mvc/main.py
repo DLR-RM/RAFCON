@@ -46,7 +46,10 @@ def main(*args, **kargs):
 
     state1 = State('State1')
     state1.add_input_data_port("my_input", "int", 0)
+    state1.add_input_data_port("longlonginputname", "int", 0)
+    state1.add_input_data_port("par", "int", 0)
     state1.add_output_data_port("my_output", "int")
+    state1.add_output_data_port("res", "int")
     state2 = State('State2')
     state3 = ContainerState(name='State3')
     state4 = State('Nested')
