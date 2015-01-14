@@ -398,16 +398,22 @@ class GraphicalEditorController(Controller):
                 # Get id and references to the from and to state
                 from_state_id = data_flow.data_flow.from_state
                 to_state_id = data_flow.data_flow.to_state
-                from_state = state.states[from_state_id]
-                to_state = state.states[to_state_id]
+                from_state = state if from_state_id == state.state.state_id else state.states[from_state_id]
+                to_state = state if to_state_id == state.state.state_id else state.states[to_state_id]
 
                 from_key = data_flow.data_flow.from_key
                 to_key = data_flow.data_flow.to_key
 
-                from_x = from_state.meta['gui']['editor']['output_pos'][from_key][0]
-                from_y = from_state.meta['gui']['editor']['output_pos'][from_key][1]
-                to_x = to_state.meta['gui']['editor']['input_pos'][to_key][0]
-                to_y = to_state.meta['gui']['editor']['input_pos'][to_key][1]
+                connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
+                                  from_state.meta['gui']['editor']['output_pos'].items() +
+                                  to_state.meta['gui']['editor']['input_pos'].items() +
+                                  to_state.meta['gui']['editor']['output_pos'].items() +
+                                  state.meta['gui']['editor']['input_pos'].items() +
+                                  state.meta['gui']['editor']['output_pos'].items())
+                from_x = connectors[from_key][0]
+                from_y = connectors[from_key][1]
+                to_x = connectors[to_key][0]
+                to_y = connectors[to_key][1]
 
                 waypoints = []
 

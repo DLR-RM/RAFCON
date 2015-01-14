@@ -3,7 +3,7 @@ from utils import log
 logger = log.get_logger(__name__)
 
 from math import sin, cos, pi, floor, ceil
-import itertools
+from itertools import chain
 
 import OpenGL
 from OpenGL.GL import *
@@ -128,7 +128,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     transition_color = Color(0.4, 0.4, 0.4, 0.8)
     transition_active_color = Color(0.7, 0, 0, 0.8)
     data_flow_color = Color(0.6, 0.6, 0.6, 0.8)
-    data_flow_active_color = Color(0.7, 0, 2, 0.8)
+    data_flow_active_color = Color(0.7, 0, 0, 0.8)
 
     def __init__(self, glconfig):
         """The graphical editor manages the OpenGL functions.
@@ -354,7 +354,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             str_height = height / 12.0
 
             # Determine the maximum width of all port labels
-            for port_name in itertools.chain(inputs, outputs):
+            for port_name in chain(inputs, outputs):
                 str_width = self._string_width(port_name, str_height)
                 if str_width > max_name_width:
                     max_name_width = str_width
