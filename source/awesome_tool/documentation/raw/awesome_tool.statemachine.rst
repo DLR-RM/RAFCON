@@ -10,6 +10,7 @@ Subpackages
     awesome_tool.statemachine.validity_check
     awesome_tool.statemachine.execution
     awesome_tool.statemachine.states
+    awesome_tool.statemachine.storage
 
 Submodules
 ----------
