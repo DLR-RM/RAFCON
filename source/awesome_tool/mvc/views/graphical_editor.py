@@ -342,6 +342,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Draw input and output data ports
         num_ports = len(inputs) + len(outputs)
+        input_connector_pos = {}
+        output_connector_pos = {}
         if num_ports > 0:
             max_num_chr = -1
             max_name_width = 0
@@ -388,20 +390,16 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 self._draw_circle(circle_pos_x, circle_pos_y, depth+0.02, margin / 4.)
                 return circle_pos_x, circle_pos_y
 
-            input_connector_pos = []
-            output_connector_pos = []
             output_num = 0
             for port in inputs.itervalues():
                 con_pos_x, con_pos_y = draw_port(port, output_num, True)
-                input_connector_pos.append((con_pos_x, con_pos_y))
+                input_connector_pos[port.name] = (con_pos_x, con_pos_y)
                 output_num += 1
 
             for port in outputs.itervalues():
                 con_pos_x, con_pos_y = draw_port(port, output_num, False)
-                output_connector_pos.append((con_pos_x, con_pos_y))
+                output_connector_pos[port.name] = (con_pos_x, con_pos_y)
                 output_num += 1
-
-
 
         glPopName()
         return id, outcome_pos, input_connector_pos, output_connector_pos
@@ -416,6 +414,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param from_pos_y: Starting y position
         :param to_pos_x: Ending x position
         :param to_pos_y: Ending y position
+        :param width: A measure for the width of a transition line
+        :param waypoints: A list of optional waypoints to connect in between
         :param active: Whether the transition shell be shown as active/selected
         :param depth: The Z layer
         :return: The OpenGL id of the transition
@@ -451,6 +451,23 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPopName()
 
         return id
+
+    def draw_data_flow(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False, depth=0):
+        """Draw a data flow connection between two ports
+
+        The ports can be input, output or scoped ports and are only specified by their position. Optional waypoints
+        allow non-direct connection.
+
+        :param from_pos_x: Starting x position
+        :param from_pos_y: Starting y position
+        :param to_pos_x: Ending x position
+        :param to_pos_y: Ending y position
+        :param width: A measure for the width of a transition line
+        :param waypoints: A list of optional waypoints to connect in between
+        :param active: Whether the transition shell be shown as active/selected
+        :param depth: The Z layer
+        """
+        pass
 
     def _write_string(self, string, pos_x, pos_y, height, color, stroke_width=1, align_right=False, depth=0):
         """Write a string

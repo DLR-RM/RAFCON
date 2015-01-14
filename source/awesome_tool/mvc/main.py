@@ -45,13 +45,15 @@ def main(*args, **kargs):
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
     state1 = State('State1')
-    state1.add_input_data_port("my_input", "int", 0)
-    state1.add_input_data_port("longlonginputname", "int", 0)
-    state1.add_input_data_port("par", "int", 0)
-    state1.add_output_data_port("my_output", "int")
-    state1.add_output_data_port("res", "int")
+    state1.add_output_data_port("output", "int")
     state2 = State('State2')
+    state2.add_input_data_port("my_input", "int", 0)
+    state2.add_input_data_port("longlonginputname", "int", 0)
+    state2.add_input_data_port("par", "int", 0)
+    state2.add_output_data_port("my_output", "int")
+    state2.add_output_data_port("res", "int")
     state3 = ContainerState(name='State3')
+    state3.add_input_data_port("input", "int", 0)
     state4 = State('Nested')
     state5 = State('Nested2')
     state3.add_state(state4)
@@ -77,6 +79,8 @@ def main(*args, **kargs):
     ctr_state.add_transition(state2.state_id, -2, state3.state_id, None)
     ctr_state.add_transition(state3.state_id, -2, None, -2)
     ctr_state.add_transition(state1.state_id, -1, None, -1)
+    ctr_state.add_data_flow(state1.state_id, "output", state2.state_id, "par")
+    ctr_state.add_data_flow(state2.state_id, "res", state3.state_id, "input")
     # ctr_state.transitions = [trans1, trans2]
     # ctr_state.data_flows = [data_flow1, data_flow2]
         # states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,
@@ -84,7 +88,6 @@ def main(*args, **kargs):
     ctr_state.name = "Container"
 
     ctr_model = ContainerStateModel(ctr_state)
-    print "Ctr", len(ctr_state.states), "state3", len(state3.states)
     # prop_view2 = StatePropertiesView()
     # prop_ctrl2 = StatePropertiesController(prop_model2, prop_view2)
     #

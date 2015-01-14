@@ -315,6 +315,8 @@ class GraphicalEditorController(Controller):
                                                                                depth)
         state.meta['gui']['editor']['id'] = id
         state.meta['gui']['editor']['outcome_pos'] = outcome_pos
+        state.meta['gui']['editor']['input_pos'] = input_pos
+        state.meta['gui']['editor']['output_pos'] = output_pos
 
         # If the state is the root container, fit the dimensions of the OpenGL coordinates so that the whole
         # container fits in the viewport
@@ -333,7 +335,7 @@ class GraphicalEditorController(Controller):
             margin = width / float(25)
 
             for child_state in state.states.itervalues():
-                # Caluclate default positions for teh child states
+                # Calculate default positions for teh child states
                 # Make the inset from the top left corner
                 state_ctr += 1
 
@@ -350,13 +352,8 @@ class GraphicalEditorController(Controller):
                 # Get id and references to the from and to state
                 from_state_id = transition.transition.from_state
                 to_state_id = transition.transition.to_state
-                from_state = None
-                to_state = None
-                for child_state in state.states.itervalues():
-                    if child_state.state.state_id == from_state_id:
-                        from_state = child_state
-                    if child_state.state.state_id == to_state_id:
-                        to_state = child_state
+                from_state = state.states[from_state_id]
+                to_state = None if to_state_id is None else state.states[to_state_id]
 
                 assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
                     id=from_state_id)
@@ -398,7 +395,17 @@ class GraphicalEditorController(Controller):
                 transition.meta['gui']['editor']['to_pos_y'] = to_y
 
             for data_flow in state.data_flows:
-                pass
+                # Get id and references to the from and to state
+                from_state_id = data_flow.data_flow.from_state
+                to_state_id = data_flow.data_flow.to_state
+                from_state = state.states[from_state_id]
+                to_state = state.states[to_state_id]
+
+                from_key = data_flow.data_flow.from_key
+                to_key = data_flow.data_flow.to_key
+
+                #print 'Pos:', from_state.meta['gui']['editor']['output_pos']
+
 
     def _find_selection(self, pos_x, pos_y):
         # e.g. sets render mode to GL_SELECT
