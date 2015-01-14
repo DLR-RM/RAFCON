@@ -28,8 +28,8 @@ class ExecutionState(State, yaml.YAMLObject):
     def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, sm_status=None,
                  path=None, filename=None):
 
-        State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename)
-        self.state_type = StateType.EXECUTION
+        State.__init__(self, name, state_id, input_keys, output_keys, outcomes, sm_status, path, filename,
+                       state_type=StateType.EXECUTION)
 
     def print_state_information(self):
         """Prints information about the state
@@ -74,7 +74,7 @@ class ExecutionState(State, yaml.YAMLObject):
             return
 
         except RuntimeError:
-            self.final_outcome = Outcome(1, "aborted")
+            self.final_outcome = Outcome(-1, "aborted")
             return
 
     def __str__(self):

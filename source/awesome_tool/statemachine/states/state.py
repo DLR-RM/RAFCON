@@ -18,7 +18,7 @@ import yaml
 from utils import log
 logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome
-from statemachine.script import Script
+from statemachine.script import Script, ScriptType
 from statemachine.execution.statemachine_status import StateMachineStatus
 from statemachine.id_generator import *
 
@@ -135,8 +135,8 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
     :ivar _state_id: the id of the state
     :ivar _name: the name of the state
-    :ivar _input_data_ports: holds the input data keys of the state
-    :ivar _output_data_ports: holds the output data keys of the state
+    :ivar _input_data_ports: holds the input data ports of the state
+    :ivar _output_data_ports: holds the output data ports of the state
     :ivar _outcomes: holds the state outcomes, which are the connection points for transitions
     :ivar _is_start: indicates if this state is a start state of a hierarchy
     :ivar _is_final: indicates if this state is a end state of a hierarchy
@@ -154,7 +154,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     """
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, path=None, filename=None):
+                 sm_status=None, path=None, filename=None, state_type=None):
 
         Observable.__init__(self)
         threading.Thread.__init__(self)
@@ -184,7 +184,10 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             self._sm_status = sm_status
 
         self._state_status = None
-        self.script = Script(path, filename)
+        if state_type is StateType.EXECUTION:
+            self.script = Script(path, filename, script_type=ScriptType.EXECUTION)
+        else:
+            self.script = Script(path, filename, script_type=ScriptType.CONTAINER)
 
         self._input_data = {}
         self._output_data = {}
@@ -192,6 +195,9 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         self._concurrency_queue = None
         self._final_outcome = None
         self._state_type = None
+        self.state_type = state_type
+
+        self._description = None
 
         logger.debug("State with id %s initialized" % self._state_id)
 
@@ -390,8 +396,8 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         if outcomes is None:
             self._outcomes = {}
             self.add_outcome("success", 0)
-            self.add_outcome("aborted", 1)
-            self.add_outcome("preempted", 2)
+            self.add_outcome("aborted", -1)
+            self.add_outcome("preempted", -2)
         else:
             if not isinstance(outcomes, dict):
                 raise TypeError("outcomes must be of type dict")
@@ -403,9 +409,9 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             if not "success" in outcomes:
                 self.add_outcome("success", 0)
             if not "aborted" in outcomes:
-                self.add_outcome("aborted", 1)
+                self.add_outcome("aborted", -1)
             if not "preempted" in outcomes:
-                self.add_outcome("preempted", 2)
+                self.add_outcome("preempted", -2)
 
 
     @property
@@ -566,3 +572,20 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             if not isinstance(state_type, StateType):
                 raise TypeError("state_type must be of type StateType")
         self._state_type = state_type
+
+    @property
+    def description(self):
+        """Property for the _description field
+
+        """
+        return self._description
+
+    @description.setter
+    @Observable.observed
+    def description(self, description):
+        if not isinstance(description, str):
+            raise TypeError("ID must be of type str")
+        if len(description) < 1:
+            raise ValueError("ID must have at least one character")
+
+        self._description = description

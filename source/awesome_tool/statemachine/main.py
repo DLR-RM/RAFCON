@@ -183,7 +183,6 @@ def hierarchy_save_load_test():
     root_state.join()
 
 
-
 def global_variable_test():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="global_variable_test_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
@@ -264,15 +263,16 @@ def ros_external_module_test():
 
 def save_and_load_data_port_test():
     s = Storage("../../test_scripts/stored_statemachine")
-    dataPort1 = DataPort("test", "str")
-    s.save_file_as_yaml(dataPort1, "saved_data_port")
+    data_port1 = DataPort("test", "str")
+    s.save_file_as_yaml_rel(data_port1, "saved_data_port")
     loaded_data_port = s.load_file_from_yaml_rel("saved_data_port")
     print loaded_data_port
     exit()
 
 
-#remember: scoped results are the data that is passed from one child state of a container to another child state
-def scoped_results_test():
+# remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
+# states)
+def scoped_data_test():
     s = Storage("../../test_scripts/stored_statemachine")
 
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
@@ -370,6 +370,7 @@ def save_library():
 
 def run_library_statemachine():
     statemachine.singleton.library_manager.initialize()
+    #print statemachine.singleton.library_manager.libraries
     library_container_state = HierarchyState("LibContainerState", path="../../test_scripts",
                                              filename="hierarchy_container.py")
     lib_state = statemachine.singleton.library_manager.libraries["MyFirstLibrary"]
@@ -391,10 +392,43 @@ def run_library_statemachine():
     library_container_state.join()
 
 
+def scoped_variable_test():
+    state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
+    state1.add_outcome("MyFirstOutcome", 3)
+    state1.add_input_data_port("MyFirstDataInputPort", "str")
+    state1.add_output_data_port("MyFirstDataOutputPort", "float")
+
+    state3 = HierarchyState("MyFirstHierarchyState", path="../../test_scripts", filename="hierarchy_container.py")
+    state3.add_state(state1)
+    state3.set_start_state(state1.state_id)
+    state3.add_outcome("Container_Outcome", 6)
+    state3.add_transition(state1.state_id, 3, None, 6)
+    state3.add_input_data_port("in1", "str")
+    state3.add_input_data_port("in2", "int")
+    state3.add_output_data_port("out1", "str")
+    state3.add_scoped_variable("scopeVar1", "str", "scopeDefaultValue")
+    state3.add_data_flow(state3.state_id, "scopeVar1", state1.state_id, "MyFirstDataInputPort")
+
+    input_data = {"in1": "input_string", "in2": 2}
+    output_data = {"out1": None}
+
+    state3.input_data = input_data
+    state3.output_data = output_data
+    state3.start()
+    state3.join()
+
+
+def state_without_path_test():
+    state1 = ExecutionState("MyFirstState")
+    state1.start()
+    pass
+
 
 if __name__ == '__main__':
 
-    #scoped_results_test()
+    state_without_path_test()
+    #scoped_data_test()
+    #scoped_variable_test()
     #hierarchy_test()
     #hierarchy_save_load_test()
     #concurrency_barrier_test()
@@ -409,8 +443,12 @@ if __name__ == '__main__':
     #save_and_load_data_port_test()
     #default_data_port_values_test()
 
-    save_library()
-    print "########################################################"
-    run_library_statemachine()
+    #save_library()
+    #print "########################################################"
+    #run_library_statemachine()
 
 
+    #TODO: scoped variable test
+    # test data flow in barrier state machine
+    # test data flow in preemptive state machine
+    # test data flow between states consisting not of primitive data types

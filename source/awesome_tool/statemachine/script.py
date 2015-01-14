@@ -12,12 +12,14 @@ import os
 import imp
 import sys
 import yaml
-
 from gtkmvc import Observable
+from enum import Enum
 
 from statemachine.id_generator import *
 import statemachine.singleton
 
+
+ScriptType = Enum('SCRIPT_TYPE', 'EXECUTION CONTAINER')
 
 class Script(Observable, yaml.YAMLObject):
 
@@ -31,22 +33,27 @@ class Script(Observable, yaml.YAMLObject):
 
     """
 
-    EMPTY_SCRIPT = """
-def entry(self):
-    pass
+    DEFAULT_SCRIPT_EXECUTION = """
 
-def execute(self):
+def execute(self, inputs, outputs, external_modules, gvm):
+    print "Hello world"
     return 0
 
-def exit(self):
-def exit(self):
-def exit(self):
-    pass
 """
+    DEFAULT_SCRIPT_CONTAINER = """
+
+def entry(self, scoped_variables, external_modules, gvm):
+    pass
+
+def exit(self, scoped_variables, external_modules, gvm):
+    pass
+
+"""
+
 
     yaml_tag = u'!Script'
 
-    def __init__(self, path=None, filename=None):
+    def __init__(self, path=None, filename=None, script_type=None):
 
         Observable.__init__(self)
 
@@ -56,7 +63,19 @@ def exit(self):
         self.filename = filename
         self._compiled_module = None
         self._script_id = generate_script_id()
-        self.script = Script.EMPTY_SCRIPT
+        if script_type == ScriptType.EXECUTION:
+            self.script = Script.DEFAULT_SCRIPT_EXECUTION
+        else:
+            self.script = Script.DEFAULT_SCRIPT_CONTAINER
+        if path is None:
+            self.path = "/tmp/DFC"
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+            self.filename = "Script_%s.file" % str(self._script_id)
+            script_file = open(os.path.join(self.path, self.filename), "w")
+            script_file.write(self.script)
+            script_file.close()
+
 
     def execute(self, state, inputs={}, outputs={}):
         return self._compiled_module.execute(state, inputs, outputs,

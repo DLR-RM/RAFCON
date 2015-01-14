@@ -29,6 +29,7 @@ class LibraryManager(Observable):
     def __init__(self):
         Observable.__init__(self)
         self._libraries = {}
+        logger.debug("Initializing Storage object ...")
         self._storage = Storage("../")
 
     # cannot be done in the __init__ function as the the library_manager can be compiled and executed by singleton.py
@@ -36,18 +37,22 @@ class LibraryManager(Observable):
     def initialize(self):
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
         for lib_path in config.LIBRARY_PATHS:
-            self.add_libraries_from_path(lib_path)
+            self.add_libraries_from_path(lib_path, self._libraries)
         logger.debug("Initialization of LibraryManager done.")
 
-    def add_libraries_from_path(self, lib_path):
+    def add_libraries_from_path(self, lib_path, target_dict):
         for lib in os.listdir(lib_path):
             if os.path.isdir(os.path.join(lib_path, lib)):
-                self.add_library(lib, lib_path)
+                if os.path.exists(os.path.join(os.path.join(lib_path, lib), Storage.STATEMACHINE_FILE)):
+                    self.add_library(lib, lib_path, target_dict)
+                else:
+                    target_dict[lib] = {}
+                    self.add_libraries_from_path(os.path.join(lib_path, lib), target_dict[lib])
 
-    def add_library(self, lib, lib_path):
+    def add_library(self, lib, lib_path, target_dict):
         #print lib
         self._storage.base_path = lib_path
-        self.libraries[lib] = self._storage.load_statemachine_from_yaml(os.path.join(lib_path, lib))
+        target_dict[lib] = self._storage.load_statemachine_from_yaml(os.path.join(lib_path, lib))
         #print self.libraries[lib]
 
 #########################################################################

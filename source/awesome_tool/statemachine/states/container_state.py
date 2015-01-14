@@ -9,7 +9,7 @@
 """
 from gtkmvc import Observable
 from threading import Condition
-import yaml
+import copy
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -17,7 +17,7 @@ from statemachine.states.state import State
 from statemachine.transition import Transition
 from statemachine.outcome import Outcome
 from statemachine.data_flow import DataFlow
-from statemachine.scope import ScopedVariable, ScopedResult
+from statemachine.scope import ScopedData, ScopedVariable
 from statemachine.id_generator import *
 from statemachine.config import *
 from statemachine.validity_check.validity_checker import ValidityChecker
@@ -33,17 +33,20 @@ class ContainerState(State, Observable):
     :ivar _start_state: the state to start with when the hierarchy state is executed
     :ivar _scope: common scope of container:
     :ivar _current_state: currently active state of the container:
-    :ivar _scoped_keys: keys of all variables that can be accessed by each child state:
+    :ivar _scoped_variables: scoped variables that can be accessed by each child state:
+    :ivar _scoped_data: dictionary that holds all values of the input_data, the scoped_variables and the outputs of
+                        of the child states during runtime
     :ivar _v_checker: reference to an object that checks the validity of this container state:
 
     """
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None, sm_status=None,
-                 states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
-                 v_checker=None, path=None, filename=None):
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+                 sm_status=None, states=None, transitions=None, data_flows=None, start_state=None,
+                 scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None):
 
         logger.debug("Creating new container state")
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, path, filename)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, path, filename,
+                       state_type=state_type)
 
         self._states = None
         self.states = states
@@ -55,7 +58,7 @@ class ContainerState(State, Observable):
         self.start_state = start_state
         self._scoped_variables = None
         self.scoped_variables = scoped_variables
-        self._scoped_results = {}
+        self._scoped_data = {}
         self._v_checker = v_checker
         self._current_state = None
         self._transitions_cv = Condition()
@@ -191,25 +194,26 @@ class ContainerState(State, Observable):
         self.data_flows.pop(data_flow_id, None)
 
     #Primary key is the name of scoped_key.
-    def add_scoped_key(self, name, value_type):
+    def add_scoped_variable(self, name, value_type, default_value):
         """Adds a data_flow to the container state
 
         :param name: The name of the scoped key
 
         """
-        self._scoped_variables[name] = ScopedVariable(name, value_type)
+        self._scoped_variables[name] = ScopedVariable(name, value_type, self, default_value)
 
-    def remove_scoped_key(self, name):
-        """Remove a scoped key from the container state
+    def remove_scoped_variable(self, name):
+        """Remove a scoped variable from the container state
 
-        :param name: the name of the scoped key to remove
+        :param name: the name of the scoped variable to remove
 
         """
+        del self._scoped_variables[name]
 
     def set_start_state(self, state_id):
         """Adds a data_flow to the container state
 
-        :param state: The state (that was already added to the container) that will be the start state
+        :param state_id: The state_id (that was already added to the container) that will be the start state
 
         """
         self._start_state = state_id
@@ -231,23 +235,19 @@ class ContainerState(State, Observable):
 
         """
         result_dict = {}
-        for input_key, value in state.input_data_ports.iteritems():
-            #print "input_key: %s - value: %s" % (str(input_key), str(value))
+        for input_port_key, value in state.input_data_ports.iteritems():
+            #print "input_port_key: %s - value: %s" % (str(input_port_key), str(value))
             # at first load all default values
-            result_dict[input_key] = value.default_value
+            result_dict[input_port_key] = value.default_value
             #print result_dict
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
             for data_flow_key, data_flow in self.data_flows.iteritems():
                 #print "data_flow_key: %s - data_flow: %s" % (str(data_flow_key), str(data_flow))
-                if data_flow.to_key == input_key:
+                if data_flow.to_key == input_port_key:
                     if data_flow.to_state == state.state_id:
-                        #data comes from scope variable of parent
-                        if data_flow.from_state == self.state_id:
-                            result_dict[input_key] = self.scoped_variables[data_flow.from_key].value
-                        else:  # data comes from result from neighbouring state
-                            #primary key for scoped_results is key+state_id
-                            result_dict[input_key] =\
-                                self.scoped_results[data_flow.from_key+data_flow.from_state].value
+                        # fetch data from the scoped_data list: the key is the data_port_key + the state_id
+                        result_dict[input_port_key] =\
+                            copy.deepcopy(self.scoped_data[data_flow.from_key+data_flow.from_state].value)
         return result_dict
 
     def get_outputs_for_state(self, state):
@@ -259,25 +259,36 @@ class ContainerState(State, Observable):
             result_dict[key] = None
         return result_dict
 
-    def add_dict_to_scope_variables(self, dictionary):
+    def add_dict_to_scoped_data(self, dictionary, state=None):
         """Add a dictionary to the scope variables
 
-        :param dictionary: The dictionary that is added to the scope variables
+        :param dictionary: The dictionary that is added to the scoped data
 
         """
         for key, value in dictionary.iteritems():
-            self.scoped_variables[key] = ScopedVariable(key, value, type(value).__name__, self)
+            if state is None:
+                self.scoped_data[key+self.state_id] = ScopedData(key, value, type(value).__name__, self)
+            else:
+                self.scoped_data[key+state.state_id] = ScopedData(key, value, type(value).__name__, state)
 
-    def add_dict_to_scoped_results(self, dictionary, state):
-        """Add a dictionary to the scoped result values
+    def add_scoped_variables_to_scoped_data(self):
+        """Add the scoped variables default values to the scoped_data dictionary
 
-        :param dictionary: The dictionary that is added to the scoped results
-        :param state: The state to which the output-dictionary belongs
+        """
+        for key, scoped_var in self.scoped_variables.iteritems():
+            self.scoped_data[scoped_var.name+self.state_id] = ScopedData(scoped_var.name, scoped_var.default_value,
+                                                                         scoped_var.value_type, self)
+
+    def update_scoped_variables(self, dictionary, state):
+        """Update the values of the scoped_variables that are stored in the scoped_data dictionary
 
         """
         for key, value in dictionary.iteritems():
-            #primary key for scoped_results is key+state_id
-            self.scoped_results[key+state.state_id] = ScopedResult(key, value, type(value).__name__, state)
+            for data_flow_key, data_flow in self.data_flows.iteritems():
+                if data_flow.to_state == self.state_id:
+                    if data_flow.to_key in self.scoped_variables:
+                        self.scoped_data[data_flow.to_key, self.state_id] =\
+                            ScopedData(data_flow.to_key, value, type(value).__name__, state)
 
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
@@ -309,7 +320,6 @@ class ContainerState(State, Observable):
             'scoped_variables': data.scoped_variables
         }
         return dict_representation
-
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -411,21 +421,21 @@ class ContainerState(State, Observable):
             self._scoped_variables = scoped_variables
 
     @property
-    def scoped_results(self):
-        """Property for the _scoped_results field
+    def scoped_data(self):
+        """Property for the _scoped_data field
 
         """
-        return self._scoped_results
+        return self._scoped_data
 
-    @scoped_results.setter
+    @scoped_data.setter
     @Observable.observed
-    def scoped_results(self, scoped_results):
-        if not isinstance(scoped_results, dict):
+    def scoped_data(self, scoped_data):
+        if not isinstance(scoped_data, dict):
             raise TypeError("scoped_results must be of type dict")
-        for s in scoped_results:
-            if not isinstance(s, ScopedResult):
-                raise TypeError("element of scoped_keys must be of type ScopedResult")
-        self._scoped_results = scoped_results
+        for s in scoped_data:
+            if not isinstance(s, ScopedData):
+                raise TypeError("element of scoped_data must be of type ScopedResult")
+        self._scoped_data = scoped_data
 
     @property
     def current_state(self):
