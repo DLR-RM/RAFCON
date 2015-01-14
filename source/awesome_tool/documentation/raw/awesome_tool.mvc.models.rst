@@ -10,7 +10,7 @@ None yet.
 StateModel (in state)
 ---------------------
 
-.. automodule:: mvc.models.state
+.. automodule:: awesome_tool.mvc.models.state
     :members:
     :undoc-members:
     :show-inheritance:
@@ -22,7 +22,7 @@ StateModel (in state)
 ContainerStateModel (in state)
 ------------------------------
 
-.. automodule:: mvc.models.container_state
+.. automodule:: awesome_tool.mvc.models.container_state
     :members:
     :undoc-members:
     :show-inheritance:
@@ -34,7 +34,7 @@ ContainerStateModel (in state)
 TransitionModel (in state)
 --------------------------
 
-.. automodule:: mvc.models.transition
+.. automodule:: awesome_tool.mvc.models.transition
     :members:
     :undoc-members:
     :show-inheritance:
@@ -46,7 +46,7 @@ TransitionModel (in state)
 Module contents
 ---------------
 
-.. automodule:: mvc.models
+.. automodule:: awesome_tool.mvc.models
     :members:
     :undoc-members:
     :show-inheritance:
