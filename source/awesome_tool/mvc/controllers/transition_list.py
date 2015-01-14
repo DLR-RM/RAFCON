@@ -30,25 +30,30 @@ class TransitionListController(Controller):
 
         def cell_text(column, cell_renderer, model, iter, container_model):
             col = column.get_name()
-            states_dic = {-1: 'Parent'}
             states_store = ListStore(str, str)
-            states_store.append([container_model.container_state.state_id, container_model.container_state.name])
+            states_store.append([container_model.state.state_id, container_model.state.name])
             transition = model.get_value(iter, 0)
-            for state_model in container_model.states:
-                states_dic[state_model.state.state_id] = state_model.state.name
+            for state_model in container_model.states.itervalues():
                 states_store.append([state_model.state.state_id, state_model.state.name])
             if col == 'from_state_col':
-                cell_renderer.set_property('text', states_dic[transition.from_state])
+                text = container_model.state.states[transition.from_state].name
+                cell_renderer.set_property('text', text)
                 cell_renderer.set_property('text-column', 1)
                 cell_renderer.set_property('model', states_store)
             elif col == 'to_state_col':
-                cell_renderer.set_property('text', states_dic[transition.to_state])
+                text = 'Sel. state' if transition.to_state is None else  \
+                    container_model.state.states[transition.to_state].name
+                cell_renderer.set_property('text', text)
                 cell_renderer.set_property('text-column', 1)
                 cell_renderer.set_property('model', states_store)
             elif col == 'from_outcome_col':
-                cell_renderer.set_property('text', transition.from_outcome)
+                from_state = container_model.state.states[transition.from_state]
+                cell_renderer.set_property('text', from_state.outcomes[transition.from_outcome].name)
             elif col == 'to_outcome_col':
-                cell_renderer.set_property('text', transition.to_outcome)
+                if transition.to_outcome is None:
+                    cell_renderer.set_property('text', '')
+                else:
+                    cell_renderer.set_property('text', container_model.state.outcomes[transition.to_outcome].name)
             else:
                 logger.error("Unknown column '{col:s}' in TransitionListView".format(col=col))
 

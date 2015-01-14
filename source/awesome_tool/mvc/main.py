@@ -51,7 +51,7 @@ def main(*args, **kargs):
     state5 = State('Nested2')
     state3.add_state(state4)
     state3.add_state(state5)
-    state3.add_transition(state4.state_id, 2, state5.state_id, None)
+    #state3.add_transition(state4.state_id, 0, state5.state_id, None)
     state1.add_outcome('Success')
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
@@ -68,10 +68,10 @@ def main(*args, **kargs):
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
-    ctr_state.add_transition(state1.state_id, 3, state2.state_id, None)
-    ctr_state.add_transition(state2.state_id, 2, state3.state_id, None)
-    ctr_state.add_transition(state3.state_id, 2, None, 2)
-    ctr_state.add_transition(state1.state_id, 1, None, 1)
+    ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
+    ctr_state.add_transition(state2.state_id, -2, state3.state_id, None)
+    ctr_state.add_transition(state3.state_id, -2, None, -2)
+    ctr_state.add_transition(state1.state_id, -1, None, -1)
     # ctr_state.transitions = [trans1, trans2]
     # ctr_state.data_flows = [data_flow1, data_flow2]
         # states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,
@@ -87,9 +87,9 @@ def main(*args, **kargs):
     # my_state2.name = "ContainerState"
     # logger.debug("changed attribute")
 
-    #ctr_view = ContainerStateView()
+    ctr_view = ContainerStateView()
 
-    #ContainerStateController(ctr_model, ctr_view)
+    ContainerStateController(ctr_model, ctr_view)
 
     editor_view = GraphicalEditorView()
     editor_ctrl = GraphicalEditorController(ctr_model, editor_view)

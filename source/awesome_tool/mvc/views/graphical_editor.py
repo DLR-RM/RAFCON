@@ -265,9 +265,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         outcome_pos = {}
         for key in outcomes:
             # Color of outcome is defined by its type, "aborted", "preempted" or else
-            if key == 1:
+            outcome_name = outcomes[key].name
+            if outcome_name == "aborted":
                 glColor3f(0.8, 0, 0)
-            elif key == 2:
+            elif outcome_name == "preempted":
                 glColor3f(0.1, 0.1, 0.7)
             else:
                 glColor3f(0.4, 0.4, 0.4)
