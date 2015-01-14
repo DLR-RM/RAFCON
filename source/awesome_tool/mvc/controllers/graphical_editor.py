@@ -404,7 +404,21 @@ class GraphicalEditorController(Controller):
                 from_key = data_flow.data_flow.from_key
                 to_key = data_flow.data_flow.to_key
 
-                #print 'Pos:', from_state.meta['gui']['editor']['output_pos']
+                from_x = from_state.meta['gui']['editor']['output_pos'][from_key][0]
+                from_y = from_state.meta['gui']['editor']['output_pos'][from_key][1]
+                to_x = to_state.meta['gui']['editor']['input_pos'][to_key][0]
+                to_y = to_state.meta['gui']['editor']['input_pos'][to_key][1]
+
+                waypoints = []
+
+                active = data_flow.meta['gui']['selected']
+                id = self.view.editor.draw_data_flow(from_x, from_y, to_x, to_y, line_width, waypoints,
+                                                      active, depth + 0.5)
+                data_flow.meta['gui']['editor']['id'] = id
+                data_flow.meta['gui']['editor']['from_pos_x'] = from_x
+                data_flow.meta['gui']['editor']['from_pos_y'] = from_y
+                data_flow.meta['gui']['editor']['to_pos_x'] = to_x
+                data_flow.meta['gui']['editor']['to_pos_y'] = to_y
 
 
     def _find_selection(self, pos_x, pos_y):

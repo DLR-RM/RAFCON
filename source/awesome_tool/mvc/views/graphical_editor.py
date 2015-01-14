@@ -125,8 +125,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     state_active_color = Color(0.7, 0, 0, 0.8)
     state_name_color = Color(0.2, 0.2, 0.2, 1)
     state_port_name_color = Color(0.2, 0.2, 0.2, 1)
-    transition_color = Color(0.6, 0.6, 0.6, 0.8)
+    transition_color = Color(0.4, 0.4, 0.4, 0.8)
     transition_active_color = Color(0.7, 0, 0, 0.8)
+    data_flow_color = Color(0.6, 0.6, 0.6, 0.8)
+    data_flow_active_color = Color(0.7, 0, 2, 0.8)
 
     def __init__(self, glconfig):
         """The graphical editor manages the OpenGL functions.
@@ -467,7 +469,38 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param active: Whether the transition shell be shown as active/selected
         :param depth: The Z layer
         """
-        pass
+         # "Generate" unique ID for each object
+        id = self.name_counter
+        self.name_counter += 1
+
+        glPushName(id)
+        width /= 2
+        self._set_closest_line_width(width)
+
+        # TODO: Show name of the transition
+
+        if active:
+            self.data_flow_active_color.set()
+        else:
+            self.data_flow_color.set()
+
+        points = [(from_pos_x, from_pos_y)]
+        points.extend(waypoints)
+        points.append((to_pos_x, to_pos_y))
+
+        # Draw the transitions as simple straight line connecting start- way- and endpoints
+        glBegin(GL_LINE_STRIP)
+        for point in points:
+            glVertex3f(point[0], point[1], depth)
+        glEnd()
+
+        self._set_closest_line_width(width / 1.5)
+        for waypoint in waypoints:
+            self._draw_circle(waypoint[0], waypoint[1], depth + 1, width / 8.)
+
+        glPopName()
+
+        return id
 
     def _write_string(self, string, pos_x, pos_y, height, color, stroke_width=1, align_right=False, depth=0):
         """Write a string
