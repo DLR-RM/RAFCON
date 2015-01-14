@@ -379,21 +379,32 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 string_pos_x = port_pos_left_x + margin/2.
                 if not is_input:
                     string_pos_x += port_width
-                self._write_string(port_name, string_pos_x, pos_y - margin/2. - num * (str_height + margin),
+                string_pos_y = pos_y - margin/2. - num * (str_height + margin)
+                self._write_string(port_name, string_pos_x, string_pos_y,
                                    str_height, self.state_port_name_color, 1.5, not is_input, depth+0.01)
+
+                circle_pos_x = port_pos_left_x if is_input else port_pos_right_x
+                circle_pos_y = string_pos_y - margin/2.
+                self._draw_circle(circle_pos_x, circle_pos_y, depth+0.02, margin / 4.)
+                return circle_pos_x, circle_pos_y
+
+            input_connector_pos = []
+            output_connector_pos = []
             output_num = 0
             for port in inputs.itervalues():
-                draw_port(port, output_num, True)
+                con_pos_x, con_pos_y = draw_port(port, output_num, True)
+                input_connector_pos.append((con_pos_x, con_pos_y))
                 output_num += 1
 
             for port in outputs.itervalues():
-                draw_port(port, output_num, False)
+                con_pos_x, con_pos_y = draw_port(port, output_num, False)
+                output_connector_pos.append((con_pos_x, con_pos_y))
                 output_num += 1
 
 
 
         glPopName()
-        return id, outcome_pos, {}, {}
+        return id, outcome_pos, input_connector_pos, output_connector_pos
 
     def draw_transition(self, name, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
                         depth=0):
