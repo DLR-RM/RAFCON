@@ -427,6 +427,7 @@ class GraphicalEditorController(Controller):
                     waypoints.append((waypoint[0], waypoint[1]))
 
                 active = data_flow.meta['gui']['selected']
+                line_width = min(width, height) / 25.0
                 id = self.view.editor.draw_data_flow(from_x, from_y, to_x, to_y, line_width, waypoints,
                                                      active, depth + 0.5)
                 data_flow.meta['gui']['editor']['id'] = id

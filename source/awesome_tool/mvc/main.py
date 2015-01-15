@@ -68,14 +68,6 @@ def main(*args, **kargs):
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
 
-    # prop_model = StateModel(my_state)
-    # prop_view = StatePropertiesView()
-    # prop_ctrl = StatePropertiesController(prop_model, prop_view)
-    #
-    #trans1 = Transition(state1.state_id, 1, state2.state_id, 2)
-    #trans2 = Transition(state2.state_id, 1, state3.state_id, 3)
-    #data_flow1 = DataFlow(state1.state_id, "success", state2.state_id, None)
-    #data_flow2 = DataFlow(state2.state_id, "success", state3.state_id, None)
     ctr_state = ContainerState(name="Container")
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
@@ -86,14 +78,14 @@ def main(*args, **kargs):
     ctr_state.add_transition(state2.state_id, -2, state3.state_id, None)
     ctr_state.add_transition(state3.state_id, -2, None, -2)
     ctr_state.add_transition(state1.state_id, -1, None, -1)
+    ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
+    ctr_state.add_transition(state2.state_id, -2, state3.state_id, None)
+    ctr_state.add_transition(state3.state_id, -2, None, -2)
+    ctr_state.add_transition(state1.state_id, -1, None, -1)
     ctr_state.add_data_flow(state1.state_id, "output", state2.state_id, "par")
     ctr_state.add_data_flow(state2.state_id, "res", state3.state_id, "input")
     ctr_state.add_data_flow(ctr_state.state_id, "ctr_in", state1.state_id, "input")
     ctr_state.add_data_flow(state3.state_id, "output", ctr_state.state_id, "ctr_out")
-    # ctr_state.transitions = [trans1, trans2]
-    # ctr_state.data_flows = [data_flow1, data_flow2]
-        # states=[state1, state2, state3], transitions=[trans1, trans2], data_flows=[data_flow1,
-        #                                                                                                   data_flow2])
     ctr_state.name = "Container"
 
     ctr_model = ContainerStateModel(ctr_state)
@@ -104,9 +96,9 @@ def main(*args, **kargs):
     # my_state2.name = "ContainerState"
     # logger.debug("changed attribute")
 
-    ctr_view = ContainerStateView()
+    #ctr_view = ContainerStateView()
 
-    ContainerStateController(ctr_model, ctr_view)
+    #ContainerStateController(ctr_model, ctr_view)
 
     editor_view = GraphicalEditorView()
     editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
