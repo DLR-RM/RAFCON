@@ -140,10 +140,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         gtk.DrawingArea.__init__(self)
 
         # default outer coordinate values which will later be overwritten by the controller
-        self.left = 0
-        self.right = 100
-        self.top = 100
-        self.bottom = 0
+        self.left = -10
+        self.right = 110
+        self.top = 110
+        self.bottom = -10
 
         # Used to generate unique ids for drawn objects
         self.name_counter = 0

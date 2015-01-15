@@ -9,6 +9,7 @@ logger = log.get_logger(__name__)
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from math import sqrt
+from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SCROLL_LEFT, SCROLL_RIGHT
 # from models.container_state import ContainerStateModel
 
 
@@ -36,6 +37,7 @@ class GraphicalEditorController(Controller):
         view.editor.connect('button-release-event', self._on_mouse_release)
         # Only called when the mouse is clicked while moving
         view.editor.connect('motion-notify-event', self._on_mouse_motion)
+        view.editor.connect('scroll-event', self._on_scroll)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -130,7 +132,6 @@ class GraphicalEditorController(Controller):
                             self.selected_waypoint = (self.selection.meta['gui']['editor']['waypoints'], i)
                             self.selection_start_pos = (waypoint[0], waypoint[1])
                             logger.debug('Selected waypoint {0:.1f} - {1:.1f}'.format(click[0], click[1]))
-                            print self.selected_waypoint, self.selection
                             break
 
             self._redraw()
@@ -270,10 +271,22 @@ class GraphicalEditorController(Controller):
             self._redraw()
 
         if self.selected_waypoint is not None:
-            print "move waypoint", self.selected_waypoint
             # Keep the waypoint within its container state
             new_pos_x, new_pos_y = limit_pos_to_state(self.selection.parent, new_pos_x, new_pos_y)
             self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
+            self._redraw()
+
+    def _on_scroll(self, widget, event):
+        pos = (event.x, event.y)
+        zoom_in = event.direction == SCROLL_UP
+        zoom_out = event.direction == SCROLL_DOWN
+
+        if zoom_in or zoom_out:
+            factor = 1.25 if zoom_in else 0.8
+            self.view.editor.left *= factor
+            self.view.editor.right *= factor
+            self.view.editor.top *= factor
+            self.view.editor.bottom *= factor
             self._redraw()
 
 
@@ -327,7 +340,7 @@ class GraphicalEditorController(Controller):
 
         # If the state is the root container, fit the dimensions of the OpenGL coordinates so that the whole
         # container fits in the viewport
-        if depth == 1:
+        if depth == 1 and False:
             margin = min(width, height) / 10.0
             self.view.editor.left = pos_x - margin
             self.view.editor.right = pos_x + width + margin
