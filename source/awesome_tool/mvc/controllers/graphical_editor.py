@@ -282,11 +282,31 @@ class GraphicalEditorController(Controller):
         zoom_out = event.direction == SCROLL_DOWN
 
         if zoom_in or zoom_out:
-            factor = 1.25 if zoom_in else 0.8
-            self.view.editor.left *= factor
-            self.view.editor.right *= factor
-            self.view.editor.top *= factor
-            self.view.editor.bottom *= factor
+            mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
+            width = self.view.editor.right - self.view.editor.left
+            height = self.view.editor.top - self.view.editor.bottom
+
+            zoom = 1.25
+            zoom = zoom if zoom_in else 1./zoom
+
+            d_l = mouse_pos[0] - self.view.editor.left
+            d_b = mouse_pos[1] - self.view.editor.bottom
+            d_r = width - d_l
+            d_t = height - d_b
+
+            new_d_l = d_l * zoom
+            new_d_b = d_b * zoom
+            new_d_r = d_r * zoom
+            new_d_t = d_t * zoom
+
+            new_width = new_d_l + new_d_r
+            new_height = new_d_b + new_d_t
+
+            self.view.editor.left = mouse_pos[0] - new_d_l
+            self.view.editor.bottom = mouse_pos[1] - new_d_b
+            self.view.editor.right = new_width + self.view.editor.left
+            self.view.editor.top = new_height + self.view.editor.bottom
+
             self._redraw()
 
 
