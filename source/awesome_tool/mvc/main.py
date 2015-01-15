@@ -62,7 +62,7 @@ def main(*args, **kargs):
     state5.add_input_data_port("in", "int", 0)
     state3.add_state(state4)
     state3.add_state(state5)
-    #state3.add_transition(state4.state_id, 0, state5.state_id, None)
+    state3.add_transition(state4.state_id, 0, state5.state_id, None)
     state3.add_data_flow(state4.state_id, "out", state5.state_id, "in")
     state1.add_outcome('Success')
     state3.add_outcome('Branch1')
