@@ -16,13 +16,14 @@ class DataFlowModel(ModelMT):
 
     __observables__ = ("data_flow",)
 
-    def __init__(self, data_flow, meta=None):
+    def __init__(self, data_flow, parent, meta=None):
         """Constructor
         """
 
         ModelMT.__init__(self)  # pass columns as separate parameters
         
         assert isinstance(data_flow, DataFlow)
+        self.parent = parent
 
         self.data_flow = data_flow
 

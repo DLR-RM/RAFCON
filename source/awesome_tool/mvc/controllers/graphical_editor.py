@@ -7,7 +7,7 @@ from utils import log
 logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
-from mvc.models import ContainerStateModel, StateModel, TransitionModel
+from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from math import sqrt
 # from models.container_state import ContainerStateModel
 
@@ -112,23 +112,25 @@ class GraphicalEditorController(Controller):
                     self.selection.meta['gui']['selected'] = True
                     # else:
                     # self.selection.meta['gui']['selected'] = False
-                    #self.selection = None
+                    # self.selection = None
 
             # If a state was clicked on, store the click coordinates for the drag'ndrop movement
             if self.selection is not None and isinstance(self.selection, StateModel):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
 
-            if self.selection is not None and isinstance(self.selection, TransitionModel):
+            if self.selection is not None and \
+                    (isinstance(self.selection, TransitionModel) or isinstance(self.selection, DataFlowModel)):
                 close_threshold = 2
                 click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
-                logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
                     if waypoint[0] is not None and waypoint[1] is not None:
                         if abs(waypoint[0] - click[0]) < close_threshold and \
                                         abs(waypoint[1] - click[1]) < close_threshold:
                             self.selected_waypoint = (self.selection.meta['gui']['editor']['waypoints'], i)
                             self.selection_start_pos = (waypoint[0], waypoint[1])
+                            logger.debug('Selected waypoint {0:.1f} - {1:.1f}'.format(click[0], click[1]))
+                            print self.selected_waypoint, self.selection
                             break
 
             self._redraw()
@@ -139,42 +141,42 @@ class GraphicalEditorController(Controller):
             click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
             clicked_model = self._find_selection(event.x, event.y)
 
-            if isinstance(clicked_model, TransitionModel):
-                transition_model = clicked_model
-                # If the right click was on a waypoint of transition, the waypoint is removed
-                # If it was on a transition, a waypoint is added to that position
+            # If a connection (transition or data flow) was clicked
+            if isinstance(clicked_model, TransitionModel) or isinstance(clicked_model, DataFlowModel):
+                connection_model = clicked_model
+                # If the right click was on a waypoint of a connection, the waypoint is removed
+                # If it was on a connection, a waypoint is added to that position
                 waypoint_removed = False
 
                 close_threshold = 2
-                logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
-                for waypoint in transition_model.meta['gui']['editor']['waypoints']:
+                # logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
+                for waypoint in connection_model.meta['gui']['editor']['waypoints']:
                     if waypoint[0] is not None and waypoint[1] is not None:
                         if abs(waypoint[0] - click[0]) < close_threshold and \
                                         abs(waypoint[1] - click[1]) < close_threshold:
-                            # del transition_model.meta['waypoints'][key]
-                            transition_model.meta['gui']['editor']['waypoints'].remove(waypoint)
+                            connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
                             waypoint_removed = True
-                            logger.debug('Transition waypoint removed')
+                            logger.debug('Connection waypoint removed')
                             self._redraw()
                             break
 
                 if not waypoint_removed:
                     # Add waypoint
-                    if isinstance(transition_model.meta['gui']['editor']['waypoints'], dict):
-                        logger.warn("Transition waypoints was of type dict, expected list")
-                        transition_model.meta['gui']['editor']['waypoints'] = transition_model.meta['waypoints'].items()
-                    num = len(transition_model.meta['gui']['editor']['waypoints'])
+                    if isinstance(connection_model.meta['gui']['editor']['waypoints'], dict):
+                        logger.warn("Connection waypoints was of type dict, expected list")
+                        connection_model.meta['gui']['editor']['waypoints'] = connection_model.meta['waypoints'].items()
+                    num = len(connection_model.meta['gui']['editor']['waypoints'])
 
-                    points = [(transition_model.meta['gui']['editor']['from_pos_x'],
-                               transition_model.meta['gui']['editor']['from_pos_y'])]
-                    points.extend(transition_model.meta['gui']['editor']['waypoints'])
-                    points.append((transition_model.meta['gui']['editor']['to_pos_x'],
-                                   transition_model.meta['gui']['editor']['to_pos_y']))
+                    points = [(connection_model.meta['gui']['editor']['from_pos_x'],
+                               connection_model.meta['gui']['editor']['from_pos_y'])]
+                    points.extend(connection_model.meta['gui']['editor']['waypoints'])
+                    points.append((connection_model.meta['gui']['editor']['to_pos_x'],
+                                   connection_model.meta['gui']['editor']['to_pos_y']))
                     for i in range(len(points) - 1):
                         if self._point_on_line(click, points[i], points[i + 1]):
-                            transition_model.meta['gui']['editor']['waypoints'].insert(i, (click[0], click[1]))
+                            connection_model.meta['gui']['editor']['waypoints'].insert(i, (click[0], click[1]))
 
-                    logger.debug('Transition waypoint added at {0:.1f} - {1:.1f}'.format(click[0], click[1]))
+                    logger.debug('Connection waypoint added at {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                     self._redraw()
 
 
@@ -197,7 +199,7 @@ class GraphicalEditorController(Controller):
         """
         if self.selection is None:
             return
-        if not isinstance(self.selection, StateModel) and not isinstance(self.selection, TransitionModel):
+        if not isinstance(self.selection, (StateModel, TransitionModel, DataFlowModel)):
             return
         if self.last_button_pressed != 1:
             return
@@ -247,6 +249,10 @@ class GraphicalEditorController(Controller):
                         for i, waypoint in enumerate(transition.meta['gui']['editor']['waypoints']):
                             new_pos = (waypoint[0] + diff_x, waypoint[1] + diff_y)
                             transition.meta['gui']['editor']['waypoints'][i] = new_pos
+                    for data_flow in state.data_flows:
+                        for i, waypoint in enumerate(data_flow.meta['gui']['editor']['waypoints']):
+                            new_pos = (waypoint[0] + diff_x, waypoint[1] + diff_y)
+                            data_flow.meta['gui']['editor']['waypoints'][i] = new_pos
                 # Move child states
                 for child_state in state.states.itervalues():
                     child_state.meta['gui']['editor']['pos_x'] += diff_x
@@ -264,6 +270,7 @@ class GraphicalEditorController(Controller):
             self._redraw()
 
         if self.selected_waypoint is not None:
+            print "move waypoint", self.selected_waypoint
             # Keep the waypoint within its container state
             new_pos_x, new_pos_y = limit_pos_to_state(self.selection.parent, new_pos_x, new_pos_y)
             self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
@@ -416,10 +423,12 @@ class GraphicalEditorController(Controller):
                 to_y = connectors[to_key][1]
 
                 waypoints = []
+                for waypoint in data_flow.meta['gui']['editor']['waypoints']:
+                    waypoints.append((waypoint[0], waypoint[1]))
 
                 active = data_flow.meta['gui']['selected']
                 id = self.view.editor.draw_data_flow(from_x, from_y, to_x, to_y, line_width, waypoints,
-                                                      active, depth + 0.5)
+                                                     active, depth + 0.5)
                 data_flow.meta['gui']['editor']['id'] = id
                 data_flow.meta['gui']['editor']['from_pos_x'] = from_x
                 data_flow.meta['gui']['editor']['from_pos_y'] = from_y
