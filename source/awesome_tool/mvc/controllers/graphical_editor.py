@@ -94,11 +94,13 @@ class GraphicalEditorController(Controller):
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
 
+        # Store the coordinates of the event
+        self.mouse_move_start_pos = (event.x, event.y)
+        self.mouse_move_last_pos = (event.x, event.y)
+
         if event.button == 1:  # Left mouse button
             # print 'press', event
 
-            # Store the coordinates of the event
-            self.mouse_move_start_pos = (event.x, event.y)
 
             # Check if something was selected
             new_selection = self._find_selection(event.x, event.y)
@@ -188,7 +190,8 @@ class GraphicalEditorController(Controller):
         :param event: Information about the event, e. g. x and y coordinate
         Not used so far
         """
-        # print 'release', event
+        #print 'release', event
+        self.last_button_pressed = None
         pass
 
     def _on_mouse_motion(self, widget, event):
@@ -198,15 +201,25 @@ class GraphicalEditorController(Controller):
         :param widget: The widget beneath the mouse when the click was done
         :param event: Information about the event, e. g. x and y coordinate
         """
-        if self.selection is None:
-            return
-        if not isinstance(self.selection, (StateModel, TransitionModel, DataFlowModel)):
-            return
-        if self.last_button_pressed != 1:
-            return
-        # Can the root container be moved?
-        if self.selection == self.model:
-            return
+        # if self.selection is None:
+        #     return
+        # if not isinstance(self.selection, (StateModel, TransitionModel, DataFlowModel)):
+        #     return
+        # if self.last_button_pressed != 1:
+        #     return
+
+        # Move while middle button is clicked moves the view
+        if self.last_button_pressed == 2:
+            last = self.view.editor.screen_to_opengl_coordinates(self.mouse_move_last_pos)
+            current = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+            diff_x = current[0] - last[0]
+            diff_y = current[1] - last[1]
+            self.view.editor.left -= diff_x
+            self.view.editor.right -= diff_x
+            self.view.editor.bottom -= diff_y
+            self.view.editor.top -= diff_y
+
+            self._redraw()
 
         rel_x_motion = event.x - self.mouse_move_start_pos[0]
         rel_y_motion = -(event.y - self.mouse_move_start_pos[1])
@@ -229,7 +242,9 @@ class GraphicalEditorController(Controller):
                     pos_y = state.meta['gui']['editor']['pos_y'] + state.meta['gui']['editor']['height'] - height
             return pos_x, pos_y
 
-        if self.selection is not None and isinstance(self.selection, StateModel):
+        #                                                                            Root container can't be moved
+        if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and\
+                        self.last_button_pressed == 1:
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
 
@@ -275,6 +290,8 @@ class GraphicalEditorController(Controller):
             new_pos_x, new_pos_y = limit_pos_to_state(self.selection.parent, new_pos_x, new_pos_y)
             self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
             self._redraw()
+
+        self.mouse_move_last_pos = (event.x, event.y)
 
     def _on_scroll(self, widget, event):
         pos = (event.x, event.y)
