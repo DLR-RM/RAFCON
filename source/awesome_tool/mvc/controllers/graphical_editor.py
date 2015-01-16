@@ -58,7 +58,7 @@ class GraphicalEditorController(Controller):
         """
 
         # Store the current outer editor coordinates
-        box1 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
+        #box1 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
         # Prepare the drawing process
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
@@ -66,18 +66,18 @@ class GraphicalEditorController(Controller):
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
         # Store the current outer editor coordinates again
-        box2 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
+        #box2 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
 
         # Calculate coordinates offset between pre and post drawing
         # If too big, configure and redraw
-        diff = sum(map(lambda i1, i2: abs(i1 - i2), box1, box2))
-        if diff > 5:
-            self._redraw()
+        #diff = sum(map(lambda i1, i2: abs(i1 - i2), box1, box2))
+        #if diff > 5:
+            #self._redraw()
 
     def _redraw(self):
         """Force the graphical editor to be redrawn
 
-        First triggers the configure event to cause the perspective to be updated, then trigger teh actual expose
+        First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
         event to redraw.
         """
         self.view.editor.emit("configure_event", None)
@@ -95,8 +95,8 @@ class GraphicalEditorController(Controller):
         self.selected_waypoint = None  # reset
 
         # Store the coordinates of the event
-        self.mouse_move_start_pos = (event.x, event.y)
-        self.mouse_move_last_pos = (event.x, event.y)
+        self.mouse_move_start_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+        self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
 
         if event.button == 1:  # Left mouse button
             # print 'press', event
@@ -190,7 +190,7 @@ class GraphicalEditorController(Controller):
         :param event: Information about the event, e. g. x and y coordinate
         Not used so far
         """
-        #print 'release', event
+        # print 'release', event
         self.last_button_pressed = None
         pass
 
@@ -202,32 +202,29 @@ class GraphicalEditorController(Controller):
         :param event: Information about the event, e. g. x and y coordinate
         """
         # if self.selection is None:
-        #     return
+        # return
         # if not isinstance(self.selection, (StateModel, TransitionModel, DataFlowModel)):
         #     return
         # if self.last_button_pressed != 1:
         #     return
 
+        mouse_current_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+        rel_x_motion = mouse_current_pos[0] - self.mouse_move_start_pos[0]
+        rel_y_motion = mouse_current_pos[1] - self.mouse_move_start_pos[1]
+
         # Move while middle button is clicked moves the view
         if self.last_button_pressed == 2:
-            last = self.view.editor.screen_to_opengl_coordinates(self.mouse_move_last_pos)
-            current = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
-            diff_x = current[0] - last[0]
-            diff_y = current[1] - last[1]
-            self.view.editor.left -= diff_x
-            self.view.editor.right -= diff_x
-            self.view.editor.bottom -= diff_y
-            self.view.editor.top -= diff_y
+            self.view.editor.left -= rel_x_motion
+            self.view.editor.right -= rel_x_motion
+            self.view.editor.bottom -= rel_y_motion
+            self.view.editor.top -= rel_y_motion
 
             self._redraw()
 
-        rel_x_motion = event.x - self.mouse_move_start_pos[0]
-        rel_y_motion = -(event.y - self.mouse_move_start_pos[1])
 
         # Translate the mouse movement to OpenGL coordinates
-        conversion = self.view.editor.pixel_to_size_ratio()
-        new_pos_x = self.selection_start_pos[0] + rel_x_motion / conversion
-        new_pos_y = self.selection_start_pos[1] + rel_y_motion / conversion
+        new_pos_x = self.selection_start_pos[0] + rel_x_motion
+        new_pos_y = self.selection_start_pos[1] + rel_y_motion
 
         def limit_pos_to_state(state, pos_x, pos_y, width=0, height=0):
             if state is not None:
@@ -243,8 +240,8 @@ class GraphicalEditorController(Controller):
             return pos_x, pos_y
 
         #                                                                            Root container can't be moved
-        if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and\
-                        self.last_button_pressed == 1:
+        if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and \
+                self.last_button_pressed == 1:
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
 
@@ -291,7 +288,7 @@ class GraphicalEditorController(Controller):
             self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
             self._redraw()
 
-        self.mouse_move_last_pos = (event.x, event.y)
+        self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
 
     def _on_scroll(self, widget, event):
         pos = (event.x, event.y)
@@ -304,7 +301,7 @@ class GraphicalEditorController(Controller):
             height = self.view.editor.top - self.view.editor.bottom
 
             zoom = 1.25
-            zoom = zoom if zoom_in else 1./zoom
+            zoom = zoom if zoom_in else 1. / zoom
 
             d_l = mouse_pos[0] - self.view.editor.left
             d_b = mouse_pos[1] - self.view.editor.bottom

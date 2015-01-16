@@ -225,7 +225,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             left = self.left*aspect
 
         # Window to OpenGL coordinates
-        opengl = (window[0] / float(conversion) + left, window[1] / float(conversion) + bottom)
+        opengl = (window[0] / conversion + left, window[1] / conversion + bottom)
         return opengl
 
     def pixel_to_size_ratio(self):
