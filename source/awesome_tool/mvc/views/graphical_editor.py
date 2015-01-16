@@ -99,12 +99,12 @@ class GraphicalEditorView(View):
         self.win.set_title("Graphical Editor")
         self.win.set_position(1)
         self.v_box = gtk.VBox()
-        self.test_label = gtk.Label("Hallo")
+        #self.test_label = gtk.Label("Hallo")
         self.editor = GraphicalEditor(glconfig)
         self.editor.add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK)
         self.editor.set_size_request(500, 500)
 
-        self.v_box.pack_start(self.test_label)
+        #self.v_box.pack_start(self.test_label)
         self.v_box.pack_end(self.editor)
 
         self.win.add(self.v_box)
@@ -212,7 +212,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     def screen_to_opengl_coordinates(self, pos):
         conversion = self.pixel_to_size_ratio()
         viewport = glGetInteger(GL_VIEWPORT)
-
         # Screen to window coordinates
         window = (pos[0], viewport[3] - pos[1] + viewport[1])
 

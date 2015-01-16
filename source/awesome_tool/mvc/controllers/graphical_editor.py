@@ -296,30 +296,32 @@ class GraphicalEditorController(Controller):
         zoom_out = event.direction == SCROLL_DOWN
 
         if zoom_in or zoom_out:
-            mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
-            width = self.view.editor.right - self.view.editor.left
-            height = self.view.editor.top - self.view.editor.bottom
+            old_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
 
             zoom = 1.25
             zoom = zoom if zoom_in else 1. / zoom
 
-            d_l = mouse_pos[0] - self.view.editor.left
-            d_b = mouse_pos[1] - self.view.editor.bottom
-            d_r = width - d_l
-            d_t = height - d_b
+            # Apply centric zoom
+            self.view.editor.left *= zoom
+            self.view.editor.right *= zoom
+            self.view.editor.bottom *= zoom
+            self.view.editor.top *= zoom
 
-            new_d_l = d_l * zoom
-            new_d_b = d_b * zoom
-            new_d_r = d_r * zoom
-            new_d_t = d_t * zoom
+            # Determine mouse offset to previous position
+            aspect = self.view.editor.allocation.width/float(self.view.editor.allocation.height)
+            new_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
+            diff_x = new_mouse_pos[0] - old_mouse_pos[0]
+            diff_y = new_mouse_pos[1] - old_mouse_pos[1]
+            if aspect < 1:
+                diff_y *= aspect
+            else:
+                diff_x /= aspect
 
-            new_width = new_d_l + new_d_r
-            new_height = new_d_b + new_d_t
-
-            self.view.editor.left = mouse_pos[0] - new_d_l
-            self.view.editor.bottom = mouse_pos[1] - new_d_b
-            self.view.editor.right = new_width + self.view.editor.left
-            self.view.editor.top = new_height + self.view.editor.bottom
+            # Move view to keep the previous mouse position in the view
+            self.view.editor.left -= diff_x
+            self.view.editor.right -= diff_x
+            self.view.editor.bottom -= diff_y
+            self.view.editor.top -= diff_y
 
             self._redraw()
 
@@ -563,10 +565,8 @@ class GraphicalEditorController(Controller):
         def distance(a, b):
             return sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
-        epsilon = 1
-        if -epsilon < (
-                        distance(line_start, point) + distance(point, line_end) - distance(line_start,
-                                                                                           line_end)) < epsilon:
+        ds = 1
+        if -ds < (distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end)) < ds:
             return True
 
         return False
