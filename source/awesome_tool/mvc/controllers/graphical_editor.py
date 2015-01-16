@@ -49,6 +49,12 @@ class GraphicalEditorController(Controller):
         """
         pass
 
+    @Controller.observe("state", assign=True)
+    def state_machine_change(self, root_model, property, info):
+        print root_model
+        print property
+        print info
+
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
 

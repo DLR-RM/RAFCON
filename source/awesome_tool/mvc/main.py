@@ -92,9 +92,9 @@ def main(*args, **kargs):
     # my_state2.name = "ContainerState"
     # logger.debug("changed attribute")
 
-    #ctr_view = ContainerStateView()
+    ctr_view = ContainerStateView()
 
-    #ContainerStateController(ctr_model, ctr_view)
+    ContainerStateController(ctr_model, ctr_view)
 
     editor_view = GraphicalEditorView()
     editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
