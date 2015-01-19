@@ -30,19 +30,21 @@ class DataFlowListController(Controller):
 
         def cell_text(column, cell_renderer, model, iter, container_model):
             col = column.get_name()
-            states_dic = {-1: 'Parent'}
             states_store = ListStore(str, str)
-            states_store.append([container_model.container_state.state_id, container_model.container_state.name])
+            states_store.append([container_model.state.state_id, container_model.state.name])
             data_flow = model.get_value(iter, 0)
-            for state_model in container_model.states:
-                states_dic[state_model.state.state_id] = state_model.state.name
+            for state_model in container_model.states.itervalues():
                 states_store.append([state_model.state.state_id, state_model.state.name])
             if col == 'from_state_col':
-                cell_renderer.set_property('text', states_dic[data_flow.from_state])
+                text = 'Sel. state' if container_model.state.state_id == data_flow.from_state else  \
+                    container_model.state.states[data_flow.from_state].name
+                cell_renderer.set_property('text', text)
                 cell_renderer.set_property('text-column', 1)
                 cell_renderer.set_property('model', states_store)
             elif col == 'to_state_col':
-                cell_renderer.set_property('text', states_dic[data_flow.to_state])
+                text = 'Sel. state' if container_model.state.state_id == data_flow.to_state else  \
+                    container_model.state.states[data_flow.to_state].name
+                cell_renderer.set_property('text', text)
                 cell_renderer.set_property('text-column', 1)
                 cell_renderer.set_property('model', states_store)
             elif col == 'from_key_col':

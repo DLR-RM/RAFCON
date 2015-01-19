@@ -7,8 +7,9 @@ from utils import log
 logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
-from mvc.models import ContainerStateModel, StateModel, TransitionModel
+from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from math import sqrt
+from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SCROLL_LEFT, SCROLL_RIGHT
 # from models.container_state import ContainerStateModel
 
 
@@ -36,6 +37,7 @@ class GraphicalEditorController(Controller):
         view.editor.connect('button-release-event', self._on_mouse_release)
         # Only called when the mouse is clicked while moving
         view.editor.connect('motion-notify-event', self._on_mouse_motion)
+        view.editor.connect('scroll-event', self._on_scroll)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -47,6 +49,13 @@ class GraphicalEditorController(Controller):
         """
         pass
 
+    @Controller.observe("state", after=True)
+    @Controller.observe("states", after=True)
+    @Controller.observe("transitions", after=True)
+    @Controller.observe("data_flows", after=True)
+    def state_machine_change(self, model, property, info):
+        self._redraw()
+
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
 
@@ -56,7 +65,7 @@ class GraphicalEditorController(Controller):
         """
 
         # Store the current outer editor coordinates
-        box1 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
+        #box1 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
         # Prepare the drawing process
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
@@ -64,18 +73,18 @@ class GraphicalEditorController(Controller):
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
         # Store the current outer editor coordinates again
-        box2 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
+        #box2 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
 
         # Calculate coordinates offset between pre and post drawing
         # If too big, configure and redraw
-        diff = sum(map(lambda i1, i2: abs(i1 - i2), box1, box2))
-        if diff > 5:
-            self._redraw()
+        #diff = sum(map(lambda i1, i2: abs(i1 - i2), box1, box2))
+        #if diff > 5:
+            #self._redraw()
 
     def _redraw(self):
         """Force the graphical editor to be redrawn
 
-        First triggers the configure event to cause the perspective to be updated, then trigger teh actual expose
+        First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
         event to redraw.
         """
         self.view.editor.emit("configure_event", None)
@@ -92,11 +101,13 @@ class GraphicalEditorController(Controller):
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
 
+        # Store the coordinates of the event
+        self.mouse_move_start_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+        self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+
         if event.button == 1:  # Left mouse button
             # print 'press', event
 
-            # Store the coordinates of the event
-            self.mouse_move_start_pos = (event.x, event.y)
 
             # Check if something was selected
             new_selection = self._find_selection(event.x, event.y)
@@ -111,24 +122,25 @@ class GraphicalEditorController(Controller):
                 if self.selection is not None:
                     self.selection.meta['gui']['selected'] = True
                     # else:
-                    #self.selection.meta['gui']['selected'] = False
-                    #self.selection = None
+                    # self.selection.meta['gui']['selected'] = False
+                    # self.selection = None
 
             # If a state was clicked on, store the click coordinates for the drag'ndrop movement
             if self.selection is not None and isinstance(self.selection, StateModel):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
 
-            if self.selection is not None and isinstance(self.selection, TransitionModel):
+            if self.selection is not None and \
+                    (isinstance(self.selection, TransitionModel) or isinstance(self.selection, DataFlowModel)):
                 close_threshold = 2
                 click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
-                logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
                     if waypoint[0] is not None and waypoint[1] is not None:
                         if abs(waypoint[0] - click[0]) < close_threshold and \
-                           abs(waypoint[1] - click[1]) < close_threshold:
+                                        abs(waypoint[1] - click[1]) < close_threshold:
                             self.selected_waypoint = (self.selection.meta['gui']['editor']['waypoints'], i)
                             self.selection_start_pos = (waypoint[0], waypoint[1])
+                            logger.debug('Selected waypoint {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                             break
 
             self._redraw()
@@ -139,42 +151,42 @@ class GraphicalEditorController(Controller):
             click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
             clicked_model = self._find_selection(event.x, event.y)
 
-            if isinstance(clicked_model, TransitionModel):
-                transition_model = clicked_model
-                # If the right click was on a waypoint of transition, the waypoint is removed
-                # If it was on a transition, a waypoint is added to that position
+            # If a connection (transition or data flow) was clicked
+            if isinstance(clicked_model, TransitionModel) or isinstance(clicked_model, DataFlowModel):
+                connection_model = clicked_model
+                # If the right click was on a waypoint of a connection, the waypoint is removed
+                # If it was on a connection, a waypoint is added to that position
                 waypoint_removed = False
 
                 close_threshold = 2
-                logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
-                for waypoint in transition_model.meta['gui']['editor']['waypoints']:
+                # logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
+                for waypoint in connection_model.meta['gui']['editor']['waypoints']:
                     if waypoint[0] is not None and waypoint[1] is not None:
                         if abs(waypoint[0] - click[0]) < close_threshold and \
                                         abs(waypoint[1] - click[1]) < close_threshold:
-                            # del transition_model.meta['waypoints'][key]
-                            transition_model.meta['gui']['editor']['waypoints'].remove(waypoint)
+                            connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
                             waypoint_removed = True
-                            logger.debug('Transition waypoint removed')
+                            logger.debug('Connection waypoint removed')
                             self._redraw()
                             break
 
                 if not waypoint_removed:
                     # Add waypoint
-                    if isinstance(transition_model.meta['gui']['editor']['waypoints'], dict):
-                        logger.warn("Transition waypoints was of type dict, expected list")
-                        transition_model.meta['gui']['editor']['waypoints'] = transition_model.meta['waypoints'].items()
-                    num = len(transition_model.meta['gui']['editor']['waypoints'])
+                    if isinstance(connection_model.meta['gui']['editor']['waypoints'], dict):
+                        logger.warn("Connection waypoints was of type dict, expected list")
+                        connection_model.meta['gui']['editor']['waypoints'] = connection_model.meta['waypoints'].items()
+                    num = len(connection_model.meta['gui']['editor']['waypoints'])
 
-                    points = [(transition_model.meta['gui']['editor']['from_pos_x'],
-                               transition_model.meta['gui']['editor']['from_pos_y'])]
-                    points.extend(transition_model.meta['gui']['editor']['waypoints'])
-                    points.append((transition_model.meta['gui']['editor']['to_pos_x'],
-                                   transition_model.meta['gui']['editor']['to_pos_y']))
+                    points = [(connection_model.meta['gui']['editor']['from_pos_x'],
+                               connection_model.meta['gui']['editor']['from_pos_y'])]
+                    points.extend(connection_model.meta['gui']['editor']['waypoints'])
+                    points.append((connection_model.meta['gui']['editor']['to_pos_x'],
+                                   connection_model.meta['gui']['editor']['to_pos_y']))
                     for i in range(len(points) - 1):
                         if self._point_on_line(click, points[i], points[i + 1]):
-                            transition_model.meta['gui']['editor']['waypoints'].insert(i, (click[0], click[1]))
+                            connection_model.meta['gui']['editor']['waypoints'].insert(i, (click[0], click[1]))
 
-                    logger.debug('Transition waypoint added at {0:.1f} - {1:.1f}'.format(click[0], click[1]))
+                    logger.debug('Connection waypoint added at {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                     self._redraw()
 
 
@@ -186,6 +198,7 @@ class GraphicalEditorController(Controller):
         Not used so far
         """
         # print 'release', event
+        self.last_button_pressed = None
         pass
 
     def _on_mouse_motion(self, widget, event):
@@ -195,23 +208,30 @@ class GraphicalEditorController(Controller):
         :param widget: The widget beneath the mouse when the click was done
         :param event: Information about the event, e. g. x and y coordinate
         """
-        if self.selection is None:
-            return
-        if not isinstance(self.selection, StateModel) and not isinstance(self.selection, TransitionModel):
-            return
-        if self.last_button_pressed != 1:
-            return
-        # Can the root container be moved?
-        if self.selection == self.model:
-            return
+        # if self.selection is None:
+        # return
+        # if not isinstance(self.selection, (StateModel, TransitionModel, DataFlowModel)):
+        #     return
+        # if self.last_button_pressed != 1:
+        #     return
 
-        rel_x_motion = event.x - self.mouse_move_start_pos[0]
-        rel_y_motion = -(event.y - self.mouse_move_start_pos[1])
+        mouse_current_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+        rel_x_motion = mouse_current_pos[0] - self.mouse_move_start_pos[0]
+        rel_y_motion = mouse_current_pos[1] - self.mouse_move_start_pos[1]
+
+        # Move while middle button is clicked moves the view
+        if self.last_button_pressed == 2:
+            self.view.editor.left -= rel_x_motion
+            self.view.editor.right -= rel_x_motion
+            self.view.editor.bottom -= rel_y_motion
+            self.view.editor.top -= rel_y_motion
+
+            self._redraw()
+
 
         # Translate the mouse movement to OpenGL coordinates
-        conversion = self.view.editor.pixel_to_size_ratio()
-        new_pos_x = self.selection_start_pos[0] + rel_x_motion / conversion
-        new_pos_y = self.selection_start_pos[1] + rel_y_motion / conversion
+        new_pos_x = self.selection_start_pos[0] + rel_x_motion
+        new_pos_y = self.selection_start_pos[1] + rel_y_motion
 
         def limit_pos_to_state(state, pos_x, pos_y, width=0, height=0):
             if state is not None:
@@ -226,7 +246,9 @@ class GraphicalEditorController(Controller):
                     pos_y = state.meta['gui']['editor']['pos_y'] + state.meta['gui']['editor']['height'] - height
             return pos_x, pos_y
 
-        if self.selection is not None and isinstance(self.selection, StateModel):
+        #                                                                            Root container can't be moved
+        if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and \
+                self.last_button_pressed == 1:
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
 
@@ -247,6 +269,10 @@ class GraphicalEditorController(Controller):
                         for i, waypoint in enumerate(transition.meta['gui']['editor']['waypoints']):
                             new_pos = (waypoint[0] + diff_x, waypoint[1] + diff_y)
                             transition.meta['gui']['editor']['waypoints'][i] = new_pos
+                    for data_flow in state.data_flows:
+                        for i, waypoint in enumerate(data_flow.meta['gui']['editor']['waypoints']):
+                            new_pos = (waypoint[0] + diff_x, waypoint[1] + diff_y)
+                            data_flow.meta['gui']['editor']['waypoints'][i] = new_pos
                 # Move child states
                 for child_state in state.states.itervalues():
                     child_state.meta['gui']['editor']['pos_x'] += diff_x
@@ -267,6 +293,43 @@ class GraphicalEditorController(Controller):
             # Keep the waypoint within its container state
             new_pos_x, new_pos_y = limit_pos_to_state(self.selection.parent, new_pos_x, new_pos_y)
             self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
+            self._redraw()
+
+        self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+
+    def _on_scroll(self, widget, event):
+        pos = (event.x, event.y)
+        zoom_in = event.direction == SCROLL_UP
+        zoom_out = event.direction == SCROLL_DOWN
+
+        if zoom_in or zoom_out:
+            old_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
+
+            zoom = 1.25
+            zoom = zoom if zoom_in else 1. / zoom
+
+            # Apply centric zoom
+            self.view.editor.left *= zoom
+            self.view.editor.right *= zoom
+            self.view.editor.bottom *= zoom
+            self.view.editor.top *= zoom
+
+            # Determine mouse offset to previous position
+            aspect = self.view.editor.allocation.width/float(self.view.editor.allocation.height)
+            new_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
+            diff_x = new_mouse_pos[0] - old_mouse_pos[0]
+            diff_y = new_mouse_pos[1] - old_mouse_pos[1]
+            if aspect < 1:
+                diff_y *= aspect
+            else:
+                diff_x /= aspect
+
+            # Move view to keep the previous mouse position in the view
+            self.view.editor.left -= diff_x
+            self.view.editor.right -= diff_x
+            self.view.editor.bottom -= diff_y
+            self.view.editor.top -= diff_y
+
             self._redraw()
 
 
@@ -307,15 +370,20 @@ class GraphicalEditorController(Controller):
         active = state.meta['gui']['selected']
 
         # Call the drawing method of the view
-        # The view returns the id of the state in OpenGL and the positions of the outcomes
-        (id, outcome_pos) = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width, height,
-                                                        state.state.outcomes, active, depth)
+        # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
+        (id, outcome_pos, input_pos, output_pos) = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width,
+                                                                               height, state.state.outcomes,
+                                                                               state.state.input_data_ports,
+                                                                               state.state.output_data_ports, active,
+                                                                               depth)
         state.meta['gui']['editor']['id'] = id
         state.meta['gui']['editor']['outcome_pos'] = outcome_pos
+        state.meta['gui']['editor']['input_pos'] = input_pos
+        state.meta['gui']['editor']['output_pos'] = output_pos
 
         # If the state is the root container, fit the dimensions of the OpenGL coordinates so that the whole
         # container fits in the viewport
-        if depth == 1:
+        if depth == 1 and False:
             margin = min(width, height) / 10.0
             self.view.editor.left = pos_x - margin
             self.view.editor.right = pos_x + width + margin
@@ -330,7 +398,7 @@ class GraphicalEditorController(Controller):
             margin = width / float(25)
 
             for child_state in state.states.itervalues():
-                # Caluclate default positions for teh child states
+                # Calculate default positions for teh child states
                 # Make the inset from the top left corner
                 state_ctr += 1
 
@@ -347,13 +415,8 @@ class GraphicalEditorController(Controller):
                 # Get id and references to the from and to state
                 from_state_id = transition.transition.from_state
                 to_state_id = transition.transition.to_state
-                from_state = None
-                to_state = None
-                for child_state in state.states.itervalues():
-                    if child_state.state.state_id == from_state_id:
-                        from_state = child_state
-                    if child_state.state.state_id == to_state_id:
-                        to_state = child_state
+                from_state = state.states[from_state_id]
+                to_state = None if to_state_id is None else state.states[to_state_id]
 
                 assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
                     id=from_state_id)
@@ -395,7 +458,40 @@ class GraphicalEditorController(Controller):
                 transition.meta['gui']['editor']['to_pos_y'] = to_y
 
             for data_flow in state.data_flows:
-                pass
+                # Get id and references to the from and to state
+                from_state_id = data_flow.data_flow.from_state
+                to_state_id = data_flow.data_flow.to_state
+                from_state = state if from_state_id == state.state.state_id else state.states[from_state_id]
+                to_state = state if to_state_id == state.state.state_id else state.states[to_state_id]
+
+                from_key = data_flow.data_flow.from_key
+                to_key = data_flow.data_flow.to_key
+
+                connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
+                                  from_state.meta['gui']['editor']['output_pos'].items() +
+                                  to_state.meta['gui']['editor']['input_pos'].items() +
+                                  to_state.meta['gui']['editor']['output_pos'].items() +
+                                  state.meta['gui']['editor']['input_pos'].items() +
+                                  state.meta['gui']['editor']['output_pos'].items())
+                from_x = connectors[from_key][0]
+                from_y = connectors[from_key][1]
+                to_x = connectors[to_key][0]
+                to_y = connectors[to_key][1]
+
+                waypoints = []
+                for waypoint in data_flow.meta['gui']['editor']['waypoints']:
+                    waypoints.append((waypoint[0], waypoint[1]))
+
+                active = data_flow.meta['gui']['selected']
+                line_width = min(width, height) / 25.0
+                id = self.view.editor.draw_data_flow(from_x, from_y, to_x, to_y, line_width, waypoints,
+                                                     active, depth + 0.5)
+                data_flow.meta['gui']['editor']['id'] = id
+                data_flow.meta['gui']['editor']['from_pos_x'] = from_x
+                data_flow.meta['gui']['editor']['from_pos_y'] = from_y
+                data_flow.meta['gui']['editor']['to_pos_x'] = to_x
+                data_flow.meta['gui']['editor']['to_pos_y'] = to_y
+
 
     def _find_selection(self, pos_x, pos_y):
         # e.g. sets render mode to GL_SELECT
@@ -476,9 +572,8 @@ class GraphicalEditorController(Controller):
         def distance(a, b):
             return sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
-        epsilon = 1
-        if -epsilon < (
-                        distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end)) < epsilon:
+        ds = 1
+        if -ds < (distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end)) < ds:
             return True
 
         return False

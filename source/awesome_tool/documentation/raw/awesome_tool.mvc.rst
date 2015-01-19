@@ -20,7 +20,7 @@ Submodules
 mvc.main module
 ---------------
 
-.. automodule:: mvc.main
+.. automodule:: awesome_tool.mvc.main
     :members:
     :undoc-members:
     :show-inheritance:

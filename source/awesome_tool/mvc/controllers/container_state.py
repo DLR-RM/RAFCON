@@ -48,11 +48,6 @@ class ContainerStateController(Controller):
         """
         self.adapt(self.__state_property_adapter("name", "input_name"))
 
-    # def __property_edited(self, _, row, value):
-    #     outcome = self.model.update_row(row, value)
-    #     if type(outcome) != bool:
-    #         logger.warning("Invalid value: %s" % outcome)
-    #
     def __state_property_adapter(self, attr_name, label, view=None, value_error=None):
         """Helper method returning an adapter for a state property
 

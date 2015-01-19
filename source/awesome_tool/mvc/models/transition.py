@@ -31,3 +31,11 @@ class TransitionModel(ModelMT):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+        # this class is an observer of its own properties:
+        self.register_observer(self)
+
+    @ModelMT.observe("transition", before=True, after=True)
+    def model_changed(self, model, name, info):
+        if self.parent is not None:
+            self.parent.model_changed(model, name, info)
