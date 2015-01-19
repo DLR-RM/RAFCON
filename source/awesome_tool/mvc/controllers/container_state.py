@@ -6,7 +6,7 @@ import gtk
 from gtkmvc import Controller
 from gtkmvc.adapters import UserClassAdapter
 from mvc.controllers.transition_list import TransitionListController
-from controllers.data_flow_list import DataFlowListController
+from mvc.controllers.data_flow_list import DataFlowListController
 
 
 class ContainerStateController(Controller):

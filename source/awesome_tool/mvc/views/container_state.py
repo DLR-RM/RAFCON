@@ -2,7 +2,7 @@
 from gtkmvc import View
 
 from mvc.views.transition_list import TransitionListView
-from views.data_flow_list import DataFlowListView
+from mvc.views.data_flow_list import DataFlowListView
 
 class ContainerStateView(View):
 
