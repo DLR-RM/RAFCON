@@ -35,7 +35,7 @@ class DataFlowModel(ModelMT):
         # this class is an observer of its own properties:
         self.register_observer(self)
 
-    @ModelMT.observe("state", before=True, after=True)
+    @ModelMT.observe("data_flow", before=True, after=True)
     def model_changed(self, model, name, info):
         if self.parent is not None:
             self.parent.model_changed(model, name, info)
