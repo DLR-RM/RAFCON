@@ -218,6 +218,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """
         self._input_data_ports[name] = DataPort(name, data_type, default_value)
 
+    @Observable.observed
     def remove_input_data_port(self, name):
         """Remove an input data port from the state
 
@@ -226,6 +227,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """
         self._input_data_ports.pop(name, None)
 
+    @Observable.observed
     def add_output_data_port(self, name, data_type, default_value=None):
         """Add a new output data port to the state
 
@@ -236,6 +238,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """
         self._output_data_ports[name] = DataPort(name, data_type, default_value)
 
+    @Observable.observed
     def remove_output_data_port(self, name):
         """Remove an output data port from the state
 

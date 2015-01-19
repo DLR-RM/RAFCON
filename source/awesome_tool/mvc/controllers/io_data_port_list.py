@@ -3,8 +3,6 @@ logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
 
-from statemachine.states.state import DataPort
-
 
 class DataPortListController(Controller):
 
@@ -30,9 +28,9 @@ class DataPortListController(Controller):
         def cell_text(column, cell_renderer, model, iter, container_model):
             container_model_data_ports = None
 
-            if self.type is "input":
+            if self.type == "input":
                 container_model_data_ports = container_model.state.input_data_ports
-            elif self.type is "output":
+            elif self.type == "output":
                 container_model_data_ports = container_model.state.output_data_ports
 
             col = column.get_name()
@@ -47,7 +45,7 @@ class DataPortListController(Controller):
                 default_value = container_model_data_ports[data_port.name].default_value
                 cell_renderer.set_property('text', default_value)
             else:
-                logger.error("Unknown column '{col:s}' in TransitionListView".format(col=col))
+                logger.error("Unknown column '{col:s}' in DataPortListView".format(col=col))
 
         #top widget is a tree view => set the model of the tree view to be a list store
         if self.type == "input":
@@ -74,23 +72,28 @@ class DataPortListController(Controller):
         print path
         import copy
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-        #print self.view.get_top_widget().get_selection().get_selected_rows()
+        print self.view.get_top_widget().get_selection().get_selected_rows()
         key = self.dataport_list_store[int(path)][0].name
-        old_data_port = copy.copy(self.model.state.input_data_ports[key])
-        del self.state_dataport_dic[key]
-        print old_data_port
+        old_data_port = copy.copy(self.state_dataport_dict[key])
+
+        print self.state_dataport_dict[key]
+        del self.state_dataport_dict[key]
+        print self.dataport_list_store[int(path)]
+        del self.dataport_list_store[int(path)]
+
         #the text is the new key
 
-        if self.type is "input":
+        if self.type == "input":
             self.model.state.add_input_data_port(text, old_data_port.data_type, old_data_port.default_value)
             self.dataport_list_store = self.model.input_data_port_list_store
             self.view.get_top_widget().set_model(self.model.input_data_port_list_store)
-        elif self.type is "output":
+            self.model.update_input_data_port_list_store()
+        elif self.type == "output":
             self.model.state.add_output_data_port(text, old_data_port.data_type, old_data_port.default_value)
             self.dataport_list_store = self.model.output_data_port_list_store
             self.view.get_top_widget().set_model(self.model.output_data_port_list_store)
-
-        self.model.update_input_data_port_list_store()
+            self.model.update_output_data_port_list_store()
+        #exit()
 
 
     def on_data_type_changed(self, widget, path, text):

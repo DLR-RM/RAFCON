@@ -197,14 +197,14 @@ class ContainerState(State, Observable):
         """
         self.data_flows.pop(data_flow_id, None)
 
-    #Primary key is the name of scoped_key.
-    def add_scoped_variable(self, name, value_type, default_value):
-        """Adds a data_flow to the container state
+    #Primary key is the name of scoped variable.
+    def add_scoped_variable(self, name, data_type, default_value):
+        """Adds a scoped variable to the container state
 
-        :param name: The name of the scoped key
+        :param name: The name of the scoped variable
 
         """
-        self._scoped_variables[name] = ScopedVariable(name, value_type, self, default_value)
+        self._scoped_variables[name] = ScopedVariable(name, data_type, self, default_value)
 
     def remove_scoped_variable(self, name):
         """Remove a scoped variable from the container state
@@ -281,7 +281,7 @@ class ContainerState(State, Observable):
         """
         for key, scoped_var in self.scoped_variables.iteritems():
             self.scoped_data[scoped_var.name+self.state_id] = ScopedData(scoped_var.name, scoped_var.default_value,
-                                                                         scoped_var.value_type, self)
+                                                                         scoped_var.data_type, self)
 
     def update_scoped_variables(self, dictionary, state):
         """Update the values of the scoped_variables that are stored in the scoped_data dictionary

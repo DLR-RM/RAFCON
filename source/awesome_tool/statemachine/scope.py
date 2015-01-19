@@ -31,7 +31,7 @@ class ScopedVariable(Observable):
     It inherits from Observable to make a change of its fields observable.
 
     :ivar _name: the key of the scoped variable
-    :ivar _value_type: specifies the type of the scoped variable; the setter of _value will only allow assignments that
+    :ivar _data_type: specifies the type of the scoped variable; the setter of _value will only allow assignments that
                 satisfies the type constraint
     :ivar _from_state: the source state of the scoped variable
     :ivar _value_type: specifies the type of self._default_value
@@ -39,7 +39,7 @@ class ScopedVariable(Observable):
 
     """
 
-    def __init__(self, name=None, value_type=None, from_state=None, default_value=None):
+    def __init__(self, name=None, data_type=None, from_state=None, default_value=None):
 
         Observable.__init__(self)
 
@@ -48,8 +48,8 @@ class ScopedVariable(Observable):
         self.from_state = from_state
         self.name = name
 
-        self._value_type = None
-        self.value_type = value_type
+        self._data_type = None
+        self.data_type = data_type
         self._default_value = None
         self.default_value = default_value
 
@@ -89,27 +89,27 @@ class ScopedVariable(Observable):
     def default_value(self, default_value):
 
         #check for primitive data types
-        if not str(type(default_value).__name__) == self._value_type:
-            print self._value_type
+        if not str(type(default_value).__name__) == self._data_type:
+            print self._data_type
             #check for classes
-            if not isinstance(default_value, getattr(sys.modules[__name__], self._value_type)):
-                raise TypeError("result must be of type %s" % str(self._value_type))
+            if not isinstance(default_value, getattr(sys.modules[__name__], self._data_type)):
+                raise TypeError("result must be of type %s" % str(self._data_type))
         self._timestamp = generate_time_stamp()
         self._default_value = default_value
 
     @property
-    def value_type(self):
+    def data_type(self):
         """Property for the _value_type field
 
         """
-        return self._value_type
+        return self._data_type
 
-    @value_type.setter
+    @data_type.setter
     @Observable.observed
-    def value_type(self, value_type):
+    def data_type(self, value_type):
         if not isinstance(value_type, str):
             raise TypeError("result_type must be of type str")
-        self._value_type = value_type
+        self._data_type = value_type
 
     @property
     def from_state(self):
@@ -155,7 +155,7 @@ class ScopedData(Observable):
     :ivar _name: the name of the scoped data
     :ivar _value: the current value of the scoped data
     :ivar _value_type: specifies the type of self._value; the setter of __value will
-            only allow assignments that satisfies the value_type constraint
+            only allow assignments that satisfies the data_type constraint
     :ivar _from_state: the state that wrote to the scoped data last
     :ivar _timestamp: the timestamp when the scoped data was written to last
 
