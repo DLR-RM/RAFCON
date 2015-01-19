@@ -84,7 +84,7 @@ def main(*args, **kargs):
     ctr_state.add_data_flow(ctr_state.state_id, "ctr_in", state1.state_id, "input")
     ctr_state.add_data_flow(state3.state_id, "output", ctr_state.state_id, "ctr_out")
     ctr_state.name = "Container"
-    # TODO: me
+
     ctr_state.add_input_data_port("input_data1", "str", "default_value1")
     ctr_state.add_input_data_port("input_data2", "str", "default_value2")
     ctr_state.add_input_data_port("input_data3", "str", "default_value3")
@@ -105,20 +105,10 @@ def main(*args, **kargs):
     # my_state2.name = "ContainerState"
     # logger.debug("changed attribute")
 
-    # TODO: me
     sdev = StateDataportEditorView()
-    sdec = StateDataPortEditorController(ctr_model, sdev)
-    #ctr_model.input_data_ports.append("test")
-    #ctr_model.state_input_data_ports["test_name"] = DataPort("test_name", "str", "test_default_value")
-    ctr_model.state.name = "New_name"
-    #ctr_model.state.input_data_ports = {}
-    ctr_model.state.add_input_data_port("test_name", "str", "test_default_value")
-
-    #input_data_port_observer = InputDataPortListObserver()
-    #input_data_port_observer.observe_model(ctr_model)
-
-    gtk.main()
-    return
+    StateDataPortEditorController(ctr_model, sdev)
+    #gtk.main()
+    #return
 
     ctr_view = ContainerStateView()
 

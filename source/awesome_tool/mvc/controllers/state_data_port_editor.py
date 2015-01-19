@@ -68,8 +68,8 @@ class StateDataPortEditorController(Controller, Observer):
 
     @Observer.observe("state", after=True)
     def assign_notification_state(self, model, prop_name, info):
-        print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-              (prop_name, info.instance, info.method_name, info.result)
+        #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+        #      (prop_name, info.instance, info.method_name, info.result)
         if info.method_name == "add_input_data_port" or info.method_name == "remove_input_data_port":
             model.update_input_data_port_list_store()
         elif info.method_name == "add_output_data_port" or info.method_name == "remove_output_data_port":

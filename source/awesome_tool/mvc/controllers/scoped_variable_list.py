@@ -49,14 +49,14 @@ class ScopedVariableListController(Controller):
         """
 
     def on_name_changed(self, widget, path, text):
-        print path
+        #print path
         import copy
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        #logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         #print self.view.get_top_widget().get_selection().get_selected_rows()
         key = self.model.scoped_variables_list_store[int(path)][0].name
         old_scoped_variable = copy.copy(self.model.container_state.scoped_variables[key])
         del self.model.container_state.scoped_variables[key]
-        print old_scoped_variable
+        #print old_scoped_variable
         #the text is the new key
         self.model.container_state.add_scoped_variable(text, old_scoped_variable.data_type,
                                                        old_scoped_variable.default_value)
@@ -64,16 +64,16 @@ class ScopedVariableListController(Controller):
         self.model.update_scoped_variables_list_store()
 
     def on_data_type_changed(self, widget, path, text):
-        print path
+        #print path
         old_data_port = self.model.scoped_variables_list_store[int(path)][0]
-        print old_data_port
+        #print old_data_port
         self.model.container_state.scoped_variables[old_data_port.name].data_type = text
         self.model.container_state.scoped_variables[old_data_port.name].default_value = None
 
     def on_default_value_changed(self, widget, path, text):
-        print path
+        #print path
         scoped_variable = self.model.scoped_variables_list_store[int(path)][0]
-        print scoped_variable
+        #print scoped_variable
         converted_value = None
 
         #TODO: how to support more data types (especially classes)
