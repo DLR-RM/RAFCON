@@ -16,13 +16,14 @@ class DataFlowModel(ModelMT):
 
     __observables__ = ("data_flow",)
 
-    def __init__(self, data_flow, meta=None):
+    def __init__(self, data_flow, parent, meta=None):
         """Constructor
         """
 
         ModelMT.__init__(self)  # pass columns as separate parameters
         
         assert isinstance(data_flow, DataFlow)
+        self.parent = parent
 
         self.data_flow = data_flow
 
@@ -30,3 +31,11 @@ class DataFlowModel(ModelMT):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+        # this class is an observer of its own properties:
+        self.register_observer(self)
+
+    @ModelMT.observe("state", before=True, after=True)
+    def model_changed(self, model, name, info):
+        if self.parent is not None:
+            self.parent.model_changed(model, name, info)

@@ -426,8 +426,8 @@ def state_without_path_test():
 
 if __name__ == '__main__':
 
-    #state_without_path_test()
-    scoped_data_test()
+    state_without_path_test()
+    #scoped_data_test()
     #scoped_variable_test()
     #hierarchy_test()
     #hierarchy_save_load_test()
@@ -439,7 +439,6 @@ if __name__ == '__main__':
     #external_modules_test()
     #global_variable_test()
     #ros_external_module_test()
-
     #save_and_load_data_port_test()
     #default_data_port_values_test()
 
@@ -447,8 +446,17 @@ if __name__ == '__main__':
     #print "########################################################"
     #run_library_statemachine()
 
-
-    #TODO: scoped variable test
+    #TODO: test
     # test data flow in barrier state machine
     # test data flow in preemptive state machine
     # test data flow between states consisting not of primitive data types
+    # global variable stress tester
+
+    #TODO: implement
+    # write unit-tests
+    # execution engine: especially pause and stop
+    # execution history + step-mode
+
+    #TODO: longterm
+    # step back
+    # validity checker

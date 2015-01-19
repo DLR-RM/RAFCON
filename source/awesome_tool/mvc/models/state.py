@@ -28,8 +28,7 @@ class StateModel(ModelMT):
     def __init__(self, state, parent=None, meta=None):
         """Constructor
         """
-
-        ModelMT.__init__(self)  # pass columns as separate parameters
+        ModelMT.__init__(self)
         assert isinstance(state, State)
 
         self.state = state
@@ -46,6 +45,9 @@ class StateModel(ModelMT):
 
         self.list_store = ListStore(*self._table.get_column_types())
         self.update_attributes()
+
+        self.register_observer(self)
+
         return
 
     def update_attributes(self):
@@ -77,4 +79,11 @@ class StateModel(ModelMT):
             return error
         return True
 
-    pass
+    # @ModelMT.observe("state", after=True)
+    # def _model_changed(self, model, name, info):
+    #     self.model_changed(model, name, info, self)
+
+    @ModelMT.observe("state", after=True, before=True)
+    def model_changed(self, model, name, info):
+        if self.parent is not None:
+            self.parent.model_changed(model, name, info)

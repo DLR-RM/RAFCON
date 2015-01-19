@@ -7,8 +7,9 @@ from mvc.models.transition import TransitionModel
 from mvc.models.data_flow import DataFlowModel
 from mvc.models.data_port import DataPortModel
 from gtk import ListStore
-import gtk
+from gtkmvc import ModelMT
 from gtkmvc import Observer
+import gtk
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -22,32 +23,29 @@ class ContainerStateModel(StateModel):
     :param ContainerState container_state: The container state to be managed
      """
 
-    #container_state = None
-    states = []
+    states = {}
     transitions = []
     data_flows = []
     input_data_ports = []
+    output_data_ports = []
 
-    transition_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually Transition, but this is not supported by GTK
-    data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually DataFlow, but this is not supported by GTK
-    input_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
-    #state_input_data_ports = {}
-
-    __observables__ = ("states", "transitions", "data_flows", "input_data_ports")
-    #__observables__ = ("states", "transitions", "data_flows", "input_data_ports", "state_input_data_ports")
-
+    __observables__ = ("states", "transitions", "data_flows", "input_data_ports", "output_data_ports")
     def __init__(self, container_state, parent=None, meta=None):
         """Constructor
         """
-
         assert isinstance(container_state, ContainerState)
-
+        #ContainerState.__init__(self, container_state, parent, meta)
         StateModel.__init__(self, container_state, parent, meta)
+
         self.states = {}
         self.transitions = []
         self.data_flows = []
         self.input_data_ports = []
-        #self.state_input_data_ports = self.state.input_data_ports
+        self.output_data_ports = []
+        self.transition_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually Transition, but this is not supported by GTK
+        self.data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)  # Actually DataFlow, but this is not supported by
+        self.input_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
+        self.output_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
 
         # Create model for each child class
         states = container_state.states
@@ -63,16 +61,19 @@ class ContainerStateModel(StateModel):
                 logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
                 logger.error(state)
 
-
         for transition in container_state.transitions.itervalues():
             self.transitions.append(TransitionModel(transition, self))
             self.transition_list_store.append([transition])
 
         for data_flow in container_state.data_flows.itervalues():
-            self.data_flows.append(DataFlowModel(data_flow))
+            self.data_flows.append(DataFlowModel(data_flow, self))
             self.data_flow_list_store.append([data_flow])
 
+        # this class is an observer of its own properties:
+        self.register_observer(self)
         self.update_input_data_port_list_store()
+        self.update_output_data_port_list_store()
+
 
     def update_input_data_port_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
@@ -80,12 +81,34 @@ class ContainerStateModel(StateModel):
         for input_data_port in self.state.input_data_ports.itervalues():
             self.input_data_ports.append(DataPortModel(input_data_port, self))
             tmp.append([input_data_port])
-
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
         tms.set_sort_func(0, self.comparemethod)
         tms.sort_column_changed()
         self.input_data_port_list_store = tms
+
+    def update_output_data_port_list_store(self):
+        tmp = ListStore(gobject.TYPE_PYOBJECT)
+        self.output_data_ports = []
+        for output_data_port in self.state.output_data_ports.itervalues():
+            self.input_data_ports.append(DataPortModel(output_data_port, self))
+            tmp.append([output_data_port])
+        tms = gtk.TreeModelSort(tmp)
+        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        tms.set_sort_func(0, self.comparemethod)
+        tms.sort_column_changed()
+        self.output_data_port_list_store = tms
+
+
+    @ModelMT.observe("state", before=True, after=True)
+    def model_changed(self, model, name, info):
+        if self is not model:
+            if hasattr(info, 'before') and info['before']:
+                self.states._notify_method_before(self.state, "state_change", (model,), info)
+            elif hasattr(info, 'after') and info['after']:
+                self.states._notify_method_after(self.state, "state_change", None, (model,), info)
+        if self.parent is not None:
+            self.parent.model_changed(model, name, info)
 
     def comparemethod(self, treemodel, iter1, iter2, user_data=None):
         path1 = treemodel.get_path(iter1)[0]
@@ -99,4 +122,4 @@ class ContainerStateModel(StateModel):
         elif name1_as_bits > name2_as_bits:
             return 1
         else:
-            return -1
+            return -1            

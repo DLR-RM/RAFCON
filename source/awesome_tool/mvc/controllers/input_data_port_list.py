@@ -2,55 +2,58 @@ from utils import log
 logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
-from gtkmvc import Observer
 
 from statemachine.states.state import DataPort
 
 
-class InputDataPortListObserver(Observer):
+class DataPortListController(Controller):
 
-    @Observer.observe("state_input_data_ports", after=True)
-    def assign_notification_idp(self, model, prop_name, info):
-        print "call_notification: AFTER: %s\n %s\n %s\n %s\n" %\
-              (prop_name, info.instance, info.method_name, info.result)
-        model.update_input_data_port_list_store()
-
-    @Observer.observe("state", after=True)
-    def assign_notification_state(self, model, prop_name, info):
-        print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-              (prop_name, info.instance, info.method_name, info.result)
-        model.update_input_data_port_list_store()
-
-
-class InputDataPortListController(Controller):
-
-    def __init__(self, model, view):
+    def __init__(self, model, view, type):
         """Constructor
         """
         Controller.__init__(self, model, view)
+        self.type = type
+        self.state_dataport_dict = None
+        self.dataport_list_store = None
 
+        if self.type == "input":
+            self.state_dataport_dict = self.model.state.input_data_ports
+            self.dataport_list_store = self.model.input_data_port_list_store
+        elif self.type == "output":
+            self.state_dataport_dict = self.model.state.output_data_ports
+            self.dataport_list_store = self.model.output_data_port_list_store
 
     def register_view(self, view):
         """Called when the View was registered
         """
 
         def cell_text(column, cell_renderer, model, iter, container_model):
+            container_model_data_ports = None
+
+            if self.type is "input":
+                container_model_data_ports = container_model.state.input_data_ports
+            elif self.type is "output":
+                container_model_data_ports = container_model.state.output_data_ports
+
             col = column.get_name()
             data_port = model.get_value(iter, 0)
             if col == 'name_col':
-                name = container_model.state.input_data_ports[data_port.name].name
+                name = container_model_data_ports[data_port.name].name
                 cell_renderer.set_property('text', name)
             elif col == 'data_type_col':
-                data_type = container_model.state.input_data_ports[data_port.name].data_type
+                data_type = container_model_data_ports[data_port.name].data_type
                 cell_renderer.set_property('text', data_type)
             elif col == 'default_value_col':
-                default_value = container_model.state.input_data_ports[data_port.name].default_value
+                default_value = container_model_data_ports[data_port.name].default_value
                 cell_renderer.set_property('text', default_value)
             else:
                 logger.error("Unknown column '{col:s}' in TransitionListView".format(col=col))
 
         #top widget is a tree view => set the model of the tree view to be a list store
-        view.get_top_widget().set_model(self.model.input_data_port_list_store)
+        if self.type == "input":
+            view.get_top_widget().set_model(self.model.input_data_port_list_store)
+        elif self.type == "output":
+            view.get_top_widget().set_model(self.model.output_data_port_list_store)
 
         view['name_col'].set_cell_data_func(view['name_text'], cell_text, self.model)
         view['name_text'].set_property("editable", True)
@@ -72,27 +75,48 @@ class InputDataPortListController(Controller):
         import copy
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         #print self.view.get_top_widget().get_selection().get_selected_rows()
-        key = self.model.input_data_port_list_store[int(path)][0].name
+        key = self.dataport_list_store[int(path)][0].name
         old_data_port = copy.copy(self.model.state.input_data_ports[key])
-        del self.model.state.input_data_ports[key]
+        del self.state_dataport_dic[key]
         print old_data_port
         #the text is the new key
-        self.model.state.input_data_ports[text] = DataPort(text, old_data_port.data_type, old_data_port.default_value)
+
+        if self.type is "input":
+            self.model.state.add_input_data_port(text, old_data_port.data_type, old_data_port.default_value)
+            self.dataport_list_store = self.model.input_data_port_list_store
+            self.view.get_top_widget().set_model(self.model.input_data_port_list_store)
+        elif self.type is "output":
+            self.model.state.add_output_data_port(text, old_data_port.data_type, old_data_port.default_value)
+            self.dataport_list_store = self.model.output_data_port_list_store
+            self.view.get_top_widget().set_model(self.model.output_data_port_list_store)
+
         self.model.update_input_data_port_list_store()
-        self.view.get_top_widget().set_model(self.model.input_data_port_list_store)
+
 
     def on_data_type_changed(self, widget, path, text):
         print path
-        old_data_port = self.model.input_data_port_list_store[int(path)][0]
+        old_data_port = self.dataport_list_store[int(path)][0]
         print old_data_port
-        self.model.state.input_data_ports[old_data_port.name].data_type = text
-        self.model.state.input_data_ports[old_data_port.name].default_value = None
+        self.state_dataport_dict[old_data_port.name].data_type = text
+        self.state_dataport_dict[old_data_port.name].default_value = None
 
     def on_default_value_changed(self, widget, path, text):
         print path
-        old_data_port = self.model.input_data_port_list_store[int(path)][0]
+        old_data_port = self.dataport_list_store[int(path)][0]
         print old_data_port
-        self.model.state.input_data_ports[old_data_port.name].default_value = text
+        converted_value = None
+
+        #TODO: how to support more data types (especially classes)
+        if old_data_port.data_type == "str":
+            converted_value = str(text)
+
+        if old_data_port.data_type == "int":
+            converted_value = int(text)
+
+        if old_data_port.data_type == "float":
+            converted_value = float(text)
+
+        self.state_dataport_dict[old_data_port.name].default_value = converted_value
 
 
 

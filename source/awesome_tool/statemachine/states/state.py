@@ -207,6 +207,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
         logger.debug("State with id %s initialized" % self._state_id)
 
+    @Observable.observed
     def add_input_data_port(self, name, data_type, default_value=None):
         """Add a new input data port to the state
 
