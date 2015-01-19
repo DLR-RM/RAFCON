@@ -200,7 +200,7 @@ class ContainerState(State, Observable):
 
     #Primary key is the name of scoped variable.
     @Observable.observed
-    def add_scoped_variable(self, name, data_type, default_value):
+    def add_scoped_variable(self, name, data_type=None, default_value=None):
         """Adds a scoped variable to the container state
 
         :param name: The name of the scoped variable

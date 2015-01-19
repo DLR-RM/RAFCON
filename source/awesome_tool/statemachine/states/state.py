@@ -100,11 +100,12 @@ class DataPort(Observable, yaml.YAMLObject):
     @data_type.setter
     @Observable.observed
     def data_type(self, data_type):
-        if not isinstance(data_type, str):
-            raise TypeError("data_type must be of type str")
-        if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
-            if not getattr(sys.modules[__name__], data_type):
-                raise TypeError("" + data_type + " is not a valid python data type")
+        if not data_type is None:
+            if not isinstance(data_type, str):
+                raise TypeError("data_type must be of type str")
+            if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
+                if not getattr(sys.modules[__name__], data_type):
+                    raise TypeError("" + data_type + " is not a valid python data type")
         self._data_type = data_type
 
     @property
@@ -208,7 +209,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         logger.debug("State with id %s initialized" % self._state_id)
 
     @Observable.observed
-    def add_input_data_port(self, name, data_type, default_value=None):
+    def add_input_data_port(self, name, data_type=None, default_value=None):
         """Add a new input data port to the state
 
         :param name: the name of the new input data port

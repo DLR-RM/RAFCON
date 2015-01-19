@@ -87,13 +87,10 @@ class DataPortListController(Controller):
             self.model.state.add_input_data_port(text, old_data_port.data_type, old_data_port.default_value)
             self.dataport_list_store = self.model.input_data_port_list_store
             self.view.get_top_widget().set_model(self.model.input_data_port_list_store)
-            self.model.update_input_data_port_list_store()
         elif self.type == "output":
             self.model.state.add_output_data_port(text, old_data_port.data_type, old_data_port.default_value)
             self.dataport_list_store = self.model.output_data_port_list_store
             self.view.get_top_widget().set_model(self.model.output_data_port_list_store)
-            self.model.update_output_data_port_list_store()
-        #exit()
 
 
     def on_data_type_changed(self, widget, path, text):

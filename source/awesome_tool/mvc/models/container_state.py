@@ -92,7 +92,10 @@ class ContainerStateModel(StateModel):
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
         tms.set_sort_func(0, self.comparemethod)
         tms.sort_column_changed()
-        self.input_data_port_list_store = tms
+        tmp = tms
+        self.input_data_port_list_store.clear()
+        for elem in tmp:
+            self.input_data_port_list_store.append(elem)
 
     def update_output_data_port_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
@@ -104,7 +107,10 @@ class ContainerStateModel(StateModel):
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
         tms.set_sort_func(0, self.comparemethod)
         tms.sort_column_changed()
-        self.output_data_port_list_store = tms
+        tmp = tms
+        self.output_data_port_list_store.clear()
+        for elem in tmp:
+            self.output_data_port_list_store.append(elem)
 
     def update_scoped_variables_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
@@ -116,7 +122,10 @@ class ContainerStateModel(StateModel):
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
         tms.set_sort_func(0, self.comparemethod)
         tms.sort_column_changed()
-        self.scoped_variables_list_store = tms
+        tmp = tms
+        self.scoped_variables_list_store.clear()
+        for elem in tmp:
+            self.scoped_variables_list_store.append(elem)
 
 
     @ModelMT.observe("state", before=True, after=True)
