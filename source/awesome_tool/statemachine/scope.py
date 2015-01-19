@@ -12,6 +12,7 @@ from gtkmvc import Observable
 import sys
 import time
 import datetime
+import yaml
 
 from statemachine.states.state import State
 
@@ -24,7 +25,7 @@ def get_human_readable_time(timestamp):
     return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 
-class ScopedVariable(Observable):
+class ScopedVariable(Observable, yaml.YAMLObject):
 
     """A class for representing a scoped variable in a container state
 
@@ -39,13 +40,15 @@ class ScopedVariable(Observable):
 
     """
 
-    def __init__(self, name=None, data_type=None, from_state=None, default_value=None):
+    yaml_tag = u'!ScopedVariable'
+
+    def __init__(self, name=None, data_type=None, default_value=None):
 
         Observable.__init__(self)
 
-        self._from_state = None
+        #self._from_state = None
         self._name = None
-        self.from_state = from_state
+        #self.from_state = from_state
         self.name = name
 
         self._data_type = None
@@ -55,11 +58,30 @@ class ScopedVariable(Observable):
 
         self._timestamp = generate_time_stamp()
         # for storage purpose inside the container states (generated from key_name and from_state.state_id
-        self._primary_key = None
+        #self._primary_key = None
 
     def __str__(self):
         return "ScopedVariable: \n name: %s \n data_type: %s \n default_value: %s " %\
                (self.name, self.data_type, self.default_value)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = {
+            'name': data.name,
+            'data_type': data.data_type,
+            'default_value': data.default_value
+        }
+        print dict_representation
+        node = dumper.represent_mapping(u'!ScopedVariable', dict_representation)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node)
+        name = dict_representation['name']
+        data_type = dict_representation['data_type']
+        default_value = dict_representation['default_value']
+        return ScopedVariable(name, data_type, default_value)
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
@@ -79,7 +101,7 @@ class ScopedVariable(Observable):
             raise TypeError("name must be of type str")
         self._name = name
         #update key
-        self._primary_key = self._name+self.from_state.state_id
+        #self._primary_key = self._name+self.from_state.state_id
 
     @property
     def default_value(self):
@@ -119,23 +141,23 @@ class ScopedVariable(Observable):
                     raise TypeError("" + data_type + " is not a valid python data type")
         self._data_type = data_type
 
-    @property
-    def from_state(self):
-        """Property for the _from_state field
-
-        """
-        return self._from_state
-
-    @from_state.setter
-    @Observable.observed
-    def from_state(self, from_state):
-        if not from_state is None:
-            if not isinstance(from_state, State):
-                raise TypeError("from_state must be of type State")
-            if not self.name is None:  #this will just happen in __init__ when key_name is not yet initialized
-                #update key
-                self._primary_key = self.name+self._from_state.state_id
-        self._from_state = from_state
+    # @property
+    # def from_state(self):
+    #     """Property for the _from_state field
+    #
+    #     """
+    #     return self._from_state
+    #
+    # @from_state.setter
+    # @Observable.observed
+    # def from_state(self, from_state):
+    #     if not from_state is None:
+    #         if not isinstance(from_state, State):
+    #             raise TypeError("from_state must be of type State")
+    #         if not self.name is None:  #this will just happen in __init__ when key_name is not yet initialized
+    #             #update key
+    #             self._primary_key = self.name+self._from_state.state_id
+    #     self._from_state = from_state
 
     @property
     def timestamp(self):

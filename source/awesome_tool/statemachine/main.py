@@ -297,6 +297,8 @@ def scoped_data_test():
     state3.add_output_data_port("out1", "str")
     state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
     state3.add_data_flow(state1.state_id, "MyFirstDataOutputPort", state2.state_id, "DataInput1")
+    state3.add_scoped_variable("scopeVar1", "str", "scopeDefaultValue")
+    state3.add_scoped_variable("scopeVar2", "str", "scopeDefaultValue")
 
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
@@ -426,8 +428,8 @@ def state_without_path_test():
 
 if __name__ == '__main__':
 
-    state_without_path_test()
-    #scoped_data_test()
+    #state_without_path_test()
+    scoped_data_test()
     #scoped_variable_test()
     #hierarchy_test()
     #hierarchy_save_load_test()

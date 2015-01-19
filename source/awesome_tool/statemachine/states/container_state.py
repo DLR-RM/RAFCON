@@ -74,7 +74,7 @@ class ContainerState(State, Observable):
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 
-    def enter(self):
+    def enter(self, scoped_variables_dict):
         """Called on entering the container state
 
         Here initializations of scoped variables and modules that are supposed to be used by the children take place.
@@ -82,9 +82,9 @@ class ContainerState(State, Observable):
         """
         logger.debug("Calling enter() script of container state with id %s", self._state_id)
         self.script.load_and_build_module()
-        self.script.enter(self, self.scoped_variables)
+        self.script.enter(self, scoped_variables_dict)
 
-    def exit(self):
+    def exit(self, scoped_variables_dict):
         """Called on exiting the container state
 
         Clean up code for the state and its variables is executed here. This method calls the custom exit function
@@ -92,7 +92,7 @@ class ContainerState(State, Observable):
         """
         logger.debug("Calling exit() script of container state with id %s", self._state_id)
         self.script.load_and_build_module()
-        self.script.exit(self, self.scoped_variables)
+        self.script.exit(self, scoped_variables_dict)
 
     def get_transition_for_outcome(self, state, outcome):
         """Determines the next transition of a state.
@@ -206,7 +206,7 @@ class ContainerState(State, Observable):
         :param name: The name of the scoped variable
 
         """
-        self._scoped_variables[name] = ScopedVariable(name, data_type, self, default_value)
+        self._scoped_variables[name] = ScopedVariable(name, data_type, default_value)
 
     @Observable.observed
     def remove_scoped_variable(self, name):
@@ -310,6 +310,17 @@ class ContainerState(State, Observable):
             return self
         else:
             return self.states[transition.to_state]
+
+    def get_scoped_variables_as_dict(self, dict):
+        for key_svar, svar in self.scoped_variables.iteritems():
+            for key_sdata, sdata in self.scoped_data.iteritems():
+                if key_svar == sdata.name:
+                    dict[key_svar] = sdata.value
+
+
+    def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
+        for key, val in output_dict.iteritems():
+            self.scoped_data[key+self.state_id] = ScopedData(key, val, type(val).__name__, self)
 
     def get_container_state_yaml_dict(data):
         dict_representation = {
@@ -422,9 +433,9 @@ class ContainerState(State, Observable):
         else:
             if not isinstance(scoped_variables, dict):
                 raise TypeError("scope_variables must be of type dict")
-            for s in scoped_variables:
-                if not isinstance(s, ScopedVariable):
-                    raise TypeError("element of scope must be of type ScopeVariable")
+            for key, svar in scoped_variables.iteritems():
+                if not isinstance(svar, ScopedVariable):
+                    raise TypeError("element of scope must be of type ScopedVariable")
             self._scoped_variables = scoped_variables
 
     @property
