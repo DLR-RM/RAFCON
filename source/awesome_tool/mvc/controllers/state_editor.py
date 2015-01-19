@@ -5,6 +5,9 @@ from mvc.controllers.container_state import ContainerStateController
 from mvc.controllers.connections_editor import StateConnectionsEditorController
 from mvc.controllers.state_overview import StateOverviewController
 
+from mvc.controllers.input_data_port_list import DataPortListController
+from gtkmvc import Observer
+
 
 class StateEditorController(Controller):
     """Controller handling the view of properties/attributes of the ContainerStateModel
@@ -25,9 +28,9 @@ class StateEditorController(Controller):
         """
         Controller.__init__(self, model, view)
         self.properties_ctrl = StateOverviewController(model, view['properties_view'])
-        self.inputs_ctrl = ContainerStateController(model, view['inputs_view'])
-        self.outputs_ctrl = ContainerStateController(model, view['outputs_view'])
-        self.scopes_ctrl = ContainerStateController(model, view['scopes_view'])
+        self.inputs_ctrl = DataPortListController(model, view['inputs_view'], "input")  #ContainerStateController(model, view['inputs_view'])
+        self.outputs_ctrl = DataPortListController(model, view['outputs_view'], "output")  # ContainerStateController(model, view['outputs_view'])
+        #self.scopes_ctrl = ContainerStateController(model, view['scopes_view'])
         self.outcomes_ctrl = ContainerStateController(model, view['outcomes_view'])
         self.source_ctrl = SourceEditorController(model, view['source_view'])
         self.connections_ctrl = StateConnectionsEditorController(model, view['connections_view'])
@@ -56,6 +59,13 @@ class StateEditorController(Controller):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
+
+    #TODO: separate functions for inputs and outputs
+    @Observer.observe("state", after=True)
+    def assign_notification_state(self, model, prop_name, info):
+        print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+              (prop_name, info.instance, info.method_name, info.result)
+        model.update_input_data_port_list_store()
 
     def resize_port_widget(self, expander, x):
 

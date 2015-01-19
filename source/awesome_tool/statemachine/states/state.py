@@ -43,6 +43,8 @@ class DataPort(Observable, yaml.YAMLObject):
         self._default_value = None
         self.default_value = default_value
 
+        logger.debug("DataPort with name %s initialized" % self.name)
+
 
     def __str__(self):
         return "DataPort: \n name: %s \n data_type: %s \n default_value: %s " % (self.name, self.data_type,
@@ -119,6 +121,7 @@ class DataPort(Observable, yaml.YAMLObject):
             #check for primitive data types
             if not str(type(default_value).__name__) == self.data_type:
                 #check for classes
+                print type(default_value).__name__
                 if not isinstance(default_value, getattr(sys.modules[__name__], self.data_type)):
                     raise TypeError("Input of execute function must be of type %s" % str(self.data_type))
         self._default_value = default_value
@@ -152,6 +155,9 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     :ivar _state_type: the type of the container state (i.e. hierarchy, concurrency etc.)
 
     """
+
+    #input_data_ports = []
+    #__observables__ = ("input_data_ports", )
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  sm_status=None, path=None, filename=None, state_type=None):
@@ -201,6 +207,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
         logger.debug("State with id %s initialized" % self._state_id)
 
+    @Observable.observed
     def add_input_data_port(self, name, data_type, default_value=None):
         """Add a new input data port to the state
 

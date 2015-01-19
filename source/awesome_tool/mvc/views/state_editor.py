@@ -4,6 +4,9 @@ from mvc.views.source_editor import SourceEditorView
 from mvc.views.container_state import ContainerStateView
 from mvc.views.connections_editor import StateConnectionsEditorView
 from mvc.views.state_overview import StateOverviewView
+from mvc.views.input_port_list import InputPortsListView
+from mvc.views.output_port_list import OutputPortsListView
+from mvc.views.scoped_variables_list import ScopedVariablesListView
 
 
 class StateEditorView(View):
@@ -15,17 +18,17 @@ class StateEditorView(View):
 
         self['properties_view'] = StateOverviewView()  # StatePropertiesEditorView()
         self['ports_editor_view'] = ContainerStateView()  # StatePortsEditorView()
-        self['inputs_view'] = ContainerStateView()  # StateInputsEditorView()
-        self['outputs_view'] = ContainerStateView()  # StateOutputsEditorView()
-        self['scopes_view'] = ContainerStateView()  # StateScopesEditorView()
+        self['inputs_view'] = InputPortsListView()  # StateInputsEditorView()
+        self['outputs_view'] = OutputPortsListView()  # StateOutputsEditorView()
+        self['scopes_view'] = ScopedVariablesListView()  # StateScopesEditorView()
         self['outcomes_view'] = ContainerStateView()  # StateOutcomesEditorView()
         self['source_view'] = SourceEditorView()
         self['connections_view'] = StateConnectionsEditorView()
 
         self['properties_viewport'].add(self['properties_view'].get_top_widget())
-        self['viewport3'].add(self['inputs_view']['vbox1'])
-        self['viewport4'].add(self['outputs_view']['vbox1'])
-        self['viewport5'].add(self['scopes_view']['vbox1'])
+        self['scrolledwindow1'].add(self['inputs_view'].get_top_widget())
+        self['viewport4'].add(self['outputs_view'].get_top_widget())
+        self['viewport5'].add(self['scopes_view'].get_top_widget())
         self['viewport6'].add(self['outcomes_view']['vbox1'])
         self['viewport1'].add(self['source_view'].get_top_widget())
         self['alignment1'].add(self['connections_view']['connections_editor_widget'])

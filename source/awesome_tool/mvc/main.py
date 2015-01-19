@@ -4,9 +4,11 @@ import gtk
 import logging
 from utils import log
 from mvc.models import StateModel, ContainerStateModel
-from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController
-from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView
+from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
+    StateDataPortEditorController
+from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView
 from mvc.views.transition_list import TransitionListView
+from statemachine.states.state import DataPort
 from statemachine.states.execution_state import ExecutionState as State
 from statemachine.states.container_state import ContainerState
 from statemachine.transition import Transition
@@ -83,6 +85,18 @@ def main(*args, **kargs):
     ctr_state.add_data_flow(ctr_state.state_id, "ctr_in", state1.state_id, "input")
     ctr_state.add_data_flow(state3.state_id, "output", ctr_state.state_id, "ctr_out")
     ctr_state.name = "Container"
+    # TODO: me
+    ctr_state.add_input_data_port("input_data1", "str", "default_value1")
+    ctr_state.add_input_data_port("input_data2", "str", "default_value2")
+    ctr_state.add_input_data_port("input_data3", "str", "default_value3")
+
+    ctr_state.add_output_data_port("output_data1", "str", "default_value1")
+    ctr_state.add_output_data_port("output_data2", "str", "default_value2")
+    ctr_state.add_output_data_port("output_data3", "str", "default_value3")
+
+    ctr_state.add_scoped_variable("scoped_variable1", "str", "default_value1")
+    ctr_state.add_scoped_variable("scoped_variable2", "str", "default_value1")
+    ctr_state.add_scoped_variable("scoped_variable3", "str", "default_value1")
 
     print ctr_state.script.script
     ctr_model = ContainerStateModel(ctr_state)
@@ -116,8 +130,20 @@ if __name__ == "__main__":
     v = StateEditorView()
     c = StateEditorController(ctr_model, v)
 
-    #editor_view = GraphicalEditorView()
-    #editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
+    editor_view = GraphicalEditorView()
+    editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
+
+    # TODO: me
+    sdev = StateDataportEditorView()
+    sdec = StateDataPortEditorController(ctr_model, sdev)
+    # #ctr_model.input_data_ports.append("test")
+    # #ctr_model.state_input_data_ports["test_name"] = DataPort("test_name", "str", "test_default_value")
+    # ctr_model.state.name = "New_name"
+    # #ctr_model.state.input_data_ports = {}
+    # ctr_model.state.add_input_data_port("test_name", "str", "test_default_value")
+    #
+    # #input_data_port_observer = InputDataPortListObserver()
+    # #input_data_port_observer.observe_model(ctr_model)
 
     gtk.main()
     logger.debug("after gtk main")

@@ -6,7 +6,7 @@ import gtk
 from gtkmvc import Controller
 from gtkmvc.adapters import UserClassAdapter
 from mvc.controllers.transition_list import TransitionListController
-from controllers.data_flow_list import DataFlowListController
+from mvc.controllers.data_flow_list import DataFlowListController
 
 
 class ContainerStateController(Controller):
@@ -27,7 +27,6 @@ class ContainerStateController(Controller):
         Controller.__init__(self, model, view)
         self.transition_list_controller = TransitionListController(model, view.transition_list_view)
         self.data_flow_list_controller = DataFlowListController(model, view.data_flow_list_view)
-
 
     def register_view(self, view):
         """Called when the View was registered
