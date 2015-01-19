@@ -57,6 +57,10 @@ class ScopedVariable(Observable):
         # for storage purpose inside the container states (generated from key_name and from_state.state_id
         self._primary_key = None
 
+    def __str__(self):
+        return "ScopedVariable: \n name: %s \n data_type: %s \n default_value: %s " %\
+               (self.name, self.data_type, self.default_value)
+
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
@@ -72,7 +76,7 @@ class ScopedVariable(Observable):
     @Observable.observed
     def name(self, name):
         if not isinstance(name, str):
-            raise TypeError("key_name must be of type str")
+            raise TypeError("name must be of type str")
         self._name = name
         #update key
         self._primary_key = self._name+self.from_state.state_id
@@ -87,13 +91,13 @@ class ScopedVariable(Observable):
     @default_value.setter
     @Observable.observed
     def default_value(self, default_value):
-
-        #check for primitive data types
-        if not str(type(default_value).__name__) == self._data_type:
-            print self._data_type
-            #check for classes
-            if not isinstance(default_value, getattr(sys.modules[__name__], self._data_type)):
-                raise TypeError("result must be of type %s" % str(self._data_type))
+        if not default_value is None:
+            #check for primitive data types
+            if not str(type(default_value).__name__) == self._data_type:
+                print self._data_type
+                #check for classes
+                if not isinstance(default_value, getattr(sys.modules[__name__], self._data_type)):
+                    raise TypeError("default_value must be of type %s" % str(self._data_type))
         self._timestamp = generate_time_stamp()
         self._default_value = default_value
 
@@ -106,10 +110,13 @@ class ScopedVariable(Observable):
 
     @data_type.setter
     @Observable.observed
-    def data_type(self, value_type):
-        if not isinstance(value_type, str):
-            raise TypeError("result_type must be of type str")
-        self._data_type = value_type
+    def data_type(self, data_type):
+        if not isinstance(data_type, str):
+            raise TypeError("data_type must be of type str")
+        if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
+            if not getattr(sys.modules[__name__], data_type):
+                raise TypeError("" + data_type + " is not a valid python data type")
+        self._data_type = data_type
 
     @property
     def from_state(self):

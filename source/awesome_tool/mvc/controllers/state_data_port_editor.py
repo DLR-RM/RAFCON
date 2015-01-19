@@ -34,4 +34,6 @@ class StateDataPortEditorController(Controller, Observer):
             model.update_input_data_port_list_store()
         elif info.method_name == "add_output_data_port":
             model.update_output_data_port_list_store()
+        elif info.method_name == "add_scoped_variable":
+            model.update_scoped_variables_list_store()
 

@@ -197,7 +197,9 @@ class ContainerState(State, Observable):
         """
         self.data_flows.pop(data_flow_id, None)
 
+
     #Primary key is the name of scoped variable.
+    @Observable.observed
     def add_scoped_variable(self, name, data_type, default_value):
         """Adds a scoped variable to the container state
 
@@ -206,6 +208,7 @@ class ContainerState(State, Observable):
         """
         self._scoped_variables[name] = ScopedVariable(name, data_type, self, default_value)
 
+    @Observable.observed
     def remove_scoped_variable(self, name):
         """Remove a scoped variable from the container state
 
