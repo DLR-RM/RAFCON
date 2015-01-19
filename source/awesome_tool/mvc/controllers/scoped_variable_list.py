@@ -63,7 +63,6 @@ class ScopedVariableListController(Controller):
         self.view.get_top_widget().set_model(self.model.scoped_variables_list_store)
         self.model.update_scoped_variables_list_store()
 
-
     def on_data_type_changed(self, widget, path, text):
         print path
         old_data_port = self.model.scoped_variables_list_store[int(path)][0]
@@ -88,7 +87,3 @@ class ScopedVariableListController(Controller):
             converted_value = float(text)
 
         self.model.container_state.scoped_variables[scoped_variable.name].default_value = converted_value
-
-
-
-

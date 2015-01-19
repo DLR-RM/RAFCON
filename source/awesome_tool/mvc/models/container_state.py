@@ -31,6 +31,7 @@ class ContainerStateModel(StateModel):
 
     __observables__ = ("states", "transitions", "data_flows", "input_data_ports",
                        "output_data_ports", "scoped_variables")
+
     def __init__(self, container_state, parent=None, meta=None):
         """Constructor
         """
@@ -126,7 +127,6 @@ class ContainerStateModel(StateModel):
         self.scoped_variables_list_store.clear()
         for elem in tmp:
             self.scoped_variables_list_store.append(elem)
-
 
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, name, info):

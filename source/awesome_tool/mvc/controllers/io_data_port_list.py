@@ -6,11 +6,11 @@ from gtkmvc import Controller
 
 class DataPortListController(Controller):
 
-    def __init__(self, model, view, type):
+    def __init__(self, model, view, io_type):
         """Constructor
         """
         Controller.__init__(self, model, view)
-        self.type = type
+        self.type = io_type
         self.state_dataport_dict = None
         self.dataport_list_store = None
 
@@ -92,7 +92,6 @@ class DataPortListController(Controller):
             self.dataport_list_store = self.model.output_data_port_list_store
             self.view.get_top_widget().set_model(self.model.output_data_port_list_store)
 
-
     def on_data_type_changed(self, widget, path, text):
         print path
         old_data_port = self.dataport_list_store[int(path)][0]
@@ -117,7 +116,3 @@ class DataPortListController(Controller):
             converted_value = float(text)
 
         self.state_dataport_dict[old_data_port.name].default_value = converted_value
-
-
-
-

@@ -15,8 +15,6 @@ class StateDataPortEditorController(Controller, Observer):
     def __init__(self, model, view):
         """Constructor
         """
-        #self.model = model
-        #self.view = view
         Controller.__init__(self, model, view)
         self.input_data_port_list_controller = DataPortListController(model, view.input_port_list_view, "input")
         self.output_data_port_list_controller = DataPortListController(model, view.output_port_list_view, "output")
@@ -30,6 +28,7 @@ class StateDataPortEditorController(Controller, Observer):
         view['delete_output_port_button'].connect('clicked', self.on_delete_output_port_button_clicked)
         view['delete_scoped_variable_button'].connect('clicked', self.on_delete_scoped_variable_button_clicked)
 
+    #new buttons
     def on_new_input_port_button_clicked(self, widget, data=None):
         self.model.state.add_input_data_port("a_new_input_port", "str", "val")
 
@@ -39,6 +38,7 @@ class StateDataPortEditorController(Controller, Observer):
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
         self.model.container_state.add_scoped_variable("a_new_scoped_variable", "str", "val")
 
+    #delete buttons
     def on_delete_input_port_button_clicked(self, widget, data=None):
         tree_view = self.view.input_port_list_view["input_ports_tree_view"]
         #print tree_view
@@ -63,12 +63,9 @@ class StateDataPortEditorController(Controller, Observer):
             key = self.model.scoped_variables_list_store[int(path[0])][0].name
             self.model.container_state.remove_scoped_variable(key)
 
-
     def register_view(self, view):
-
         view['state_dataport_editor'].connect('destroy', gtk.main_quit)
 
-    #TODO: separate functions for inputs, outputs, and scoped vars
     @Observer.observe("state", after=True)
     def assign_notification_state(self, model, prop_name, info):
         print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
@@ -79,4 +76,3 @@ class StateDataPortEditorController(Controller, Observer):
             model.update_output_data_port_list_store()
         elif info.method_name == "add_scoped_variable" or info.method_name == "remove_scoped_variable":
             model.update_scoped_variables_list_store()
-
