@@ -34,7 +34,6 @@ class ScopedVariable(Observable, yaml.YAMLObject):
     :ivar _name: the key of the scoped variable
     :ivar _data_type: specifies the type of the scoped variable; the setter of _value will only allow assignments that
                 satisfies the type constraint
-    :ivar _from_state: the source state of the scoped variable
     :ivar _value_type: specifies the type of self._default_value
     :ivar _timestamp: the timestamp when the variable was written to last
 
@@ -46,9 +45,7 @@ class ScopedVariable(Observable, yaml.YAMLObject):
 
         Observable.__init__(self)
 
-        #self._from_state = None
         self._name = None
-        #self.from_state = from_state
         self.name = name
 
         self._data_type = None
@@ -57,8 +54,6 @@ class ScopedVariable(Observable, yaml.YAMLObject):
         self.default_value = default_value
 
         self._timestamp = generate_time_stamp()
-        # for storage purpose inside the container states (generated from key_name and from_state.state_id
-        #self._primary_key = None
 
     def __str__(self):
         return "ScopedVariable: \n name: %s \n data_type: %s \n default_value: %s " %\
@@ -100,8 +95,6 @@ class ScopedVariable(Observable, yaml.YAMLObject):
         if not isinstance(name, str):
             raise TypeError("name must be of type str")
         self._name = name
-        #update key
-        #self._primary_key = self._name+self.from_state.state_id
 
     @property
     def default_value(self):
@@ -140,24 +133,6 @@ class ScopedVariable(Observable, yaml.YAMLObject):
                 if not getattr(sys.modules[__name__], data_type):
                     raise TypeError("" + data_type + " is not a valid python data type")
         self._data_type = data_type
-
-    # @property
-    # def from_state(self):
-    #     """Property for the _from_state field
-    #
-    #     """
-    #     return self._from_state
-    #
-    # @from_state.setter
-    # @Observable.observed
-    # def from_state(self, from_state):
-    #     if not from_state is None:
-    #         if not isinstance(from_state, State):
-    #             raise TypeError("from_state must be of type State")
-    #         if not self.name is None:  #this will just happen in __init__ when key_name is not yet initialized
-    #             #update key
-    #             self._primary_key = self.name+self._from_state.state_id
-    #     self._from_state = from_state
 
     @property
     def timestamp(self):

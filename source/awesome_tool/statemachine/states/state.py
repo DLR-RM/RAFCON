@@ -248,6 +248,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """
         self._output_data_ports.pop(name, None)
 
+    @Observable.observed
     def add_outcome(self, name, outcome_id=None):
         """Add a new outcome to the state
 
@@ -267,6 +268,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         self._outcomes[outcome_id] = outcome
         return outcome_id
 
+    @Observable.observed
     def remove_outcome(self, outcome_id):
         """Remove an outcome from the state
 

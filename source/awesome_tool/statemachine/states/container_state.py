@@ -115,6 +115,7 @@ class ContainerState(State, Observable):
             exit()
         return result_transition
 
+    @Observable.observed
     # Primary key is state_id, as one should be able to change the name of the state without updating all connections
     def create_state(self, name, state_id=None):
         """Creates a state for the container state.
@@ -129,6 +130,7 @@ class ContainerState(State, Observable):
         self._states[state_id] = state
         return state_id
 
+    @Observable.observed
     def add_state(self, state):
         """Adds a state to the container state.
 
@@ -141,6 +143,7 @@ class ContainerState(State, Observable):
             exit()
         self._states[state.state_id] = state
 
+    @Observable.observed
     def remove_state(self, state_id):
         """Remove a state from the container state.
 
@@ -149,6 +152,7 @@ class ContainerState(State, Observable):
         """
         self._states.pop(state_id, None)
 
+    @Observable.observed
     #Primary key is transition_id.
     def add_transition(self, from_state, from_outcome, to_state, to_outcome):
         """Adds a transition to the container state
@@ -167,6 +171,7 @@ class ContainerState(State, Observable):
         self._transitions_cv.release()
         return transition_id
 
+    @Observable.observed
     def remove_transition(self, transition_id):
         """Removes a transition from the container state
 
@@ -175,6 +180,7 @@ class ContainerState(State, Observable):
         """
         self._transitions.pop(transition_id, None)
 
+    @Observable.observed
     #Primary key is data_flow_id.
     def add_data_flow(self, from_state, from_key, to_state, to_key):
         """Adds a data_flow to the container state
@@ -189,6 +195,7 @@ class ContainerState(State, Observable):
         self.data_flows[data_flow_id] = DataFlow(from_state, from_key, to_state, to_key)
         return data_flow_id
 
+    @Observable.observed
     def remove_data_flow(self, data_flow_id):
         """ Removes a data flow from the container state
 
@@ -217,6 +224,7 @@ class ContainerState(State, Observable):
         """
         del self._scoped_variables[name]
 
+    @Observable.observed
     def set_start_state(self, state_id):
         """Adds a data_flow to the container state
 
