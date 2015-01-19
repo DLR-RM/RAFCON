@@ -6,10 +6,11 @@ import gtk
 from gtkmvc import Controller
 from gtkmvc.adapters import UserClassAdapter
 from mvc.controllers.transition_list import TransitionListController
-from controllers.data_flow_list import DataFlowListController
+from mvc.controllers.data_flow_list import DataFlowListController
 
 
-class ContainerStateController(Controller):
+
+class StateConnectionsEditorController(Controller):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -25,8 +26,8 @@ class ContainerStateController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
-        self.transition_list_controller = TransitionListController(model, view.transition_list_view)
-        self.data_flow_list_controller = DataFlowListController(model, view.data_flow_list_view)
+        self.transitions_ctrl = TransitionListController(model, view.transitions_view)
+        self.dataflows_ctrl = DataFlowListController(model, view.dataflows_view)
 
 
     def register_view(self, view):
@@ -46,7 +47,7 @@ class ContainerStateController(Controller):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-        self.adapt(self.__state_property_adapter("name", "input_name"))
+        #self.adapt(self.__state_property_adapter("name", "input_name"))
 
     # def __property_edited(self, _, row, value):
     #     outcome = self.model.update_row(row, value)
@@ -65,18 +66,18 @@ class ContainerStateController(Controller):
             print out and the widget value is updated to the previous value.
         :return: The custom created adapter, which can be used in :func:`register_adapter`
         """
-        if view is None:
-            view = self.view
-
-        if value_error is None:
-            value_error = self._value_error
-
-        adapter = UserClassAdapter(self.model, "state",
-                                   getter=lambda state: state.__getattribute__(attr_name),
-                                   setter=lambda state, value: state.__setattr__(attr_name, value),
-                                   value_error=value_error)
-        adapter.connect_widget(view[label])
-        return adapter
+        # if view is None:
+        #     view = self.view
+        #
+        # if value_error is None:
+        #     value_error = self._value_error
+        #
+        # adapter = UserClassAdapter(self.model, "state",
+        #                            getter=lambda state: state.__getattribute__(attr_name),
+        #                            setter=lambda state, value: state.__setattr__(attr_name, value),
+        #                            value_error=value_error)
+        # adapter.connect_widget(view[label])
+        # return adapter
     
     @staticmethod
     def _value_error(adapt, prop_name, value):

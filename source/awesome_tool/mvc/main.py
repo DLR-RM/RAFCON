@@ -7,7 +7,7 @@ from mvc.models import StateModel, ContainerStateModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView
 from mvc.views.transition_list import TransitionListView
-from statemachine.states.state import State
+from statemachine.states.execution_state import ExecutionState as State
 from statemachine.states.container_state import ContainerState
 from statemachine.transition import Transition
 from statemachine.data_flow import DataFlow
@@ -78,6 +78,7 @@ def main(*args, **kargs):
         #                                                                                                   data_flow2])
     ctr_state.name = "Container"
 
+    print ctr_state.script.script
     ctr_model = ContainerStateModel(ctr_state)
     print "Ctr", len(ctr_state.states), "state3", len(state3.states)
     # prop_view2 = StatePropertiesView()
@@ -87,20 +88,32 @@ def main(*args, **kargs):
     # my_state2.name = "ContainerState"
     # logger.debug("changed attribute")
 
-    ctr_view = ContainerStateView()
-
-    ContainerStateController(ctr_model, ctr_view)
-
-    editor_view = GraphicalEditorView()
-    editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
-
-    gtk.main()
-    logger.debug("after gtk main")
-
-    return
+    return ctr_model, logger, ctr_state
 
 if __name__ == "__main__":
     setup_path()
     check_requirements()
-    main()
+    [ctr_model, logger, ctr_state] = main()
+
+    #ctr_view = ContainerStateView()
+    #ContainerStateController(ctr_model, ctr_view)
+
+    # from mvc.views.source_editor import SourceEditorView
+    # from mvc.controllers.source_editor import SourceEditorController
+    # from mvc.views.single_widget_window import SingleWidgetWindowView, SingleWidgetWindowController
+    # v = SingleWidgetWindowView(SourceEditorView)
+    # c = SingleWidgetWindowController(ctr_model, v, SourceEditorController)
+
+    from mvc.models import StateModel, ContainerStateModel
+    from mvc.views.state_editor import StateEditorView
+    from mvc.controllers.state_editor import StateEditorController
+
+    v = StateEditorView()
+    c = StateEditorController(ctr_model, v)
+
+    #editor_view = GraphicalEditorView()
+    #editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
+
+    gtk.main()
+    logger.debug("after gtk main")
     pass

@@ -69,7 +69,6 @@ class DataFlowListController(Controller):
         """Adapters should be registered in this method call
         """
 
-
     def on_combo_changed(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
 
