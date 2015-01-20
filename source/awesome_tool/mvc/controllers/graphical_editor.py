@@ -92,6 +92,7 @@ class GraphicalEditorController(Controller):
 
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
+        self.selected_outcome = None  # reset
 
         # Store the coordinates of the event
         self.mouse_move_start_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -125,15 +126,25 @@ class GraphicalEditorController(Controller):
             if self.selection is not None and \
                     (isinstance(self.selection, TransitionModel) or isinstance(self.selection, DataFlowModel)):
                 close_threshold = 2
-                click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+                click = self.mouse_move_start_pos
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
                     if waypoint[0] is not None and waypoint[1] is not None:
-                        if abs(waypoint[0] - click[0]) < close_threshold and \
-                                        abs(waypoint[1] - click[1]) < close_threshold:
+                        dist = sqrt((waypoint[0] - click[0])**2 + (waypoint[1] - click[1])**2)
+                        if dist < close_threshold:
                             self.selected_waypoint = (self.selection.meta['gui']['editor']['waypoints'], i)
                             self.selection_start_pos = (waypoint[0], waypoint[1])
                             logger.debug('Selected waypoint {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                             break
+
+            if self.selection is not None and isinstance(self.selection, StateModel):
+                outcomes_close_threshold = 1.5
+                outcomes = self.selection.meta['gui']['editor']['outcome_pos']
+                click = self.mouse_move_start_pos
+                for key in outcomes:
+                    dist = sqrt((outcomes[key][0] - click[0])**2 + (outcomes[key][1] - click[1])**2)
+                    if dist < outcomes_close_threshold:
+                        self.selected_outcome = (outcomes, key)
+                pass
 
             self._redraw()
 
