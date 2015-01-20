@@ -268,12 +268,14 @@ class ContainerState(State, Observable):
         else:
             to_state = self.states[to_state_id]
 
-        if from_key in from_state.output_data_ports or from_key in from_state.input_data_ports:
+        if from_key in from_state.output_data_ports or from_key in from_state.input_data_ports or \
+                (isinstance(from_state, ContainerState) and from_key in from_state.scoped_variables):
             # special case
             if from_key in from_state.input_data_ports and not from_state is self:
                 raise AttributeError("Data Flow not allowed if from_key is input_data_port of a child state")
 
-            if to_key in to_state.input_data_ports or to_key in to_state.output_data_ports:
+            if to_key in to_state.input_data_ports or to_key in to_state.output_data_ports or \
+                    (isinstance(to_state, ContainerState) and to_key in to_state.scoped_variables):
                 #special case
                 if to_key in to_state.output_data_ports and not to_state is self:
                     raise AttributeError("Data Flow not allowed if to_key is output_data_port of a child state")
@@ -294,7 +296,6 @@ class ContainerState(State, Observable):
 
         """
         self.data_flows.pop(data_flow_id, None)
-
 
     #Primary key is the name of scoped variable.
     @Observable.observed
