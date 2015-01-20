@@ -95,12 +95,19 @@ def test_create_container_state():
     assert len(container.data_flows) == 1
 
     with raises(AttributeError):
+        # Data flow to connected income
+        container.add_data_flow(state1.state_id, "output", state2.state_id, "input")
+    with raises(AttributeError):
+        # Data flow to non-existing port
         container.add_data_flow(state1.state_id, "output", state2.state_id, "no_input")
     with raises(AttributeError):
+        # Data flow from non-existing port
         container.add_data_flow(state1.state_id, "no_output", state2.state_id, "input")
     with raises(AttributeError):
+        # Data flow from non-existing state
         container.add_data_flow(-1, "output", state2.state_id, "input")
     with raises(AttributeError):
+        # Data flow to non-existing state
         container.add_data_flow(state1.state_id, "output", -1, "input")
 
     container.add_data_flow(container.state_id, "input", state1.state_id, "input")
@@ -110,12 +117,31 @@ def test_create_container_state():
 
     assert len(container.transitions) == 0
 
-    container.add_transition(state1.state_id, -1, state2.state_id)
+    container.add_transition(state1.state_id, -1, state2.state_id, None)
     assert len(container.transitions) == 1
     container.add_transition(state1.state_id, -2, None, -2)
     assert len(container.transitions) == 2
     t3 = container.add_transition(state2.state_id, -1, None, -1)
     assert len(container.transitions) == 3
+
+    with raises(AttributeError):
+        # Transition from connected outcome
+        container.add_transition(state1.state_id, -1, state2.state_id, None)
+    with raises(AttributeError):
+        # Non-existing from state id
+        container.add_transition(-1, -1, state2.state_id, None)
+    with raises(AttributeError):
+        # Non-existing from outcome
+        container.add_transition(state1.state_id, -3, state2.state_id, None)
+    with raises(AttributeError):
+        # Non-existing to state id
+        container.add_transition(state1.state_id, -1, -1, None)
+    with raises(AttributeError):
+        # Non-existing to outcome
+        container.add_transition(state1.state_id, -1, None, -3)
+    with raises(AttributeError):
+        # Transition pointing to the state itself
+        container.add_transition(state1.state_id, -2, state1.state_id, None)
 
     with raises(AttributeError):
         # The removal of an undefined transition should throw an AttributeError
