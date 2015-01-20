@@ -4,6 +4,7 @@ from gtkmvc import View
 from mvc.views.transition_list import TransitionListView
 from mvc.views.data_flow_list import DataFlowListView
 
+
 class ContainerStateView(View):
 
     builder = './glade/ContainerStateWidget_frame.glade'
