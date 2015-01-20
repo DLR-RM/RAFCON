@@ -2,3 +2,4 @@ from state import StateModel
 from container_state import ContainerStateModel
 from transition import TransitionModel
 from data_flow import DataFlowModel
+from global_variable_manager import GlobalVariableManagerModel

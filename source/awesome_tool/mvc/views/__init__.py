@@ -5,3 +5,4 @@ from state_data_port_editor import StateDataportEditorView
 from input_port_list import InputPortsListView
 from output_port_list import OutputPortsListView
 from scoped_variables_list import ScopedVariablesListView
+from global_variable_editor import GlobalVariableEditorView

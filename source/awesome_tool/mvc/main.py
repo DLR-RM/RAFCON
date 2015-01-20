@@ -3,10 +3,11 @@ import sys
 import gtk
 import logging
 from utils import log
-from mvc.models import StateModel, ContainerStateModel
+from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController
-from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView
+    StateDataPortEditorController, GlobalVariableManagerController
+from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
+    GlobalVariableEditorView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
 from statemachine.states.container_state import ContainerState
@@ -106,10 +107,15 @@ def main(*args, **kargs):
     # my_state2.name = "ContainerState"
     # logger.debug("changed attribute")
 
+    global_var_manager_view = GlobalVariableEditorView()
+    global_var_manager_model = GlobalVariableManagerModel()
+    GlobalVariableManagerController(global_var_manager_model, global_var_manager_view)
+    global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
+    global_var_manager_model.global_variable_manager.lock_variable("global_variable_1")
+    global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
+
     sdev = StateDataportEditorView()
     StateDataPortEditorController(ctr_model, sdev)
-    #gtk.main()
-    #return
 
     ctr_view = ContainerStateView()
 
