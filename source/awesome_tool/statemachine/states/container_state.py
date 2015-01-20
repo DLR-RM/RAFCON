@@ -138,10 +138,9 @@ class ContainerState(State, Observable):
 
         """
         if state.state_id in self._states:
-            print "This should never happen: For adding a new state to a container state, the new state must have" \
-                  " a state_id that does not already exist in the container state!"
-            exit()
-        self._states[state.state_id] = state
+            raise AttributeError("State id %s already exists in the container state", state.state_id)
+        else:
+            self._states[state.state_id] = state
 
     @Observable.observed
     def remove_state(self, state_id):
@@ -150,25 +149,81 @@ class ContainerState(State, Observable):
         :param state_id: the id of the state to remove
 
         """
-        self._states.pop(state_id, None)
+        if not state_id in self.states:
+            raise AttributeError("State_id %s doe not exit" % state_id)
+        del self.states[state_id]
+
+        #delete all transitions and data_flows connected to this state
+
+        keys_to_delete = []
+        for key, transition in self.transitions.iteritems():
+            if transition.from_state == state_id or transition.to_state == state_id:
+                keys_to_delete.append(key)
+        for key in keys_to_delete:
+            del self.transitions[key]
+
+        keys_to_delete = []
+        for key, data_flow in self.data_flows.iteritems():
+            if data_flow.from_state == state_id or data_flow.to_state == state_id:
+                keys_to_delete.append(key)
+        for key in keys_to_delete:
+            del self.data_flows[key]
+
 
     @Observable.observed
-    #Primary key is transition_id.
-    def add_transition(self, from_state, from_outcome, to_state, to_outcome):
+    #Primary key is transition_id
+    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None):
         """Adds a transition to the container state
 
         Note: Either the toState or the toOutcome needs to be "None"
 
-        :param from_state: The source state of the transition
+        :param from_state_id: The source state of the transition
         :param from_outcome: The outcome of the source state to connect the transition to
-        :param to_state: The target state of the transition
+        :param to_state_id: The target state of the transition
         :param to_outcome: The target outcome of a container state
         """
         transition_id = generate_transition_id()
-        self._transitions[transition_id] = Transition(from_state, from_outcome, to_state, to_outcome)
+
+        if not (from_state_id in self.states or from_state_id == self.state_id):
+            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
+
+        if not to_state_id is None:
+            if not (to_state_id in self.states or to_state_id == self.state_id):
+                raise AttributeError("To_state %s does not exit in the container state" % to_state_id.state_id)
+
+        from_state = None
+        if from_state_id == self.state_id:
+            from_state = self
+        else:
+            from_state = self.states[from_state_id]
+
+        to_state = None
+        if not to_state_id is None:
+            if to_state_id == self.state_id:
+                to_state = self
+            else:
+                to_state = self.states[to_state_id]
+
+        if to_state_id is None and to_outcome is None:
+            raise AttributeError("Either to_state_id or to_outcome must not be None")
+
+        if from_outcome in from_state.outcomes:
+            if not to_outcome is None:
+                if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self
+                    self.transitions[transition_id] = Transition(from_state_id, from_outcome, to_state_id, to_outcome)
+                else:
+                    raise AttributeError("to_state does not have outcome %s", to_outcome)
+            else:  # to outcome is None but to_state is not None, so the transition is valid
+                self.transitions[transition_id] = Transition(from_state_id, from_outcome, to_state_id, to_outcome)
+        else:
+            raise AttributeError("from_state does not have outcome %s", from_state)
+
+
+        # notify all states waiting for transition to be connected
         self._transitions_cv.acquire()
         self._transitions_cv.notify_all()
         self._transitions_cv.release()
+
         return transition_id
 
     @Observable.observed
@@ -178,22 +233,59 @@ class ContainerState(State, Observable):
         :param transition_id: the id of the transition to remove
 
         """
+        if transition_id == -1 or transition_id == -2:
+            raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
+        if transition_id not in self.transitions:
+            raise AttributeError("The transition_id %s does not exist" % str(transition_id))
         self._transitions.pop(transition_id, None)
 
     @Observable.observed
     #Primary key is data_flow_id.
-    def add_data_flow(self, from_state, from_key, to_state, to_key):
+    def add_data_flow(self, from_state_id, from_key, to_state_id, to_key):
         """Adds a data_flow to the container state
 
-        :param from_state: The source state of the data_flow
+        :param from_state_id: The id source state of the data_flow
         :param from_key: The output_key of the source state
-        :param to_state: The target state of the data_flow
+        :param to_state_id: The id target state of the data_flow
         :param to_key: The input_key of the target state
 
         """
         data_flow_id = generate_data_flow_id()
-        self.data_flows[data_flow_id] = DataFlow(from_state, from_key, to_state, to_key)
-        return data_flow_id
+
+        if not (from_state_id in self.states or from_state_id == self.state_id):
+            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
+        if not (to_state_id in self.states or to_state_id == self.state_id):
+            raise AttributeError("To_state %s does not exit in the container state" % to_state_id.state_id)
+
+        from_state = None
+        if from_state_id == self.state_id:
+            from_state = self
+        else:
+            from_state = self.states[from_state_id]
+
+        to_state = None
+        if to_state_id == self.state_id:
+            to_state = self
+        else:
+            to_state = self.states[to_state_id]
+
+        if from_key in from_state.output_data_ports or from_key in from_state.input_data_ports:
+            # special case
+            if from_key in from_state.input_data_ports and not from_state is self:
+                raise AttributeError("Data Flow not allowed if from_key is input_data_port of a child state")
+
+            if to_key in to_state.input_data_ports or to_key in to_state.output_data_ports:
+                #special case
+                if to_key in to_state.output_data_ports and not to_state is self:
+                    raise AttributeError("Data Flow not allowed if to_key is output_data_port of a child state")
+
+                self.data_flows[data_flow_id] = DataFlow(from_state_id, from_key, to_state_id, to_key)
+                return data_flow_id
+            else:
+                raise AttributeError("To_key %s does not exist" % to_key)
+        else:
+            raise AttributeError("From_key %s does not exit" % from_key)
+
 
     @Observable.observed
     def remove_data_flow(self, data_flow_id):

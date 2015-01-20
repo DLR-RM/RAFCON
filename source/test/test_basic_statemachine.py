@@ -37,7 +37,7 @@ def test_create_state():
     assert len(state1.output_data_ports) == 1
 
     state1.remove_input_data_port("input")
-    state1.remove_input_data_port("outut")
+    state1.remove_output_data_port("output")
 
     assert len(state1.input_data_ports) == 0
     assert len(state1.output_data_ports) == 0
@@ -69,8 +69,8 @@ def test_create_container_state():
     container = ContainerState("Container")
     assert len(container.states) == 0
 
-    container.add_input_data_port("input", "double")
-    container.add_output_data_port("input", "double")
+    container.add_input_data_port("input", "float")
+    container.add_output_data_port("input", "float")
 
     state1 = ExecutionState("MyFirstState")
     container.add_state(state1)
@@ -85,10 +85,10 @@ def test_create_container_state():
     container.add_state(state2)
     assert len(container.states) == 2
 
-    state1.add_input_data_port("input", "double")
+    state1.add_input_data_port("input", "float")
     state1.add_output_data_port("output", "float")
     state2.add_input_data_port("input", "float")
-    state2.add_output_data_port("output", "double")
+    state2.add_output_data_port("output", "float")
 
     assert len(container.data_flows) == 0
     container.add_data_flow(state1.state_id, "output", state2.state_id, "input")
@@ -103,8 +103,8 @@ def test_create_container_state():
     with raises(AttributeError):
         container.add_data_flow(state1.state_id, "output", -1, "input")
 
-    container.add_data_flow(container.state_id, "input", state1, "input")
-    container.add_data_flow(state2.state_id, "output", state2, "output")
+    container.add_data_flow(container.state_id, "input", state1.state_id, "input")
+    container.add_data_flow(state2.state_id, "output", state2.state_id, "input")
 
     assert len(container.data_flows) == 3
 
