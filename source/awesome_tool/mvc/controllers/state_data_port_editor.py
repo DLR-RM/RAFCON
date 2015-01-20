@@ -28,15 +28,26 @@ class StateDataPortEditorController(Controller, Observer):
         view['delete_output_port_button'].connect('clicked', self.on_delete_output_port_button_clicked)
         view['delete_scoped_variable_button'].connect('clicked', self.on_delete_scoped_variable_button_clicked)
 
+        self.new_ip_counter = 0
+        self.new_op_counter = 0
+        self.new_sv_counter = 0
+
+
     #new buttons
     def on_new_input_port_button_clicked(self, widget, data=None):
-        self.model.state.add_input_data_port("a_new_input_port", "str", "val")
+        new_iport_name = "a_new_intput_port%s" % str(self.new_ip_counter)
+        self.new_ip_counter += 1
+        self.model.state.add_input_data_port(new_iport_name, "str", "val")
 
     def on_new_output_port_button_clicked(self, widget, data=None):
-        self.model.state.add_output_data_port("a_new_output_port", "str", "val")
+        new_oport_name = "a_new_output_port%s" % str(self.new_op_counter)
+        self.new_op_counter += 1
+        self.model.state.add_output_data_port(new_oport_name, "str", "val")
 
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
-        self.model.container_state.add_scoped_variable("a_new_scoped_variable", "str", "val")
+        new_sv_name = "a_new_scoped_variable%s" % str(self.new_sv_counter)
+        self.new_sv_counter += 1
+        self.model.container_state.add_scoped_variable(new_sv_name, "str", "val")
 
     #delete buttons
     def on_delete_input_port_button_clicked(self, widget, data=None):
