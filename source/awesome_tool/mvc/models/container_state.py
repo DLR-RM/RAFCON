@@ -75,6 +75,7 @@ class ContainerStateModel(StateModel):
 
         for data_flow in container_state.data_flows.itervalues():
             self.data_flows.append(DataFlowModel(data_flow, self))
+            print "DataFlows", self.data_flows
             self.data_flow_list_store.append([data_flow])
 
         # this class is an observer of its own properties:
@@ -151,3 +152,50 @@ class ContainerStateModel(StateModel):
             return 1
         else:
             return -1            
+
+    @ModelMT.observe("state", after=True)
+    def update_child_models(self, model, name, info):
+        #print info
+
+        model_list = []
+        data_list = []
+        model_name = ""
+        model_class = None
+        if "transition" in info.method_name:
+            model_list = self.transitions
+            data_list = self.state.transitions
+            model_name = "transition"
+            model_class = TransitionModel
+        elif "data_flow" in info.method_name:
+            model_list = self.data_flows
+            data_list = self.state.data_flows
+            model_name = "data_flow"
+            model_class = DataFlowModel
+
+        if model_name is not "":
+            #print "before", model_list
+            if "add" in info.method_name:
+                #print "add", model_name
+                self.add_missing_model(model_list, data_list, model_name, model_class)
+            elif "remove" in info.method_name:
+                #print "remove", model_name
+                self.remove_additional_model(model_list, data_list, model_name)
+            print "after", model_list
+
+    def add_missing_model(self, model_list, data_list, model_name, model_class):
+        for data in data_list.itervalues():
+            found = False
+            for model in model_list:
+                if data is getattr(model, model_name):
+                    found = True
+                    break
+            if not found:
+                model_list.append(model_class(data, self))
+                return
+
+    def remove_additional_model(self, model_list, data_list, model_name):
+        for model in model_list:
+            for data in data_list.itervalues():
+                if data is getattr(model, model_name):
+                    model_list.remove(model)
+                    return
