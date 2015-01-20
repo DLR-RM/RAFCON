@@ -161,6 +161,47 @@ def test_create_container_state():
     assert len(container.data_flows) == 1
 
 
+def test_port_and_outcome_removal():
+    container = ContainerState("Container")
+    container.add_input_data_port("input", "float")
+    container.add_output_data_port("output", "float")
+    csco = container.add_scoped_variable("scope")
+
+    assert len(container.transitions) == 0
+    assert len(container.data_flows) == 0
+    assert len(container.outcomes) == 2
+    assert len(container.input_data_ports) == 1
+    assert len(container.output_data_ports) == 1
+    assert len(container.scoped_variables) == 1
+
+    state1 = ExecutionState()
+    sin = state1.add_input_data_port("input", "float")
+    sout = state1.add_output_data_port("output", "float")
+    state1.add_outcome("success", 0)
+
+    container.add_state(state1)
+    container.add_transition(state1.state_id, 0, None, -2)
+    container.add_data_flow(container.state_id, "input", state1.state_id, "input")
+    container.add_data_flow(state1.state_id, "output", container.state_id, "output")
+    container.add_data_flow(container.state_id, "input", container.state_id, "scope")
+
+    assert len(container.transitions) == 1
+    assert len(container.data_flows) == 3
+
+    state1.remove_outcome(0)
+    assert len(container.transitions) == 0
+
+    state1.remove_output_data_port(sout)
+    assert len(container.data_flows) == 2
+
+    state1.remove_output_data_port(sin)
+    assert len(container.data_flows) == 1
+
+    container.remove_scoped_variable(csco)
+    assert len(container.data_flows) == 0
+
+
+
 
 if __name__ == '__main__':
     pytest.main()

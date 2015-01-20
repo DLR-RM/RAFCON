@@ -87,8 +87,10 @@ class GraphicalEditorController(Controller):
         First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
         event to redraw.
         """
-        self.view.editor.emit("configure_event", None)
-        self.view.editor.emit("expose_event", None)
+        # Check if initialized
+        if hasattr(self.view, "editor"):
+            self.view.editor.emit("configure_event", None)
+            self.view.editor.emit("expose_event", None)
 
     def _on_mouse_press(self, widget, event):
         """Triggered when the mouse is pressed
@@ -315,7 +317,7 @@ class GraphicalEditorController(Controller):
             self.view.editor.top *= zoom
 
             # Determine mouse offset to previous position
-            aspect = self.view.editor.allocation.width/float(self.view.editor.allocation.height)
+            aspect = self.view.editor.allocation.width / float(self.view.editor.allocation.height)
             new_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
             diff_x = new_mouse_pos[0] - old_mouse_pos[0]
             diff_y = new_mouse_pos[1] - old_mouse_pos[1]
