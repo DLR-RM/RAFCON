@@ -218,7 +218,6 @@ class ContainerState(State, Observable):
         else:
             raise AttributeError("from_state does not have outcome %s", from_state)
 
-
         # notify all states waiting for transition to be connected
         self._transitions_cv.acquire()
         self._transitions_cv.notify_all()
