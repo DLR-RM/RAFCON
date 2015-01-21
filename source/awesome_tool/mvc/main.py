@@ -5,9 +5,9 @@ import logging
 from utils import log
 from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController
+    StateDataPortEditorController, GlobalVariableManagerController, SourceEditorController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView
+    GlobalVariableEditorView, SourceEditorView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
 from statemachine.states.execution_state import ExecutionState
@@ -34,7 +34,7 @@ def check_requirements():
     return
 
 
-def main(*args, **kargs):
+def create_models(*args, **kargs):
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
     #logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
@@ -112,11 +112,26 @@ def main(*args, **kargs):
     global_var_manager_model.global_variable_manager.lock_variable("global_variable_1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
+    return ctr_model, logger, ctr_state, global_var_manager_model
+
+
+
+if __name__ == "__main__":
+    setup_path()
+    check_requirements()
+    [ctr_model, logger, ctr_state, gvm_model] = create_models()
+
     #sdev = StateDataportEditorView()
     #StateDataPortEditorController(ctr_model, sdev)
 
-    #ctr_view = ContainerStateView()
+    w = gtk.Window()
+    v = SourceEditorView()
+    c = SourceEditorController(ctr_model, v)
+    w.resize(width=550, height=500)
+    w.add(v.get_top_widget())
+    w.show_all()
 
+    #ctr_view = ContainerStateView()
     #ContainerStateController(ctr_model, ctr_view)
 
     editor_view = GraphicalEditorView()
@@ -125,11 +140,4 @@ def main(*args, **kargs):
 
     gtk.main()
     logger.debug("after gtk main")
-
-    return
-
-if __name__ == "__main__":
-    setup_path()
-    check_requirements()
-    main()
     pass
