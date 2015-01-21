@@ -108,8 +108,6 @@ def create_models(*args, **kargs):
     ctr_model = ContainerStateModel(ctr_state)
 
     external_module_manager_model = ExternalModuleManagerModel()
-    external_module_manager_view = ExternalModuleManagerView()
-    ExternalModuleManagerController(external_module_manager_model, external_module_manager_view)
     em = ExternalModule(name="External Module 1", module_name="external_module_test", class_name="TestModule")
     external_module_manager_model.external_module_manager.add_external_module(em)
     external_module_manager_model.external_module_manager.external_modules["External Module 1"].connect([])
@@ -118,21 +116,24 @@ def create_models(*args, **kargs):
     external_module_manager_model.external_module_manager.add_external_module(em)
 
     global_var_manager_model = GlobalVariableManagerModel()
-    #GlobalVariableManagerController(global_var_manager_model, global_var_manager_view)
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
-    return ctr_model, logger, ctr_state, global_var_manager_model
+    return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
 
 
 
 if __name__ == "__main__":
     setup_path()
     check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model] = create_models()
+    [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
 
-    #sdev = StateDataportEditorView()
-    #StateDataPortEditorController(ctr_model, sdev)
+    sdev = StateDataportEditorView()
+    StateDataPortEditorController(ctr_model, sdev)
+
+    gtk.main()
+    exit()
+
 
     w = gtk.Window()
     v = SourceEditorView()
@@ -144,10 +145,14 @@ if __name__ == "__main__":
     #ctr_view = ContainerStateView()
     #ContainerStateController(ctr_model, ctr_view)
 
+    #global_var_manager_view = GlobalVariableEditorView()
+    #GlobalVariableManagerController(gvm_model, global_var_manager_view)
+
+    external_module_manager_view = ExternalModuleManagerView()
+    ExternalModuleManagerController(emm_model, external_module_manager_view)
+
     editor_view = GraphicalEditorView()
     editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
 
-
     gtk.main()
     logger.debug("after gtk main")
-    pass

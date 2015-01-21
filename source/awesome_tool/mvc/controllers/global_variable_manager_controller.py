@@ -16,6 +16,7 @@ class GlobalVariableManagerController(Controller, Observer):
         view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
         view['delete_global_variable_button'].connect('clicked', self.on_delete_global_variable_button_clicked)
         self.new_gv_counter = 0
+        model.update_global_variables_list_store()
 
     #new buttons
     def on_new_global_variable_button_clicked(self, widget, data=None):
@@ -33,13 +34,11 @@ class GlobalVariableManagerController(Controller, Observer):
             #print "key to remove: ", key
             self.model.global_variable_manager.delete_global_variable(key)
 
-
     @Observer.observe("global_variable_manager", after=True)
     def assign_notification_state(self, model, prop_name, info):
         #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #      (prop_name, info.instance, info.method_name, info.result)
         model.update_global_variables_list_store()
-
 
     def register_view(self, view):
         """Called when the View was registered
