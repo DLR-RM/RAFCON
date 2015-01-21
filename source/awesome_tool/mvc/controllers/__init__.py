@@ -4,3 +4,4 @@ from graphical_editor import GraphicalEditorController
 from state_data_port_editor import StateDataPortEditorController
 from global_variable_manager_controller import GlobalVariableManagerController
 from external_module_manager import ExternalModuleManagerController
+from source_editor import SourceEditorController

@@ -64,22 +64,12 @@ class GraphicalEditorController(Controller):
         :param args: console arguments, not used
         """
 
-        # Store the current outer editor coordinates
-        #box1 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
         # Prepare the drawing process
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
         self.draw_state(self.model)
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
-        # Store the current outer editor coordinates again
-        #box2 = [self.view.editor.left, self.view.editor.right, self.view.editor.top, self.view.editor.bottom]
-
-        # Calculate coordinates offset between pre and post drawing
-        # If too big, configure and redraw
-        #diff = sum(map(lambda i1, i2: abs(i1 - i2), box1, box2))
-        #if diff > 5:
-            #self._redraw()
 
     def _redraw(self):
         """Force the graphical editor to be redrawn
@@ -210,12 +200,6 @@ class GraphicalEditorController(Controller):
         :param widget: The widget beneath the mouse when the click was done
         :param event: Information about the event, e. g. x and y coordinate
         """
-        # if self.selection is None:
-        # return
-        # if not isinstance(self.selection, (StateModel, TransitionModel, DataFlowModel)):
-        #     return
-        # if self.last_button_pressed != 1:
-        #     return
 
         mouse_current_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
         rel_x_motion = mouse_current_pos[0] - self.mouse_move_start_pos[0]
@@ -368,29 +352,28 @@ class GraphicalEditorController(Controller):
         pos_x = state.meta['gui']['editor']['pos_x']
         pos_y = state.meta['gui']['editor']['pos_y']
 
+        scoped_ports = {}
+        if isinstance(state, ContainerStateModel):
+            scoped_ports = state.state.scoped_variables
+
         # Was the state selected?
         active = state.meta['gui']['selected']
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
-        (id, outcome_pos, input_pos, output_pos) = self.view.editor.draw_state(state.state.name, pos_x, pos_y, width,
-                                                                               height, state.state.outcomes,
-                                                                               state.state.input_data_ports,
-                                                                               state.state.output_data_ports, active,
-                                                                               depth)
+        (id, outcome_pos, input_pos, output_pos, scoped_pos) = self.view.editor.draw_state(state.state.name,
+                                                                                       pos_x, pos_y, width,
+                                                                                       height, state.state.outcomes,
+                                                                                       state.state.input_data_ports,
+                                                                                       state.state.output_data_ports,
+                                                                                       scoped_ports,
+                                                                                       active,
+                                                                                       depth)
         state.meta['gui']['editor']['id'] = id
         state.meta['gui']['editor']['outcome_pos'] = outcome_pos
         state.meta['gui']['editor']['input_pos'] = input_pos
         state.meta['gui']['editor']['output_pos'] = output_pos
-
-        # If the state is the root container, fit the dimensions of the OpenGL coordinates so that the whole
-        # container fits in the viewport
-        if depth == 1 and False:
-            margin = min(width, height) / 10.0
-            self.view.editor.left = pos_x - margin
-            self.view.editor.right = pos_x + width + margin
-            self.view.editor.bottom = pos_y - margin
-            self.view.editor.top = pos_y + height + margin
+        state.meta['gui']['editor']['scoped_pos'] = scoped_pos
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
@@ -471,10 +454,13 @@ class GraphicalEditorController(Controller):
 
                 connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
                                   from_state.meta['gui']['editor']['output_pos'].items() +
+                                  from_state.meta['gui']['editor']['scoped_pos'].items() +
                                   to_state.meta['gui']['editor']['input_pos'].items() +
                                   to_state.meta['gui']['editor']['output_pos'].items() +
+                                  to_state.meta['gui']['editor']['scoped_pos'].items() +
                                   state.meta['gui']['editor']['input_pos'].items() +
-                                  state.meta['gui']['editor']['output_pos'].items())
+                                  state.meta['gui']['editor']['output_pos'].items() +
+                                  state.meta['gui']['editor']['scoped_pos'].items())
                 from_x = connectors[from_key][0]
                 from_y = connectors[from_key][1]
                 to_x = connectors[to_key][0]

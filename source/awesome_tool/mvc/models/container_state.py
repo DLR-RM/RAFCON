@@ -59,12 +59,15 @@ class ContainerStateModel(StateModel):
         states = container_state.states
         for state in states.itervalues():
             # Create hierarchy
-            if isinstance(state, ContainerState):
-                self.states[state.state_id] = ContainerStateModel(state, parent=self)
-            # elif isinstance(state, HierarchyState):
-            #     self.states.append(ContainerState(state))
-            elif isinstance(state, State):
-                self.states[state.state_id] = StateModel(state, parent=self)
+            model_class = self.state_to_state_model(state)
+            if model_class is not None:
+                self.states[state.state_id] = model_class(state, parent=self)
+            # if isinstance(state, ContainerState):
+            #     self.states[state.state_id] = ContainerStateModel(state, parent=self)
+            # # elif isinstance(state, HierarchyState):
+            # #     self.states.append(ContainerState(state))
+            # elif isinstance(state, State):
+            #     self.states[state.state_id] = StateModel(state, parent=self)
             else:
                 logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
                 logger.error(state)
@@ -154,48 +157,100 @@ class ContainerStateModel(StateModel):
             return -1            
 
     @ModelMT.observe("state", after=True)
-    def update_child_models(self, model, name, info):
-        #print info
+    def update_child_models(self, _, name, info):
+        #print name, info.method_name
+        model_list = None
 
-        model_list = []
-        data_list = []
-        model_name = ""
-        model_class = None
+        def get_model_info(model):
+            model_list = None
+            data_list = None
+            model_name = ""
+            model_class = None
+            model_key = None
+            if model == "transition":
+                model_list = self.transitions
+                data_list = self.state.transitions
+                model_name = "transition"
+                model_class = TransitionModel
+            elif model ==  "data_flow":
+                model_list = self.data_flows
+                data_list = self.state.data_flows
+                model_name = "data_flow"
+                model_class = DataFlowModel
+            elif model == "state":
+                model_list = self.states
+                data_list = self.state.states
+                model_name = "state"
+                # Defer state type from class type (Execution, Hierarchy, ...)
+                model_class = self.state_to_state_model(info.args[1])
+                model_key = "state_id"
+            return model_list, data_list, model_name, model_class, model_key
+
         if "transition" in info.method_name:
-            model_list = self.transitions
-            data_list = self.state.transitions
-            model_name = "transition"
-            model_class = TransitionModel
+            (model_list, data_list, model_name, model_class, model_key) = get_model_info("transition")
         elif "data_flow" in info.method_name:
-            model_list = self.data_flows
-            data_list = self.state.data_flows
-            model_name = "data_flow"
-            model_class = DataFlowModel
+            (model_list, data_list, model_name, model_class, model_key) = get_model_info("data_flow")
+        elif "state" in info.method_name:
+            (model_list, data_list, model_name, model_class, model_key) = get_model_info("state")
 
-        if model_name is not "":
-            #print "before", model_list
+        if model_list is not None:
             if "add" in info.method_name:
-                #print "add", model_name
-                self.add_missing_model(model_list, data_list, model_name, model_class)
+                self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
             elif "remove" in info.method_name:
-                #print "remove", model_name
-                self.remove_additional_model(model_list, data_list, model_name)
-            print "after", model_list
+                self.remove_additional_model(model_list, data_list, model_name, model_key)
 
-    def add_missing_model(self, model_list, data_list, model_name, model_class):
+        if info.method_name in ("remove_state", "remove_outcome"):
+            (model_list, data_list, model_name, _, model_key) = get_model_info("transition")
+            while True:
+                num_transitions = len(self.transitions)
+                self.remove_additional_model(model_list, data_list, model_name, model_key)
+                if len(self.transitions) == num_transitions:
+                    break
+
+        if info.method_name in ("remove_state", "remove_scoped_variable", "remove_input_data_port",
+                                "remove_output_data_port"):
+            (model_list, data_list, model_name, _, model_key) = get_model_info("data_flow")
+            while True:
+                num_data_flows = len(self.data_flows)
+                self.remove_additional_model(model_list, data_list, model_name, model_key)
+                if len(self.data_flows) == num_data_flows:
+                    break
+
+    def add_missing_model(self, model_list, data_list, model_name, model_class, model_key):
         for data in data_list.itervalues():
             found = False
-            for model in model_list:
+            for model_item in model_list:
+                model = model_item if model_key is None else model_list[model_item]
                 if data is getattr(model, model_name):
                     found = True
                     break
             if not found:
-                model_list.append(model_class(data, self))
+                if model_key is None:
+                    model_list.append(model_class(data, self))
+                else:
+                    model_list[getattr(data, model_key)] = model_class(data, self)
                 return
 
-    def remove_additional_model(self, model_list, data_list, model_name):
-        for model in model_list:
+    def remove_additional_model(self, model_list, data_list, model_name, model_key):
+        for model_item in model_list:
+            model = model_item if model_key is None else model_list[model_item]
+            found = False
             for data in data_list.itervalues():
                 if data is getattr(model, model_name):
+                    found = True
+                    break
+            if not found:
+                if model_key is None:
                     model_list.remove(model)
-                    return
+                else:
+                    del model_list[model_item]
+                return
+
+    @staticmethod
+    def state_to_state_model(state):
+        if isinstance(state, ContainerState):
+            return ContainerStateModel
+        elif isinstance(state, State):
+            return StateModel
+        else:
+            return None

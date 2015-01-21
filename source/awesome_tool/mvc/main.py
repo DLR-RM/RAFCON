@@ -5,11 +5,13 @@ import logging
 from utils import log
 from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController
+    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
+    SourceEditorController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView, ExternalModuleManagerView
+    GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
+from statemachine.states.execution_state import ExecutionState
 from statemachine.states.container_state import ContainerState
 from statemachine.transition import Transition
 from statemachine.data_flow import DataFlow
@@ -34,10 +36,10 @@ def check_requirements():
     return
 
 
-def main(*args, **kargs):
+def create_models(*args, **kargs):
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
-    logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
+    #logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
     stdout = logging.StreamHandler(sys.stdout)
@@ -52,7 +54,7 @@ def main(*args, **kargs):
     state1.add_input_data_port("input", "int", 0)
     state2 = State('State2')
     state2.add_input_data_port("my_input", "int", 0)
-    state2.add_input_data_port("longlonginputname", "int", 0)
+    longlong = state2.add_input_data_port("longlonginputname", "int", 0)
     state2.add_input_data_port("par", "int", 0)
     state2.add_output_data_port("my_output", "int")
     state2.add_output_data_port("res", "int")
@@ -81,7 +83,6 @@ def main(*args, **kargs):
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
     ctr_state.add_transition(state2.state_id, -2, state3.state_id, None)
     ctr_state.add_transition(state3.state_id, -2, None, -2)
-    ctr_state.add_transition(state1.state_id, -1, None, -1)
     ctr_state.add_data_flow(state1.state_id, "output", state2.state_id, "par")
     ctr_state.add_data_flow(state2.state_id, "res", state3.state_id, "input")
     ctr_state.add_data_flow(ctr_state.state_id, "ctr_in", state1.state_id, "input")
@@ -100,13 +101,11 @@ def main(*args, **kargs):
     ctr_state.add_scoped_variable("scoped_variable2", "str", "default_value1")
     ctr_state.add_scoped_variable("scoped_variable3", "str", "default_value1")
 
+    ctr_state.add_data_flow(ctr_state.state_id, "ctr_in", ctr_state.state_id, "scoped_variable1")
+    ctr_state.add_data_flow(ctr_state.state_id, "scoped_variable2", ctr_state.state_id, "ctr_out")
+    ctr_state.add_data_flow(state1.state_id, "output", ctr_state.state_id, "scoped_variable3")
+
     ctr_model = ContainerStateModel(ctr_state)
-    # prop_view2 = StatePropertiesView()
-    # prop_ctrl2 = StatePropertiesController(prop_model2, prop_view2)
-    #
-    # my_state.name = "test2"
-    # my_state2.name = "ContainerState"
-    # logger.debug("changed attribute")
 
     external_module_manager_model = ExternalModuleManagerModel()
     external_module_manager_view = ExternalModuleManagerView()
@@ -118,29 +117,37 @@ def main(*args, **kargs):
     em = ExternalModule(name="External Module 2", module_name="external_module_test2", class_name="TestModule2")
     external_module_manager_model.external_module_manager.add_external_module(em)
 
-    global_var_manager_view = GlobalVariableEditorView()
     global_var_manager_model = GlobalVariableManagerModel()
-    GlobalVariableManagerController(global_var_manager_model, global_var_manager_view)
+    #GlobalVariableManagerController(global_var_manager_model, global_var_manager_view)
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
-    sdev = StateDataportEditorView()
-    StateDataPortEditorController(ctr_model, sdev)
+    return ctr_model, logger, ctr_state, global_var_manager_model
 
-    ctr_view = ContainerStateView()
 
-    ContainerStateController(ctr_model, ctr_view)
-
-    editor_view = GraphicalEditorView()
-    editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
-
-    gtk.main()
-    logger.debug("after gtk main")
-
-    return
 
 if __name__ == "__main__":
     setup_path()
     check_requirements()
-    main()
+    [ctr_model, logger, ctr_state, gvm_model] = create_models()
+
+    #sdev = StateDataportEditorView()
+    #StateDataPortEditorController(ctr_model, sdev)
+
+    w = gtk.Window()
+    v = SourceEditorView()
+    c = SourceEditorController(ctr_model, v)
+    w.resize(width=550, height=500)
+    w.add(v.get_top_widget())
+    w.show_all()
+
+    #ctr_view = ContainerStateView()
+    #ContainerStateController(ctr_model, ctr_view)
+
+    editor_view = GraphicalEditorView()
+    editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
+
+
+    gtk.main()
+    logger.debug("after gtk main")
     pass
