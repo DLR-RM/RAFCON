@@ -16,25 +16,26 @@ class LibraryTreeView(View, gtk.TreeView):
         tvcolumn.pack_start(cell, True)
         tvcolumn.add_attribute(cell, 'text', 0)
 
-        tvcolumn = gtk.TreeViewColumn('ID')
-        #tvcolumn.set_min_width(150)
-        self.append_column(tvcolumn)
-        cell = gtk.CellRendererText()
-        tvcolumn.pack_start(cell, True)
-        tvcolumn.add_attribute(cell, 'text', 1)
-
-        tvcolumn = gtk.TreeViewColumn('Type')
-        #tvcolumn.set_min_width(150)
-        self.append_column(tvcolumn)
-        cell = gtk.CellRendererText()
-        tvcolumn.pack_start(cell, True)
-        tvcolumn.add_attribute(cell, 'text', 2)
+        # tvcolumn = gtk.TreeViewColumn('ID')
+        # #tvcolumn.set_min_width(150)
+        # self.append_column(tvcolumn)
+        # cell = gtk.CellRendererText()
+        # tvcolumn.pack_start(cell, True)
+        # tvcolumn.add_attribute(cell, 'text', 1)
+        #
+        # tvcolumn = gtk.TreeViewColumn('Type')
+        # #tvcolumn.set_min_width(150)
+        # self.append_column(tvcolumn)
+        # cell = gtk.CellRendererText()
+        # tvcolumn.pack_start(cell, True)
+        # tvcolumn.add_attribute(cell, 'text', 2)
 
         self['top_tree'] = self
 
 
-if __name__ is '__main__':
-    from mvc.controllers.library_tree import LibraryTreeController
+if __name__ == '__main__':
+    from mvc.views import SingleWidgetWindowView
+    from mvc.controllers import LibraryTreeController, SingleWidgetWindowController
 
     import mvc.main as main
 
@@ -42,10 +43,7 @@ if __name__ is '__main__':
     main.check_requirements()
     [ctr_model, logger, ctr_state] = main.main()
 
-    w = gtk.Window()
-    v = LibraryTreeView()
-    c = LibraryTreeController(ctr_model, v)
-    w.add(v.get_top_widget())
-    w.show_all()
+    v = SingleWidgetWindowView(LibraryTreeView, width=50, height=100)
+    c = SingleWidgetWindowController(ctr_model, v, LibraryTreeController)
 
     gtk.main()

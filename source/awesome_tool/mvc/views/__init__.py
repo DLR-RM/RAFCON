@@ -1,7 +1,20 @@
-from state_properties import StatePropertiesView
-from container_state import ContainerStateView
+from state_properties import StatePropertiesView  # old
+from container_state import ContainerStateView  # old
+
 from graphical_editor import GraphicalEditorView
 from state_data_port_editor import StateDataportEditorView
+from single_widget_window import SingleWidgetWindowView
+
 from input_port_list import InputPortsListView
 from output_port_list import OutputPortsListView
 from scoped_variables_list import ScopedVariablesListView
+from state_overview import StateOverviewView
+from source_editor import SourceEditorView
+from connections_editor import StateConnectionsEditorView
+from state_editor import StateEditorView
+
+from state_machine_tree import StateMachineTreeView
+from library_tree import LibraryTreeView
+#from state_editors_notebook import StateEditorsNotebookView
+#from state_machines_notebook import StateMachinesNotebookView
+from full_main_window import FullMainWindowView

@@ -23,7 +23,6 @@ class TransitionListController(Controller):
         """
         Controller.__init__(self, model, view)
 
-
     def register_view(self, view):
         """Called when the View was registered
         """
@@ -72,7 +71,6 @@ class TransitionListController(Controller):
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
-
 
     def on_combo_changed(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))

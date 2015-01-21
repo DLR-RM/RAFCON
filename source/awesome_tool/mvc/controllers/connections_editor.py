@@ -9,7 +9,6 @@ from mvc.controllers.transition_list import TransitionListController
 from mvc.controllers.data_flow_list import DataFlowListController
 
 
-
 class StateConnectionsEditorController(Controller):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
@@ -28,7 +27,6 @@ class StateConnectionsEditorController(Controller):
         Controller.__init__(self, model, view)
         self.transitions_ctrl = TransitionListController(model, view.transitions_view)
         self.dataflows_ctrl = DataFlowListController(model, view.dataflows_view)
-
 
     def register_view(self, view):
         """Called when the View was registered
@@ -118,7 +116,6 @@ class StateConnectionsEditorController(Controller):
     #     pass
     #
     #
-    #
     # @Controller.observe("state", after=True)
     # def after_state_change(self, model, _, info):
     #     """Called after an attribute of the state was set
@@ -163,3 +160,17 @@ class StateConnectionsEditorController(Controller):
     #             for path in selected_paths:
     #                 selection.select_path(path)
 
+if __name__ == '__main__':
+    from mvc.controllers import SingleWidgetWindowController
+    from mvc.views import StateConnectionsEditorView, SingleWidgetWindowView
+
+    import mvc.main as main
+
+    main.setup_path()
+    main.check_requirements()
+    [ctr_model, logger, ctr_state] = main.main()
+
+    v = SingleWidgetWindowView(StateConnectionsEditorView, width=500, height=200, title='Connection Editor')
+    c = SingleWidgetWindowController(ctr_model, v, StateConnectionsEditorController)
+
+    gtk.main()

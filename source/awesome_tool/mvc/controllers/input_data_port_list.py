@@ -92,7 +92,6 @@ class DataPortListController(Controller):
 
         self.model.update_input_data_port_list_store()
 
-
     def on_data_type_changed(self, widget, path, text):
         print path
         old_data_port = self.dataport_list_store[int(path)][0]

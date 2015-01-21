@@ -1,6 +1,6 @@
 import gtk
-from gtkmvc import View, Controller
-from mvc.models import StateModel, ContainerStateModel
+from gtkmvc import Controller
+from mvc.models import ContainerStateModel
 
 
 class LibraryTreeController(Controller):
@@ -52,8 +52,7 @@ class LibraryTreeController(Controller):
 
     def insert_rec(self, parent, state_model):
         #print 'Inserting %s' % str((state.title, state.id, utils.const2str(Point.Point, state.type)))
-        parent = self.tree_store.insert_before(parent, None,
-                                               (state_model.state.name,
+        parent = self.tree_store.insert_before(parent, None, (state_model.state.name,
                                                 state_model.state.state_id,
                                                 state_model.state.state_type))
         print "I use this model %s" % state_model
@@ -71,7 +70,8 @@ class LibraryTreeController(Controller):
 
 
 if __name__ == '__main__':
-    from mvc.views.library_tree import LibraryTreeView
+    from mvc.views import LibraryTreeView, SingleWidgetWindowView
+    from mvc.controllers import SingleWidgetWindowController
 
     import mvc.main as main
 
@@ -79,10 +79,7 @@ if __name__ == '__main__':
     main.check_requirements()
     [ctr_model, logger, ctr_state] = main.main()
 
-    w = gtk.Window()
-    v = LibraryTreeView()
-    c = LibraryTreeController(ctr_model, v)
-    w.add(v.get_top_widget())
-    w.show_all()
+    v = SingleWidgetWindowView(LibraryTreeView, width=50, height=100)
+    c = SingleWidgetWindowController(ctr_model, v, LibraryTreeController)
 
     gtk.main()

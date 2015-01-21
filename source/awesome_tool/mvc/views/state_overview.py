@@ -1,5 +1,5 @@
 import gtk
-from gtkmvc import View, Controller
+from gtkmvc import View
 
 
 class StateOverviewView(View):
@@ -12,19 +12,15 @@ class StateOverviewView(View):
 
 if __name__ == '__main__':
     from statemachine.states.execution_state import ExecutionState as State
-    from statemachine.states.container_state import ContainerState
 
-    from mvc.models import StateModel, ContainerStateModel
-    #from mvc.views.source_editor import SourceEditorView
-    from mvc.controllers.state_overview import StateOverviewController
+    from mvc.models import StateModel
+    from mvc.views import SingleWidgetWindowView
+    from mvc.controllers import StateOverviewController, SingleWidgetWindowController
 
     state1 = State('state1')
     m = StateModel(state1)
 
-    w = gtk.Window()
-    v = StateOverviewView()
-    c = StateOverviewController(m, v)
-    w.add(v.get_top_widget())#['main_frame'])
-    w.show_all()
+    v = SingleWidgetWindowView(StateOverviewView, width=500, height=200, title="State Overview")
+    c = SingleWidgetWindowController(m, v, StateOverviewController)
 
     gtk.main()

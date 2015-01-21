@@ -1,6 +1,6 @@
 import gtk
-from gtkmvc import View, Controller
-from mvc.models import StateModel, ContainerStateModel
+from gtkmvc import Controller
+from mvc.models import ContainerStateModel
 
 
 class StateMachineTreeController(Controller):
@@ -71,7 +71,8 @@ class StateMachineTreeController(Controller):
 
 
 if __name__ == '__main__':
-    from mvc.views.state_machine_tree import StateMachineTreeView
+    from mvc.views import StateMachineTreeView, SingleWidgetWindowView
+    from mvc.controllers import SingleWidgetWindowController
 
     import mvc.main as main
 
@@ -79,10 +80,7 @@ if __name__ == '__main__':
     main.check_requirements()
     [ctr_model, logger, ctr_state] = main.main()
 
-    w = gtk.Window()
-    v = StateMachineTreeView()
-    c = StateMachineTreeController(ctr_model, v)
-    w.add(v.get_top_widget())
-    w.show_all()
+    v = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
+    c = SingleWidgetWindowController(ctr_model, v, StateMachineTreeController)
 
     gtk.main()

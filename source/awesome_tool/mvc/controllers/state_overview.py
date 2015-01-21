@@ -62,19 +62,15 @@ class StateOverviewController(Controller):
 
 if __name__ == '__main__':
     from statemachine.states.execution_state import ExecutionState as State
-    from statemachine.states.container_state import ContainerState
 
-    from mvc.models import StateModel, ContainerStateModel
-    from mvc.views.state_overview import StateOverviewView
-    #from mvc.views.state_editor import StateEditorView
+    from mvc.models import StateModel
+    from mvc.views import StateOverviewView, SingleWidgetWindowView
+    from mvc.controllers import SingleWidgetWindowController
 
     state1 = State('state1')
     m = StateModel(state1)
 
-    w = gtk.Window()
-    v = StateOverviewView()
-    c = StateOverviewController(m, v)
-    w.add(v.get_top_widget())#['main_frame'])
-    w.show_all()
+    v = SingleWidgetWindowView(StateOverviewView, width=500, height=200, title='Source Editor')
+    c = SingleWidgetWindowController(m, v, StateOverviewController)
 
     gtk.main()
