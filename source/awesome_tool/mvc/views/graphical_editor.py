@@ -458,7 +458,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPopName()
         return id, outcome_pos, input_connector_pos, output_connector_pos, scoped_connector_pos
 
-    def draw_transition(self, name, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
+    def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
                         depth=0):
         """Draw a state with the given properties
 
@@ -480,8 +480,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         glPushName(id)
         self._set_closest_line_width(width)
-
-        # TODO: Show name of the transition
 
         if active:
             self.transition_active_color.set()

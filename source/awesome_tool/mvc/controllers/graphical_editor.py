@@ -32,6 +32,9 @@ class GraphicalEditorController(Controller):
         self.mouse_move_start_pos = (0, 0)
         self.last_button_pressed = -1
 
+        self.selected_outcome = None
+        self.selected_waypoint = None
+
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
@@ -136,7 +139,7 @@ class GraphicalEditorController(Controller):
                             logger.debug('Selected waypoint {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                             break
 
-            if self.selection is not None and isinstance(self.selection, StateModel):
+            if self.selection is not None and isinstance(self.selection, StateModel) and self.selection is not self.model:
                 outcomes_close_threshold = 1.5
                 outcomes = self.selection.meta['gui']['editor']['outcome_pos']
                 click = self.mouse_move_start_pos
@@ -245,7 +248,8 @@ class GraphicalEditorController(Controller):
 
         #                                                                            Root container can't be moved
         if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and \
-                self.last_button_pressed == 1:
+                self.last_button_pressed == 1 and self.selected_outcome is None:
+
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
 
@@ -290,6 +294,9 @@ class GraphicalEditorController(Controller):
             # Keep the waypoint within its container state
             new_pos_x, new_pos_y = limit_pos_to_state(self.selection.parent, new_pos_x, new_pos_y)
             self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
+            self._redraw()
+
+        if self.selected_outcome is not None:
             self._redraw()
 
         self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -398,8 +405,8 @@ class GraphicalEditorController(Controller):
                 # Make the inset from the top left corner
                 state_ctr += 1
 
-                child_width = width / float(5)
-                child_height = height / float(5)
+                child_width = width / 5.
+                child_height = height / 5.
 
                 child_pos_x = pos_x + state_ctr * margin
                 child_pos_y = pos_y + height - child_height - state_ctr * margin
@@ -445,7 +452,7 @@ class GraphicalEditorController(Controller):
                 # Let the view draw the transition and store the returned OpenGl object id
                 active = transition.meta['gui']['selected']
                 line_width = min(width, height) / 25.0
-                id = self.view.editor.draw_transition("Transition", from_x, from_y, to_x, to_y, line_width, waypoints,
+                id = self.view.editor.draw_transition(from_x, from_y, to_x, to_y, line_width, waypoints,
                                                       active, depth + 0.5)
                 transition.meta['gui']['editor']['id'] = id
                 transition.meta['gui']['editor']['from_pos_x'] = from_x
@@ -490,6 +497,15 @@ class GraphicalEditorController(Controller):
                 data_flow.meta['gui']['editor']['from_pos_y'] = from_y
                 data_flow.meta['gui']['editor']['to_pos_x'] = to_x
                 data_flow.meta['gui']['editor']['to_pos_y'] = to_y
+
+        if self.selected_outcome is not None and self.last_button_pressed == 1:
+            if self.selected_outcome[0] == state.meta['gui']['editor']['outcome_pos']:
+                outcome = self.selected_outcome[0][self.selected_outcome[1]]
+                cur = self.mouse_move_last_pos
+                line_width = min(state.parent.meta['gui']['editor']['width'], state.parent.meta['gui']['editor'][
+                    'height']) / 25.0
+                self.view.editor.draw_transition(outcome[0], outcome[1], cur[0], cur[1], line_width, [], True,
+                                                 depth + 0.6)
 
 
     def _find_selection(self, pos_x, pos_y):
