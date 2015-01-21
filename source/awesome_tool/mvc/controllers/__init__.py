@@ -1,9 +1,11 @@
 from state_properties import StatePropertiesController  # old
 from container_state import ContainerStateController  # old
+from single_widget_window import SingleWidgetWindowController
 
 from graphical_editor import GraphicalEditorController
 from state_data_port_editor import StateDataPortEditorController
-from single_widget_window import SingleWidgetWindowController
+from global_variable_manager_controller import GlobalVariableManagerController
+from external_module_manager import ExternalModuleManagerController
 
 from state_overview import StateOverviewController
 from source_editor import SourceEditorController

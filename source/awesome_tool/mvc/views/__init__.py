@@ -1,13 +1,15 @@
 from state_properties import StatePropertiesView  # old
 from container_state import ContainerStateView  # old
+from single_widget_window import SingleWidgetWindowView
 
 from graphical_editor import GraphicalEditorView
 from state_data_port_editor import StateDataportEditorView
-from single_widget_window import SingleWidgetWindowView
 
 from input_port_list import InputPortsListView
 from output_port_list import OutputPortsListView
 from scoped_variables_list import ScopedVariablesListView
+from global_variable_editor import GlobalVariableEditorView
+from external_module_manager import ExternalModuleManagerView
 from state_overview import StateOverviewView
 from source_editor import SourceEditorView
 from connections_editor import StateConnectionsEditorView

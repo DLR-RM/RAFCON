@@ -14,6 +14,7 @@ from utils import log
 logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome
 from statemachine.states.state import StateType
+from statemachine.scope import ScopedData
 
 
 class HierarchyState(ContainerState, yaml.YAMLObject):
@@ -50,7 +51,15 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
         try:
             logger.debug("Starting hierarchy state with id %s" % self._state_id)
-            self.enter()
+
+            #handle data for the entry script
+            scoped_variables_as_dict = {}
+            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            #print "Printing Scoped Variables Dict:"
+            #print scoped_variables_as_dict
+            self.enter(scoped_variables_as_dict)
+            self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+
             transition = None
 
             state = self.get_start_state()
@@ -78,8 +87,11 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     transition = self.get_transition_for_outcome(state, state.final_outcome)
                 state = self.get_state_for_transition(transition)
 
-            self.exit()
-            #print transition
+            #handle data for the entry script
+            scoped_variables_as_dict = {}
+            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            self.exit(scoped_variables_as_dict)
+            self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
             #write output data back to the dictionary
             for output_key, value in output_data.iteritems():

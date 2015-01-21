@@ -30,7 +30,7 @@ def class_by_name(module, class_name):
     raise TypeError("%s is not a class." % class_name)
 
 
-EMStatus = Enum('EM_STATUS', 'STOPPED STARTED PAUSED')
+EMStatus = Enum('EM_STATUS', 'DISCONNECTED CONNECTED STOPPED STARTED PAUSED')
 
 
 class ExternalModule(Observable):
@@ -56,7 +56,7 @@ class ExternalModule(Observable):
         self._module_name = module_name
         self._class_name = class_name
         self._module_id = generate_external_module_id()
-        self._status = EMStatus.STOPPED
+        self._status = EMStatus.DISCONNECTED
         self._list_params = args
         self._dict_params = kwargs
         self._tried_load = False
@@ -65,15 +65,18 @@ class ExternalModule(Observable):
         self.__stop_method = None
         self.__pause_method = None
         self.__module_loaded = False
-        self.__class = None
+        self.__external_module_class = None
         self.__instance = None
+
+        self.load()
+        self.__module_loaded = True
 
     def load(self):
         """loads and imports the external module
 
         """
         logger.debug("load external module %s" % str(self._module_name))
-        if not self.__class:
+        if not self.__external_module_class:
             self._tried_load = True
             #try:
             if not self._module_name in sys.modules:
@@ -81,7 +84,7 @@ class ExternalModule(Observable):
             else:
                 reload(sys.modules[self._module_name])
             mod = sys.modules[self._module_name]
-            self.__class = class_by_name(mod, self._class_name)
+            self.__external_module_class = class_by_name(mod, self._class_name)
             #except:
             #    raise IOError("External module could not be loaded")
 
@@ -89,18 +92,24 @@ class ExternalModule(Observable):
         """reloads the external module
 
         """
-        if not self.__class:
+        if not self.__external_module_class:
             self.load()
         else:
             mod = sys.modules[self._module_name]
             reload(mod)
-            self.__class = class_by_name(mod, self._class_name)
+            self.__external_module_class = class_by_name(mod, self._class_name)
 
-    def connect(self, list_arguments):
+    @Observable.observed
+    def connect(self, list_arguments=[]):
         """creates an instance of the class given by self._class_name and connects the default functions of the external
         module class to the custom functions of external module
 
         """
+        #print self._status
+        if not self._status is EMStatus.DISCONNECTED:
+            logger.debug("module %s is already connected" % str(self._module_name))
+            return
+
         if not self.__module_loaded:
             self.load()
             self.__module_loaded = True
@@ -108,11 +117,15 @@ class ExternalModule(Observable):
         logger.debug("connect to the external module %s" % str(self._module_name))
         if not isinstance(list_arguments, list):
             raise TypeError("list_arguments should be of type list")
-        self.__instance = self.__class(*self._list_params, **self._dict_params)
+        self.__instance = self.__external_module_class(*self._list_params, **self._dict_params)
+        #print "functions of class: ", dir(self.__class)
+        #import inspect
+        #print inspect.getmembers(self.__class, predicate=inspect.ismethod)
+        #print inspect.getdoc(getattr(self.__class, "custom_function"))
         #try:
-        self.__start_method = self.__class.start
-        self.__stop_method = self.__class.stop
-        self.__pause_method = self.__class.pause
+        self.__start_method = self.__external_module_class.start
+        self.__stop_method = self.__external_module_class.stop
+        self.__pause_method = self.__external_module_class.pause
         if not inspect.ismethod(self.__start_method):
             self.__start_method = None
         if not inspect.ismethod(self.__stop_method):
@@ -121,7 +134,9 @@ class ExternalModule(Observable):
             self.__pause_method = None
         #except AttributeError:
         #    pass
+        self._status = EMStatus.CONNECTED
 
+    @Observable.observed
     def disconnect(self):
         """stops the external module and disconnect the default functions
 
@@ -132,27 +147,40 @@ class ExternalModule(Observable):
         self.__start_method = None
         self.__stop_method = None
         self.__pause_method = None
+        self._status = EMStatus.DISCONNECTED
 
+    @Observable.observed
     def start(self):
         """starts the external module
 
         """
+        if self._status is EMStatus.DISCONNECTED:
+            logger.debug("Module %s must be connected before in can be started" % str(self._module_name))
+            return
         if self.__start_method:
             self.__start_method(self.__instance)
             self._status = EMStatus.STARTED
 
+    @Observable.observed
     def pause(self):
         """pauses the external module
 
         """
+        if self._status is EMStatus.DISCONNECTED:
+            logger.debug("Module %s must be connected before in can be paused" % str(self._module_name))
+            return
         if self.__pause_method:
             self.__pause_method(self.__instance)
             self._status = EMStatus.PAUSED
 
+    @Observable.observed
     def stop(self):
         """stops the external module
 
         """
+        if self._status is EMStatus.DISCONNECTED:
+            logger.debug("Module %s must be connected before in can be stopped" % str(self._module_name))
+            return
         if self.__stop_method:
             self.__stop_method(self.__instance)
             self._status = EMStatus.STOPPED
@@ -185,8 +213,8 @@ class ExternalModule(Observable):
     @status.setter
     @Observable.observed
     def status(self, status):
-        if not isinstance(status, dict):
-            raise TypeError("external_modules must be of type dict")
+        if not isinstance(status, EMStatus):
+            raise TypeError("status must be of type EMStatus")
         self._status = status
 
     @property
@@ -200,3 +228,15 @@ class ExternalModule(Observable):
     @Observable.observed
     def instance(self, instance):
         self.__instance = instance
+
+    @property
+    def external_module_class(self):
+        """Property for the __external_module_class field
+
+        """
+        return self.__external_module_class
+
+    @external_module_class.setter
+    @Observable.observed
+    def external_module_class(self, external_module_class):
+        self.__external_module_class = external_module_class

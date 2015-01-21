@@ -47,7 +47,14 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
         try:
             logger.debug("Starting preemptive concurrency state with id %s" % self._state_id)
-            self.enter()
+
+            #handle data for the entry script
+            scoped_variables_as_dict = {}
+            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            #print "Printing Scoped Variables Dict:"
+            #print scoped_variables_as_dict
+            self.enter(scoped_variables_as_dict)
+            self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
             #start all threads
             for key, state in self.states.iteritems():
@@ -78,7 +85,11 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             self.check_output_data_type(output_data)
 
-            self.exit()
+            #handle data for the entry script
+            scoped_variables_as_dict = {}
+            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            self.exit(scoped_variables_as_dict)
+            self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")

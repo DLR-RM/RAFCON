@@ -2,7 +2,7 @@ from gtkmvc import View
 from mvc.views.input_port_list import InputPortsListView
 from mvc.views.output_port_list import OutputPortsListView
 from mvc.views.scoped_variables_list import ScopedVariablesListView
-import gtk
+
 
 class StateDataportEditorView(View):
     builder = './glade/StateDataportEditor.glade'
@@ -19,32 +19,21 @@ class StateDataportEditorView(View):
         self['output_ports_scroller'].add(self.output_port_list_view.get_top_widget())
         self['scoped_variables_scroller'].add(self.scoped_variables_list_view.get_top_widget())
 
-        #toplevel = gtk.window_list_toplevels()
-        #toplevel.get_propertey("name")
-        #print toplevel
-        #print toplevel[0].get_property("name")
-        #print self['output_ports_scroller'].get_property("parent")
-
         self.top_box = self['vbox1']
 
         self.expanders = []
-        #self.expanders.append(self.builder.get_object("input_ports_expander"))
         self.expanders.append(self["input_ports_expander"])
         self.expanders[0].connect("activate", self.on_expander_activate)
 
-        #self.expanders.append(self.builder.get_object("output_ports_expander"))
         self.expanders.append(self["output_ports_expander"])
         self.expanders[1].connect("activate", self.on_expander_activate)
 
-        #self.expanders.append(self.builder.get_object("scoped_variables_expander"))
         self.expanders.append(self["scoped_variables_expander"])
         self.expanders[2].connect("activate", self.on_expander_activate)
 
 
     #this will be called before the expander is activated
     def on_expander_activate(self, widget, data=None):
-
-        #print widget.get_expanded()
 
         # deactivate other expanders
         for expander in self.expanders:
@@ -60,4 +49,4 @@ class StateDataportEditorView(View):
             else:
                 self.top_box.set_child_packing(expander, False, fill, padding, pack_type)
 
-        print "Reset Expander Values"
+        #print "Reset Expander Values"

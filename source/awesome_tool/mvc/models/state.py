@@ -1,9 +1,13 @@
 
 from gtkmvc import ModelMT
+import gobject
+from gtk import ListStore
+import gtk
+
 from statemachine.states.state import State
 from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
-from gtk import ListStore
 from utils.vividict import Vividict
+from mvc.models.data_port import DataPortModel
 
 class StateModel(ModelMT):
     """This model class manages a State
@@ -14,8 +18,10 @@ class StateModel(ModelMT):
      """
 
     state = None
+    input_data_ports = []
+    output_data_ports = []
 
-    __observables__ = ("state",)
+    __observables__ = ("state", "input_data_ports", "output_data_ports")
 
     _table = TableDescriptor()
     _table.add_column(ColumnDescriptor(0, 'key', str))
@@ -48,8 +54,12 @@ class StateModel(ModelMT):
         self.update_attributes()
 
         self.register_observer(self)
-
-        return
+        self.input_data_ports = []
+        self.output_data_ports = []
+        self.input_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
+        self.output_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
+        self.update_input_data_port_list_store()
+        self.update_output_data_port_list_store()
 
     def update_attributes(self):
         """Update table model with state model
@@ -88,3 +98,47 @@ class StateModel(ModelMT):
     def model_changed(self, model, name, info):
         if self.parent is not None:
             self.parent.model_changed(model, name, info)
+
+    def update_input_data_port_list_store(self):
+        tmp = ListStore(gobject.TYPE_PYOBJECT)
+        self.input_data_ports = []
+        for input_data_port in self.state.input_data_ports.itervalues():
+            self.input_data_ports.append(DataPortModel(input_data_port, self))
+            tmp.append([input_data_port])
+        tms = gtk.TreeModelSort(tmp)
+        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        tms.set_sort_func(0, dataport_compare_method)
+        tms.sort_column_changed()
+        tmp = tms
+        self.input_data_port_list_store.clear()
+        for elem in tmp:
+            self.input_data_port_list_store.append(elem)
+
+    def update_output_data_port_list_store(self):
+        tmp = ListStore(gobject.TYPE_PYOBJECT)
+        self.output_data_ports = []
+        for output_data_port in self.state.output_data_ports.itervalues():
+            self.output_data_ports.append(DataPortModel(output_data_port, self))
+            tmp.append([output_data_port])
+        tms = gtk.TreeModelSort(tmp)
+        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        tms.set_sort_func(0, dataport_compare_method)
+        tms.sort_column_changed()
+        tmp = tms
+        self.output_data_port_list_store.clear()
+        for elem in tmp:
+            self.output_data_port_list_store.append(elem)
+
+def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
+    path1 = treemodel.get_path(iter1)[0]
+    path2 = treemodel.get_path(iter2)[0]
+    name1 = treemodel[path1][0].name
+    name2 = treemodel[path2][0].name
+    name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
+    name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
+    if name1_as_bits == name2_as_bits:
+        return 0
+    elif name1_as_bits > name2_as_bits:
+        return 1
+    else:
+        return -1

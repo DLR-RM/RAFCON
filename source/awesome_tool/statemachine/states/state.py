@@ -100,11 +100,12 @@ class DataPort(Observable, yaml.YAMLObject):
     @data_type.setter
     @Observable.observed
     def data_type(self, data_type):
-        if not isinstance(data_type, str):
-            raise TypeError("data_type must be of type str")
-        if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
-            if not getattr(sys.modules[__name__], data_type):
-                raise TypeError("" + data_type + " is not a valid python data type")
+        if not data_type is None:
+            if not isinstance(data_type, str):
+                raise TypeError("data_type must be of type str")
+            if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
+                if not getattr(sys.modules[__name__], data_type):
+                    raise TypeError("" + data_type + " is not a valid python data type")
         self._data_type = data_type
 
     @property
@@ -170,6 +171,8 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             self._state_id = state_id_generator()
         else:
             self._state_id = state_id
+        self._state_type = None
+        self.state_type = state_type
 
         self._input_data_ports = None
         self.input_data_ports = input_data_ports
@@ -200,15 +203,12 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         self._preempted = False
         self._concurrency_queue = None
         self._final_outcome = None
-        self._state_type = None
-        self.state_type = state_type
-
         self._description = None
 
         logger.debug("State with id %s initialized" % self._state_id)
 
     @Observable.observed
-    def add_input_data_port(self, name, data_type, default_value=None):
+    def add_input_data_port(self, name, data_type=None, default_value=None):
         """Add a new input data port to the state
 
         :param name: the name of the new input data port
@@ -218,14 +218,21 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """
         self._input_data_ports[name] = DataPort(name, data_type, default_value)
 
+    @Observable.observed
     def remove_input_data_port(self, name):
         """Remove an input data port from the state
 
         :param name: the name or the output data port to remove
 
         """
-        self._input_data_ports.pop(name, None)
+        print "input_data_ports:", self._input_data_ports
+        if name in self._input_data_ports:
+            del self._input_data_ports[name]
+        else:
+            raise AttributeError("input data port with name %s does not exit", name)
+        print "input_data_ports:", self._input_data_ports
 
+    @Observable.observed
     def add_output_data_port(self, name, data_type, default_value=None):
         """Add a new output data port to the state
 
@@ -236,14 +243,20 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """
         self._output_data_ports[name] = DataPort(name, data_type, default_value)
 
+    @Observable.observed
     def remove_output_data_port(self, name):
         """Remove an output data port from the state
 
         :param name: the name of the output data port to remove
 
         """
-        self._output_data_ports.pop(name, None)
+        print "output_data_ports: ", self._output_data_ports
+        if name in self._output_data_ports:
+            del self._output_data_ports[name]
+        else:
+            raise AttributeError("output data port with name %s does not exit", name)
 
+    @Observable.observed
     def add_outcome(self, name, outcome_id=None):
         """Add a new outcome to the state
 
@@ -261,14 +274,22 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             return
         outcome = Outcome(outcome_id, name)
         self._outcomes[outcome_id] = outcome
+        self.__used_outcome_ids.append(outcome_id)
         return outcome_id
 
+    @Observable.observed
     def remove_outcome(self, outcome_id):
         """Remove an outcome from the state
 
         :param outcome_id: the id of the outcome to remove
 
         """
+        if not outcome_id in self.__used_outcome_ids:
+            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
+
+        if outcome_id == -1 or outcome_id == -2:
+            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
+                                 "return aborted or preempted")
         self.__used_outcome_ids.remove(outcome_id)
         self._outcomes.pop(outcome_id, None)
 
@@ -368,6 +389,8 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             for key, value in input_data_ports.iteritems():
                 if not isinstance(value, DataPort):
                     raise TypeError("element of input_data_ports must be of type DataPort")
+                if not key == value.name:
+                    raise AttributeError("the key of the input dictionary and the name of the data port do not match")
             self._input_data_ports = input_data_ports
 
     @property
@@ -402,9 +425,12 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     def outcomes(self, outcomes):
         if outcomes is None:
             self._outcomes = {}
-            self.add_outcome("success", 0)
             self.add_outcome("aborted", -1)
             self.add_outcome("preempted", -2)
+            if self.state_type is StateType.BARRIER_CONCURRENCY:
+                #for a barrier concurrency case, there is only one successfull outcome
+                self.add_outcome("success", 0)
+
         else:
             if not isinstance(outcomes, dict):
                 raise TypeError("outcomes must be of type dict")
@@ -412,9 +438,10 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
                 if not isinstance(value, Outcome):
                     raise TypeError("element of outcomes must be of type Outcome")
             self._outcomes = outcomes
-            #check if aborted and preempted exists
-            if not "success" in outcomes:
-                self.add_outcome("success", 0)
+            if self.state_type is StateType.BARRIER_CONCURRENCY:
+                if not "success" in outcomes:
+                    self.add_outcome("success", 0)
+            #aborted and preempted must always exist
             if not "aborted" in outcomes:
                 self.add_outcome("aborted", -1)
             if not "preempted" in outcomes:
@@ -594,7 +621,8 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     @Observable.observed
     def description(self, description):
         if not isinstance(description, str):
-            raise TypeError("ID must be of type str")
+            if not isinstance(description, unicode):
+                raise TypeError("ID must be of type str or unicode")
         if len(description) < 1:
             raise ValueError("ID must have at least one character")
 

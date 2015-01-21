@@ -4,6 +4,7 @@ logger = log.get_logger(__name__)
 
 from math import sin, cos, pi, floor, ceil
 from itertools import chain
+from enum import Enum
 
 import OpenGL
 from OpenGL.GL import *
@@ -21,6 +22,13 @@ import gtk
 import gtk.gtkgl
 import gtk.gdkgl
 from gtkmvc import View
+
+
+class Direction(Enum):
+    top = 1
+    right = 2
+    bottom = 3
+    left = 4
 
 
 class Color:
@@ -124,7 +132,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     state_color = Color(0.9, 0.9, 0.9, 0.8)
     state_active_color = Color(0.7, 0, 0, 0.8)
     state_name_color = Color(0.2, 0.2, 0.2, 1)
-    state_port_name_color = Color(0.2, 0.2, 0.2, 1)
+    port_color = Color(0.7, 0.7, 0.7, 0.8)
+    port_name_color = Color(0.2, 0.2, 0.2, 1)
     transition_color = Color(0.4, 0.4, 0.4, 0.8)
     transition_active_color = Color(0.7, 0, 0, 0.8)
     data_flow_color = Color(0.6, 0.6, 0.6, 0.8)
@@ -283,7 +292,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         #logger.debug("expose_finish")
 
-    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0, inputs={}, outputs={}, active=False, depth=0):
+    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0, inputs={}, outputs={}, scoped_vars={},
+                   active=False, depth=0):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified (container) state.
@@ -292,7 +302,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param pos_y: y position of the state
         :param width: width of the state
         :param height: height of the state
-        :param outcomes: outcomes of teh state (list with outcome objects)
+        :param outcomes: outcomes of the state (list with outcome objects)
+        :param inputs: input ports of the state
+        :param outputs: output ports of the state
+        :param scoped_vars: scoped variable ports of the state
         :param active: whether to display the state as active/selected
         :param depth: The z layer
         :return: The OpenGL id and the positions of teh outcomes (as dictionary with outcome id as key)
@@ -346,7 +359,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         input_connector_pos = {}
         output_connector_pos = {}
         if num_ports > 0:
-            max_num_chr = -1
             max_name_width = 0
             margin = height / 10.0
             max_allowed_name_width = 0.7 * width - margin
@@ -358,7 +370,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 if str_width > max_name_width:
                     max_name_width = str_width
 
-            fill_color = self.state_color
+            fill_color = self.port_color
             if active:
                 fill_color = self.state_active_color
 
@@ -384,7 +396,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                     string_pos_x += port_width
                 string_pos_y = pos_y - margin/2. - num * (str_height + margin)
                 self._write_string(port_name, string_pos_x, string_pos_y,
-                                   str_height, self.state_port_name_color, 1.5, not is_input, depth+0.01)
+                                   str_height, self.port_name_color, 1.5, not is_input, depth+0.01)
 
                 circle_pos_x = port_pos_left_x if is_input else port_pos_right_x
                 circle_pos_y = string_pos_y - margin/2.
@@ -402,8 +414,49 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 output_connector_pos[port.name] = (con_pos_x, con_pos_y)
                 output_num += 1
 
+        # Draw input and output data ports
+        scoped_connector_pos = {}
+        if len(scoped_vars) > 0:
+            max_scope_width = width * 0.9
+            max_single_scope_width = max_scope_width / len(scoped_vars)
+            margin = height / 50.
+            str_height = height / 35.0
+            port_pos_left_x = pos_x + width / 2 - len(scoped_vars) * max_single_scope_width / 2
+            port_pos_top_y = pos_y + height - margin
+            num = 0
+
+            for key in scoped_vars:
+                port_name = scoped_vars[key].name
+                trim_len = len(port_name)
+                while trim_len > 1:
+                    if self._string_width(port_name[0:trim_len-1], str_height) <= max_single_scope_width - margin:
+                        break
+                    trim_len -= 1
+                if trim_len < len(port_name):
+                    port_name = port_name[0:trim_len-2] + '~'
+                str_width = self._string_width(port_name, str_height)
+
+                move_x = num * (str_width + 2 * margin)
+                connect = self._draw_rect_arrow(port_pos_left_x + move_x, port_pos_left_x + move_x + str_width + margin,
+                                      port_pos_top_y - str_height - margin, port_pos_top_y, Direction.bottom,
+                                      self.port_color, self.border_color, depth+0.01)
+
+                string_pos_x = port_pos_left_x + margin/2. + move_x
+                string_pos_y = port_pos_top_y - margin/2. # - num * (str_height + margin)
+                self._write_string(port_name, string_pos_x, string_pos_y, str_height, self.port_name_color,
+                                           1.5,
+                                   False, depth+0.02)
+
+                #circle_pos_x = string_pos_x + margin/2. + str_width/2.
+                #circle_pos_y = string_pos_y - margin - str_height
+                self._draw_circle(connect[0], connect[1], depth+0.02, margin / 4.)
+                num += 1
+                scoped_connector_pos[key] = connect
+                pass
+
+
         glPopName()
-        return id, outcome_pos, input_connector_pos, output_connector_pos
+        return id, outcome_pos, input_connector_pos, output_connector_pos, scoped_connector_pos
 
     def draw_transition(self, name, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
                         depth=0):
@@ -610,6 +663,46 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glVertex3f(right_x, top_y, depth)
             glVertex3f(left_x, top_y, depth)
             glEnd()
+
+    def _draw_rect_arrow(self, left_x, right_x, bottom_y, top_y, arrow_pos, fill_color, border_color, depth):
+        self._draw_rect(left_x, right_x, bottom_y, top_y, fill_color, border_color, depth)
+
+        width = right_x - left_x
+        height = top_y - bottom_y
+        arrow_width = min(width, height) / 1.5
+        a = (0, 0)
+        b = (0, 0)
+        c = (0, 0)
+
+        if arrow_pos == Direction.top:
+            a = (left_x + width/2 - arrow_width/2, top_y)
+            b = (left_x + width/2 + arrow_width/2, top_y)
+            c = (left_x + width/2, top_y + arrow_width)
+        elif arrow_pos == Direction.bottom:
+            a = (left_x + width/2 - arrow_width/2, bottom_y)
+            b = (left_x + width/2 + arrow_width/2, bottom_y)
+            c = (left_x + width/2, bottom_y - arrow_width)
+        elif arrow_pos == Direction.right:
+            a = (left_x, bottom_y + height/2 - arrow_width/2)
+            b = (left_x, bottom_y + height/2 + arrow_width/2)
+            c = (left_x - arrow_width, bottom_y + height/2)
+        elif arrow_pos == Direction.right:
+            a = (right_x, bottom_y + height/2 - arrow_width/2)
+            b = (right_x, bottom_y + height/2 + arrow_width/2)
+            c = (right_x + arrow_width, bottom_y + height/2)
+
+        for type in (GL_POLYGON, GL_LINE_LOOP):
+            if type == GL_POLYGON:
+                fill_color.set()
+            else:
+                border_color.set()
+            glBegin(type)
+            glVertex3f(a[0], a[1], depth)
+            glVertex3f(b[0], b[1], depth)
+            glVertex3f(c[0], c[1], depth)
+            glEnd()
+
+        return c
 
     @staticmethod
     def _draw_circle(pos_x, pos_y, depth, radius, segments=10):
