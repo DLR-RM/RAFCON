@@ -35,6 +35,42 @@ class StateEditorView(View):
         #self['expander3_ScriptEditor'].add(self['source_editor_view'].get_top_widget())
         #self['expander4_ConnectionEditor'].add(self['state_connections_editor_view']['vbox1'])
 
+        self['port_expander'].connect('size-request', self.resize_port_widget)
+        self['port_expander1'].connect('size-request', self.resize_port_widget)
+        self['port_expander2'].connect('size-request', self.resize_port_widget)
+        self['port_expander3'].connect('size-request', self.resize_port_widget)
+        self['port_expander4'].connect('size-request', self.resize_port_widget)
+        self['connections_expander'].connect('size-request', self.resize_connections_widget)
+        self['connections_view']['transitions_expander'].connect('size-request', self.resize_connections_widget)
+        self['connections_view']['dataflows_expander'].connect('size-request', self.resize_connections_widget)
+
+    def resize_port_widget(self, expander, x):
+
+        if self['port_expander'].get_expanded():
+            count = 0
+            for i in range(1, 5):
+                if self['port_expander'+str(i)].get_expanded():
+                    print "%s is expanded" % ('port_expander'+str(i))
+                    count += 1
+            self['port_expander'].set_size_request(width=-1, height=count*150+100)
+        else:
+            self['port_expander'].set_size_request(width=-1, height=-1)
+
+    def resize_connections_widget(self, expander, x):
+
+        if self['connections_expander'].get_expanded():
+            count = 0
+            for expand_id in ['transitions_expander', 'dataflows_expander']:
+                if self['connections_view'][expand_id].get_expanded():
+                    print "%s is expanded" % expand_id
+                    count += 1
+            self['connections_expander'].set_size_request(width=-1, height=count*150+75)
+            self['vpaned1'].set_position(1000)
+        else:
+            self['connections_expander'].set_size_request(width=-1, height=-1)
+            self['vpaned1'].set_position(1000)
+            #print "position: %s" % self.view['vpaned1'].get_position()
+
 
 if __name__ == '__main__':
     from statemachine.states.execution_state import ExecutionState as State
@@ -51,10 +87,10 @@ if __name__ == '__main__':
 
     main.setup_path()
     main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
+    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
 
-    v = SingleWidgetWindowView(StateEditorView, width=550, height=550, title='State Editor')
-    c = SingleWidgetWindowController(ctr_model, v, StateEditorController)
-    #c = StateEditorController(m, v)
+    v = SingleWidgetWindowView(StateEditorView, width=550, height=600, title='State Editor')
+    #c = SingleWidgetWindowController(ctr_model, v, StateEditorController)
+    c = SingleWidgetWindowController(m, v, StateEditorController)
 
     gtk.main()

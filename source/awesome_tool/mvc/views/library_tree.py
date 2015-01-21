@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     main.setup_path()
     main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
+    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
 
     v = SingleWidgetWindowView(LibraryTreeView, width=50, height=100)
     c = SingleWidgetWindowController(ctr_model, v, LibraryTreeController)

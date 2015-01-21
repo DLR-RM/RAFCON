@@ -84,6 +84,7 @@ class Color:
 
 
 class GraphicalEditorView(View):
+    top = 'main_frame'
 
     def __init__(self):
         """View holding the graphical editor
@@ -103,9 +104,9 @@ class GraphicalEditorView(View):
             raise SystemExit
 
         # Only temporary, later the editor won't be in an own window
-        self.win = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.win.set_title("Graphical Editor")
-        self.win.set_position(1)
+        # self.win = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        # self.win.set_title("Graphical Editor")
+        # self.win.set_position(1)
         self.v_box = gtk.VBox()
         #self.test_label = gtk.Label("Hallo")
         self.editor = GraphicalEditor(glconfig)
@@ -115,15 +116,16 @@ class GraphicalEditorView(View):
         #self.v_box.pack_start(self.test_label)
         self.v_box.pack_end(self.editor)
 
-        self.win.add(self.v_box)
-        self.win.show_all()
-        self.win.connect("destroy", lambda w: gtk.main_quit())
+        # self.win.add(self.v_box)
+        # self.win.show_all()
+        # self.win.connect("destroy", lambda w: gtk.main_quit())
+        self['main_frame'] = self.v_box
 
         # Query the OpenGL extension version.
         print "OpenGL extension version - %d.%d\n" % gtk.gdkgl.query_version()
 
-    def get_top_widget(self):
-        return self.win
+    # def get_top_widget(self):
+    #     return self.win
 
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):

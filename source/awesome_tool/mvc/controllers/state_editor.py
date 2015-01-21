@@ -5,7 +5,7 @@ from mvc.controllers.container_state import ContainerStateController
 from mvc.controllers.connections_editor import StateConnectionsEditorController
 from mvc.controllers.state_overview import StateOverviewController
 
-from mvc.controllers.input_data_port_list import DataPortListController
+from mvc.controllers import DataPortListController
 from gtkmvc import Observer
 
 
@@ -42,15 +42,6 @@ class StateEditorController(Controller):
         """
         #view['entry_name'].connect('focus-out-event', self.change_name)
         #view['entry_name'].set_text(self.model.state.name)
-        view['port_expander'].connect('size-request', self.resize_port_widget)
-        view['port_expander1'].connect('size-request', self.resize_port_widget)
-        view['port_expander2'].connect('size-request', self.resize_port_widget)
-        view['port_expander3'].connect('size-request', self.resize_port_widget)
-        view['port_expander4'].connect('size-request', self.resize_port_widget)
-        view['connections_expander'].connect('size-request', self.resize_connections_widget)
-        view['connections_view']['transitions_expander'].connect('size-request', self.resize_connections_widget)
-        view['connections_view']['dataflow_expander'].connect('size-request', self.resize_connections_widget)
-        view.get_top_widget().connect('destroy', gtk.main_quit)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -66,33 +57,6 @@ class StateEditorController(Controller):
         print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
               (prop_name, info.instance, info.method_name, info.result)
         model.update_input_data_port_list_store()
-
-    def resize_port_widget(self, expander, x):
-
-        if self.view['port_expander'].get_expanded():
-            count = 0
-            for i in range(1, 5):
-                if self.view['port_expander'+str(i)].get_expanded():
-                    print "%s is expanded" % ('port_expander'+str(i))
-                    count += 1
-            self.view['port_expander'].set_size_request(width=-1, height=count*150+100)
-        else:
-            self.view['port_expander'].set_size_request(width=-1, height=-1)
-
-    def resize_connections_widget(self, expander, x):
-
-        if self.view['connections_expander'].get_expanded():
-            count = 0
-            for expand_id in ['transitions_expander', 'dataflows_expander']:
-                if self.view['connections_view'][expand_id].get_expanded():
-                    print "%s is expanded" % expand_id
-                    count += 1
-            self.view['connections_expander'].set_size_request(width=-1, height=count*150+75)
-            self.view['vpaned1'].set_position(1000)
-        else:
-            self.view['connections_expander'].set_size_request(width=-1, height=-1)
-            self.view['vpaned1'].set_position(1000)
-            #print "position: %s" % self.view['vpaned1'].get_position()
 
 
 if __name__ == '__main__':

@@ -6,9 +6,9 @@ from utils import log
 from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController
+    SourceEditorController, SingleWidgetWindowController,StateEditorController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView
+    GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
 from statemachine.states.execution_state import ExecutionState
@@ -108,6 +108,7 @@ def create_models(*args, **kargs):
     ctr_model = ContainerStateModel(ctr_state)
 
     external_module_manager_model = ExternalModuleManagerModel()
+    sys.path.insert(0, '../../test_scripts')
     em = ExternalModule(name="External Module 1", module_name="external_module_test", class_name="TestModule")
     external_module_manager_model.external_module_manager.add_external_module(em)
     external_module_manager_model.external_module_manager.external_modules["External Module 1"].connect([])
@@ -122,7 +123,6 @@ def create_models(*args, **kargs):
     return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
 
 
-
 if __name__ == "__main__":
     setup_path()
     check_requirements()
@@ -131,12 +131,11 @@ if __name__ == "__main__":
     sdev = StateDataportEditorView()
     StateDataPortEditorController(ctr_model, sdev)
 
-    w = gtk.Window()
-    v = SourceEditorView()
-    c = SourceEditorController(ctr_model, v)
-    w.resize(width=550, height=500)
-    w.add(v.get_top_widget())
-    w.show_all()
+    #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
+    #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
+
+    state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
+    state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
 
     #ctr_view = ContainerStateView()
     #ContainerStateController(ctr_model, ctr_view)
@@ -147,8 +146,8 @@ if __name__ == "__main__":
     external_module_manager_view = ExternalModuleManagerView()
     ExternalModuleManagerController(emm_model, external_module_manager_view)
 
-    editor_view = GraphicalEditorView()
-    editor_ctrl = GraphicalEditorController(ctr_model, editor_view)
+    editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
+    editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
 
     gtk.main()
     logger.debug("after gtk main")

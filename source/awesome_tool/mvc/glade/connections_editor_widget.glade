@@ -18,7 +18,7 @@
               <object class="GtkHBox" id="hbox4">
                 <property name="visible">True</property>
                 <child>
-                  <object class="GtkCheckButton" id="checkbutton_internal">
+                  <object class="GtkCheckButton" id="internal_t_checkbutton_internal">
                     <property name="label" translatable="yes">Internal</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -33,7 +33,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="checkbutton2">
+                  <object class="GtkCheckButton" id="connected_to_tcheckbutton">
                     <property name="label" translatable="yes">Connected to</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -48,7 +48,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="cancel_transition_edit_button">
+                  <object class="GtkButton" id="cancel_t_edit_button">
                     <property name="label" translatable="yes">Cancel</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -59,7 +59,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="add_transition_button">
+                  <object class="GtkButton" id="add_t_button">
                     <property name="label" translatable="yes">Add</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -70,7 +70,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="remove_transition_button">
+                  <object class="GtkButton" id="remove_t_button">
                     <property name="label" translatable="yes">Remove</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -150,7 +150,7 @@
               <object class="GtkHBox" id="hbox1">
                 <property name="visible">True</property>
                 <child>
-                  <object class="GtkCheckButton" id="checkbutton_internal1">
+                  <object class="GtkCheckButton" id="internal_d_checkbutton">
                     <property name="label" translatable="yes">Internal</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -165,7 +165,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="checkbutton1">
+                  <object class="GtkCheckButton" id="connected_to_d_checkbutton">
                     <property name="label" translatable="yes">Connected to</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -180,7 +180,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="cancel_dataflow_edit_button">
+                  <object class="GtkButton" id="cancel_d_edit_button">
                     <property name="label" translatable="yes">Cancel</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -191,7 +191,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="add_dataflow_button">
+                  <object class="GtkButton" id="add_d_button">
                     <property name="label" translatable="yes">Add</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -202,7 +202,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="remove_dataflow_button">
+                  <object class="GtkButton" id="remove_d_button">
                     <property name="label" translatable="yes">Remove</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>

@@ -1,11 +1,7 @@
 import gtk
-from gtkmvc import View, Controller
-from mvc.controllers.source_editor import SourceEditorController
-from mvc.controllers.container_state import ContainerStateController
-from mvc.controllers.connections_editor import StateConnectionsEditorController
-from mvc.controllers.state_overview import StateOverviewController
+from gtkmvc import Controller
+from mvc.controllers import StateEditorController, LibraryTreeController, StateMachineTreeController, GraphicalEditorController
 
-from mvc.controllers.input_data_port_list import DataPortListController
 from gtkmvc import Observer
 
 
@@ -28,9 +24,10 @@ class FullMainWindowController(Controller):
         """
         Controller.__init__(self, model, view)
 
-        self.open_statemachine_list = []
-
-        self.state_editor_notebook_ctrl = StateEditorNotebookController(model, view['state_editor_notebook'])
+        self.library_tree_ctrl = LibraryTreeController(model, view.library_tree)
+        self.state_machine_tree_ctrl = StateMachineTreeController(model, view.state_machine_tree)
+        self.state_editors_ctrl = StateEditorController(model, view.state_editors)
+        self.state_machines_ctrl = GraphicalEditorController(model, view.state_machines_editors)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -57,8 +54,8 @@ if __name__ == '__main__':
 
     main.setup_path()
     main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
-    # TODO create new model for to control and edit multiple statemachines
+    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
+    # TODO create new model to control and edit multiple statemachines
 
     #w = gtk.Window()
     v = FullMainWindowView()

@@ -33,7 +33,17 @@ class StateConnectionsEditorController(Controller):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        #view['container_state_widget'].connect('destroy', gtk.main_quit)
+        view['add_t_button'].connect('clicked', self.on_add_transition_clicked)
+        view['cancel_t_edit_button'].connect('clicked', self.on_cancel_transition_edit_clicked)
+        view['remove_t_button'].connect('clicked', self.on_remove_transition_clicked)
+        view['connected_to_t_checkbutton'].connect('toggled', self.toggled_connected_to_for_transitions)
+        view['internal_t_checkbutton'].connect('toggled', self.toggled_internal_for_transitions)
+
+        view['add_d_button'].connect('clicked', self.on_add_dataflow_clicked)
+        view['cancel_d_edit_button'].connect('clicked', self.on_cancel_dataflow_edit_clicked)
+        view['remove_d_button'].connect('clicked', self.on_remove_dataflow_clicked)
+        view['connected_to_d_checkbutton'].connect('toggled', self.toggled_connected_to_for_dataflows)
+        view['internal_d_checkbutton'].connect('toggled', self.toggled_internal_for_dataflows)
 
         # view['state_properties_view'].set_model(self.model.list_store)
         #
@@ -52,6 +62,37 @@ class StateConnectionsEditorController(Controller):
     #     if type(outcome) != bool:
     #         logger.warning("Invalid value: %s" % outcome)
     #
+
+    def on_add_transition_clicked(self):
+        pass
+
+    def on_cancel_transition_edit_clicked(self):
+        pass
+
+    def on_remove_transition_clicked(self):
+        pass
+
+    def toggled_connected_to_for_transitions(self):
+        pass
+
+    def toggled_internal_for_transitions(self):
+        pass
+
+    def on_add_dataflow_clicked(self):
+        pass
+
+    def on_cancel_dataflow_edit_clicked(self):
+        pass
+
+    def on_remove_dataflow_clicked(self):
+        pass
+
+    def toggled_connected_to_for_dataflows(self):
+        pass
+
+    def toggled_internal_for_dataflows(self):
+        pass
+
     def __state_property_adapter(self, attr_name, label, view=None, value_error=None):
         """Helper method returning an adapter for a state property
 
@@ -168,7 +209,7 @@ if __name__ == '__main__':
 
     main.setup_path()
     main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
+    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
 
     v = SingleWidgetWindowView(StateConnectionsEditorView, width=500, height=200, title='Connection Editor')
     c = SingleWidgetWindowController(ctr_model, v, StateConnectionsEditorController)

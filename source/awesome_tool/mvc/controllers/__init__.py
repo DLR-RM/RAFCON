@@ -9,7 +9,7 @@ from external_module_manager import ExternalModuleManagerController
 
 from state_overview import StateOverviewController
 from source_editor import SourceEditorController
-from input_data_port_list import DataPortListController
+from io_data_port_list import DataPortListController
 from connections_editor import StateConnectionsEditorController
 from state_editor import StateEditorController
 

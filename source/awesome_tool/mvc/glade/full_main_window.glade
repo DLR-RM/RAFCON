@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<glade-interface>
-  <!-- interface-requires gtk+ 2.16 -->
+<interface>
+  <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy toplevel-contextual -->
-  <widget class="GtkWindow" id="MainWindow">
+  <object class="GtkWindow" id="MainWindow">
     <property name="width_request">700</property>
     <property name="height_request">600</property>
     <property name="visible">True</property>
@@ -10,444 +10,445 @@
     <property name="window_position">center</property>
     <property name="default_width">480</property>
     <property name="default_height">640</property>
+    <accel-groups>
+      <group name="accelgroup1"/>
+    </accel-groups>
     <child>
-      <widget class="GtkVBox" id="vbox1">
+      <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
         <property name="orientation">vertical</property>
         <property name="spacing">4</property>
         <child>
-          <widget class="GtkMenuBar" id="menubar1">
+          <object class="GtkMenuBar" id="menubar1">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkMenuItem" id="menu_file">
+              <object class="GtkMenuItem" id="menu_file">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_File</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menuitem7_menu">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menuitem7_menu">
                     <child>
-                      <widget class="GtkImageMenuItem" id="new1">
+                      <object class="GtkImageMenuItem" id="new1">
                         <property name="label">gtk-new</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_new1_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="open1">
+                      <object class="GtkImageMenuItem" id="open1">
                         <property name="label">gtk-open</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_open1_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="save1">
+                      <object class="GtkImageMenuItem" id="save1">
                         <property name="label">gtk-save</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_save1_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="save_as1">
+                      <object class="GtkImageMenuItem" id="save_as1">
                         <property name="label">gtk-save-as</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_save_as1_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="menu_properties">
+                      <object class="GtkImageMenuItem" id="menu_properties">
                         <property name="label">gtk-properties</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                        <property name="accel_group">accelgroup1</property>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkSeparatorMenuItem" id="separatormenuitem1">
+                      <object class="GtkSeparatorMenuItem" id="separatormenuitem1">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="quit1">
+                      <object class="GtkImageMenuItem" id="quit1">
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_quit1_activate"/>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menu_edit">
+              <object class="GtkMenuItem" id="menu_edit">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Edit</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menuitem8_menu">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menuitem8_menu">
                     <child>
-                      <widget class="GtkImageMenuItem" id="cut1">
+                      <object class="GtkImageMenuItem" id="cut1">
                         <property name="label">gtk-cut</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_cut1_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="copy">
+                      <object class="GtkImageMenuItem" id="copy">
                         <property name="label">gtk-copy</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_copy_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="paste">
+                      <object class="GtkImageMenuItem" id="paste">
                         <property name="label">gtk-paste</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_paste_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="delete1">
+                      <object class="GtkImageMenuItem" id="delete1">
                         <property name="label">gtk-delete</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="accel_group">accelgroup1</property>
                         <signal name="activate" handler="on_delete1_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkSeparatorMenuItem" id="menuitem2">
+                      <object class="GtkSeparatorMenuItem" id="menuitem2">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="add state">
+                      <object class="GtkMenuItem" id="add state">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">add state</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="delete">
+                      <object class="GtkMenuItem" id="delete">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Delete</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="group">
+                      <object class="GtkMenuItem" id="group">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">group</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="ungroup">
+                      <object class="GtkMenuItem" id="ungroup">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">ungroup</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="entry point">
+                      <object class="GtkMenuItem" id="entry point">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">entry point</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="exit point">
+                      <object class="GtkMenuItem" id="exit point">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">exit point</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="undo">
+                      <object class="GtkImageMenuItem" id="undo">
                         <property name="label">gtk-undo</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                        <property name="accel_group">accelgroup1</property>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="redo">
+                      <object class="GtkImageMenuItem" id="redo">
                         <property name="label">gtk-redo</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                        <property name="accel_group">accelgroup1</property>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="fit">
+                      <object class="GtkMenuItem" id="fit">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">fit</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="center_view">
+                      <object class="GtkMenuItem" id="center_view">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">center view</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkSeparatorMenuItem" id="menuitem3">
+                      <object class="GtkSeparatorMenuItem" id="menuitem3">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkCheckMenuItem" id="grid">
+                      <object class="GtkCheckMenuItem" id="grid">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">grid</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menu_view">
+              <object class="GtkMenuItem" id="menu_view">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_View</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menuitem9_menu">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menuitem9_menu">
                     <child>
-                      <widget class="GtkMenuItem" id="reload_theme1">
+                      <object class="GtkMenuItem" id="reload_theme1">
                         <property name="visible">True</property>
-                        <property name="tooltip" translatable="yes">Reload svg files</property>
+                        <property name="tooltip_text" translatable="yes">Reload svg files</property>
                         <property name="label" translatable="yes">Reload Theme</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_reload_theme_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="reload_library">
+                      <object class="GtkMenuItem" id="reload_library">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Reload library</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="reload_fakegraph1">
+                      <object class="GtkMenuItem" id="reload_fakegraph1">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Reload FakeGraph</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_reload_fakegraph1_activate"/>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="reload_environment">
+                      <object class="GtkMenuItem" id="reload_environment">
                         <property name="visible">True</property>
                         <property name="has_tooltip">True</property>
-                        <property name="tooltip" translatable="yes">Reload svg files</property>
+                        <property name="tooltip_text" translatable="yes">Reload svg files</property>
                         <property name="label" translatable="yes">Reload Theme</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menu_tools">
+              <object class="GtkMenuItem" id="menu_tools">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Tools</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menuitem7_menu4">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menuitem7_menu4">
                     <child>
-                      <widget class="GtkImageMenuItem" id="goal_planner">
+                      <object class="GtkImageMenuItem" id="goal_planner">
                         <property name="label">goal planner</property>
                         <property name="visible">True</property>
+                        <property name="image">image8</property>
                         <property name="use_stock">False</property>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image8">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-yes</property>
-                          </widget>
-                        </child>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="environment_selector">
+                      <object class="GtkImageMenuItem" id="environment_selector">
                         <property name="label">environment selector</property>
                         <property name="visible">True</property>
+                        <property name="image">image9</property>
                         <property name="use_stock">False</property>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image9">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-yes</property>
-                          </widget>
-                        </child>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="services_deployement">
+                      <object class="GtkImageMenuItem" id="services_deployement">
                         <property name="label">services deployement</property>
                         <property name="visible">True</property>
+                        <property name="image">image10</property>
                         <property name="use_stock">False</property>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image10">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-yes</property>
-                          </widget>
-                        </child>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menu_help">
+              <object class="GtkMenuItem" id="menu_help">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Help</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menuitem10_menu">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menuitem10_menu">
                     <child>
-                      <widget class="GtkMenuItem" id="about1">
+                      <object class="GtkMenuItem" id="about1">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">_About</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_about1_activate"/>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menu_debug">
+              <object class="GtkMenuItem" id="menu_debug">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Debug</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menu1">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu1">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkMenuItem" id="run">
+                      <object class="GtkMenuItem" id="run">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Run</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="pause">
+                      <object class="GtkMenuItem" id="pause">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Pause</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="stop">
+                      <object class="GtkMenuItem" id="stop">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Stop</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkSeparatorMenuItem" id="sep">
+                      <object class="GtkSeparatorMenuItem" id="sep">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="debug">
+                      <object class="GtkMenuItem" id="debug">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Debug</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="step_over">
+                      <object class="GtkMenuItem" id="step_over">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Step over</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkSeparatorMenuItem" id="sep2">
+                      <object class="GtkSeparatorMenuItem" id="sep2">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="reload">
+                      <object class="GtkMenuItem" id="reload">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Reload</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="reload_env">
+                      <object class="GtkMenuItem" id="reload_env">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Reload Environment</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="load">
+                      <object class="GtkMenuItem" id="load">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Load</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="save">
+                      <object class="GtkMenuItem" id="save">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Save</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkMenuItem" id="info">
+                      <object class="GtkMenuItem" id="info">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Info</property>
                         <property name="use_underline">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menu_environments">
+              <object class="GtkMenuItem" id="menu_environments">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Environments</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menu2">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu2">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="menu_environments_refresh">
+                      <object class="GtkImageMenuItem" id="menu_environments_refresh">
                         <property name="label">gtk-refresh</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                        <property name="accel_group">accelgroup1</property>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
@@ -455,97 +456,97 @@
           </packing>
         </child>
         <child>
-          <widget class="GtkToolbar" id="toolbar">
+          <object class="GtkToolbar" id="toolbar">
             <property name="visible">True</property>
             <property name="toolbar_style">icons</property>
             <property name="icon_size">0</property>
             <property name="icon_size_set">True</property>
             <child>
-              <widget class="GtkToolButton" id="button_new">
+              <object class="GtkToolButton" id="button_new">
                 <property name="visible">True</property>
-                <property name="tooltip" translatable="yes">Create a new state machine.</property>
+                <property name="tooltip_text" translatable="yes">Create a new state machine.</property>
                 <property name="label" translatable="yes">button_new</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-new</property>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="button_refreshlib">
+              <object class="GtkToolButton" id="button_refreshlib">
                 <property name="visible">True</property>
-                <property name="tooltip" translatable="yes">Refreshes the library display.</property>
+                <property name="tooltip_text" translatable="yes">Refreshes the library display.</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-refresh</property>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="button_load">
+              <object class="GtkToolButton" id="button_load">
                 <property name="visible">True</property>
-                <property name="tooltip" translatable="yes">Load an existing state machine.</property>
+                <property name="tooltip_text" translatable="yes">Load an existing state machine.</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-open</property>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="button_save_as">
+              <object class="GtkToolButton" id="button_save_as">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-save-as</property>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkHPaned" id="hpaned1">
+          <object class="GtkHPaned" id="hpaned1">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
-              <widget class="GtkVPaned" id="vpaned3">
+              <object class="GtkVPaned" id="vpaned3">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="orientation">vertical</property>
                 <property name="position">500</property>
                 <property name="position_set">True</property>
                 <child>
-                  <widget class="GtkHPaned" id="center_pane">
+                  <object class="GtkHPaned" id="center_pane">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <child>
-                      <widget class="GtkNotebook" id="notebook1">
+                      <object class="GtkNotebook" id="notebook1">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <child>
-                          <widget class="GtkVBox" id="library_vbox">
+                          <object class="GtkVBox" id="library_vbox">
                             <property name="visible">True</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <widget class="GtkLabel" id="library_label">
+                              <object class="GtkLabel" id="library_label">
                                 <property name="visible">True</property>
                                 <property name="label" translatable="yes">&lt;b&gt;Library&lt;/b&gt;</property>
                                 <property name="use_markup">True</property>
-                              </widget>
+                              </object>
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">False</property>
@@ -555,28 +556,27 @@
                             <child>
                               <placeholder/>
                             </child>
-                          </widget>
+                          </object>
                         </child>
-                        <child>
-                          <widget class="GtkLabel" id="library_label ">
+                        <child type="tab">
+                          <object class="GtkLabel" id="library_label ">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">Library</property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="tab_fill">False</property>
-                            <property name="type">tab</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkVBox" id="smtree_vbox">
+                          <object class="GtkVBox" id="smtree_vbox">
                             <property name="visible">True</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <widget class="GtkLabel" id="smtree_title_label">
+                              <object class="GtkLabel" id="smtree_title_label">
                                 <property name="visible">True</property>
                                 <property name="label" translatable="yes">&lt;b&gt;Statemachine Tree&lt;/b&gt;</property>
                                 <property name="use_markup">True</property>
-                              </widget>
+                              </object>
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">False</property>
@@ -586,79 +586,78 @@
                             <child>
                               <placeholder/>
                             </child>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="position">1</property>
                           </packing>
                         </child>
-                        <child>
-                          <widget class="GtkLabel" id="tree_label">
+                        <child type="tab">
+                          <object class="GtkLabel" id="tree_label">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">Tree</property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="position">1</property>
                             <property name="tab_fill">False</property>
-                            <property name="type">tab</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="resize">False</property>
                         <property name="shrink">True</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkVBox" id="state_machines_vbox">
+                      <object class="GtkVBox" id="state_machines_vbox">
                         <property name="visible">True</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <placeholder/>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="resize">True</property>
                         <property name="shrink">True</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="resize">True</property>
                     <property name="shrink">True</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkScrolledWindow" id="console_scroller">
+                  <object class="GtkScrolledWindow" id="console_scroller">
                     <property name="height_request">150</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <child>
-                      <widget class="GtkTextView" id="textview1">
+                      <object class="GtkTextView" id="textview1">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="resize">True</property>
                     <property name="shrink">True</property>
                   </packing>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="resize">False</property>
                 <property name="shrink">True</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkVPaned" id="right_vpane">
+              <object class="GtkVPaned" id="right_vpane">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="orientation">vertical</property>
                 <property name="position">250</property>
                 <property name="position_set">True</property>
                 <child>
-                  <widget class="GtkVBox" id="state_editors_vbox">
+                  <object class="GtkVBox" id="state_editors_vbox">
                     <property name="width_request">300</property>
                     <property name="height_request">400</property>
                     <property name="visible">True</property>
@@ -666,117 +665,130 @@
                     <child>
                       <placeholder/>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="resize">True</property>
                     <property name="shrink">True</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkHPaned" id="hpaned2">
+                  <object class="GtkHPaned" id="hpaned2">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <child>
-                      <widget class="GtkVBox" id="vbox2">
+                      <object class="GtkVBox" id="vbox2">
                         <property name="visible">True</property>
                         <property name="orientation">vertical</property>
                         <child>
-                          <widget class="GtkLabel" id="label4">
+                          <object class="GtkLabel" id="label4">
                             <property name="visible">True</property>
                             <property name="xalign">0</property>
                             <property name="yalign">0</property>
                             <property name="label" translatable="yes">&lt;b&gt;Environment&lt;/b&gt;</property>
                             <property name="use_markup">True</property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkVBox" id="external_module_manager_vbox">
+                          <object class="GtkVBox" id="external_module_manager_vbox">
                             <property name="width_request">300</property>
                             <property name="visible">True</property>
                             <property name="orientation">vertical</property>
                             <child>
                               <placeholder/>
                             </child>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="position">1</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="resize">False</property>
                         <property name="shrink">True</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkVBox" id="vbox3">
+                      <object class="GtkVBox" id="vbox3">
                         <property name="visible">True</property>
                         <property name="orientation">vertical</property>
                         <child>
-                          <widget class="GtkLabel" id="label2">
+                          <object class="GtkLabel" id="label2">
                             <property name="visible">True</property>
                             <property name="xalign">0</property>
                             <property name="yalign">0</property>
                             <property name="label" translatable="yes">&lt;b&gt;History&lt;/b&gt;</property>
                             <property name="use_markup">True</property>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkHBox" id="history_vbox">
+                          <object class="GtkHBox" id="history_vbox">
                             <property name="visible">True</property>
                             <child>
                               <placeholder/>
                             </child>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="position">1</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="resize">True</property>
                         <property name="shrink">True</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="resize">True</property>
                     <property name="shrink">True</property>
                   </packing>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="resize">False</property>
                 <property name="shrink">True</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="position">2</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkStatusbar" id="lower_statusbar">
+          <object class="GtkStatusbar" id="lower_statusbar">
             <property name="visible">True</property>
             <property name="spacing">2</property>
             <child>
               <placeholder/>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="position">3</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-</glade-interface>
+  </object>
+  <object class="GtkImage" id="image8">
+    <property name="visible">True</property>
+    <property name="stock">gtk-yes</property>
+  </object>
+  <object class="GtkImage" id="image9">
+    <property name="visible">True</property>
+    <property name="stock">gtk-yes</property>
+  </object>
+  <object class="GtkImage" id="image10">
+    <property name="visible">True</property>
+    <property name="stock">gtk-yes</property>
+  </object>
+  <object class="GtkAccelGroup" id="accelgroup1"/>
+</interface>

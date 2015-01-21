@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     main.setup_path()
     main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
+    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
 
     v = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
     c = SingleWidgetWindowController(ctr_model, v, StateMachineTreeController)

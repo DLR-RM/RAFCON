@@ -64,19 +64,16 @@ class SourceEditorController(Controller):
 
 
 if __name__ == '__main__':
-    from mvc.views.source_editor import SourceEditorView
+    from mvc.views import SourceEditorView, SingleWidgetWindowView
+    from mvc.controllers import SingleWidgetWindowController
 
     import mvc.main as main
 
     main.setup_path()
     main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
+    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
 
-    w = gtk.Window()
-    w.resize(width=550, height=500)
-    v = SourceEditorView()
-    c = SourceEditorController(ctr_model, v)
-    w.add(v.get_top_widget())
-    w.show_all()
+    v = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
+    c = SingleWidgetWindowController(ctr_model, v, SourceEditorController)
 
     gtk.main()
