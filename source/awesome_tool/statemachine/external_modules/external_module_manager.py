@@ -29,11 +29,13 @@ class ExternalModuleManager(Observable):
         Observable.__init__(self)
         self._external_modules = {}
 
+    @Observable.observed
     def add_external_module(self, module):
         """Adds a new external module to the list of external modules
 
         """
         self._external_modules[module.name] = module
+        logger.debug("External module %s was added to the manager" % (str(module.name)))
 
 
 #########################################################################

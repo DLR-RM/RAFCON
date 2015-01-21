@@ -59,11 +59,14 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be fechted
 
         """
-        return_value = None
-        access_key = self.lock_variable(key)
-        return_value = copy.deepcopy(self.__global_variable_dictionary[key])
-        self.unlock_variable(key, access_key)
-        return return_value
+        if key in self.__global_variable_dictionary:
+            return_value = None
+            access_key = self.lock_variable(key)
+            return_value = copy.deepcopy(self.__global_variable_dictionary[key])
+            self.unlock_variable(key, access_key)
+            return return_value
+        else:
+            raise AttributeError("Global variable %s does not exist!" % str(key))
 
     @Observable.observed
     def delete_global_variable(self, key):
@@ -73,13 +76,16 @@ class GlobalVariableManager(Observable):
 
         """
         self.__dictionary_lock.acquire()
-        if key in self.global_variable_dictionary:
+        if key in self.__global_variable_dictionary:
             access_key = self.lock_variable(key)
-            del self.global_variable_dictionary[key]
+            del self.__global_variable_dictionary[key]
             self.unlock_variable(key, access_key)
             del self.__variable_locks[key]
+        else:
+            raise AttributeError("Global variable %s does not exist!" % str(key))
         self.__dictionary_lock.release()
         logger.debug("Global variable %s was deleted!" % str(key))
+        print self.__global_variable_dictionary
 
     @Observable.observed
     def lock_variable(self, key):
@@ -88,10 +94,11 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be locked
 
         """
-        self.__variable_locks[key].acquire()
-        access_key = global_variable_id_generator()
-        self.__access_keys[key] = access_key
-        return access_key
+        if key in self.__variable_locks:
+            self.__variable_locks[key].acquire()
+            access_key = global_variable_id_generator()
+            self.__access_keys[key] = access_key
+            return access_key
 
     @Observable.observed
     def unlock_variable(self, key, access_key):
@@ -100,8 +107,11 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be unlocked
 
         """
-        if self.__access_keys[key] is access_key:
-            self.__variable_locks[key].release()
+        if self.__access_keys[key] == access_key:
+            if key in self.__variable_locks:
+                self.__variable_locks[key].release()
+            else:
+                raise AttributeError("Global variable %s does not exist!" % str(key))
         else:
             raise RuntimeError("Wrong access key for accessing global variable")
 
@@ -131,6 +141,10 @@ class GlobalVariableManager(Observable):
         else:
             raise RuntimeError("Wrong access key for accessing global variable")
 
+    def locked_status_for_variable(self, key):
+        if key in self.__variable_locks:
+            return self.__variable_locks[key].locked()
+
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
@@ -140,18 +154,5 @@ class GlobalVariableManager(Observable):
         """Property for the _global_variable_dictionary field
 
         """
-        return self.__global_variable_dictionary
-
-    @property
-    def variable_locks(self):
-        """Property for the _variable_locks field
-
-        """
-        return self.__variable_locks
-
-    @property
-    def dictionary_lock(self):
-        """Property for the _dictionary_lock field
-
-        """
-        return self.__dictionary_lock
+        return copy.deepcopy(self.__global_variable_dictionary)
+        #return self.__global_variable_dictionary

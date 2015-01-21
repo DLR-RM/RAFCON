@@ -4,6 +4,7 @@
   <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="state_dataport_editor">
     <property name="visible">True</property>
+    <property name="title" translatable="yes">State Dataport Editor</property>
     <property name="default_width">300</property>
     <property name="default_height">400</property>
     <child>

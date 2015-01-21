@@ -16,6 +16,7 @@ class GlobalVariableManagerController(Controller, Observer):
         view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
         view['delete_global_variable_button'].connect('clicked', self.on_delete_global_variable_button_clicked)
         self.new_gv_counter = 0
+        model.update_global_variables_list_store()
 
     #new buttons
     def on_new_global_variable_button_clicked(self, widget, data=None):
@@ -33,13 +34,11 @@ class GlobalVariableManagerController(Controller, Observer):
             #print "key to remove: ", key
             self.model.global_variable_manager.delete_global_variable(key)
 
-
     @Observer.observe("global_variable_manager", after=True)
     def assign_notification_state(self, model, prop_name, info):
         #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #      (prop_name, info.instance, info.method_name, info.result)
         model.update_global_variables_list_store()
-
 
     def register_view(self, view):
         """Called when the View was registered
@@ -47,7 +46,7 @@ class GlobalVariableManagerController(Controller, Observer):
 
         view.get_top_widget().connect('destroy', gtk.main_quit)
 
-        def cell_text(column, cell_renderer, model, iter, global_variable_manager_model):
+        def cell_text(column, cell_renderer, model, iter, gvm_model):
             col = column.get_name()
             global_variable = model.get_value(iter, 0)
             if col == 'name_col':
@@ -55,16 +54,14 @@ class GlobalVariableManagerController(Controller, Observer):
             elif col == 'value_col':
                 cell_renderer.set_property('text', global_variable[1])
             elif col == 'locked_col':
-                lock =\
-                    global_variable_manager_model.global_variable_manager.variable_locks[global_variable[0]]
-                locked = lock.locked()
+                locked = gvm_model.global_variable_manager.locked_status_for_variable(global_variable[0])
                 cell_renderer.set_property('text', locked)
             else:
                 logger.error("Unknown column '{col:s}' in GlobalVariableManagerView".format(col=col))
 
         #print self.model.global_variables_list_store
-        for elem in self.model.global_variables_list_store:
-            print "elem is: ", elem
+        #for elem in self.model.global_variables_list_store:
+        #    print "elem is: ", elem
 
         view["global_variable_tree_view"].set_model(self.model.global_variables_list_store)
 

@@ -6,3 +6,5 @@ from input_port_list import InputPortsListView
 from output_port_list import OutputPortsListView
 from scoped_variables_list import ScopedVariablesListView
 from global_variable_editor import GlobalVariableEditorView
+from external_module_manager import ExternalModuleManagerView
+from source_editor import SourceEditorView
