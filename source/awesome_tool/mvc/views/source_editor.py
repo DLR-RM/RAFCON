@@ -3,7 +3,7 @@ import gtk
 try:
     import gtksourceview2
 except:
-    print "NO python-module gtksourceview2 found!!!"
+    print "NO python-module gtksourceview2 found!"
 
 from gtkmvc import View
 
@@ -15,8 +15,24 @@ class SourceEditorView(View):
     def __init__(self):
         View.__init__(self)
 
-        editor_frame = gtk.Frame()
+        window = gtk.Window()
+        window.resize(width=550, height=500)
+        vbox = gtk.VBox()
+        window.add(vbox)
+        hbox = gtk.HBox()
+        apply_button = gtk.Button("Apply")
+        cancel_button = gtk.Button("Cancel")
+        hbox.pack_start(apply_button)
+        hbox.pack_end(cancel_button)
 
+        editor_frame = gtk.Frame()
+        vbox.pack_start(editor_frame, expand=True, fill=True)
+        vbox.pack_end(hbox, expand=False, fill=False)
+        l = gtk.Label()
+        vbox.pack_start(l, expand=False, fill=False)
+
+        # create textview
+        self.textview = None
         try:
             lm = gtksourceview2.LanguageManager()
             sm = gtksourceview2.StyleSchemeManager()
@@ -31,14 +47,13 @@ class SourceEditorView(View):
                 self.textview.set_show_line_numbers(True)
                 self.textview.set_auto_indent(True)
                 self.textview.set_highlight_current_line(True)
-                self.textview.set_mark_category_pixbuf('INSTRUCTION', editor_frame.render_icon(gtk.STOCK_GO_FORWARD, gtk.ICON_SIZE_MENU))
-                self.textview.set_show_line_marks(True)
+                self.textview.set_mark_category_pixbuf('INSTRUCTION',
+                                                       editor_frame.render_icon(gtk.STOCK_GO_FORWARD, gtk.ICON_SIZE_MENU))
                 self.using_source_view = True
             else:
                 print "No SourceViewWidget, using default Text widget"
                 self.textview = gtk.TextView()
                 self.using_source_view = False
-            #buffer.create_source_mark('TestMessage', 'INSTRUCTION', sourceedit.get_buffer().get_start_iter())
         except NameError:
             self.textview = gtk.TextView()
             self.using_source_view = False
@@ -49,25 +64,12 @@ class SourceEditorView(View):
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.add(self.textview)
-
         editor_frame.add(scrollable)
-        #editor_frame.add()
 
-        #w = gtk.Window()
-        vbox = gtk.VBox()
-        hbox = gtk.HBox()
-        apply_button = gtk.Button("Apply")
-        cancel_button = gtk.Button("Cancel")
-        hbox.pack_start(apply_button)
-        hbox.pack_end(cancel_button)
-        vbox.pack_start(editor_frame, expand=True, fill=True)
-        vbox.pack_end(hbox, expand=False, fill=False)
-        l = gtk.Label()
-        vbox.pack_start(l, expand=False, fill=False)
-        #w.add(vbox)
-        #w.show_all()
+        window.set_property("visible", True)
+        window.show_all()
 
-        #self['main_window'] = w
+        self['main_window'] = window
         self['main_frame'] = vbox
         self['apply_button'] = apply_button
         self['cancel_button'] = cancel_button
@@ -93,22 +95,3 @@ class SourceEditorView(View):
         else:
             self.apply_tag('dead_color')
         self.textview.set_property('editable', on)
-
-
-if __name__ == '__main__':
-    from mvc.controllers.source_editor import SourceEditorController
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
-
-    w = gtk.Window()
-    w.resize(width=550, height=500)
-    v = SourceEditorView()
-    c = SourceEditorController(ctr_model, v)
-    w.add(v.get_top_widget())
-    w.show_all()
-
-    gtk.main()

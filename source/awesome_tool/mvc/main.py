@@ -128,15 +128,11 @@ if __name__ == "__main__":
     check_requirements()
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
 
-    sdev = StateDataportEditorView()
-    StateDataPortEditorController(ctr_model, sdev)
+    #sdev = StateDataportEditorView()
+    #StateDataPortEditorController(ctr_model, sdev)
 
-    w = gtk.Window()
     v = SourceEditorView()
-    c = SourceEditorController(ctr_model, v)
-    w.resize(width=550, height=500)
-    w.add(v.get_top_widget())
-    w.show_all()
+    SourceEditorController(ctr_model, v)
 
     #ctr_view = ContainerStateView()
     #ContainerStateController(ctr_model, ctr_view)
