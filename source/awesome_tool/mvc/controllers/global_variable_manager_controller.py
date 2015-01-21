@@ -63,8 +63,8 @@ class GlobalVariableManagerController(Controller, Observer):
                 logger.error("Unknown column '{col:s}' in GlobalVariableManagerView".format(col=col))
 
         #print self.model.global_variables_list_store
-        for elem in self.model.global_variables_list_store:
-            print "elem is: ", elem
+        #for elem in self.model.global_variables_list_store:
+        #    print "elem is: ", elem
 
         view["global_variable_tree_view"].set_model(self.model.global_variables_list_store)
 

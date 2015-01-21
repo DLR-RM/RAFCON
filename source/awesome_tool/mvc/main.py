@@ -3,16 +3,17 @@ import sys
 import gtk
 import logging
 from utils import log
-from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel
+from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController
+    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView
+    GlobalVariableEditorView, ExternalModuleManagerView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
 from statemachine.states.container_state import ContainerState
 from statemachine.transition import Transition
 from statemachine.data_flow import DataFlow
+from statemachine.external_modules.external_module import ExternalModule
 
 
 def setup_path():
@@ -106,6 +107,19 @@ def main(*args, **kargs):
     # my_state.name = "test2"
     # my_state2.name = "ContainerState"
     # logger.debug("changed attribute")
+
+    external_module_manager_model = ExternalModuleManagerModel()
+    external_module_manager_view = ExternalModuleManagerView()
+    ExternalModuleManagerController(external_module_manager_model, external_module_manager_view)
+    em = ExternalModule(name="External Module 1", module_name="external_module_test", class_name="TestModule")
+    external_module_manager_model.external_module_manager.add_external_module(em)
+    external_module_manager_model.external_module_manager.external_modules["External Module 1"].connect([])
+    external_module_manager_model.external_module_manager.external_modules["External Module 1"].start()
+    em = ExternalModule(name="External Module 2", module_name="external_module_test2", class_name="TestModule2")
+    external_module_manager_model.external_module_manager.add_external_module(em)
+
+    gtk.main()
+    return
 
     global_var_manager_view = GlobalVariableEditorView()
     global_var_manager_model = GlobalVariableManagerModel()
