@@ -5,7 +5,7 @@ from OpenGL.GLU import *
 from utils import log
 
 logger = log.get_logger(__name__)
-
+import time
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from math import sqrt
@@ -41,6 +41,7 @@ class GraphicalEditorController(Controller):
         # Only called when the mouse is clicked while moving
         view.editor.connect('motion-notify-event', self._on_mouse_motion)
         view.editor.connect('scroll-event', self._on_scroll)
+        self.last_time = time.time()
 
     def register_view(self, view):
         """Called when the View was registered
@@ -81,9 +82,10 @@ class GraphicalEditorController(Controller):
         event to redraw.
         """
         # Check if initialized
-        if hasattr(self.view, "editor"):
+        if hasattr(self.view, "editor") and time.time() - self.last_time > 1/100.:
             self.view.editor.emit("configure_event", None)
             self.view.editor.emit("expose_event", None)
+            self.last_time = time.time()
 
     def _on_mouse_press(self, widget, event):
         """Triggered when the mouse is pressed
