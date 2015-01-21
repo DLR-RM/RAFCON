@@ -131,10 +131,6 @@ if __name__ == "__main__":
     sdev = StateDataportEditorView()
     StateDataPortEditorController(ctr_model, sdev)
 
-    gtk.main()
-    exit()
-
-
     w = gtk.Window()
     v = SourceEditorView()
     c = SourceEditorController(ctr_model, v)

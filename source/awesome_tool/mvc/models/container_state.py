@@ -2,6 +2,7 @@ import gobject
 from statemachine.states.container_state import ContainerState
 from statemachine.states.state import State
 from mvc.models.state import StateModel
+import mvc.models
 from mvc.models.transition import TransitionModel
 from mvc.models.data_flow import DataFlowModel
 from mvc.models.data_port import DataPortModel
@@ -25,12 +26,9 @@ class ContainerStateModel(StateModel):
     states = {}
     transitions = []
     data_flows = []
-    input_data_ports = []
-    output_data_ports = []
     scoped_variables = []
 
-    __observables__ = ("states", "transitions", "data_flows", "input_data_ports",
-                       "output_data_ports", "scoped_variables")
+    __observables__ = ("states", "transitions", "data_flows", "scoped_variables")
 
     def __init__(self, container_state, parent=None, meta=None):
         """Constructor
@@ -44,15 +42,11 @@ class ContainerStateModel(StateModel):
         self.states = {}
         self.transitions = []
         self.data_flows = []
-        self.input_data_ports = []
-        self.output_data_ports = []
         self.scoped_variables = []
         # Actually Transition, but this is not supported by GTK
         self.transition_list_store = ListStore(gobject.TYPE_PYOBJECT)
         # Actually DataFlow, but this is not supported by
         self.data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)
-        self.input_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
-        self.output_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
         self.scoped_variables_list_store = ListStore(gobject.TYPE_PYOBJECT)
 
         # Create model for each child class
@@ -83,39 +77,7 @@ class ContainerStateModel(StateModel):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
-        self.update_input_data_port_list_store()
-        self.update_output_data_port_list_store()
         self.update_scoped_variables_list_store()
-
-    def update_input_data_port_list_store(self):
-        tmp = ListStore(gobject.TYPE_PYOBJECT)
-        self.input_data_ports = []
-        for input_data_port in self.state.input_data_ports.itervalues():
-            self.input_data_ports.append(DataPortModel(input_data_port, self))
-            tmp.append([input_data_port])
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, self.comparemethod)
-        tms.sort_column_changed()
-        tmp = tms
-        self.input_data_port_list_store.clear()
-        for elem in tmp:
-            self.input_data_port_list_store.append(elem)
-
-    def update_output_data_port_list_store(self):
-        tmp = ListStore(gobject.TYPE_PYOBJECT)
-        self.output_data_ports = []
-        for output_data_port in self.state.output_data_ports.itervalues():
-            self.output_data_ports.append(DataPortModel(output_data_port, self))
-            tmp.append([output_data_port])
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, self.comparemethod)
-        tms.sort_column_changed()
-        tmp = tms
-        self.output_data_port_list_store.clear()
-        for elem in tmp:
-            self.output_data_port_list_store.append(elem)
 
     def update_scoped_variables_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
@@ -125,7 +87,7 @@ class ContainerStateModel(StateModel):
             tmp.append([scoped_variable])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, self.comparemethod)
+        tms.set_sort_func(0, mvc.models.state.dataport_compare_method)
         tms.sort_column_changed()
         tmp = tms
         self.scoped_variables_list_store.clear()
@@ -141,20 +103,6 @@ class ContainerStateModel(StateModel):
                 self.states._notify_method_after(self.state, "state_change", None, (model,), info)
         if self.parent is not None:
             self.parent.model_changed(model, name, info)
-
-    def comparemethod(self, treemodel, iter1, iter2, user_data=None):
-        path1 = treemodel.get_path(iter1)[0]
-        path2 = treemodel.get_path(iter2)[0]
-        name1 = treemodel[path1][0].name
-        name2 = treemodel[path2][0].name
-        name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
-        name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
-        if name1_as_bits == name2_as_bits:
-            return 0
-        elif name1_as_bits > name2_as_bits:
-            return 1
-        else:
-            return -1            
 
     @ModelMT.observe("state", after=True)
     def update_child_models(self, _, name, info):
