@@ -1,3 +1,4 @@
+import gtk
 from gtkmvc import Controller
 
 
@@ -15,7 +16,7 @@ class SourceEditorController(Controller):
 
     # TODO Missing functions
     # - Code syntax check
-    # - Code wrapping
+    # - Code function-expander
     # - Code completion
 
     def __init__(self, model, view):
@@ -61,3 +62,21 @@ class SourceEditorController(Controller):
     def cancel_clicked(self, button):
         self.view.set_text(self.model.state.script.script)
 
+
+if __name__ == '__main__':
+    from mvc.views.source_editor import SourceEditorView
+
+    import mvc.main as main
+
+    main.setup_path()
+    main.check_requirements()
+    [ctr_model, logger, ctr_state] = main.main()
+
+    w = gtk.Window()
+    w.resize(width=550, height=500)
+    v = SourceEditorView()
+    c = SourceEditorController(ctr_model, v)
+    w.add(v.get_top_widget())
+    w.show_all()
+
+    gtk.main()

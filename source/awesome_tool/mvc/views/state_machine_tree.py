@@ -33,7 +33,7 @@ class StateMachineTreeView(View, gtk.TreeView):
         self['top_tree'] = self
 
 
-if __name__ is '__main__':
+if __name__ == '__main__':
     from mvc.controllers.state_machine_tree import StateMachineTreeController
 
     import mvc.main as main

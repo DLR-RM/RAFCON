@@ -11,7 +11,7 @@ from mvc.views.scoped_variables_list import ScopedVariablesListView
 
 class StateEditorView(View):
     builder = './glade/state_editor_widget.glade'
-    top = 'window_state_editor'
+    top = 'main_frame_vbox'
 
     def __init__(self):
         View.__init__(self)
@@ -35,9 +35,6 @@ class StateEditorView(View):
         #self['expander3_ScriptEditor'].add(self['source_editor_view'].get_top_widget())
         #self['expander4_ConnectionEditor'].add(self['state_connections_editor_view']['vbox1'])
 
-        self.get_top_widget().resize(width=550, height=550)
-        self.get_top_widget().show_all()
-
 
 if __name__ == '__main__':
     from statemachine.states.execution_state import ExecutionState as State
@@ -47,13 +44,21 @@ if __name__ == '__main__':
     #from mvc.views.source_editor import SourceEditorView
     from mvc.controllers.state_editor import StateEditorController
 
-    state1 = State('Rico2')
+    state1 = State('state2')
     m = StateModel(state1)
 
-    #w = gtk.Window()
+    import mvc.main as main
+
+    main.setup_path()
+    main.check_requirements()
+    [ctr_model, logger, ctr_state] = main.main()
+
+    w = gtk.Window()
     v = StateEditorView()
-    c = StateEditorController(m, v)
-    #w.add(v.get_top_widget())#['main_frame'])
-    #w.show_all()
+    c = StateEditorController(ctr_model, v)
+    #c = StateEditorController(m, v)
+    w.resize(width=550, height=550)
+    w.add(v.get_top_widget())#['main_frame'])
+    w.show_all()
 
     gtk.main()

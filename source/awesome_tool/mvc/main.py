@@ -123,12 +123,16 @@ if __name__ == "__main__":
     # v = SingleWidgetWindowView(SourceEditorView)
     # c = SingleWidgetWindowController(ctr_model, v, SourceEditorController)
 
-    from mvc.models import StateModel, ContainerStateModel
     from mvc.views.state_editor import StateEditorView
     from mvc.controllers.state_editor import StateEditorController
 
+    w = gtk.Window()
     v = StateEditorView()
     c = StateEditorController(ctr_model, v)
+    #c = StateEditorController(m, v)
+    w.resize(width=550, height=550)
+    w.add(v.get_top_widget())#['main_frame'])
+    w.show_all()
 
     editor_view = GraphicalEditorView()
     editor_ctrl = GraphicalEditorController(ctr_model, editor_view)

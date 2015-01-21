@@ -96,20 +96,26 @@ class StateEditorController(Controller):
 
 
 if __name__ == '__main__':
-    from statemachine.states.execution_state import ExecutionState as State
-    from statemachine.states.container_state import ContainerState
-
-    from mvc.models import StateModel, ContainerStateModel
     from mvc.views.state_editor import StateEditorView
-    #from mvc.controllers.state_editor import StateEditorController
 
-    state1 = State('Rico2')
+    from statemachine.states.execution_state import ExecutionState as State
+    from mvc.models import StateModel, ContainerStateModel
+
+    state1 = State('state2')
     m = StateModel(state1)
 
-    #w = gtk.Window()
+    import mvc.main as main
+
+    main.setup_path()
+    main.check_requirements()
+    [ctr_model, logger, ctr_state] = main.main()
+
+    w = gtk.Window()
     v = StateEditorView()
-    c = StateEditorController(m, v)
-    #w.add(v.get_top_widget())#['main_frame'])
-    #w.show_all()
+    c = StateEditorController(ctr_model, v)
+    #c = StateEditorController(m, v)
+    w.resize(width=550, height=550)
+    w.add(v.get_top_widget())#['main_frame'])
+    w.show_all()
 
     gtk.main()

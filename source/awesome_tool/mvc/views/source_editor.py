@@ -15,7 +15,6 @@ class SourceEditorView(View):
     def __init__(self):
         View.__init__(self)
 
-        #w = gtk.Window()
         editor_frame = gtk.Frame()
 
         try:
@@ -54,6 +53,7 @@ class SourceEditorView(View):
         editor_frame.add(scrollable)
         #editor_frame.add()
 
+        #w = gtk.Window()
         vbox = gtk.VBox()
         hbox = gtk.HBox()
         apply_button = gtk.Button("Apply")
@@ -89,63 +89,26 @@ class SourceEditorView(View):
     #===============================================================
     def set_enabled(self, on):
         if on:
-            self.view.apply_tag('default')
+            self.apply_tag('default')
         else:
-            self.view.apply_tag('dead_color')
+            self.apply_tag('dead_color')
         self.textview.set_property('editable', on)
 
 
-# from gtkmvc import Model
-# class MyModel (Model):
-#     # observable properties:
-#     counter = 0
-#     __observables__ = ('counter',)
-#
-#     pass  # end of class
-#
-#
-# from gtkmvc import Controller
-# class MyController (Controller):
-#     def __init__(self, model, view):
-#         Controller.__init__(self, model, view)
-#
-#         # The controller is an observer for properties contained in
-#         # the model:
-#         return
-#
-#     def register_view(self, view):
-#         """This method is called by the view, that calls it when it is
-#         ready to register itself. Here we connect the 'pressed' signal
-#         of the button with a controller's method. Signal 'destroy'
-#         for the main window is handled as well."""
-#
-#         # connects some signals manually:
-#         view['apply_button'].connect('clicked', self.on_button_clicked)
-#         view.get_top_widget().connect('destroy', gtk.main_quit)
-#
-#         # initializes the text of label:
-#         #view.set_text("%d" % self.model.counter)
-#         return
-#
-#     # signals:
-#     def on_button_clicked(self, button):
-#         self.model.counter += 1  # changes the model
-#         return
-#
-#     # observable properties:
-#     @Controller.observe("counter", assign=True)
-#     def counter_change(self, model, prop_name, info):
-#         self.view.set_text("%d" % info.new)
-#         print "Property '%s' changed value from %d to %d" \
-#           % (prop_name, info.old, info.new)
-#         return
-#
-#     pass  # end of class
-#
-#
-# m = MyModel()
-# v = SourceEditorView()
-# c = MyController(m, v)
-# #v = MyView2()
-# #c = MyController(m, v)
-# gtk.main()
+if __name__ == '__main__':
+    from mvc.controllers.source_editor import SourceEditorController
+
+    import mvc.main as main
+
+    main.setup_path()
+    main.check_requirements()
+    [ctr_model, logger, ctr_state] = main.main()
+
+    w = gtk.Window()
+    w.resize(width=550, height=500)
+    v = SourceEditorView()
+    c = SourceEditorController(ctr_model, v)
+    w.add(v.get_top_widget())
+    w.show_all()
+
+    gtk.main()
