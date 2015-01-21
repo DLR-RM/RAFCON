@@ -205,7 +205,45 @@ class GraphicalEditorController(Controller):
         """
         # print 'release', event
         self.last_button_pressed = None
-        pass
+
+        if self.selected_outcome is not None:
+            release_selection = self._find_selection(event.x, event.y)
+            if isinstance(release_selection, StateModel) and release_selection != self.selection:
+                target_state_id = None
+                target_outcome = None
+                if release_selection == self.selection.parent:
+                    # Check whether the mouse was released on an outcome
+                    outcomes_close_threshold = self.selection.parent.meta['gui']['editor']['outcome_radius']
+                    outcomes = self.selection.parent.meta['gui']['editor']['outcome_pos']
+                    click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+                    for key in outcomes:
+                        dist = sqrt((outcomes[key][0] - click[0])**2 + (outcomes[key][1] - click[1])**2)
+                        if dist < outcomes_close_threshold:
+                            # This is a possible connection:
+                            # The outcome of a state is connected to ian outcome of its parent state
+                            target_outcome = key
+
+                elif release_selection.parent == self.selection.parent:
+                    # This is a possible connection:
+                    # The outcome of a state is connected to another state, which is on the same hierarchy
+                    target_state_id = release_selection.state.state_id
+
+                if target_state_id is not None or target_outcome is not None:
+                    state_id = self.selection.state.state_id
+                    outcome_id = self.selected_outcome[1]
+                    try:
+                        self.selection.parent.state.add_transition(state_id, outcome_id,
+                                                                      target_state_id, target_outcome)
+                    except AttributeError as e:
+                        logger.debug("Transition couldn't be added: {0}".format(e))
+                    except Exception as e:
+                        logger.error("Unexpected exception: {0}".format(e))
+                else:
+                    self.selected_outcome = None
+                    self._redraw()
+            else:
+                self.selected_outcome = None
+                self._redraw()
 
     def _on_mouse_motion(self, widget, event):
         """Triggered when the mouse is moved while being pressed
@@ -379,16 +417,17 @@ class GraphicalEditorController(Controller):
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
-        (id, outcome_pos, input_pos, output_pos, scoped_pos) = self.view.editor.draw_state(state.state.name,
-                                                                                       pos_x, pos_y, width,
-                                                                                       height, state.state.outcomes,
-                                                                                       state.state.input_data_ports,
-                                                                                       state.state.output_data_ports,
-                                                                                       scoped_ports,
-                                                                                       active,
-                                                                                       depth)
+        (id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos) = self.view.editor.draw_state(
+            state.state.name,
+            pos_x, pos_y, width, height,
+            state.state.outcomes,
+            state.state.input_data_ports,
+            state.state.output_data_ports,
+            scoped_ports,
+            active, depth)
         state.meta['gui']['editor']['id'] = id
         state.meta['gui']['editor']['outcome_pos'] = outcome_pos
+        state.meta['gui']['editor']['outcome_radius'] = outcome_radius
         state.meta['gui']['editor']['input_pos'] = input_pos
         state.meta['gui']['editor']['output_pos'] = output_pos
         state.meta['gui']['editor']['scoped_pos'] = scoped_pos

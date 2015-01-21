@@ -335,6 +335,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
         i = 0
         outcome_pos = {}
+        outcome_radius = min(5, height/15.0, height/(2*num_outcomes+3))
         for key in outcomes:
             # Color of outcome is defined by its type, "aborted", "preempted" or else
             outcome_name = outcomes[key].name
@@ -351,7 +352,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             outcome_x = pos_x + width
             outcome_y = pos_y + height / (num_outcomes + 1) * (i + 1)
             outcome_pos[key] = (outcome_x, outcome_y)
-            self._draw_circle(outcome_x, outcome_y, depth + 0.1, min(5, height/15.0, height/(2*num_outcomes+3)), 16)
+            self._draw_circle(outcome_x, outcome_y, depth + 0.1, outcome_radius, 16)
             i += 1
 
         # Draw input and output data ports
@@ -456,7 +457,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
 
         glPopName()
-        return id, outcome_pos, input_connector_pos, output_connector_pos, scoped_connector_pos
+        return id, outcome_pos, outcome_radius, input_connector_pos, output_connector_pos, scoped_connector_pos
 
     def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
                         depth=0):
