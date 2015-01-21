@@ -118,14 +118,10 @@ def main(*args, **kargs):
     em = ExternalModule(name="External Module 2", module_name="external_module_test2", class_name="TestModule2")
     external_module_manager_model.external_module_manager.add_external_module(em)
 
-    gtk.main()
-    return
-
     global_var_manager_view = GlobalVariableEditorView()
     global_var_manager_model = GlobalVariableManagerModel()
     GlobalVariableManagerController(global_var_manager_model, global_var_manager_view)
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
-    global_var_manager_model.global_variable_manager.lock_variable("global_variable_1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
     sdev = StateDataportEditorView()

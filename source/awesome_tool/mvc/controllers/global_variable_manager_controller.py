@@ -47,7 +47,7 @@ class GlobalVariableManagerController(Controller, Observer):
 
         view.get_top_widget().connect('destroy', gtk.main_quit)
 
-        def cell_text(column, cell_renderer, model, iter, global_variable_manager_model):
+        def cell_text(column, cell_renderer, model, iter, gvm_model):
             col = column.get_name()
             global_variable = model.get_value(iter, 0)
             if col == 'name_col':
@@ -55,9 +55,7 @@ class GlobalVariableManagerController(Controller, Observer):
             elif col == 'value_col':
                 cell_renderer.set_property('text', global_variable[1])
             elif col == 'locked_col':
-                lock =\
-                    global_variable_manager_model.global_variable_manager.variable_locks[global_variable[0]]
-                locked = lock.locked()
+                locked = gvm_model.global_variable_manager.locked_status_for_variable(global_variable[0])
                 cell_renderer.set_property('text', locked)
             else:
                 logger.error("Unknown column '{col:s}' in GlobalVariableManagerView".format(col=col))

@@ -5,6 +5,7 @@
   <object class="GtkTreeStore" id="treestore1"/>
   <object class="GtkWindow" id="external_module_manager_widget">
     <property name="visible">True</property>
+    <property name="title" translatable="yes">External Module Manager</property>
     <property name="default_width">350</property>
     <property name="default_height">300</property>
     <child>

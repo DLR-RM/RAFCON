@@ -2,8 +2,10 @@
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
+  <object class="GtkListStore" id="liststore1"/>
   <object class="GtkWindow" id="global_variable_editor_widget">
     <property name="visible">True</property>
+    <property name="title" translatable="yes">Global Variable Editor</property>
     <property name="default_width">300</property>
     <property name="default_height">300</property>
     <child>
@@ -100,5 +102,4 @@
       </object>
     </child>
   </object>
-  <object class="GtkListStore" id="liststore1"/>
 </interface>
