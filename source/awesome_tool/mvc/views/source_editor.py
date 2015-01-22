@@ -15,10 +15,10 @@ class SourceEditorView(View):
     def __init__(self):
         View.__init__(self)
 
-        window = gtk.Window()
-        window.resize(width=550, height=500)
+        #window = gtk.Window()
+        #window.resize(width=550, height=500)
         vbox = gtk.VBox()
-        window.add(vbox)
+        #window.add(vbox)
         hbox = gtk.HBox()
         apply_button = gtk.Button("Apply")
         cancel_button = gtk.Button("Cancel")
@@ -66,10 +66,10 @@ class SourceEditorView(View):
         scrollable.add(self.textview)
         editor_frame.add(scrollable)
 
-        window.set_property("visible", True)
-        window.show_all()
+        #window.set_property("visible", True)
+        #window.show_all()
 
-        self['main_window'] = window
+        #self['main_window'] = window
         self['main_frame'] = vbox
         self['apply_button'] = apply_button
         self['cancel_button'] = cancel_button
@@ -94,7 +94,6 @@ class SourceEditorView(View):
             self.apply_tag('default')
         else:
             self.apply_tag('dead_color')
-<<<<<<< HEAD
         self.textview.set_property('editable', on)
 
 
@@ -112,6 +111,3 @@ if __name__ == '__main__':
     c = SingleWidgetWindowController(ctr_model, v, SourceEditorController)
 
     gtk.main()
-=======
-        self.textview.set_property('editable', on)
->>>>>>> master
