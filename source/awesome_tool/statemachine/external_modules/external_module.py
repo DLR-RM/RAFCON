@@ -141,6 +141,9 @@ class ExternalModule(Observable):
         """stops the external module and disconnect the default functions
 
         """
+        if self._status is EMStatus.DISCONNECTED:
+            logger.debug("module %s is already disconnected" % str(self._module_name))
+            return
         self.stop()
         del self.__instance
         self.__instance = None

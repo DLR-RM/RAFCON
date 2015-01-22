@@ -33,6 +33,7 @@ class ExternalModuleManagerModel(ModelMT):
 
         self.external_modules_tree_store = TreeStore(str, str, str)
         self.update_external_modules_list_store()
+        self.reset_external_module_model()
 
     def update_external_modules_list_store_short(self):
         self.external_modules_tree_store.clear()
@@ -44,6 +45,7 @@ class ExternalModuleManagerModel(ModelMT):
     def reset_external_module_model(self):
         self.external_modules = []
         for key, em in self.external_module_manager.external_modules.iteritems():
+            print em
             self.external_modules.append(ExternalModuleModel(em, self))
 
     def update_external_modules_list_store(self):
