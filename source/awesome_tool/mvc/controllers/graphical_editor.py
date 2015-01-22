@@ -130,7 +130,8 @@ class GraphicalEditorController(Controller):
 
             if self.selection is not None and \
                     (isinstance(self.selection, TransitionModel) or isinstance(self.selection, DataFlowModel)):
-                close_threshold = 2
+                close_threshold = min(self.selection.parent.meta['gui']['editor']['height'],
+                                      self.selection.parent.meta['gui']['editor']['width)']) / 50.
                 click = self.mouse_move_start_pos
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
                     if waypoint[0] is not None and waypoint[1] is not None:
@@ -166,12 +167,12 @@ class GraphicalEditorController(Controller):
                 # If it was on a connection, a waypoint is added to that position
                 waypoint_removed = False
 
-                close_threshold = 2
+                close_threshold = min(clicked_model.parent.meta['gui']['editor']['height'],
+                                      clicked_model.parent.meta['gui']['editor']['width)']) / 70.
                 # logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for waypoint in connection_model.meta['gui']['editor']['waypoints']:
                     if waypoint[0] is not None and waypoint[1] is not None:
-                        if abs(waypoint[0] - click[0]) < close_threshold and \
-                                        abs(waypoint[1] - click[1]) < close_threshold:
+                        if sqrt((waypoint[0] - click[0])**2 + (waypoint[1] - click[1])**2) < close_threshold:
                             connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
                             waypoint_removed = True
                             logger.debug('Connection waypoint removed')

@@ -319,7 +319,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         id = self.name_counter
         self.name_counter += 1
         glPushName(id)
-        self._set_closest_line_width(1.5)
+        self._set_closest_stroke_width(1.5)
 
         # First draw the face of the rectangular, then the outline
         fill_color = self.state_color
@@ -491,7 +491,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.name_counter += 1
 
         glPushName(id)
-        self._set_closest_line_width(width)
+        self._set_closest_stroke_width(width)
 
         color = self.transition_color
         if active:
@@ -508,7 +508,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glVertex3f(point[0], point[1], depth)
         glEnd()
 
-        self._set_closest_line_width(width / 1.5)
+        self._set_closest_stroke_width(width / 1.5)
         for waypoint in waypoints:
             self._draw_circle(waypoint[0], waypoint[1], width / 6., depth + 1, fill_color=color)
 
@@ -537,7 +537,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         glPushName(id)
         width /= 2
-        self._set_closest_line_width(width)
+        self._set_closest_stroke_width(width)
 
         color = self.data_flow_color
 
@@ -556,7 +556,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glVertex3f(point[0], point[1], depth)
         glEnd()
 
-        self._set_closest_line_width(width / 1.5)
+        self._set_closest_stroke_width(width / 1.5)
         for waypoint in waypoints:
             self._draw_circle(waypoint[0], waypoint[1], width / 6., depth + 1, fill_color=color)
 
@@ -579,7 +579,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         if bold:
             stroke_width = height / 5.
         color.set()
-        self._set_closest_line_width(stroke_width)
+        self._set_closest_stroke_width(stroke_width)
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         pos_y = pos_y - height
@@ -624,7 +624,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         glLoadIdentity()
         # The system y axis is inverse to the OpenGL y axis
-        gluPickMatrix(pos_x, viewport[3] - pos_y + viewport[1], 3, 3, viewport)
+        range = self.pixel_to_size_ratio() / 3.
+        gluPickMatrix(pos_x, viewport[3] - pos_y + viewport[1], range, range, viewport)
 
         self._apply_orthogonal_view()
 
@@ -645,7 +646,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         return hits
 
     #@staticmethod
-    def _set_closest_line_width(self, width):
+    def _set_closest_stroke_width(self, width):
         """Sets the line width to the closest supported one
 
         Not all line widths are supported. This function queries both minimum and maximum as well as the step size of
@@ -655,19 +656,19 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Adapt line width to zooming level
         width *= self.pixel_to_size_ratio() / 6.
-        line_width_range = glGetFloatv(GL_LINE_WIDTH_RANGE)
-        line_width_granularity = glGetFloatv(GL_LINE_WIDTH_GRANULARITY)
+        stroke_width_range = glGetFloatv(GL_LINE_WIDTH_RANGE)
+        stroke_width_granularity = glGetFloatv(GL_LINE_WIDTH_GRANULARITY)
 
-        if width < line_width_range[0]:
-            glLineWidth(line_width_range[0])
+        if width < stroke_width_range[0]:
+            glLineWidth(stroke_width_range[0])
             return
-        if width > line_width_range[1]:
-            glLineWidth(line_width_range[1])
+        if width > stroke_width_range[1]:
+            glLineWidth(stroke_width_range[1])
             return
-        glLineWidth(round(width / line_width_granularity) * line_width_granularity)
+        glLineWidth(round(width / stroke_width_granularity) * stroke_width_granularity)
 
     #@staticmethod
-    def _draw_rect(self, left_x, right_x, bottom_y, top_y, depth, stroke_width=1, fill_color=None, border_color=None):
+    def _draw_rect(self, left_x, right_x, bottom_y, top_y, depth, border_width=1, fill_color=None, border_color=None):
 
         types = []
         if fill_color is not None:
@@ -679,7 +680,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             if type == GL_POLYGON:
                 fill_color.set()
             else:
-                self._set_closest_line_width(stroke_width)
+                self._set_closest_stroke_width(border_width)
                 border_color.set()
             glBegin(type)
             glVertex3f(left_x, bottom_y, depth)
@@ -689,8 +690,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glEnd()
 
     def _draw_rect_arrow(self, left_x, right_x, bottom_y, top_y, arrow_pos, depth,
-                         stroke_width=1, fill_color=None, border_color=None):
-        self._draw_rect(left_x, right_x, bottom_y, top_y, depth, stroke_width, fill_color, border_color)
+                         border_width=1, fill_color=None, border_color=None):
+        self._draw_rect(left_x, right_x, bottom_y, top_y, depth, border_width, fill_color, border_color)
 
 
         width = right_x - left_x
@@ -727,7 +728,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             if type == GL_POLYGON:
                 fill_color.set()
             else:
-                self._set_closest_line_width(stroke_width)
+                self._set_closest_stroke_width(border_width)
                 border_color.set()
             glBegin(type)
             glVertex3f(a[0], a[1], depth)
@@ -761,7 +762,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             if type == GL_POLYGON:
                 fill_color.set()
             else:
-                self._set_closest_line_width(stroke_width)
+                self._set_closest_stroke_width(stroke_width)
                 border_color.set()
             glBegin(type)
             for i in range(0, segments):
