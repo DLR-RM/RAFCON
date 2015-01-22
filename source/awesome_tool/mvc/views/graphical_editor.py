@@ -96,7 +96,7 @@ class GraphicalEditorView(View):
         # Configure OpenGL frame buffer.
         # Try to get a double-buffered frame buffer configuration,
         # if not successful then exit program
-        display_mode = (gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_SINGLE)
+        display_mode = (gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
         try:
             glconfig = gtk.gdkgl.Config(mode=display_mode)
         except gtk.gdkgl.NoMatches:
