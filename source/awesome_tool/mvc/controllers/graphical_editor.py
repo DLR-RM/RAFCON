@@ -58,7 +58,7 @@ class GraphicalEditorController(Controller):
     @Controller.observe("transitions", after=True)
     @Controller.observe("data_flows", after=True)
     def state_machine_change(self, model, property, info):
-        self._redraw()
+        self._redraw(True)
 
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
