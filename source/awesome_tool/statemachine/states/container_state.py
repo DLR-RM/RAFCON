@@ -172,7 +172,7 @@ class ContainerState(State, Observable):
 
     @Observable.observed
     #Primary key is transition_id
-    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None):
+    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
         """Adds a transition to the container state
 
         Note: Either the toState or the toOutcome needs to be "None"
@@ -182,7 +182,8 @@ class ContainerState(State, Observable):
         :param to_state_id: The target state of the transition
         :param to_outcome: The target outcome of a container state
         """
-        transition_id = generate_transition_id()
+        if transition_id is None:
+            transition_id = generate_transition_id()
 
         if not (from_state_id in self.states or from_state_id == self.state_id):
             raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
@@ -210,11 +211,13 @@ class ContainerState(State, Observable):
         if from_outcome in from_state.outcomes:
             if not to_outcome is None:
                 if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self
-                    self.transitions[transition_id] = Transition(from_state_id, from_outcome, to_state_id, to_outcome)
+                    self.transitions[transition_id] =\
+                        Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
                 else:
                     raise AttributeError("to_state does not have outcome %s", to_outcome)
             else:  # to outcome is None but to_state is not None, so the transition is valid
-                self.transitions[transition_id] = Transition(from_state_id, from_outcome, to_state_id, to_outcome)
+                self.transitions[transition_id] =\
+                    Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
         else:
             raise AttributeError("from_state does not have outcome %s", from_state)
 
@@ -240,7 +243,7 @@ class ContainerState(State, Observable):
 
     @Observable.observed
     #Primary key is data_flow_id.
-    def add_data_flow(self, from_state_id, from_key, to_state_id, to_key):
+    def add_data_flow(self, from_state_id, from_key, to_state_id, to_key, data_flow_id=None):
         """Adds a data_flow to the container state
 
         :param from_state_id: The id source state of the data_flow
@@ -249,7 +252,8 @@ class ContainerState(State, Observable):
         :param to_key: The input_key of the target state
 
         """
-        data_flow_id = generate_data_flow_id()
+        if data_flow_id is None:
+            data_flow_id = generate_data_flow_id()
 
         if not (from_state_id in self.states or from_state_id == self.state_id):
             raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
@@ -280,7 +284,7 @@ class ContainerState(State, Observable):
                 if to_key in to_state.output_data_ports and not to_state is self:
                     raise AttributeError("Data Flow not allowed if to_key is output_data_port of a child state")
 
-                self.data_flows[data_flow_id] = DataFlow(from_state_id, from_key, to_state_id, to_key)
+                self.data_flows[data_flow_id] = DataFlow(from_state_id, from_key, to_state_id, to_key, data_flow_id)
                 return data_flow_id
             else:
                 raise AttributeError("To_key %s does not exist" % to_key)

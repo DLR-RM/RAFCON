@@ -13,6 +13,7 @@ import numpy
 import yaml
 
 from statemachine.states.state import State
+from statemachine.id_generator import *
 
 
 class DataFlow(Observable, yaml.YAMLObject):
@@ -30,9 +31,15 @@ class DataFlow(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!DataFlow'
 
-    def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None):
+    def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None):
 
         Observable.__init__(self)
+
+        self._data_flow_id = None
+        if data_flow_id is None:
+            self.data_flow_id = generate_data_flow_id()
+        else:
+            self.data_flow_id = data_flow_id
 
         self._from_state = None
         self.from_state = from_state
@@ -47,8 +54,8 @@ class DataFlow(Observable, yaml.YAMLObject):
         self.to_key = to_key
 
     def __str__(self):
-        return "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s" % (self._from_state, self._from_key,
-                                                                                      self._to_state, self._to_key)
+        return "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
+               (self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id)
 
     @classmethod
     def to_yaml(cls, dumper, data):
@@ -135,3 +142,18 @@ class DataFlow(Observable, yaml.YAMLObject):
 
         self._to_key = to_key
 
+    @property
+    def data_flow_id(self):
+        """Property for the _data_flow_id field
+
+        """
+        return self._data_flow_id
+
+    @data_flow_id.setter
+    @Observable.observed
+    def data_flow_id(self, data_flow_id):
+        if not data_flow_id is None:
+            if not isinstance(data_flow_id, int):
+                raise TypeError("data_flow_id must be of type int")
+
+        self._data_flow_id = data_flow_id

@@ -13,6 +13,8 @@ from utils import log
 logger = log.get_logger(__name__)
 import yaml
 
+from statemachine.id_generator import *
+
 
 class Transition(Observable, yaml.YAMLObject):
     """A class for representing a transition in the state machine
@@ -29,8 +31,14 @@ class Transition(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Transition'
 
-    def __init__(self, from_state=None, from_outcome=None, to_state=None, to_outcome=None):
+    def __init__(self, from_state=None, from_outcome=None, to_state=None, to_outcome=None, transition_id=None):
         Observable.__init__(self)
+
+        self._transition_id = None
+        if transition_id is None:
+            self.transition_id = generate_transition_id()
+        else:
+            self.transition_id = transition_id
 
         self._from_state = None
         self.from_state = from_state
@@ -47,9 +55,8 @@ class Transition(Observable, yaml.YAMLObject):
         logger.debug(self.__str__())
 
     def __str__(self):
-        return "Transition - from_state: %s, from_outcome: %s, to_state: %s, to_outcome: %s" % (self._from_state,
-                                                                                       self._from_outcome,
-                                                                                       self._to_state, self._to_outcome)
+        return "Transition - from_state: %s, from_outcome: %s, to_state: %s, to_outcome: %s, id: %s" %\
+               (self._from_state, self._from_outcome, self._to_state, self._to_outcome, self._transition_id)
 
     @classmethod
     def to_yaml(cls, dumper, data):
@@ -137,3 +144,19 @@ class Transition(Observable, yaml.YAMLObject):
                 raise TypeError("to_outcome must be of type int")
 
         self._to_outcome = to_outcome
+
+    @property
+    def transition_id(self):
+        """Property for the _transition_id field
+
+        """
+        return self._transition_id
+
+    @transition_id.setter
+    @Observable.observed
+    def transition_id(self, transition_id):
+        if not transition_id is None:
+            if not isinstance(transition_id, int):
+                raise TypeError("transition_id must be of type int")
+
+        self._transition_id = transition_id

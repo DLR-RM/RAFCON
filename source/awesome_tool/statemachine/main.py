@@ -429,7 +429,7 @@ def state_without_path_test():
 if __name__ == '__main__':
 
     #state_without_path_test()
-    #scoped_data_test()
+    scoped_data_test()
     #scoped_variable_test()
     #hierarchy_test()
     #hierarchy_save_load_test()
