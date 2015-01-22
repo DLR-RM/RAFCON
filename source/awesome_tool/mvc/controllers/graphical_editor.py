@@ -58,7 +58,7 @@ class GraphicalEditorController(Controller):
     @Controller.observe("transitions", after=True)
     @Controller.observe("data_flows", after=True)
     def state_machine_change(self, model, property, info):
-        self._redraw()
+        self._redraw(True)
 
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
@@ -75,14 +75,14 @@ class GraphicalEditorController(Controller):
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
 
-    def _redraw(self):
+    def _redraw(self, important=False):
         """Force the graphical editor to be redrawn
 
         First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
         event to redraw.
         """
         # Check if initialized
-        if hasattr(self.view, "editor") and time.time() - self.last_time > 1/100.:
+        if hasattr(self.view, "editor") and (time.time() - self.last_time > 1/50. or important):
             self.view.editor.emit("configure_event", None)
             self.view.editor.emit("expose_event", None)
             self.last_time = time.time()
@@ -130,7 +130,8 @@ class GraphicalEditorController(Controller):
 
             if self.selection is not None and \
                     (isinstance(self.selection, TransitionModel) or isinstance(self.selection, DataFlowModel)):
-                close_threshold = 2
+                close_threshold = min(self.selection.parent.meta['gui']['editor']['height'],
+                                      self.selection.parent.meta['gui']['editor']['width)']) / 50.
                 click = self.mouse_move_start_pos
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
                     if waypoint[0] is not None and waypoint[1] is not None:
@@ -142,7 +143,7 @@ class GraphicalEditorController(Controller):
                             break
 
             if self.selection is not None and isinstance(self.selection, StateModel) and self.selection is not self.model:
-                outcomes_close_threshold = 1.5
+                outcomes_close_threshold = self.selection.meta['gui']['editor']['outcome_radius']
                 outcomes = self.selection.meta['gui']['editor']['outcome_pos']
                 click = self.mouse_move_start_pos
                 for key in outcomes:
@@ -166,12 +167,12 @@ class GraphicalEditorController(Controller):
                 # If it was on a connection, a waypoint is added to that position
                 waypoint_removed = False
 
-                close_threshold = 2
+                close_threshold = min(clicked_model.parent.meta['gui']['editor']['height'],
+                                      clicked_model.parent.meta['gui']['editor']['width)']) / 70.
                 # logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for waypoint in connection_model.meta['gui']['editor']['waypoints']:
                     if waypoint[0] is not None and waypoint[1] is not None:
-                        if abs(waypoint[0] - click[0]) < close_threshold and \
-                                        abs(waypoint[1] - click[1]) < close_threshold:
+                        if sqrt((waypoint[0] - click[0])**2 + (waypoint[1] - click[1])**2) < close_threshold:
                             connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
                             waypoint_removed = True
                             logger.debug('Connection waypoint removed')
@@ -235,17 +236,14 @@ class GraphicalEditorController(Controller):
                     outcome_id = self.selected_outcome[1]
                     try:
                         self.selection.parent.state.add_transition(state_id, outcome_id,
-                                                                      target_state_id, target_outcome)
+                                                                   target_state_id, target_outcome)
                     except AttributeError as e:
                         logger.debug("Transition couldn't be added: {0}".format(e))
                     except Exception as e:
                         logger.error("Unexpected exception: {0}".format(e))
-                else:
-                    self.selected_outcome = None
-                    self._redraw()
-            else:
-                self.selected_outcome = None
-                self._redraw()
+
+            self.selected_outcome = None
+            self._redraw(True)
 
     def _on_mouse_motion(self, widget, event):
         """Triggered when the mouse is moved while being pressed
