@@ -5,6 +5,8 @@ logger = log.get_logger(__name__)
 from gtkmvc import Controller
 from gtk import ListStore
 
+from mvc.models import ContainerStateModel, StateModel
+
 
 class TransitionListController(Controller):
     """Controller handling the view of transitions of the ContainerStateModel
@@ -33,7 +35,11 @@ class TransitionListController(Controller):
             states_store.append([container_model.state.state_id, container_model.state.name])
             transition = model.get_value(iter, 0)
             for state_model in container_model.states.itervalues():
+                #print "state: ", state_model.state
+                #print "state model: ", [state_model.state.state_id, state_model.state.name]
                 states_store.append([state_model.state.state_id, state_model.state.name])
+
+            outcomes_store = ListStore(str, str)
             if col == 'from_state_col':
                 text = container_model.state.states[transition.from_state].name
                 cell_renderer.set_property('text', text)
@@ -47,34 +53,81 @@ class TransitionListController(Controller):
                 cell_renderer.set_property('model', states_store)
             elif col == 'from_outcome_col':
                 from_state = container_model.state.states[transition.from_state]
+                self.get_outcome_combos(from_state, outcomes_store)
                 cell_renderer.set_property('text', from_state.outcomes[transition.from_outcome].name)
+                cell_renderer.set_property('text-column', 1)
+                cell_renderer.set_property('model', outcomes_store)
             elif col == 'to_outcome_col':
                 if transition.to_outcome is None:
                     cell_renderer.set_property('text', '')
                 else:
+                    print "to state outcomes: ", container_model.state.outcomes
+                    self.get_outcome_combos(container_model.state, outcomes_store)
                     cell_renderer.set_property('text', container_model.state.outcomes[transition.to_outcome].name)
+                    cell_renderer.set_property('text-column', 1)
+                    cell_renderer.set_property('model', outcomes_store)
+            elif col == 'external_col':
+                # if transition.to_outcome is None:
+                #     cell_renderer.set_property('boolean', True)
+                # else:
+                #     print "to state outcomes: ", container_model.state.outcomes
+                cell_renderer.set_property('boolean', False)
             else:
                 logger.error("Unknown column '{col:s}' in TransitionListView".format(col=col))
 
-
-        view.get_top_widget().set_model(self.model.transition_list_store)
+        if isinstance(self.model.parent, StateModel):
+            import gobject
+            transition_list_store = ListStore(gobject.TYPE_PYOBJECT)
+            # if isinstance(self.model, ContainerStateModel):
+            #     transition_list_store.append(self.model.transition_list_store)
+            # transition_list_store.append(self.model.parent.transition_list_store)
+            # view.get_top_widget().set_model(transition_list_store)
+            if isinstance(self.model, ContainerStateModel):
+                view.get_top_widget().set_model(self.model.transition_list_store)
+        else:
+            if isinstance(self.model, ContainerStateModel):
+                view.get_top_widget().set_model(self.model.transition_list_store)
 
         view['from_state_col'].set_cell_data_func(view['from_state_combo'], cell_text, self.model)
         view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
         view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text, self.model)
         view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text, self.model)
-
+        #view['external_col'].set_cell_data_func(view['external_toggle'], cell_text, self.model)
 
         view['from_state_combo'].connect("edited", self.on_combo_changed)
+        view['from_outcome_combo'].connect("edited", self.on_combo_changed)
         view['to_state_combo'].connect("edited", self.on_combo_changed)
+        view['to_outcome_combo'].connect("edited", self.on_combo_changed)
+        view['external_toggle'].connect("toggled", self.on_external_toggled)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
 
-    def on_combo_changed(self, widget, path, text):
+    def on_external_toggled(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
 
+
+    def get_state_combos(self, state):
+        states_store = ListStore(str, str)
+        states_store.append([container_model.state.state_id, container_model.state.name])
+        for state_model in container_model.states.itervalues():
+            print "model: ", [state_model.state.state_id, state_model.state.name]
+            states_store.append([state_model.state.state_id, state_model.state.name])
+
+    def get_outcome_combos(self, state, outcomes_store):
+        print "state name: ", state.name
+        print "from state outcomes: ", state.outcomes
+        for outcome in state.outcomes.itervalues():
+            print "outcome: ", outcome
+            print "model: ", [state.state_id, outcome.name]
+            outcomes_store.append([state.state_id, outcome.name])
+        print "final store: ", outcomes_store
+        return outcomes_store
+
+    def on_combo_changed(self, widget, path, text):
+        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        #liststore[path][2]
 
 import gtk
 import gobject

@@ -10,7 +10,7 @@ from mvc.controllers.data_flow_list import DataFlowListController
 
 
 class StateConnectionsEditorController(Controller):
-    """Controller handling the view of properties/attributes of the ContainerStateModel
+    """Controller handling the view of properties/attributes of the ContainerStateModel and StateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
     :class:`mvc.views.state_properties.ContainerStateView` and the properties of the
@@ -27,6 +27,8 @@ class StateConnectionsEditorController(Controller):
         Controller.__init__(self, model, view)
         self.transitions_ctrl = TransitionListController(model, view.transitions_view)
         self.dataflows_ctrl = DataFlowListController(model, view.dataflows_view)
+        self.view_dict = {'transitions_internal': True, 'transitions_external': True,
+                          'dataflows_internal': True, 'dataflows_external': True}
 
     def register_view(self, view):
         """Called when the View was registered
@@ -36,14 +38,14 @@ class StateConnectionsEditorController(Controller):
         view['add_t_button'].connect('clicked', self.on_add_transition_clicked)
         view['cancel_t_edit_button'].connect('clicked', self.on_cancel_transition_edit_clicked)
         view['remove_t_button'].connect('clicked', self.on_remove_transition_clicked)
-        view['connected_to_t_checkbutton'].connect('toggled', self.toggled_connected_to_for_transitions)
-        view['internal_t_checkbutton'].connect('toggled', self.toggled_internal_for_transitions)
+        view['connected_to_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_external')
+        view['internal_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_internal')
 
-        view['add_d_button'].connect('clicked', self.on_add_dataflow_clicked)
+        view['add_d_button'].connect('clicked', self.on_add_transition_clicked)
         view['cancel_d_edit_button'].connect('clicked', self.on_cancel_dataflow_edit_clicked)
         view['remove_d_button'].connect('clicked', self.on_remove_dataflow_clicked)
-        view['connected_to_d_checkbutton'].connect('toggled', self.toggled_connected_to_for_dataflows)
-        view['internal_d_checkbutton'].connect('toggled', self.toggled_internal_for_dataflows)
+        view['connected_to_d_checkbutton'].connect('toggled', self.toggled_button, 'dataflows_external')
+        view['internal_d_checkbutton'].connect('toggled', self.toggled_button, 'dataflows_internal')
 
         # view['state_properties_view'].set_model(self.model.list_store)
         #
@@ -63,35 +65,27 @@ class StateConnectionsEditorController(Controller):
     #         logger.warning("Invalid value: %s" % outcome)
     #
 
-    def on_add_transition_clicked(self):
-        pass
+    def on_add_transition_clicked(self, widget, data=None):
+        print "add_t: %s" % widget
 
-    def on_cancel_transition_edit_clicked(self):
-        pass
+    def on_cancel_transition_edit_clicked(self, widget, data=None):
+        print "cancel_t: %s" % widget
 
-    def on_remove_transition_clicked(self):
-        pass
+    def on_remove_transition_clicked(self, widget, data=None):
+        print "rm_t: %s" % widget
 
-    def toggled_connected_to_for_transitions(self):
-        pass
+    def on_add_dataflow_clicked(self, widget, data):
+        print "add_d: %s" % widget
 
-    def toggled_internal_for_transitions(self):
-        pass
+    def on_cancel_dataflow_edit_clicked(self, widget, data=None):
+        print "cancel_d: %s" % widget
 
-    def on_add_dataflow_clicked(self):
-        pass
+    def on_remove_dataflow_clicked(self, widget, data=None):
+        print "rm_d: %s" % widget
 
-    def on_cancel_dataflow_edit_clicked(self):
-        pass
-
-    def on_remove_dataflow_clicked(self):
-        pass
-
-    def toggled_connected_to_for_dataflows(self):
-        pass
-
-    def toggled_internal_for_dataflows(self):
-        pass
+    def toggled_button(self, button, name=None):
+        self.view_dict[name] = button.get_active()
+        print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
 
     def __state_property_adapter(self, attr_name, label, view=None, value_error=None):
         """Helper method returning an adapter for a state property
@@ -213,5 +207,6 @@ if __name__ == '__main__':
 
     v = SingleWidgetWindowView(StateConnectionsEditorView, width=500, height=200, title='Connection Editor')
     c = SingleWidgetWindowController(ctr_model, v, StateConnectionsEditorController)
+    #c = SingleWidgetWindowController(ctr_model.states.values()[1], v, StateConnectionsEditorController)
 
     gtk.main()

@@ -26,9 +26,9 @@ class StateEditorView(View):
         self['connections_view'] = StateConnectionsEditorView()
 
         self['properties_viewport'].add(self['properties_view'].get_top_widget())
-        self['scrolledwindow1'].add(self['inputs_view'].get_top_widget())
-        self['viewport4'].add(self['outputs_view'].get_top_widget())
-        self['viewport5'].add(self['scopes_view'].get_top_widget())
+        self['input_ports_scroller'].add(self['inputs_view'].get_top_widget())
+        self['output_ports_scroller'].add(self['outputs_view'].get_top_widget())
+        self['scoped_variables_scroller'].add(self['scopes_view'].get_top_widget())
         self['viewport6'].add(self['outcomes_view']['vbox1'])
         self['viewport1'].add(self['source_view'].get_top_widget())
         self['alignment1'].add(self['connections_view']['connections_editor_widget'])
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
 
     v = SingleWidgetWindowView(StateEditorView, width=550, height=600, title='State Editor')
-    #c = SingleWidgetWindowController(ctr_model, v, StateEditorController)
-    c = SingleWidgetWindowController(m, v, StateEditorController)
+    c = SingleWidgetWindowController(ctr_model, v, StateEditorController)
+    #c = SingleWidgetWindowController(m, v, StateEditorController)
 
     gtk.main()
