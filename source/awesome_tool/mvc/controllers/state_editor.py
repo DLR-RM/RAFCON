@@ -1,12 +1,9 @@
 import gtk
 from gtkmvc import View, Controller
-from mvc.controllers.source_editor import SourceEditorController
-from mvc.controllers.container_state import ContainerStateController
-from mvc.controllers.connections_editor import StateConnectionsEditorController
-from mvc.controllers.state_overview import StateOverviewController
-
-from mvc.controllers import DataPortListController
 from gtkmvc import Observer
+
+from mvc.controllers import StateOverviewController, StateConnectionsEditorController, SourceEditorController, \
+    DataPortListController, ScopedVariableListController, ContainerStateController
 
 
 class StateEditorController(Controller):
@@ -28,10 +25,12 @@ class StateEditorController(Controller):
         """
         Controller.__init__(self, model, view)
         self.properties_ctrl = StateOverviewController(model, view['properties_view'])
+
         self.inputs_ctrl = DataPortListController(model, view['inputs_view'], "input")  #ContainerStateController(model, view['inputs_view'])
         self.outputs_ctrl = DataPortListController(model, view['outputs_view'], "output")  # ContainerStateController(model, view['outputs_view'])
-        #self.scopes_ctrl = ContainerStateController(model, view['scopes_view'])
+        self.scoped_ctrl = ScopedVariableListController(model, view['scopes_view'])
         self.outcomes_ctrl = ContainerStateController(model, view['outcomes_view'])
+
         self.source_ctrl = SourceEditorController(model, view['source_view'])
         self.connections_ctrl = StateConnectionsEditorController(model, view['connections_view'])
 

@@ -52,7 +52,7 @@ class StateEditorView(View):
                 if self['port_expander'+str(i)].get_expanded():
                     print "%s is expanded" % ('port_expander'+str(i))
                     count += 1
-            self['port_expander'].set_size_request(width=-1, height=count*150+100)
+            self['port_expander'].set_size_request(width=-1, height=count*165+100)
         else:
             self['port_expander'].set_size_request(width=-1, height=-1)
 

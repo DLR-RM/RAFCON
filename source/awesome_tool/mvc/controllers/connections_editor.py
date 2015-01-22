@@ -116,7 +116,7 @@ class StateConnectionsEditorController(Controller):
     def _value_error(adapt, prop_name, value):
         logger.warning("Invalid value '{val:s}' for key '{prop:s}'.".format(val=value, prop=prop_name))
         adapt.update_widget()  # Update widget values with values from model
-    #
+
     # @Controller.observe("state", before=True)
     # def before_state_change(self, model, _, info):
     #     """Called before an attribute of the state is set

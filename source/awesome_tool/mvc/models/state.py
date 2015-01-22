@@ -9,6 +9,7 @@ from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
 from utils.vividict import Vividict
 from mvc.models.data_port import DataPortModel
 
+
 class StateModel(ModelMT):
     """This model class manages a State
 
@@ -38,7 +39,7 @@ class StateModel(ModelMT):
         assert isinstance(state, State)
 
         self.state = state
-        print "state.name: %s and script: \n %s" % (state.name, state.script.script)
+        #print "state.name: %s and script: \n %s" % (state.name, state.script.script)
 
         if isinstance(meta, Vividict):
             self.meta = meta
