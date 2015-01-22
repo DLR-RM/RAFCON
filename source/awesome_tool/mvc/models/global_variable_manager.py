@@ -27,7 +27,7 @@ class GlobalVariableManagerModel(ModelMT):
         self.update_global_variables_list_store()
 
     def update_global_variables_list_store(self):
-        print "update_global_variables_list_store"
+        #print "update_global_variables_list_store"
         tmp = ListStore(gobject.TYPE_PYOBJECT)
         for key, value in self.global_variable_manager.global_variable_dictionary.iteritems():
             #print "global_key: ", key

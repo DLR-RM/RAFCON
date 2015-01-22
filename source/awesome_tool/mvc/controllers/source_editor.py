@@ -1,21 +1,19 @@
 import gtk
 from gtkmvc import Controller
+from pylint import epylint as lint
+
+from utils import log
+logger = log.get_logger(__name__)
 
 
 class SourceEditorController(Controller):
-    """Controller handling the view of properties/attributes of the ContainerStateModel
-
-    This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
-    :class:`mvc.views.source_editor.SourceEditorView` and the properties of the
-    :class:`mvc.models.state.StateModel`. Changes made in
-    the GUI are written back to the model and vice versa.
+    """Controller handling the source script of a state
 
     :param mvc.models.StateModel model: The state model containing the data
     :param mvc.views.SourceEditorView view: The GTK view showing the data as a table
     """
 
     # TODO Missing functions
-    # - Code syntax check
     # - Code function-expander
     # - Code completion
 
@@ -44,24 +42,58 @@ class SourceEditorController(Controller):
 
     #===============================================================
     def code_changed(self, source):
+        print "The text in the text_buffer changed"
         self.view.apply_tag('default')
 
     #===============================================================
     def apply_clicked(self, button):
-        #self.model.state.script = self.view.get_buffer()
-        # bypath the observer
-        # self.model.state.script.script = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        print "Apply button pressed!"
         tbuffer = self.view.get_buffer()
-        script = self.model.state.script
-        script.script = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-        self.model.state.script = script
+        current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        text_file = open("/tmp/file_to_get_pylinted.py", "w")
+        text_file.write(current_text)
+        text_file.close()
 
-        self.view.set_text(self.model.state.script.script)
+        (pylint_stdout, pylint_stderr) = lint.py_run('/tmp/file_to_get_pylinted.py', True)
+        pylint_stdout_data=pylint_stdout.readlines()
+        pylint_stderr_data=pylint_stdout.readlines()
+
+        invalid_sytax = False
+        for elem in pylint_stdout_data:
+            if " Error " in elem:
+                #print elem
+                invalid_sytax = True
+
+        if invalid_sytax:
+            print "There are still errors in the python file"
+            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+            message_string = "Are you sure you want the save this file \nThe following errors were found:"
+            for elem in pylint_stdout_data:
+                message_string = "%s \n %s " % (message_string, str(elem))
+                print message_string
+            message.set_markup(message_string)
+            message.add_button("Yes", 42)
+            message.add_button("No", 43)
+            message.connect('response', self.on_message_dialog_response_signal, current_text)
+            message.show()
+        else:
+            self.model.state.script.script = current_text
+            self.view.set_text(self.model.state.script.script)
+            logger.debug("File saved")
 
     #===============================================================
     def cancel_clicked(self, button):
         self.view.set_text(self.model.state.script.script)
 
+    def on_message_dialog_response_signal(self, widget, response_id, current_text):
+        print current_text
+        if response_id == 42:
+            self.model.state.script.script = current_text
+            self.view.set_text(self.model.state.script.script)
+            logger.debug("File saved")
+        else:
+            logger.debug("File not saved")
+        widget.destroy()
 
 if __name__ == '__main__':
     from mvc.views import SourceEditorView, SingleWidgetWindowView

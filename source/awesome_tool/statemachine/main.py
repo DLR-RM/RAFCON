@@ -438,7 +438,7 @@ if __name__ == '__main__':
     #concurrency_preemption_test()
     #concurrency_preemption_save_load_test()
     #state_machine_manager_test()
-    external_modules_test()
+    #external_modules_test()
     #global_variable_test()
     #ros_external_module_test()
     #save_and_load_data_port_test()
@@ -446,7 +446,7 @@ if __name__ == '__main__':
 
     #save_library()
     #print "########################################################"
-    #run_library_statemachine()
+    run_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine
