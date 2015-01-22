@@ -1,5 +1,5 @@
-
 from gtkmvc import View
+
 
 class DataFlowListView(View):
     builder = './glade/DataFlowListWidget.glade'

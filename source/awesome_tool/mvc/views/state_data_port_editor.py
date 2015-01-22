@@ -31,7 +31,6 @@ class StateDataportEditorView(View):
         self.expanders.append(self["scoped_variables_expander"])
         self.expanders[2].connect("activate", self.on_expander_activate)
 
-
     #this will be called before the expander is activated
     def on_expander_activate(self, widget, data=None):
 

@@ -9,8 +9,8 @@ from mvc.controllers.transition_list import TransitionListController
 from mvc.controllers.data_flow_list import DataFlowListController
 
 
-class ContainerStateController(Controller):
-    """Controller handling the view of properties/attributes of the ContainerStateModel
+class StateConnectionsEditorController(Controller):
+    """Controller handling the view of properties/attributes of the ContainerStateModel and StateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
     :class:`mvc.views.state_properties.ContainerStateView` and the properties of the
@@ -25,15 +25,27 @@ class ContainerStateController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
-        self.transition_list_controller = TransitionListController(model, view.transition_list_view)
-        self.data_flow_list_controller = DataFlowListController(model, view.data_flow_list_view)
+        self.transitions_ctrl = TransitionListController(model, view.transitions_view)
+        self.dataflows_ctrl = DataFlowListController(model, view.dataflows_view)
+        self.view_dict = {'transitions_internal': True, 'transitions_external': True,
+                          'dataflows_internal': True, 'dataflows_external': True}
 
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        #view['container_state_widget'].connect('destroy', gtk.main_quit)
+        view['add_t_button'].connect('clicked', self.on_add_transition_clicked)
+        view['cancel_t_edit_button'].connect('clicked', self.on_cancel_transition_edit_clicked)
+        view['remove_t_button'].connect('clicked', self.on_remove_transition_clicked)
+        view['connected_to_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_external')
+        view['internal_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_internal')
+
+        view['add_d_button'].connect('clicked', self.on_add_transition_clicked)
+        view['cancel_d_edit_button'].connect('clicked', self.on_cancel_dataflow_edit_clicked)
+        view['remove_d_button'].connect('clicked', self.on_remove_dataflow_clicked)
+        view['connected_to_d_checkbutton'].connect('toggled', self.toggled_button, 'dataflows_external')
+        view['internal_d_checkbutton'].connect('toggled', self.toggled_button, 'dataflows_internal')
 
         # view['state_properties_view'].set_model(self.model.list_store)
         #
@@ -45,7 +57,35 @@ class ContainerStateController(Controller):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-        self.adapt(self.__state_property_adapter("name", "input_name"))
+        #self.adapt(self.__state_property_adapter("name", "input_name"))
+
+    # def __property_edited(self, _, row, value):
+    #     outcome = self.model.update_row(row, value)
+    #     if type(outcome) != bool:
+    #         logger.warning("Invalid value: %s" % outcome)
+    #
+
+    def on_add_transition_clicked(self, widget, data=None):
+        print "add_t: %s" % widget
+
+    def on_cancel_transition_edit_clicked(self, widget, data=None):
+        print "cancel_t: %s" % widget
+
+    def on_remove_transition_clicked(self, widget, data=None):
+        print "rm_t: %s" % widget
+
+    def on_add_dataflow_clicked(self, widget, data):
+        print "add_d: %s" % widget
+
+    def on_cancel_dataflow_edit_clicked(self, widget, data=None):
+        print "cancel_d: %s" % widget
+
+    def on_remove_dataflow_clicked(self, widget, data=None):
+        print "rm_d: %s" % widget
+
+    def toggled_button(self, button, name=None):
+        self.view_dict[name] = button.get_active()
+        print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
 
     def __state_property_adapter(self, attr_name, label, view=None, value_error=None):
         """Helper method returning an adapter for a state property
@@ -59,18 +99,18 @@ class ContainerStateController(Controller):
             print out and the widget value is updated to the previous value.
         :return: The custom created adapter, which can be used in :func:`register_adapter`
         """
-        if view is None:
-            view = self.view
-
-        if value_error is None:
-            value_error = self._value_error
-
-        adapter = UserClassAdapter(self.model, "state",
-                                   getter=lambda state: state.__getattribute__(attr_name),
-                                   setter=lambda state, value: state.__setattr__(attr_name, value),
-                                   value_error=value_error)
-        adapter.connect_widget(view[label])
-        return adapter
+        # if view is None:
+        #     view = self.view
+        #
+        # if value_error is None:
+        #     value_error = self._value_error
+        #
+        # adapter = UserClassAdapter(self.model, "state",
+        #                            getter=lambda state: state.__getattribute__(attr_name),
+        #                            setter=lambda state, value: state.__setattr__(attr_name, value),
+        #                            value_error=value_error)
+        # adapter.connect_widget(view[label])
+        # return adapter
     
     @staticmethod
     def _value_error(adapt, prop_name, value):
@@ -109,7 +149,6 @@ class ContainerStateController(Controller):
     #     #     pass
     #
     #     pass
-    #
     #
     #
     # @Controller.observe("state", after=True)
@@ -156,3 +195,18 @@ class ContainerStateController(Controller):
     #             for path in selected_paths:
     #                 selection.select_path(path)
 
+if __name__ == '__main__':
+    from mvc.controllers import SingleWidgetWindowController
+    from mvc.views import StateConnectionsEditorView, SingleWidgetWindowView
+
+    import mvc.main as main
+
+    main.setup_path()
+    main.check_requirements()
+    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
+
+    v = SingleWidgetWindowView(StateConnectionsEditorView, width=500, height=200, title='Connection Editor')
+    c = SingleWidgetWindowController(ctr_model, v, StateConnectionsEditorController)
+    #c = SingleWidgetWindowController(ctr_model.states.values()[1], v, StateConnectionsEditorController)
+
+    gtk.main()

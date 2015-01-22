@@ -9,7 +9,7 @@ from mvc.controllers.scoped_variable_list import ScopedVariableListController
 from gtkmvc import Observer
 
 
-class StateDataPortEditorController(Controller, Observer):
+class StateDataPortEditorController(Controller):
 
     #model will be a container state model
     def __init__(self, model, view):
@@ -31,7 +31,6 @@ class StateDataPortEditorController(Controller, Observer):
         self.new_ip_counter = 0
         self.new_op_counter = 0
         self.new_sv_counter = 0
-
 
     #new buttons
     def on_new_input_port_button_clicked(self, widget, data=None):

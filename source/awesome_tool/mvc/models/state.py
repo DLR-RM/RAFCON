@@ -38,6 +38,7 @@ class StateModel(ModelMT):
         assert isinstance(state, State)
 
         self.state = state
+        print "state.name: %s and script: \n %s" % (state.name, state.script.script)
 
         if isinstance(meta, Vividict):
             self.meta = meta

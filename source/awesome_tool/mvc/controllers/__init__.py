@@ -1,7 +1,18 @@
-from state_properties import StatePropertiesController
-from container_state import ContainerStateController
+from state_properties import StatePropertiesController  # old
+from container_state import ContainerStateController  # old
+from single_widget_window import SingleWidgetWindowController
+
 from graphical_editor import GraphicalEditorController
 from state_data_port_editor import StateDataPortEditorController
 from global_variable_manager_controller import GlobalVariableManagerController
 from external_module_manager import ExternalModuleManagerController
+
+from state_overview import StateOverviewController
 from source_editor import SourceEditorController
+from io_data_port_list import DataPortListController
+from connections_editor import StateConnectionsEditorController
+from state_editor import StateEditorController
+
+from library_tree import LibraryTreeController
+from state_machine_tree import StateMachineTreeController
+from full_main_window import FullMainWindowController

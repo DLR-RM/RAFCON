@@ -516,7 +516,10 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     def script(self, script):
         if not isinstance(script, Script):
             raise TypeError("script must be of type Script")
+        #if hasattr(self, '_script'):
+        #    print "change script of state.name: %s from script: \n %s" % (self.name, self._script.script)
         self._script = script
+        print "change script of state: %s state.name: %s to script: \n %s" % (self.state_id, self.name, self._script.script)
 
     @property
     def input_data(self):
