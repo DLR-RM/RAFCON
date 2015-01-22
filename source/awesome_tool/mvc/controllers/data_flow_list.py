@@ -4,6 +4,7 @@ logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
 from gtk import ListStore
+import gobject
 
 from mvc.models import ContainerStateModel, StateModel
 from mvc.models.data_port import DataPortModel
@@ -25,6 +26,16 @@ class DataFlowListController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
+        self.tree_dict_combos = {'internal':    {'from': {'state': ListStore(gobject.TYPE_PYOBJECT),
+                                                          'key': ListStore(gobject.TYPE_PYOBJECT)},
+                                                 'to':   {'state': ListStore(gobject.TYPE_PYOBJECT),
+                                                          'key': ListStore(gobject.TYPE_PYOBJECT)}},
+                                 'external':    {'from': {'state': ListStore(gobject.TYPE_PYOBJECT),
+                                                          'key': ListStore(gobject.TYPE_PYOBJECT)},
+                                                 'to':   {'state': ListStore(gobject.TYPE_PYOBJECT),
+                                                          'key': ListStore(gobject.TYPE_PYOBJECT)}}}
+        self.dataflow_dict = {'internal':    {},
+                              'external':    {}}
 
     def register_view(self, view):
         """Called when the View was registered
@@ -90,6 +101,9 @@ class DataFlowListController(Controller):
             else:
                 logger.error("Unknown column '{col:s}' in DataFlowListView".format(col=col))
 
+        self.update_combos()
+        self.update_data_flow()
+
         if isinstance(self.model.parent, StateModel):
             import gobject
             data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)
@@ -136,6 +150,29 @@ class DataFlowListController(Controller):
         print "final store: ", keys_store
         return keys_store
 
+    def update_combos(model):
+        pass
+
+    def update_data_flow(model):
+        pass
+
     def on_combo_changed(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
 
+def update_combos(model,):
+    tree_dict_combos = {'internal':    {'from': {'state': {},
+                                                          'key': {}},
+                                                 'to':   {'state': {},
+                                                          'key': {}}},
+                                 'external':    {'from': {'state': {},
+                                                          'key': {}},
+                                                 'to':   {'state': {},
+                                                          'key': {}}}}
+    ListStore(str)
+    pass
+
+def update_data_flow(model):
+    dataflow_dict = {'internal':    {},
+                     'external':    {}}
+    # from_state, to_key, to_state, to_key, external
+    pass
