@@ -209,7 +209,7 @@ class GraphicalEditorController(Controller):
         self.last_button_pressed = None
 
         if self.selected_outcome is not None:
-            release_selection = self._find_selection(event.x, event.y)
+            release_selection = self._find_selection(event.x, event.y, True)
             if isinstance(release_selection, StateModel) and release_selection != self.selection:
                 target_state_id = None
                 target_outcome = None
@@ -549,7 +549,7 @@ class GraphicalEditorController(Controller):
                                                  depth + 0.6)
 
 
-    def _find_selection(self, pos_x, pos_y):
+    def _find_selection(self, pos_x, pos_y, only_states=False):
         # e.g. sets render mode to GL_SELECT
         self.view.editor.prepare_selection(pos_x, pos_y)
         # draw again
@@ -564,14 +564,14 @@ class GraphicalEditorController(Controller):
         try:
             selected_ids = map(lambda hit: hit[2][1], hits)
             # print selected_ids
-            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0)
+            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0, only_states)
             # print selection, selection_depth
         except Exception as e:
             logger.error("Error while finding selection: {err:s}".format(err=e))
             pass
         return selection
 
-    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth):
+    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth, only_states):
         """Searches recursively for objects with the given ids
 
         The method searches recursively and compares all stored ids with the given ones. It finally returns the
@@ -603,9 +603,9 @@ class GraphicalEditorController(Controller):
 
             for state in search_state.states.itervalues():
                 (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
-                                                                            selection, selection_depth)
+                                                                            selection, selection_depth, only_states)
 
-            if len(ids) == 0 or search_state_depth < selection_depth:
+            if len(ids) == 0 or search_state_depth < selection_depth or only_states:
                 return selection, selection_depth
 
             for transition in search_state.transitions:
