@@ -42,12 +42,12 @@ class SourceEditorController(Controller):
 
     #===============================================================
     def code_changed(self, source):
-        print "The text in the text_buffer changed"
+        #print "The text in the text_buffer changed"
         self.view.apply_tag('default')
 
     #===============================================================
     def apply_clicked(self, button):
-        print "Apply button pressed!"
+        #print "Apply button pressed!"
         tbuffer = self.view.get_buffer()
         current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
         text_file = open("/tmp/file_to_get_pylinted.py", "w")
@@ -65,12 +65,12 @@ class SourceEditorController(Controller):
                 invalid_sytax = True
 
         if invalid_sytax:
-            print "There are still errors in the python file"
+            #print "There are still errors in the python file"
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "Are you sure you want the save this file \nThe following errors were found:"
             for elem in pylint_stdout_data:
                 message_string = "%s \n %s " % (message_string, str(elem))
-                print message_string
+                #print message_string
             message.set_markup(message_string)
             message.add_button("Yes", 42)
             message.add_button("No", 43)
@@ -86,7 +86,7 @@ class SourceEditorController(Controller):
         self.view.set_text(self.model.state.script.script)
 
     def on_message_dialog_response_signal(self, widget, response_id, current_text):
-        print current_text
+        #print current_text
         if response_id == 42:
             self.model.state.script.script = current_text
             self.view.set_text(self.model.state.script.script)

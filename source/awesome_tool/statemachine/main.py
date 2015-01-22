@@ -444,8 +444,9 @@ if __name__ == '__main__':
     #save_and_load_data_port_test()
     #default_data_port_values_test()
 
-    #save_library()
+    save_library()
     #print "########################################################"
+    # you have to run save_library() test before you can run run_library_statemachine()
     run_library_statemachine()
 
     #TODO: test

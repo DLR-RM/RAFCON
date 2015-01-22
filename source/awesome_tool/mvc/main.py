@@ -8,7 +8,8 @@ from mvc.controllers import StatePropertiesController, ContainerStateController,
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
     SourceEditorController, SingleWidgetWindowController,StateEditorController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView
+    GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
+    LoggingView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
 from statemachine.states.execution_state import ExecutionState
@@ -34,6 +35,11 @@ def check_requirements():
     import gtkmvc
     gtkmvc.require("1.99.1")
     return
+
+
+def setup_logger(logging_view):
+    log.debug_filter.set_logging_test_view(logging_view)
+    log.error_filter.set_logging_test_view(logging_view)
 
 
 def create_models(*args, **kargs):
@@ -126,16 +132,21 @@ def create_models(*args, **kargs):
 if __name__ == "__main__":
     setup_path()
     check_requirements()
+    logging_view = LoggingView()
+    setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
 
-    sdev = StateDataportEditorView()
-    StateDataPortEditorController(ctr_model, sdev)
+    #sdev = StateDataportEditorView()
+    #StateDataPortEditorController(ctr_model, sdev)
 
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
 
-    state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
-    state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
+    #state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
+    #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
+
+    #v = SourceEditorView()
+    #SourceEditorController(ctr_model, v)
 
     #ctr_view = ContainerStateView()
     #ContainerStateController(ctr_model, ctr_view)
@@ -143,8 +154,8 @@ if __name__ == "__main__":
     #global_var_manager_view = GlobalVariableEditorView()
     #GlobalVariableManagerController(gvm_model, global_var_manager_view)
 
-    external_module_manager_view = ExternalModuleManagerView()
-    ExternalModuleManagerController(emm_model, external_module_manager_view)
+    #external_module_manager_view = ExternalModuleManagerView()
+    #ExternalModuleManagerController(emm_model, external_module_manager_view)
 
     editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)

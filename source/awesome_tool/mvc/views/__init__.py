@@ -13,6 +13,7 @@ from external_module_manager import ExternalModuleManagerView
 from state_overview import StateOverviewView
 from source_editor import SourceEditorView
 from connections_editor import StateConnectionsEditorView
+from logging_view import LoggingView
 from state_editor import StateEditorView
 
 from state_machine_tree import StateMachineTreeView

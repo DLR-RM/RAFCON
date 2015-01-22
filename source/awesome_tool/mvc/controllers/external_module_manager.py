@@ -21,6 +21,7 @@ class ExternalModuleManagerController(Controller, Observer):
         view['stop_button'].connect('clicked', self.on_stop_button_clicked)
         view['pause_button'].connect('clicked', self.on_pause_button_clicked)
         model.update_external_modules_list_store()
+        model.reset_external_module_model()
 
 
     def on_connect_button_clicked(self, widget, data=None):

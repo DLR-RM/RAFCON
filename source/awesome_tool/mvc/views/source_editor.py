@@ -51,7 +51,7 @@ class SourceEditorView(View):
                                                        editor_frame.render_icon(gtk.STOCK_GO_FORWARD, gtk.ICON_SIZE_MENU))
                 self.using_source_view = True
             else:
-                print "No SourceViewWidget, using default Text widget"
+                #print "No SourceViewWidget, using default Text widget"
                 self.textview = gtk.TextView()
                 self.using_source_view = False
         except NameError:
