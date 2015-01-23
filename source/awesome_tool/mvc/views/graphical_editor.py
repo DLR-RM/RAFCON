@@ -375,10 +375,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             str_height = height / 12.0
 
             # Determine the maximum width of all port labels
-            for port_name in chain(inputs, outputs):
-                str_width = self._string_width(port_name, str_height)
-                if str_width > max_name_width:
-                    max_name_width = str_width
+            for ports in [inputs, outputs]:
+                for port in ports:
+                    port_name = ports[port].name
+                    str_width = self._string_width(port_name, str_height)
+                    if str_width > max_name_width:
+                        max_name_width = str_width
 
             fill_color = self.port_color
             if active:
@@ -417,12 +419,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             output_num = 0
             for port in inputs.itervalues():
                 con_pos_x, con_pos_y = draw_port(port, output_num, True)
-                input_connector_pos[port.name] = (con_pos_x, con_pos_y)
+                input_connector_pos[port.data_port_id] = (con_pos_x, con_pos_y)
                 output_num += 1
 
             for port in outputs.itervalues():
                 con_pos_x, con_pos_y = draw_port(port, output_num, False)
-                output_connector_pos[port.name] = (con_pos_x, con_pos_y)
+                output_connector_pos[port.data_port_id] = (con_pos_x, con_pos_y)
                 output_num += 1
 
         # Draw input and output data ports
