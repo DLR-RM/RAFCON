@@ -137,20 +137,20 @@ if __name__ == "__main__":
     setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
 
-    sdev = StateDataportEditorView()
-    StateDataPortEditorController(ctr_model, sdev)
+    #sdev = StateDataportEditorView()
+    #StateDataPortEditorController(ctr_model, sdev)
 
-    #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
-    #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
+    src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
+    src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
+
+    external_module_manager_view = ExternalModuleManagerView()
+    ExternalModuleManagerController(emm_model, external_module_manager_view, src_view.widget_view)
 
     #state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
     #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
 
     #global_var_manager_view = GlobalVariableEditorView()
     #GlobalVariableManagerController(gvm_model, global_var_manager_view)
-
-    #external_module_manager_view = ExternalModuleManagerView()
-    #ExternalModuleManagerController(emm_model, external_module_manager_view)
 
     #editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     #editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
