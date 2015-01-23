@@ -1,4 +1,4 @@
-from statemachine.states.state import DataPort
+from statemachine.states.state import DataPort, DataPortType
 from statemachine.states.hierarchy_state import HierarchyState
 from states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -141,7 +141,10 @@ def hierarchy_test():
     state3.add_input_data_port("in1", "str")
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
+    state3.add_data_flow(state3.state_id,
+                         state3.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT),
+                         state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
     state3.input_data = input_data
@@ -169,7 +172,10 @@ def hierarchy_save_load_test():
     state3.add_input_data_port("in1", "str")
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
+    state3.add_data_flow(state3.state_id,
+                         state3.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT),
+                         state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
 
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
@@ -295,8 +301,14 @@ def scoped_data_test():
     state3.add_input_data_port("in1", "str")
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
-    state3.add_data_flow(state1.state_id, "MyFirstDataOutputPort", state2.state_id, "DataInput1")
+    state3.add_data_flow(state3.state_id,
+                         state3.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT),
+                         state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
+    state3.add_data_flow(state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataOutputPort", DataPortType.OUTPUT),
+                         state2.state_id,
+                         state2.get_io_data_port_id_from_name_and_type("DataInput1", DataPortType.INPUT))
     state3.add_scoped_variable("scopeVar1", "str", "scopeDefaultValue")
     state3.add_scoped_variable("scopeVar2", "str", "scopeDefaultValue")
 
@@ -327,7 +339,6 @@ def default_data_port_values_test():
     state3.add_input_data_port("in1", "str")
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    #state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
 
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
@@ -409,7 +420,10 @@ def scoped_variable_test():
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
     state3.add_scoped_variable("scopeVar1", "str", "scopeDefaultValue")
-    state3.add_data_flow(state3.state_id, "scopeVar1", state1.state_id, "MyFirstDataInputPort")
+    state3.add_data_flow(state3.state_id,
+                         state3.get_scoped_variable_from_name("scopeVar1"),
+                         state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
 
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
@@ -422,32 +436,36 @@ def scoped_variable_test():
 
 def state_without_path_test():
     state1 = ExecutionState("MyFirstState")
+    state1.add_outcome("Success", 0)
     state1.start()
     pass
 
 
 if __name__ == '__main__':
 
-    #state_without_path_test()
     scoped_data_test()
+
+    #save_and_load_data_port_test()
+    #default_data_port_values_test()
     #scoped_variable_test()
     #hierarchy_test()
     #hierarchy_save_load_test()
+    #state_without_path_test()
+
     #concurrency_barrier_test()
     #concurrency_barrier_save_load_test()
     #concurrency_preemption_test()
     #concurrency_preemption_save_load_test()
+
     #state_machine_manager_test()
     #external_modules_test()
     #global_variable_test()
     #ros_external_module_test()
-    #save_and_load_data_port_test()
-    #default_data_port_values_test()
 
-    save_library()
+    #save_library()
     #print "########################################################"
     # you have to run save_library() test before you can run run_library_statemachine()
-    run_library_statemachine()
+    #run_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine

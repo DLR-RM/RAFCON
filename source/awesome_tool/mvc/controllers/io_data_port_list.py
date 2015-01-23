@@ -36,13 +36,13 @@ class DataPortListController(Controller):
             col = column.get_name()
             data_port = model.get_value(iter, 0)
             if col == 'name_col':
-                name = container_model_data_ports[data_port.name].name
+                name = container_model_data_ports[data_port.data_port_id].name
                 cell_renderer.set_property('text', name)
             elif col == 'data_type_col':
-                data_type = container_model_data_ports[data_port.name].data_type
+                data_type = container_model_data_ports[data_port.data_port_id].data_type
                 cell_renderer.set_property('text', data_type)
             elif col == 'default_value_col':
-                default_value = container_model_data_ports[data_port.name].default_value
+                default_value = container_model_data_ports[data_port.data_port_id].default_value
                 cell_renderer.set_property('text', default_value)
             else:
                 logger.error("Unknown column '{col:s}' in DataPortListView".format(col=col))
@@ -73,7 +73,7 @@ class DataPortListController(Controller):
         import copy
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         print self.view.get_top_widget().get_selection().get_selected_rows()
-        key = self.dataport_list_store[int(path)][0].name
+        key = self.dataport_list_store[int(path)][0].data_port_id
         old_data_port = copy.copy(self.state_dataport_dict[key])
 
         print self.state_dataport_dict[key]
@@ -97,8 +97,8 @@ class DataPortListController(Controller):
         print path
         old_data_port = self.dataport_list_store[int(path)][0]
         print old_data_port
-        self.state_dataport_dict[old_data_port.name].data_type = text
-        self.state_dataport_dict[old_data_port.name].default_value = None
+        self.state_dataport_dict[old_data_port.data_port_id].data_type = text
+        self.state_dataport_dict[old_data_port.data_port_id].default_value = None
 
     def on_default_value_changed(self, widget, path, text):
         print path
@@ -116,4 +116,4 @@ class DataPortListController(Controller):
         if old_data_port.data_type == "float":
             converted_value = float(text)
 
-        self.state_dataport_dict[old_data_port.name].default_value = converted_value
+        self.state_dataport_dict[old_data_port.data_port_id].default_value = converted_value
