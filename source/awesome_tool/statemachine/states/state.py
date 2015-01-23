@@ -438,8 +438,6 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     @name.setter
     @Observable.observed
     def name(self, name):
-        print type(name)
-        print name
         if not isinstance(name, str):
             raise TypeError("Name must be of type str")
         if len(name) < 1:

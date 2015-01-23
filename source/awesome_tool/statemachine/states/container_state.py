@@ -287,13 +287,13 @@ class ContainerState(State, Observable):
             elif from_data_port_id in from_state.input_data_ports:
                 from_key_type = DataPortType.INPUT
             else:
-                raise AttributeError("from_key_id not in scoped_variables or input_data_ports")
+                raise AttributeError("from_data_port_id not in scoped_variables or input_data_ports")
         else:  # data flow originates in child state
             from_state = self.states[from_state_id]
             if from_data_port_id in from_state.output_data_ports:
                 from_key_type = DataPortType.OUTPUT
             else:
-                raise AttributeError("from_key_id not in output_data_ports")
+                raise AttributeError("from_data_port_id not in output_data_ports")
 
         to_state = None
         to_key_type = None
@@ -304,17 +304,18 @@ class ContainerState(State, Observable):
             elif to_data_port_id in self.output_data_ports:
                 to_key_type = DataPortType.OUTPUT
             else:
-                raise AttributeError("from_key_id not in scoped_variables or output_data_ports")
+                raise AttributeError("to_data_port_id not in scoped_variables or output_data_ports")
         else:  # data_flow ends in child state
             to_state = self.states[to_state_id]
             if to_data_port_id in to_state.input_data_ports:
                 to_key_type = DataPortType.INPUT
             else:
-                raise AttributeError("to_key_id not in input_data_ports")
+                raise AttributeError("to_data_port_id not in input_data_ports")
 
         #check if to_dataport_id of to_state has already a data_flow
         for flow_id, data_flow in self.data_flows.iteritems():
-            if data_flow.to_state == to_state_id:
+            # scoped variables are allowed to have several data_flows connecte to them
+            if data_flow.to_state == to_state_id and not data_flow.to_state == self.state_id:
                 if data_flow.to_key == to_data_port_id:
                     raise AttributeError("port %s of state %s already has a connection" %
                                          (str(to_data_port_id), str(to_state_id)))
