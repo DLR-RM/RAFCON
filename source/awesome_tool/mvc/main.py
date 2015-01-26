@@ -6,10 +6,11 @@ from utils import log
 from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController, SingleWidgetWindowController, StateEditorController, StateConnectionsEditorController
+    SourceEditorController, SingleWidgetWindowController, StateEditorController, StateConnectionsEditorController,\
+    StateOutcomesEditorController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
     GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-    LoggingView, StateConnectionsEditorView
+    LoggingView, StateConnectionsEditorView, StateOutcomesEditorView, StateOutcomesTreeView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
 from statemachine.states.execution_state import ExecutionState
@@ -132,8 +133,8 @@ def create_models(*args, **kargs):
 if __name__ == "__main__":
     setup_path()
     check_requirements()
-    logging_view = LoggingView()
-    setup_logger(logging_view)
+    #logging_view = LoggingView()
+    #setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
 
     #sdev = StateDataportEditorView()
@@ -142,10 +143,21 @@ if __name__ == "__main__":
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
 
+    state_id = 'NONE'
+    for smdl in ctr_model.states.values():
+       if smdl.state.name == 'State1':
+           state_id = smdl.state.state_id
+    print "take state: ", state_id, ctr_model.states[state_id].state.name
+    this_state = ctr_model.states[state_id]
+
     state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
-    state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
-    scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
-    scon_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateConnectionsEditorController)
+    #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
+    state_editor_ctrl = SingleWidgetWindowController(this_state, state_editor_view, StateEditorController)
+    #scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
+    #scon_editor_ctrl = SingleWidgetWindowController(ctr_model, scon_editor_view, StateConnectionsEditorController)
+
+    #v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
+    #c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
 
     #v = SourceEditorView()
     #SourceEditorController(ctr_model, v)

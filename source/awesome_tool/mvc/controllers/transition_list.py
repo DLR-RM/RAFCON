@@ -107,7 +107,6 @@ class TransitionListController(Controller):
     def on_external_toggled(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
 
-
     def get_state_combos(self, state):
         states_store = ListStore(str, str)
         states_store.append([container_model.state.state_id, container_model.state.name])
@@ -133,6 +132,8 @@ import gtk
 import gobject
 import traceback
 import sys
+
+
 #===========================================================
 #                   Mask Edit View
 #===========================================================
@@ -164,6 +165,7 @@ class MaskEditView(gtk.VBox):
 
         self.add(scrollable)
         self.show_all()
+
 
 #===========================================================
 #                   Mask Edit View

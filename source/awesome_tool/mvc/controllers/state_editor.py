@@ -3,8 +3,7 @@ from gtkmvc import View, Controller
 from gtkmvc import Observer
 
 from mvc.controllers import StateOverviewController, StateConnectionsEditorController, SourceEditorController, \
-    DataPortListController, ScopedVariableListController, ContainerStateController
-
+    DataPortListController, ScopedVariableListController, StateOutcomesEditorController, StateOutcomesTreeController
 
 class StateEditorController(Controller):
     """Controller handling the view of properties/attributes of the ContainerStateModel
@@ -29,7 +28,7 @@ class StateEditorController(Controller):
         self.inputs_ctrl = DataPortListController(model, view['inputs_view'], "input")  #ContainerStateController(model, view['inputs_view'])
         self.outputs_ctrl = DataPortListController(model, view['outputs_view'], "output")  # ContainerStateController(model, view['outputs_view'])
         self.scoped_ctrl = ScopedVariableListController(model, view['scopes_view'])
-        self.outcomes_ctrl = ContainerStateController(model, view['outcomes_view'])
+        self.outcomes_ctrl = StateOutcomesEditorController(model, view['outcomes_view'])
 
         self.source_ctrl = SourceEditorController(model, view['source_view'])
         self.connections_ctrl = StateConnectionsEditorController(model, view['connections_view'])
@@ -46,10 +45,12 @@ class StateEditorController(Controller):
         view['new_input_port_button'].connect('clicked', self.on_new_input_port_button_clicked)
         view['new_output_port_button'].connect('clicked', self.on_new_output_port_button_clicked)
         view['new_scoped_variable_button'].connect('clicked', self.on_new_scoped_variable_button_clicked)
+        #view['new_outcome_button'].connect('clicked', self.outcomes_ctrl.on_add)
 
         view['delete_input_port_button'].connect('clicked', self.on_delete_input_port_button_clicked)
         view['delete_output_port_button'].connect('clicked', self.on_delete_output_port_button_clicked)
         view['delete_scoped_variable_button'].connect('clicked', self.on_delete_scoped_variable_button_clicked)
+        #view['delete_outcome_button'].connect('clicked', self.outcomes_ctrl.on_remove)
         #view['entry_name'].connect('focus-out-event', self.change_name)
         #view['entry_name'].set_text(self.model.state.name)
 

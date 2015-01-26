@@ -316,18 +316,36 @@
                   </packing>
                 </child>
                 <child>
+                  <placeholder/>
+                </child>
+                <child>
                   <object class="GtkExpander" id="port_expander4">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="label_fill">True</property>
                     <child>
-                      <object class="GtkViewport" id="viewport6">
-                        <property name="height_request">150</property>
+                      <object class="GtkVBox" id="outcoms_vbox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="resize_mode">queue</property>
                         <child>
                           <placeholder/>
+                        </child>
+                        <child>
+                          <object class="GtkScrolledWindow" id="outcomes_scroller">
+                            <property name="height_request">150</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="hscrollbar_policy">automatic</property>
+                            <property name="vscrollbar_policy">automatic</property>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
                         </child>
                       </object>
                     </child>
@@ -343,8 +361,11 @@
                     <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="padding">1</property>
-                    <property name="position">3</property>
+                    <property name="position">4</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
               </object>
             </child>
