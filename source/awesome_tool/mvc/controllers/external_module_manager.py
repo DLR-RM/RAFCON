@@ -10,7 +10,7 @@ from statemachine.external_modules.external_module import EMStatus
 
 class ExternalModuleManagerController(Controller, Observer):
 
-    def __init__(self, model, view):
+    def __init__(self, model, view, source_view=None):
         """Constructor
         """
         Controller.__init__(self, model, view)
@@ -22,6 +22,9 @@ class ExternalModuleManagerController(Controller, Observer):
         view['pause_button'].connect('clicked', self.on_pause_button_clicked)
         model.update_external_modules_list_store()
         model.reset_external_module_model()
+
+        self.source_view = source_view
+
 
 
     def on_connect_button_clicked(self, widget, data=None):
@@ -91,6 +94,7 @@ class ExternalModuleManagerController(Controller, Observer):
             #print "external_module_action", external_module_action
             actions_store = gtk.ListStore(str, str)
             actions_store.append([0, "insert"])
+            actions_store.append([0, "insert_with_parameters"])
             actions_store.append([1, "help"])
             if col == 'status_col':
                 readable_status = self.convert_em_status_to_string(external_module_status)
@@ -143,9 +147,15 @@ class ExternalModuleManagerController(Controller, Observer):
         #print em_name
         external_module = self.model.external_module_manager.external_modules[em_name]
         if text == "insert":
-            print "the method %s should be inserted into the source field" % selected_method
-        if text == "help":
-            print "A dialog box should pop up"
+            if self.source_view:
+                #print "the method %s should be inserted into the source field" % selected_method
+                self.source_view.get_buffer().insert_at_cursor(selected_method)
+        elif text == "insert_with_parameters":
+            if self.source_view:
+                args = str(inspect.getargspec(getattr(external_module.external_module_class, selected_method)).args)
+                self.source_view.get_buffer().insert_at_cursor(selected_method+args)
+        elif text == "help":
+            #print "A dialog box should pop up"
             method_docu = inspect.getdoc(getattr(external_module.external_module_class, selected_method))
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message.set_markup(method_docu)

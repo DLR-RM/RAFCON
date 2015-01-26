@@ -32,9 +32,14 @@ class DataPort(Observable, yaml.YAMLObject):
     :ivar _data_type: the value type of the port
 
     """
-    def __init__(self, name=None, data_type=None, default_value=None):
+    def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None):
 
         Observable.__init__(self)
+
+        if data_port_id is None:
+            self._data_port_id = generate_data_port_id()
+        else:
+            self._data_port_id = data_port_id
 
         self._name = None
         self.name = name
@@ -55,6 +60,7 @@ class DataPort(Observable, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = {
+            'data_port_id' : data.data_port_id,
             'name': data.name,
             'data_type': data.data_type,
             'default_value': data.default_value
@@ -66,15 +72,23 @@ class DataPort(Observable, yaml.YAMLObject):
     @classmethod
     def from_yaml(cls, loader, node):
         dict_representation = loader.construct_mapping(node)
+        data_port_id = dict_representation['data_port_id']
         name = dict_representation['name']
         data_type = dict_representation['data_type']
         default_value = dict_representation['default_value']
-        return DataPort(name, data_type, default_value)
+        return DataPort(name, data_type, default_value, data_port_id)
 
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
+
+    @property
+    def data_port_id(self):
+        """Property for the _data_port_id field
+
+        """
+        return self._data_port_id
 
     @property
     def name(self):
@@ -129,7 +143,7 @@ class DataPort(Observable, yaml.YAMLObject):
 
 
 StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY')
-
+DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 
 class State(threading.Thread, Observable, yaml.YAMLObject):
 
@@ -161,16 +175,21 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     #__observables__ = ("input_data_ports", )
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, path=None, filename=None, state_type=None):
+                 sm_status=None, path=None, filename=None, state_type=None, parent=None):
 
         Observable.__init__(self)
         threading.Thread.__init__(self)
 
-        self._name = name
+        self._name = None
+        self.name = name
         if state_id is None:
             self._state_id = state_id_generator()
         else:
             self._state_id = state_id
+
+        self._parent = None
+        self.parent = parent
+
         self._state_type = None
         self.state_type = state_type
 
@@ -208,7 +227,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         logger.debug("State with id %s initialized" % self._state_id)
 
     @Observable.observed
-    def add_input_data_port(self, name, data_type=None, default_value=None):
+    def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
         """Add a new input data port to the state
 
         :param name: the name of the new input data port
@@ -216,24 +235,42 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         :param default_value: the default value of the data port
 
         """
-        self._input_data_ports[name] = DataPort(name, data_type, default_value)
+        if data_port_id is None:
+            data_port_id = generate_data_flow_id()
+        self._input_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id)
+        return data_port_id
 
     @Observable.observed
-    def remove_input_data_port(self, name):
+    def remove_input_data_port(self, data_port_id):
         """Remove an input data port from the state
 
         :param name: the name or the output data port to remove
 
         """
-        print "input_data_ports:", self._input_data_ports
-        if name in self._input_data_ports:
-            del self._input_data_ports[name]
+        if data_port_id in self._input_data_ports:
+            del self._input_data_ports[data_port_id]
         else:
-            raise AttributeError("input data port with name %s does not exit", name)
-        print "input_data_ports:", self._input_data_ports
+            raise AttributeError("input data port with name %s does not exit", data_port_id)
+        self.remove_data_flows_with_data_port_id(data_port_id)
+
+    def remove_data_flows_with_data_port_id(self, data_port_id):
+        """Remove an data ports whose from_key or to_key equals the passed data_port_id
+
+        :param data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
+                            output data port id
+
+        """
+        if not self.parent is None:
+            data_flow_ids_to_remove = []
+            for data_flow_id, data_flow in self.parent.data_flows.iteritems():
+                if data_flow.from_key == data_port_id or data_flow.to_key == data_port_id:
+                    data_flow_ids_to_remove.append(data_flow_id)
+
+            for data_flow_id in data_flow_ids_to_remove:
+                del self.parent.data_flows[data_flow_id]
 
     @Observable.observed
-    def add_output_data_port(self, name, data_type, default_value=None):
+    def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Add a new output data port to the state
 
         :param name: the name of the new output data port
@@ -241,20 +278,43 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         :param default_value: the default value of the data port
 
         """
-        self._output_data_ports[name] = DataPort(name, data_type, default_value)
+        if data_port_id is None:
+            data_port_id = generate_data_flow_id()
+        self._output_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id)
+        return data_port_id
 
     @Observable.observed
-    def remove_output_data_port(self, name):
+    def remove_output_data_port(self, data_port_id):
         """Remove an output data port from the state
 
         :param name: the name of the output data port to remove
 
         """
-        print "output_data_ports: ", self._output_data_ports
-        if name in self._output_data_ports:
-            del self._output_data_ports[name]
+        if data_port_id in self._output_data_ports:
+            del self._output_data_ports[data_port_id]
         else:
-            raise AttributeError("output data port with name %s does not exit", name)
+            raise AttributeError("output data port with name %s does not exit", data_port_id)
+        self.remove_data_flows_with_data_port_id(data_port_id)
+
+    def get_io_data_port_id_from_name_and_type(self, name, data_port_type):
+        """Returns the data_port_id of a data_port with a certain name and data port type
+
+        :param name: the name of the target data_port
+        :param data_port_type: the data port type of the target data port
+
+        """
+        if data_port_type is DataPortType.INPUT:
+            for ip_id, output_port in self.input_data_ports.iteritems():
+                if output_port.name == name:
+                    #print ip_id
+                    return ip_id
+            raise AttributeError("Name %s is not in input_data_ports", name)
+        elif data_port_type is DataPortType.OUTPUT:
+            for op_id, output_port in self.output_data_ports.iteritems():
+                if output_port.name == name:
+                    return op_id
+            raise AttributeError("Name %s is not in output_data_ports", name)
+
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
@@ -293,6 +353,16 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         self.__used_outcome_ids.remove(outcome_id)
         self._outcomes.pop(outcome_id, None)
 
+        # delete all transitions connected to this outcome
+        transition_ids_to_remove = []
+        if not self.parent is None:
+            for transition_id, transition in self.parent.transitions.iteritems():
+                if transition.from_outcome == outcome_id or transition.to_outcome == outcome_id:
+                    transition_ids_to_remove.append(transition_id)
+
+        for transition_id in transition_ids_to_remove:
+            del self.parent.transitions[transition_id]
+
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
 
@@ -304,26 +374,30 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         """Check the input data types of the state
 
         """
-        for key, value in self.input_data_ports.iteritems():
-            if not input_data[key] is None:
-                #print "key: %s, value: %s" % (str(key), str(value))
+        # print input_data
+        # for key, idp in self.input_data_ports.iteritems():
+        #     print key
+        #     print idp
+
+        for input_data_port_key, data_port in self.input_data_ports.iteritems():
+            if not input_data[data_port.name] is None:
                 #check for primitive data types
-                if not str(type(input_data[key]).__name__) == value.data_type:
+                if not str(type(input_data[data_port.name]).__name__) == data_port.data_type:
                     #check for classes
-                    if not isinstance(input_data[key], getattr(sys.modules[__name__], value.data_type)):
-                        raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
+                    if not isinstance(input_data[data_port.name], getattr(sys.modules[__name__], data_port.data_type)):
+                        raise TypeError("Input of execute function must be of type %s" % str(data_port.data_type))
 
     def check_output_data_type(self, output_data):
         """Check the output data types of the state
 
         """
-        for key, value in self.output_data_ports.iteritems():
-            if not output_data[key] is None:
+        for output_port_id, output_port in self.output_data_ports.iteritems():
+            if not output_data[output_port.name] is None:
                 #check for primitive data types
-                if not str(type(output_data[key]).__name__) == value.data_type:
+                if not str(type(output_data[output_port.name]).__name__) == output_port.data_type:
                     #check for classes
-                    if not isinstance(output_data[key], getattr(sys.modules[__name__], value.data_type)):
-                        raise TypeError("Input of execute function must be of type %s" % str(value.data_type))
+                    if not isinstance(output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
+                        raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
 
     def __str__(self):
         return "Common state values:\nstate_id: %s\nname: %s" % (self.state_id, self.name)
@@ -372,6 +446,22 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         self._name = name
 
     @property
+    def parent(self):
+        """Property for the _parent field
+
+        """
+        return self._parent
+
+    @parent.setter
+    @Observable.observed
+    def parent(self, parent):
+        if not parent is None:
+            if not isinstance(parent, State):
+                raise TypeError("parent must be of type State")
+
+        self._parent = parent
+
+    @property
     def input_data_ports(self):
         """Property for the _input_data_ports field
 
@@ -389,7 +479,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             for key, value in input_data_ports.iteritems():
                 if not isinstance(value, DataPort):
                     raise TypeError("element of input_data_ports must be of type DataPort")
-                if not key == value.name:
+                if not key == value.data_port_id:
                     raise AttributeError("the key of the input dictionary and the name of the data port do not match")
             self._input_data_ports = input_data_ports
 

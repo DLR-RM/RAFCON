@@ -1,4 +1,4 @@
-from statemachine.states.state import DataPort
+from statemachine.states.state import DataPort, DataPortType
 from statemachine.states.hierarchy_state import HierarchyState
 from states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -14,23 +14,26 @@ import statemachine.singleton
 def concurrency_barrier_test():
     state1 = ExecutionState("FirstState", path="../../test_scripts", filename="concurrence_barrier1.py")
     state1.add_outcome("FirstOutcome", 3)
-    state1.add_input_data_port("FirstDataInputPort", "str")
-    state1.add_output_data_port("FirstDataOutputPort", "float")
+    input_state1 = state1.add_input_data_port("FirstDataInputPort", "str")
+    output_state1 = state1.add_output_data_port("FirstDataOutputPort", "float")
 
     state2 = ExecutionState("SecondState", path="../../test_scripts", filename="concurrence_barrier2.py")
     state2.add_outcome("FirstOutcome", 3)
-    state2.add_input_data_port("FirstDataInputPort", "str")
-    state2.add_output_data_port("FirstDataOutputPort", "float")
+    input_state2 = state2.add_input_data_port("FirstDataInputPort", "str")
+    output_state2 = state2.add_output_data_port("FirstDataOutputPort", "float")
 
     state3 = BarrierConcurrencyState("FirstConcurrencyState", path="../../test_scripts",
                                      filename="concurrency_container.py")
     state3.add_state(state1)
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "FirstDataInputPort")
+    input_state3 = state3.add_input_data_port("in1", "str", "default_in1_string")
+    input2_state3 = state3.add_input_data_port("in2", "str", "default_in2_string")
+    state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     state3.add_state(state2)
-    state3.add_data_flow(state3.state_id, "in1", state2.state_id, "FirstDataInputPort")
+    state3.add_data_flow(state3.state_id, input2_state3, state2.state_id, input_state2)
+    state3.add_output_data_port("out1", "str", "default_output_value")
 
-    input_data = {"in1": "input_string", "in2": 2}
-    output_data = {"out1": None, "out2": None}
+    input_data = {"in1": "in1_string", "in2": "in2_string"}
+    output_data = {"out1": None}
     state3.input_data = input_data
     state3.output_data = output_data
     state3.start()
@@ -39,29 +42,31 @@ def concurrency_barrier_test():
 
 def concurrency_barrier_save_load_test():
     s = Storage("../../test_scripts/stored_statemachine")
-
     state1 = ExecutionState("FirstState", path="../../test_scripts", filename="concurrence_barrier1.py")
     state1.add_outcome("FirstOutcome", 3)
-    state1.add_input_data_port("FirstDataInputPort", "str")
-    state1.add_output_data_port("FirstDataOutputPort", "float")
+    input_state1 = state1.add_input_data_port("FirstDataInputPort", "str")
+    output_state1 = state1.add_output_data_port("FirstDataOutputPort", "float")
 
     state2 = ExecutionState("SecondState", path="../../test_scripts", filename="concurrence_barrier2.py")
     state2.add_outcome("FirstOutcome", 3)
-    state2.add_input_data_port("FirstDataInputPort", "str")
-    state2.add_output_data_port("FirstDataOutputPort", "float")
+    input_state2 = state2.add_input_data_port("FirstDataInputPort", "str")
+    output_state2 = state2.add_output_data_port("FirstDataOutputPort", "float")
 
     state3 = BarrierConcurrencyState("FirstConcurrencyState", path="../../test_scripts",
                                      filename="concurrency_container.py")
     state3.add_state(state1)
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "FirstDataInputPort")
+    input_state3 = state3.add_input_data_port("in1", "str", "default_in1_string")
+    input2_state3 = state3.add_input_data_port("in2", "str", "default_in2_string")
+    state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     state3.add_state(state2)
-    state3.add_data_flow(state3.state_id, "in1", state2.state_id, "FirstDataInputPort")
+    state3.add_data_flow(state3.state_id, input2_state3, state2.state_id, input_state2)
+    state3.add_output_data_port("out1", "str", "default_output_value")
 
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
 
-    input_data = {"in1": "input_string", "in2": 2}
-    output_data = {"out1": None, "out2": None}
+    input_data = {"in1": "in1_string", "in2": "in2_string"}
+    output_data = {"out1": None}
     root_state.input_data = input_data
     root_state.output_data = output_data
 
@@ -72,23 +77,26 @@ def concurrency_barrier_save_load_test():
 def concurrency_preemption_test():
     state1 = ExecutionState("FirstState", path="../../test_scripts", filename="concurrence_preemption1.py")
     state1.add_outcome("FirstOutcome", 3)
-    state1.add_input_data_port("FirstDataInputPort", "str")
-    state1.add_output_data_port("FirstDataOutputPort", "float")
+    input_state1 = state1.add_input_data_port("FirstDataInputPort", "str")
+    output_state1 = state1.add_output_data_port("FirstDataOutputPort", "float")
 
     state2 = ExecutionState("SecondState", path="../../test_scripts", filename="concurrence_preemption2.py")
     state2.add_outcome("FirstOutcome", 3)
-    state2.add_input_data_port("FirstDataInputPort", "str")
-    state2.add_output_data_port("FirstDataOutputPort", "float")
+    input_state2 = state2.add_input_data_port("FirstDataInputPort", "str")
+    output_state2 = state2.add_output_data_port("FirstDataOutputPort", "float")
 
     state3 = PreemptiveConcurrencyState("FirstConcurrencyState", path="../../test_scripts",
-                                        filename="concurrency_container.py")
+                                     filename="concurrency_container.py")
     state3.add_state(state1)
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "FirstDataInputPort")
+    input_state3 = state3.add_input_data_port("in1", "str", "default_in1_string")
+    input2_state3 = state3.add_input_data_port("in2", "str", "default_in2_string")
+    state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     state3.add_state(state2)
-    state3.add_data_flow(state3.state_id, "in1", state2.state_id, "FirstDataInputPort")
+    state3.add_data_flow(state3.state_id, input2_state3, state2.state_id, input_state2)
+    state3.add_output_data_port("out1", "str", "default_output_value")
 
-    input_data = {"in1": "input_string", "in2": 2}
-    output_data = {"out1": None, "out2": None}
+    input_data = {"in1": "in1_string", "in2": "in2_string"}
+    output_data = {"out1": None}
     state3.input_data = input_data
     state3.output_data = output_data
     state3.start()
@@ -97,29 +105,32 @@ def concurrency_preemption_test():
 
 def concurrency_preemption_save_load_test():
     s = Storage("../../test_scripts/stored_statemachine")
-
     state1 = ExecutionState("FirstState", path="../../test_scripts", filename="concurrence_preemption1.py")
     state1.add_outcome("FirstOutcome", 3)
-    state1.add_input_data_port("FirstDataInputPort", "str")
-    state1.add_output_data_port("FirstDataOutputPort", "float")
+    input_state1 = state1.add_input_data_port("FirstDataInputPort", "str")
+    output_state1 = state1.add_output_data_port("FirstDataOutputPort", "float")
 
     state2 = ExecutionState("SecondState", path="../../test_scripts", filename="concurrence_preemption2.py")
     state2.add_outcome("FirstOutcome", 3)
-    state2.add_input_data_port("FirstDataInputPort", "str")
-    state2.add_output_data_port("FirstDataOutputPort", "float")
+    input_state2 = state2.add_input_data_port("FirstDataInputPort", "str")
+    output_state2 = state2.add_output_data_port("FirstDataOutputPort", "float")
 
     state3 = PreemptiveConcurrencyState("FirstConcurrencyState", path="../../test_scripts",
-                                        filename="concurrency_container.py")
+                                     filename="concurrency_container.py")
     state3.add_state(state1)
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "FirstDataInputPort")
+    input_state3 = state3.add_input_data_port("in1", "str", "default_in1_string")
+    input2_state3 = state3.add_input_data_port("in2", "str", "default_in2_string")
+    state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     state3.add_state(state2)
-    state3.add_data_flow(state3.state_id, "in1", state2.state_id, "FirstDataInputPort")
+    state3.add_data_flow(state3.state_id, input2_state3, state2.state_id, input_state2)
+    state3.add_output_data_port("out1", "str", "default_output_value")
+
 
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
 
-    input_data = {"in1": "input_string", "in2": 2}
-    output_data = {"out1": None, "out2": None}
+    input_data = {"in1": "in1_string", "in2": "in2_string"}
+    output_data = {"out1": None}
     root_state.input_data = input_data
     root_state.output_data = output_data
 
@@ -141,7 +152,10 @@ def hierarchy_test():
     state3.add_input_data_port("in1", "str")
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
+    state3.add_data_flow(state3.state_id,
+                         state3.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT),
+                         state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
     state3.input_data = input_data
@@ -169,7 +183,10 @@ def hierarchy_save_load_test():
     state3.add_input_data_port("in1", "str")
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
+    state3.add_data_flow(state3.state_id,
+                         state3.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT),
+                         state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
 
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
@@ -186,18 +203,18 @@ def hierarchy_save_load_test():
 def global_variable_test():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="global_variable_test_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
-    state1.add_input_data_port("MyFirstDataInputPort", "str")
-    state1.add_output_data_port("MyFirstDataOutputPort", "float")
+    input_state1 = state1.add_input_data_port("MyFirstDataInputPort", "str")
+    output_state1 = state1.add_output_data_port("MyFirstDataOutputPort", "float")
 
     state3 = HierarchyState("MyFirstHierarchyState", path="../../test_scripts", filename="hierarchy_container.py")
     state3.add_state(state1)
     state3.set_start_state(state1.state_id)
     state3.add_outcome("Container_Outcome", 6)
     state3.add_transition(state1.state_id, 3, None, 6)
-    state3.add_input_data_port("in1", "str")
-    state3.add_input_data_port("in2", "int")
-    state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
+    input_state3 = state3.add_input_data_port("in1", "str")
+    input2_state3 = state3.add_input_data_port("in2", "int")
+    output_state2 = state3.add_output_data_port("out1", "str")
+    state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
     state3.input_data = input_data
@@ -295,8 +312,14 @@ def scoped_data_test():
     state3.add_input_data_port("in1", "str")
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
-    state3.add_data_flow(state1.state_id, "MyFirstDataOutputPort", state2.state_id, "DataInput1")
+    state3.add_data_flow(state3.state_id,
+                         state3.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT),
+                         state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
+    state3.add_data_flow(state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataOutputPort", DataPortType.OUTPUT),
+                         state2.state_id,
+                         state2.get_io_data_port_id_from_name_and_type("DataInput1", DataPortType.INPUT))
     state3.add_scoped_variable("scopeVar1", "str", "scopeDefaultValue")
     state3.add_scoped_variable("scopeVar2", "str", "scopeDefaultValue")
 
@@ -327,7 +350,6 @@ def default_data_port_values_test():
     state3.add_input_data_port("in1", "str")
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    #state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
 
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
@@ -409,7 +431,10 @@ def scoped_variable_test():
     state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
     state3.add_scoped_variable("scopeVar1", "str", "scopeDefaultValue")
-    state3.add_data_flow(state3.state_id, "scopeVar1", state1.state_id, "MyFirstDataInputPort")
+    state3.add_data_flow(state3.state_id,
+                         state3.get_scoped_variable_from_name("scopeVar1"),
+                         state1.state_id,
+                         state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
 
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
@@ -422,32 +447,36 @@ def scoped_variable_test():
 
 def state_without_path_test():
     state1 = ExecutionState("MyFirstState")
+    state1.add_outcome("Success", 0)
     state1.start()
     pass
 
 
 if __name__ == '__main__':
 
-    #state_without_path_test()
     scoped_data_test()
+
+    #save_and_load_data_port_test()
+    #default_data_port_values_test()
     #scoped_variable_test()
     #hierarchy_test()
     #hierarchy_save_load_test()
+    #state_without_path_test()
+
     #concurrency_barrier_test()
     #concurrency_barrier_save_load_test()
     #concurrency_preemption_test()
     #concurrency_preemption_save_load_test()
+
     #state_machine_manager_test()
     #external_modules_test()
     #global_variable_test()
     #ros_external_module_test()
-    #save_and_load_data_port_test()
-    #default_data_port_values_test()
 
-    save_library()
+    #save_library()
     #print "########################################################"
     # you have to run save_library() test before you can run run_library_statemachine()
-    run_library_statemachine()
+    #run_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine

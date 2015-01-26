@@ -3,7 +3,7 @@ from gtkmvc import View
 
 
 class StateMachineTreeView(View, gtk.TreeView):
-    top = 'top_tree'
+    top = 'state_machine_tree_view'
 
     def __init__(self):
         View.__init__(self)
@@ -30,7 +30,7 @@ class StateMachineTreeView(View, gtk.TreeView):
         tvcolumn.pack_start(cell, True)
         tvcolumn.add_attribute(cell, 'text', 2)
 
-        self['top_tree'] = self
+        self['state_machine_tree_view'] = self
 
 
 if __name__ == '__main__':

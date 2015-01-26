@@ -10,7 +10,8 @@ from mvc.controllers import StatePropertiesController, ContainerStateController,
     StateOutcomesEditorController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
     GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-    LoggingView, StateConnectionsEditorView, StateOutcomesEditorView, StateOutcomesTreeView
+    LoggingView, StateConnectionsEditorView, StateOutcomesEditorView, StateOutcomesTreeView, StateMachineTreeView
+from mvc.views.single_widget_window import TestButtonsView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
 from statemachine.states.execution_state import ExecutionState
@@ -57,27 +58,27 @@ def create_models(*args, **kargs):
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
     state1 = State('State1')
-    state1.add_output_data_port("output", "int")
-    state1.add_input_data_port("input", "int", 0)
+    output_state1 = state1.add_output_data_port("output", "int")
+    input_state1 = state1.add_input_data_port("input", "int", 0)
+    state1.add_outcome('success', 0)
     state2 = State('State2')
-    state2.add_input_data_port("my_input", "int", 0)
-    longlong = state2.add_input_data_port("longlonginputname", "int", 0)
-    state2.add_input_data_port("par", "int", 0)
-    state2.add_output_data_port("my_output", "int")
-    state2.add_output_data_port("res", "int")
-    state3 = ContainerState(name='State3')
-    state3.add_input_data_port("input", "int", 0)
-    state3.add_output_data_port("output", "int")
+    input_my_input_state2 = state2.add_input_data_port("my_input", "int", 0)
+    input_long_state2 = state2.add_input_data_port("longlonginputname", "int", 0)
+    input_par_state2 = state2.add_input_data_port("par", "int", 0)
+    output_my_output_state2 = state2.add_output_data_port("my_output", "int")
+    output_res_state2 = state2.add_output_data_port("res", "int")
     state4 = State('Nested')
-    state4.add_output_data_port("out", "int")
+    output_state4 = state4.add_output_data_port("out", "int")
     state4.add_outcome("success", 0)
     state5 = State('Nested2')
-    state5.add_input_data_port("in", "int", 0)
+    input_state5 = state5.add_input_data_port("in", "int", 0)
+    state3 = ContainerState(name='State3')
+    input_state3 = state3.add_input_data_port("input", "int", 0)
+    output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
     state3.add_state(state5)
     state3.add_transition(state4.state_id, 0, state5.state_id, None)
-    state3.add_data_flow(state4.state_id, "out", state5.state_id, "in")
-    state1.add_outcome('success', 0)
+    state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
 
@@ -85,15 +86,15 @@ def create_models(*args, **kargs):
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
-    ctr_state.add_input_data_port("ctr_in", "int", 0)
-    ctr_state.add_output_data_port("ctr_out", "int")
+    input_ctr_state = ctr_state.add_input_data_port("ctr_in", "int", 0)
+    output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
     ctr_state.add_transition(state2.state_id, -2, state3.state_id, None)
     ctr_state.add_transition(state3.state_id, -2, None, -2)
-    ctr_state.add_data_flow(state1.state_id, "output", state2.state_id, "par")
-    ctr_state.add_data_flow(state2.state_id, "res", state3.state_id, "input")
-    ctr_state.add_data_flow(ctr_state.state_id, "ctr_in", state1.state_id, "input")
-    ctr_state.add_data_flow(state3.state_id, "output", ctr_state.state_id, "ctr_out")
+    ctr_state.add_data_flow(state1.state_id, output_state1, state2.state_id, input_par_state2)
+    ctr_state.add_data_flow(state2.state_id, output_res_state2, state3.state_id, input_state3)
+    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
+    ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
     ctr_state.name = "Container"
 
     ctr_state.add_input_data_port("input_data1", "str", "default_value1")
@@ -104,13 +105,14 @@ def create_models(*args, **kargs):
     ctr_state.add_output_data_port("output_data2", "str", "default_value2")
     ctr_state.add_output_data_port("output_data3", "str", "default_value3")
 
-    ctr_state.add_scoped_variable("scoped_variable1", "str", "default_value1")
-    ctr_state.add_scoped_variable("scoped_variable2", "str", "default_value1")
-    ctr_state.add_scoped_variable("scoped_variable3", "str", "default_value1")
+    scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped_variable1", "str", "default_value1")
+    scoped_variable2_ctr_state = ctr_state.add_scoped_variable("scoped_variable2", "str", "default_value1")
+    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("scoped_variable3", "str", "default_value1")
 
-    ctr_state.add_data_flow(ctr_state.state_id, "ctr_in", ctr_state.state_id, "scoped_variable1")
-    ctr_state.add_data_flow(ctr_state.state_id, "scoped_variable2", ctr_state.state_id, "ctr_out")
-    ctr_state.add_data_flow(state1.state_id, "output", ctr_state.state_id, "scoped_variable3")
+    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
+    # this is not allowed as the output port is already connected
+    #ctr_state.add_data_flow(ctr_state.state_id, scoped_variable2_ctr_state, ctr_state.state_id, output_ctr_state)
+    ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
     ctr_model = ContainerStateModel(ctr_state)
 
@@ -130,7 +132,7 @@ def create_models(*args, **kargs):
     return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  
     setup_path()
     check_requirements()
     #logging_view = LoggingView()
@@ -139,6 +141,12 @@ if __name__ == "__main__":
 
     #sdev = StateDataportEditorView()
     #StateDataPortEditorController(ctr_model, sdev)
+
+    # a view, whose buttons can trigger arbitrary function that are needed for testing purposes
+    #test_buttons_view = TestButtonsView(ctr_model)
+
+    state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
+    state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
 
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
@@ -158,18 +166,12 @@ if __name__ == "__main__":
 
     #v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
     #c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
-
-    #v = SourceEditorView()
-    #SourceEditorController(ctr_model, v)
-
-    #ctr_view = ContainerStateView()
-    #ContainerStateController(ctr_model, ctr_view)
+    
+    #external_module_manager_view = ExternalModuleManagerView()
+    #ExternalModuleManagerController(emm_model, external_module_manager_view, src_view.widget_view)
 
     #global_var_manager_view = GlobalVariableEditorView()
     #GlobalVariableManagerController(gvm_model, global_var_manager_view)
-
-    #external_module_manager_view = ExternalModuleManagerView()
-    #ExternalModuleManagerController(emm_model, external_module_manager_view)
 
     editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)

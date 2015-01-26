@@ -15,7 +15,7 @@ logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome
 from concurrency_state import ConcurrencyState
 from container_state import ContainerState
-from statemachine.states.state import StateType
+from statemachine.states.state import StateType, DataPortType
 
 
 class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
@@ -39,11 +39,9 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             raise TypeError("states must be of type dict")
         if not isinstance(output_data, dict):
             raise TypeError("states must be of type dict")
-        #print input_data
         self.check_input_data_type(input_data)
-        self.add_dict_to_scoped_data(input_data)
+        self.add_input_data_to_scoped_data(input_data, self)
         self.add_scoped_variables_to_scoped_data()
-        #print self.scoped_variables
 
         try:
             logger.debug("Starting preemptive concurrency state with id %s" % self._state_id)
@@ -51,8 +49,6 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             #handle data for the entry script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
-            #print "Printing Scoped Variables Dict:"
-            #print scoped_variables_as_dict
             self.enter(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
@@ -67,29 +63,25 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             #wait for all threads
             for key, state in self.states.iteritems():
                 state.join()
-                self.update_scoped_variables(state.output_data, state)
+                self.add_state_execution_output_to_scoped_data(state.output_data, state)
+                self.update_scoped_variables_with_output_dictionary(state.output_data, state)
 
-            #write output data back to the dictionary
-            for output_key, value in output_data.iteritems():
-                for data_flow_key, data_flow in self.data_flows.iteritems():
-                    if data_flow.to_key == output_key:
-                        # should be always the case, although used could specify something else
-                        if data_flow.to_state == self.state_id:
-                            if data_flow.from_state is self:
-                                # get value from a scoped_variable
-                                output_data[output_key] = self.scoped_variables[output_key].value()
-                            else:
-                                # get value from the output of the correct state
-                                output_data[output_key] =\
-                                    self.states[data_flow.from_state].output_data[data_flow.from_key]
-
-            self.check_output_data_type(output_data)
-
-            #handle data for the entry script
+            #handle data for the exit script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+
+            #write output data back to the dictionary
+            for output_name, value in output_data.iteritems():
+                output_port_key = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
+                for data_flow_key, data_flow in self.data_flows.iteritems():
+                    if data_flow.to_state is self.state_id:
+                        if data_flow.to_key == output_port_key:
+                            output_data[output_name] =\
+                                self.scoped_results[str(data_flow.from_key)+data_flow.from_state].value()
+
+            self.check_output_data_type(output_data)
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")

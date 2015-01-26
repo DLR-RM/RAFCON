@@ -5,6 +5,7 @@ import gtk
 from gtkmvc import Controller
 from gtkmvc import Observer
 
+#TODO: comment
 
 class GlobalVariableManagerController(Controller, Observer):
 

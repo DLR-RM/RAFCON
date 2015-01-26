@@ -2,6 +2,7 @@ from gtkmvc import ModelMT
 from statemachine.external_modules.external_module import ExternalModule
 from utils.vividict import Vividict
 
+#TODO: comment
 
 class ExternalModuleModel(ModelMT):
     """This model class manages a ExternalModule

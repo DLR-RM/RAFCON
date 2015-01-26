@@ -55,7 +55,7 @@ class StateDataPortEditorController(Controller):
         path = tree_view.get_cursor()[0]
         if path is not None:
             #print path
-            key = self.model.input_data_port_list_store[int(path[0])][0].name
+            key = self.model.input_data_port_list_store[int(path[0])][0].data_port_id
             #print key
             self.model.state.remove_input_data_port(key)
 
@@ -63,14 +63,14 @@ class StateDataPortEditorController(Controller):
         tree_view = self.view.output_port_list_view["output_ports_tree_view"]
         path = tree_view.get_cursor()[0]
         if path is not None:
-            key = self.model.output_data_port_list_store[int(path[0])][0].name
+            key = self.model.output_data_port_list_store[int(path[0])][0].data_port_id
             self.model.state.remove_output_data_port(key)
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
         tree_view = self.view.scoped_variables_list_view["scoped_variables_tree_view"]
         path = tree_view.get_cursor()[0]
         if path is not None:
-            key = self.model.scoped_variables_list_store[int(path[0])][0].name
+            key = self.model.scoped_variables_list_store[int(path[0])][0].data_port_id
             self.model.container_state.remove_scoped_variable(key)
 
     def register_view(self, view):

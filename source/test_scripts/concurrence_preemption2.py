@@ -11,5 +11,5 @@ def execute(self, inputs, outputs, external_modules, gvm):
         print "concurrence_barrier2 state active"
         if self.preempted:
             print "concurrence_barrier2: I was preempted"
-            return 2
+            return -2
     return 3

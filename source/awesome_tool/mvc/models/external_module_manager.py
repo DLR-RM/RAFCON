@@ -9,6 +9,7 @@ from utils.vividict import Vividict
 import statemachine.singleton
 from mvc.models.external_module import ExternalModuleModel
 
+#TODO: comment
 
 class ExternalModuleManagerModel(ModelMT):
 
@@ -45,7 +46,7 @@ class ExternalModuleManagerModel(ModelMT):
     def reset_external_module_model(self):
         self.external_modules = []
         for key, em in self.external_module_manager.external_modules.iteritems():
-            print em
+            #print em
             self.external_modules.append(ExternalModuleModel(em, self))
 
     def update_external_modules_list_store(self):

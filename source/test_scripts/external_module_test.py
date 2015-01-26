@@ -41,3 +41,11 @@ class TestModule:
             xD
         '''
         print "External module: this is a custom function"
+
+    def custom_function_with_parameters(self, param1, param2, param3=[]):
+        '''
+            I am the holy documentation of the first external module in the awesome_tool history.
+            Function: custom_function
+            xD
+        '''
+        print "External module: this is a custom function with parameters"

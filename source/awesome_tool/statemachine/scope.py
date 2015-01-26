@@ -14,7 +14,7 @@ import time
 import datetime
 import yaml
 
-from statemachine.states.state import State
+from statemachine.states.state import State, DataPort
 
 
 def generate_time_stamp():
@@ -25,7 +25,7 @@ def get_human_readable_time(timestamp):
     return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 
-class ScopedVariable(Observable, yaml.YAMLObject):
+class ScopedVariable(DataPort, Observable, yaml.YAMLObject):
 
     """A class for representing a scoped variable in a container state
 
@@ -41,19 +41,11 @@ class ScopedVariable(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!ScopedVariable'
 
-    def __init__(self, name=None, data_type=None, default_value=None):
+    def __init__(self, name=None, data_type=None, default_value=None, scoped_variable_id=None):
 
         Observable.__init__(self)
 
-        self._name = None
-        self.name = name
-
-        self._data_type = None
-        self.data_type = data_type
-        self._default_value = None
-        self.default_value = default_value
-
-        self._timestamp = generate_time_stamp()
+        DataPort.__init__(self, name, data_type, default_value, scoped_variable_id)
 
     def __str__(self):
         return "ScopedVariable: \n name: %s \n data_type: %s \n default_value: %s " %\
@@ -62,6 +54,7 @@ class ScopedVariable(Observable, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = {
+            'scoped_variable_id': data.data_port_id,
             'name': data.name,
             'data_type': data.data_type,
             'default_value': data.default_value
@@ -73,82 +66,11 @@ class ScopedVariable(Observable, yaml.YAMLObject):
     @classmethod
     def from_yaml(cls, loader, node):
         dict_representation = loader.construct_mapping(node)
+        scoped_variable_id = dict_representation['scoped_variable_id']
         name = dict_representation['name']
         data_type = dict_representation['data_type']
         default_value = dict_representation['default_value']
-        return ScopedVariable(name, data_type, default_value)
-
-#########################################################################
-# Properties for all class field that must be observed by the gtkmvc
-#########################################################################
-
-    @property
-    def name(self):
-        """Property for the _name field
-
-        """
-        return self._name
-
-    @name.setter
-    @Observable.observed
-    def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError("name must be of type str")
-        self._name = name
-
-    @property
-    def default_value(self):
-        """Property for the _default_value field
-
-        """
-        return self._default_value
-
-    @default_value.setter
-    @Observable.observed
-    def default_value(self, default_value):
-        if not default_value is None:
-            #check for primitive data types
-            if not str(type(default_value).__name__) == self._data_type:
-                print self._data_type
-                #check for classes
-                if not isinstance(default_value, getattr(sys.modules[__name__], self._data_type)):
-                    raise TypeError("default_value must be of type %s" % str(self._data_type))
-        self._timestamp = generate_time_stamp()
-        self._default_value = default_value
-
-    @property
-    def data_type(self):
-        """Property for the _value_type field
-
-        """
-        return self._data_type
-
-    @data_type.setter
-    @Observable.observed
-    def data_type(self, data_type):
-        if not data_type is None:
-            if not isinstance(data_type, str):
-                raise TypeError("data_type must be of type str")
-            if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
-                if not getattr(sys.modules[__name__], data_type):
-                    raise TypeError("" + data_type + " is not a valid python data type")
-        self._data_type = data_type
-
-    @property
-    def timestamp(self):
-        """Property for the _timestamp field
-
-        """
-        return self._timestamp
-
-    # WARNING: This setter function should never be used, as the timestamp is generated when the setter function of
-    # the self._result variable is called
-    @timestamp.setter
-    @Observable.observed
-    def timestamp(self, timestamp):
-        if not isinstance(timestamp, float):
-            raise TypeError("timestamp must be of type float")
-        self._timestamp = timestamp
+        return ScopedVariable(name, data_type, default_value, scoped_variable_id)
 
 
 class ScopedData(Observable):
@@ -184,6 +106,9 @@ class ScopedData(Observable):
         # for storage purpose inside the container states (generated from key_name and from_state.state_id
         self._primary_key = None
 
+    def __str__(self):
+        return "ScopedData: \n name: %s \n data_type: %s \n value: %s \n from_state %s" %\
+               (self.name, self.value_type, self.value, self.from_state.state_id)
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc

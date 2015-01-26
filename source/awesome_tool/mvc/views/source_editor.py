@@ -8,8 +8,10 @@ except:
 from gtkmvc import View
 
 
+#TODO: comment
+
 class SourceEditorView(View):
-    top = 'main_frame'
+    top = 'source_editor_frame'
 
     #===============================================================
     def __init__(self):
@@ -70,7 +72,7 @@ class SourceEditorView(View):
         #window.show_all()
 
         #self['main_window'] = window
-        self['main_frame'] = vbox
+        self['source_editor_frame'] = vbox
         self['apply_button'] = apply_button
         self['cancel_button'] = cancel_button
 
