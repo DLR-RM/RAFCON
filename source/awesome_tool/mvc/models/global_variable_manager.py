@@ -5,6 +5,7 @@ import gobject
 from gtk import ListStore
 import gtk
 
+#TODO: comment
 
 class GlobalVariableManagerModel(ModelMT):
 

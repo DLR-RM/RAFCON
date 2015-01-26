@@ -10,7 +10,7 @@ class SingleWidgetWindowController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
-        self.widget_ctrl = ctrl_class(model, view['main_frame'])
+        self.widget_ctrl = ctrl_class(model, view.get_top_widget())
 
     def register_view(self, view):
         """Called when the View was registered

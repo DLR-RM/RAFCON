@@ -155,7 +155,7 @@ class ExternalModuleManagerController(Controller, Observer):
                 args = str(inspect.getargspec(getattr(external_module.external_module_class, selected_method)).args)
                 self.source_view.get_buffer().insert_at_cursor(selected_method+args)
         elif text == "help":
-            print "A dialog box should pop up"
+            #print "A dialog box should pop up"
             method_docu = inspect.getdoc(getattr(external_module.external_module_class, selected_method))
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message.set_markup(method_docu)
