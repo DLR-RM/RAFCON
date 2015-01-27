@@ -3,12 +3,65 @@ import gtk, gobject
 from gtkmvc import Controller, Observer
 
 
+class ParentObserver(Observer):
+
+    def __init__(self, model, key, funct_handle_list):
+        Observer.__init__(self, model)
+        self.func_handle_list = funct_handle_list
+        # self.observe(self.notify, "state", after=True)
+        self.method_list = ["add_transition", "remove_transition", "add_outcome", "remove_outcome",
+                            "modify_outcome_name"]
+
+    @Observer.observe('state', after=True)
+    def notification(self, model, prop_name, info):
+        print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+              (prop_name, info.instance, info.method_name, info.result)
+        if info.method_name in self.method_list:
+            for func_handle in self.func_handle_list:
+                func_handle()
+        #print "observing methods: ", self.get_observing_methods('state')
+
+    # def notify(self, model, prop_name, info):
+    #     print "parent call_notify - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+    #           (prop_name, info.instance, info.method_name, info.result)
+    #     print self
+
+# class ParentObserver(Observer):
+#
+#     def __init__(self, model, observe_attr, method_list, func_handle_list):
+#         print "generate ParentObserver", self
+#         Observer.__init__(self, model)
+#         self.func_handle_list = func_handle_list
+#         self.method_list = method_list
+#         self.observe(self.notification, "state", after=True)
+#
+#     def notification(self, model, prop_name, info):
+#         print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+#               (prop_name, info.instance, info.method_name, info.result)
+#         if info.method_name in self.method_list:
+#             pass
+#         for func_handle in self.func_handle_list:
+#             func_handle()
+#         return
+#     if model.parent is not None:
+#             self.parent_observer = ParentObserver(model=model.parent,
+#                                                   observe_attr="state",
+#                                                   method_list=["add_transition", "remove_transition"],
+#                                                   func_handle_list=[self.update_stores, self.update_model])
+
+
 class StateOutcomesTreeController(Controller):
+
+    parent_observer = None
 
     def __init__(self, model, view):
         """Constructor
         """
         Controller.__init__(self, model, view)
+
+        if model.parent is not None:
+            self.parent_observer = ParentObserver(model.parent, "state", [self.update_stores, self.update_model])
+            #self.parent_observer.observe(model.parent)
         self.tree_store = view.tree_store
 
         self.to_state_combo_list = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
@@ -67,11 +120,11 @@ class StateOutcomesTreeController(Controller):
         view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
 
     def on_name_modification(self, widget, path, text):
-        self.model.model_changed(self.model, 'outcome.name', 'before')
         self.tree_store[path][1] = text
-        self.tree_store[path][6].name = text
-        self.model.model_changed(self.model, 'outcome.name', 'after')
-        print "change name of outcome: ", path, self.tree_store[path][6].name
+        self.model.state.outcomes[self.tree_store[path][6].outcome_id].name = text
+        # because observer is on modify_outcome_name in state not on name in outcome
+        self.model.state.outcomes[self.tree_store[path][6].outcome_id].name = text
+        print "change name of outcome: ", path, self.model.state.outcomes[self.tree_store[path][6].outcome_id].name
 
     def on_to_state_modification(self, widget, path, text):
         print "change to state: ", path
@@ -83,7 +136,7 @@ class StateOutcomesTreeController(Controller):
         print "add outcome"
         outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
         outcome = self.model.state.outcomes[outcome_id]
-        self.tree_store.append(None, [outcome_id, outcome.name, '', '', '#f0E5C7', '#f0E5c7', outcome, self.model.state])
+        #self.tree_store.append(None, [outcome_id, outcome.name, '', '', '#f0E5C7', '#f0E5c7', outcome, self.model.state])
         #self.update_path()
 
     def on_remove(self, button, info=None):
@@ -115,8 +168,8 @@ class StateOutcomesTreeController(Controller):
                     self.model.state.remove_transition(transition.transition_id)
 
             self.model.state.remove_outcome(outcome_id)
-            parent = self.tree_store.remove(iter)
-            print path, parent, tree, iter
+            #parent = self.tree_store.remove(iter)
+            #print path, parent, tree, iter
         print self.model.state.outcomes
 
     def update_stores(self):
@@ -138,7 +191,7 @@ class StateOutcomesTreeController(Controller):
                     self.to_state_combo_list.append([smdl.state.name, smdl.state.state_id, parent_id])
             # check for "to outcome combos" -> so all outcomes of parent
             for outcome in model.parent.state.outcomes.values():
-                print "type outcome: ", type(outcome)
+                print "type outcome: ", outcome.name, type(outcome)
                 self.to_outcome_combo_list.append([outcome.name, outcome.outcome_id, parent_id])
             for transition_id, transition in model.parent.state.transitions.items():
                 print transition.from_state, transition.from_outcome, \
@@ -194,29 +247,14 @@ class StateOutcomesTreeController(Controller):
             self.tree_store.append(None, [outcome.outcome_id, outcome.name, to_state, to_outcome,
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
 
-    @Observer.observe("state", after=True)
-    def assign_notification_state(self, model, prop_name, info):
+    @Controller.observe("state", after=True)
+    def assign_notification_parent_state(self, model, prop_name, info):
         print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
               (prop_name, info.instance, info.method_name, info.result)
-        if info.method_name == "add_outcome" or info.method_name == "remove_outcome":
+        if info.method_name in ["add_outcome", "remove_outcome", "add_transition", "remove_transition",
+                                "modify_outcome_name"]:
             self.update_stores()
             self.update_model()
-        elif info.method_name == "add_transition" or info.method_name == "remove_transition":
-            self.update_stores()
-
-    # @Observer.observe("", after=True)
-    # def assign_notification_state(self, model, prop_name, info):
-    #     print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-    #           (prop_name, info.instance, info.method_name, info.result)
-    #     self.update_stores()
-    #     self.update_model()
-
-    # @Observer.observe("parent.state", after=True)
-    # def assign_notification_state(self, model, prop_name, info):
-    #     print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-    #           (prop_name, info.instance, info.method_name, info.result)
-    #     if info.method_name == "add_transition" or info.method_name == "remove_transition":
-    #         self.update_stores()
 
 
 class StateOutcomesEditorController(Controller):

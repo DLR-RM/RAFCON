@@ -332,7 +332,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         if outcome_id in self.__used_outcome_ids:
             logger.error("Two outcomes cannot have the same outcome_ids")
             return
-        outcome = Outcome(outcome_id, name)
+        outcome = Outcome(outcome_id, name, self.modify_outcome_name)
         self._outcomes[outcome_id] = outcome
         self.__used_outcome_ids.append(outcome_id)
         return outcome_id
@@ -362,6 +362,27 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
         for transition_id in transition_ids_to_remove:
             del self.parent.transitions[transition_id]
+
+    @Observable.observed
+    def modify_outcome_name(self, name, outcome_id):
+        print "check outcome_name: %s of outcome_id %s" % (name, outcome_id)
+
+        def define_unique_name(name, dict_of_names, count=0):
+            count += 1
+            if name + str(count) in dict_of_names.values():
+                count = define_unique_name(name, dict_of_names, count)
+            return count
+
+        dict_of_names = {}
+        for o_id, outcome in self._outcomes.items():
+            dict_of_names[o_id] = outcome.name
+        print dict_of_names
+
+        if outcome_id in self._outcomes.keys() and self._outcomes[outcome_id].name == name:
+            name = self._outcomes[outcome_id].name
+        elif name in dict_of_names.values():
+            name += str(define_unique_name(name, dict_of_names))
+        return name
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`

@@ -164,9 +164,9 @@ if __name__ == "__main__":
     #scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
     #scon_editor_ctrl = SingleWidgetWindowController(ctr_model, scon_editor_view, StateConnectionsEditorController)
 
-    v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
+    #v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
     #c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
-    c = SingleWidgetWindowController(this_model, v, StateOutcomesEditorController)
+    #c = SingleWidgetWindowController(this_model, v, StateOutcomesEditorController)
     
     #external_module_manager_view = ExternalModuleManagerView()
     #ExternalModuleManagerController(emm_model, external_module_manager_view, src_view.widget_view)
