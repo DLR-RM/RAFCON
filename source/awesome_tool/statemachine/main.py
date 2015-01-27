@@ -368,32 +368,45 @@ def save_library():
 
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
-    state1.add_input_data_port("MyFirstDataInputPort", "str")
-    state1.add_output_data_port("MyFirstDataOutputPort", "float")
+    input_state1 = state1.add_input_data_port("MyFirstDataInputPort", "str")
+    output_state1 = state1.add_output_data_port("MyFirstDataOutputPort", "float")
 
     state2 = ExecutionState("MySecondState", path="../../test_scripts", filename="second_state.py")
     state2.add_outcome("FirstOutcome", 3)
-    state2.add_input_data_port("DataInput1", "float")
-    state2.add_output_data_port("DataOutput1", "float")
+    input_state2 = state2.add_input_data_port("DataInput1", "float")
+    output_state2 = state2.add_output_data_port("DataOutput1", "float")
 
-    state3 = HierarchyState("ContainerState", path="../../test_scripts", filename="hierarchy_container.py")
+    state3 = HierarchyState("Library1", path="../../test_scripts", filename="hierarchy_container.py")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
     state3.add_outcome("Container_Outcome", 6)
     state3.add_transition(state2.state_id, 3, None, 6)
     state3.add_transition(state1.state_id, 3, state2.state_id, None)
-    state3.add_input_data_port("in1", "str")
-    state3.add_input_data_port("in2", "int")
+    input_state3 = state3.add_input_data_port("in1", "str")
+    input2_state3 = state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
-    state3.add_data_flow(state1.state_id, "MyFirstDataOutputPort", state2.state_id, "DataInput1")
+    state3.add_data_flow(state3.state_id,
+                         input_state3,
+                         state1.state_id,
+                         input_state1)
+    state3.add_data_flow(state1.state_id,
+                         output_state1,
+                         state2.state_id,
+                         input_state2)
 
     s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/MyFirstLibrary")
+    state3.name = "Library2"
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/MySecondLibrary")
+    state3.name = "LibraryNested1"
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/LibraryContainer/Nested1")
+    state3.name = "LibraryNested2"
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/LibraryContainer/Nested2")
 
 
 def run_library_statemachine():
     statemachine.singleton.library_manager.initialize()
+    exit()
     #print statemachine.singleton.library_manager.libraries
     library_container_state = HierarchyState("LibContainerState", path="../../test_scripts",
                                              filename="hierarchy_container.py")
@@ -402,10 +415,12 @@ def run_library_statemachine():
     library_container_state.set_start_state(lib_state.state_id)
     library_container_state.add_outcome("Container_Outcome", 6)
     library_container_state.add_transition(lib_state.state_id, 6, None, 6)
-    library_container_state.add_input_data_port("in1", "str")
+    lib_container_input = library_container_state.add_input_data_port("in1", "str")
     library_container_state.add_output_data_port("out1", "str")
-    library_container_state.add_data_flow(library_container_state.state_id, "in1",
-                                          lib_state.state_id, "in1")
+    library_container_state.add_data_flow(library_container_state.state_id,
+                                          lib_container_input,
+                                          lib_state.state_id,
+                                          lib_state.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT))
 
     input_data = {"in1": "input_string"}
     output_data = {"out1": None}
@@ -454,7 +469,7 @@ def state_without_path_test():
 
 if __name__ == '__main__':
 
-    scoped_data_test()
+    #scoped_data_test()
 
     #save_and_load_data_port_test()
     #default_data_port_values_test()
@@ -476,7 +491,7 @@ if __name__ == '__main__':
     #save_library()
     #print "########################################################"
     # you have to run save_library() test before you can run run_library_statemachine()
-    #run_library_statemachine()
+    run_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine

@@ -39,9 +39,11 @@ class LibraryManager(Observable):
         for lib_path in config.LIBRARY_PATHS:
             self.add_libraries_from_path(lib_path, self._libraries)
         logger.debug("Initialization of LibraryManager done.")
+        #print self._libraries
 
     def add_libraries_from_path(self, lib_path, target_dict):
         for lib in os.listdir(lib_path):
+            logger.debug(str(lib))
             if os.path.isdir(os.path.join(lib_path, lib)):
                 if os.path.exists(os.path.join(os.path.join(lib_path, lib), Storage.STATEMACHINE_FILE)):
                     self.add_library(lib, lib_path, target_dict)
@@ -50,7 +52,7 @@ class LibraryManager(Observable):
                     self.add_libraries_from_path(os.path.join(lib_path, lib), target_dict[lib])
 
     def add_library(self, lib, lib_path, target_dict):
-        #print lib
+        #logger.debug("add_library: %s %s " % (str(lib), str(lib_path)))
         self._storage.base_path = lib_path
         target_dict[lib] = self._storage.load_statemachine_from_yaml(os.path.join(lib_path, lib))
         #print self.libraries[lib]

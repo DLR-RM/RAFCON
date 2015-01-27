@@ -6,10 +6,11 @@ from utils import log
 from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController
+    SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
+    LibraryTreeController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
     GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-    LoggingView, StateMachineTreeView
+    LoggingView, StateMachineTreeView, LibraryTreeView
 from mvc.views.single_widget_window import TestButtonsView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
@@ -18,6 +19,8 @@ from statemachine.states.container_state import ContainerState
 from statemachine.transition import Transition
 from statemachine.data_flow import DataFlow
 from statemachine.external_modules.external_module import ExternalModule
+import statemachine.singleton
+from statemachine.states.hierarchy_state import HierarchyState
 
 
 def setup_path():
@@ -131,7 +134,8 @@ def create_models(*args, **kargs):
     return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
 
 
-if __name__ == "__main__":  
+if __name__ == '__main__':
+    statemachine.singleton.library_manager.initialize()
     setup_path()
     check_requirements()
     logging_view = LoggingView()
@@ -146,6 +150,9 @@ if __name__ == "__main__":
 
     state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
     state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
+
+    library_tree = SingleWidgetWindowView(LibraryTreeView, width=300, height=200, title='Library Tree')
+    library_controller = SingleWidgetWindowController(None, library_tree, LibraryTreeController)
 
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)

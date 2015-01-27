@@ -1,7 +1,10 @@
 import gtk
+import gobject
 from gtkmvc import Controller
 from gtkmvc import Observer
+
 from mvc.models import ContainerStateModel
+
 
 #TODO: comment
 
@@ -12,11 +15,11 @@ class StateMachineTreeController(Controller):
         """
         Controller.__init__(self, model, view)
         self.model = model
-        self.tree_store = gtk.TreeStore(str, str, str)
+        self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT)
         view.set_model(self.tree_store)
 
     def register_view(self, view):
-        self.view.connect('cursor-changed', self.on_select)
+        self.view.connect('cursor-changed', self.on_cursor_changed)
         self.update()
 
     def register_adapters(self):
@@ -25,9 +28,10 @@ class StateMachineTreeController(Controller):
     def update(self):
         self.tree_store.clear()
         parent = self.tree_store.insert_before(None, None,
-                                      (self.model.state.name,
-                                        self.model.state.state_id,
-                                        self.model.state.state_type))
+                                               (self.model.state.name,
+                                                self.model.state.state_id,
+                                                self.model.state.state_type,
+                                                self.model.state))
         for state_id, smodel in self.model.states.items():
             self.insert_rec(parent, smodel)
 
@@ -36,15 +40,19 @@ class StateMachineTreeController(Controller):
         parent = self.tree_store.insert_before(parent, None,
                                                (state_model.state.name,
                                                 state_model.state.state_id,
-                                                state_model.state.state_type))
+                                                state_model.state.state_type,
+                                                state_model.state))
         if type(state_model) is ContainerStateModel:
-            #print "Inserte container state %s recursively" % state_model.state.name
+            #print "Insert container state %s recursively" % state_model.state.name
             for state_id, smodel in state_model.states.items():
                 self.insert_rec(parent, smodel)
 
-    def on_select(self, widget):
+    def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
-        print "SM_Tree state selected: %s, %s" % (model, row)
+        #print "SM_Tree state selected: %s, %s" % (model, row)
+        state = model[row][3]
+        #print library
+        print "The view should jump to the selected state and the zoom should be adjusted as well"
         #selected_state = self.model.statemachine.get_graph().find_node(model.get_value(row, 1))
         #self.model.statemachine.selection.set([selected_state])
 
@@ -53,6 +61,7 @@ class StateMachineTreeController(Controller):
         #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #      (prop_name, info.instance, info.method_name, info.result)
         self.update()
+
 
 if __name__ == '__main__':
     from mvc.views import StateMachineTreeView, SingleWidgetWindowView
