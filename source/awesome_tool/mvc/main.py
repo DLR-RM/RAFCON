@@ -7,7 +7,7 @@ from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerMod
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
     SourceEditorController, SingleWidgetWindowController, StateEditorController, StateConnectionsEditorController,\
-    StateOutcomesEditorController
+    StateOutcomesEditorController, StateMachineTreeController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
     GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
     LoggingView, StateConnectionsEditorView, StateOutcomesEditorView, StateOutcomesTreeView, StateMachineTreeView
@@ -156,16 +156,17 @@ if __name__ == "__main__":
        if smdl.state.name == 'State1':
            state_id = smdl.state.state_id
     print "take state: ", state_id, ctr_model.states[state_id].state.name
-    this_state = ctr_model.states[state_id]
+    this_model = ctr_model.states[state_id]
 
     state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
     #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
-    state_editor_ctrl = SingleWidgetWindowController(this_state, state_editor_view, StateEditorController)
+    state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
     #scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
     #scon_editor_ctrl = SingleWidgetWindowController(ctr_model, scon_editor_view, StateConnectionsEditorController)
 
-    #v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
+    v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
     #c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
+    c = SingleWidgetWindowController(this_model, v, StateOutcomesEditorController)
     
     #external_module_manager_view = ExternalModuleManagerView()
     #ExternalModuleManagerController(emm_model, external_module_manager_view, src_view.widget_view)
