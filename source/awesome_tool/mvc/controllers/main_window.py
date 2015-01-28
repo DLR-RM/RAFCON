@@ -48,7 +48,7 @@ class FullMainWindowController(Controller):
 
 
 if __name__ == '__main__':
-    from mvc.views.full_main_window import FullMainWindowView
+    from mvc.views.main_window import FullMainWindowView
 
     import mvc.main as main
 

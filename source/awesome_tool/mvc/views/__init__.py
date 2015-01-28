@@ -20,4 +20,4 @@ from state_machine_tree import StateMachineTreeView
 from library_tree import LibraryTreeView
 #from state_editors_notebook import StateEditorsNotebookView
 #from state_machines_notebook import StateMachinesNotebookView
-from full_main_window import FullMainWindowView
+from main_window import FullMainWindowView

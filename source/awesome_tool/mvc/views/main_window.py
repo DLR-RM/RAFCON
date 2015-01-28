@@ -4,7 +4,7 @@ from mvc.views import StateEditorView, GraphicalEditorView, LibraryTreeView, Sta
 
 
 class FullMainWindowView(View):
-    builder = './glade/full_main_window.glade'
+    builder = './glade/main_window.glade'
     top = 'MainWindow'
 
     def __init__(self):
