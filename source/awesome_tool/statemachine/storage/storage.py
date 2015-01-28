@@ -91,9 +91,8 @@ class Storage(Observable):
             self._remove_path(self.base_path)
         self._create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
-        statemachine_content = "creation_time: %s\nroot_state: %s\nstatemachine_name: %s\nversion: %s"\
-                               % (strftime("%Y-%m-%d %H:%M:%S", gmtime()), root_state.state_id, root_state.name,
-                                  str(version))
+        statemachine_content = "root_state: %s\nversion: %s\ncreation_time: %s"\
+                               % (root_state.state_id, version, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
         yaml.dump(yaml.load(statemachine_content), f, indent=4)
         f.close()
         # add root state recursively
@@ -126,6 +125,8 @@ class Storage(Observable):
         stream = file(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'r')
         tmp_dict = yaml.load(stream)
         root_state_id = tmp_dict['root_state']
+        version = tmp_dict['version']
+        creation_time = tmp_dict['creation_time']
         tmp_base_path = os.path.join(self.base_path, root_state_id)
         root_state = self.load_file_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         for p in os.listdir(tmp_base_path):
@@ -133,7 +134,7 @@ class Storage(Observable):
                 elem = os.path.join(tmp_base_path, p)
                 self.load_state_recursively(root_state, elem)
 
-        return root_state
+        return [root_state, version, creation_time]
 
     def load_state_recursively(self, root_state, parent_path=None):
         #print "Path of next state to add: %s" % base_path

@@ -36,7 +36,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                                 transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
                                 state_type = StateType.HIERARCHY)
 
-
     # the input_data and output_data comes in with a mapping from names to values,
     # to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
     def run(self):
@@ -70,7 +69,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
                 statemachine.singleton.state_machine_execution_engine.handle_execution_mode()
 
-                logger.debug("Executing next state state with id %s" % state.state_id)
+                logger.debug("Executing next state state with id %s and type %s" %
+                             (state.state_id, str(state.state_type)))
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)
                 state.input_data = state_input

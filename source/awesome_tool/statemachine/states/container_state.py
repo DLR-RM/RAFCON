@@ -27,15 +27,13 @@ class ContainerState(State, Observable):
 
     """A class for representing a state in the statemachine
 
-    :ivar _states: the child states of the container state of the state:
-    :ivar _transitions: transitions between all child states:
-    :ivar _data_flows: data flows between all child states:
-    :ivar _start_state: the state to start with when the hierarchy state is executed
-    :ivar _scope: common scope of container:
-    :ivar _current_state: currently active state of the container:
-    :ivar _scoped_variables: scoped variables that can be accessed by each child state:
-    :ivar _scoped_data: dictionary that holds all values of the input_data, the scoped_variables and the outputs of
-                        of the child states during runtime
+    Only the variables are listed that are not already contained in the state base class
+
+    :ivar states: the child states of the container state of the state:
+    :ivar transitions: transitions between all child states:
+    :ivar data_flows: data flows between all child states:
+    :ivar start_state: the state to start with when the hierarchy state is executed
+    :ivar scoped_variables: the scoped variables of the container:
     :ivar _v_checker: reference to an object that checks the validity of this container state:
 
     """
@@ -547,9 +545,9 @@ class ContainerState(State, Observable):
         else:
             if not isinstance(states, dict):
                 raise TypeError("states must be of type dict")
-            for s in states:
-                if not isinstance(s, State):
-                    raise TypeError("element of states must be of type State")
+            for key, state in states.iteritems():
+                if not isinstance(state, State):
+                    raise TypeError("element of container_state.states must be of type State")
             self._states = states
 
     @property

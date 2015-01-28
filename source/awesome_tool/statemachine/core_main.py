@@ -1,5 +1,6 @@
 from statemachine.states.state import DataPort, DataPortType
 from statemachine.states.hierarchy_state import HierarchyState
+from statemachine.states.library_state import LibraryState
 from states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
@@ -403,7 +404,7 @@ def default_data_port_values_test():
     root_state.join()
 
 
-def save_library():
+def save_libraries():
     s = Storage("../")
 
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
@@ -435,22 +436,20 @@ def save_library():
                          state2.state_id,
                          input_state2)
 
-    s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/MyFirstLibrary")
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/test_libraries/MyFirstLibrary", "0.1")
     state3.name = "Library2"
-    s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/MySecondLibrary")
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/test_libraries/MySecondLibrary", "0.1")
     state3.name = "LibraryNested1"
-    s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/LibraryContainer/Nested1")
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/test_libraries/LibraryContainer/Nested1", "0.1")
     state3.name = "LibraryNested2"
-    s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/LibraryContainer/Nested2")
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/test_libraries/LibraryContainer/Nested2", "0.1")
 
 
-def run_library_statemachine():
+def get_library_statemachine():
     statemachine.singleton.library_manager.initialize()
-    exit()
-    #print statemachine.singleton.library_manager.libraries
     library_container_state = HierarchyState("LibContainerState", path="../../test_scripts",
                                              filename="hierarchy_container.py")
-    lib_state = statemachine.singleton.library_manager.libraries["MyFirstLibrary"]
+    lib_state = LibraryState("test_libraries", "MyFirstLibrary", "0.1")
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
     library_container_state.add_outcome("Container_Outcome", 6)
@@ -461,15 +460,35 @@ def run_library_statemachine():
                                           lib_container_input,
                                           lib_state.state_id,
                                           lib_state.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT))
+    return library_container_state
 
+
+def run_library_statemachine():
+    library_container_state = get_library_statemachine()
     input_data = {"in1": "input_string"}
     output_data = {"out1": None}
     library_container_state.input_data = input_data
     library_container_state.output_data = output_data
-
     library_container_state.start()
     library_container_state.join()
 
+
+def save_nested_library_state():
+    save_libraries()
+    library_container_state = get_library_statemachine()
+    statemachine.singleton.global_storage.save_statemachine_as_yaml(library_container_state,
+                                "../../test_scripts/test_libraries/library_with_nested_library", "0.1")
+
+
+def run_nested_library_statemachine():
+    statemachine.singleton.library_manager.initialize()
+    nested_lib_state = LibraryState("test_libraries", "library_with_nested_library", "0.1")
+    input_data = {"in1": "input_string"}
+    output_data = {"out1": None}
+    nested_lib_state.input_data = input_data
+    nested_lib_state.output_data = output_data
+    nested_lib_state.start()
+    nested_lib_state.join()
 
 def scoped_variable_test():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
@@ -509,7 +528,7 @@ def state_without_path_test():
 
 if __name__ == '__main__':
 
-    start_stop_pause_step_test()
+    #start_stop_pause_step_test()
 
     #scoped_data_test()
     #save_and_load_data_port_test()
@@ -529,10 +548,15 @@ if __name__ == '__main__':
     #global_variable_test()
     #ros_external_module_test()
 
-    #save_library()
+    #save_libraries()
     #print "########################################################"
-    # you have to run save_library() test before you can run run_library_statemachine()
+    # you have to run save_libraries() test before you can run run_library_statemachine()
     #run_library_statemachine()
+
+    save_nested_library_state()
+    #print "########################################################"
+    # you have to run save_nested_library_state() test before you can run run_library_statemachine()
+    run_nested_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine

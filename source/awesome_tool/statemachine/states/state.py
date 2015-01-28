@@ -142,7 +142,7 @@ class DataPort(Observable, yaml.YAMLObject):
         self._default_value = default_value
 
 
-StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY')
+StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY')
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 
 
@@ -366,8 +366,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
-
-        TODO: Should be filled with code, that should be executed for each state derivative
+            Must be implemented
         """
         raise NotImplementedError("The State.run() function has to be implemented!")
 
@@ -401,7 +400,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
                         raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
 
     def __str__(self):
-        return "Common state values:\nstate_id: %s\nname: %s" % (self.state_id, self.name)
+        return "State properties of state: %s \nstate_id: %s" % (self.name, self.state_id)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -439,11 +438,11 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     @name.setter
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError("Name must be of type str")
-        if len(name) < 1:
-            raise ValueError("Name must have at least one character")
-
+        if not name is None:
+            if not isinstance(name, str):
+                raise TypeError("Name must be of type str")
+            if len(name) < 1:
+                raise ValueError("Name must have at least one character")
         self._name = name
 
     @property
@@ -533,9 +532,9 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
                 if not "success" in outcomes:
                     self.add_outcome("success", 0)
             #aborted and preempted must always exist
-            if not "aborted" in outcomes:
+            if not -1 in outcomes:
                 self.add_outcome("aborted", -1)
-            if not "preempted" in outcomes:
+            if not -2 in outcomes:
                 self.add_outcome("preempted", -2)
 
 

@@ -12,6 +12,7 @@ from statemachine.global_variable_manager import GlobalVariableManager
 from statemachine.external_modules.external_module_manager import ExternalModuleManager
 from statemachine.library_manager import LibraryManager
 from statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
+from statemachine.storage.storage import Storage
 
 #This variable holds the global variable manager singleton
 global_variable_manager = GlobalVariableManager()
@@ -24,4 +25,7 @@ library_manager = LibraryManager()
 
 #This variable holds the execution engine singleton
 state_machine_execution_engine = StatemachineExecutionEngine()
+
+#This variable holds a global storage object
+global_storage = Storage("")
 
