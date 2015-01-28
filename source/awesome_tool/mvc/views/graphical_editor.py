@@ -332,11 +332,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                         fill_color, self.border_color)
 
         # Put the name of the state in the upper left corner of the state
-        margin = min(width, height) / 8.0
-        self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, self.state_name_color, True,
+        margin = min(width, height) / 8.
+        font_size = min(width, height) / 8.
+        self._write_string(name, pos_x + margin, pos_y + height - margin, font_size, self.state_name_color, True,
                            False, depth=depth+0.01)
 
-        resize_length = min(width, height) / 12.
+        resize_length = min(width, height) / 8.
         p1 = (pos_x + width, pos_y)
         p2 = (p1[0] - resize_length, p1[1])
         p3 = (p1[0], p1[1] + resize_length)
@@ -349,7 +350,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
         i = 0
         outcome_pos = {}
-        outcome_radius = min(5, height/15.0, height/(2*num_outcomes+3))
+        outcome_radius = min(5, height/15., height/(2.*num_outcomes+3))
         for key in outcomes:
             # Color of outcome is defined by its type, "aborted", "preempted" or else
             outcome_name = outcomes[key].name
@@ -376,7 +377,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         output_connector_pos = {}
         if num_ports > 0:
             max_name_width = 0
-            margin = height / 10.0
+            margin = min(width, height) / 10.0
             max_allowed_name_width = 0.7 * width - margin
             str_height = height / 12.0
 
@@ -391,7 +392,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             fill_color = self.port_color
             if active:
                 fill_color = self.state_active_color
-
             port_width = min(max_name_width, max_allowed_name_width)
             port_pos_left_x = pos_x + (width - port_width - margin) / 2
             port_pos_right_x = port_pos_left_x + port_width + margin
@@ -406,7 +406,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                     if self._string_width(port_name[0:trim_len-1], str_height) <= port_width:
                         break
                     trim_len -= 1
-                if trim_len < len(port_name):
+                if trim_len < 3:
+                    port_name = ''
+                elif trim_len < len(port_name):
                     port_name = port_name[0:trim_len-2] + '~'
 
                 string_pos_x = port_pos_left_x + margin/2.
@@ -437,10 +439,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         scoped_connector_pos = {}
         if len(scoped_vars) > 0:
             max_scope_width = width * 0.9
-            max_single_scope_width = max_scope_width / len(scoped_vars)
             margin = height / 50.
+            max_single_scope_width = max_scope_width / len(scoped_vars) - 2 * margin
             str_height = height / 35.0
-            port_pos_left_x = pos_x + width / 2 - len(scoped_vars) * max_single_scope_width / 2
+            port_pos_left_x = pos_x + width / 2 - (len(scoped_vars) * max_single_scope_width) / 2
             port_pos_top_y = pos_y + height - margin
             num = 0
 

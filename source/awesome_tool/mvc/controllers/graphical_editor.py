@@ -5,6 +5,7 @@ from OpenGL.GLU import *
 from utils import log
 
 logger = log.get_logger(__name__)
+import sys
 import time
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
@@ -366,9 +367,48 @@ class GraphicalEditorController(Controller):
             state_editor_data = self.selection.meta['gui']['editor']
             width = mouse_current_pos[0] - state_editor_data['pos_x']
             height_diff = state_editor_data['pos_y'] - mouse_current_pos[1]
-            state_editor_data['width'] = width
-            state_editor_data['height'] += height_diff
-            state_editor_data['pos_y'] -= height_diff
+            height = state_editor_data['height'] + height_diff
+
+            # Check lower right corner of all child states
+            min_right_edge = state_editor_data['pos_x']
+            max_bottom_edge = state_editor_data['pos_y'] + state_editor_data['height']
+            if isinstance(self.selection, ContainerStateModel):
+                for child_state_m in self.selection.states.itervalues():
+                    child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
+                                       child_state_m.meta['gui']['editor']['width']
+                    child_bottom_edge = child_state_m.meta['gui']['editor']['pos_y']
+                    if min_right_edge < child_right_edge:
+                        min_right_edge = child_right_edge
+                    if max_bottom_edge > child_bottom_edge:
+                        max_bottom_edge = child_bottom_edge
+
+            # Check for parent size limitation
+            max_right_edge = sys.maxint
+            min_bottom_edge = -sys.maxint - 1
+            if self.selection.parent is not None:
+                max_right_edge = self.selection.parent.meta['gui']['editor']['pos_x'] + \
+                                 self.selection.parent.meta['gui']['editor']['width']
+                min_bottom_edge = self.selection.parent.meta['gui']['editor']['pos_y']
+
+            desired_right_edge = state_editor_data['pos_x'] + width
+            desired_bottom_edge = state_editor_data['pos_y'] - height_diff
+            if width > 0:
+                if desired_right_edge > max_right_edge:
+                    state_editor_data['width'] = max_right_edge - state_editor_data['pos_x']
+                elif desired_right_edge < min_right_edge:
+                    state_editor_data['width'] = min_right_edge - state_editor_data['pos_x']
+                else:
+                    state_editor_data['width'] = width
+            if height > 0:
+                if desired_bottom_edge > max_bottom_edge:
+                    state_editor_data['height'] += state_editor_data['pos_y'] - max_bottom_edge
+                    state_editor_data['pos_y'] = max_bottom_edge
+                elif desired_bottom_edge < min_bottom_edge:
+                    state_editor_data['height'] += state_editor_data['pos_y'] - min_bottom_edge
+                    state_editor_data['pos_y'] = min_bottom_edge
+                else:
+                    state_editor_data['height'] = height
+                    state_editor_data['pos_y'] -= height_diff
             self._redraw()
 
         self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
