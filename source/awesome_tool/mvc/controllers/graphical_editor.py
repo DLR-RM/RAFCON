@@ -11,6 +11,7 @@ from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from math import sqrt
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SCROLL_LEFT, SCROLL_RIGHT
+from gtk.gdk import keyval_name
 # from models.container_state import ContainerStateModel
 
 
@@ -37,12 +38,18 @@ class GraphicalEditorController(Controller):
         self.selected_waypoint = None
         self.selected_resizer = None
 
+        self.shift_modifier = False
+        self.alt_modifier = False
+        self.ctrl_modifier = False
+
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
         # Only called when the mouse is clicked while moving
         view.editor.connect('motion-notify-event', self._on_mouse_motion)
         view.editor.connect('scroll-event', self._on_scroll)
+        view.editor.connect('key-press-event', self._on_key_press)
+        view.editor.connect('key-release-event', self._on_key_release)
         self.last_time = time.time()
 
     def register_view(self, view):
@@ -88,6 +95,26 @@ class GraphicalEditorController(Controller):
             self.view.editor.emit("configure_event", None)
             self.view.editor.emit("expose_event", None)
             self.last_time = time.time()
+
+    def _on_key_press(self, widget, event):
+        key_name = keyval_name(event.keyval)
+        #print "key press", key_name
+        if key_name == "Control_L" or key_name == "Control_R":
+            self.ctrl_modifier = True
+        elif key_name == "Alt_L":
+            self.alt_modifier = True
+        elif key_name == "Shift_L" or key_name == "Shift_R":
+            self.shift_modifier = True
+
+    def _on_key_release(self, widget, event):
+        key_name = keyval_name(event.keyval)
+        #print "key release", key_name
+        if key_name == "Control_L" or key_name == "Control_R":
+            self.ctrl_modifier = False
+        elif key_name == "Alt_L":
+            self.alt_modifier = False
+        elif key_name == "Shift_L" or key_name == "Shift_R":
+            self.shift_modifier = False
 
     def _on_mouse_press(self, widget, event):
         """Triggered when the mouse is pressed
