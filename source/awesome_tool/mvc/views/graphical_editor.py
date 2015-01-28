@@ -336,6 +336,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self._write_string(name, pos_x + margin, pos_y + height - margin, height / 8.0, self.state_name_color, True,
                            False, depth=depth+0.01)
 
+        resize_length = min(width, height) / 12.
+        p1 = (pos_x + width, pos_y)
+        p2 = (p1[0] - resize_length, p1[1])
+        p3 = (p1[0], p1[1] + resize_length)
+        self._draw_triangle(p1, p2, p3, depth+0.01, border_width, fill_color, self.border_color)
+
         # Draw outcomes as circle on the right side of the state
         # Every state has at least the default outcomes "aborted" and "preempted"
         num_outcomes = max(0, len(outcomes))
@@ -470,7 +476,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
 
         glPopName()
-        return id, outcome_pos, outcome_radius, input_connector_pos, output_connector_pos, scoped_connector_pos
+        return id, outcome_pos, outcome_radius, input_connector_pos, output_connector_pos, scoped_connector_pos, \
+               resize_length
 
     def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
                         depth=0):
@@ -669,9 +676,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             return
         glLineWidth(round(width / stroke_width_granularity) * stroke_width_granularity)
 
-    #@staticmethod
-    def _draw_rect(self, left_x, right_x, bottom_y, top_y, depth, border_width=1, fill_color=None, border_color=None):
-
+    def _draw_polygon(self, points, depth, border_width=1, fill_color=None, border_color=None):
         types = []
         if fill_color is not None:
             types.append(GL_POLYGON)
@@ -685,11 +690,20 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 self._set_closest_stroke_width(border_width)
                 border_color.set()
             glBegin(type)
-            glVertex3f(left_x, bottom_y, depth)
-            glVertex3f(right_x, bottom_y, depth)
-            glVertex3f(right_x, top_y, depth)
-            glVertex3f(left_x, top_y, depth)
+            for p in points:
+                glVertex3f(p[0], p[1], depth)
             glEnd()
+
+    def _draw_triangle(self, p1, p2, p3, depth, border_width=1, fill_color=None, border_color=None):
+        self._draw_polygon([p1, p2, p3], depth, border_width, fill_color, border_color)
+
+    def _draw_rect(self, left_x, right_x, bottom_y, top_y, depth, border_width=1, fill_color=None, border_color=None):
+        p1 = (left_x, bottom_y)
+        p2 = (right_x, bottom_y)
+        p3 = (right_x, top_y)
+        p4 = (left_x, top_y)
+
+        self._draw_polygon([p1, p2, p3, p4], depth, border_width, fill_color, border_color)
 
     def _draw_rect_arrow(self, left_x, right_x, bottom_y, top_y, arrow_pos, depth,
                          border_width=1, fill_color=None, border_color=None):
@@ -720,27 +734,11 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             b = (right_x, bottom_y + height/2 + arrow_width/2)
             c = (right_x + arrow_width, bottom_y + height/2)
 
-        types = []
-        if fill_color is not None:
-            types.append(GL_POLYGON)
-        if border_color is not None:
-            types.append(GL_LINE_LOOP)
-
-        for type in types:
-            if type == GL_POLYGON:
-                fill_color.set()
-            else:
-                self._set_closest_stroke_width(border_width)
-                border_color.set()
-            glBegin(type)
-            glVertex3f(a[0], a[1], depth)
-            glVertex3f(b[0], b[1], depth)
-            glVertex3f(c[0], c[1], depth)
-            glEnd()
+        points = [a, b, c]
+        self._draw_polygon(points, depth, border_width, fill_color, border_color)
 
         return c
 
-    #@staticmethod
     def _draw_circle(self, pos_x, pos_y, radius, depth, stroke_width=1, fill_color=None, border_color=None):
         """Draws a circle
 
@@ -752,7 +750,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param segments: Number of segments to draw (the more the more exact)
         """
 
-        segments = max(4, int(self.pixel_to_size_ratio() * radius))
+        segments = max(4, int(self.pixel_to_size_ratio() * radius * 1.5))
 
         types = []
         if fill_color is not None:
