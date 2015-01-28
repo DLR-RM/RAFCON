@@ -394,8 +394,19 @@ class GraphicalEditorController(Controller):
 
         if self.selected_resizer is not None:
             state_editor_data = self.selection.meta['gui']['editor']
-            width = mouse_current_pos[0] - state_editor_data['pos_x']
-            height_diff = state_editor_data['pos_y'] - mouse_current_pos[1]
+            mouse_resize_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+
+            if self.shift_modifier:
+                state_size_ratio = state_editor_data['width'] / state_editor_data['height']
+                if rel_x_motion / state_size_ratio < rel_y_motion:
+                    mouse_resize_pos = (mouse_resize_pos[0],
+                                        self.mouse_move_start_pos[1] - rel_x_motion / state_size_ratio)
+                else:
+                    mouse_resize_pos = (self.mouse_move_start_pos[0] - rel_y_motion * state_size_ratio,
+                                        mouse_resize_pos[1])
+
+            width = mouse_resize_pos[0] - state_editor_data['pos_x']
+            height_diff = state_editor_data['pos_y'] - mouse_resize_pos[1]
             height = state_editor_data['height'] + height_diff
 
             min_right_edge = state_editor_data['pos_x']
