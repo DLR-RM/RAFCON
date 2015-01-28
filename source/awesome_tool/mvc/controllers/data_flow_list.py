@@ -2,12 +2,35 @@
 from utils import log
 logger = log.get_logger(__name__)
 
-from gtkmvc import Controller
+from gtkmvc import Controller, Observer
 from gtk import ListStore
 import gobject
 
 from mvc.models import ContainerStateModel, StateModel
 from mvc.models.data_port import DataPortModel
+
+
+class ParentObserver(Observer):
+
+    def __init__(self, model, key, funct_handle_list):
+        Observer.__init__(self, model)
+        self.func_handle_list = funct_handle_list
+        # self.observe(self.notify, "state", after=True)
+        self.method_list = ["add_data_flow", "remove_data_flow",
+                            "add_input_data_port", "remove_input_data_port",
+                            "add_output_data_port", "remove_output_data_port",
+                            "add_output_data_port", "remove_output_data_port",
+                            "add_scoped_variable", "remove_scoped_variable",
+                            "add_state", "remove_state",
+                            "modify_outcome_name",]
+
+    @Observer.observe('state', after=True)
+    def notification(self, model, prop_name, info):
+        print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+              (prop_name, info.instance, info.method_name, info.result)
+        #if info.method_name in self.method_list:
+        for func_handle in self.func_handle_list:
+            func_handle()
 
 
 class DataFlowListController(Controller):
@@ -26,6 +49,11 @@ class DataFlowListController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
+        if model.parent is not None:
+            self.parent_observer = ParentObserver(model.parent, "state", [self.update_stores, self.update_model])
+            #self.parent_observer.observe(model.parent)
+
+
         self.tree_dict_combos = {'internal':    {'from': {'state': ListStore(gobject.TYPE_PYOBJECT),
                                                           'key': ListStore(gobject.TYPE_PYOBJECT)},
                                                  'to':   {'state': ListStore(gobject.TYPE_PYOBJECT),
@@ -150,6 +178,28 @@ class DataFlowListController(Controller):
         print "final store: ", keys_store
         return keys_store
 
+    def on_add(self, button, info=None):
+        print "add dataflow"
+        pass
+
+    def on_remove(self, button, info=None):
+        print "remove dataflow"
+        tree, path = self.view.tree_view.get_selection().get_selected_rows()
+        print path, tree
+        if path:
+            if self.new_version:
+                print "Transition: ", self.tree_store[path[0][0]][0]
+            else:
+                print "Transition old: ", self.model.transition_list_store[path[0][0]][0]
+                transition_id = self.model.transition_list_store[path[0][0]][0].transition_id
+                self.model.state.remove_transition(transition_id)
+
+    def update_stores(self):
+        pass
+
+    def update_model(self):
+        pass
+
     def update_combos(model):
         pass
 
@@ -158,6 +208,19 @@ class DataFlowListController(Controller):
 
     def on_combo_changed(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+
+    @Controller.observe("state", after=True)
+    def assign_notification_parent_state(self, model, prop_name, info):
+        print "transition_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+              (prop_name, info.instance, info.method_name, info.result)
+        if info.method_name in ["add_data_flow", "remove_data_flow",
+                                "add_input_data_port", "remove_input_data_port",
+                                "add_output_data_port", "remove_output_data_port",
+                                "add_output_data_port", "remove_output_data_port",
+                                "add_scoped_variable", "remove_scoped_variable",
+                                "add_state", "remove_state",
+                                "modify_outcome_name"]:
+            self.update_model()
 
 
 def update_combos(model,):
@@ -380,7 +443,6 @@ def update_data_flow(model):
                 tree_dict_combos['external']['to']['state'][data_flow.data_flow_id] = states_store
                 tree_dict_combos['external']['to']['key'][data_flow.data_flow_id] = to_keys_store
                 print "external", data_flow_dict['external'][data_flow.data_flow_id]
-
 
 
 if __name__ == '__main__':

@@ -29,24 +29,36 @@ class StateConnectionsEditorController(Controller):
         self.dataflows_ctrl = DataFlowListController(model, view.dataflows_view)
         self.view_dict = {'transitions_internal': True, 'transitions_external': True,
                           'dataflows_internal': True, 'dataflows_external': True}
+        self.dataflows_ctrl.view_dict = self.view_dict
+        self.transitions_ctrl.view_dict = self.view_dict
 
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        view['add_t_button'].connect('clicked', self.on_add_transition_clicked)
-        view['cancel_t_edit_button'].connect('clicked', self.on_cancel_transition_edit_clicked)
-        view['remove_t_button'].connect('clicked', self.on_remove_transition_clicked)
+        view['add_t_button'].connect('clicked', self.transitions_ctrl.on_add)
+        #view['cancel_t_edit_button'].connect('clicked', self.on_cancel_transition_edit_clicked)
+        view['remove_t_button'].connect('clicked', self.transitions_ctrl.on_remove)
         view['connected_to_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_external')
         view['internal_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_internal')
 
-        view['add_d_button'].connect('clicked', self.on_add_transition_clicked)
-        view['cancel_d_edit_button'].connect('clicked', self.on_cancel_dataflow_edit_clicked)
-        view['remove_d_button'].connect('clicked', self.on_remove_dataflow_clicked)
+        view['add_d_button'].connect('clicked', self.dataflows_ctrl.on_add)
+        #view['cancel_d_edit_button'].connect('clicked', self.on_cancel_dataflow_edit_clicked)
+        view['remove_d_button'].connect('clicked', self.dataflows_ctrl.on_remove)
         view['connected_to_d_checkbutton'].connect('toggled', self.toggled_button, 'dataflows_external')
         view['internal_d_checkbutton'].connect('toggled', self.toggled_button, 'dataflows_internal')
 
+        if self.model.parent is None:
+            self.view_dict['transitions_external'] = False
+            view['connected_to_t_checkbutton'].set_active(False)
+            self.view_dict['dataflows_external'] = False
+            view['connected_to_d_checkbutton'].set_active(False)
+        if not hasattr(self.model, 'states'):
+            self.view_dict['transitions_internal'] = False
+            view['internal_t_checkbutton'].set_active(False)
+            self.view_dict['dataflows_internal'] = False
+            view['internal_d_checkbutton'].set_active(False)
         # view['state_properties_view'].set_model(self.model.list_store)
         #
         # view['value_renderer'].connect('edited', self.__property_edited)
@@ -65,27 +77,41 @@ class StateConnectionsEditorController(Controller):
     #         logger.warning("Invalid value: %s" % outcome)
     #
 
-    def on_add_transition_clicked(self, widget, data=None):
-        print "add_t: %s" % widget
-
-    def on_cancel_transition_edit_clicked(self, widget, data=None):
-        print "cancel_t: %s" % widget
-
-    def on_remove_transition_clicked(self, widget, data=None):
-        print "rm_t: %s" % widget
-
-    def on_add_dataflow_clicked(self, widget, data):
-        print "add_d: %s" % widget
-
-    def on_cancel_dataflow_edit_clicked(self, widget, data=None):
-        print "cancel_d: %s" % widget
-
-    def on_remove_dataflow_clicked(self, widget, data=None):
-        print "rm_d: %s" % widget
+    # def on_add_transition_clicked(self, widget, data=None):
+    #     print "add_t: %s" % widget
+    #
+    # def on_cancel_transition_edit_clicked(self, widget, data=None):
+    #     print "cancel_t: %s" % widget
+    #
+    # def on_remove_transition_clicked(self, widget, data=None):
+    #     print "rm_t: %s" % widget
+    #
+    # def on_add_dataflow_clicked(self, widget, data):
+    #     print "add_d: %s" % widget
+    #
+    # def on_cancel_dataflow_edit_clicked(self, widget, data=None):
+    #     print "cancel_d: %s" % widget
+    #
+    # def on_remove_dataflow_clicked(self, widget, data=None):
+    #     print "rm_d: %s" % widget
 
     def toggled_button(self, button, name=None):
-        self.view_dict[name] = button.get_active()
-        print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+
+        if name in ['transitions_external', 'dataflows_external'] and self.model.parent is not None:
+            self.view_dict[name] = button.get_active()
+            print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+        elif not name in ['transitions_internal', 'dataflows_internal']:
+            self.view_dict['transitions_external'] = False
+            self.view_dict['dataflows_external'] = False
+            button.set_active(False)
+
+        if name in ['transitions_internal', 'dataflows_internal'] and hasattr(self.model, 'states'):
+            self.view_dict[name] = button.get_active()
+            print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+        elif not name in ['transitions_external', 'dataflows_external']:
+            self.view_dict['transitions_internal'] = False
+            self.view_dict['dataflows_internal'] = False
+            button.set_active(False)
 
     def __state_property_adapter(self, attr_name, label, view=None, value_error=None):
         """Helper method returning an adapter for a state property
