@@ -5,6 +5,7 @@ from OpenGL.GLU import *
 from utils import log
 
 logger = log.get_logger(__name__)
+import sys
 import time
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
@@ -34,6 +35,7 @@ class GraphicalEditorController(Controller):
 
         self.selected_outcome = None
         self.selected_waypoint = None
+        self.selected_resizer = None
 
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
@@ -98,6 +100,7 @@ class GraphicalEditorController(Controller):
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
         self.selected_outcome = None  # reset
+        self.selected_resizer = None  # reset
 
         # Store the coordinates of the event
         self.mouse_move_start_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -128,6 +131,7 @@ class GraphicalEditorController(Controller):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
 
+            # Check, whether a waypoint was clicked on
             if self.selection is not None and \
                     (isinstance(self.selection, TransitionModel) or isinstance(self.selection, DataFlowModel)):
                 close_threshold = min(self.selection.parent.meta['gui']['editor']['height'],
@@ -142,6 +146,7 @@ class GraphicalEditorController(Controller):
                             logger.debug('Selected waypoint {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                             break
 
+            # Check, whether an outcome was clicked on
             if self.selection is not None and isinstance(self.selection, StateModel) and self.selection is not self.model:
                 outcomes_close_threshold = self.selection.meta['gui']['editor']['outcome_radius']
                 outcomes = self.selection.meta['gui']['editor']['outcome_pos']
@@ -151,6 +156,27 @@ class GraphicalEditorController(Controller):
                     if dist < outcomes_close_threshold:
                         self.selected_outcome = (outcomes, key)
                 pass
+
+            # Check, whether a resizer was clicked on
+            if self.selection is not None and isinstance(self.selection, StateModel) and self.selection:
+                state_editor_data = self.selection.meta['gui']['editor']
+                p1 = (state_editor_data['pos_x'] + state_editor_data['width'], state_editor_data['pos_y'])
+                p2 = (p1[0] - state_editor_data['resize_length'], p1[1])
+                p3 = (p1[0], p1[1] + state_editor_data['resize_length'])
+
+                def point_in_triangle(p, v1, v2, v3):
+                    def _test(p1, p2, p3):
+                        return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+                    b1 = _test(p, v1, v2) < 0.0
+                    b2 = _test(p, v2, v3) < 0.0
+                    b3 = _test(p, v3, v1) < 0.0
+
+                    return (b1 == b2) and (b2 == b3)
+
+                if point_in_triangle(self.mouse_move_start_pos, p1, p2, p3):
+                    self.selected_resizer = self.selection
+                    # Start resize process
+                    pass
 
             self._redraw()
 
@@ -286,7 +312,7 @@ class GraphicalEditorController(Controller):
 
         #                                                                            Root container can't be moved
         if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and \
-                self.last_button_pressed == 1 and self.selected_outcome is None:
+                self.last_button_pressed == 1 and self.selected_outcome is None and self.selected_resizer is None:
 
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
@@ -335,6 +361,54 @@ class GraphicalEditorController(Controller):
             self._redraw()
 
         if self.selected_outcome is not None:
+            self._redraw()
+
+        if self.selected_resizer is not None:
+            state_editor_data = self.selection.meta['gui']['editor']
+            width = mouse_current_pos[0] - state_editor_data['pos_x']
+            height_diff = state_editor_data['pos_y'] - mouse_current_pos[1]
+            height = state_editor_data['height'] + height_diff
+
+            # Check lower right corner of all child states
+            min_right_edge = state_editor_data['pos_x']
+            max_bottom_edge = state_editor_data['pos_y'] + state_editor_data['height']
+            if isinstance(self.selection, ContainerStateModel):
+                for child_state_m in self.selection.states.itervalues():
+                    child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
+                                       child_state_m.meta['gui']['editor']['width']
+                    child_bottom_edge = child_state_m.meta['gui']['editor']['pos_y']
+                    if min_right_edge < child_right_edge:
+                        min_right_edge = child_right_edge
+                    if max_bottom_edge > child_bottom_edge:
+                        max_bottom_edge = child_bottom_edge
+
+            # Check for parent size limitation
+            max_right_edge = sys.maxint
+            min_bottom_edge = -sys.maxint - 1
+            if self.selection.parent is not None:
+                max_right_edge = self.selection.parent.meta['gui']['editor']['pos_x'] + \
+                                 self.selection.parent.meta['gui']['editor']['width']
+                min_bottom_edge = self.selection.parent.meta['gui']['editor']['pos_y']
+
+            desired_right_edge = state_editor_data['pos_x'] + width
+            desired_bottom_edge = state_editor_data['pos_y'] - height_diff
+            if width > 0:
+                if desired_right_edge > max_right_edge:
+                    state_editor_data['width'] = max_right_edge - state_editor_data['pos_x']
+                elif desired_right_edge < min_right_edge:
+                    state_editor_data['width'] = min_right_edge - state_editor_data['pos_x']
+                else:
+                    state_editor_data['width'] = width
+            if height > 0:
+                if desired_bottom_edge > max_bottom_edge:
+                    state_editor_data['height'] += state_editor_data['pos_y'] - max_bottom_edge
+                    state_editor_data['pos_y'] = max_bottom_edge
+                elif desired_bottom_edge < min_bottom_edge:
+                    state_editor_data['height'] += state_editor_data['pos_y'] - min_bottom_edge
+                    state_editor_data['pos_y'] = min_bottom_edge
+                else:
+                    state_editor_data['height'] = height
+                    state_editor_data['pos_y'] -= height_diff
             self._redraw()
 
         self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -417,7 +491,8 @@ class GraphicalEditorController(Controller):
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
-        (id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos) = self.view.editor.draw_state(
+        (id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos, resize_length) = \
+            self.view.editor.draw_state(
             state.state.name,
             pos_x, pos_y, width, height,
             state.state.outcomes,
@@ -431,6 +506,7 @@ class GraphicalEditorController(Controller):
         state.meta['gui']['editor']['input_pos'] = input_pos
         state.meta['gui']['editor']['output_pos'] = output_pos
         state.meta['gui']['editor']['scoped_pos'] = scoped_pos
+        state.meta['gui']['editor']['resize_length'] = resize_length
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
