@@ -287,11 +287,7 @@ def save_and_load_data_port_test():
     exit()
 
 
-# remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
-# states)
-def scoped_data_test():
-    s = Storage("../../test_scripts/stored_statemachine")
-
+def return_test_state_machine():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
     state1.add_input_data_port("MyFirstDataInputPort", "str")
@@ -322,10 +318,54 @@ def scoped_data_test():
                          state2.get_io_data_port_id_from_name_and_type("DataInput1", DataPortType.INPUT))
     state3.add_scoped_variable("scopeVar1", "str", "scopeDefaultValue")
     state3.add_scoped_variable("scopeVar2", "str", "scopeDefaultValue")
+    return state3
 
+
+def return_loop_state_machine():
+    state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="loop_state1.py")
+    state1.add_outcome("MyFirstOutcome", 3)
+
+
+    state2 = ExecutionState("MySecondState", path="../../test_scripts", filename="loop_state2.py")
+    state2.add_outcome("FirstOutcome", 3)
+
+    state3 = HierarchyState("MyFirstHierarchyState", path="../../test_scripts", filename="hierarchy_container.py")
+    state3.add_state(state1)
+    state3.add_state(state2)
+    state3.set_start_state(state1.state_id)
+    state3.add_transition(state1.state_id, 3, state2.state_id, None)
+    state3.add_transition(state2.state_id, 3, state1.state_id, None)
+
+    return state3
+
+
+def start_stop_pause_step_test():
+    from mvc.models import ContainerStateModel
+    from mvc.views.single_widget_window import TestButtonsView
+    import gtk
+
+    statemachine.singleton.state_machine_execution_engine.step_mode()
+
+    s = Storage("../../test_scripts/stored_statemachine")
+    state3 = return_loop_state_machine()
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
 
+    ctr_model = ContainerStateModel(root_state)
+    test_buttons_view = TestButtonsView(ctr_model)
+
+    root_state.daemon = True
+    root_state.start()
+    gtk.main()
+
+
+# remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
+# states)
+def scoped_data_test():
+    s = Storage("../../test_scripts/stored_statemachine")
+    state3 = return_test_state_machine()
+    s.save_statemachine_as_yaml(state3)
+    root_state = s.load_statemachine_from_yaml()
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
     root_state.input_data = input_data
@@ -469,8 +509,9 @@ def state_without_path_test():
 
 if __name__ == '__main__':
 
-    #scoped_data_test()
+    start_stop_pause_step_test()
 
+    #scoped_data_test()
     #save_and_load_data_port_test()
     #default_data_port_values_test()
     #scoped_variable_test()
@@ -491,7 +532,7 @@ if __name__ == '__main__':
     #save_library()
     #print "########################################################"
     # you have to run save_library() test before you can run run_library_statemachine()
-    run_library_statemachine()
+    #run_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine

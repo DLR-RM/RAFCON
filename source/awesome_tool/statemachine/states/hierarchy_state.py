@@ -16,6 +16,7 @@ from statemachine.outcome import Outcome
 from statemachine.states.state import StateType
 from statemachine.scope import ScopedData
 from statemachine.states.state import DataPortType
+import statemachine.singleton
 
 
 class HierarchyState(ContainerState, yaml.YAMLObject):
@@ -65,6 +66,10 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             state = self.get_start_state()
 
             while not state is self:
+                # depending on the execution mode pause execution
+
+                statemachine.singleton.state_machine_execution_engine.handle_execution_mode()
+
                 logger.debug("Executing next state state with id %s" % state.state_id)
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)
@@ -102,13 +107,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                                 self.scoped_results[str(data_flow.from_key)+data_flow.from_state].value()
 
             self.check_output_data_type(output_data)
-
-            #for i in range(5):
-            #    if self.preempted:
-            #        print str(self.__class__) + " was preempted"
-            #        return transition.to_outcome
-            #    print i
-            #    time.sleep(1.0)
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")

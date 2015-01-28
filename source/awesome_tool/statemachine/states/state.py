@@ -145,6 +145,7 @@ class DataPort(Observable, yaml.YAMLObject):
 StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY')
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 
+
 class State(threading.Thread, Observable, yaml.YAMLObject):
 
     """A class for representing a state in the state machine
@@ -244,7 +245,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     def remove_input_data_port(self, data_port_id):
         """Remove an input data port from the state
 
-        :param name: the name or the output data port to remove
+        :param data_port_id: the id or the output data port to remove
 
         """
         if data_port_id in self._input_data_ports:
@@ -287,7 +288,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     def remove_output_data_port(self, data_port_id):
         """Remove an output data port from the state
 
-        :param name: the name of the output data port to remove
+        :param data_port_id: the id of the output data port to remove
 
         """
         if data_port_id in self._output_data_ports:

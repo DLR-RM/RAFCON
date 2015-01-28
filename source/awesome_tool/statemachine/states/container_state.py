@@ -13,7 +13,7 @@ import copy
 
 from utils import log
 logger = log.get_logger(__name__)
-from statemachine.states.state import State, DataPortType
+from statemachine.states.state import State, DataPortType, StateType
 from statemachine.transition import Transition
 from statemachine.outcome import Outcome
 from statemachine.data_flow import DataFlow
@@ -212,13 +212,18 @@ class ContainerState(State, Observable):
             raise AttributeError("Either to_state_id or to_outcome must not be None")
 
         # check if outcome of from state is not already connected
-
         for trans_key, transition in self.transitions.iteritems():
             if transition.from_state == from_state_id:
                 if transition.from_outcome == from_outcome:
                     raise AttributeError("outcome %s of state %s is already connected" %
                                          (str(from_outcome), str(from_state_id)))
 
+        # check if state is a concurrency state, in concurrency states only transitions to the parents are allowd
+        if self.state_type is StateType.BARRIER_CONCURRENCY or self.state_type is StateType.PREEMPTION_CONCURRENCY:
+            if not to_state_id is self.state_id:
+                raise AttributeError("In concurrency states the to_state must be the container state itself")
+
+        # finally add transition
         if from_outcome in from_state.outcomes:
             if not to_outcome is None:
                 if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self

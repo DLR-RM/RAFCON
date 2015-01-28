@@ -2,6 +2,7 @@ import gtk
 from gtkmvc import View
 from gtkmvc import Controller
 from statemachine.states.execution_state import ExecutionState
+import statemachine.singleton
 
 
 class SingleWidgetWindowView(View):
@@ -38,29 +39,64 @@ class TestButtonsView(View, Controller):
         self.model = model
 
         window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        window.set_property("default-height", 100)
-        window.set_property("default-width", 400)
+        window.set_property("default-height", 200)
+        window.set_property("default-width", 500)
         window.connect("destroy", self.destroy)
         window.set_border_width(10)
 
-        button1 = gtk.Button("Button 1")
-        button1.connect("clicked", self.on_button1_pressed, None)
-        button1.show()
+        top_vbox = gtk.VBox(False, 0)
 
-        button2 = gtk.Button("Button 2")
-        button2.connect("clicked", self.on_button2_pressed, None)
-        button2.show()
+        #################################################################################
+        # Execution buttons
+        #################################################################################
 
-        button3 = gtk.Button("Button 3")
-        button3.connect("clicked", self.on_button3_pressed, None)
-        button3.show()
+        start_button = gtk.Button("Start")
+        start_button.connect("clicked", self.on_button3_pressed, None)
+        start_button.show()
 
-        hbox = gtk.HBox(False, 0)
-        hbox.pack_start(button1, True, True, 0)
-        hbox.pack_start(button2, True, True, 0)
-        hbox.pack_start(button3, True, True, 0)
-        window.add(hbox)
-        hbox.show()
+        stop_button = gtk.Button("Stop")
+        stop_button.connect("clicked", self.on_button4_pressed, None)
+        stop_button.show()
+
+        pause_button = gtk.Button("Pause")
+        pause_button.connect("clicked", self.on_button5_pressed, None)
+        pause_button.show()
+
+        step_mode_button = gtk.Button("Step-Mode")
+        step_mode_button.connect("clicked", self.on_button6_pressed, None)
+        step_mode_button.show()
+
+        step_button = gtk.Button("Step")
+        step_button.connect("clicked", self.on_button2_pressed, None)
+        step_button.show()
+
+        execution_hbox = gtk.HBox(True, 10)
+        execution_hbox.pack_start(start_button, True, True, 0)
+        execution_hbox.pack_start(stop_button, True, True, 0)
+        execution_hbox.pack_start(pause_button, True, True, 0)
+        execution_hbox.pack_start(step_mode_button, True, True, 0)
+        execution_hbox.pack_start(step_button, True, True, 0)
+
+        execution_label = gtk.Label("Execution Buttons")
+        execution_label.show()
+        top_vbox.pack_start(execution_label, True, False, 0)
+        top_vbox.pack_start(execution_hbox, False, False, 0)
+
+        #################################################################################
+        # State modification buttons
+        #################################################################################
+
+        state_modification_label = gtk.Label("State modification Buttons")
+        state_modification_label.show()
+        top_vbox.pack_start(state_modification_label, True, False, 0)
+        add_state_button = gtk.Button("Add state")
+        add_state_button.connect("clicked", self.on_button1_pressed, None)
+        add_state_button.show()
+        top_vbox.pack_start(add_state_button, False, False, 0)
+
+        window.add(top_vbox)
+        top_vbox.show()
+        execution_hbox.show()
         window.show()
         self['window_with_test_buttons'] = window
 
@@ -69,15 +105,29 @@ class TestButtonsView(View, Controller):
         gtk.main_quit()
 
     def on_button1_pressed(self, widget, data=None):
-        print "Pressed button1"
+        print "Add state button pressed"
         execution_state = ExecutionState("Test Execution State")
         self.model.state.add_state(execution_state)
 
     def on_button2_pressed(self, widget, data=None):
-        print "Pressed button2"
+        print "Step button pressed"
+        statemachine.singleton.state_machine_execution_engine.step()
 
     def on_button3_pressed(self, widget, data=None):
-        print "Pressed button3"
+        print "Start button pressed"
+        statemachine.singleton.state_machine_execution_engine.start()
+
+    def on_button4_pressed(self, widget, data=None):
+        print "Stop button pressed"
+        statemachine.singleton.state_machine_execution_engine.stop()
+
+    def on_button5_pressed(self, widget, data=None):
+        print "Pause button pressed"
+        statemachine.singleton.state_machine_execution_engine.pause()
+
+    def on_button6_pressed(self, widget, data=None):
+        print "Step-mode button pressed"
+        statemachine.singleton.state_machine_execution_engine.step_mode()
 
     def register_view(self, view):
         """Called when the View was registered

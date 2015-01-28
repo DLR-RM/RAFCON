@@ -146,7 +146,7 @@ if __name__ == '__main__':
     #StateDataPortEditorController(ctr_model, sdev)
 
     # a view, whose buttons can trigger arbitrary function that are needed for testing purposes
-    #test_buttons_view = TestButtonsView(ctr_model)
+    test_buttons_view = TestButtonsView(ctr_model)
 
     state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
     state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)

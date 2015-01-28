@@ -83,6 +83,16 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             self.check_output_data_type(output_data)
 
+            # check the outcomes of all states for aborted or preempted
+            # the output data has to be set before this check can be done
+            for key, state in self.states.iteritems():
+                if state.final_outcome.outcome_id == -1:
+                    self.final_outcome = Outcome(-1, "preempted")
+                    return
+                if state.final_outcome.outcome_id == -2:
+                    self.final_outcome = Outcome(-2, "aborted")
+                    return
+
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
                 return
