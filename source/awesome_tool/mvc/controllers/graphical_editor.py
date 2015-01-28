@@ -91,14 +91,14 @@ class GraphicalEditorController(Controller):
         event to redraw.
         """
         # Check if initialized
-        if hasattr(self.view, "editor") and (time.time() - self.last_time > 1/50. or important):
+        if hasattr(self.view, "editor") and (time.time() - self.last_time > 1 / 50. or important):
             self.view.editor.emit("configure_event", None)
             self.view.editor.emit("expose_event", None)
             self.last_time = time.time()
 
     def _on_key_press(self, widget, event):
         key_name = keyval_name(event.keyval)
-        #print "key press", key_name
+        # print "key press", key_name
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = True
         elif key_name == "Alt_L":
@@ -108,7 +108,7 @@ class GraphicalEditorController(Controller):
 
     def _on_key_release(self, widget, event):
         key_name = keyval_name(event.keyval)
-        #print "key release", key_name
+        # print "key release", key_name
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = False
         elif key_name == "Alt_L":
@@ -166,7 +166,7 @@ class GraphicalEditorController(Controller):
                 click = self.mouse_move_start_pos
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
                     if waypoint[0] is not None and waypoint[1] is not None:
-                        dist = sqrt((waypoint[0] - click[0])**2 + (waypoint[1] - click[1])**2)
+                        dist = sqrt((waypoint[0] - click[0]) ** 2 + (waypoint[1] - click[1]) ** 2)
                         if dist < close_threshold:
                             self.selected_waypoint = (self.selection.meta['gui']['editor']['waypoints'], i)
                             self.selection_start_pos = (waypoint[0], waypoint[1])
@@ -174,12 +174,13 @@ class GraphicalEditorController(Controller):
                             break
 
             # Check, whether an outcome was clicked on
-            if self.selection is not None and isinstance(self.selection, StateModel) and self.selection is not self.model:
+            if self.selection is not None and isinstance(self.selection,
+                                                         StateModel) and self.selection is not self.model:
                 outcomes_close_threshold = self.selection.meta['gui']['editor']['outcome_radius']
                 outcomes = self.selection.meta['gui']['editor']['outcome_pos']
                 click = self.mouse_move_start_pos
                 for key in outcomes:
-                    dist = sqrt((outcomes[key][0] - click[0])**2 + (outcomes[key][1] - click[1])**2)
+                    dist = sqrt((outcomes[key][0] - click[0]) ** 2 + (outcomes[key][1] - click[1]) ** 2)
                     if dist < outcomes_close_threshold:
                         self.selected_outcome = (outcomes, key)
                 pass
@@ -194,6 +195,7 @@ class GraphicalEditorController(Controller):
                 def point_in_triangle(p, v1, v2, v3):
                     def _test(p1, p2, p3):
                         return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+
                     b1 = _test(p, v1, v2) < 0.0
                     b2 = _test(p, v2, v3) < 0.0
                     b3 = _test(p, v3, v1) < 0.0
@@ -225,7 +227,7 @@ class GraphicalEditorController(Controller):
                 # logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for waypoint in connection_model.meta['gui']['editor']['waypoints']:
                     if waypoint[0] is not None and waypoint[1] is not None:
-                        if sqrt((waypoint[0] - click[0])**2 + (waypoint[1] - click[1])**2) < close_threshold:
+                        if sqrt((waypoint[0] - click[0]) ** 2 + (waypoint[1] - click[1]) ** 2) < close_threshold:
                             connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
                             waypoint_removed = True
                             logger.debug('Connection waypoint removed')
@@ -273,7 +275,7 @@ class GraphicalEditorController(Controller):
                     outcomes = self.selection.parent.meta['gui']['editor']['outcome_pos']
                     click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                     for key in outcomes:
-                        dist = sqrt((outcomes[key][0] - click[0])**2 + (outcomes[key][1] - click[1])**2)
+                        dist = sqrt((outcomes[key][0] - click[0]) ** 2 + (outcomes[key][1] - click[1]) ** 2)
                         if dist < outcomes_close_threshold:
                             # This is a possible connection:
                             # The outcome of a state is connected to ian outcome of its parent state
@@ -337,9 +339,9 @@ class GraphicalEditorController(Controller):
                     pos_y = state.meta['gui']['editor']['pos_y'] + state.meta['gui']['editor']['height'] - height
             return pos_x, pos_y
 
-        #                                                                            Root container can't be moved
+        # Root container can't be moved
         if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and \
-                self.last_button_pressed == 1 and self.selected_outcome is None and self.selected_resizer is None:
+                        self.last_button_pressed == 1 and self.selected_outcome is None and self.selected_resizer is None:
 
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
@@ -396,10 +398,10 @@ class GraphicalEditorController(Controller):
             height_diff = state_editor_data['pos_y'] - mouse_current_pos[1]
             height = state_editor_data['height'] + height_diff
 
-            # Check lower right corner of all child states
             min_right_edge = state_editor_data['pos_x']
             max_bottom_edge = state_editor_data['pos_y'] + state_editor_data['height']
-            if isinstance(self.selection, ContainerStateModel):
+            if not self.ctrl_modifier and isinstance(self.selection, ContainerStateModel):
+                # Check lower right corner of all child states
                 for child_state_m in self.selection.states.itervalues():
                     child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
                                        child_state_m.meta['gui']['editor']['width']
@@ -419,6 +421,12 @@ class GraphicalEditorController(Controller):
 
             desired_right_edge = state_editor_data['pos_x'] + width
             desired_bottom_edge = state_editor_data['pos_y'] - height_diff
+
+            old_width = state_editor_data['width']
+            old_height = state_editor_data['height']
+            old_pos_x= state_editor_data['pos_x']
+            old_pos_y= state_editor_data['pos_y']
+
             if width > 0:
                 if desired_right_edge > max_right_edge:
                     state_editor_data['width'] = max_right_edge - state_editor_data['pos_x']
@@ -436,6 +444,35 @@ class GraphicalEditorController(Controller):
                 else:
                     state_editor_data['height'] = height
                     state_editor_data['pos_y'] -= height_diff
+
+            width_factor = state_editor_data['width'] / old_width
+            height_factor = state_editor_data['height'] / old_height
+            if (width_factor != 1 or height_factor != 1) and self.ctrl_modifier:
+
+                def resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y):
+                    if isinstance(state_m, ContainerStateModel):
+                        for child_state_m in state_m.states.itervalues():
+                            child_state_m.meta['gui']['editor']['width'] *= width_factor
+                            child_state_m.meta['gui']['editor']['height'] *= height_factor
+
+                            child_old_pos_x = child_state_m.meta['gui']['editor']['pos_x']
+                            diff_pos_x = child_state_m.meta['gui']['editor']['pos_x'] - old_pos_x
+                            diff_pos_x *= width_factor
+                            child_state_m.meta['gui']['editor']['pos_x'] = state_m.meta['gui']['editor']['pos_x'] + \
+                                diff_pos_x
+
+
+                            child_old_pos_y = child_state_m.meta['gui']['editor']['pos_y']
+                            diff_pos_y = child_state_m.meta['gui']['editor']['pos_y'] - old_pos_y
+                            diff_pos_y *= height_factor
+                            child_state_m.meta['gui']['editor']['pos_y'] = state_m.meta['gui']['editor']['pos_y'] + \
+                                diff_pos_y
+
+                            if isinstance(child_state_m, ContainerStateModel):
+                                resize_children(child_state_m, width_factor, height_factor,
+                                                child_old_pos_x, child_old_pos_y)
+
+                resize_children(self.selection, width_factor, height_factor, old_pos_x, old_pos_y)
             self._redraw()
 
         self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -520,13 +557,13 @@ class GraphicalEditorController(Controller):
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
         (id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos, resize_length) = \
             self.view.editor.draw_state(
-            state.state.name,
-            pos_x, pos_y, width, height,
-            state.state.outcomes,
-            state.state.input_data_ports,
-            state.state.output_data_ports,
-            scoped_ports,
-            active, depth)
+                state.state.name,
+                pos_x, pos_y, width, height,
+                state.state.outcomes,
+                state.state.input_data_ports,
+                state.state.output_data_ports,
+                scoped_ports,
+                active, depth)
         state.meta['gui']['editor']['id'] = id
         state.meta['gui']['editor']['outcome_pos'] = outcome_pos
         state.meta['gui']['editor']['outcome_radius'] = outcome_radius
@@ -665,7 +702,8 @@ class GraphicalEditorController(Controller):
         try:
             selected_ids = map(lambda hit: hit[2][1], hits)
             # print selected_ids
-            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0, only_states)
+            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0,
+                                                                        only_states)
             # print selection, selection_depth
         except Exception as e:
             logger.error("Error while finding selection: {err:s}".format(err=e))
