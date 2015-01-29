@@ -110,8 +110,10 @@ class GraphicalEditorView(View):
         self.v_box = gtk.VBox()
         #self.test_label = gtk.Label("Hallo")
         self.editor = GraphicalEditor(glconfig)
-        self.editor.add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK)
+        self.editor.add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
+                               gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK)
         self.editor.set_size_request(500, 500)
+        self.editor.set_flags(gtk.CAN_FOCUS)
 
         #self.v_box.pack_start(self.test_label)
         self.v_box.pack_end(self.editor)
@@ -400,16 +402,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                             fill_color, self.border_color)
 
             def draw_port(port, num, is_input):
-                port_name = port.name
-                trim_len = len(port_name)
-                while trim_len > 1:
-                    if self._string_width(port_name[0:trim_len-1], str_height) <= port_width:
-                        break
-                    trim_len -= 1
-                if trim_len < 3:
-                    port_name = ''
-                elif trim_len < len(port_name):
-                    port_name = port_name[0:trim_len-2] + '~'
+                port_name = self._shorten_string(port.name, str_height, port_width)
 
                 string_pos_x = port_pos_left_x + margin/2.
                 if not is_input:
@@ -439,7 +432,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         scoped_connector_pos = {}
         if len(scoped_vars) > 0:
             max_scope_width = width * 0.9
-            margin = height / 50.
+            margin = min(height, width) / 50.
             max_single_scope_width = max_scope_width / len(scoped_vars) - 2 * margin
             str_height = height / 35.0
             port_pos_left_x = pos_x + width / 2 - (len(scoped_vars) * max_single_scope_width) / 2
@@ -447,14 +440,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             num = 0
 
             for key in scoped_vars:
-                port_name = scoped_vars[key].name
-                trim_len = len(port_name)
-                while trim_len > 1:
-                    if self._string_width(port_name[0:trim_len-1], str_height) <= max_single_scope_width - margin:
-                        break
-                    trim_len -= 1
-                if trim_len < len(port_name):
-                    port_name = port_name[0:trim_len-2] + '~'
+                port_name = self._shorten_string(scoped_vars[key].name, str_height, max_single_scope_width - margin)
                 str_width = self._string_width(port_name, str_height)
 
                 move_x = num * (str_width + 2 * margin)
@@ -773,6 +759,18 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 y = pos_y + sin(angle) * radius
                 glVertex3f(x, y, depth)
             glEnd()
+
+    def _shorten_string(self, string, height, max_width):
+        trim_len = len(string)
+        while trim_len > 1:
+            if self._string_width(string[0:trim_len-1], height) <= max_width:
+                break
+            trim_len -= 1
+        if trim_len < 3 and trim_len < len(string):
+            string = ''
+        elif trim_len < len(string):
+            string = string[0:trim_len-2] + '~'
+        return string
 
     def _apply_orthogonal_view(self):
         """Orthogonal view with respect to current aspect ratio
