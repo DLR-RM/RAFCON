@@ -90,9 +90,19 @@ class TestButtonsView(View, Controller):
         state_modification_label.show()
         top_vbox.pack_start(state_modification_label, True, False, 0)
         add_state_button = gtk.Button("Add state")
-        add_state_button.connect("clicked", self.on_button1_pressed, None)
+        add_state_button.connect("clicked", self.on_add_state_button_pressed, None)
         add_state_button.show()
         top_vbox.pack_start(add_state_button, False, False, 0)
+
+        data_port_change_button = gtk.Button("Change name of data port")
+        data_port_change_button.connect("clicked", self.on_data_port_change_button_pressed, None)
+        data_port_change_button.show()
+        top_vbox.pack_start(data_port_change_button, False, False, 0)
+
+        scoped_variable_changed_button = gtk.Button("Change name of scoped variable")
+        scoped_variable_changed_button.connect("clicked", self.on_scoped_variable_change_button_pressed, None)
+        scoped_variable_changed_button.show()
+        top_vbox.pack_start(scoped_variable_changed_button, False, False, 0)
 
         window.add(top_vbox)
         top_vbox.show()
@@ -104,10 +114,20 @@ class TestButtonsView(View, Controller):
         print "destroy signal occurred"
         gtk.main_quit()
 
-    def on_button1_pressed(self, widget, data=None):
+    def on_add_state_button_pressed(self, widget, data=None):
         print "Add state button pressed"
         execution_state = ExecutionState("Test Execution State")
         self.model.state.add_state(execution_state)
+
+    def on_data_port_change_button_pressed(self, widget, data=None):
+        print "Data port change button pressed"
+        key = self.model.state.input_data_ports.keys()[0]
+        self.model.state.input_data_ports[key].name = "New name for input port"
+
+    def on_scoped_variable_change_button_pressed(self, widget, data=None):
+        print "Scoped variable change button pressed"
+        key = self.model.state.scoped_variables.keys()[0]
+        self.model.state.scoped_variables[key].name = "New name for scoped variable"
 
     def on_button2_pressed(self, widget, data=None):
         print "Step button pressed"

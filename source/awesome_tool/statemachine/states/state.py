@@ -78,7 +78,6 @@ class DataPort(Observable, yaml.YAMLObject):
         default_value = dict_representation['default_value']
         return DataPort(name, data_type, default_value, data_port_id)
 
-
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
@@ -366,7 +365,8 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
-            Must be implemented
+
+        TODO: Should be filled with code, that should be executed for each state derivative
         """
         raise NotImplementedError("The State.run() function has to be implemented!")
 

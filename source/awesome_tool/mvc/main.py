@@ -142,17 +142,17 @@ if __name__ == '__main__':
     setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
 
-    #sdev = StateDataportEditorView()
-    #StateDataPortEditorController(ctr_model, sdev)
+    sdev = StateDataportEditorView()
+    StateDataPortEditorController(ctr_model, sdev)
 
     # a view, whose buttons can trigger arbitrary function that are needed for testing purposes
     test_buttons_view = TestButtonsView(ctr_model)
 
-    state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
-    state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
+    #state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
+    #state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
 
-    library_tree = SingleWidgetWindowView(LibraryTreeView, width=300, height=200, title='Library Tree')
-    library_controller = SingleWidgetWindowController(None, library_tree, LibraryTreeController)
+    #library_tree = SingleWidgetWindowView(LibraryTreeView, width=300, height=200, title='Library Tree')
+    #library_controller = SingleWidgetWindowController(None, library_tree, LibraryTreeController)
 
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)

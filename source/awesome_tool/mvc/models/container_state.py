@@ -76,13 +76,11 @@ class ContainerStateModel(StateModel):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
-        self.update_scoped_variables_list_store()
+        self.update_scoped_variables_list_store_and_models()
 
     def update_scoped_variables_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
-        self.scoped_variables = []
         for scoped_variable in self.container_state.scoped_variables.itervalues():
-            self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
             tmp.append([scoped_variable])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
@@ -92,6 +90,16 @@ class ContainerStateModel(StateModel):
         self.scoped_variables_list_store.clear()
         for elem in tmp:
             self.scoped_variables_list_store.append(elem)
+
+    def update_scoped_variables_models(self):
+        self.scoped_variables = []
+        for scoped_variable in self.container_state.scoped_variables.itervalues():
+            self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
+
+    def update_scoped_variables_list_store_and_models(self):
+        self.update_scoped_variables_models()
+        self.update_scoped_variables_list_store()
+
 
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, name, info):

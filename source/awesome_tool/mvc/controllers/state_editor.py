@@ -109,11 +109,11 @@ class StateEditorController(Controller):
     def assign_notification_state(self, model, prop_name, info):
         #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #      (prop_name, info.instance, info.method_name, info.result)
-        #model.update_input_data_port_list_store()
+        #model.update_input_data_port_list_store_and_models()
         if info.method_name == "add_input_data_port" or info.method_name == "remove_input_data_port":
-            model.update_input_data_port_list_store()
+            model.update_input_data_port_list_store_and_models()
         elif info.method_name == "add_output_data_port" or info.method_name == "remove_output_data_port":
-            model.update_output_data_port_list_store()
+            model.update_output_data_port_list_store_and_models()
         elif info.method_name == "add_scoped_variable" or info.method_name == "remove_scoped_variable":
             model.update_scoped_variables_list_store()
 
