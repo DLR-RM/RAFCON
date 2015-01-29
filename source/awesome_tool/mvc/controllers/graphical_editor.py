@@ -461,23 +461,39 @@ class GraphicalEditorController(Controller):
             if (width_factor != 1 or height_factor != 1) and self.ctrl_modifier:
 
                 def resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y):
+                    def calc_new_pos(old_parent_pos, new_parent_pos, old_self_pos, factor):
+                        diff_pos = old_self_pos - old_parent_pos
+                        diff_pos *= factor
+                        return new_parent_pos + diff_pos
                     if isinstance(state_m, ContainerStateModel):
+                        for transition_m in state_m.transitions:
+                            for i, waypoint in enumerate(transition_m.meta['gui']['editor']['waypoints']):
+                                new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                                                         waypoint[0], width_factor)
+                                new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                                                         waypoint[1], height_factor)
+                                transition_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
+                        for data_flow_m in state_m.data_flows:
+                            for i, waypoint in enumerate(data_flow_m.meta['gui']['editor']['waypoints']):
+                                new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                                                         waypoint[0], width_factor)
+                                new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                                                         waypoint[1], height_factor)
+                                data_flow_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
+
                         for child_state_m in state_m.states.itervalues():
                             child_state_m.meta['gui']['editor']['width'] *= width_factor
                             child_state_m.meta['gui']['editor']['height'] *= height_factor
 
                             child_old_pos_x = child_state_m.meta['gui']['editor']['pos_x']
-                            diff_pos_x = child_state_m.meta['gui']['editor']['pos_x'] - old_pos_x
-                            diff_pos_x *= width_factor
-                            child_state_m.meta['gui']['editor']['pos_x'] = state_m.meta['gui']['editor']['pos_x'] + \
-                                diff_pos_x
-
+                            new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                                                         child_state_m.meta['gui']['editor']['pos_x'], width_factor)
+                            child_state_m.meta['gui']['editor']['pos_x'] = new_pos_x
 
                             child_old_pos_y = child_state_m.meta['gui']['editor']['pos_y']
-                            diff_pos_y = child_state_m.meta['gui']['editor']['pos_y'] - old_pos_y
-                            diff_pos_y *= height_factor
-                            child_state_m.meta['gui']['editor']['pos_y'] = state_m.meta['gui']['editor']['pos_y'] + \
-                                diff_pos_y
+                            new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                                                         child_state_m.meta['gui']['editor']['pos_y'], height_factor)
+                            child_state_m.meta['gui']['editor']['pos_y'] = new_pos_y
 
                             if isinstance(child_state_m, ContainerStateModel):
                                 resize_children(child_state_m, width_factor, height_factor,
