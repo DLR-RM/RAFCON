@@ -1,12 +1,11 @@
-
-from utils import log
-logger = log.get_logger(__name__)
-
 import gtk
 from gtkmvc import Controller
+from gtkmvc import Observer
+
 from mvc.controllers.io_data_port_list import DataPortListController
 from mvc.controllers.scoped_variable_list import ScopedVariableListController
-from gtkmvc import Observer
+from utils import log
+logger = log.get_logger(__name__)
 
 
 class StateDataPortEditorController(Controller):

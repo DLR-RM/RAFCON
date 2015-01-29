@@ -7,10 +7,10 @@ from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerMod
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
     SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
-    LibraryTreeController
+    LibraryTreeController, MainWindowController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-    LoggingView, StateMachineTreeView, LibraryTreeView
+    GlobalVariableEditorView, ExternalModuleManagerWindowView, ExternalModuleManagerView,  SourceEditorView, \
+    SingleWidgetWindowView, StateEditorView, LoggingView, StateMachineTreeView, LibraryTreeView, MainWindowView
 from mvc.views.single_widget_window import TestButtonsView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
@@ -138,15 +138,20 @@ if __name__ == '__main__':
     statemachine.singleton.library_manager.initialize()
     setup_path()
     check_requirements()
+    #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
+    #setup_logger(logging_view['main_frame'])
     logging_view = LoggingView()
     setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
 
-    sdev = StateDataportEditorView()
-    StateDataPortEditorController(ctr_model, sdev)
+    main_window_view = MainWindowView(logging_view)
+    main_window_controller = MainWindowController(ctr_model, main_window_view, emm_model, gvm_model)
+
+    #sdev = StateDataportEditorView()
+    #StateDataPortEditorController(ctr_model, sdev)
 
     # a view, whose buttons can trigger arbitrary function that are needed for testing purposes
-    test_buttons_view = TestButtonsView(ctr_model)
+    #test_buttons_view = TestButtonsView(ctr_model)
 
     #state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
     #state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
@@ -157,17 +162,18 @@ if __name__ == '__main__':
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
 
-    #external_module_manager_view = ExternalModuleManagerView()
-    #ExternalModuleManagerController(emm_model, external_module_manager_view, src_view.widget_view)
+    #external_module_manager_view = SingleWidgetWindowView(ExternalModuleManagerView, width=500, height=200, title='External Module Manager')
+    #external_module_manger_controller = SingleWidgetWindowController(emm_model, external_module_manager_view, ExternalModuleManagerController)
+    #external_module_manger_controller.set_source_view(src_view.widget_view)
 
     #state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
     #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
 
-    #global_var_manager_view = GlobalVariableEditorView()
-    #GlobalVariableManagerController(gvm_model, global_var_manager_view)
+    # global_variables_view = SingleWidgetWindowView(GlobalVariableEditorView, width=500, height=200, title='Global Variable Manager')
+    # global_variables_controller = SingleWidgetWindowController(gvm_model, global_variables_view, GlobalVariableManagerController)
 
-    editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
-    editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
+    #editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
+    #editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
 
     gtk.main()
     logger.debug("after gtk main")

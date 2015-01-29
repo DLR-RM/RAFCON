@@ -9,10 +9,6 @@ class LoggingView(View):
     def __init__(self):
         View.__init__(self)
 
-        window = gtk.Window()
-        window.resize(width=500, height=200)
-        window.set_property("title", "Logging")
-
         # create textview
         self.textview = None
         self.textview = gtk.TextView()
@@ -20,18 +16,15 @@ class LoggingView(View):
         #self.textview.get_buffer().create_tag("dead_color", foreground="gray")
         self.textview.get_buffer().create_tag("default", font="Monospace 10")
         self.textview.get_buffer().create_tag("set_warning_color", foreground="blue")
-        self.textview.get_buffer().create_tag("set_error_color"  , foreground="red")
-        self.textview.get_buffer().create_tag("set_debug_color"  , foreground="green")
-        self.textview.get_buffer().create_tag("set_info_color"   , foreground="orange")
+        self.textview.get_buffer().create_tag("set_error_color", foreground="red")
+        self.textview.get_buffer().create_tag("set_debug_color", foreground="green")
+        self.textview.get_buffer().create_tag("set_info_color", foreground="orange")
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.add(self.textview)
-        window.add(scrollable)
-        window.set_property("visible", True)
-        window.show_all()
+        self.textview.show()
 
-        self['main_window'] = window
         self['scrollable'] = scrollable
 
     def apply_tag(self, name):

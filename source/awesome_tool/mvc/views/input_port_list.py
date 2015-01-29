@@ -7,5 +7,3 @@ class InputPortsListView(View):
 
     def __init__(self):
         View.__init__(self)
-
-    pass

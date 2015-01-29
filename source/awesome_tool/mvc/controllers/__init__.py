@@ -16,4 +16,4 @@ from state_editor import StateEditorController
 
 from library_tree import LibraryTreeController
 from state_machine_tree import StateMachineTreeController
-from main_window import FullMainWindowController
+from main_window import MainWindowController

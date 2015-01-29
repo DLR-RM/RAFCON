@@ -1,31 +1,52 @@
 import gtk
 from gtkmvc import View
-from mvc.views import StateEditorView, GraphicalEditorView, LibraryTreeView, StateMachineTreeView
+from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
+     GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
+     LoggingView, StateMachineTreeView, LibraryTreeView
 
 
-class FullMainWindowView(View):
+class MainWindowView(View):
     builder = './glade/main_window.glade'
-    top = 'MainWindow'
+    top = 'main_window'
 
-    def __init__(self):
+    def __init__(self, logging_view):
         View.__init__(self)
+
+        self.logging_view = logging_view
 
         # insert library-tree
         self.library_tree = LibraryTreeView()
-        self['library_vbox'].add(self.library_tree.get_top_widget())
+        self.library_tree.show()
 
-        # insert state-machine-tree
         self.state_machine_tree = StateMachineTreeView()
-        self['smtree_vbox'].add(self.state_machine_tree.get_top_widget())
+        self.state_machine_tree.show()
 
-        # insert one graphical-statemachine-editor
-        self.graphical_editors = GraphicalEditorView()
-        self.state_machines_editors = self.graphical_editors
-        self['state_machines_vbox'].add(self.state_machines_editors.get_top_widget())
+        # self.graphical_editor_window = gtk.Window()
+        # self.graphical_editor_window.set_title("Graphical Editor")
+        # self.graphical_editor_window.set_position(1)
+        # graphical_editor_view = GraphicalEditorView()
+        # self.graphical_editor_window.add(graphical_editor_view.get_top_widget())
+        # self.graphical_editor_window.show_all()
 
-        # insert one state-editor
-        self.state_editors = StateEditorView()
-        self["state_editors_vbox"].add(self.state_editors.get_top_widget())
+        #self.graphical_editor_window = SingleWidgetWindowView(GraphicalEditorView, title="Graphical-Editor", pos=1)
+
+        self.graphical_editor_view = GraphicalEditorView()
+        self.graphical_editor_view.show()
+
+        self.external_module_manager_view = ExternalModuleManagerView()
+        self.external_module_manager_view.show()
+
+        self.global_var_manager_view = GlobalVariableEditorView()
+        self.global_var_manager_view.show()
+
+        # # insert one graphical-statemachine-editor
+        # self.graphical_editors = GraphicalEditorView()
+        # self.state_machines_editors = self.graphical_editors
+        # self['state_machines_vbox'].add(self.state_machines_editors.get_top_widget())
+        #
+        # # insert one state-editor
+        # self.state_editors = StateEditorView()
+        # self["state_editors_vbox"].add(self.state_editors.get_top_widget())
 
         # insert environment-manager
         #self['external_module_manager_vbox'].add(self['external_module_manager'].get_top_widget())
