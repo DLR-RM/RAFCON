@@ -157,12 +157,12 @@ if __name__ == "__main__":
     # #c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
     # c = SingleWidgetWindowController(this_model, v, StateOutcomesEditorController)
 
-    state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
-    #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
-    state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
+    # state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
+    # #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
+    # state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
 
-    # scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
-    # scon_editor_ctrl = SingleWidgetWindowController(this_model, scon_editor_view, StateConnectionsEditorController)
+    scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
+    scon_editor_ctrl = SingleWidgetWindowController(this_model, scon_editor_view, StateConnectionsEditorController)
 
     #external_module_manager_view = ExternalModuleManagerView()
     #ExternalModuleManagerController(emm_model, external_module_manager_view, src_view.widget_view)
@@ -172,6 +172,8 @@ if __name__ == "__main__":
 
     editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
+    #from mvc.controllers.data_flow_list import find_free_keys
+    #print "ALL free ports found: ", find_free_keys(ctr_model)
 
     gtk.main()
     logger.debug("after gtk main")

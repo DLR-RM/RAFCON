@@ -259,6 +259,20 @@ class ContainerState(State, Observable):
                 return scoped_id
         raise AttributeError("Name %s is not in scoped_variables", name)
 
+    def get_data_port_by_id(self, data_port_id):
+        """ Returns the io-data_port or scoped_variable with a certain data_id
+        :param port_id:
+        :return:
+        """
+        if data_port_id in self.input_data_ports:
+            return self.input_data_ports[data_port_id]
+        elif data_port_id in self.output_data_ports:
+            return self.output_data_ports[data_port_id]
+        elif data_port_id in self.scoped_variables:
+            return self.scoped_variables[data_port_id]
+        else:
+            raise AttributeError("Data_Port_id %s is not in input_data_ports, output_data_ports or scoped_variables", data_port_id)
+
     @Observable.observed
     #Primary key is data_flow_id.
     def add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id=None):

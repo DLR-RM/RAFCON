@@ -40,7 +40,7 @@ class StateOutcomesTreeView(View):
         self['to_state_col'] = gtk.TreeViewColumn('To-State', self.to_state_cell, text=2, background=5)
         self.tree_view.append_column(self['to_state_col'])
 
-        # Variable to-key
+        # Variable to-outcome
         self.to_outcome_cell = gtk.CellRendererCombo()
         self['to_outcome_combo'] = self.to_outcome_cell
         self.to_outcome_cell.set_property("text-column", 0)

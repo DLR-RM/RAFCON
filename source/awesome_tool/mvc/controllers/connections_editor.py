@@ -113,6 +113,13 @@ class StateConnectionsEditorController(Controller):
             self.view_dict['dataflows_internal'] = False
             button.set_active(False)
 
+        self.transitions_ctrl.update_transitions_store()
+        self.transitions_ctrl.update_stores()
+        self.transitions_ctrl.update_model()
+
+        self.dataflows_ctrl.update_stores()
+        self.dataflows_ctrl.update_model()
+
     def __state_property_adapter(self, attr_name, label, view=None, value_error=None):
         """Helper method returning an adapter for a state property
 

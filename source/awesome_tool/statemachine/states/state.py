@@ -145,6 +145,7 @@ class DataPort(Observable, yaml.YAMLObject):
 StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY')
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 
+
 class State(threading.Thread, Observable, yaml.YAMLObject):
 
     """A class for representing a state in the state machine
@@ -315,6 +316,17 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
                     return op_id
             raise AttributeError("Name %s is not in output_data_ports", name)
 
+    def get_data_port_by_id(self, id):
+        """ Returns the io-data_port or scoped_variable with a certain id
+        :param port_id:
+        :return:
+        """
+        if id in self.input_data_ports:
+            return self.input_data_ports[id]
+        elif id in self.output_data_ports:
+            return self.output_data_ports[id]
+        else:
+            raise AttributeError("Data_Port_id %s is not in input_data_ports or output_data_ports", id)
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
