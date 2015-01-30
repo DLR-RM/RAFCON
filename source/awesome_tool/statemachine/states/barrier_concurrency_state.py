@@ -32,6 +32,8 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
     def run(self):
 
+        self.active = True
+
         #initialize data structures
         input_data = self.input_data
         output_data = self.output_data
@@ -88,20 +90,25 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             for key, state in self.states.iteritems():
                 if state.final_outcome.outcome_id == -1:
                     self.final_outcome = Outcome(-1, "preempted")
+                    self.active = False
                     return
                 if state.final_outcome.outcome_id == -2:
                     self.final_outcome = Outcome(-2, "aborted")
+                    self.active = False
                     return
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
+                self.active = False
                 return
 
             self.final_outcome = Outcome(0, "success")
+            self.active = False
             return
 
         except RuntimeError:
             self.final_outcome = Outcome(-1, "aborted")
+            self.active = False
             return
 
     @classmethod

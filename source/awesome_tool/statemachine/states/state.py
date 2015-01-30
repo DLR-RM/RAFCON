@@ -224,6 +224,8 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         self._final_outcome = None
         self._description = None
 
+        self._active = None
+
         logger.debug("State with id %s initialized" % self._state_id)
 
     @Observable.observed
@@ -717,3 +719,18 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             raise ValueError("ID must have at least one character")
 
         self._description = description
+
+    @property
+    def active(self):
+        """Property for the _active field
+
+        """
+        return self._active
+
+    @active.setter
+    @Observable.observed
+    def active(self, active):
+        if not isinstance(active, bool):
+            raise TypeError("active must be of type bool")
+
+        self._active = active

@@ -93,7 +93,6 @@ class MainWindowController(Controller):
                             str(statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         status_bar3.push(0, status_bar3_string)
 
-
     def register_view(self, view):
         view['main_window'].connect('destroy', gtk.main_quit)
 

@@ -528,6 +528,7 @@ def state_without_path_test():
 
 if __name__ == '__main__':
 
+    statemachine.singleton.state_machine_execution_engine.start()
     #start_stop_pause_step_test()
 
     #scoped_data_test()
@@ -554,7 +555,7 @@ if __name__ == '__main__':
     #run_library_statemachine()
 
     save_nested_library_state()
-    #print "########################################################"
+    print "########################################################"
     # you have to run save_nested_library_state() test before you can run run_library_statemachine()
     run_nested_library_statemachine()
 
@@ -566,8 +567,7 @@ if __name__ == '__main__':
 
     #TODO: implement
     # write unit-tests
-    # execution engine: especially pause and stop
-    # execution history + step-mode
+    # execution history
 
     #TODO: longterm
     # step back

@@ -78,12 +78,14 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
 
     #just call the run method of the container state
     def run(self):
+        self.active = True
         logger.debug("Entering library state %s" % self.library_name)
         self.state_copy.input_data = self.input_data
         self.state_copy.output_data = self.output_data
         self.state_copy.run()
         self.final_outcome = self.state_copy.final_outcome
         logger.debug("Exiting library state %s" % self.library_name)
+        self.active = False
 
 
     @classmethod

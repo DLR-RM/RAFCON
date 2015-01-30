@@ -40,6 +40,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
     # to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
     def run(self):
 
+        self.active = True
+
         #initialize data structures
         input_data = self.input_data
         output_data = self.output_data
@@ -87,6 +89,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     self._transitions_cv.wait(3.0)
                     if self.preempted:
                         self.final_outcome = Outcome(-2, "preempted")
+                        self.active = False
                         return
                     transition = self.get_transition_for_outcome(state, state.final_outcome)
                 state = self.get_state_for_transition(transition)
@@ -110,13 +113,16 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
+                self.active = False
                 return
 
             self.final_outcome = self.outcomes[transition.to_outcome]
+            self.active = False
             return
 
         except RuntimeError:
             self.final_outcome = Outcome(-1, "aborted")
+            self.active = False
             return
 
     @classmethod

@@ -48,6 +48,7 @@ class ExecutionState(State, yaml.YAMLObject):
         return self.outcomes[outcome_id]
 
     def run(self):
+        self.active = True
         try:
 
             #initialize data structures
@@ -71,10 +72,12 @@ class ExecutionState(State, yaml.YAMLObject):
                 self.concurrency_queue.put(self.state_id)
 
             self.final_outcome = outcome
+            self.active = False
             return
 
         except RuntimeError:
             self.final_outcome = Outcome(-1, "aborted")
+            self.active = False
             return
 
     def __str__(self):
