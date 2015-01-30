@@ -1,20 +1,29 @@
 import gtk
-from gtkmvc import Controller, Observer
+from gtkmvc import Controller
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
     SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
     LibraryTreeController
-from mvc.models import StateModel
-from statemachine.states.execution_state import ExecutionState
+import statemachine.singleton
 
 
 class MainWindowController(Controller):
 
+    state_machine_execution_engine = None
+
+    __observables__ = ("state_machine_execution_engine",)
+
     def __init__(self, root_state_model, view, em_module, gvm_model):
         Controller.__init__(self, root_state_model, view)
+        self.state_machine_execution_engine = statemachine.singleton.state_machine_execution_engine
+        self.observe_model(self.state_machine_execution_engine)
+        self.state_machine_execution_engine.register_observer(self)
+
+        self.root_state_model = root_state_model
+        self.em_module = root_state_model
+        self.em_module = root_state_model
 
         left_v_pane = view["left_v_pane"]
-
         console_scroller = left_v_pane.get_child2()
         left_v_pane.remove(console_scroller)
         view.logging_view.get_top_widget().show()
@@ -67,13 +76,31 @@ class MainWindowController(Controller):
         global_variables_label = gtk.Label('Global Variables')
         em_global_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
 
+        # add some data to the status bar
+        status_bar1 = view["statusbar1"]
+        status_bar1.push(0, "The awesome tool")
+        status_bar2 = view["statusbar2"]
+        status_bar2.push(0, "is awesome :-)")
+        status_bar3 = view["statusbar3"]
+        status_bar3_string = "Execution status: " + \
+                            str(statemachine.singleton.state_machine_execution_engine.status.execution_mode)
+        status_bar3.push(0, status_bar3_string)
+
+    @Controller.observe("execution_engine", after=True)
+    def model_changed(self, model, prop_name, info):
+        status_bar3 = self.view["statusbar3"]
+        status_bar3_string = "Execution status: " + \
+                            str(statemachine.singleton.state_machine_execution_engine.status.execution_mode)
+        status_bar3.push(0, status_bar3_string)
+
+
     def register_view(self, view):
         view['main_window'].connect('destroy', gtk.main_quit)
 
     def on_about_activate(self, widget, data=None):
         pass
 
-    def on_backward_step_activate(self, widget, data=None):
+    def on_backward_step_mode_activate(self, widget, data=None):
         pass
 
     def on_step_activate(self, widget, data=None):

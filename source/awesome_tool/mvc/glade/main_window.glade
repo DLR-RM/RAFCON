@@ -291,11 +291,11 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="backward_step">
+                      <object class="GtkMenuItem" id="backward_step_mode">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">backward step</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_backward_step_activate"/>
+                        <signal name="activate" handler="on_backward_step_mode_activate"/>
                       </object>
                     </child>
                   </object>
@@ -619,9 +619,35 @@
           </packing>
         </child>
         <child>
-          <object class="GtkStatusbar" id="statusbar">
+          <object class="GtkHBox" id="statusbar_hbox">
             <property name="visible">True</property>
-            <property name="spacing">2</property>
+            <child>
+              <object class="GtkStatusbar" id="statusbar1">
+                <property name="visible">True</property>
+                <property name="spacing">2</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkStatusbar" id="statusbar2">
+                <property name="visible">True</property>
+                <property name="spacing">2</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkStatusbar" id="statusbar3">
+                <property name="visible">True</property>
+                <property name="spacing">2</property>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>

@@ -8,13 +8,15 @@
 
 """
 
+from gtkmvc import Observable
+from gtkmvc import ModelMT
 from execution_history import ExecutionHistory
 from statemachine_status import StateMachineStatus, ExecutionMode
 from utils import log
 logger = log.get_logger(__name__)
 
 
-class StatemachineExecutionEngine():
+class StatemachineExecutionEngine(ModelMT, Observable):
 
     """A class that cares for the execution of the statemachine
 
@@ -23,18 +25,28 @@ class StatemachineExecutionEngine():
 
     """
 
+    execution_engine = None
+
+    __observables__ = ("execution_engine",)
+
     def __init__(self):
 
-        self._status = StateMachineStatus(ExecutionMode.RUNNING)
+        ModelMT.__init__(self)
+        Observable.__init__(self)
+        self.execution_engine = self
+        self._status = None
+        self.status = StateMachineStatus(ExecutionMode.STOPPED)
         # TODO: write validity checker of the statemachine; Should this include the validity checkers of the state
         self._validity_checker = None
         self.execution_history = ExecutionHistory()
         logger.debug("Statemachine execution engine initialized")
 
     #TODO: pause all external modules
+    @Observable.observed
     def pause(self):
         self._status.execution_mode = ExecutionMode.PAUSED
 
+    @Observable.observed
     def start(self):
         logger.debug("Start statemachine and notify all threads waiting ")
         self._status.execution_mode = ExecutionMode.RUNNING
@@ -43,13 +55,16 @@ class StatemachineExecutionEngine():
         self._status.execution_condition_variable.release()
 
     #TODO: stop all external modules
+    @Observable.observed
     def stop(self):
         self._status.execution_mode = ExecutionMode.STOPPED
 
+    @Observable.observed
     def step_mode(self):
         logger.debug("Activate step mode")
         self._status.execution_mode = ExecutionMode.STEPPING
 
+    @Observable.observed
     def backward_step_mode(self):
         self._status.execution_mode = ExecutionMode.BACKWARD_STEPPING
 
@@ -105,3 +120,21 @@ class StatemachineExecutionEngine():
     def _start_tree(self):
         #TODO: implement
         pass
+
+#########################################################################
+# Properties for all class fields that must be observed by gtkmvc
+#########################################################################
+
+    @property
+    def status(self):
+        """Property for the _status field
+
+        """
+        return self._status
+
+    @status.setter
+    @Observable.observed
+    def status(self, status):
+        if not isinstance(status, StateMachineStatus):
+            raise TypeError("status must be of type StateMachineStatus")
+        self._status = status
