@@ -301,9 +301,15 @@ def get_key_combos(ports, keys_store, port_type):
                 keys_store.append([scope.data_port.data_type + '.' + scope.data_port.name + '.' + scope.data_port.port_id])
         elif ports:
             print ports
-            for scope in ports.values():
-                print scope
-                keys_store.append([port_type + '.' + scope.name + '.' + str(scope.data_port_id)])
+            try:
+                for scope in ports.values():
+                    print scope
+                    keys_store.append([port_type + '.' + scope.name + '.' + str(scope.data_port_id)])
+            except AttributeError:
+                for scope in ports:
+                    print scope, scope.scoped_variable
+                    scope = scope.scoped_variable
+                    keys_store.append([port_type + '.' + scope.name + '.' + str(scope.data_port_id)])
 
     print "final store: ", keys_store
     return keys_store
@@ -485,8 +491,9 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
                                    from_keys_store, 'output_port')
                 else:
-                    get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
-                                   from_keys_store, 'output_port')
+                    #get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
+                    #               from_keys_store, 'output_port')
+                    pass
 
                 # all states and parent-state
                 to_states_store = ListStore(str)

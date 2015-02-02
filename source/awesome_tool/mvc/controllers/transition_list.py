@@ -124,7 +124,7 @@ class TransitionListController(Controller):
 
     def on_add(self, button, info=None):
         print "add transition"
-        print type(self.combo['free_from_state_models']), self.combo['free_from_state_models'], '\n', self.combo['free_from_outcomes_dict']
+        # type(self.combo['free_from_state_models']), self.combo['free_from_state_models'], '\n', self.combo['free_from_outcomes_dict']
         if self.view_dict['transitions_internal'] and len(self.combo['free_from_outcomes_dict']) > 0:
             from_state_id = self.combo['free_from_outcomes_dict'].keys()[0]
             from_outcome = self.combo['free_from_outcomes_dict'][from_state_id][0].outcome_id
@@ -311,7 +311,7 @@ class TransitionListController(Controller):
             print "CLEAN"
             update_transition_list_store(self.model)
 
-        if hasattr(self.model, 'parent'):
+        if hasattr(self.model, 'parent') and self.model.parent is not None:
             print "CLEAN"
             update_transition_list_store(self.model.parent)
 
@@ -357,7 +357,7 @@ class TransitionListController(Controller):
                 self.combo['free_from_outcomes_dict'] = free_from_outcomes_dict
                 print "FREE: ", self.combo['free_from_outcomes_dict'].keys(), self.combo['free_from_outcomes_dict']
 
-        if hasattr(model, 'parent'):
+        if hasattr(model, 'parent') and self.model.parent is not None:
             # check for internal combos
             for transition_id, transition in model.parent.state.transitions.items():
                 if transition.from_state == model.state.state_id or transition.to_state == model.state.state_id:
@@ -393,7 +393,7 @@ class TransitionListController(Controller):
                     to_state_label = None
                     to_outcome_label = 'self.' + self.model.state.outcomes[t.to_outcome].name + "." + str(t.to_outcome)
                 else:
-                    print t.to_state, self.model.states, "\n", self.model.parent.states
+                    print t.to_state, self.model.states
                     if t.to_state == self.model.state.state_id:
                         to_state_label = "self." + self.model.state.name + "." + t.to_state
                     else:
@@ -411,6 +411,7 @@ class TransitionListController(Controller):
                                               to_outcome_label,  # to-outcome
                                               False,  # is_external
                                               '#f0E5C7', '#f0E5c7', t, self.model.state, True])
+
         if self.view_dict['transitions_external'] and len(self.model.parent.state.transitions) > 0:
             for transition_id in self.combo['external'].keys():
                 print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions

@@ -57,6 +57,10 @@ class MainWindowController(Controller):
         #self.graphical_editor = GraphicalEditorController(model, view.graphical_editor_window.get_top_widget())
         #test = SingleWidgetWindowController(model, view.graphical_editor_window, GraphicalEditorController)
 
+        # state-editor
+        this_model = filter(lambda model: model.state.name == 'State3', root_state_model.states.values()).pop()
+        self.state_editor = StateEditorController(root_state_model, view.state_editor)  # .get_top_widget())
+
         em_global_notebook = view["em_global_notebook"]
         #remove placeholder tab
         external_modules_tab = view['external_modules_placeholder']

@@ -45,8 +45,9 @@ class MainWindowView(View):
         # self['state_machines_vbox'].add(self.state_machines_editors.get_top_widget())
         #
         # # insert one state-editor
-        # self.state_editors = StateEditorView()
-        # self["state_editors_vbox"].add(self.state_editors.get_top_widget())
+        self.state_editor = StateEditorView()
+        self.state_editor.show()
+        self["state_editor"].add(self.state_editor.get_top_widget())
 
         # insert environment-manager
         #self['external_module_manager_vbox'].add(self['external_module_manager'].get_top_widget())

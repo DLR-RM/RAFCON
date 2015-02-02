@@ -40,6 +40,13 @@ class StateEditorController(Controller):
         self.new_op_counter = 0
         self.new_sv_counter = 0
 
+        view['inputs_view'].show()
+        view['outputs_view'].show()
+        view['scopes_view'].show()
+        view['outcomes_view'].show()
+        view['source_view'].show()
+        view['connections_view'].show()
+
     def register_view(self, view):
         """Called when the View was registered
 
@@ -87,7 +94,7 @@ class StateEditorController(Controller):
         path = tree_view.get_cursor()[0]
         print "pathremove: %s" % path
         if path is not None:
-            key = self.model.input_data_port_list_store[int(path[0])][0].name
+            key = self.model.input_data_port_list_store[int(path[0])][0].data_port_id
             print "remove: %s" % key
             self.model.state.remove_input_data_port(key)
 
@@ -96,7 +103,7 @@ class StateEditorController(Controller):
         path = tree_view.get_cursor()[0]
         print "pathremove: %s" % path
         if path is not None:
-            key = self.model.output_data_port_list_store[int(path[0])][0].name
+            key = self.model.output_data_port_list_store[int(path[0])][0].data_port_id
             print "remove: %s" % key
             self.model.state.remove_output_data_port(key)
 
@@ -105,7 +112,7 @@ class StateEditorController(Controller):
         path = tree_view.get_cursor()[0]
         print "pathremove: %s" % path
         if path is not None:
-            key = self.model.scoped_variables_list_store[int(path[0])][0].name
+            key = self.model.scoped_variables_list_store[int(path[0])][0].data_port_id
             print "remove: %s" % key
             self.model.container_state.remove_scoped_variable(key)
 

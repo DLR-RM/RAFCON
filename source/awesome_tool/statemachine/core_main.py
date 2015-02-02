@@ -557,7 +557,7 @@ if __name__ == '__main__':
     save_nested_library_state()
     print "########################################################"
     # you have to run save_nested_library_state() test before you can run run_library_statemachine()
-    run_nested_library_statemachine()
+    #run_nested_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine
