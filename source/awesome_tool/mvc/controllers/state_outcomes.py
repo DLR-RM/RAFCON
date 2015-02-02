@@ -8,46 +8,20 @@ class ParentObserver(Observer):
     def __init__(self, model, key, funct_handle_list):
         Observer.__init__(self, model)
         self.func_handle_list = funct_handle_list
-        # self.observe(self.notify, "state", after=True)
         self.method_list = ["add_transition", "remove_transition", "add_outcome", "remove_outcome",
                             "modify_outcome_name"]
+        # # dynamically
+        # self.func_handle_list = func_handle_list
+        # self.observe(self.notification, "state", after=True)
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):
         print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
               (prop_name, info.instance, info.method_name, info.result)
+        # TODO test with accepting limited methods
         #if info.method_name in self.method_list:
         for func_handle in self.func_handle_list:
             func_handle()
-        #print "observing methods: ", self.get_observing_methods('state')
-
-    # def notify(self, model, prop_name, info):
-    #     print "parent call_notify - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-    #           (prop_name, info.instance, info.method_name, info.result)
-    #     print self
-
-# class ParentObserver(Observer):
-#
-#     def __init__(self, model, observe_attr, method_list, func_handle_list):
-#         print "generate ParentObserver", self
-#         Observer.__init__(self, model)
-#         self.func_handle_list = func_handle_list
-#         self.method_list = method_list
-#         self.observe(self.notification, "state", after=True)
-#
-#     def notification(self, model, prop_name, info):
-#         print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-#               (prop_name, info.instance, info.method_name, info.result)
-#         if info.method_name in self.method_list:
-#             pass
-#         for func_handle in self.func_handle_list:
-#             func_handle()
-#         return
-#     if model.parent is not None:
-#             self.parent_observer = ParentObserver(model=model.parent,
-#                                                   observe_attr="state",
-#                                                   method_list=["add_transition", "remove_transition"],
-#                                                   func_handle_list=[self.update_stores, self.update_model])
 
 
 class StateOutcomesTreeController(Controller):
@@ -79,31 +53,24 @@ class StateOutcomesTreeController(Controller):
         def cell_text(column, cell_renderer, model, iter, container_model):
 
             outcome = model.get_value(iter, 6)
-            state = model.get_value(iter, 7)
             if column.get_title() == 'ID':
                 if int(outcome.outcome_id) < 0:
                     cell_renderer.set_property('editable', False)
-                #cell_renderer.set_property('text', outcome.outcome_id)
             elif column.get_title() == 'Name':
                 if int(outcome.outcome_id) < 0:
                     cell_renderer.set_property('editable', False)
                 else:
                     cell_renderer.set_property('editable', True)
-                #cell_renderer.set_property('text', outcome.name)
             elif column.get_title() == 'To-State':
                 cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-                #print "to_state: ", type(cell_renderer)
-                # find to state by from_state == model.state.state_id and from_key == outcome.name
             elif column.get_title() == 'To-Outcome':
                 cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_outcome_combo_list)
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-                #print "to_outcome: ", type(cell_renderer)
-                # find to outcome by from_outcome == model.state.state_id and from_outcome == outcome.name
             else:
                 print "not allowed", column.get_name(), column.get_title()
 

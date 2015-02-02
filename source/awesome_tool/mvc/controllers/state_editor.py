@@ -1,9 +1,12 @@
+
+
 import gtk
 from gtkmvc import View, Controller
 from gtkmvc import Observer
 
 from mvc.controllers import StateOverviewController, StateConnectionsEditorController, SourceEditorController, \
     DataPortListController, ScopedVariableListController, StateOutcomesEditorController, StateOutcomesTreeController
+
 
 class StateEditorController(Controller):
     """Controller handling the view of properties/attributes of the ContainerStateModel

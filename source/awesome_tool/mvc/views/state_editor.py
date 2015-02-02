@@ -1,3 +1,13 @@
+"""
+.. module:: state_editor (View)
+   :platform: Unix, Windows
+   :synopsis: A module to view the all aspects of a respective state
+
+.. moduleauthor:: Rico Belder
+
+"""
+
+
 import gtk
 from gtkmvc import View, Controller
 from mvc.views import SourceEditorView, StateOutcomesEditorView, StateOutcomesTreeView

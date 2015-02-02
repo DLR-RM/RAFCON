@@ -6,9 +6,6 @@ from gtkmvc import Controller, Observer
 from utils import log
 logger = log.get_logger(__name__)
 
-from mvc.models import ContainerStateModel, StateModel
-from mvc.models.data_port import DataPortModel
-
 
 class ParentObserver(Observer):
 
@@ -26,8 +23,9 @@ class ParentObserver(Observer):
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):
-        print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+        print "parent data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
               (prop_name, info.instance, info.method_name, info.result)
+        # TODO Test with accepting limited methods
         #if info.method_name in self.method_list:
         for func_handle in self.func_handle_list:
             func_handle()
@@ -76,11 +74,9 @@ class DataFlowListController(Controller):
         def cell_text(column, cell_renderer, model, iter, container_model):
 
             df_id = model.get_value(iter, 0)
-            state = model.get_value(iter, 9)
             in_external = 'internal'
             if model.get_value(iter, 5):
                 in_external = 'external'
-            #print t_id, in_external, self.combo[in_external]
             if column.get_title() == 'From-State':
                 cell_renderer.set_property("model", self.tree_dict_combos[in_external][df_id]['from_state'])
                 cell_renderer.set_property("text-column", 0)
@@ -97,8 +93,6 @@ class DataFlowListController(Controller):
                 cell_renderer.set_property("model", self.tree_dict_combos[in_external][df_id]['to_key'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-                #print "to_outcome: ", type(cell_renderer)
-                # find to outcome by from_outcome == model.state.state_id and from_outcome == outcome.name
             else:
                 print "not allowed", column.get_name(), column.get_title()
 
@@ -109,10 +103,10 @@ class DataFlowListController(Controller):
         view['from_key_col'].set_cell_data_func(view['from_key_combo'], cell_text, self.model)
         view['to_key_col'].set_cell_data_func(view['to_key_combo'], cell_text, self.model)
 
-        view['from_state_combo'].connect("edited", self.on_combo_changed)
-        view['from_key_combo'].connect("edited", self.on_combo_changed)
-        view['to_state_combo'].connect("edited", self.on_combo_changed)
-        view['to_key_combo'].connect("edited", self.on_combo_changed)
+        view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
+        view['from_key_combo'].connect("edited", self.on_combo_changed_from_key)
+        view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
+        view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
         #view['external_toggle'].connect("edited", self.on_external_toggled)
 
     def register_adapters(self):
@@ -120,91 +114,141 @@ class DataFlowListController(Controller):
         """
 
     def on_add(self, button, info=None):
-        print "add dataflow"
-        # TODO implement add
+        print "ADD DATA_FLOW"
+        if self.view_dict['dataflows_internal'] and self.free_to_port_internal:
+            print self.from_port_internal
+            from_state_id = self.from_port_internal.keys()[0]
+            from_key = self.from_port_internal[from_state_id][0].data_port_id
+            print from_state_id, from_key, self.model.state.state_id
+            to_state_id = self.free_to_port_internal.keys()[0]
+            to_key = self.free_to_port_internal[to_state_id][0].data_port_id
+            print "NEW DATA_FLOW INTERNAL IS: ", from_state_id, from_key, to_state_id, to_key
+            data_flow_id = self.model.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
+            print "NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id]
+
+        elif self.view_dict['dataflows_external'] and self.model.state.output_data_ports:  # self.free_to_port_external:
+            from_state_id = self.model.state.state_id
+            print from_state_id, self.model.state.output_data_ports
+            from_key = self.model.state.output_data_ports.keys()[0]
+            to_state_id = self.free_to_port_external.keys()[0]
+            to_key = self.free_to_port_external[to_state_id][0].data_port_id
+            print "NEW DATA_FLOW EXTERNAL IS: ", from_state_id, from_key, to_state_id, to_key, \
+                get_state_model(self.model.parent, to_state_id).state.get_data_port_by_id(to_key)
+            data_flow_id = self.model.parent.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
+            print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
+        else:
+            print "NO OPTION TO ADD TRANSITION"
 
     def on_remove(self, button, info=None):
         print "remove dataflow"
-        # TODO remove has to result to tree_store by Observer
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
         print path, tree
         if path:
             print "DataFlow: ", self.tree_store[path[0][0]][0]
             if self.tree_store[path[0][0]][5]:
-                print "Parent has %s dataflows."
+                print "Parent has %s dataflows." % len(self.model.parent.state.data_flows)
                 self.model.parent.state.remove_data_flow(self.tree_store[path[0][0]][0])
-
+                print "Parent has %s dataflows." % len(self.model.parent.state.data_flows)
             else:
+                print "Self_state has %s dataflows." % len(self.model.state.data_flows)
                 self.model.state.remove_data_flow(self.tree_store[path[0][0]][0])
-
+                print "Self_state has %s dataflows." % len(self.model.state.data_flows)
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-        # does nothing by porpos
+        text = text.split('.')
+        df_id = self.tree_store[path][0]
+        df = self.tree_store[path][8]
+        #fs = df.from_state
+        fk = None  # df.from_key
+        ts = df.to_state
+        tk = df.to_key
+        if self.tree_store[path][5]:  # external
+            fk = self.from_port_external[text[-1]][0].data_port_id
+            self.model.parent.state.remove_data_flow(df_id)
+            self.model.parent.state.add_data_flow(text[-1], fk, ts, tk, data_flow_id=df_id)
+        else:
+            state_model = get_state_model(self.model, text[-1])
+            if state_model.state.state_id == self.model.state.state_id:
+                if self.model.state.input_data_ports:
+                    fk = self.model.state.input_data_ports.values()[0].data_port_id
+                if self.model.scoped_variables:
+                    fk = self.model.scoped_variables[0].data_port_id
+            else:  # child-state
+                if state_model.state.output_data_ports:
+                    fk = state_model.state.output_data_ports.values()[0].data_port_id
+            if fk:
+                self.model.state.remove_data_flow(df_id)
+                self.model.state.add_data_flow(text[-1], fk, ts, tk, data_flow_id=df_id)
 
     def on_combo_changed_from_key(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-        # TODO implement change_from_key it is transition still
         text = text.split('.')
-        t_id = self.tree_store[path][0]
-        t = self.tree_store[path][8]
-        fs = t.from_state
-        fo = t.from_outcome
-        ts = t.to_state
-        to = t.to_outcome
+        df_id = self.tree_store[path][0]
+        df = self.tree_store[path][8]
+        fs = df.from_state
+        #fk = df.from_key
+        ts = df.to_state
+        tk = df.to_key
         if self.tree_store[path][5]:  # external
-            self.model.parent.state.remove_transition(t_id)
-            self.model.parent.state.add_transition(fs, int(text[-1]), ts, to, transition_id=t_id)
+            self.model.parent.state.remove_data_flow(df_id)
+            self.model.parent.state.add_data_flow(fs, int(text[-1]), ts, tk, data_flow_id=df_id)
         else:
-            self.model.state.remove_transition(t_id)
-            self.model.state.add_transition(fs, int(text[-1]), ts, to, transition_id=t_id)
+            self.model.state.remove_data_flow(df_id)
+            self.model.state.add_data_flow(fs, int(text[-1]), ts, tk, data_flow_id=df_id)
 
     def on_combo_changed_to_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-        # TODO implement change_to_state it is transition still
         #self.combo['free_ext_from_outcomes_dict']
         text = text.split('.')
-        t_id = self.tree_store[path][0]
-        t = self.tree_store[path][8]
-        fs = t.from_state
-        fo = t.from_outcome
+        df_id = self.tree_store[path][0]
+        df = self.tree_store[path][8]
+        fs = df.from_state
+        fk = df.from_key
         if self.tree_store[path][5]:  # external
-            self.model.parent.state.remove_transition(t_id)
-            self.model.parent.state.add_transition(fs, fo, to_state_id=text[-1], transition_id=t_id)
+            self.model.parent.state.remove_data_flow(df_id)
+            tk = self.free_to_port_external[text[-1]][0].data_port_id
+            self.model.parent.state.add_data_flow(fs, fk, to_state_id=text[-1],  to_data_port_id=tk, data_flow_id=df_id)
         else:
-            self.model.state.remove_transition(t_id)
-            self.model.state.add_transition(fs, fo, to_state_id=text[-1], transition_id=t_id)
+            self.model.state.remove_data_flow(df_id)
+            tk = self.free_to_port_internal[text[-1]][0].data_port_id
+            self.model.state.add_data_flow(fs, fk, to_state_id=text[-1],  to_data_port_id=tk, data_flow_id=df_id)
 
     def on_combo_changed_to_key(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-        # TODO implement change_to_key it is transition still
         text = text.split('.')
-        t_id = self.tree_store[path][0]
-        t = self.tree_store[path][8]
-        fs = t.from_state
-        fo = t.from_outcome
+        df_id = self.tree_store[path][0]
+        df = self.tree_store[path][8]
+        fs = df.from_state
+        fk = df.from_key
+        ts = df.to_state
         if self.tree_store[path][5]:  # external
-            self.model.parent.state.remove_transition(t_id)
-            self.model.parent.state.add_transition(fs, fo, to_outcome=int(text[-1]), transition_id=t_id)
+            self.model.parent.state.remove_data_flow(df_id)
+            self.model.parent.state.add_data_flow(fs, fk, ts,  to_data_port_id=int(text[-1]), data_flow_id=df_id)
         else:
-            self.model.state.remove_transition(t_id)
-            self.model.state.add_transition(fs, fo, to_outcome=int(text[-1]), transition_id=t_id)
+            self.model.state.remove_data_flow(df_id)
+            self.model.state.add_data_flow(fs, fk, ts,  to_data_port_id=int(text[-1]), data_flow_id=df_id)
 
     def update_stores(self):
-        update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
+         [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
+         self.free_to_port_internal = free_to_int
+         self.free_to_port_external = free_to_ext
+         self.from_port_internal = from_int
+         self.from_port_external = from_ext
 
     def update_model(self):
         self.tree_store.clear()
 
         if self.view_dict['dataflows_internal']:
-            for row in self.model.data_flow_list_store:
-                data_flow = row[0]
+            for data_flow in self.model.state.data_flows.values():
+                #data_flow = row[0]
                 print "type: ", type(data_flow)
                 if data_flow.data_flow_id in self.data_flow_dict['internal'].keys():
                     df_dict = self.data_flow_dict['internal'][data_flow.data_flow_id]
                     # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
         #                   name-color, to-state-color, data-flow-object, state-object, is_editable
-                    print 'insert int: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], df_dict['to_state'], df_dict['to_key']
+                    print 'insert int: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
+                        df_dict['to_state'], df_dict['to_key']
                     self.tree_store.append(None, [data_flow.data_flow_id,
                                                   df_dict['from_state'],
                                                   df_dict['from_key'],
@@ -214,13 +258,14 @@ class DataFlowListController(Controller):
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
         if self.view_dict['dataflows_external']:
-            for row in self.model.parent.data_flow_list_store:
-                data_flow = row[0]
+            for data_flow in self.model.parent.state.data_flows.values():
+                #data_flow = row[0]
                 if data_flow.data_flow_id in self.data_flow_dict['external'].keys():
                     df_dict = self.data_flow_dict['external'][data_flow.data_flow_id]
                     # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
         #                   name-color, to-state-color, data-flow-object, state-object, is_editable
-                    print 'insert ext: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], df_dict['to_state'], df_dict['to_key']
+                    print 'insert ext: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
+                        df_dict['to_state'], df_dict['to_key']
                     self.tree_store.append(None, [data_flow.data_flow_id,
                                                   df_dict['from_state'],
                                                   df_dict['from_key'],
@@ -229,12 +274,9 @@ class DataFlowListController(Controller):
                                                   True,
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
-    def on_combo_changed(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-
     @Controller.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
-        print "transition_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+        print "dataflow_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
               (prop_name, info.instance, info.method_name, info.result)
         if info.method_name in ["add_data_flow", "remove_data_flow",
                                 "add_input_data_port", "remove_input_data_port",
@@ -257,15 +299,23 @@ def get_key_combos(ports, keys_store, port_type):
         if type(ports) == type(list):
             for scope in ports:
                 keys_store.append([scope.data_port.data_type + '.' + scope.data_port.name + '.' + scope.data_port.port_id])
-        else:
+        elif ports:
+            print ports
             for scope in ports.values():
                 print scope
                 keys_store.append([port_type + '.' + scope.name + '.' + str(scope.data_port_id)])
-            # if type(scope) is DataPortModel:
-            #
-            # else:
+
     print "final store: ", keys_store
     return keys_store
+
+
+def get_state_model(model, state_id):
+    state_model = None
+    if state_id == model.state.state_id:
+        state_model = model
+    elif hasattr(model, 'states') and state_id in model.states:
+        state_model = model.states[state_id]
+    return state_model
 
 
 def update_data_flow(model, data_flow_dict, tree_dict_combos):
@@ -275,8 +325,8 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
     tree_dict_combos['external'] = {}
 
     # free input ports and scopes are real to_keys and real states
-    free_to_port_internal = find_free_keys(model)
-    free_to_port_external = find_free_keys(model.parent)
+    [free_to_port_internal, from_ports_internal] = find_free_keys(model)
+    [free_to_port_external, from_ports_external] = find_free_keys(model.parent)
 
     def take_from_dict(from_dict, key):
         if key in from_dict:
@@ -284,40 +334,32 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
         else:
             print "WARNING Key '%s' is not in %s" % (key, from_dict)
 
-    def get_state_model(model, state_id):
-        state_model = None
-        if state_id == model.state.state_id:
-            state_model = model
-        elif hasattr(model, 'states') and state_id in model.states:
-            state_model = model.states[state_id]
-        return state_model
-
     # from_state, to_key, to_state, to_key, external
     if hasattr(model.state, 'states'):
-        for data_flow in model.data_flow_list_store:  # model.state.data_flows:
-            data_flow = data_flow[0]
-            # tree store label
+        for data_flow in model.state.data_flows.values():  # model.data_flow_list_store:
+
+            # TREE STORE LABEL
             # check if from Self_state
             if data_flow.from_state == model.state.state_id:
                 fstate = model.state
-                from_state = '.self.' + model.state.name + '.' + data_flow.from_state
+                from_state = 'self.' + model.state.name + '.' + data_flow.from_state
             else:
                 if take_from_dict(model.states, data_flow.from_state):
                     fstate = take_from_dict(model.states, data_flow.from_state).state
                     from_state = fstate.name + '.' + data_flow.from_state
                 else:
-                    print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                    #print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
                     break
             # check if to Self_state
             if data_flow.to_state == model.state.state_id:
                 tstate = model.state
-                to_state = '.self.' + model.state.name + '.' + data_flow.to_state
+                to_state = 'self.' + model.state.name + '.' + data_flow.to_state
             else:
                 if take_from_dict(model.states, data_flow.to_state):
                     tstate = take_from_dict(model.states, data_flow.to_state).state
                     to_state = tstate.name + '.' + data_flow.to_state
                 else:
-                    print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                    #print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
                     break
 
             from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
@@ -328,51 +370,57 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                                                                   'from_key': from_key_label,
                                                                   'to_state': to_state,
                                                                   'to_key': to_key_label}
-            # data_flow_dict['internal'][data_flow.data_flow_id] = {'from_state': from_state,
-            #                                                       'from_key': data_flow.from_key,
-            #                                                       'to_state': to_state,
-            #                                                       'to_key': data_flow.to_key}
 
-            # all internal states
-            states_store = ListStore(str)
+            # ALL INTERNAL COMBOS
+            from_states_store = ListStore(str)
+            to_states_store = ListStore(str)
             if hasattr(model, 'states'):
-                states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
+                if model.state.state_id in free_to_port_internal or model.state.state_id == data_flow.to_state:
+                    to_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
+                if model.state.state_id in from_ports_internal or model.state.state_id == data_flow.from_state:
+                    from_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
                 for state_model in model.states.itervalues():
-                    states_store.append([state_model.state.name + '.' + state_model.state.state_id])
+                    if state_model.state.state_id in free_to_port_internal or \
+                            state_model.state.state_id == data_flow.to_state:
+                        to_states_store.append([state_model.state.name + '.' + state_model.state.state_id])
+                    if state_model.state.state_id in from_ports_internal or \
+                            state_model.state.state_id == data_flow.from_state:
+                        from_states_store.append([state_model.state.name + '.' + state_model.state.state_id])
 
             from_keys_store = ListStore(str)
             if model.state.state_id == data_flow.from_state:
-                print "input_ports", model.state.input_data_ports
+                #print "input_ports", model.state.input_data_ports
                 get_key_combos(model.state.input_data_ports, from_keys_store, 'input_ports')
-                print type(model)
+                #print type(model)
                 if hasattr(model, 'states'):
-                    print "scoped_variables", model.scoped_variables
+                    #print "scoped_variables", model.scoped_variables
                     get_key_combos(model.scoped_variables, from_keys_store, 'scoped_variable')
             else:
-                print "output_ports", model.states[data_flow.from_state].state.output_data_ports
-                get_key_combos(model.states[data_flow.from_state].state.output_data_ports, from_keys_store, 'output_port')
+                #print "output_ports", model.states[data_flow.from_state].state.output_data_ports
+                get_key_combos(model.states[data_flow.from_state].state.output_data_ports,
+                               from_keys_store, 'output_port')
+
             to_keys_store = ListStore(str)
             if model.state.state_id == data_flow.to_state:
-                print "output_ports", model.state.output_data_ports
+                #print "output_ports", model.state.output_data_ports
                 get_key_combos(model.state.output_data_ports, to_keys_store, 'output_ports')
-                print type(model)
+                #print type(model)
                 if hasattr(model, 'states'):
-                    print "scoped_variables", model.scoped_variables
+                    #print "scoped_variables", model.scoped_variables
                     get_key_combos(model.scoped_variables, to_keys_store, 'scoped_variable')
             else:
-                print "input_ports", model.states[data_flow.to_state].state.input_data_ports
+                #print "input_ports", model.states[data_flow.to_state].state.input_data_ports
                 get_key_combos(model.states[data_flow.to_state].state.input_data_ports, to_keys_store, 'input_port')
-            tree_dict_combos['internal'][data_flow.data_flow_id] = {'from_state': states_store,
+            tree_dict_combos['internal'][data_flow.data_flow_id] = {'from_state': from_states_store,
                                                                     'from_key': from_keys_store,
-                                                                    'to_state': states_store,
+                                                                    'to_state': to_states_store,
                                                                     'to_key': to_keys_store}
             print "internal", data_flow_dict['internal'][data_flow.data_flow_id]
 
     if model.parent is not None:  # if it is the top container state
-        for data_flow in model.parent.data_flow_list_store:  # model.parent.state.data_flows.values():
-            # tree store label
-            data_flow = data_flow[0]
+        for data_flow in model.parent.state.data_flows.values():  # model.parent.data_flow_list_store:
 
+            # TREE STORE LABEL
             # check if from Self_state
             if model.state.state_id == data_flow.from_state:
                 fstate = model.state
@@ -380,28 +428,29 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             else:
                 if model.parent.state.state_id == data_flow.from_state:
                     fstate = model.parent.state
-                    from_state = '.parent.' + model.parent.state.name + '.' + data_flow.from_state
+                    from_state = 'parent.' + model.parent.state.name + '.' + data_flow.from_state
                 else:
                     if take_from_dict(model.parent.states, data_flow.from_state):
                         fstate = take_from_dict(model.parent.states, data_flow.from_state).state
                         from_state = fstate.name + '.' + data_flow.from_state
                     else:
-                        print "#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                        #print "#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
                         break
+
             # check if to Self_state
             if model.state.state_id == data_flow.to_state:
                 tstate = model.state
-                to_state = '.self.' + model.state.name + '.' + data_flow.to_state
+                to_state = 'self.' + model.state.name + '.' + data_flow.to_state
             else:
                 if model.parent.state.state_id == data_flow.to_state:
                     tstate = model.parent.state
-                    to_state = '.parent.' + model.parent.state.name + '.' + data_flow.to_state
+                    to_state = 'parent.' + model.parent.state.name + '.' + data_flow.to_state
                 else:
                     if take_from_dict(model.parent.states, data_flow.to_state):
                         tstate = take_from_dict(model.parent.states, data_flow.to_state).state
                         to_state = fstate.name + '.' + data_flow.to_state
                     else:
-                        print "##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                        #print "##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
                         break
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
                 from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
@@ -412,38 +461,35 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                                                                       'from_key': from_key_label,
                                                                       'to_state': to_state,
                                                                       'to_key': to_key_label}
-            # data_flow_dict['external'][data_flow.data_flow_id] = {'from_state': from_state,
-            #                                                       'from_key': data_flow.from_key,
-            #                                                       'to_state': to_state,
-            #                                                       'to_key': data_flow.to_key}
 
-            # combos
-            #print "EXT: ", model.state.name, [model.parent.states[data_flow.from_state].state.name,
-            #                                  model.parent.states[data_flow.to_state].state.name]
+            # ALL EXTERNAL COMBOS
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
 
                 # only self-state
                 from_states_store = ListStore(str)
-                from_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
+                for state_id in from_ports_external.keys():
+                    if model.parent.state.state_id == state_id:
+                        state_model = model.parent
+                    else:
+                        state_model = model.parent.states[state_id]
+                    if state_model.state.state_id == model.state.state_id:
+                        from_states_store.append(['self.' + state_model.state.name + '.' + state_model.state.state_id])
+                    else:
+                        from_states_store.append([state_model.state.name + '.' + state_model.state.state_id])
+                    #from_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
 
                 # only outports of self
                 from_keys_store = ListStore(str)
                 if model.state.state_id == data_flow.from_state:
-                    print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
-                    get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports, from_keys_store, 'output_port')
+                    #print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
+                    get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
+                                   from_keys_store, 'output_port')
                 else:
-                    # print "input_ports", model.parent.state.input_data_ports
-                    # get_key_combos(model.parent.state.input_data_ports, from_keys_store, 'input_ports')
-                    # print "scoped_variables", model.parent.state.scoped_variables
-                    # get_key_combos(model.parent.state.scoped_variables, from_keys_store, 'scoped_variable')
-                    print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
-                    get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports, from_keys_store, 'output_port')
-
+                    get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
+                                   from_keys_store, 'output_port')
 
                 # all states and parent-state
-
                 to_states_store = ListStore(str)
-                #to_states_store.append(['parent.' + model.parent.state.name + '.' + model.parent.state.state_id])
                 for state_id in free_to_port_external.keys():
                     if model.parent.state.state_id == state_id:
                         state_model = model.parent
@@ -465,33 +511,31 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                         to_state_model = get_state_model(model.parent, data_flow.to_state)
                         port = to_state_model.state.get_data_port_by_id(data_flow.to_key)
                         to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
-                        # if model.parent.state.state_id == data_flow.to_state:
-                        #     print "output_ports", model.parent.state.output_data_ports
-                        #     #get_key_combos(model.parent.state.output_data_ports, to_keys_store, 'output_ports')
-                        #     print "scoped_variables", model.parent.scoped_variables
-                        #     #get_key_combos(model.parent.scoped_variables, to_keys_store, 'scoped_variable')
-                        # else:
-                        #     print "input_ports", model.parent.states[data_flow.to_state].state.input_data_ports
-                        #     get_key_combos(model.parent.states[data_flow.to_state].state.input_data_ports, to_keys_store, 'input_port')
+
                 tree_dict_combos['external'][data_flow.data_flow_id] = {'from_state': from_states_store,
-                                                                    'from_key': from_keys_store,
-                                                                    'to_state': to_states_store,
-                                                                    'to_key': to_keys_store}
+                                                                        'from_key': from_keys_store,
+                                                                        'to_state': to_states_store,
+                                                                        'to_key': to_keys_store}
                 print "external", data_flow_dict['external'][data_flow.data_flow_id]
 
-    print "ALL SCANNED: ", data_flow_dict['internal'].keys(), data_flow_dict['external'].keys(), \
-        tree_dict_combos['internal'].keys(), tree_dict_combos['external'].keys()
+    # print "ALL SCANNED: ", data_flow_dict['internal'].keys(), data_flow_dict['external'].keys(), \
+    #     tree_dict_combos['internal'].keys(), tree_dict_combos['external'].keys()
+    return free_to_port_internal, free_to_port_external, from_ports_internal, from_ports_external
 
 
 def find_free_keys(model):
     free_to_ports = {}
     nfree_to_ports = {}
+    from_ports = {}
 
     # check for container state
     if hasattr(model, 'states'):
         free_container_ports = []
+        container_from_ports = []
         nfree_container_ports = []
         free_container_ports.extend(model.state.scoped_variables.values())
+        container_from_ports.extend(model.state.scoped_variables.values())
+        container_from_ports.extend(model.state.input_data_ports.values())
         # free_container_ports.extend(model.state.scoped_variables.keys())
         nfree_container_ports.extend([s.name for s in model.state.scoped_variables.values()])
         if model.state.output_data_ports:
@@ -509,9 +553,13 @@ def find_free_keys(model):
         if free_container_ports:
             free_to_ports[model.state.state_id] = free_container_ports
             nfree_to_ports[model.state.name] = nfree_container_ports
+        if container_from_ports:
+            from_ports[model.state.state_id] = container_from_ports
 
         # check every single state
         for state_model in model.states.values():
+            if state_model.state.output_data_ports:
+                from_ports[state_model.state.state_id] = state_model.state.output_data_ports.values()
 
             if state_model.state.input_data_ports:
                 port_keys = state_model.state.input_data_ports.keys()
@@ -522,16 +570,13 @@ def find_free_keys(model):
                     #print "actual keys: ", port_keys
 
                 #print "found free prots: ", port_keys
-
-
                 if port_keys:
                     free_to_ports[state_model.state.state_id] = [state_model.state.input_data_ports[i] for i in port_keys]
-                    # free_to_ports[state_model.state.name] = port_keys
                     nfree_to_ports[state_model.state.name] = [state_model.state.input_data_ports[i].name for i in port_keys]
 
-    print "\nFOUND FREE PORTS: \n", nfree_to_ports
+    print "\nFOUND FREE PORTS: \n", nfree_to_ports, "\n", free_to_ports, "\n",  from_ports
 
-    return free_to_ports
+    return free_to_ports, from_ports
 
 
 if __name__ == '__main__':
@@ -548,8 +593,5 @@ if __name__ == '__main__':
     v = SingleWidgetWindowView(StateConnectionsEditorView, width=500, height=200, title='Connection Editor')
     c = SingleWidgetWindowController(ctr_model, v, StateConnectionsEditorController)
     #c = SingleWidgetWindowController(ctr_model.states.values()[1], v, StateConnectionsEditorController)
-    # for state_model in ctr_model.states.values():
-    #     print state_model
-    #     update_data_flow(state_model)
-    update_data_flow(ctr_model)
+
     gtk.main()

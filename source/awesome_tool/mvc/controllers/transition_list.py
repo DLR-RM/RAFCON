@@ -158,71 +158,6 @@ class TransitionListController(Controller):
             else:
                 self.model.state.remove_transition(int(transition_id))
 
-    def update_stores(self):
-
-        self.update_transitions_store()
-        model = self.model
-
-        print "clean stores"
-
-        ### FOR COMBOS
-        # internal transitions
-        # - take all internal states
-        # - take all not used internal outcomes of this states
-
-        # external transitions
-        # - take all external states
-        # - take all external outcomes
-        # - take all not used own outcomes
-
-        ### LINKING
-        # internal  -> from_state -> outcome combos
-        #           -> to
-        # external -> state -> outcome combos
-        self.combo['internal'] = {}
-        self.combo['external'] = {}
-
-        if hasattr(model.state, 'transitions'):
-            # check for internal combos
-            for transition_id, transition in model.state.transitions.items():
-                self.combo['internal'][transition_id] = {}
-
-                [from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict] = \
-                    self.get_free_state_combos_for_transition(transition, self.model, self.model)
-                print transition
-
-                self.combo['internal'][transition_id]['from_state'] = from_state_combo
-                self.combo['internal'][transition_id]['from_outcome'] = from_outcome_combo
-                self.combo['internal'][transition_id]['to_state'] = to_state_combo
-                self.combo['internal'][transition_id]['to_outcome'] = to_outcome_combo
-
-                self.combo['free_from_state_models'] = free_from_state_models
-                self.combo['free_from_outcomes_dict'] = free_from_outcomes_dict
-                print "FREE: ", self.combo['free_from_outcomes_dict'].keys(), self.combo['free_from_outcomes_dict']
-
-        if hasattr(model, 'parent'):
-            # check for internal combos
-            for transition_id, transition in model.parent.state.transitions.items():
-                if transition.from_state == model.state.state_id or transition.to_state == model.state.state_id:
-                    self.combo['external'][transition_id] = {}
-
-                    [from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict] = \
-                        self.get_free_state_combos_for_transition(transition, self.model.parent, self.model, True)
-                    print transition
-
-                    self.combo['external'][transition_id]['from_state'] = from_state_combo
-                    self.combo['external'][transition_id]['from_outcome'] = from_outcome_combo
-                    self.combo['external'][transition_id]['to_state'] = to_state_combo
-                    self.combo['external'][transition_id]['to_outcome'] = to_outcome_combo
-
-                    self.combo['free_ext_from_state_models'] = free_from_state_models
-                    self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
-
-        # print "to_state: ", self.list_to_other_state
-        # print "to_outcome: ", self.list_to_other_outcome
-        # print "from state: ", self.list_from_other_state
-        print "state.name: ", self.model.state.name
-
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         #self.combo['free_from_outcomes_dict']
@@ -379,6 +314,71 @@ class TransitionListController(Controller):
         if hasattr(self.model, 'parent'):
             print "CLEAN"
             update_transition_list_store(self.model.parent)
+
+    def update_stores(self):
+
+        self.update_transitions_store()
+        model = self.model
+
+        print "clean stores"
+
+        ### FOR COMBOS
+        # internal transitions
+        # - take all internal states
+        # - take all not used internal outcomes of this states
+
+        # external transitions
+        # - take all external states
+        # - take all external outcomes
+        # - take all not used own outcomes
+
+        ### LINKING
+        # internal  -> from_state -> outcome combos
+        #           -> to
+        # external -> state -> outcome combos
+        self.combo['internal'] = {}
+        self.combo['external'] = {}
+
+        if hasattr(model.state, 'transitions'):
+            # check for internal combos
+            for transition_id, transition in model.state.transitions.items():
+                self.combo['internal'][transition_id] = {}
+
+                [from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict] = \
+                    self.get_free_state_combos_for_transition(transition, self.model, self.model)
+                print transition
+
+                self.combo['internal'][transition_id]['from_state'] = from_state_combo
+                self.combo['internal'][transition_id]['from_outcome'] = from_outcome_combo
+                self.combo['internal'][transition_id]['to_state'] = to_state_combo
+                self.combo['internal'][transition_id]['to_outcome'] = to_outcome_combo
+
+                self.combo['free_from_state_models'] = free_from_state_models
+                self.combo['free_from_outcomes_dict'] = free_from_outcomes_dict
+                print "FREE: ", self.combo['free_from_outcomes_dict'].keys(), self.combo['free_from_outcomes_dict']
+
+        if hasattr(model, 'parent'):
+            # check for internal combos
+            for transition_id, transition in model.parent.state.transitions.items():
+                if transition.from_state == model.state.state_id or transition.to_state == model.state.state_id:
+                    self.combo['external'][transition_id] = {}
+
+                    [from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict] = \
+                        self.get_free_state_combos_for_transition(transition, self.model.parent, self.model, True)
+                    print transition
+
+                    self.combo['external'][transition_id]['from_state'] = from_state_combo
+                    self.combo['external'][transition_id]['from_outcome'] = from_outcome_combo
+                    self.combo['external'][transition_id]['to_state'] = to_state_combo
+                    self.combo['external'][transition_id]['to_outcome'] = to_outcome_combo
+
+                    self.combo['free_ext_from_state_models'] = free_from_state_models
+                    self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
+
+        # print "to_state: ", self.list_to_other_state
+        # print "to_outcome: ", self.list_to_other_outcome
+        # print "from state: ", self.list_from_other_state
+        print "state.name: ", self.model.state.name
 
     def update_model(self):
 
