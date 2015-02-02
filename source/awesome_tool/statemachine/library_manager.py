@@ -30,18 +30,21 @@ class LibraryManager(Observable):
         Observable.__init__(self)
         self._libraries = {}
         logger.debug("Initializing Storage object ...")
-        self._storage = Storage("../")
+        self.storage = Storage("../")
 
-    # cannot be done in the __init__ function as the the library_manager can be compiled and executed by singleton.py
+    # cannot be done in the __init__ function as the library_manager can be compiled and executed by singleton.py
     # before the state*.pys are loaded
     def initialize(self):
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
-        for lib_path in config.LIBRARY_PATHS:
-            self.add_libraries_from_path(lib_path, self._libraries)
+        for lib_key, lib_path in config.LIBRARY_PATHS.iteritems():
+            self._libraries[lib_key] = {}
+            self.add_libraries_from_path(lib_path, self._libraries[lib_key])
         logger.debug("Initialization of LibraryManager done.")
+        #print self._libraries
 
     def add_libraries_from_path(self, lib_path, target_dict):
         for lib in os.listdir(lib_path):
+            #logger.debug(str(lib))
             if os.path.isdir(os.path.join(lib_path, lib)):
                 if os.path.exists(os.path.join(os.path.join(lib_path, lib), Storage.STATEMACHINE_FILE)):
                     self.add_library(lib, lib_path, target_dict)
@@ -50,9 +53,8 @@ class LibraryManager(Observable):
                     self.add_libraries_from_path(os.path.join(lib_path, lib), target_dict[lib])
 
     def add_library(self, lib, lib_path, target_dict):
-        #print lib
-        self._storage.base_path = lib_path
-        target_dict[lib] = self._storage.load_statemachine_from_yaml(os.path.join(lib_path, lib))
+        self.storage.base_path = lib_path
+        target_dict[lib] = os.path.join(lib_path, lib)  # self._storage.load_statemachine_from_yaml(os.path.join(lib_path, lib))
         #print self.libraries[lib]
 
 #########################################################################

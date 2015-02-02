@@ -13,7 +13,7 @@ import copy
 
 from utils import log
 logger = log.get_logger(__name__)
-from statemachine.states.state import State, DataPortType
+from statemachine.states.state import State, DataPortType, StateType
 from statemachine.transition import Transition
 from statemachine.outcome import Outcome
 from statemachine.data_flow import DataFlow
@@ -27,15 +27,13 @@ class ContainerState(State, Observable):
 
     """A class for representing a state in the statemachine
 
-    :ivar _states: the child states of the container state of the state:
-    :ivar _transitions: transitions between all child states:
-    :ivar _data_flows: data flows between all child states:
-    :ivar _start_state: the state to start with when the hierarchy state is executed
-    :ivar _scope: common scope of container:
-    :ivar _current_state: currently active state of the container:
-    :ivar _scoped_variables: scoped variables that can be accessed by each child state:
-    :ivar _scoped_data: dictionary that holds all values of the input_data, the scoped_variables and the outputs of
-                        of the child states during runtime
+    Only the variables are listed that are not already contained in the state base class
+
+    :ivar states: the child states of the container state of the state:
+    :ivar transitions: transitions between all child states:
+    :ivar data_flows: data flows between all child states:
+    :ivar start_state: the state to start with when the hierarchy state is executed
+    :ivar scoped_variables: the scoped variables of the container:
     :ivar _v_checker: reference to an object that checks the validity of this container state:
 
     """
@@ -212,13 +210,18 @@ class ContainerState(State, Observable):
             raise AttributeError("Either to_state_id or to_outcome must not be None")
 
         # check if outcome of from state is not already connected
-
         for trans_key, transition in self.transitions.iteritems():
             if transition.from_state == from_state_id:
                 if transition.from_outcome == from_outcome:
                     raise AttributeError("outcome %s of state %s is already connected" %
                                          (str(from_outcome), str(from_state_id)))
 
+        # check if state is a concurrency state, in concurrency states only transitions to the parents are allowd
+        if self.state_type is StateType.BARRIER_CONCURRENCY or self.state_type is StateType.PREEMPTION_CONCURRENCY:
+            if not to_state_id is self.state_id:
+                raise AttributeError("In concurrency states the to_state must be the container state itself")
+
+        # finally add transition
         if from_outcome in from_state.outcomes:
             if not to_outcome is None:
                 if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self
@@ -556,9 +559,9 @@ class ContainerState(State, Observable):
         else:
             if not isinstance(states, dict):
                 raise TypeError("states must be of type dict")
-            for s in states:
-                if not isinstance(s, State):
-                    raise TypeError("element of states must be of type State")
+            for key, state in states.iteritems():
+                if not isinstance(state, State):
+                    raise TypeError("element of container_state.states must be of type State")
             self._states = states
 
     @property

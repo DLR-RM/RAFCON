@@ -16,6 +16,7 @@ from statemachine.outcome import Outcome
 from statemachine.states.state import StateType
 from statemachine.scope import ScopedData
 from statemachine.states.state import DataPortType
+import statemachine.singleton
 
 
 class HierarchyState(ContainerState, yaml.YAMLObject):
@@ -35,10 +36,11 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                                 transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
                                 state_type = StateType.HIERARCHY)
 
-
     # the input_data and output_data comes in with a mapping from names to values,
     # to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
     def run(self):
+
+        self.active = True
 
         #initialize data structures
         input_data = self.input_data
@@ -65,7 +67,12 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             state = self.get_start_state()
 
             while not state is self:
-                logger.debug("Executing next state state with id %s" % state.state_id)
+                # depending on the execution mode pause execution
+
+                statemachine.singleton.state_machine_execution_engine.handle_execution_mode()
+
+                logger.debug("Executing next state state with id %s and type %s" %
+                             (state.state_id, str(state.state_type)))
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)
                 state.input_data = state_input
@@ -82,6 +89,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     self._transitions_cv.wait(3.0)
                     if self.preempted:
                         self.final_outcome = Outcome(-2, "preempted")
+                        self.active = False
                         return
                     transition = self.get_transition_for_outcome(state, state.final_outcome)
                 state = self.get_state_for_transition(transition)
@@ -103,22 +111,18 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             self.check_output_data_type(output_data)
 
-            #for i in range(5):
-            #    if self.preempted:
-            #        print str(self.__class__) + " was preempted"
-            #        return transition.to_outcome
-            #    print i
-            #    time.sleep(1.0)
-
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
+                self.active = False
                 return
 
             self.final_outcome = self.outcomes[transition.to_outcome]
+            self.active = False
             return
 
         except RuntimeError:
             self.final_outcome = Outcome(-1, "aborted")
+            self.active = False
             return
 
     @classmethod

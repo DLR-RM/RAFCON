@@ -9,7 +9,7 @@ from input_port_list import InputPortsListView
 from output_port_list import OutputPortsListView
 from scoped_variables_list import ScopedVariablesListView
 from global_variable_editor import GlobalVariableEditorView
-from external_module_manager import ExternalModuleManagerView
+from external_module_manager import ExternalModuleManagerView, ExternalModuleManagerWindowView
 from state_overview import StateOverviewView
 from state_outcomes import StateOutcomesTreeView
 from state_outcomes import StateOutcomesEditorView
@@ -22,4 +22,4 @@ from state_machine_tree import StateMachineTreeView
 from library_tree import LibraryTreeView
 #from state_editors_notebook import StateEditorsNotebookView
 #from state_machines_notebook import StateMachinesNotebookView
-from full_main_window import FullMainWindowView
+from main_window import MainWindowView

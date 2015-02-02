@@ -5,11 +5,13 @@ from OpenGL.GLU import *
 from utils import log
 
 logger = log.get_logger(__name__)
+import sys
 import time
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from math import sqrt
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SCROLL_LEFT, SCROLL_RIGHT
+from gtk.gdk import keyval_name
 # from models.container_state import ContainerStateModel
 
 
@@ -34,6 +36,11 @@ class GraphicalEditorController(Controller):
 
         self.selected_outcome = None
         self.selected_waypoint = None
+        self.selected_resizer = None
+
+        self.shift_modifier = False
+        self.alt_modifier = False
+        self.ctrl_modifier = False
 
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
@@ -41,6 +48,8 @@ class GraphicalEditorController(Controller):
         # Only called when the mouse is clicked while moving
         view.editor.connect('motion-notify-event', self._on_mouse_motion)
         view.editor.connect('scroll-event', self._on_scroll)
+        view.editor.connect('key-press-event', self._on_key_press)
+        view.editor.connect('key-release-event', self._on_key_release)
         self.last_time = time.time()
 
     def register_view(self, view):
@@ -82,10 +91,30 @@ class GraphicalEditorController(Controller):
         event to redraw.
         """
         # Check if initialized
-        if hasattr(self.view, "editor") and (time.time() - self.last_time > 1/50. or important):
+        if hasattr(self.view, "editor") and (time.time() - self.last_time > 1 / 50. or important):
             self.view.editor.emit("configure_event", None)
             self.view.editor.emit("expose_event", None)
             self.last_time = time.time()
+
+    def _on_key_press(self, widget, event):
+        key_name = keyval_name(event.keyval)
+        # print "key press", key_name
+        if key_name == "Control_L" or key_name == "Control_R":
+            self.ctrl_modifier = True
+        elif key_name == "Alt_L":
+            self.alt_modifier = True
+        elif key_name == "Shift_L" or key_name == "Shift_R":
+            self.shift_modifier = True
+
+    def _on_key_release(self, widget, event):
+        key_name = keyval_name(event.keyval)
+        # print "key release", key_name
+        if key_name == "Control_L" or key_name == "Control_R":
+            self.ctrl_modifier = False
+        elif key_name == "Alt_L":
+            self.alt_modifier = False
+        elif key_name == "Shift_L" or key_name == "Shift_R":
+            self.shift_modifier = False
 
     def _on_mouse_press(self, widget, event):
         """Triggered when the mouse is pressed
@@ -98,6 +127,7 @@ class GraphicalEditorController(Controller):
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
         self.selected_outcome = None  # reset
+        self.selected_resizer = None  # reset
 
         # Store the coordinates of the event
         self.mouse_move_start_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -128,6 +158,7 @@ class GraphicalEditorController(Controller):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
 
+            # Check, whether a waypoint was clicked on
             if self.selection is not None and \
                     (isinstance(self.selection, TransitionModel) or isinstance(self.selection, DataFlowModel)):
                 close_threshold = min(self.selection.parent.meta['gui']['editor']['height'],
@@ -135,22 +166,46 @@ class GraphicalEditorController(Controller):
                 click = self.mouse_move_start_pos
                 for i, waypoint in enumerate(self.selection.meta['gui']['editor']['waypoints']):
                     if waypoint[0] is not None and waypoint[1] is not None:
-                        dist = sqrt((waypoint[0] - click[0])**2 + (waypoint[1] - click[1])**2)
+                        dist = sqrt((waypoint[0] - click[0]) ** 2 + (waypoint[1] - click[1]) ** 2)
                         if dist < close_threshold:
                             self.selected_waypoint = (self.selection.meta['gui']['editor']['waypoints'], i)
                             self.selection_start_pos = (waypoint[0], waypoint[1])
                             logger.debug('Selected waypoint {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                             break
 
-            if self.selection is not None and isinstance(self.selection, StateModel) and self.selection is not self.model:
+            # Check, whether an outcome was clicked on
+            if self.selection is not None and isinstance(self.selection,
+                                                         StateModel) and self.selection is not self.model:
                 outcomes_close_threshold = self.selection.meta['gui']['editor']['outcome_radius']
                 outcomes = self.selection.meta['gui']['editor']['outcome_pos']
                 click = self.mouse_move_start_pos
                 for key in outcomes:
-                    dist = sqrt((outcomes[key][0] - click[0])**2 + (outcomes[key][1] - click[1])**2)
+                    dist = sqrt((outcomes[key][0] - click[0]) ** 2 + (outcomes[key][1] - click[1]) ** 2)
                     if dist < outcomes_close_threshold:
                         self.selected_outcome = (outcomes, key)
                 pass
+
+            # Check, whether a resizer was clicked on
+            if self.selection is not None and isinstance(self.selection, StateModel) and self.selection:
+                state_editor_data = self.selection.meta['gui']['editor']
+                p1 = (state_editor_data['pos_x'] + state_editor_data['width'], state_editor_data['pos_y'])
+                p2 = (p1[0] - state_editor_data['resize_length'], p1[1])
+                p3 = (p1[0], p1[1] + state_editor_data['resize_length'])
+
+                def point_in_triangle(p, v1, v2, v3):
+                    def _test(p1, p2, p3):
+                        return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+
+                    b1 = _test(p, v1, v2) < 0.0
+                    b2 = _test(p, v2, v3) < 0.0
+                    b3 = _test(p, v3, v1) < 0.0
+
+                    return (b1 == b2) and (b2 == b3)
+
+                if point_in_triangle(self.mouse_move_start_pos, p1, p2, p3):
+                    self.selected_resizer = self.selection
+                    # Start resize process
+                    pass
 
             self._redraw()
 
@@ -172,7 +227,7 @@ class GraphicalEditorController(Controller):
                 # logger.debug('Examining waypoint for click {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                 for waypoint in connection_model.meta['gui']['editor']['waypoints']:
                     if waypoint[0] is not None and waypoint[1] is not None:
-                        if sqrt((waypoint[0] - click[0])**2 + (waypoint[1] - click[1])**2) < close_threshold:
+                        if sqrt((waypoint[0] - click[0]) ** 2 + (waypoint[1] - click[1]) ** 2) < close_threshold:
                             connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
                             waypoint_removed = True
                             logger.debug('Connection waypoint removed')
@@ -220,7 +275,7 @@ class GraphicalEditorController(Controller):
                     outcomes = self.selection.parent.meta['gui']['editor']['outcome_pos']
                     click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                     for key in outcomes:
-                        dist = sqrt((outcomes[key][0] - click[0])**2 + (outcomes[key][1] - click[1])**2)
+                        dist = sqrt((outcomes[key][0] - click[0]) ** 2 + (outcomes[key][1] - click[1]) ** 2)
                         if dist < outcomes_close_threshold:
                             # This is a possible connection:
                             # The outcome of a state is connected to ian outcome of its parent state
@@ -284,9 +339,9 @@ class GraphicalEditorController(Controller):
                     pos_y = state.meta['gui']['editor']['pos_y'] + state.meta['gui']['editor']['height'] - height
             return pos_x, pos_y
 
-        #                                                                            Root container can't be moved
+        # Root container can't be moved
         if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and \
-                self.last_button_pressed == 1 and self.selected_outcome is None:
+                        self.last_button_pressed == 1 and self.selected_outcome is None and self.selected_resizer is None:
 
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
@@ -335,6 +390,116 @@ class GraphicalEditorController(Controller):
             self._redraw()
 
         if self.selected_outcome is not None:
+            self._redraw()
+
+        if self.selected_resizer is not None:
+            state_editor_data = self.selection.meta['gui']['editor']
+            mouse_resize_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+
+            if self.shift_modifier:
+                state_size_ratio = state_editor_data['width'] / state_editor_data['height']
+                if rel_x_motion / state_size_ratio < rel_y_motion:
+                    mouse_resize_pos = (mouse_resize_pos[0],
+                                        self.mouse_move_start_pos[1] - rel_x_motion / state_size_ratio)
+                else:
+                    mouse_resize_pos = (self.mouse_move_start_pos[0] - rel_y_motion * state_size_ratio,
+                                        mouse_resize_pos[1])
+
+            width = mouse_resize_pos[0] - state_editor_data['pos_x']
+            height_diff = state_editor_data['pos_y'] - mouse_resize_pos[1]
+            height = state_editor_data['height'] + height_diff
+
+            min_right_edge = state_editor_data['pos_x']
+            max_bottom_edge = state_editor_data['pos_y'] + state_editor_data['height']
+            if not self.ctrl_modifier and isinstance(self.selection, ContainerStateModel):
+                # Check lower right corner of all child states
+                for child_state_m in self.selection.states.itervalues():
+                    child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
+                                       child_state_m.meta['gui']['editor']['width']
+                    child_bottom_edge = child_state_m.meta['gui']['editor']['pos_y']
+                    if min_right_edge < child_right_edge:
+                        min_right_edge = child_right_edge
+                    if max_bottom_edge > child_bottom_edge:
+                        max_bottom_edge = child_bottom_edge
+
+            # Check for parent size limitation
+            max_right_edge = sys.maxint
+            min_bottom_edge = -sys.maxint - 1
+            if self.selection.parent is not None:
+                max_right_edge = self.selection.parent.meta['gui']['editor']['pos_x'] + \
+                                 self.selection.parent.meta['gui']['editor']['width']
+                min_bottom_edge = self.selection.parent.meta['gui']['editor']['pos_y']
+
+            desired_right_edge = state_editor_data['pos_x'] + width
+            desired_bottom_edge = state_editor_data['pos_y'] - height_diff
+
+            old_width = state_editor_data['width']
+            old_height = state_editor_data['height']
+            old_pos_x= state_editor_data['pos_x']
+            old_pos_y= state_editor_data['pos_y']
+
+            if width > 0:
+                if desired_right_edge > max_right_edge:
+                    state_editor_data['width'] = max_right_edge - state_editor_data['pos_x']
+                elif desired_right_edge < min_right_edge:
+                    state_editor_data['width'] = min_right_edge - state_editor_data['pos_x']
+                else:
+                    state_editor_data['width'] = width
+            if height > 0:
+                if desired_bottom_edge > max_bottom_edge:
+                    state_editor_data['height'] += state_editor_data['pos_y'] - max_bottom_edge
+                    state_editor_data['pos_y'] = max_bottom_edge
+                elif desired_bottom_edge < min_bottom_edge:
+                    state_editor_data['height'] += state_editor_data['pos_y'] - min_bottom_edge
+                    state_editor_data['pos_y'] = min_bottom_edge
+                else:
+                    state_editor_data['height'] = height
+                    state_editor_data['pos_y'] -= height_diff
+
+            width_factor = state_editor_data['width'] / old_width
+            height_factor = state_editor_data['height'] / old_height
+            if (width_factor != 1 or height_factor != 1) and self.ctrl_modifier:
+
+                def resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y):
+                    def calc_new_pos(old_parent_pos, new_parent_pos, old_self_pos, factor):
+                        diff_pos = old_self_pos - old_parent_pos
+                        diff_pos *= factor
+                        return new_parent_pos + diff_pos
+                    if isinstance(state_m, ContainerStateModel):
+                        for transition_m in state_m.transitions:
+                            for i, waypoint in enumerate(transition_m.meta['gui']['editor']['waypoints']):
+                                new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                                                         waypoint[0], width_factor)
+                                new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                                                         waypoint[1], height_factor)
+                                transition_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
+                        for data_flow_m in state_m.data_flows:
+                            for i, waypoint in enumerate(data_flow_m.meta['gui']['editor']['waypoints']):
+                                new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                                                         waypoint[0], width_factor)
+                                new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                                                         waypoint[1], height_factor)
+                                data_flow_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
+
+                        for child_state_m in state_m.states.itervalues():
+                            child_state_m.meta['gui']['editor']['width'] *= width_factor
+                            child_state_m.meta['gui']['editor']['height'] *= height_factor
+
+                            child_old_pos_x = child_state_m.meta['gui']['editor']['pos_x']
+                            new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                                                         child_state_m.meta['gui']['editor']['pos_x'], width_factor)
+                            child_state_m.meta['gui']['editor']['pos_x'] = new_pos_x
+
+                            child_old_pos_y = child_state_m.meta['gui']['editor']['pos_y']
+                            new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                                                         child_state_m.meta['gui']['editor']['pos_y'], height_factor)
+                            child_state_m.meta['gui']['editor']['pos_y'] = new_pos_y
+
+                            if isinstance(child_state_m, ContainerStateModel):
+                                resize_children(child_state_m, width_factor, height_factor,
+                                                child_old_pos_x, child_old_pos_y)
+
+                resize_children(self.selection, width_factor, height_factor, old_pos_x, old_pos_y)
             self._redraw()
 
         self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -417,20 +582,22 @@ class GraphicalEditorController(Controller):
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
-        (id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos) = self.view.editor.draw_state(
-            state.state.name,
-            pos_x, pos_y, width, height,
-            state.state.outcomes,
-            state.state.input_data_ports,
-            state.state.output_data_ports,
-            scoped_ports,
-            active, depth)
+        (id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos, resize_length) = \
+            self.view.editor.draw_state(
+                state.state.name,
+                pos_x, pos_y, width, height,
+                state.state.outcomes,
+                state.state.input_data_ports,
+                state.state.output_data_ports,
+                scoped_ports,
+                active, depth)
         state.meta['gui']['editor']['id'] = id
         state.meta['gui']['editor']['outcome_pos'] = outcome_pos
         state.meta['gui']['editor']['outcome_radius'] = outcome_radius
         state.meta['gui']['editor']['input_pos'] = input_pos
         state.meta['gui']['editor']['output_pos'] = output_pos
         state.meta['gui']['editor']['scoped_pos'] = scoped_pos
+        state.meta['gui']['editor']['resize_length'] = resize_length
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
@@ -562,7 +729,8 @@ class GraphicalEditorController(Controller):
         try:
             selected_ids = map(lambda hit: hit[2][1], hits)
             # print selected_ids
-            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0, only_states)
+            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0,
+                                                                        only_states)
             # print selection, selection_depth
         except Exception as e:
             logger.error("Error while finding selection: {err:s}".format(err=e))

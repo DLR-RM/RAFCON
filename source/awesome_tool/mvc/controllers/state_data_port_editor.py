@@ -1,12 +1,11 @@
-
-from utils import log
-logger = log.get_logger(__name__)
-
 import gtk
 from gtkmvc import Controller
+from gtkmvc import Observer
+
 from mvc.controllers.io_data_port_list import DataPortListController
 from mvc.controllers.scoped_variable_list import ScopedVariableListController
-from gtkmvc import Observer
+from utils import log
+logger = log.get_logger(__name__)
 
 
 class StateDataPortEditorController(Controller):
@@ -81,8 +80,8 @@ class StateDataPortEditorController(Controller):
         #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #      (prop_name, info.instance, info.method_name, info.result)
         if info.method_name == "add_input_data_port" or info.method_name == "remove_input_data_port":
-            model.update_input_data_port_list_store()
+            model.update_input_data_port_list_store_and_models()
         elif info.method_name == "add_output_data_port" or info.method_name == "remove_output_data_port":
-            model.update_output_data_port_list_store()
+            model.update_output_data_port_list_store_and_models()
         elif info.method_name == "add_scoped_variable" or info.method_name == "remove_scoped_variable":
             model.update_scoped_variables_list_store()

@@ -3,34 +3,25 @@ from gtkmvc import View
 
 
 class LibraryTreeView(View, gtk.TreeView):
-    top = 'top_tree'
+    top = 'library_tree_view'
 
     def __init__(self):
         View.__init__(self)
         gtk.TreeView.__init__(self)
 
-        tvcolumn = gtk.TreeViewColumn('Name')
-        #tvcolumn.set_min_width(150)
-        self.append_column(tvcolumn)
-        cell = gtk.CellRendererText()
-        tvcolumn.pack_start(cell, True)
-        tvcolumn.add_attribute(cell, 'text', 0)
+        tvcolumn_name = gtk.TreeViewColumn('Name')
+        self.append_column(tvcolumn_name)
+        cell_renderer_name = gtk.CellRendererText()
+        tvcolumn_name.pack_start(cell_renderer_name, True)
+        tvcolumn_name.add_attribute(cell_renderer_name, 'text', 0)
 
-        # tvcolumn = gtk.TreeViewColumn('ID')
-        # #tvcolumn.set_min_width(150)
-        # self.append_column(tvcolumn)
-        # cell = gtk.CellRendererText()
-        # tvcolumn.pack_start(cell, True)
-        # tvcolumn.add_attribute(cell, 'text', 1)
-        #
-        # tvcolumn = gtk.TreeViewColumn('Type')
-        # #tvcolumn.set_min_width(150)
-        # self.append_column(tvcolumn)
-        # cell = gtk.CellRendererText()
-        # tvcolumn.pack_start(cell, True)
-        # tvcolumn.add_attribute(cell, 'text', 2)
+        # tvcolumn_path = gtk.TreeViewColumn('Path')
+        # self.append_column(tvcolumn_path)
+        # cell_renderer_path = gtk.CellRendererText()
+        # tvcolumn_path.pack_start(cell_renderer_path, True)
+        # tvcolumn_path.add_attribute(cell_renderer_path, 'text', 1)
 
-        self['top_tree'] = self
+        self['library_tree_view'] = self
 
 
 if __name__ == '__main__':

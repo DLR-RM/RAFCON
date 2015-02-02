@@ -6,11 +6,11 @@ from utils import log
 from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController, SingleWidgetWindowController, StateEditorController, StateConnectionsEditorController,\
-    StateOutcomesEditorController, StateMachineTreeController
+    SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
+    LibraryTreeController, MainWindowController
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-    LoggingView, StateConnectionsEditorView, StateOutcomesEditorView, StateOutcomesTreeView, StateMachineTreeView
+    GlobalVariableEditorView, ExternalModuleManagerWindowView, ExternalModuleManagerView,  SourceEditorView, \
+    SingleWidgetWindowView, StateEditorView, LoggingView, StateMachineTreeView, LibraryTreeView, MainWindowView
 from mvc.views.single_widget_window import TestButtonsView
 from mvc.views.transition_list import TransitionListView
 from statemachine.states.state import State, DataPort
@@ -19,6 +19,8 @@ from statemachine.states.container_state import ContainerState
 from statemachine.transition import Transition
 from statemachine.data_flow import DataFlow
 from statemachine.external_modules.external_module import ExternalModule
+import statemachine.singleton
+from statemachine.states.hierarchy_state import HierarchyState
 
 
 def setup_path():
@@ -132,27 +134,39 @@ def create_models(*args, **kargs):
     return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    statemachine.singleton.library_manager.initialize()
     setup_path()
     check_requirements()
-    #logging_view = LoggingView()
-    #setup_logger(logging_view)
+    #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
+    #setup_logger(logging_view['main_frame'])
+    logging_view = LoggingView()
+    setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
+
+    main_window_view = MainWindowView(logging_view)
+    main_window_controller = MainWindowController(ctr_model, main_window_view, emm_model, gvm_model)
 
     #sdev = StateDataportEditorView()
     #StateDataPortEditorController(ctr_model, sdev)
 
     # a view, whose buttons can trigger arbitrary function that are needed for testing purposes
-    #test_buttons_view = TestButtonsView(ctr_model)
+    test_buttons_view = TestButtonsView(ctr_model)
 
-    # state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
-    # state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
+    this_model = filter(lambda model: model.state.name == 'State3', ctr_model.states.values()).pop()
+    #state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
+    #state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
+
+    #library_tree = SingleWidgetWindowView(LibraryTreeView, width=300, height=200, title='Library Tree')
+    #library_controller = SingleWidgetWindowController(None, library_tree, LibraryTreeController)
 
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
 
-    this_model = filter(lambda model: model.state.name == 'State3', ctr_model.states.values()).pop()
-
+    #external_module_manager_view = SingleWidgetWindowView(ExternalModuleManagerView, width=500, height=200, title='External Module Manager')
+    #external_module_manger_controller = SingleWidgetWindowController(emm_model, external_module_manager_view, ExternalModuleManagerController)
+    #external_module_manger_controller.set_source_view(src_view.widget_view)
+    
     # v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
     # #c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
     # c = SingleWidgetWindowController(this_model, v, StateOutcomesEditorController)
@@ -167,13 +181,11 @@ if __name__ == "__main__":
     #external_module_manager_view = ExternalModuleManagerView()
     #ExternalModuleManagerController(emm_model, external_module_manager_view, src_view.widget_view)
 
-    #global_var_manager_view = GlobalVariableEditorView()
-    #GlobalVariableManagerController(gvm_model, global_var_manager_view)
+    # global_variables_view = SingleWidgetWindowView(GlobalVariableEditorView, width=500, height=200, title='Global Variable Manager')
+    # global_variables_controller = SingleWidgetWindowController(gvm_model, global_variables_view, GlobalVariableManagerController)
 
-    editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
-    editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
-    #from mvc.controllers.data_flow_list import find_free_keys
-    #print "ALL free ports found: ", find_free_keys(ctr_model)
+    #editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
+    #editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
 
     gtk.main()
     logger.debug("after gtk main")

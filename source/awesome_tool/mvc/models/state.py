@@ -59,8 +59,8 @@ class StateModel(ModelMT):
         self.output_data_ports = []
         self.input_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
         self.output_data_port_list_store = ListStore(gobject.TYPE_PYOBJECT)
-        self.update_input_data_port_list_store()
-        self.update_output_data_port_list_store()
+        self.update_input_data_port_list_store_and_models()
+        self.update_output_data_port_list_store_and_models()
 
     def update_attributes(self):
         """Update table model with state model
@@ -102,9 +102,7 @@ class StateModel(ModelMT):
 
     def update_input_data_port_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
-        self.input_data_ports = []
         for input_data_port in self.state.input_data_ports.itervalues():
-            self.input_data_ports.append(DataPortModel(input_data_port, self))
             tmp.append([input_data_port])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
@@ -115,11 +113,18 @@ class StateModel(ModelMT):
         for elem in tmp:
             self.input_data_port_list_store.append(elem)
 
+    def update_input_data_port_models(self):
+        self.input_data_ports = []
+        for input_data_port in self.state.input_data_ports.itervalues():
+            self.input_data_ports.append(DataPortModel(input_data_port, self))
+
+    def update_input_data_port_list_store_and_models(self):
+        self.update_input_data_port_list_store()
+        self.update_input_data_port_models()
+
     def update_output_data_port_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
-        self.output_data_ports = []
         for output_data_port in self.state.output_data_ports.itervalues():
-            self.output_data_ports.append(DataPortModel(output_data_port, self))
             tmp.append([output_data_port])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
@@ -129,6 +134,15 @@ class StateModel(ModelMT):
         self.output_data_port_list_store.clear()
         for elem in tmp:
             self.output_data_port_list_store.append(elem)
+
+    def update_output_data_port_models(self):
+        self.output_data_ports = []
+        for output_data_port in self.state.output_data_ports.itervalues():
+            self.output_data_ports.append(DataPortModel(output_data_port, self))
+
+    def update_output_data_port_list_store_and_models(self):
+        self.update_output_data_port_list_store()
+        self.update_output_data_port_models()
 
 
 def dataport_compare_method(treemodel, iter1, iter2, user_data=None):

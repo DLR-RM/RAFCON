@@ -10,7 +10,7 @@ from statemachine.external_modules.external_module import EMStatus
 
 class ExternalModuleManagerController(Controller, Observer):
 
-    def __init__(self, model, view, source_view=None):
+    def __init__(self, model, view):
         """Constructor
         """
         Controller.__init__(self, model, view)
@@ -22,10 +22,10 @@ class ExternalModuleManagerController(Controller, Observer):
         view['pause_button'].connect('clicked', self.on_pause_button_clicked)
         model.update_external_modules_list_store()
         model.reset_external_module_model()
+        self.source_view = None
 
+    def source_view(self, source_view):
         self.source_view = source_view
-
-
 
     def on_connect_button_clicked(self, widget, data=None):
         tree_view = self.view["external_modules_tree_view"]

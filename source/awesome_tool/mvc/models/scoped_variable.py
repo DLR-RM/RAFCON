@@ -22,11 +22,19 @@ class ScopedVariableModel(ModelMT):
         ModelMT.__init__(self)
 
         assert isinstance(scoped_variable, ScopedVariable)
+        self.register_observer(self)
 
         self.scoped_variable = scoped_variable
         self.parent = parent
+
 
         if isinstance(meta, Vividict):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+    @ModelMT.observe("scoped_variable", after=True)
+    def model_changed(self, model, prop_name, info):
+        print "laksdhfkjashdkhf"
+        if not self.parent is None:
+            self.parent.update_scoped_variables_list_store()

@@ -78,7 +78,6 @@ class DataPort(Observable, yaml.YAMLObject):
         default_value = dict_representation['default_value']
         return DataPort(name, data_type, default_value, data_port_id)
 
-
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
@@ -142,7 +141,7 @@ class DataPort(Observable, yaml.YAMLObject):
         self._default_value = default_value
 
 
-StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY')
+StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY')
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 
 
@@ -225,6 +224,8 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         self._final_outcome = None
         self._description = None
 
+        self._active = None
+
         logger.debug("State with id %s initialized" % self._state_id)
 
     @Observable.observed
@@ -245,7 +246,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     def remove_input_data_port(self, data_port_id):
         """Remove an input data port from the state
 
-        :param name: the name or the output data port to remove
+        :param data_port_id: the id or the output data port to remove
 
         """
         if data_port_id in self._input_data_ports:
@@ -288,7 +289,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     def remove_output_data_port(self, data_port_id):
         """Remove an output data port from the state
 
-        :param name: the name of the output data port to remove
+        :param data_port_id: the id of the output data port to remove
 
         """
         if data_port_id in self._output_data_ports:
@@ -433,7 +434,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
                         raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
 
     def __str__(self):
-        return "Common state values:\nstate_id: %s\nname: %s" % (self.state_id, self.name)
+        return "State properties of state: %s \nstate_id: %s" % (self.name, self.state_id)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -471,11 +472,11 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
     @name.setter
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError("Name must be of type str")
-        if len(name) < 1:
-            raise ValueError("Name must have at least one character")
-
+        if not name is None:
+            if not isinstance(name, str):
+                raise TypeError("Name must be of type str")
+            if len(name) < 1:
+                raise ValueError("Name must have at least one character")
         self._name = name
 
     @property
@@ -565,9 +566,9 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
                 if not "success" in outcomes:
                     self.add_outcome("success", 0)
             #aborted and preempted must always exist
-            if not "aborted" in outcomes:
+            if not -1 in outcomes:
                 self.add_outcome("aborted", -1)
-            if not "preempted" in outcomes:
+            if not -2 in outcomes:
                 self.add_outcome("preempted", -2)
 
 
@@ -750,3 +751,18 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
             raise ValueError("ID must have at least one character")
 
         self._description = description
+
+    @property
+    def active(self):
+        """Property for the _active field
+
+        """
+        return self._active
+
+    @active.setter
+    @Observable.observed
+    def active(self, active):
+        if not isinstance(active, bool):
+            raise TypeError("active must be of type bool")
+
+        self._active = active

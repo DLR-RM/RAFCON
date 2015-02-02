@@ -18,6 +18,7 @@ class SingleWidgetWindowController(Controller):
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         view['main_window'].connect('destroy', gtk.main_quit)
+        #view.get_top_widget().connect('destroy', gtk.main_quit)
 
     def register_adapters(self):
         """Adapters should be registered in this method call

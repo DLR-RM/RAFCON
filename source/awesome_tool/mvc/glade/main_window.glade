@@ -2,70 +2,70 @@
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy toplevel-contextual -->
-  <object class="GtkWindow" id="MainWindow">
+  <object class="GtkWindow" id="main_window">
     <property name="width_request">700</property>
     <property name="height_request">600</property>
     <property name="visible">True</property>
-    <property name="title" translatable="yes">window1</property>
+    <property name="title" translatable="yes">Awesome Tool</property>
     <property name="window_position">center</property>
-    <property name="default_width">480</property>
-    <property name="default_height">640</property>
+    <property name="default_width">1400</property>
+    <property name="default_height">800</property>
     <accel-groups>
       <group name="accelgroup1"/>
     </accel-groups>
     <child>
-      <object class="GtkVBox" id="vbox1">
+      <object class="GtkVBox" id="top_level_vbox">
         <property name="visible">True</property>
         <property name="orientation">vertical</property>
         <property name="spacing">4</property>
         <child>
-          <object class="GtkMenuBar" id="menubar1">
+          <object class="GtkMenuBar" id="menubar">
             <property name="visible">True</property>
             <child>
               <object class="GtkMenuItem" id="menu_file">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">_File</property>
+                <property name="label" translatable="yes">File</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem7_menu">
+                  <object class="GtkMenu" id="menuitem_file">
                     <child>
-                      <object class="GtkImageMenuItem" id="new1">
+                      <object class="GtkImageMenuItem" id="new">
                         <property name="label">gtk-new</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
-                        <signal name="activate" handler="on_new1_activate"/>
+                        <signal name="activate" handler="on_new_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="open1">
+                      <object class="GtkImageMenuItem" id="open">
                         <property name="label">gtk-open</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
-                        <signal name="activate" handler="on_open1_activate"/>
+                        <signal name="activate" handler="on_open_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="save1">
+                      <object class="GtkImageMenuItem" id="save">
                         <property name="label">gtk-save</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
-                        <signal name="activate" handler="on_save1_activate"/>
+                        <signal name="activate" handler="on_save_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="save_as1">
+                      <object class="GtkImageMenuItem" id="save_as">
                         <property name="label">gtk-save-as</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
-                        <signal name="activate" handler="on_save_as1_activate"/>
+                        <signal name="activate" handler="on_save_as_activate"/>
                       </object>
                     </child>
                     <child>
@@ -75,21 +75,22 @@
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
+                        <signal name="activate" handler="on_menu_properties_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkSeparatorMenuItem" id="separatormenuitem1">
+                      <object class="GtkSeparatorMenuItem" id="menu_file_sep1">
                         <property name="visible">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="quit1">
+                      <object class="GtkImageMenuItem" id="quit">
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
-                        <signal name="activate" handler="on_quit1_activate"/>
+                        <signal name="activate" handler="on_quit_activate"/>
                       </object>
                     </child>
                   </object>
@@ -99,18 +100,18 @@
             <child>
               <object class="GtkMenuItem" id="menu_edit">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">_Edit</property>
+                <property name="label" translatable="yes">Edit</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem8_menu">
+                  <object class="GtkMenu" id="menuitem_edit">
                     <child>
-                      <object class="GtkImageMenuItem" id="cut1">
+                      <object class="GtkImageMenuItem" id="cut">
                         <property name="label">gtk-cut</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
-                        <signal name="activate" handler="on_cut1_activate"/>
+                        <signal name="activate" handler="on_cut_activate"/>
                       </object>
                     </child>
                     <child>
@@ -134,59 +135,49 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="delete1">
+                      <object class="GtkImageMenuItem" id="delete">
                         <property name="label">gtk-delete</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
-                        <signal name="activate" handler="on_delete1_activate"/>
+                        <signal name="activate" handler="on_delete_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkSeparatorMenuItem" id="menuitem2">
+                      <object class="GtkSeparatorMenuItem" id="menu_edit_sep1">
                         <property name="visible">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="add state">
+                      <object class="GtkMenuItem" id="add_state">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">add state</property>
+                        <signal name="activate" handler="on_add_state_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="delete">
+                      <object class="GtkMenuItem" id="delete_state">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Delete</property>
+                        <property name="label" translatable="yes">delete state</property>
                         <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_delete_state_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="group">
+                      <object class="GtkMenuItem" id="group_states">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">group</property>
+                        <property name="label" translatable="yes">group states</property>
                         <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_group_states_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="ungroup">
+                      <object class="GtkMenuItem" id="ungroup_states">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">ungroup</property>
+                        <property name="label" translatable="yes">ungroup states</property>
                         <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="entry point">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">entry point</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="exit point">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">exit point</property>
-                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_ungroup_states_activate"/>
                       </object>
                     </child>
                     <child>
@@ -196,6 +187,7 @@
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
+                        <signal name="activate" handler="on_undo_activate"/>
                       </object>
                     </child>
                     <child>
@@ -205,20 +197,7 @@
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="accel_group">accelgroup1</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="fit">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">fit</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="center_view">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">center view</property>
-                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_redo_activate"/>
                       </object>
                     </child>
                     <child>
@@ -231,6 +210,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">grid</property>
                         <property name="use_underline">True</property>
+                        <signal name="toggled" handler="on_grid_toggled"/>
                       </object>
                     </child>
                   </object>
@@ -240,40 +220,16 @@
             <child>
               <object class="GtkMenuItem" id="menu_view">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">_View</property>
+                <property name="label" translatable="yes">View</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem9_menu">
+                  <object class="GtkMenu" id="menuitem_view">
                     <child>
-                      <object class="GtkMenuItem" id="reload_theme1">
-                        <property name="visible">True</property>
-                        <property name="tooltip_text" translatable="yes">Reload svg files</property>
-                        <property name="label" translatable="yes">Reload Theme</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_reload_theme_activate"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="reload_library">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Reload library</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="reload_fakegraph1">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Reload FakeGraph</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_reload_fakegraph1_activate"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="reload_environment">
+                      <object class="GtkMenuItem" id="expert_view">
                         <property name="visible">True</property>
                         <property name="has_tooltip">True</property>
                         <property name="tooltip_text" translatable="yes">Reload svg files</property>
-                        <property name="label" translatable="yes">Reload Theme</property>
+                        <property name="label" translatable="yes">expert view</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
@@ -282,34 +238,64 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="menu_tools">
+              <object class="GtkMenuItem" id="menu_execution">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">_Tools</property>
+                <property name="label" translatable="yes">Execution</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem7_menu4">
+                  <object class="GtkMenu" id="menuitem_execution">
+                    <property name="visible">True</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="goal_planner">
-                        <property name="label">goal planner</property>
+                      <object class="GtkMenuItem" id="start">
                         <property name="visible">True</property>
-                        <property name="image">image8</property>
-                        <property name="use_stock">False</property>
+                        <property name="label" translatable="yes">start</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_start_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="environment_selector">
-                        <property name="label">environment selector</property>
+                      <object class="GtkMenuItem" id="pause">
                         <property name="visible">True</property>
-                        <property name="image">image9</property>
-                        <property name="use_stock">False</property>
+                        <property name="label" translatable="yes">pause</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_pause_activate"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="services_deployement">
-                        <property name="label">services deployement</property>
+                      <object class="GtkMenuItem" id="stop">
                         <property name="visible">True</property>
-                        <property name="image">image10</property>
-                        <property name="use_stock">False</property>
+                        <property name="label" translatable="yes">stop</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_stop_activate"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem" id="menu_exec_sep1">
+                        <property name="visible">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="step_mode">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">step mode</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_step_mode_activate"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="step">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">step</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_step_activate"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="backward_step_mode">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">backward step</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_backward_step_mode_activate"/>
                       </object>
                     </child>
                   </object>
@@ -319,129 +305,16 @@
             <child>
               <object class="GtkMenuItem" id="menu_help">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">_Help</property>
+                <property name="label" translatable="yes">Help</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem10_menu">
+                  <object class="GtkMenu" id="menuitem_help">
                     <child>
-                      <object class="GtkMenuItem" id="about1">
+                      <object class="GtkMenuItem" id="about">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">_About</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_about1_activate"/>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="menu_debug">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Debug</property>
-                <property name="use_underline">True</property>
-                <child type="submenu">
-                  <object class="GtkMenu" id="menu1">
-                    <property name="visible">True</property>
-                    <child>
-                      <object class="GtkMenuItem" id="run">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Run</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="pause">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Pause</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="stop">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Stop</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem" id="sep">
-                        <property name="visible">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="debug">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Debug</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="step_over">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Step over</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem" id="sep2">
-                        <property name="visible">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="reload">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Reload</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="reload_env">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Reload Environment</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="load">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Load</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="save">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Save</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="info">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Info</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="menu_environments">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Environments</property>
-                <property name="use_underline">True</property>
-                <child type="submenu">
-                  <object class="GtkMenu" id="menu2">
-                    <property name="visible">True</property>
-                    <child>
-                      <object class="GtkImageMenuItem" id="menu_environments_refresh">
-                        <property name="label">gtk-refresh</property>
-                        <property name="visible">True</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                        <property name="accel_group">accelgroup1</property>
+                        <signal name="activate" handler="on_about_activate"/>
                       </object>
                     </child>
                   </object>
@@ -503,6 +376,7 @@
             <child>
               <object class="GtkToolButton" id="button_save_as">
                 <property name="visible">True</property>
+                <property name="tooltip_text" translatable="yes">Save the state machine.</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-save-as</property>
@@ -519,82 +393,52 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHPaned" id="hpaned1">
+          <object class="GtkHPaned" id="top_level_h_pane">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
-              <object class="GtkVPaned" id="vpaned3">
+              <object class="GtkVPaned" id="left_v_pane">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="orientation">vertical</property>
                 <property name="position">500</property>
                 <property name="position_set">True</property>
                 <child>
-                  <object class="GtkHPaned" id="center_pane">
+                  <object class="GtkHPaned" id="top_h_pane">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <child>
-                      <object class="GtkNotebook" id="notebook1">
+                      <object class="GtkNotebook" id="tree_notebook">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <child>
-                          <object class="GtkVBox" id="library_vbox">
+                          <object class="GtkLabel" id="library_tree_placeholder">
                             <property name="visible">True</property>
-                            <property name="orientation">vertical</property>
-                            <child>
-                              <object class="GtkLabel" id="library_label">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">&lt;b&gt;Library&lt;/b&gt;</property>
-                                <property name="use_markup">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
+                            <property name="label" translatable="yes">placeholder against warnings</property>
                           </object>
                         </child>
                         <child type="tab">
-                          <object class="GtkLabel" id="library_label ">
+                          <object class="GtkLabel" id="library_tree_tab">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Library</property>
+                            <property name="label" translatable="yes">Libraries</property>
                           </object>
                           <packing>
                             <property name="tab_fill">False</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkVBox" id="smtree_vbox">
+                          <object class="GtkLabel" id="state_machine_tree_placeholder">
                             <property name="visible">True</property>
-                            <property name="orientation">vertical</property>
-                            <child>
-                              <object class="GtkLabel" id="smtree_title_label">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">&lt;b&gt;Statemachine Tree&lt;/b&gt;</property>
-                                <property name="use_markup">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
+                            <property name="label" translatable="yes">placeholder against warnings</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
                           </packing>
                         </child>
                         <child type="tab">
-                          <object class="GtkLabel" id="tree_label">
+                          <object class="GtkLabel" id="state_machine_tree_tab">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Tree</property>
+                            <property name="label" translatable="yes">Statemachine Tree</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
@@ -608,11 +452,19 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkVBox" id="state_machines_vbox">
+                      <object class="GtkFrame" id="graphical_editor_frame">
                         <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
+                        <property name="label_xalign">0</property>
+                        <property name="shadow_type">none</property>
                         <child>
                           <placeholder/>
+                        </child>
+                        <child type="label">
+                          <object class="GtkLabel" id="graphical_editor_label">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">&lt;b&gt;Graphical Editor&lt;/b&gt;</property>
+                            <property name="use_markup">True</property>
+                          </object>
                         </child>
                       </object>
                       <packing>
@@ -632,10 +484,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <child>
-                      <object class="GtkTextView" id="textview1">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                      </object>
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>
@@ -650,20 +499,26 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVPaned" id="right_vpane">
+              <object class="GtkVPaned" id="right_v_pane">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="orientation">vertical</property>
                 <property name="position">250</property>
                 <property name="position_set">True</property>
                 <child>
-                  <object class="GtkVBox" id="state_editors_vbox">
-                    <property name="width_request">300</property>
-                    <property name="height_request">400</property>
+                  <object class="GtkFrame" id="state_editor">
                     <property name="visible">True</property>
-                    <property name="orientation">vertical</property>
+                    <property name="label_xalign">0</property>
+                    <property name="shadow_type">none</property>
                     <child>
                       <placeholder/>
+                    </child>
+                    <child type="label">
+                      <object class="GtkLabel" id="state_editor_label">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">&lt;b&gt;State Editor&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </object>
                     </child>
                   </object>
                   <packing>
@@ -672,37 +527,46 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHPaned" id="hpaned2">
+                  <object class="GtkVPaned" id="vpaned1">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkVBox" id="vbox2">
+                      <object class="GtkNotebook" id="em_global_notebook">
                         <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
+                        <property name="can_focus">True</property>
                         <child>
-                          <object class="GtkLabel" id="label4">
+                          <object class="GtkLabel" id="external_modules_placeholder">
                             <property name="visible">True</property>
-                            <property name="xalign">0</property>
-                            <property name="yalign">0</property>
-                            <property name="label" translatable="yes">&lt;b&gt;Environment&lt;/b&gt;</property>
-                            <property name="use_markup">True</property>
+                            <property name="label" translatable="yes">placeholder against warnings</property>
+                          </object>
+                        </child>
+                        <child type="tab">
+                          <object class="GtkLabel" id="external_modules_tab">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">External Modules</property>
                           </object>
                           <packing>
-                            <property name="expand">False</property>
-                            <property name="position">0</property>
+                            <property name="tab_fill">False</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkVBox" id="external_module_manager_vbox">
-                            <property name="width_request">300</property>
+                          <object class="GtkLabel" id="global_variables_placeholder">
                             <property name="visible">True</property>
-                            <property name="orientation">vertical</property>
-                            <child>
-                              <placeholder/>
-                            </child>
+                            <property name="label" translatable="yes">placeholder against warnings</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child type="tab">
+                          <object class="GtkLabel" id="global_variables_tab">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Global Variables</property>
+                          </object>
+                          <packing>
+                            <property name="position">1</property>
+                            <property name="tab_fill">False</property>
                           </packing>
                         </child>
                       </object>
@@ -712,11 +576,11 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkVBox" id="vbox3">
+                      <object class="GtkVBox" id="history_vbox">
                         <property name="visible">True</property>
                         <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkLabel" id="label2">
+                          <object class="GtkLabel" id="history_label">
                             <property name="visible">True</property>
                             <property name="xalign">0</property>
                             <property name="yalign">0</property>
@@ -729,15 +593,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkHBox" id="history_vbox">
-                            <property name="visible">True</property>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="position">1</property>
-                          </packing>
+                          <placeholder/>
                         </child>
                       </object>
                       <packing>
@@ -763,11 +619,34 @@
           </packing>
         </child>
         <child>
-          <object class="GtkStatusbar" id="lower_statusbar">
+          <object class="GtkHBox" id="statusbar_hbox">
             <property name="visible">True</property>
-            <property name="spacing">2</property>
             <child>
-              <placeholder/>
+              <object class="GtkStatusbar" id="statusbar1">
+                <property name="visible">True</property>
+                <property name="spacing">2</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkStatusbar" id="statusbar2">
+                <property name="visible">True</property>
+                <property name="spacing">2</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkStatusbar" id="statusbar3">
+                <property name="visible">True</property>
+                <property name="spacing">2</property>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
             </child>
           </object>
           <packing>
@@ -777,18 +656,6 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkImage" id="image8">
-    <property name="visible">True</property>
-    <property name="stock">gtk-yes</property>
-  </object>
-  <object class="GtkImage" id="image9">
-    <property name="visible">True</property>
-    <property name="stock">gtk-yes</property>
-  </object>
-  <object class="GtkImage" id="image10">
-    <property name="visible">True</property>
-    <property name="stock">gtk-yes</property>
   </object>
   <object class="GtkAccelGroup" id="accelgroup1"/>
 </interface>

@@ -3,149 +3,141 @@
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkTreeStore" id="treestore1"/>
-  <object class="GtkWindow" id="external_module_manager_widget">
+  <object class="GtkExpander" id="external_modules_expander">
     <property name="visible">True</property>
-    <property name="title" translatable="yes">External Module Manager</property>
-    <property name="default_width">350</property>
-    <property name="default_height">300</property>
+    <property name="can_focus">True</property>
+    <property name="expanded">True</property>
     <child>
-      <object class="GtkExpander" id="expander1">
+      <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="expanded">True</property>
+        <property name="orientation">vertical</property>
         <child>
-          <object class="GtkVBox" id="vbox1">
+          <object class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
-            <property name="orientation">vertical</property>
+            <property name="homogeneous">True</property>
             <child>
-              <object class="GtkHBox" id="hbox1">
+              <object class="GtkButton" id="connect_button">
+                <property name="label" translatable="yes">Connect</property>
                 <property name="visible">True</property>
-                <property name="homogeneous">True</property>
-                <child>
-                  <object class="GtkButton" id="connect_button">
-                    <property name="label" translatable="yes">Connect</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="disconnect_button">
-                    <property name="label" translatable="yes">Disconnect</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
               </object>
               <packing>
-                <property name="expand">False</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="hbox2">
+              <object class="GtkButton" id="disconnect_button">
+                <property name="label" translatable="yes">Disconnect</property>
                 <property name="visible">True</property>
-                <property name="homogeneous">True</property>
-                <child>
-                  <object class="GtkButton" id="start_button">
-                    <property name="label" translatable="yes">Start</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="stop_button">
-                    <property name="label" translatable="yes">Stop</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="pause_button">
-                    <property name="label" translatable="yes">Pause</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">2</property>
-                  </packing>
-                </child>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hbox2">
+            <property name="visible">True</property>
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkButton" id="start_button">
+                <property name="label" translatable="yes">Start</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="stop_button">
+                <property name="label" translatable="yes">Stop</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow1">
+              <object class="GtkButton" id="pause_button">
+                <property name="label" translatable="yes">Pause</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">automatic</property>
-                <property name="vscrollbar_policy">automatic</property>
-                <child>
-                  <object class="GtkTreeView" id="external_modules_tree_view">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">treestore1</property>
-                    <property name="headers_clickable">False</property>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="name_col">
-                        <property name="title">Name</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="name_text"/>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="status_col">
-                        <property name="title">Status</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="status_text"/>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="actions_col">
-                        <property name="title">Actions</property>
-                        <child>
-                          <object class="GtkCellRendererCombo" id="actions_combo">
-                            <property name="editable">True</property>
-                            <property name="has_entry">False</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                </child>
+                <property name="receives_default">True</property>
               </object>
               <packing>
                 <property name="position">2</property>
               </packing>
             </child>
           </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">1</property>
+          </packing>
         </child>
-        <child type="label">
-          <object class="GtkLabel" id="label1">
+        <child>
+          <object class="GtkScrolledWindow" id="scrolledwindow1">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">External Module Manager</property>
+            <property name="can_focus">True</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <child>
+              <object class="GtkTreeView" id="external_modules_tree_view">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="model">treestore1</property>
+                <property name="headers_clickable">False</property>
+                <child>
+                  <object class="GtkTreeViewColumn" id="name_col">
+                    <property name="title">Name</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="name_text"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="status_col">
+                    <property name="title">Status</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="status_text"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="actions_col">
+                    <property name="title">Actions</property>
+                    <child>
+                      <object class="GtkCellRendererCombo" id="actions_combo">
+                        <property name="editable">True</property>
+                        <property name="has_entry">False</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
+          <packing>
+            <property name="position">2</property>
+          </packing>
         </child>
+      </object>
+    </child>
+    <child type="label">
+      <object class="GtkLabel" id="label1">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">External Module Manager</property>
       </object>
     </child>
   </object>

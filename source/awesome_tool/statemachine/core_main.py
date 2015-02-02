@@ -1,5 +1,6 @@
 from statemachine.states.state import DataPort, DataPortType
 from statemachine.states.hierarchy_state import HierarchyState
+from statemachine.states.library_state import LibraryState
 from states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
@@ -287,11 +288,7 @@ def save_and_load_data_port_test():
     exit()
 
 
-# remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
-# states)
-def scoped_data_test():
-    s = Storage("../../test_scripts/stored_statemachine")
-
+def return_test_state_machine():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
     state1.add_input_data_port("MyFirstDataInputPort", "str")
@@ -322,10 +319,54 @@ def scoped_data_test():
                          state2.get_io_data_port_id_from_name_and_type("DataInput1", DataPortType.INPUT))
     state3.add_scoped_variable("scopeVar1", "str", "scopeDefaultValue")
     state3.add_scoped_variable("scopeVar2", "str", "scopeDefaultValue")
+    return state3
 
+
+def return_loop_state_machine():
+    state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="loop_state1.py")
+    state1.add_outcome("MyFirstOutcome", 3)
+
+
+    state2 = ExecutionState("MySecondState", path="../../test_scripts", filename="loop_state2.py")
+    state2.add_outcome("FirstOutcome", 3)
+
+    state3 = HierarchyState("MyFirstHierarchyState", path="../../test_scripts", filename="hierarchy_container.py")
+    state3.add_state(state1)
+    state3.add_state(state2)
+    state3.set_start_state(state1.state_id)
+    state3.add_transition(state1.state_id, 3, state2.state_id, None)
+    state3.add_transition(state2.state_id, 3, state1.state_id, None)
+
+    return state3
+
+
+def start_stop_pause_step_test():
+    from mvc.models import ContainerStateModel
+    from mvc.views.single_widget_window import TestButtonsView
+    import gtk
+
+    statemachine.singleton.state_machine_execution_engine.step_mode()
+
+    s = Storage("../../test_scripts/stored_statemachine")
+    state3 = return_loop_state_machine()
     s.save_statemachine_as_yaml(state3)
     root_state = s.load_statemachine_from_yaml()
 
+    ctr_model = ContainerStateModel(root_state)
+    test_buttons_view = TestButtonsView(ctr_model)
+
+    root_state.daemon = True
+    root_state.start()
+    gtk.main()
+
+
+# remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
+# states)
+def scoped_data_test():
+    s = Storage("../../test_scripts/stored_statemachine")
+    state3 = return_test_state_machine()
+    s.save_statemachine_as_yaml(state3)
+    root_state = s.load_statemachine_from_yaml()
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
     root_state.input_data = input_data
@@ -363,58 +404,91 @@ def default_data_port_values_test():
     root_state.join()
 
 
-def save_library():
+def save_libraries():
     s = Storage("../")
 
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
-    state1.add_input_data_port("MyFirstDataInputPort", "str")
-    state1.add_output_data_port("MyFirstDataOutputPort", "float")
+    input_state1 = state1.add_input_data_port("MyFirstDataInputPort", "str")
+    output_state1 = state1.add_output_data_port("MyFirstDataOutputPort", "float")
 
     state2 = ExecutionState("MySecondState", path="../../test_scripts", filename="second_state.py")
     state2.add_outcome("FirstOutcome", 3)
-    state2.add_input_data_port("DataInput1", "float")
-    state2.add_output_data_port("DataOutput1", "float")
+    input_state2 = state2.add_input_data_port("DataInput1", "float")
+    output_state2 = state2.add_output_data_port("DataOutput1", "float")
 
-    state3 = HierarchyState("ContainerState", path="../../test_scripts", filename="hierarchy_container.py")
+    state3 = HierarchyState("Library1", path="../../test_scripts", filename="hierarchy_container.py")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
     state3.add_outcome("Container_Outcome", 6)
     state3.add_transition(state2.state_id, 3, None, 6)
     state3.add_transition(state1.state_id, 3, state2.state_id, None)
-    state3.add_input_data_port("in1", "str")
-    state3.add_input_data_port("in2", "int")
+    input_state3 = state3.add_input_data_port("in1", "str")
+    input2_state3 = state3.add_input_data_port("in2", "int")
     state3.add_output_data_port("out1", "str")
-    state3.add_data_flow(state3.state_id, "in1", state1.state_id, "MyFirstDataInputPort")
-    state3.add_data_flow(state1.state_id, "MyFirstDataOutputPort", state2.state_id, "DataInput1")
+    state3.add_data_flow(state3.state_id,
+                         input_state3,
+                         state1.state_id,
+                         input_state1)
+    state3.add_data_flow(state1.state_id,
+                         output_state1,
+                         state2.state_id,
+                         input_state2)
 
-    s.save_statemachine_as_yaml(state3, "../../test_scripts/libraries/MyFirstLibrary")
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/test_libraries/MyFirstLibrary", "0.1")
+    state3.name = "Library2"
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/test_libraries/MySecondLibrary", "0.1")
+    state3.name = "LibraryNested1"
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/test_libraries/LibraryContainer/Nested1", "0.1")
+    state3.name = "LibraryNested2"
+    s.save_statemachine_as_yaml(state3, "../../test_scripts/test_libraries/LibraryContainer/Nested2", "0.1")
 
 
-def run_library_statemachine():
+def get_library_statemachine():
     statemachine.singleton.library_manager.initialize()
-    #print statemachine.singleton.library_manager.libraries
     library_container_state = HierarchyState("LibContainerState", path="../../test_scripts",
                                              filename="hierarchy_container.py")
-    lib_state = statemachine.singleton.library_manager.libraries["MyFirstLibrary"]
+    lib_state = LibraryState("test_libraries", "MyFirstLibrary", "0.1")
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
     library_container_state.add_outcome("Container_Outcome", 6)
     library_container_state.add_transition(lib_state.state_id, 6, None, 6)
-    library_container_state.add_input_data_port("in1", "str")
+    lib_container_input = library_container_state.add_input_data_port("in1", "str")
     library_container_state.add_output_data_port("out1", "str")
-    library_container_state.add_data_flow(library_container_state.state_id, "in1",
-                                          lib_state.state_id, "in1")
+    library_container_state.add_data_flow(library_container_state.state_id,
+                                          lib_container_input,
+                                          lib_state.state_id,
+                                          lib_state.get_io_data_port_id_from_name_and_type("in1", DataPortType.INPUT))
+    return library_container_state
 
+
+def run_library_statemachine():
+    library_container_state = get_library_statemachine()
     input_data = {"in1": "input_string"}
     output_data = {"out1": None}
     library_container_state.input_data = input_data
     library_container_state.output_data = output_data
-
     library_container_state.start()
     library_container_state.join()
 
+
+def save_nested_library_state():
+    save_libraries()
+    library_container_state = get_library_statemachine()
+    statemachine.singleton.global_storage.save_statemachine_as_yaml(library_container_state,
+                                "../../test_scripts/test_libraries/library_with_nested_library", "0.1")
+
+
+def run_nested_library_statemachine():
+    statemachine.singleton.library_manager.initialize()
+    nested_lib_state = LibraryState("test_libraries", "library_with_nested_library", "0.1")
+    input_data = {"in1": "input_string"}
+    output_data = {"out1": None}
+    nested_lib_state.input_data = input_data
+    nested_lib_state.output_data = output_data
+    nested_lib_state.start()
+    nested_lib_state.join()
 
 def scoped_variable_test():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
@@ -454,8 +528,10 @@ def state_without_path_test():
 
 if __name__ == '__main__':
 
-    scoped_data_test()
+    statemachine.singleton.state_machine_execution_engine.start()
+    #start_stop_pause_step_test()
 
+    #scoped_data_test()
     #save_and_load_data_port_test()
     #default_data_port_values_test()
     #scoped_variable_test()
@@ -473,10 +549,15 @@ if __name__ == '__main__':
     #global_variable_test()
     #ros_external_module_test()
 
-    #save_library()
+    #save_libraries()
     #print "########################################################"
-    # you have to run save_library() test before you can run run_library_statemachine()
+    # you have to run save_libraries() test before you can run run_library_statemachine()
     #run_library_statemachine()
+
+    save_nested_library_state()
+    print "########################################################"
+    # you have to run save_nested_library_state() test before you can run run_library_statemachine()
+    run_nested_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine
@@ -486,8 +567,7 @@ if __name__ == '__main__':
 
     #TODO: implement
     # write unit-tests
-    # execution engine: especially pause and stop
-    # execution history + step-mode
+    # execution history
 
     #TODO: longterm
     # step back
