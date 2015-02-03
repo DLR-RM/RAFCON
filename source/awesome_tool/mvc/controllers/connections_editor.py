@@ -99,7 +99,7 @@ class StateConnectionsEditorController(Controller):
 
         if name in ['transitions_external', 'dataflows_external'] and self.model.parent is not None:
             self.view_dict[name] = button.get_active()
-            print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
         elif not name in ['transitions_internal', 'dataflows_internal']:
             self.view_dict['transitions_external'] = False
             self.view_dict['dataflows_external'] = False
@@ -107,7 +107,7 @@ class StateConnectionsEditorController(Controller):
 
         if name in ['transitions_internal', 'dataflows_internal'] and hasattr(self.model, 'states'):
             self.view_dict[name] = button.get_active()
-            print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
         elif not name in ['transitions_external', 'dataflows_external']:
             self.view_dict['transitions_internal'] = False
             self.view_dict['dataflows_internal'] = False

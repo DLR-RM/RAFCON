@@ -7,9 +7,9 @@
 
 """
 
-
 import gtk, gobject
 from gtkmvc import View
+
 
 class TransitionListView(View):
     #builder = './glade/TransitionListWidget.glade'
@@ -33,7 +33,7 @@ class TransitionListView(View):
         self['from_state_combo'] = self.from_state_cell
         #self.to_state_cell.set_property("width", 30)
         self.from_state_cell.set_property("text-column", 0)
-        self['from_state_col'] = gtk.TreeViewColumn('From-State', self.from_state_cell, text=1, background=6, editable=10)
+        self['from_state_col'] = gtk.TreeViewColumn('From-State', self.from_state_cell, text=1, editable=10)
         self.tree_view.append_column(self['from_state_col'])
 
         # Variable from-outcome
@@ -41,7 +41,7 @@ class TransitionListView(View):
         self['from_outcome_combo'] = self.from_outcome_cell
         #self.to_state_cell.set_property("width", 30)
         self.from_outcome_cell.set_property("text-column", 0)
-        self['from_outcome_col'] = gtk.TreeViewColumn('From-Outcome', self.from_outcome_cell, text=2, background=6, editable=10)
+        self['from_outcome_col'] = gtk.TreeViewColumn('From-Outcome', self.from_outcome_cell, text=2, editable=10)
         self.tree_view.append_column(self['from_outcome_col'])
 
         # Variable to-state
@@ -49,7 +49,7 @@ class TransitionListView(View):
         self['to_state_combo'] = self.to_state_cell
         self.to_state_cell.set_property("text-column", 0)
         #self.to_state_cell.set_property("width", 30)
-        self['to_state_col'] = gtk.TreeViewColumn('To-State', self.to_state_cell, text=3, background=7, editable=10)
+        self['to_state_col'] = gtk.TreeViewColumn('To-State', self.to_state_cell, text=3, editable=10)  # ,background=7)
         self.tree_view.append_column(self['to_state_col'])
 
         # Variable to-outcome
@@ -57,14 +57,14 @@ class TransitionListView(View):
         self['to_outcome_combo'] = self.to_outcome_cell
         self.to_outcome_cell.set_property("text-column", 0)
         #self.to_outcome_cell.set_property("width", 30)
-        self['to_outcome_col'] = gtk.TreeViewColumn('To-Outcome', self.to_outcome_cell, text=4, background=7, editable=10)
+        self['to_outcome_col'] = gtk.TreeViewColumn('To-Outcome', self.to_outcome_cell, text=4, editable=10)
         self.tree_view.append_column(self['to_outcome_col'])
 
         # Variable is_external
         self.external_cell = gtk.CellRendererToggle()
         self['external_toggle'] = self.external_cell
         #self.to_outcome_cell.set_property("width", 30)
-        self['external_col'] = gtk.TreeViewColumn('External', self.external_cell, active=5, cell_background=7)
+        self['external_col'] = gtk.TreeViewColumn('External', self.external_cell, active=5)  # , cell_background=7)
         self.tree_view.append_column(self['external_col'])
 
         self.tree_view.show_all()

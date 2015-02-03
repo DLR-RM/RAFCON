@@ -92,28 +92,28 @@ class StateEditorController(Controller):
     def on_delete_input_port_button_clicked(self, widget, data=None):
         tree_view = self.view['inputs_view']["input_ports_tree_view"]
         path = tree_view.get_cursor()[0]
-        print "pathremove: %s" % path
+        # print "pathremove: %s" % path
         if path is not None:
             key = self.model.input_data_port_list_store[int(path[0])][0].data_port_id
-            print "remove: %s" % key
+            # print "remove: %s" % key
             self.model.state.remove_input_data_port(key)
 
     def on_delete_output_port_button_clicked(self, widget, data=None):
         tree_view = self.view['outputs_view']["output_ports_tree_view"]
         path = tree_view.get_cursor()[0]
-        print "pathremove: %s" % path
+        # print "pathremove: %s" % path
         if path is not None:
             key = self.model.output_data_port_list_store[int(path[0])][0].data_port_id
-            print "remove: %s" % key
+            # print "remove: %s" % key
             self.model.state.remove_output_data_port(key)
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
         tree_view = self.view['scopes_view']["scoped_variables_tree_view"]
         path = tree_view.get_cursor()[0]
-        print "pathremove: %s" % path
+        # print "pathremove: %s" % path
         if path is not None:
             key = self.model.scoped_variables_list_store[int(path[0])][0].data_port_id
-            print "remove: %s" % key
+            # print "remove: %s" % key
             self.model.container_state.remove_scoped_variable(key)
 
     @Observer.observe("state", after=True)
