@@ -154,7 +154,6 @@ if __name__ == '__main__':
     # a view, whose buttons can trigger arbitrary function that are needed for testing purposes
     #test_buttons_view = TestButtonsView(ctr_model)
 
-
     #state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
     #state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
 
@@ -172,8 +171,8 @@ if __name__ == '__main__':
     # #c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
     # c = SingleWidgetWindowController(this_model, v, StateOutcomesEditorController)
 
-    # state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
-    # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
+    #state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
+    #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
     # #state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
 
     #scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
@@ -185,8 +184,8 @@ if __name__ == '__main__':
     # global_variables_view = SingleWidgetWindowView(GlobalVariableEditorView, width=500, height=200, title='Global Variable Manager')
     # global_variables_controller = SingleWidgetWindowController(gvm_model, global_variables_view, GlobalVariableManagerController)
 
-    # editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
-    # editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
+    #editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
+    #editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
 
     gtk.main()
     logger.debug("after gtk main")

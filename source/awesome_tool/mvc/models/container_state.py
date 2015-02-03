@@ -33,13 +33,6 @@ class ContainerStateModel(StateModel):
     def __init__(self, container_state, parent=None, meta=None):
         """Constructor
         """
-        import inspect
-        print inspect.getmro(container_state.__class__)
-        print ContainerState
-        if ContainerState in inspect.getmro(container_state.__class__):
-            print "ContainerState in base class of state3"
-        print isinstance(container_state, ContainerState)
-
         assert isinstance(container_state, ContainerState)
         #ContainerState.__init__(self, container_state, parent, meta)
         StateModel.__init__(self, container_state, parent, meta)
