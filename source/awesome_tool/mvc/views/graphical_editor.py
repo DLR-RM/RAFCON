@@ -336,6 +336,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Put the name of the state in the upper left corner of the state
         margin = min(width, height) / 8.
         font_size = min(width, height) / 8.
+        name = self._shorten_string(name, font_size, width - 2*margin)
         self._write_string(name, pos_x + margin, pos_y + height - margin, font_size, self.state_name_color, True,
                            False, depth=depth+0.01)
 
