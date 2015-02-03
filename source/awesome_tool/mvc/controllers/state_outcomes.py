@@ -16,8 +16,8 @@ class ParentObserver(Observer):
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):
-        print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-              (prop_name, info.instance, info.method_name, info.result)
+        # print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+        #       (prop_name, info.instance, info.method_name, info.result)
         # TODO test with accepting limited methods
         #if info.method_name in self.method_list:
         for func_handle in self.func_handle_list:
@@ -72,7 +72,7 @@ class StateOutcomesTreeController(Controller):
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
             else:
-                print "not allowed", column.get_name(), column.get_title()
+                logger.warning("Column do not has cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
         self.update_model()
 
@@ -92,7 +92,7 @@ class StateOutcomesTreeController(Controller):
         # because observer is on modify_outcome_name in state not on name in outcome
         self.model.state.outcomes[self.tree_store[path][6].outcome_id].name = text
         #self.model.model_changed(self.model, 'outcome.name', 'after')
-        print "change name of outcome: ", path, self.model.state.outcomes[self.tree_store[path][6].outcome_id].name
+        # print "change name of outcome: ", path, self.model.state.outcomes[self.tree_store[path][6].outcome_id].name
 
     def on_to_state_modification(self, widget, path, text):
 
@@ -112,11 +112,12 @@ class StateOutcomesTreeController(Controller):
         else:  # there is no transition
             pass
         if text is None:
-            print "only delete"
+            # print "only delete"
+            pass
         else:
             to_state = text.split('.')[1]
-            print "change to state: ", path, text, to_state, outcome_id, self.list_to_other_state, self.list_to_other_outcome
-            print "do state transition", self.model.state.state_id, outcome_id, to_state, str(None), transition_id
+            # print "change to state: ", path, text, to_state, outcome_id, self.list_to_other_state, self.list_to_other_outcome
+            # print "do state transition", self.model.state.state_id, outcome_id, to_state, str(None), transition_id
             self.model.parent.state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                    to_state_id=to_state, to_outcome=None, transition_id=transition_id)
 
@@ -125,7 +126,7 @@ class StateOutcomesTreeController(Controller):
         transition_id = None
         outcome_id = int(self.tree_store[path][0])
         if outcome_id in self.list_to_other_state.keys():
-            print "TO_OTHER_STATE"
+            # print "TO_OTHER_STATE"
             transition_id = int(self.list_to_other_state[outcome_id][2])
             self.model.parent.state.remove_transition(transition_id)
             # to_outcome = int(text.split('.')[2])
@@ -139,24 +140,23 @@ class StateOutcomesTreeController(Controller):
         else:  # there is no transition
             pass
         if text is None:
-            print "only delete"
+            # print "only delete"
+            pass
         else:
             to_outcome = int(text.split('.')[2])
-            print "change to outcome: ", path, text, to_outcome
-            print "do parent transition", self.model.state.state_id, outcome_id, str(None), to_outcome, transition_id
+            # print "change to outcome: ", path, text, to_outcome
+            # print "do parent transition", self.model.state.state_id, outcome_id, str(None), to_outcome, transition_id
             self.model.parent.state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                    to_state_id=None, to_outcome=to_outcome, transition_id=transition_id)
 
     def on_add(self, button, info=None):
-        print "add outcome"
+        # print "add outcome"
         outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
         outcome = self.model.state.outcomes[outcome_id]
-        #self.tree_store.append(None, [outcome_id, outcome.name, '', '', '#f0E5C7', '#f0E5c7', outcome, self.model.state])
-        #self.update_path()
 
     def on_remove(self, button, info=None):
-        print "remove outcome"
-        print self.model.state.outcomes
+        # print "remove outcome"
+        # print self.model.state.outcomes
         # self.update_path()
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
         #print path, tree
@@ -166,32 +166,31 @@ class StateOutcomesTreeController(Controller):
             if outcome_id in self.list_to_other_outcome:
                 elem = self.list_to_other_outcome[outcome_id]
                 transition = self.model.parent.state.transitions[elem[2]]  # transition by transition_id
-                print "remove_to_other_outcome: ", elem[2], transition.transition_id, self.model.parent.state.name, \
-                    transition.to_outcome, transition.to_state, transition.to_outcome, transition.to_state
+                # print "remove_to_other_outcome: ", elem[2], transition.transition_id, self.model.parent.state.name, \
+                #     transition.to_outcome, transition.to_state, transition.to_outcome, transition.to_state
                 self.model.parent.state.remove_transition(transition.transition_id)
             if outcome_id in self.list_to_other_state:
                 elem = self.list_to_other_state[outcome_id]
                 transition = self.model.parent.state.transitions[elem[2]]  # transition by transition_id
-                print "remove_to_other_state: ", elem[2], transition.transition_id, self.model.parent.state.name, \
-                    transition.from_outcome, transition.from_state, transition.to_outcome, transition.to_state
+                # print "remove_to_other_state: ", elem[2], transition.transition_id, self.model.parent.state.name, \
+                #     transition.from_outcome, transition.from_state, transition.to_outcome, transition.to_state
                 self.model.parent.state.remove_transition(transition.transition_id)
             if outcome_id in self.list_from_other_state:
                 for elem in self.list_from_other_state[outcome_id]:
                     transition = self.model.state.transitions[elem[2]]  # transition by transition_id
-                    print "remove_from_other_state: ", elem[2], transition.transition_id, self.model.state.name, \
-                        transition.to_outcome, transition.to_state
+                    # print "remove_from_other_state: ", elem[2], transition.transition_id, self.model.state.name, \
+                    #     transition.to_outcome, transition.to_state
                     self.model.state.remove_transition(transition.transition_id)
 
             self.model.state.remove_outcome(outcome_id)
-            #parent = self.tree_store.remove(iter)
-            #print path, parent, tree, iter
-        print self.model.state.outcomes
+            # print path, parent, tree, iter
+        # print self.model.state.outcomes
 
     def update_stores(self):
 
         model = self.model
 
-        print "clean stores"
+        # print "clean stores"
         self.to_state_combo_list.clear()
         self.to_state_combo_list.append([None, None, None])
         self.to_outcome_combo_list.clear()
@@ -209,14 +208,14 @@ class StateOutcomesTreeController(Controller):
                                                      smdl.state.state_id, parent_id])
             # check for "to outcome combos" -> so all outcomes of parent
             for outcome in model.parent.state.outcomes.values():
-                print "type outcome: ", outcome.name, type(outcome)
+                # print "type outcome: ", outcome.name, type(outcome)
                 self.to_outcome_combo_list.append(['parent.' + outcome.name + '.' + str(outcome.outcome_id),
                                                    outcome.outcome_id, parent_id])
             for transition_id, transition in model.parent.state.transitions.items():
-                print transition.from_state, transition.from_outcome, \
-                        transition.to_state, transition.to_outcome, model.parent.state.name, \
-                    model.parent.state.state_id, \
-                    transition_id, transition.transition_id, model.parent.state.transitions[transition_id].transition_id
+                # print transition.from_state, transition.from_outcome, \
+                #         transition.to_state, transition.to_outcome, model.parent.state.name, \
+                #         model.parent.state.state_id, \
+                #         transition_id, transition.transition_id, model.parent.state.transitions[transition_id].transition_id
                 # check for "to other state" connections -> so from self-state and self-outcome "external" transitions
                 if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes.keys():
                     # check for "to other outcomes" connections -> so to parent-state and parent-outcome "ext" transitions
@@ -234,19 +233,19 @@ class StateOutcomesTreeController(Controller):
         if hasattr(model.state, 'transitions'):
             # check for "from other state" connections -> so to self-state and self-outcome "internal" transitions
             for transition_id, transition in model.state.transitions.items():
-                print transition.from_state, transition.from_outcome, \
-                        transition.to_state, transition.to_outcome, model.state.name, model.state.state_id, \
-                    transition_id, transition.transition_id
+                # print transition.from_state, transition.from_outcome, \
+                #         transition.to_state, transition.to_outcome, model.state.name, model.state.state_id, \
+                #         transition_id, transition.transition_id
                 if transition.to_state is None:  # no to_state means self
                     if transition.to_outcome in self.list_from_other_state:
                         self.list_from_other_state[transition.to_outcome].append([transition.from_state, transition.from_outcome, transition.transition_id])
                     else:
                         self.list_from_other_state[transition.to_outcome] = [[transition.from_state, transition.from_outcome, transition.transition_id]]
 
-        print "to_state: ", self.list_to_other_state
-        print "to_outcome: ", self.list_to_other_outcome
-        print "from state: ", self.list_from_other_state
-        print "state.name: ", self.model.state.name
+        # print "to_state: ", self.list_to_other_state
+        # print "to_outcome: ", self.list_to_other_outcome
+        # print "from state: ", self.list_from_other_state
+        # print "state.name: ", self.model.state.name
 
     def update_model(self):
 
@@ -262,14 +261,14 @@ class StateOutcomesTreeController(Controller):
             from_state = None
             if outcome.outcome_id in self.list_from_other_state.keys():
                 from_state = self.list_from_other_state[outcome.outcome_id][0]
-            print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
+            # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
             self.tree_store.append(None, [outcome.outcome_id, outcome.name, to_state, to_outcome,
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
 
     @Controller.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
-        print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-              (prop_name, info.instance, info.method_name, info.result)
+        # print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+        #       (prop_name, info.instance, info.method_name, info.result)
         if info.method_name in ["add_outcome", "remove_outcome", "add_transition", "remove_transition",
                                 "modify_outcome_name"]:
             self.update_stores()

@@ -60,7 +60,7 @@ class StateEditorView(View):
             count = 0
             for i in range(1, 5):
                 if self['port_expander'+str(i)].get_expanded():
-                    print "%s is expanded" % ('port_expander'+str(i))
+                    # print "%s is expanded" % ('port_expander'+str(i))
                     count += 1
             self['port_expander'].set_size_request(width=-1, height=count*170+110)
         else:
@@ -72,14 +72,14 @@ class StateEditorView(View):
             count = 0
             for expand_id in ['transitions_expander', 'dataflows_expander']:
                 if self['connections_view'][expand_id].get_expanded():
-                    print "%s is expanded" % expand_id
+                    # print "%s is expanded" % expand_id
                     count += 1
             self['connections_expander'].set_size_request(width=-1, height=count*150+75)
             self['vpaned1'].set_position(1000)
         else:
             self['connections_expander'].set_size_request(width=-1, height=-1)
             self['vpaned1'].set_position(1000)
-            #print "position: %s" % self.view['vpaned1'].get_position()
+            # print "position: %s" % self.view['vpaned1'].get_position()
 
 
 if __name__ == '__main__':

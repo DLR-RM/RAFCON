@@ -23,8 +23,8 @@ class ParentObserver(Observer):
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):
-        print "parent data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-              (prop_name, info.instance, info.method_name, info.result)
+        # print "parent data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+        #       (prop_name, info.instance, info.method_name, info.result)
         # TODO Test with accepting limited methods
         #if info.method_name in self.method_list:
         for func_handle in self.func_handle_list:
@@ -94,7 +94,7 @@ class DataFlowListController(Controller):
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
             else:
-                print "not allowed", column.get_name(), column.get_title()
+                logger.warning("Column has no cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
         self.update_model()
 
@@ -114,45 +114,48 @@ class DataFlowListController(Controller):
         """
 
     def on_add(self, button, info=None):
-        print "ADD DATA_FLOW"
+        # print "ADD DATA_FLOW"
         if self.view_dict['dataflows_internal'] and self.free_to_port_internal:
-            print self.from_port_internal
+            # print self.from_port_internal
             from_state_id = self.from_port_internal.keys()[0]
             from_key = self.from_port_internal[from_state_id][0].data_port_id
-            print from_state_id, from_key, self.model.state.state_id
+            # print from_state_id, from_key, self.model.state.state_id
             to_state_id = self.free_to_port_internal.keys()[0]
             to_key = self.free_to_port_internal[to_state_id][0].data_port_id
-            print "NEW DATA_FLOW INTERNAL IS: ", from_state_id, from_key, to_state_id, to_key
+            # print "NEW DATA_FLOW INTERNAL IS: ", from_state_id, from_key, to_state_id, to_key
             data_flow_id = self.model.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
-            print "NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id]
+            # print "NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id]
 
         elif self.view_dict['dataflows_external'] and self.model.state.output_data_ports:  # self.free_to_port_external:
             from_state_id = self.model.state.state_id
-            print from_state_id, self.model.state.output_data_ports
+            # print from_state_id, self.model.state.output_data_ports
             from_key = self.model.state.output_data_ports.keys()[0]
             to_state_id = self.free_to_port_external.keys()[0]
             to_key = self.free_to_port_external[to_state_id][0].data_port_id
-            print "NEW DATA_FLOW EXTERNAL IS: ", from_state_id, from_key, to_state_id, to_key, \
-                get_state_model(self.model.parent, to_state_id).state.get_data_port_by_id(to_key)
+            # print "NEW DATA_FLOW EXTERNAL IS: ", from_state_id, from_key, to_state_id, to_key, \
+            #     get_state_model(self.model.parent, to_state_id).state.get_data_port_by_id(to_key)
             data_flow_id = self.model.parent.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
-            print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
+            # print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
         else:
-            print "NO OPTION TO ADD TRANSITION"
+                logger.warning("NO OPTION TO ADD TRANSITION")
 
     def on_remove(self, button, info=None):
-        print "remove dataflow"
+        # print "remove dataflow"
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        print path, tree
+        # print path, tree
         if path:
-            print "DataFlow: ", self.tree_store[path[0][0]][0]
+            # print "DataFlow: ", self.tree_store[path[0][0]][0]
             if self.tree_store[path[0][0]][5]:
-                print "Parent has %s dataflows." % len(self.model.parent.state.data_flows)
+                # print "Parent has %s dataflows." % len(self.model.parent.state.data_flows)
                 self.model.parent.state.remove_data_flow(self.tree_store[path[0][0]][0])
-                print "Parent has %s dataflows." % len(self.model.parent.state.data_flows)
+                # print "Parent has %s dataflows." % len(self.model.parent.state.data_flows)
             else:
-                print "Self_state has %s dataflows." % len(self.model.state.data_flows)
+                # print "Self_state has %s dataflows." % len(self.model.state.data_flows)
                 self.model.state.remove_data_flow(self.tree_store[path[0][0]][0])
-                print "Self_state has %s dataflows." % len(self.model.state.data_flows)
+                # print "Self_state has %s dataflows." % len(self.model.state.data_flows)
+            # self.view.tree_view.get_selection().select_all()
+        else:
+            logger.warning("NO selection to remove data-flow")
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -241,14 +244,14 @@ class DataFlowListController(Controller):
 
         if self.view_dict['dataflows_internal']:
             for data_flow in self.model.state.data_flows.values():
-                #data_flow = row[0]
-                print "type: ", type(data_flow)
+
+                # print "type: ", type(data_flow)
                 if data_flow.data_flow_id in self.data_flow_dict['internal'].keys():
                     df_dict = self.data_flow_dict['internal'][data_flow.data_flow_id]
                     # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
-        #                   name-color, to-state-color, data-flow-object, state-object, is_editable
-                    print 'insert int: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
-                        df_dict['to_state'], df_dict['to_key']
+                    #       name-color, to-state-color, data-flow-object, state-object, is_editable
+                    # print 'insert int: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
+                    #     df_dict['to_state'], df_dict['to_key']
                     self.tree_store.append(None, [data_flow.data_flow_id,
                                                   df_dict['from_state'],
                                                   df_dict['from_key'],
@@ -263,9 +266,9 @@ class DataFlowListController(Controller):
                 if data_flow.data_flow_id in self.data_flow_dict['external'].keys():
                     df_dict = self.data_flow_dict['external'][data_flow.data_flow_id]
                     # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
-        #                   name-color, to-state-color, data-flow-object, state-object, is_editable
-                    print 'insert ext: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
-                        df_dict['to_state'], df_dict['to_key']
+                    #       name-color, to-state-color, data-flow-object, state-object, is_editable
+                    # print 'insert ext: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
+                    #     df_dict['to_state'], df_dict['to_key']
                     self.tree_store.append(None, [data_flow.data_flow_id,
                                                   df_dict['from_state'],
                                                   df_dict['from_key'],
@@ -276,8 +279,8 @@ class DataFlowListController(Controller):
 
     @Controller.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
-        print "dataflow_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-              (prop_name, info.instance, info.method_name, info.result)
+        # print "dataflow_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+        #       (prop_name, info.instance, info.method_name, info.result)
         if info.method_name in ["add_data_flow", "remove_data_flow",
                                 "add_input_data_port", "remove_input_data_port",
                                 "add_output_data_port", "remove_output_data_port",
@@ -295,23 +298,23 @@ def get_key_combos(ports, keys_store, port_type):
         for key in ports.keys():
             keys_store.append([port_type + '.' + str(key)])
     else:  # scoped_variable
-        print type(ports), "\n", ports
+        # print type(ports), "\n", ports
         if type(ports) == type(list):
             for scope in ports:
                 keys_store.append([scope.data_port.data_type + '.' + scope.data_port.name + '.' + scope.data_port.port_id])
         elif ports:
-            print ports
+            # print ports
             try:
                 for scope in ports.values():
-                    print scope
+                    # print scope
                     keys_store.append([port_type + '.' + scope.name + '.' + str(scope.data_port_id)])
             except AttributeError:
                 for scope in ports:
-                    print scope, scope.scoped_variable
+                    # print scope, scope.scoped_variable
                     scope = scope.scoped_variable
                     keys_store.append([port_type + '.' + scope.name + '.' + str(scope.data_port_id)])
 
-    print "final store: ", keys_store
+    # print "final store: ", keys_store
     return keys_store
 
 
@@ -338,7 +341,8 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
         if key in from_dict:
             return from_dict[key]
         else:
-            print "WARNING Key '%s' is not in %s" % (key, from_dict)
+            logger.warning("Key '%s' is not in %s" % (key, from_dict))
+            pass
 
     # from_state, to_key, to_state, to_key, external
     if hasattr(model.state, 'states'):
@@ -354,7 +358,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     fstate = take_from_dict(model.states, data_flow.from_state).state
                     from_state = fstate.name + '.' + data_flow.from_state
                 else:
-                    #print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                    # print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
                     break
             # check if to Self_state
             if data_flow.to_state == model.state.state_id:
@@ -365,7 +369,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     tstate = take_from_dict(model.states, data_flow.to_state).state
                     to_state = tstate.name + '.' + data_flow.to_state
                 else:
-                    #print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                    # print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
                     break
 
             from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
@@ -395,33 +399,33 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
 
             from_keys_store = ListStore(str)
             if model.state.state_id == data_flow.from_state:
-                #print "input_ports", model.state.input_data_ports
+                # print "input_ports", model.state.input_data_ports
                 get_key_combos(model.state.input_data_ports, from_keys_store, 'input_ports')
-                #print type(model)
+                # print type(model)
                 if hasattr(model, 'states'):
-                    #print "scoped_variables", model.scoped_variables
+                    # print "scoped_variables", model.scoped_variables
                     get_key_combos(model.scoped_variables, from_keys_store, 'scoped_variable')
             else:
-                #print "output_ports", model.states[data_flow.from_state].state.output_data_ports
+                # print "output_ports", model.states[data_flow.from_state].state.output_data_ports
                 get_key_combos(model.states[data_flow.from_state].state.output_data_ports,
                                from_keys_store, 'output_port')
 
             to_keys_store = ListStore(str)
             if model.state.state_id == data_flow.to_state:
-                #print "output_ports", model.state.output_data_ports
+                # print "output_ports", model.state.output_data_ports
                 get_key_combos(model.state.output_data_ports, to_keys_store, 'output_ports')
-                #print type(model)
+                # print type(model)
                 if hasattr(model, 'states'):
-                    #print "scoped_variables", model.scoped_variables
+                    # print "scoped_variables", model.scoped_variables
                     get_key_combos(model.scoped_variables, to_keys_store, 'scoped_variable')
             else:
-                #print "input_ports", model.states[data_flow.to_state].state.input_data_ports
+                # print "input_ports", model.states[data_flow.to_state].state.input_data_ports
                 get_key_combos(model.states[data_flow.to_state].state.input_data_ports, to_keys_store, 'input_port')
             tree_dict_combos['internal'][data_flow.data_flow_id] = {'from_state': from_states_store,
                                                                     'from_key': from_keys_store,
                                                                     'to_state': to_states_store,
                                                                     'to_key': to_keys_store}
-            print "internal", data_flow_dict['internal'][data_flow.data_flow_id]
+            # print "internal", data_flow_dict['internal'][data_flow.data_flow_id]
 
     if model.parent is not None:  # if it is the top container state
         for data_flow in model.parent.state.data_flows.values():  # model.parent.data_flow_list_store:
@@ -440,7 +444,8 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                         fstate = take_from_dict(model.parent.states, data_flow.from_state).state
                         from_state = fstate.name + '.' + data_flow.from_state
                     else:
-                        #print "#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                        # print "#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                        logger.warning("DO break in ctrl/data_flow.py 1")
                         break
 
             # check if to Self_state
@@ -456,7 +461,8 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                         tstate = take_from_dict(model.parent.states, data_flow.to_state).state
                         to_state = fstate.name + '.' + data_flow.to_state
                     else:
-                        #print "##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                        # print "##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                        logger.warning("DO break in ctrl/data_flow.py 2")
                         break
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
                 from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
@@ -487,7 +493,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                 # only outports of self
                 from_keys_store = ListStore(str)
                 if model.state.state_id == data_flow.from_state:
-                    #print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
+                    # print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
                     get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
                                    from_keys_store, 'output_port')
                 else:
@@ -523,7 +529,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                                                                         'from_key': from_keys_store,
                                                                         'to_state': to_states_store,
                                                                         'to_key': to_keys_store}
-                print "external", data_flow_dict['external'][data_flow.data_flow_id]
+                # print "external", data_flow_dict['external'][data_flow.data_flow_id]
 
     # print "ALL SCANNED: ", data_flow_dict['internal'].keys(), data_flow_dict['external'].keys(), \
     #     tree_dict_combos['internal'].keys(), tree_dict_combos['external'].keys()
@@ -547,12 +553,12 @@ def find_free_keys(model):
         nfree_container_ports.extend([s.name for s in model.state.scoped_variables.values()])
         if model.state.output_data_ports:
             port_keys = model.state.output_data_ports.keys()
-            #print "actual keys: ", port_keys
+            # print "actual keys: ", port_keys
             for data_flow in model.state.data_flows.values():
                 port_keys = filter(lambda port_id: not (model.state.state_id == data_flow.to_state and
                                                         port_id == data_flow.to_key), port_keys)
-                #print "actual keys: ", port_keys
-            #print "found free prots: ", port_keys
+                # print "actual keys: ", port_keys
+            # print "found free prots: ", port_keys
             free_container_ports.extend([model.state.output_data_ports[i] for i in port_keys])
             # free_container_ports.extend(port_keys)
             nfree_container_ports.extend([model.state.output_data_ports[i].name for i in port_keys])
@@ -570,18 +576,18 @@ def find_free_keys(model):
 
             if state_model.state.input_data_ports:
                 port_keys = state_model.state.input_data_ports.keys()
-                #print "actual keys: ", port_keys
+                # print "actual keys: ", port_keys
                 for data_flow in model.state.data_flows.values():
                     port_keys = filter(lambda port_id: not (state_model.state.state_id == data_flow.to_state and
                                                             port_id == data_flow.to_key), port_keys)
-                    #print "actual keys: ", port_keys
+                    # print "actual keys: ", port_keys
 
-                #print "found free prots: ", port_keys
+                # print "found free prots: ", port_keys
                 if port_keys:
                     free_to_ports[state_model.state.state_id] = [state_model.state.input_data_ports[i] for i in port_keys]
                     nfree_to_ports[state_model.state.name] = [state_model.state.input_data_ports[i].name for i in port_keys]
 
-    print "\nFOUND FREE PORTS: \n", nfree_to_ports, "\n", free_to_ports, "\n",  from_ports
+    # print "\nFOUND FREE PORTS: \n", nfree_to_ports, "\n", free_to_ports, "\n",  from_ports
 
     return free_to_ports, from_ports
 
