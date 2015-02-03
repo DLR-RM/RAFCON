@@ -685,6 +685,10 @@ class GraphicalEditorController(Controller):
                                   state.meta['gui']['editor']['input_pos'].items() +
                                   state.meta['gui']['editor']['output_pos'].items() +
                                   state.meta['gui']['editor']['scoped_pos'].items())
+
+                if not from_key in connectors or not to_key in connectors:
+                    logger.warn("Data flow with non existing port(s): {0}, {1}".format(from_key, to_key))
+                    continue
                 from_x = connectors[from_key][0]
                 from_y = connectors[from_key][1]
                 to_x = connectors[to_key][0]
