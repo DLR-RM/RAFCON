@@ -144,6 +144,7 @@ class StateModel(ModelMT):
         self.update_output_data_port_list_store()
         self.update_output_data_port_models()
 
+
 def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
     path1 = treemodel.get_path(iter1)[0]
     path2 = treemodel.get_path(iter2)[0]

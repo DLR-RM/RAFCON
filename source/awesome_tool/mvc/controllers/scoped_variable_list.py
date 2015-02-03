@@ -31,7 +31,12 @@ class ScopedVariableListController(Controller):
                 logger.error("Unknown column '{col:s}' in ScopedVariableListView".format(col=col))
 
         #top widget is a tree view => set the model of the tree view to be a list store
-        view.get_top_widget().set_model(self.model.scoped_variables_list_store)
+        if hasattr(self.model, 'scoped_variables_list_store'):
+            view.get_top_widget().set_model(self.model.scoped_variables_list_store)
+        else:
+            import gtk
+            import gobject
+            view.get_top_widget().set_model(gtk.ListStore(gobject.TYPE_PYOBJECT))
 
         view['name_col'].set_cell_data_func(view['name_text'], cell_text, self.model)
         view['name_text'].set_property("editable", True)

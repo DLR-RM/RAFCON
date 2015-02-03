@@ -1,6 +1,16 @@
+"""
+.. module:: state_editor (View)
+   :platform: Unix, Windows
+   :synopsis: A module to view the all aspects of a respective state
+
+.. moduleauthor:: Rico Belder
+
+"""
+
+
 import gtk
 from gtkmvc import View, Controller
-from mvc.views.source_editor import SourceEditorView
+from mvc.views import SourceEditorView, StateOutcomesEditorView, StateOutcomesTreeView
 from mvc.views.container_state import ContainerStateView
 from mvc.views.connections_editor import StateConnectionsEditorView
 from mvc.views.state_overview import StateOverviewView
@@ -17,11 +27,11 @@ class StateEditorView(View):
         View.__init__(self)
 
         self['properties_view'] = StateOverviewView()  # StatePropertiesEditorView()
-        self['ports_editor_view'] = ContainerStateView()  # StatePortsEditorView()
+        #self['ports_editor_view'] = ContainerStateView()  # StatePortsEditorView()
         self['inputs_view'] = InputPortsListView()  # StateInputsEditorView()
         self['outputs_view'] = OutputPortsListView()  # StateOutputsEditorView()
-        self['scopes_view'] = ScopedVariablesListView()  # StateScopesEditorView()
-        self['outcomes_view'] = ContainerStateView()  # StateOutcomesEditorView()
+        self['scopes_view'] = ScopedVariablesListView()
+        self['outcomes_view'] = StateOutcomesEditorView()
         self['source_view'] = SourceEditorView()
         self['connections_view'] = StateConnectionsEditorView()
 
@@ -29,7 +39,7 @@ class StateEditorView(View):
         self['input_ports_scroller'].add(self['inputs_view'].get_top_widget())
         self['output_ports_scroller'].add(self['outputs_view'].get_top_widget())
         self['scoped_variables_scroller'].add(self['scopes_view'].get_top_widget())
-        self['viewport6'].add(self['outcomes_view']['vbox1'])
+        self['outcomes_scroller'].add(self['outcomes_view'].get_top_widget())
         self['viewport1'].add(self['source_view'].get_top_widget())
         self['alignment1'].add(self['connections_view']['connections_editor_widget'])
         #self['expander3_ScriptEditor'].add(self['source_editor_view'].get_top_widget())
@@ -52,7 +62,7 @@ class StateEditorView(View):
                 if self['port_expander'+str(i)].get_expanded():
                     print "%s is expanded" % ('port_expander'+str(i))
                     count += 1
-            self['port_expander'].set_size_request(width=-1, height=count*165+100)
+            self['port_expander'].set_size_request(width=-1, height=count*170+110)
         else:
             self['port_expander'].set_size_request(width=-1, height=-1)
 

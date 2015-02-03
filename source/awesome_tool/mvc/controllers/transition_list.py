@@ -2,10 +2,30 @@
 from utils import log
 logger = log.get_logger(__name__)
 
-from gtkmvc import Controller
-from gtk import ListStore
+from gtkmvc import Controller, Observer
+import gtk
+import gobject
 
 from mvc.models import ContainerStateModel, StateModel
+
+
+class ParentObserver(Observer):
+
+    def __init__(self, model, key, funct_handle_list):
+        Observer.__init__(self, model)
+        self.func_handle_list = funct_handle_list
+        # self.observe(self.notify, "state", after=True)
+        self.method_list = ["add_transition", "remove_transition",
+                            "add_outcome", "remove_outcome",
+                            "add_state", "remove_state", "modify_outcome_name"]
+
+    @Observer.observe('state', after=True)
+    def notification(self, model, prop_name, info):
+        print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+              (prop_name, info.instance, info.method_name, info.result)
+        #if info.method_name in self.method_list:
+        for func_handle in self.func_handle_list:
+            func_handle()
 
 
 class TransitionListController(Controller):
@@ -25,430 +45,413 @@ class TransitionListController(Controller):
         """
         Controller.__init__(self, model, view)
 
+        if model.parent is not None:
+            self.parent_observer = ParentObserver(model.parent, "state", [self.update_stores, self.update_model])
+            #self.parent_observer.observe(model.parent)
+
+        # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
+        #                   name-color, to-state-color, transition-object, state-object, is_editable
+        self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
+                                        str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
+        self.combo = {}
+
+        self.update_stores()
+        self.new_version = True
+        self.view_dict = {}
+        view.get_top_widget().set_model(self.tree_store)
+
     def register_view(self, view):
         """Called when the View was registered
         """
 
         def cell_text(column, cell_renderer, model, iter, container_model):
-            col = column.get_name()
-            states_store = ListStore(str, str)
-            states_store.append([container_model.state.state_id, container_model.state.name])
-            transition = model.get_value(iter, 0)
-            for state_model in container_model.states.itervalues():
-                #print "state: ", state_model.state
-                #print "state model: ", [state_model.state.state_id, state_model.state.name]
-                states_store.append([state_model.state.state_id, state_model.state.name])
 
-            outcomes_store = ListStore(str, str)
-            if col == 'from_state_col':
-                text = container_model.state.states[transition.from_state].name
-                cell_renderer.set_property('text', text)
-                cell_renderer.set_property('text-column', 1)
-                cell_renderer.set_property('model', states_store)
-            elif col == 'to_state_col':
-                text = 'Sel. state' if transition.to_state is None else  \
-                    container_model.state.states[transition.to_state].name
-                cell_renderer.set_property('text', text)
-                cell_renderer.set_property('text-column', 1)
-                cell_renderer.set_property('model', states_store)
-            elif col == 'from_outcome_col':
-                from_state = container_model.state.states[transition.from_state]
-                self.get_outcome_combos(from_state, outcomes_store)
-                cell_renderer.set_property('text', from_state.outcomes[transition.from_outcome].name)
-                cell_renderer.set_property('text-column', 1)
-                cell_renderer.set_property('model', outcomes_store)
-            elif col == 'to_outcome_col':
-                if transition.to_outcome is None:
-                    cell_renderer.set_property('text', '')
-                else:
-                    print "to state outcomes: ", container_model.state.outcomes
-                    self.get_outcome_combos(container_model.state, outcomes_store)
-                    cell_renderer.set_property('text', container_model.state.outcomes[transition.to_outcome].name)
-                    cell_renderer.set_property('text-column', 1)
-                    cell_renderer.set_property('model', outcomes_store)
-            elif col == 'external_col':
-                # if transition.to_outcome is None:
-                #     cell_renderer.set_property('boolean', True)
-                # else:
-                #     print "to state outcomes: ", container_model.state.outcomes
-                cell_renderer.set_property('boolean', False)
+            t_id = model.get_value(iter, 0)
+            state = model.get_value(iter, 9)
+            in_external = 'internal'
+            if model.get_value(iter, 5):
+                in_external = 'external'
+            #print t_id, in_external, self.combo[in_external]
+            if column.get_title() == 'From-State':
+                cell_renderer.set_property("model", self.combo[in_external][t_id]['from_state'])
+                cell_renderer.set_property("text-column", 0)
+                cell_renderer.set_property("has-entry", False)
+            elif column.get_title() == 'From-Outcome':
+                cell_renderer.set_property("model", self.combo[in_external][t_id]['from_outcome'])
+                cell_renderer.set_property("text-column", 0)
+                cell_renderer.set_property("has-entry", False)
+            elif column.get_title() == 'To-State':
+                cell_renderer.set_property("model", self.combo[in_external][t_id]['to_state'])
+                cell_renderer.set_property("text-column", 0)
+                cell_renderer.set_property("has-entry", False)
+            elif column.get_title() == 'To-Outcome':
+                cell_renderer.set_property("model", self.combo[in_external][t_id]['to_outcome'])
+                cell_renderer.set_property("text-column", 0)
+                cell_renderer.set_property("has-entry", False)
+                #print "to_outcome: ", type(cell_renderer)
+                # find to outcome by from_outcome == model.state.state_id and from_outcome == outcome.name
             else:
-                logger.error("Unknown column '{col:s}' in TransitionListView".format(col=col))
+                print "not allowed", column.get_name(), column.get_title()
 
-        if isinstance(self.model.parent, StateModel):
-            import gobject
-            transition_list_store = ListStore(gobject.TYPE_PYOBJECT)
-            # if isinstance(self.model, ContainerStateModel):
-            #     transition_list_store.append(self.model.transition_list_store)
-            # transition_list_store.append(self.model.parent.transition_list_store)
-            # view.get_top_widget().set_model(transition_list_store)
-            if isinstance(self.model, ContainerStateModel):
-                view.get_top_widget().set_model(self.model.transition_list_store)
-        else:
-            if isinstance(self.model, ContainerStateModel):
-                view.get_top_widget().set_model(self.model.transition_list_store)
+        self.update_model()
 
         view['from_state_col'].set_cell_data_func(view['from_state_combo'], cell_text, self.model)
         view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
         view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text, self.model)
         view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text, self.model)
-        #view['external_col'].set_cell_data_func(view['external_toggle'], cell_text, self.model)
 
-        view['from_state_combo'].connect("edited", self.on_combo_changed)
-        view['from_outcome_combo'].connect("edited", self.on_combo_changed)
-        view['to_state_combo'].connect("edited", self.on_combo_changed)
-        view['to_outcome_combo'].connect("edited", self.on_combo_changed)
+        view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
+        view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
+        view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
+        view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
+
+        #view['external_toggle'].set_radio(True)
         view['external_toggle'].connect("toggled", self.on_external_toggled)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
 
-    def on_external_toggled(self, widget, path, text):
+    def on_external_toggled(self, widget, path):
+        logger.debug("Widget: {widget:s} - Path: {path:s}".format(widget=widget, path=path))
+
+        if widget.get_active():
+            print "change to INTERNAL ", path
+            #self.tree_store[path][5] = False
+        else:
+            print "change to EXTERNAL ", path
+            #self.tree_store[path][5] = True
+
+    def on_add(self, button, info=None):
+        print "add transition"
+        # type(self.combo['free_from_state_models']), self.combo['free_from_state_models'], '\n', self.combo['free_from_outcomes_dict']
+        if self.view_dict['transitions_internal'] and len(self.combo['free_from_outcomes_dict']) > 0:
+            from_state_id = self.combo['free_from_outcomes_dict'].keys()[0]
+            from_outcome = self.combo['free_from_outcomes_dict'][from_state_id][0].outcome_id
+            to_state_id = None  # self.model.state.state_id
+            to_outcome = self.model.state.outcomes.values()[0].outcome_id
+            print "NEW TRANSITION INTERNAL IS: ", from_state_id, from_outcome, to_state_id, to_outcome
+            transition_id = self.model.state.add_transition(from_state_id, from_outcome, to_state_id, to_outcome)
+            print "NEW TRANSITION INTERNAL IS: ", self.model.state.transitions[transition_id]
+
+        elif self.view_dict['transitions_external']:
+            from_state_id = self.model.state.state_id
+            from_outcome = self.model.state.outcomes.values()[0].outcome_id
+            to_state_id = None  # self.model.parent.state.state_id
+            to_outcome = self.model.parent.state.outcomes.values()[0].outcome_id
+            print "NEW TRANSITION EXTERNAL IS: ", from_state_id, from_outcome, to_state_id, to_outcome
+            transition_id = self.model.parent.state.add_transition(from_state_id, from_outcome, to_state_id, to_outcome)
+            print "NEW TRANSITION EXTERNAL IS: ", self.model.parent.state.transitions[transition_id]
+        else:
+            print "NO OPTION TO ADD TRANSITION"
+
+    def on_remove(self, button, info=None):
+        print "remove transition"
+        tree, path = self.view.tree_view.get_selection().get_selected_rows()
+        print path, tree
+        if path:
+            print "Transition: ", self.tree_store[path[0][0]][0]
+            transition_id = self.tree_store[path[0][0]][0]
+            if self.tree_store[path[0][0]][5]:
+                print self.model.parent.state.transitions
+                self.model.parent.state.remove_transition(int(transition_id))
+            else:
+                self.model.state.remove_transition(int(transition_id))
+
+    def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        #self.combo['free_from_outcomes_dict']
+        text = text.split('.')
+        t_id = self.tree_store[path][0]
+        t = self.tree_store[path][8]
+        fs = t.from_state
+        ts = t.to_state
+        to = t.to_outcome
+        if self.tree_store[path][5]:  # external
+            fo = self.combo['free_ext_from_outcomes_dict'][text[-1]][0].outcome_id
+            self.model.parent.state.remove_transition(t_id)
+            self.model.parent.state.add_transition(text[-1], fo, ts, to, transition_id=t_id)
+        else:
+            fo = self.combo['free_from_outcomes_dict'][text[-1]][0].outcome_id
+            self.model.state.remove_transition(t_id)
+            self.model.state.add_transition(text[-1], fo, ts, to, transition_id=t_id)
 
-
-    def get_state_combos(self, state):
-        states_store = ListStore(str, str)
-        states_store.append([container_model.state.state_id, container_model.state.name])
-        for state_model in container_model.states.itervalues():
-            print "model: ", [state_model.state.state_id, state_model.state.name]
-            states_store.append([state_model.state.state_id, state_model.state.name])
-
-    def get_outcome_combos(self, state, outcomes_store):
-        print "state name: ", state.name
-        print "from state outcomes: ", state.outcomes
-        for outcome in state.outcomes.itervalues():
-            print "outcome: ", outcome
-            print "model: ", [state.state_id, outcome.name]
-            outcomes_store.append([state.state_id, outcome.name])
-        print "final store: ", outcomes_store
-        return outcomes_store
-
-    def on_combo_changed(self, widget, path, text):
+    def on_combo_changed_from_outcome(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-        #liststore[path][2]
+        text = text.split('.')
+        t_id = self.tree_store[path][0]
+        t = self.tree_store[path][8]
+        fs = t.from_state
+        fo = t.from_outcome
+        ts = t.to_state
+        to = t.to_outcome
+        if self.tree_store[path][5]:  # external
+            self.model.parent.state.remove_transition(t_id)
+            self.model.parent.state.add_transition(fs, int(text[-1]), ts, to, transition_id=t_id)
+        else:
+            self.model.state.remove_transition(t_id)
+            self.model.state.add_transition(fs, int(text[-1]), ts, to, transition_id=t_id)
 
-import gtk
-import gobject
-import traceback
-import sys
-#===========================================================
-#                   Mask Edit View
-#===========================================================
-class MaskEditView(gtk.VBox):
+    def on_combo_changed_to_state(self, widget, path, text):
+        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        #self.combo['free_ext_from_outcomes_dict']
+        text = text.split('.')
+        t_id = self.tree_store[path][0]
+        t = self.tree_store[path][8]
+        fs = t.from_state
+        fo = t.from_outcome
+        if self.tree_store[path][5]:  # external
+            self.model.parent.state.remove_transition(t_id)
+            self.model.parent.state.add_transition(fs, fo, to_state_id=text[-1], transition_id=t_id)
+        else:
+            self.model.state.remove_transition(t_id)
+            self.model.state.add_transition(fs, fo, to_state_id=text[-1], transition_id=t_id)
 
-    def __init__(self, mask, libmode=False):
-        gtk.VBox.__init__(self)
-        self.tree = MaskEditTree(mask, libmode)
+    def on_combo_changed_to_outcome(self, widget, path, text):
+        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        text = text.split('.')
+        t_id = self.tree_store[path][0]
+        t = self.tree_store[path][8]
+        fs = t.from_state
+        fo = t.from_outcome
+        if self.tree_store[path][5]:  # external
+            self.model.parent.state.remove_transition(t_id)
+            self.model.parent.state.add_transition(fs, fo, to_outcome=int(text[-1]), transition_id=t_id)
+        else:
+            self.model.state.remove_transition(t_id)
+            self.model.state.add_transition(fs, fo, to_outcome=int(text[-1]), transition_id=t_id)
 
-        self.add_button = gtk.Button('Add')
-        self.add_button.connect("clicked", self.tree.on_add)
+    def get_free_state_combos_for_transition(self, trans, model, self_model, external=False):
+        from_state_combo = gtk.ListStore(str)
+        from_outcome_combo = gtk.ListStore(str)
+        to_state_combo = gtk.ListStore(str)
+        to_outcome_combo = gtk.ListStore(str)
 
-        self.remove_button = gtk.Button('Remove')
-        self.remove_button.connect("clicked", self.tree.on_remove)
+        trans_dict = model.state.transitions
 
-        self.adv_button = gtk.Button('Advanced view')
-        self.adv_button.connect("clicked", self.tree.on_adv)
+        # for from-outcome-combo filter all outcome already used
+        from_state = model.states[trans.from_state].state
+        free_from_outcomes_dict = {}
+        for state_model in model.states.values():
+            from_o_combo = state_model.state.outcomes.values()
+            #print from_o_combo
 
-        self.Hbox = gtk.HButtonBox()
-        self.Hbox.add(self.add_button)
-        self.Hbox.add(self.remove_button)
-        self.Hbox.add(self.adv_button)
+            #print [o.outcome_id for o in from_o_combo], state_model.state.state_id
+            for transition in trans_dict.values():
 
-        self.pack_start(self.Hbox, expand=False, fill=True)
+                #print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
+                from_o_combo = filter(lambda o: not (o.outcome_id == transition.from_outcome and
+                                                transition.from_state == state_model.state.state_id), from_o_combo)
 
-        scrollable = gtk.ScrolledWindow()
-        scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrollable.add(self.tree)
+                #print [o.outcome_id for o in from_o_combo]
+            if len(from_o_combo) > 0:
+                free_from_outcomes_dict[state_model.state.state_id] = from_o_combo
 
-        self.add(scrollable)
-        self.show_all()
+        #print "free outcomes: ", free_from_outcomes_dict
+        # for state_id in free_from_outcomes_dict.keys():
+        #     if not state_id == trans.to_state:
+        #         for outcome in free_from_outcomes_dict[state_id]:
+        #             state = model.states[state_id].state
+        #             if state_id == self_model.state.state_id:
+        #                 from_outcome_combo.append(["self." + outcome.name + "." + str(outcome.outcome_id)])
+        #             else:
+        #                 from_outcome_combo.append([state.name + "." + outcome.name + "." + str(outcome.outcome_id)])
+        for outcome in free_from_outcomes_dict[from_state.state_id]:
+            state = model.states[from_state.state_id].state
+            if from_state.state_id == self_model.state.state_id:
+                from_outcome_combo.append(["self." + outcome.name + "." + str(outcome.outcome_id)])
+            else:
+                from_outcome_combo.append([state.name + "." + outcome.name + "." + str(outcome.outcome_id)])
 
-#===========================================================
-#                   Mask Edit View
-#===========================================================
-class MaskEditTree(gtk.TreeView):
-    '''
-    @brief Used for the tab where the user can edit the library mask of a bubble.
-    '''
+        # for from-state-combo us all states with free outcomes and from_state
+        #print "model.states: ", model.states, free_from_outcomes_dict
+        free_from_state_models = filter(lambda smodel: smodel.state.state_id in free_from_outcomes_dict.keys(), model.states.values())
+        if not from_state.state_id in free_from_outcomes_dict.keys():
+            if from_state.state_id == self_model.state.state_id:
+                from_state_combo.append(['self.' + from_state.state_id])
+            else:
+                from_state_combo.append([from_state.name + '.' + from_state.state_id])
+        for state_model in free_from_state_models:
+            if state_model.state.state_id == self_model.state.state_id:
+                from_state_combo.append(['self.' + state_model.state.state_id])
+            else:
+                from_state_combo.append([state_model.state.name + '.' + state_model.state.state_id])
 
-    #===============================================================
-    def __init__(self, mask, libmode=False):
-        '''
-        @brief constructor
-        @param mask mask of the bubble that is edited
-        @param libmode Library or not.
-            - if it is a library, every field are editable
-            - otherwise, just the value is editable
-        '''
-        gtk.TreeView.__init__(self)
-        self.libmode = libmode
-        #self.type_list = ['num', 'list', 'text']
-        self.type_list = ['text'] # this is only temporarily to make it more stable
-        self.typecombo = gtk.ListStore(gobject.TYPE_STRING)
-        self.mask = mask
+        # for to-state-combo  filter self state
+        to_state_models = filter(lambda s: not s.state.state_id == trans.from_state, model.states.values())
+        for state_model in to_state_models:
+            if state_model.state.state_id == self_model.state.state_id:
+                to_state_combo.append(["self." + state_model.state.state_id])
+            else:
+                to_state_combo.append([state_model.state.name + '.' + state_model.state.state_id])
 
-        self.set_search_column(0)
-        self.set_reorderable(True)
+        # for to-outcome-combo use parent combos
+        to_outcome = model.state.outcomes.values()
+        for outcome in to_outcome:
+            if external:
+                to_outcome_combo.append(['parent.' + outcome.name + "." + str(outcome.outcome_id)])
+            else:
+                to_outcome_combo.append(['self.' + outcome.name + "." + str(outcome.outcome_id)])
 
+        return from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict
 
-        for x in self.type_list :
-            self.typecombo.append([x])
+    def update_transitions_store(self):
+        from mvc.models import TransitionModel
+        print "update store"
 
-        self.treestore = gtk.TreeStore(str, str, str, str, str)
-        self.set_model(self.treestore)
+        def update_transition_list_store(model):
+            model.transitions = []
+            model.transition_list_store.clear()
+            for transition in model.state.transitions.values():
+                model.transitions.append(TransitionModel(transition, model))
+                print "insert: ", transition
+                model.transition_list_store.append([transition])
 
-        # Variable name
-        self.name_cell = gtk.CellRendererText()
-        self.name_cell.set_property("width-chars", 15)
-        self.name_cell.set_property("editable", True)
-        self.name_cell.connect('edited', self.on_name_modification)
-        name_col = gtk.TreeViewColumn('Name', self.name_cell, text=0, background=3)
-        self.append_column(name_col)
+        if hasattr(self.model, 'transitions'):
+            print "CLEAN"
+            update_transition_list_store(self.model)
 
-        # Variable Type
-        self.type_cell = gtk.CellRendererCombo()
-        self.type_cell.set_property("model", self.typecombo)
-        self.type_cell.set_property("text-column", 0)
-        self.type_cell.set_property("width", 60)
-        self.type_cell.connect('edited', self.on_type_modification)
-        type_col = gtk.TreeViewColumn('Type', self.type_cell, text=1, background=3)
-        self.append_column(type_col)
+        if hasattr(self.model, 'parent') and self.model.parent is not None:
+            print "CLEAN"
+            update_transition_list_store(self.model.parent)
 
-        # Variable Value
-        self.val_cell = gtk.CellRendererText()
-        self.val_cell.set_property("editable", True)
-        self.val_cell.connect('edited', self.on_val_modification)
-        self.val_col = gtk.TreeViewColumn('Value', self.val_cell, text=2, background=4)
-        self.append_column(self.val_col)
+    def update_stores(self):
 
-        self.set_libmode(libmode)
-        self.connect("drag_data_received", self.drag_data_received_data)
+        self.update_transitions_store()
+        model = self.model
 
-        self.update()
+        print "clean stores"
 
-    def drag_data_received_data(self, treeview, context, x, y, selection, info, etime):
-        self.update_path()
+        ### FOR COMBOS
+        # internal transitions
+        # - take all internal states
+        # - take all not used internal outcomes of this states
 
-    def update_path(self, top=None) :
-        if top == None :
-            next = self.treestore.get_iter_first()
-        else :
-            next = self.treestore.iter_children(top)
-        while next :
-            name, size = self.treestore.get(next, 0, 1)
-            path = self.treestore.get_path(next)
-            for item in self.mask.tree :
-                if item[0] == name and item[2] == (size == None) :
-                    self.mask.tree.tree.remove(item)
-                    self.mask.tree.tree.append((name, path, (size == None)))
+        # external transitions
+        # - take all external states
+        # - take all external outcomes
+        # - take all not used own outcomes
 
-            self.update_path(next)
-            next = self.treestore.iter_next(next)
+        ### LINKING
+        # internal  -> from_state -> outcome combos
+        #           -> to
+        # external -> state -> outcome combos
+        self.combo['internal'] = {}
+        self.combo['external'] = {}
 
-    def set_libmode(self, bool) :
-        '''
-        @brief Change libmode and set the field editable accordingly
-        '''
-        self.libmode = bool
-        self.type_cell.set_property("editable", bool)
-        if bool :
-            self.val_col.set_property("title", "Default Value")
-        else :
-            self.val_col.set_property("title", "Value")
-        return
+        if hasattr(model.state, 'transitions'):
+            # check for internal combos
+            for transition_id, transition in model.state.transitions.items():
+                self.combo['internal'][transition_id] = {}
 
-    def on_add(self, widget) :
-        name = 'Unknown 0'
-        i = 0
-        while name in [x[0] for x in self.mask.tree.cat(True)] :
-            i += 1
-            name = name[:-1] + str(i)
-        self.mask.tree.add_to_tree(name, True)
-        self.treestore.append(None, [name, None, None, '#f0E5C7', '#f0E5c7'])
-        self.update_path()
+                [from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict] = \
+                    self.get_free_state_combos_for_transition(transition, self.model, self.model)
+                print transition
 
-    def on_remove(self, widget) :
-        self.update_path()
-        tree, path = self.get_selection().get_selected_rows()
-        tree, iter = self.get_selection().get_selected()
-        for p in path :
-            for item in self.mask.tree :
-                if p == item[1] :
-                    #parent = self.treestore.get_iter(p)
-                    #gp = self.treestore.iter_parent(parent)
-                    #children = self.treestore.iter_n_children(parent)
-                    #for i in range(children) :
-                        #child = self.treestore.iter_nth_child(parent,i)
-                        #row = []
-                        #for col in range(self.treestore.get_n_columns()) :
-                            #row.append(self.treestore.get(child,col)[0])
-                        #self.treestore.insert_before(gp,parent,row)
-                        #self.treestore.remove(child)
-                    #self.treestore.remove(parent)
+                self.combo['internal'][transition_id]['from_state'] = from_state_combo
+                self.combo['internal'][transition_id]['from_outcome'] = from_outcome_combo
+                self.combo['internal'][transition_id]['to_state'] = to_state_combo
+                self.combo['internal'][transition_id]['to_outcome'] = to_outcome_combo
 
-                    if item[2] == False :
-                        continue
-                    else :
-                        self.mask.tree.rem_from_tree(item[0], item[2])
-        #self.mask.tree.tree_sort()
-        self.update(update_path=False)
+                self.combo['free_from_state_models'] = free_from_state_models
+                self.combo['free_from_outcomes_dict'] = free_from_outcomes_dict
+                print "FREE: ", self.combo['free_from_outcomes_dict'].keys(), self.combo['free_from_outcomes_dict']
 
-    def on_adv(self, widget) :
-        tree, path = self.get_selection().get_selected_rows()
-        tree, iter = self.get_selection().get_selected()
-        # for p in path :
-        #     for item in self.mask.tree :
-        #         if p == item[1] and item[2] == False :
-        #             it = self.mask.get_var(item[0])
-        #             alt = MaskAdvancedView(it, self.libmode)
-        #             self.mask.set_var(item[0], alt.entry)
-        # self.update()
+        if hasattr(model, 'parent') and self.model.parent is not None:
+            # check for internal combos
+            for transition_id, transition in model.parent.state.transitions.items():
+                if transition.from_state == model.state.state_id or transition.to_state == model.state.state_id:
+                    self.combo['external'][transition_id] = {}
 
-    def on_name_modification(self, cell, path, text):
-        title = self.treestore[path][0]
-        for i, item in enumerate(self.mask.tree) :
-            if item[0] == title and item[2] == True :
-                self.mask.tree[i] = (text, item[1], item[2])
-                self.treestore[path][0] = text
-                self.treestore.set_value(self.treestore.get_iter(path), 0, text)
-                break
+                    [from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict] = \
+                        self.get_free_state_combos_for_transition(transition, self.model.parent, self.model, True)
+                    print transition
 
-    #===============================================================
-    def update(self, update_path=True):
-        '''
-        @brief Fill the mask treeview
-        the last two fields are for the cell background.
-        the 5th for the backgd of name, size and type
-        the 6th for value
-        '''
-        if update_path :
-            self.update_path()
-        self.treestore.clear()
-        dic = {}
-        self.mask.tree.tree_sort()
-        for item in self.mask.tree :
-            if len(item[1]) == 1 :
-                parent = None
-            else :
-                parent = dic[item[1][:-1]]
+                    self.combo['external'][transition_id]['from_state'] = from_state_combo
+                    self.combo['external'][transition_id]['from_outcome'] = from_outcome_combo
+                    self.combo['external'][transition_id]['to_state'] = to_state_combo
+                    self.combo['external'][transition_id]['to_outcome'] = to_outcome_combo
 
-            if item[2] == True :
-                dic[item[1]] = self.treestore.append(parent, [item[0], None, None, '#f0E5C7', '#f0E5c7'])
-            else :
-                for vals in self.mask.item :
-                    if vals.name == item[0] :
-                        val = vals
-                if self.libmode or val.val == None :
-                    dic[item[1]] = self.treestore.append(parent, [val.name, val.type, str(val.defval), 'white', '#99FF99'])
-                else :
-                    dic[item[1]] = self.treestore.append(parent, [val.name, val.type, str(val.val), 'white', 'white'])
+                    self.combo['free_ext_from_state_models'] = free_from_state_models
+                    self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
-    def convert_path(self, p_str) :
-        res = (int(p_str[0]),)
-        for i in p_str[1:] :
-            if i != ':' :
-                res += (int(i),)
-        return res
+        # print "to_state: ", self.list_to_other_state
+        # print "to_outcome: ", self.list_to_other_outcome
+        # print "from state: ", self.list_from_other_state
+        print "state.name: ", self.model.state.name
 
+    def update_model(self):
 
-    #===============================================================
-    def on_type_modification(self, cell, path, text) :
-        path = self.convert_path(path)
-        self.update_path()
-        item = self.mask.get_var_i(path)
-        item.type = text
-        if text == 'list' :
-            item.defval = [0]
-        else :
-            item.defval = 0
-        item.val = None
+        self.tree_store.clear()
+        if self.view_dict['transitions_internal'] and len(self.model.state.transitions) > 0:
+            for transition_id in self.combo['internal'].keys():
+                print "TRANSITION_ID: ", transition_id, self.model.state.transitions
+                t = self.model.state.transitions[transition_id]
+                from_state = self.model.states[t.from_state].state
 
-        self.treestore.set_value(self.treestore.get_iter(path), 1, text)
+                if t.to_state is None:
+                    to_state_label = None
+                    to_outcome_label = 'self.' + self.model.state.outcomes[t.to_outcome].name + "." + str(t.to_outcome)
+                else:
+                    print t.to_state, self.model.states
+                    if t.to_state == self.model.state.state_id:
+                        to_state_label = "self." + self.model.state.name + "." + t.to_state
+                    else:
+                        to_state_label = self.model.states[t.to_state].state.name + "." + t.to_state
+                    to_outcome_label = None
 
-    #===============================================================
-    def on_val_modification(self, cell, path, text):
-        logger.debug('on_val_modification()')
+                #print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
 
-        model = self.get_model()
-        name = model.get_value(model.get_iter(path), 0)
+                # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
+    #                   name-color, to-state-color, transition-object, state-object, is_editable
+                self.tree_store.append(None, [transition_id,  # id
+                                              from_state.name + "." + from_state.state_id,  # from-state
+                                              from_state.outcomes[t.from_outcome].name + "." + str(t.from_outcome),  # from-outcome
+                                              to_state_label,  # to-state
+                                              to_outcome_label,  # to-outcome
+                                              False,  # is_external
+                                              '#f0E5C7', '#f0E5c7', t, self.model.state, True])
 
-        path = self.convert_path(path)
-        self.update_path()
-        error = []
+        if self.view_dict['transitions_external'] and len(self.model.parent.state.transitions) > 0:
+            for transition_id in self.combo['external'].keys():
+                print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
+                t = self.model.parent.state.transitions[transition_id]
+                from_state = self.model.parent.states[t.from_state].state
 
-        val = 0
+                if from_state.state_id == self.model.state.state_id:
+                    from_state_label = "self." + from_state.name + "." + from_state.state_id
+                    from_outcome_label = "self." + from_state.outcomes[t.from_outcome].name + "." + str(t.from_outcome)
+                else:
+                    from_state_label = from_state.name + "." + from_state.state_id
+                    from_outcome_label = from_state.outcomes[t.from_outcome].name + "." + str(t.from_outcome)
 
-        def mod_tree_val(text, item, error) :
-            if self.libmode or text == None :
-                if error :
-                    self.treestore.set_value(self.treestore.get_iter(path), 2, str(item.defval))
-                    self.treestore.set_value(self.treestore.get_iter(path), 4, 'red')
-                else :
-                    self.treestore.set_value(self.treestore.get_iter(path), 2, text)
-                    self.treestore.set_value(self.treestore.get_iter(path), 4, '#99FF99')
-            else :
-                if error :
-                    self.treestore.set_value(self.treestore.get_iter(path), 2, str(item.val))
-                    self.treestore.set_value(self.treestore.get_iter(path), 4, 'red')
-                else :
-                    self.treestore.set_value(self.treestore.get_iter(path), 2, text)
-                    self.treestore.set_value(self.treestore.get_iter(path), 4, 'white')
+                if t.to_state is None:
+                    to_state_label = 'parent'
+                    to_outcome_label = self.model.parent.state.outcomes[t.to_outcome].name + "." + str(t.to_outcome)
+                else:
+                    if t.to_state == self.model.state.state_id:
+                        to_state_label = "self." + self.model.state.name + "." + t.to_state
+                    else:
+                        to_state_label = self.model.parent.states[t.to_state].state.name + "." + t.to_state
+                    to_outcome_label = None
 
+                #print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
 
-        #When no text is entered, set the value to None,
-        #In this case, the default value is used instead.
-        if text == '' :
-            item = self.mask.get_var(name)
-            if item:
-                item.set_val(None)
+                # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
+    #                   name-color, to-state-color, transition-object, state-object, is_editable
+                self.tree_store.append(None, [transition_id,  # id
+                                              from_state_label,  # from-state
+                                              from_outcome_label,  # from-outcome
+                                              to_state_label,  # to-state
+                                              to_outcome_label,  # to-outcome
+                                              True,  # is_external
+                                              '#f0E5C7', '#f0E5c7', t, self.model.state, True])
 
-        else :
-            item = self.mask.get_var(name)
-            if not item :
-                print "Element %r Not Found in %r" % (path, self.mask.tree.tree)
-                return
-            if item.type == 'num' :
-                try :
-                    val = eval(text)
-                    if type(val) in [int, long, float, complex] :
-                        if item.test_val(val) :
-                            item.set_val(val, self.libmode)
-                            mod_tree_val(text, item, False)
-                        else :
-                            print "Error : invalid value"
-                            mod_tree_val(text, item, True)
-                    else :
-                        print "Error : invalid type"
-                        mod_tree_val(text, item, True)
-                except :
-                    print "Error in the given value", traceback.format_exc()#sys.exc_info()[0]
-                    mod_tree_val(text, item, True)
-
-
-            elif item.type == 'list' :
-                try :
-                    val = eval(text)
-                    if type(val) in [list, tuple] :
-                        if not item.test_size(len(val)) :
-                            print "Error, the list entered is not of the given size"
-                            error.append(path)
-                            mod_tree_val(text, item, True)
-                        else :
-                            item.set_val(val, self.libmode)
-                            mod_tree_val(text, item, False)
-                    else :
-                        print "Error : invalid type"
-                        error.append(path)
-                        mod_tree_val(text, item, True)
-                except :
-                    print "Error in the given value", sys.exc_info()[0]
-                    error.append(path)
-                    mod_tree_val(text, item, True)
-
-            else :
-                item.set_val(text, self.libmode)
-                mod_tree_val(text, item, False)
-
-        #self.update()
+    @Controller.observe("state", after=True)
+    def assign_notification_parent_state(self, model, prop_name, info):
+        print "transition_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
+              (prop_name, info.instance, info.method_name, info.result)
+        if info.method_name in ["add_outcome", "remove_outcome", "add_transition", "remove_transition",
+                                "modify_outcome_name"]:
+            self.update_stores()
+            self.update_model()

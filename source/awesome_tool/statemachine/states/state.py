@@ -317,6 +317,17 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
                     return op_id
             raise AttributeError("Name %s is not in output_data_ports", name)
 
+    def get_data_port_by_id(self, id):
+        """ Returns the io-data_port or scoped_variable with a certain id
+        :param port_id:
+        :return:
+        """
+        if id in self.input_data_ports:
+            return self.input_data_ports[id]
+        elif id in self.output_data_ports:
+            return self.output_data_ports[id]
+        else:
+            raise AttributeError("Data_Port_id %s is not in input_data_ports or output_data_ports", id)
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
@@ -334,7 +345,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
         if outcome_id in self.__used_outcome_ids:
             logger.error("Two outcomes cannot have the same outcome_ids")
             return
-        outcome = Outcome(outcome_id, name)
+        outcome = Outcome(outcome_id, name, self.modify_outcome_name)
         self._outcomes[outcome_id] = outcome
         self.__used_outcome_ids.append(outcome_id)
         return outcome_id
@@ -364,6 +375,27 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
 
         for transition_id in transition_ids_to_remove:
             del self.parent.transitions[transition_id]
+
+    @Observable.observed
+    def modify_outcome_name(self, name, outcome_id):
+        print "check outcome_name: %s of outcome_id %s" % (name, outcome_id)
+
+        def define_unique_name(name, dict_of_names, count=0):
+            count += 1
+            if name + str(count) in dict_of_names.values():
+                count = define_unique_name(name, dict_of_names, count)
+            return count
+
+        dict_of_names = {}
+        for o_id, outcome in self._outcomes.items():
+            dict_of_names[o_id] = outcome.name
+        print dict_of_names
+
+        if outcome_id in self._outcomes.keys() and self._outcomes[outcome_id].name == name:
+            name = self._outcomes[outcome_id].name
+        elif name in dict_of_names.values():
+            name += str(define_unique_name(name, dict_of_names))
+        return name
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`

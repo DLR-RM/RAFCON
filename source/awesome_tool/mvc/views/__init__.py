@@ -11,6 +11,8 @@ from scoped_variables_list import ScopedVariablesListView
 from global_variable_editor import GlobalVariableEditorView
 from external_module_manager import ExternalModuleManagerView, ExternalModuleManagerWindowView
 from state_overview import StateOverviewView
+from state_outcomes import StateOutcomesTreeView
+from state_outcomes import StateOutcomesEditorView
 from source_editor import SourceEditorView
 from connections_editor import StateConnectionsEditorView
 from logging_view import LoggingView

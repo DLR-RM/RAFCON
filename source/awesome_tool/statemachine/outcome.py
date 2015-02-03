@@ -28,12 +28,14 @@ class Outcome(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Outcome'
 
-    def __init__(self, outcome_id=None, name=None):
+    def __init__(self, outcome_id=None, name=None, check_name_func_handle=None):
 
         Observable.__init__(self)
 
         self._outcome_id = None
         self.outcome_id = outcome_id
+
+        self.check_name = check_name_func_handle
 
         self._name = None
         self.name = name
@@ -91,5 +93,6 @@ class Outcome(Observable, yaml.YAMLObject):
         if not isinstance(name, str):
             raise TypeError("name must be of type str")
 
-        self._name = name
+        if self.check_name is not None:
+            self._name = self.check_name(name, self.outcome_id)
 

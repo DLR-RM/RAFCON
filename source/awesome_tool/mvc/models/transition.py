@@ -37,5 +37,7 @@ class TransitionModel(ModelMT):
 
     @ModelMT.observe("transition", before=True, after=True)
     def model_changed(self, model, name, info):
+
         if self.parent is not None:
+            print "TRANSITION_MODEL_CHANGED", model, name, info
             self.parent.model_changed(model, name, info)
