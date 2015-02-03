@@ -145,7 +145,7 @@ StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTI
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 
 
-class State(threading.Thread, Observable, yaml.YAMLObject):
+class State(threading.Thread, Observable, yaml.YAMLObject, object):
 
     """A class for representing a state in the state machine
 

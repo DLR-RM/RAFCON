@@ -23,7 +23,7 @@ from statemachine.config import *
 from statemachine.validity_check.validity_checker import ValidityChecker
 
 
-class ContainerState(State, Observable):
+class ContainerState(State):
 
     """A class for representing a state in the statemachine
 
@@ -218,7 +218,7 @@ class ContainerState(State, Observable):
 
         # check if state is a concurrency state, in concurrency states only transitions to the parents are allowd
         if self.state_type is StateType.BARRIER_CONCURRENCY or self.state_type is StateType.PREEMPTION_CONCURRENCY:
-            if not to_state_id is self.state_id:
+            if not to_state_id is None:  # None means that the target state is the containing state
                 raise AttributeError("In concurrency states the to_state must be the container state itself")
 
         # finally add transition

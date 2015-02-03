@@ -34,7 +34,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
         ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, states,
                                 transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
-                                state_type = StateType.HIERARCHY)
+                                state_type=StateType.HIERARCHY)
 
     # the input_data and output_data comes in with a mapping from names to values,
     # to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
