@@ -22,8 +22,6 @@ class GraphicalEditorController(Controller):
     :param mvc.views.GraphicalEditorView view: The GTK view having an OpenGL rendering element
     """
 
-    max_depth = 2
-
     def __init__(self, model, view):
         """Constructor
         """
@@ -601,7 +599,7 @@ class GraphicalEditorController(Controller):
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
-        if isinstance(state, ContainerStateModel) and depth < self.max_depth:
+        if isinstance(state, ContainerStateModel):
 
             state_ctr = 0
             margin = width / float(25)
@@ -618,7 +616,7 @@ class GraphicalEditorController(Controller):
                 child_pos_y = pos_y + height - child_height - state_ctr * margin
 
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
-                                depth + (1.0 / len(state.states)) + 0.5)
+                                depth + 1)
 
             for transition in state.transitions:
                 # Get id and references to the from and to state
