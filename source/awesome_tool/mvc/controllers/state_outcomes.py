@@ -157,30 +157,11 @@ class StateOutcomesListController(Controller):
     def on_remove(self, button, info=None):
         # print "remove outcome"
         # print self.model.state.outcomes
-        # self.update_path()
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
         #print path, tree
         tree, iter = self.view.tree_view.get_selection().get_selected()
         if path and not self.tree_store[path[0][0]][6].outcome_id < 0:
             outcome_id = self.tree_store[path[0][0]][6].outcome_id
-            if outcome_id in self.list_to_other_outcome:
-                elem = self.list_to_other_outcome[outcome_id]
-                transition = self.model.parent.state.transitions[elem[2]]  # transition by transition_id
-                # print "remove_to_other_outcome: ", elem[2], transition.transition_id, self.model.parent.state.name, \
-                #     transition.to_outcome, transition.to_state, transition.to_outcome, transition.to_state
-                self.model.parent.state.remove_transition(transition.transition_id)
-            if outcome_id in self.list_to_other_state:
-                elem = self.list_to_other_state[outcome_id]
-                transition = self.model.parent.state.transitions[elem[2]]  # transition by transition_id
-                # print "remove_to_other_state: ", elem[2], transition.transition_id, self.model.parent.state.name, \
-                #     transition.from_outcome, transition.from_state, transition.to_outcome, transition.to_state
-                self.model.parent.state.remove_transition(transition.transition_id)
-            if outcome_id in self.list_from_other_state:
-                for elem in self.list_from_other_state[outcome_id]:
-                    transition = self.model.state.transitions[elem[2]]  # transition by transition_id
-                    # print "remove_from_other_state: ", elem[2], transition.transition_id, self.model.state.name, \
-                    #     transition.to_outcome, transition.to_state
-                    self.model.state.remove_transition(transition.transition_id)
 
             self.model.state.remove_outcome(outcome_id)
             # print path, parent, tree, iter

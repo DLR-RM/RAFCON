@@ -155,7 +155,7 @@ if __name__ == '__main__':
     logging_view = LoggingView()
     setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
-    this_model = filter(lambda model: model.state.name == 'State1', ctr_model.states.values()).pop()
+    this_model = filter(lambda model: model.state.name == 'State3', ctr_model.states.values()).pop()
 
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(ctr_model, main_window_view, emm_model, gvm_model)
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     # #state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
 
     # state_editor_view = SingleWidgetWindowView(StateEditorEggView, width=550, height=500, title='Source Editor')
-    # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorEggController)
+    # state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorEggController)
 
     # state_editor_view = SingleWidgetWindowView(StateEditorLDView, width=550, height=500, title='Source Editor')
     # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorLDController)
