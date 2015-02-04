@@ -300,7 +300,7 @@ class StateDataFlowsListController(Controller):
             self.update_model()
 
 
-def get_key_combos(ports, keys_store, port_type):
+def get_key_combos(ports, keys_store, port_type, not_key=None):
 
     if (port_type == "input_port" or port_type == "output_port") and not type(ports) is list:
         for key in ports.keys():
@@ -409,27 +409,28 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             from_keys_store = ListStore(str)
             if model.state.state_id == data_flow.from_state:
                 # print "input_ports", model.state.input_data_ports
-                get_key_combos(model.state.input_data_ports, from_keys_store, 'input_port')
+                get_key_combos(model.state.input_data_ports, from_keys_store, 'input_port', data_flow.to_key)
                 # print type(model)
                 if hasattr(model, 'states'):
-                    # print "scoped_variables", model.scoped_variables
-                    get_key_combos(model.scoped_variables, from_keys_store, 'scoped_variable')
+                    # print "scoped_variables", model.state.scoped_variables
+                    get_key_combos(model.state.scoped_variables, from_keys_store, 'scoped_variable', data_flow.to_key)
             else:
                 # print "output_ports", model.states[data_flow.from_state].state.output_data_ports
                 get_key_combos(model.states[data_flow.from_state].state.output_data_ports,
-                               from_keys_store, 'output_port')
+                               from_keys_store, 'output_port', data_flow.to_key)
 
             to_keys_store = ListStore(str)
             if model.state.state_id == data_flow.to_state:
                 # print "output_ports", model.state.output_data_ports
-                get_key_combos(model.state.output_data_ports, to_keys_store, 'output_port')
+                get_key_combos(model.state.output_data_ports, to_keys_store, 'output_port', data_flow.from_key)
                 # print type(model)
                 if hasattr(model, 'states'):
-                    # print "scoped_variables", model.scoped_variables
-                    get_key_combos(model.scoped_variables, to_keys_store, 'scoped_variable')
+                    # print "scoped_variables", model.state.scoped_variables
+                    get_key_combos(model.state.scoped_variables, to_keys_store, 'scoped_variable', data_flow.from_key)
             else:
                 # print "input_ports", model.states[data_flow.to_state].state.input_data_ports
-                get_key_combos(model.states[data_flow.to_state].state.input_data_ports, to_keys_store, 'input_port')
+                get_key_combos(model.states[data_flow.to_state].state.input_data_ports
+                               , to_keys_store, 'input_port', data_flow.from_key)
             tree_dict_combos['internal'][data_flow.data_flow_id] = {'from_state': from_states_store,
                                                                     'from_key': from_keys_store,
                                                                     'to_state': to_states_store,
@@ -504,10 +505,10 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                 if model.state.state_id == data_flow.from_state:
                     # print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
                     get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
-                                   from_keys_store, 'output_port')
+                                   from_keys_store, 'output_port', data_flow.to_key)
                 else:
                     #get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
-                    #               from_keys_store, 'output_port')
+                    #               from_keys_store, 'output_port', data_flow.from_key)
                     pass
 
                 # all states and parent-state
@@ -527,12 +528,14 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                 if data_flow.to_state in free_to_port_external:
                     for port in free_to_port_external[data_flow.to_state]:
                         to_state = get_state_model(model.parent, data_flow.to_state).state
-                        to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
+                        if not port.data_port_id == data_flow.from_key:
+                            to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
                 else:
                     if get_state_model(model.parent, data_flow.to_state):
                         to_state_model = get_state_model(model.parent, data_flow.to_state)
                         port = to_state_model.state.get_data_port_by_id(data_flow.to_key)
-                        to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
+                        if not port.data_port_id == data_flow.from_key:
+                            to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
 
                 tree_dict_combos['external'][data_flow.data_flow_id] = {'from_state': from_states_store,
                                                                         'from_key': from_keys_store,

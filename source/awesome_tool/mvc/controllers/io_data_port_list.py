@@ -14,6 +14,8 @@ class DataPortListController(Controller):
         self.state_dataport_dict = None
         self.dataport_list_store = None
 
+        self.new_port_counter = 0
+
         if self.type == "input":
             self.state_dataport_dict = self.model.state.input_data_ports
             self.dataport_list_store = self.model.input_data_port_list_store
@@ -91,6 +93,35 @@ class DataPortListController(Controller):
             self.model.state.add_output_data_port(text, old_data_port.data_type, old_data_port.default_value)
             self.dataport_list_store = self.model.output_data_port_list_store
             self.view.get_top_widget().set_model(self.model.output_data_port_list_store)
+
+    #new buttons
+    def on_new_input_port_button_clicked(self, widget, data=None):
+        new_iport_name = "a_new_intput_port%s" % str(self.new_port_counter)
+        self.new_port_counter += 1
+        self.model.state.add_input_data_port(new_iport_name, "str", "val")
+
+    def on_new_output_port_button_clicked(self, widget, data=None):
+        new_oport_name = "a_new_output_port%s" % str(self.new_port_counter)
+        self.new_port_counter += 1
+        self.model.state.add_output_data_port(new_oport_name, "str", "val")
+
+    def on_delete_output_port_button_clicked(self, widget, data=None):
+        tree_view = self.view["output_ports_tree_view"]
+        path = tree_view.get_cursor()[0]
+        if path is not None:
+            key = self.model.output_data_port_list_store[int(path[0])][0].data_port_id
+            self.model.state.remove_output_data_port(key)
+
+    #delete buttons
+    def on_delete_input_port_button_clicked(self, widget, data=None):
+        tree_view = self.view["input_ports_tree_view"]
+        #print tree_view
+        path = tree_view.get_cursor()[0]
+        if path is not None:
+            #print path
+            key = self.model.input_data_port_list_store[int(path[0])][0].data_port_id
+            #print key
+            self.model.state.remove_input_data_port(key)
 
         #self.model.update_input_data_port_list_store_and_models()
     def on_data_type_changed(self, widget, path, text):

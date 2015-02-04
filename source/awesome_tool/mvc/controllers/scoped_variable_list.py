@@ -11,6 +11,8 @@ class ScopedVariableListController(Controller):
         """
         Controller.__init__(self, model, view)
 
+        self.new_sv_counter = 0
+
     def register_view(self, view):
         """Called when the View was registered
         """
@@ -52,6 +54,20 @@ class ScopedVariableListController(Controller):
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
+
+    def on_new_scoped_variable_button_clicked(self, widget, data=None):
+        new_sv_name = "a_new_scoped_variable%s" % str(self.new_sv_counter)
+        if hasattr(self.model, 'states'):
+            self.new_sv_counter += 1
+            self.model.container_state.add_scoped_variable(new_sv_name, "str", "val")
+
+    def on_delete_scoped_variable_button_clicked(self, widget, data=None):
+        tree_view = self.view["scoped_variables_tree_view"]
+        if hasattr(self.model, 'states'):
+            path = tree_view.get_cursor()[0]
+            if path is not None:
+                key = self.model.scoped_variables_list_store[int(path[0])][0].data_port_id
+                self.model.container_state.remove_scoped_variable(key)
 
     def on_name_changed(self, widget, path, text):
         #print path
