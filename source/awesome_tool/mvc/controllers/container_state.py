@@ -5,8 +5,8 @@ logger = log.get_logger(__name__)
 import gtk
 from gtkmvc import Controller
 from gtkmvc.adapters import UserClassAdapter
-from mvc.controllers.transition_list import TransitionListController
-from mvc.controllers.data_flow_list import DataFlowListController
+from mvc.controllers.state_transitions import StateTransitionsListController
+from mvc.controllers.state_data_flows import StateDataFlowsListController
 
 
 class ContainerStateController(Controller):
@@ -25,8 +25,8 @@ class ContainerStateController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
-        self.transition_list_controller = TransitionListController(model, view.transition_list_view)
-        self.data_flow_list_controller = DataFlowListController(model, view.data_flow_list_view)
+        self.transition_list_controller = StateTransitionsListController(model, view.transition_list_view)
+        self.data_flow_list_controller = StateDataFlowsListController(model, view.data_flow_list_view)
 
     def register_view(self, view):
         """Called when the View was registered

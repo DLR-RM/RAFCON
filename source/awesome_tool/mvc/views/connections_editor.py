@@ -1,8 +1,8 @@
 import gtk
 from gtkmvc import View
 
-from mvc.views.transition_list import TransitionListView
-from mvc.views.data_flow_list import DataFlowListView
+from mvc.views.state_transitions import StateTransitionsListView,StateTransitionsEditorView
+from mvc.views.state_data_flows import StateDataFlowsListView,StateDataFlowsEditorView
 
 
 class StateConnectionsEditorView(View):
@@ -13,11 +13,13 @@ class StateConnectionsEditorView(View):
     def __init__(self):
         View.__init__(self)
 
-        self.transitions_view = TransitionListView()
-        self.dataflows_view = DataFlowListView()
+        # self.transitions_view = StateTransitionsListView()
+        # self.data_flows_view = StateDataFlowsListView()
+        self.transitions_view = StateTransitionsEditorView()
+        self.data_flows_view = StateDataFlowsEditorView()
 
-        self['transitions_scroller'].add(self.transitions_view.get_top_widget())
-        self['dataflows_scroller'].add(self.dataflows_view.get_top_widget())
+        self['transitions_viewport'].add(self.transitions_view.get_top_widget())
+        self['data_flows_viewport'].add(self.data_flows_view.get_top_widget())
 
     pass
 

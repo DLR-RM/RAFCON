@@ -77,7 +77,7 @@
             </child>
           </object>
           <packing>
-            <property name="resize">False</property>
+            <property name="resize">True</property>
             <property name="shrink">True</property>
           </packing>
         </child>
@@ -86,7 +86,81 @@
             <property name="visible">True</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkExpander" id="port_expander">
+              <object class="GtkExpander" id="logic_expander">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="resize_mode">queue</property>
+                <child>
+                  <object class="GtkVBox" id="vbox3">
+                    <property name="visible">True</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <object class="GtkExpander" id="logic_expander2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="label_fill">True</property>
+                        <child>
+                          <object class="GtkViewport" id="outcomes_viewport">
+                            <property name="visible">True</property>
+                            <property name="resize_mode">queue</property>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                        </child>
+                        <child type="label">
+                          <object class="GtkLabel" id="label_script4">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Outcomes</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkExpander" id="logic_expander1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="label_fill">True</property>
+                        <child>
+                          <object class="GtkViewport" id="transitions_viewport">
+                            <property name="visible">True</property>
+                            <property name="resize_mode">queue</property>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                        </child>
+                        <child type="label">
+                          <object class="GtkLabel" id="label_script5">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Transitions</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label_logic">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Logical Linkage</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkExpander" id="data_expander">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="resize_mode">queue</property>
@@ -99,7 +173,7 @@
                         <property name="visible">True</property>
                         <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkExpander" id="port_expander1">
+                          <object class="GtkExpander" id="data_expander1">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="label_fill">True</property>
@@ -173,7 +247,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkExpander" id="port_expander2">
+                          <object class="GtkExpander" id="data_expander2">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="label_fill">True</property>
@@ -246,7 +320,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkExpander" id="port_expander3">
+                          <object class="GtkExpander" id="data_expander3">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="label_fill">True</property>
@@ -318,103 +392,52 @@
                             <property name="position">2</property>
                           </packing>
                         </child>
+                        <child>
+                          <object class="GtkExpander" id="data_expander4">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="label_fill">True</property>
+                            <child>
+                              <object class="GtkViewport" id="data_flows_viewport">
+                                <property name="visible">True</property>
+                                <property name="resize_mode">queue</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                            </child>
+                            <child type="label">
+                              <object class="GtkLabel" id="label_script6">
+                                <property name="visible">True</property>
+                                <property name="label" translatable="yes">DataFlows</property>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
                       </object>
                     </child>
                   </object>
                 </child>
                 <child type="label">
-                  <object class="GtkLabel" id="label_dataport">
+                  <object class="GtkLabel" id="label_data">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Ports</property>
+                    <property name="label" translatable="yes">Data Linkage</property>
                   </object>
                 </child>
               </object>
               <packing>
-                <property name="expand">False</property>
                 <property name="padding">2</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkExpander" id="dataflows_expander">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="label_fill">True</property>
-                <child>
-                  <object class="GtkViewport" id="data_flows_viewport">
-                    <property name="visible">True</property>
-                    <property name="resize_mode">queue</property>
-                    <child>
-                      <placeholder/>
-                    </child>
-                  </object>
-                </child>
-                <child type="label">
-                  <object class="GtkLabel" id="label_script6">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">DataFlows</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
                 <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkExpander" id="port_expander4">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="label_fill">True</property>
-                <child>
-                  <object class="GtkViewport" id="outcomes_viewport">
-                    <property name="visible">True</property>
-                    <property name="resize_mode">queue</property>
-                    <child>
-                      <placeholder/>
-                    </child>
-                  </object>
-                </child>
-                <child type="label">
-                  <object class="GtkLabel" id="label_script4">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Outcomes</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="padding">1</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkExpander" id="transitions_expander">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="label_fill">True</property>
-                <child>
-                  <object class="GtkViewport" id="transitions_viewport">
-                    <property name="visible">True</property>
-                    <property name="resize_mode">queue</property>
-                    <child>
-                      <placeholder/>
-                    </child>
-                  </object>
-                </child>
-                <child type="label">
-                  <object class="GtkLabel" id="label_script5">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Transitions</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="position">3</property>
               </packing>
             </child>
           </object>
           <packing>
             <property name="resize">False</property>
-            <property name="shrink">True</property>
+            <property name="shrink">False</property>
           </packing>
         </child>
       </object>

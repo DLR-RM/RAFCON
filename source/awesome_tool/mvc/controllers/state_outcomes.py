@@ -24,7 +24,7 @@ class ParentObserver(Observer):
             func_handle()
 
 
-class StateOutcomesTreeController(Controller):
+class StateOutcomesListController(Controller):
 
     parent_observer = None
 
@@ -281,15 +281,15 @@ class StateOutcomesEditorController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
-        self.tree_ctrl = StateOutcomesTreeController(model, view.treeView)
+        self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
 
     def register_view(self, view):
         """Called when the View was registered
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
 
-        view['add_button'].connect("clicked", self.tree_ctrl.on_add)
-        view['remove_button'].connect("clicked", self.tree_ctrl.on_remove)
+        view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
+        view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
 
     def register_adapters(self):
         """Adapters should be registered in this method call

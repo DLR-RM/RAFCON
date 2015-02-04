@@ -28,7 +28,7 @@ class ParentObserver(Observer):
             func_handle()
 
 
-class TransitionListController(Controller):
+class StateTransitionsListController(Controller):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -51,13 +51,13 @@ class TransitionListController(Controller):
 
         # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable
+        self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
                                         str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
         self.combo = {}
 
         self.update_stores()
         self.new_version = True
-        self.view_dict = {}
         view.get_top_widget().set_model(self.tree_store)
 
     def register_view(self, view):
@@ -162,10 +162,12 @@ class TransitionListController(Controller):
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         #self.combo['free_from_outcomes_dict']
+        #print self.tree_store[path][1], text TODO may no data_flow.from_state in from_state_combo
+        if self.tree_store[path][1] == text or text is None:
+            return
         text = text.split('.')
         t_id = self.tree_store[path][0]
         t = self.tree_store[path][8]
-        fs = t.from_state
         ts = t.to_state
         to = t.to_outcome
         if self.tree_store[path][5]:  # external
@@ -179,11 +181,12 @@ class TransitionListController(Controller):
 
     def on_combo_changed_from_outcome(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        if text is None:
+            return
         text = text.split('.')
         t_id = self.tree_store[path][0]
         t = self.tree_store[path][8]
         fs = t.from_state
-        fo = t.from_outcome
         ts = t.to_state
         to = t.to_outcome
         if self.tree_store[path][5]:  # external
@@ -195,6 +198,8 @@ class TransitionListController(Controller):
 
     def on_combo_changed_to_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        if text is None:
+            return
         #self.combo['free_ext_from_outcomes_dict']
         text = text.split('.')
         t_id = self.tree_store[path][0]
@@ -210,6 +215,8 @@ class TransitionListController(Controller):
 
     def on_combo_changed_to_outcome(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        if text is None:
+            return
         text = text.split('.')
         t_id = self.tree_store[path][0]
         t = self.tree_store[path][8]
@@ -454,3 +461,57 @@ class TransitionListController(Controller):
                                 "modify_outcome_name"]:
             self.update_stores()
             self.update_model()
+
+
+class StateTransitionsEditorController(Controller):
+
+    def __init__(self, model, view):
+        Controller.__init__(self, model, view)
+        self.trans_list_ctrl = StateTransitionsListController(model, view.transitions_listView)
+
+    def register_view(self, view):
+        """Called when the View was registered
+
+        Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
+        """
+        view['add_t_button'].connect('clicked', self.trans_list_ctrl.on_add)
+        #view['cancel_t_edit_button'].connect('clicked', self.on_cancel_transition_edit_clicked)
+        view['remove_t_button'].connect('clicked', self.trans_list_ctrl.on_remove)
+        view['connected_to_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_external')
+        view['internal_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_internal')
+
+        if self.model.parent is None:
+            self.trans_list_ctrl.view_dict['transitions_external'] = False
+            view['connected_to_t_checkbutton'].set_active(False)
+
+        if not hasattr(self.model, 'states'):
+            self.trans_list_ctrl.view_dict['transitions_internal'] = False
+            view['internal_t_checkbutton'].set_active(False)
+
+    def register_adapters(self):
+        """Adapters should be registered in this method call
+
+        Each property of the state should have its own adapter, connecting a label in the View with the attribute of
+        the State.
+        """
+        #self.adapt(self.__state_property_adapter("name", "input_name"))
+
+    def toggled_button(self, button, name=None):
+
+        if name in ['transitions_external'] and self.model.parent is not None:
+            self.trans_list_ctrl.view_dict[name] = button.get_active()
+            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+        elif not name in ['transitions_internal']:
+            self.trans_list_ctrl.view_dict['transitions_external'] = False
+            button.set_active(False)
+
+        if name in ['transitions_internal'] and hasattr(self.model, 'states'):
+            self.trans_list_ctrl.view_dict[name] = button.get_active()
+            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+        elif not name in ['transitions_external']:
+            self.trans_list_ctrl.view_dict['transitions_internal'] = False
+            button.set_active(False)
+
+        self.trans_list_ctrl.update_transitions_store()
+        self.trans_list_ctrl.update_stores()
+        self.trans_list_ctrl.update_model()

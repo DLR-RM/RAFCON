@@ -12,7 +12,19 @@ from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorVi
     GlobalVariableEditorView, ExternalModuleManagerWindowView, ExternalModuleManagerView,  SourceEditorView, \
     SingleWidgetWindowView, StateEditorView, LoggingView, StateMachineTreeView, LibraryTreeView, MainWindowView
 from mvc.views.single_widget_window import TestButtonsView
-from mvc.views.transition_list import TransitionListView
+from mvc.views.state_transitions import StateTransitionsEditorView
+from mvc.controllers.state_transitions import StateTransitionsEditorController
+from mvc.views.state_data_flows import StateDataFlowsEditorView
+from mvc.controllers.state_data_flows import StateDataFlowsEditorController
+from mvc.views.connections_editor import StateConnectionsEditorView
+from mvc.controllers.connections_editor import StateConnectionsEditorController
+from mvc.views.state_outcomes import StateOutcomesEditorView
+from mvc.controllers.state_outcomes import StateOutcomesEditorController
+from mvc.views.state_overview import StateOverviewView
+from mvc.controllers.state_overview import StateOverviewController
+from mvc.views.state_editor import StateEditorEggView, StateEditorLDView
+from mvc.controllers.state_editor import StateEditorEggController, StateEditorLDController
+
 from statemachine.states.state import State, DataPort
 from statemachine.states.execution_state import ExecutionState
 from statemachine.states.container_state import ContainerState
@@ -164,29 +176,41 @@ if __name__ == '__main__':
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
 
-    #external_module_manager_view = SingleWidgetWindowView(ExternalModuleManagerView, width=500, height=200, title='External Module Manager')
-    #external_module_manger_controller = SingleWidgetWindowController(emm_model, external_module_manager_view, ExternalModuleManagerController)
-    #external_module_manger_controller.set_source_view(src_view.widget_view)
-    
-    # v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
-    # #c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
-    # c = SingleWidgetWindowController(this_model, v, StateOutcomesEditorController)
+    # external_module_manager_view = SingleWidgetWindowView(ExternalModuleManagerView, width=500, height=200, title='External Module Manager')
+    # external_module_manger_controller = SingleWidgetWindowController(emm_model, external_module_manager_view, ExternalModuleManagerController)
+    # external_module_manger_controller.set_source_view(src_view.widget_view)
+
+    # prop_view = SingleWidgetWindowView(StateOverviewView, width=400, height=100, title='Properties Editor')
+    # prop_ctrl = SingleWidgetWindowController(this_model, prop_view, StateOverviewController)
+
+    oc_editor_view = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
+    oc_editor_ctrl = SingleWidgetWindowController(ctr_model, oc_editor_view, StateOutcomesEditorController)
+    #oc_editor_ctrl = SingleWidgetWindowController(this_model, oc_editor_view, StateOutcomesEditorController)
 
     # state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
     # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
     # #state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
 
-    #scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
-    #scon_editor_ctrl = SingleWidgetWindowController(this_model, scon_editor_view, StateConnectionsEditorController)
+    state_editor_view = SingleWidgetWindowView(StateEditorEggView, width=550, height=500, title='Source Editor')
+    state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorEggController)
 
-    #external_module_manager_view = ExternalModuleManagerView()
-    #ExternalModuleManagerController(emm_model, external_module_manager_view, src_view.widget_view)
+    # state_editor_view = SingleWidgetWindowView(StateEditorLDView, width=550, height=500, title='Source Editor')
+    # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorLDController)
+
+    # trans_editor_view = SingleWidgetWindowView(StateTransitionsEditorView, width=550, height=400, title='Transitions Editor')
+    # trans_editor_ctrl = SingleWidgetWindowController(this_model, trans_editor_view, StateTransitionsEditorController)
+
+    # df_editor_view = SingleWidgetWindowView(StateDataFlowsEditorView, width=550, height=400, title='Data Flows Editor')
+    # df_editor_ctrl = SingleWidgetWindowController(this_model, df_editor_view, StateDataFlowsEditorController)
+
+    # scon_editor_view = SingleWidgetWindowView(StateConnectionsEditorView, width=550, height=400, title='Connections Editor')
+    # scon_editor_ctrl = SingleWidgetWindowController(this_model, scon_editor_view, StateConnectionsEditorController)
 
     # global_variables_view = SingleWidgetWindowView(GlobalVariableEditorView, width=500, height=200, title='Global Variable Manager')
     # global_variables_controller = SingleWidgetWindowController(gvm_model, global_variables_view, GlobalVariableManagerController)
 
-    # editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
-    # editor_ctrl = SingleWidgetWindowController(ctr_model, editor_view, GraphicalEditorController)
+    # graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
+    # graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)
 
     gtk.main()
     logger.debug("after gtk main")
