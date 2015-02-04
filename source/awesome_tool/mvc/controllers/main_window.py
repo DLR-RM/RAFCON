@@ -23,6 +23,9 @@ class MainWindowController(Controller):
         self.em_module = root_state_model
         self.em_module = root_state_model
 
+        ######################################################
+        # logging view
+        ######################################################
         left_v_pane = view["left_v_pane"]
         console_scroller = left_v_pane.get_child2()
         left_v_pane.remove(console_scroller)
@@ -30,6 +33,9 @@ class MainWindowController(Controller):
         left_v_pane.add2(view.logging_view.get_top_widget())
         #console_scroller.add(view.logging_view["textview"])
 
+        ######################################################
+        # library tree
+        ######################################################
         tree_notebook = view["tree_notebook"]
         #remove placeholder tab
         library_tree_tab = view['library_tree_placeholder']
@@ -42,6 +48,9 @@ class MainWindowController(Controller):
         libraries_label = gtk.Label('Libraries')
         tree_notebook.insert_page(view.library_tree, libraries_label, page_num)
 
+        ######################################################
+        # statemachine tree
+        ######################################################
         #remove placeholder tab
         state_machine_tree_tab = view['state_machine_tree_placeholder']
         page_num = tree_notebook.page_num(state_machine_tree_tab)
@@ -51,16 +60,24 @@ class MainWindowController(Controller):
         state_machine_label = gtk.Label('Statemachine Tree')
         tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
 
+        ######################################################
+        # graphical editor
+        ######################################################
         graphical_editor_frame = view['graphical_editor_frame']
         self.graphical_editor = GraphicalEditorController(root_state_model, view.graphical_editor_view)
         graphical_editor_frame.add(view.graphical_editor_view['main_frame'])
         #self.graphical_editor = GraphicalEditorController(model, view.graphical_editor_window.get_top_widget())
         #test = SingleWidgetWindowController(model, view.graphical_editor_window, GraphicalEditorController)
 
-        # state-editor
+        ######################################################
+        # state editor
+        ######################################################
         this_model = filter(lambda model: model.state.name == 'State3', root_state_model.states.values()).pop()
         self.state_editor = StateEditorController(root_state_model, view.state_editor)  # .get_top_widget())
 
+        ######################################################
+        # external module editor
+        ######################################################
         em_global_notebook = view["em_global_notebook"]
         #remove placeholder tab
         external_modules_tab = view['external_modules_placeholder']
@@ -71,6 +88,9 @@ class MainWindowController(Controller):
         external_modules_label = gtk.Label('External Modules')
         em_global_notebook.insert_page(view.external_module_manager_view.get_top_widget(), external_modules_label, page_num)
 
+        ######################################################
+        # global variable editor
+        ######################################################
         #remove placeholder tab
         global_variables_tab = view['global_variables_placeholder']
         page_num = em_global_notebook.page_num(global_variables_tab)
@@ -80,6 +100,9 @@ class MainWindowController(Controller):
         global_variables_label = gtk.Label('Global Variables')
         em_global_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
 
+        ######################################################
+        # status bar
+        ######################################################
         # add some data to the status bar
         status_bar1 = view["statusbar1"]
         status_bar1.push(0, "The awesome tool")

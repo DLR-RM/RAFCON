@@ -209,7 +209,7 @@ class StateEditorEggController(Controller):
             for i in range(1, 5):
                 expand_id = 'port_expander'+str(i)
                 if self.view[expand_id].get_expanded():
-                    print "%s holds %s rows" % (expand_id, len(self.arrangement_dict[expand_id]['list_store']))
+                    # print "%s holds %s rows" % (expand_id, len(self.arrangement_dict[expand_id]['list_store']))
                     active_l[expand_id] = len(self.arrangement_dict[expand_id]['list_store'])
                     if active_l[expand_id] > 4:
                         count_rows += 5
@@ -219,14 +219,14 @@ class StateEditorEggController(Controller):
                         self.view[expand_id].set_size_request(width=-1, height=60+22*active_l[expand_id]+22)
                     # print "%s is expanded" % ('port_expander'+str(i))
                     count += 1
-                    print self.view[expand_id].get_parent()
+                    # print self.view[expand_id].get_parent()
                 else:
                     if self.view[expand_id] == expander:
                         self.view[expand_id].set_size_request(width=-1, height=-1)
 
                 if expander is self.view[expand_id]:
                     exp_str = expand_id
-                    print "expander is %s" % exp_str
+                    # print "expander is %s" % exp_str
             if count_rows*22+110+count*60 > 500:
                 self.view['port_expander'].set_size_request(width=-1, height=500)
                 # for expand_id in active_l.keys():
@@ -244,14 +244,14 @@ class StateEditorEggController(Controller):
     def resize_connections_widget(self, expander, x=None):
 
         alloc = self.view['source_expander'].get_allocation()
-        print "Size of Source_expander: height %s, width %s" % (alloc.height, alloc.width)
+        # print "Size of Source_expander: height %s, width %s" % (alloc.height, alloc.width)
         if self.view['connections_expander'].get_expanded():
             count = 0
             count_rows = 0
             active_l = {}
             for expand_id in ['transitions_expander', 'dataflows_expander']:
                 if self.view[expand_id].get_expanded():
-                    print "%s holds %s rows" % (expand_id, len(self.arrangement_dict[expand_id]['list_store']))
+                    # print "%s holds %s rows" % (expand_id, len(self.arrangement_dict[expand_id]['list_store']))
                     active_l[expand_id] = len(self.arrangement_dict[expand_id]['list_store'])
                     if active_l[expand_id] > 4:
                         count_rows += 5
@@ -266,7 +266,7 @@ class StateEditorEggController(Controller):
                         self.view[expand_id].set_size_request(width=-1, height=-1)
                 if expander is self.view[expand_id]:
                         exp_str = expand_id
-                        print "expander is %s" % exp_str
+                        # print "expander is %s" % exp_str
 
             if count_rows*22+65+count*60 > 360:
                 self.view['connections_expander'].set_size_request(width=-1, height=350)

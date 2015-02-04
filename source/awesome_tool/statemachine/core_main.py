@@ -1,7 +1,8 @@
 from statemachine.states.state import DataPort, DataPortType
 from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.library_state import LibraryState
-from states.execution_state import ExecutionState
+from statemachine.states.execution_state import ExecutionState
+from statemachine.states.container_state import ContainerState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
@@ -323,7 +324,7 @@ def return_test_state_machine():
 
 
 def return_loop_state_machine():
-    state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="loop_state1.py")
+    state1 = ExecutionState("MyFirstState - asdkfjhasdkgfakjsgf", path="../../test_scripts", filename="loop_state1.py")
     state1.add_outcome("MyFirstOutcome", 3)
 
 
@@ -349,8 +350,14 @@ def start_stop_pause_step_test():
 
     s = Storage("../../test_scripts/stored_statemachine")
     state3 = return_loop_state_machine()
+    # import inspect
+    # print inspect.getmro(state3.__class__)
+    # print ContainerState
+    # if ContainerState in inspect.getmro(state3.__class__):
+    #     print "ContainerState in base class of state3"
+
     s.save_statemachine_as_yaml(state3)
-    root_state = s.load_statemachine_from_yaml()
+    root_state, version, creation_time = s.load_statemachine_from_yaml()
 
     ctr_model = ContainerStateModel(root_state)
     test_buttons_view = TestButtonsView(ctr_model)
@@ -490,6 +497,7 @@ def run_nested_library_statemachine():
     nested_lib_state.start()
     nested_lib_state.join()
 
+
 def scoped_variable_test():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
@@ -529,7 +537,7 @@ def state_without_path_test():
 if __name__ == '__main__':
 
     statemachine.singleton.state_machine_execution_engine.start()
-    #start_stop_pause_step_test()
+    start_stop_pause_step_test()
 
     #scoped_data_test()
     #save_and_load_data_port_test()
@@ -554,10 +562,10 @@ if __name__ == '__main__':
     # you have to run save_libraries() test before you can run run_library_statemachine()
     #run_library_statemachine()
 
-    save_nested_library_state()
+    #save_nested_library_state()
     print "########################################################"
     # you have to run save_nested_library_state() test before you can run run_library_statemachine()
-    #run_nested_library_statemachine()
+    run_nested_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine

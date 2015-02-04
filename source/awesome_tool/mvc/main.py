@@ -166,7 +166,6 @@ if __name__ == '__main__':
     # a view, whose buttons can trigger arbitrary function that are needed for testing purposes
     #test_buttons_view = TestButtonsView(ctr_model)
 
-
     #state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
     #state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
 
@@ -183,16 +182,16 @@ if __name__ == '__main__':
     # prop_view = SingleWidgetWindowView(StateOverviewView, width=400, height=100, title='Properties Editor')
     # prop_ctrl = SingleWidgetWindowController(this_model, prop_view, StateOverviewController)
 
-    oc_editor_view = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
-    oc_editor_ctrl = SingleWidgetWindowController(ctr_model, oc_editor_view, StateOutcomesEditorController)
-    #oc_editor_ctrl = SingleWidgetWindowController(this_model, oc_editor_view, StateOutcomesEditorController)
+    # oc_editor_view = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
+    # oc_editor_ctrl = SingleWidgetWindowController(ctr_model, oc_editor_view, StateOutcomesEditorController)
+    # #oc_editor_ctrl = SingleWidgetWindowController(this_model, oc_editor_view, StateOutcomesEditorController)
 
-    # state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
-    # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
+    #state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
+    #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
     # #state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
 
-    state_editor_view = SingleWidgetWindowView(StateEditorEggView, width=550, height=500, title='Source Editor')
-    state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorEggController)
+    # state_editor_view = SingleWidgetWindowView(StateEditorEggView, width=550, height=500, title='Source Editor')
+    # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorEggController)
 
     # state_editor_view = SingleWidgetWindowView(StateEditorLDView, width=550, height=500, title='Source Editor')
     # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorLDController)

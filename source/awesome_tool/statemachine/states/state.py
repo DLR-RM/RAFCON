@@ -145,7 +145,7 @@ StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTI
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 
 
-class State(threading.Thread, Observable, yaml.YAMLObject):
+class State(threading.Thread, Observable, yaml.YAMLObject, object):
 
     """A class for representing a state in the state machine
 
@@ -378,7 +378,6 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
 
     @Observable.observed
     def modify_outcome_name(self, name, outcome_id):
-        print "check outcome_name: %s of outcome_id %s" % (name, outcome_id)
 
         def define_unique_name(name, dict_of_names, count=0):
             count += 1
@@ -389,7 +388,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject):
         dict_of_names = {}
         for o_id, outcome in self._outcomes.items():
             dict_of_names[o_id] = outcome.name
-        print dict_of_names
+        #print dict_of_names
 
         if outcome_id in self._outcomes.keys() and self._outcomes[outcome_id].name == name:
             name = self._outcomes[outcome_id].name

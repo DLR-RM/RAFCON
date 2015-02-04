@@ -9,7 +9,6 @@
 """
 
 from gtkmvc import Observable
-import numpy
 import yaml
 
 from statemachine.states.state import State

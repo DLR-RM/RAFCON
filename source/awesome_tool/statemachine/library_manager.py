@@ -37,8 +37,11 @@ class LibraryManager(Observable):
     def initialize(self):
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
         for lib_key, lib_path in config.LIBRARY_PATHS.iteritems():
-            self._libraries[lib_key] = {}
-            self.add_libraries_from_path(lib_path, self._libraries[lib_key])
+            if os.path.exists(lib_path):
+                self._libraries[lib_key] = {}
+                self.add_libraries_from_path(lib_path, self._libraries[lib_key])
+            else:
+                logger.warn("Wrong path in config for LibraryManager: Path %s does not exist", lib_path)
         logger.debug("Initialization of LibraryManager done.")
         #print self._libraries
 
