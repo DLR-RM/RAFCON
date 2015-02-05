@@ -76,8 +76,11 @@ def exit(self, scoped_variables, external_modules, gvm):
             script_file.write(self.script)
             script_file.close()
 
-        if not os.path.exists(os.path.join(self.path, filename)):
-            raise RuntimeError("Path %s does not exist", os.path.join(self.path, filename))
+        if not os.path.exists(self.path):
+            raise RuntimeError("Path %s does not exist" % self.path)
+        else:
+            if not os.path.exists(os.path.join(self.path, self.filename)):
+                raise RuntimeError("Path %s does not exist" % os.path.join(self.path, self.filename))
 
 
     def execute(self, state, inputs={}, outputs={}):

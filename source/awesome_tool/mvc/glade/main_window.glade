@@ -329,14 +329,12 @@
         <child>
           <object class="GtkToolbar" id="toolbar">
             <property name="visible">True</property>
-            <property name="toolbar_style">icons</property>
-            <property name="icon_size">0</property>
-            <property name="icon_size_set">True</property>
+            <property name="toolbar_style">both</property>
             <child>
               <object class="GtkToolButton" id="button_new">
                 <property name="visible">True</property>
                 <property name="tooltip_text" translatable="yes">Create a new state machine.</property>
-                <property name="label" translatable="yes">button_new</property>
+                <property name="label" translatable="yes">New Statemachine</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-new</property>
               </object>
@@ -349,7 +347,7 @@
               <object class="GtkToolButton" id="button_refreshlib">
                 <property name="visible">True</property>
                 <property name="tooltip_text" translatable="yes">Refreshes the library display.</property>
-                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="label" translatable="yes">Refresh Libraries</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-refresh</property>
               </object>
@@ -362,7 +360,7 @@
               <object class="GtkToolButton" id="button_load">
                 <property name="visible">True</property>
                 <property name="tooltip_text" translatable="yes">Load an existing state machine.</property>
-                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="label" translatable="yes">Load Statemachin</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-open</property>
               </object>
@@ -375,7 +373,7 @@
               <object class="GtkToolButton" id="button_save_as">
                 <property name="visible">True</property>
                 <property name="tooltip_text" translatable="yes">Save the state machine.</property>
-                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="label" translatable="yes">Save Statemachin</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-save-as</property>
               </object>

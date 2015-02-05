@@ -9,7 +9,6 @@ from statemachine.states.preemptive_concurrency_state import PreemptiveConcurren
 from state_machine_manager import StateMachineManager
 from external_modules.external_module import ExternalModule
 from statemachine.storage.storage import Storage
-
 import statemachine.singleton
 
 
@@ -38,7 +37,8 @@ def concurrency_barrier_test():
     output_data = {"out1": None}
     state3.input_data = input_data
     state3.output_data = output_data
-    state3.start()
+    statemachine.singleton.state_machine_manager.root_state = state3
+    statemachine.singleton.state_machine_execution_engine.start()
     state3.join()
 
 
@@ -71,8 +71,8 @@ def concurrency_barrier_save_load_test():
     output_data = {"out1": None}
     root_state.input_data = input_data
     root_state.output_data = output_data
-
-    root_state.start()
+    statemachine.singleton.state_machine_manager.root_state = root_state
+    statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
 
 
@@ -101,7 +101,8 @@ def concurrency_preemption_test():
     output_data = {"out1": None}
     state3.input_data = input_data
     state3.output_data = output_data
-    state3.start()
+    statemachine.singleton.state_machine_manager.root_state = state3
+    statemachine.singleton.state_machine_execution_engine.start()
     state3.join()
 
 
@@ -135,8 +136,8 @@ def concurrency_preemption_save_load_test():
     output_data = {"out1": None}
     root_state.input_data = input_data
     root_state.output_data = output_data
-
-    root_state.start()
+    statemachine.singleton.state_machine_manager.root_state = root_state
+    statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
 
 
@@ -162,11 +163,9 @@ def hierarchy_test():
     output_data = {"out1": None}
     state3.input_data = input_data
     state3.output_data = output_data
-    state3.start()
-    #time.sleep(1.0)
-    #state3.preempted = True
+    statemachine.singleton.state_machine_manager.root_state = state3
+    statemachine.singleton.state_machine_execution_engine.start()
     state3.join()
-    #print "joined thread"
 
 
 def hierarchy_save_load_test():
@@ -197,8 +196,8 @@ def hierarchy_save_load_test():
     output_data = {"out1": None}
     root_state.input_data = input_data
     root_state.output_data = output_data
-
-    root_state.start()
+    statemachine.singleton.state_machine_manager.root_state = root_state
+    statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
 
 
@@ -221,7 +220,8 @@ def global_variable_test():
     output_data = {"out1": None}
     state3.input_data = input_data
     state3.output_data = output_data
-    state3.start()
+    statemachine.singleton.state_machine_manager.root_state = state3
+    statemachine.singleton.state_machine_execution_engine.start()
     state3.join()
 
 
@@ -280,15 +280,6 @@ def ros_external_module_test():
     sm.start()
 
 
-def save_and_load_data_port_test():
-    s = Storage("../../test_scripts/stored_statemachine")
-    data_port1 = DataPort("test", "str")
-    s.save_file_as_yaml_rel(data_port1, "saved_data_port")
-    loaded_data_port = s.load_file_from_yaml_rel("saved_data_port")
-    print loaded_data_port
-    exit()
-
-
 def return_test_state_machine():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="first_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
@@ -327,7 +318,6 @@ def return_loop_state_machine():
     state1 = ExecutionState("MyFirstState - asdkfjhasdkgfakjsgf", path="../../test_scripts", filename="loop_state1.py")
     state1.add_outcome("MyFirstOutcome", 3)
 
-
     state2 = ExecutionState("MySecondState", path="../../test_scripts", filename="loop_state2.py")
     state2.add_outcome("FirstOutcome", 3)
 
@@ -337,7 +327,6 @@ def return_loop_state_machine():
     state3.set_start_state(state1.state_id)
     state3.add_transition(state1.state_id, 3, state2.state_id, None)
     state3.add_transition(state2.state_id, 3, state1.state_id, None)
-
     return state3
 
 
@@ -363,7 +352,8 @@ def start_stop_pause_step_test():
     test_buttons_view = TestButtonsView(ctr_model)
 
     root_state.daemon = True
-    root_state.start()
+    statemachine.singleton.state_machine_manager.root_state = root_state
+    statemachine.singleton.state_machine_execution_engine.start()
     gtk.main()
 
 
@@ -378,7 +368,8 @@ def scoped_data_test():
     output_data = {"out1": None}
     root_state.input_data = input_data
     root_state.output_data = output_data
-    root_state.start()
+    statemachine.singleton.state_machine_manager.root_state = root_state
+    statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
 
 
@@ -406,8 +397,8 @@ def default_data_port_values_test():
     output_data = {"out1": None}
     root_state.input_data = input_data
     root_state.output_data = output_data
-
-    root_state.start()
+    statemachine.singleton.state_machine_manager.root_state = root_state
+    statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
 
 
@@ -476,7 +467,8 @@ def run_library_statemachine():
     output_data = {"out1": None}
     library_container_state.input_data = input_data
     library_container_state.output_data = output_data
-    library_container_state.start()
+    statemachine.singleton.state_machine_manager.root_state = library_container_state
+    statemachine.singleton.state_machine_execution_engine.start()
     library_container_state.join()
 
 
@@ -494,7 +486,8 @@ def run_nested_library_statemachine():
     output_data = {"out1": None}
     nested_lib_state.input_data = input_data
     nested_lib_state.output_data = output_data
-    nested_lib_state.start()
+    statemachine.singleton.state_machine_manager.root_state = nested_lib_state
+    statemachine.singleton.state_machine_execution_engine.start()
     nested_lib_state.join()
 
 
@@ -523,33 +516,34 @@ def scoped_variable_test():
 
     state3.input_data = input_data
     state3.output_data = output_data
-    state3.start()
+    statemachine.singleton.state_machine_manager.root_state = state3
+    statemachine.singleton.state_machine_execution_engine.start()
     state3.join()
 
 
 def state_without_path_test():
     state1 = ExecutionState("MyFirstState")
     state1.add_outcome("Success", 0)
-    state1.start()
+    statemachine.singleton.state_machine_manager.root_state = state1
+    statemachine.singleton.state_machine_execution_engine.start()
     pass
 
 
 if __name__ == '__main__':
 
-    statemachine.singleton.state_machine_execution_engine.start()
     #start_stop_pause_step_test()
 
     #scoped_data_test()
     #save_and_load_data_port_test()
     #default_data_port_values_test()
-    #scoped_variable_test()
+    scoped_variable_test()
     #hierarchy_test()
     #hierarchy_save_load_test()
     #state_without_path_test()
 
     #concurrency_barrier_test()
     #concurrency_barrier_save_load_test()
-    concurrency_preemption_test()
+    #concurrency_preemption_test()
     #concurrency_preemption_save_load_test()
 
     #state_machine_manager_test()
