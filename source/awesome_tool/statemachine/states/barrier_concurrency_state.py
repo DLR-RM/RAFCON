@@ -23,10 +23,10 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
     yaml_tag = u'!BarrierConcurrencyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, states=None, transitions=None, data_flows=None, start_state=None,
-                 scoped_variables=None, v_checker=None, path=None, filename=None):
+                 states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
+                 v_checker=None, path=None, filename=None):
 
-        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status,
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state, scoped_variables, v_checker, path,
                                   filename, state_type = StateType.BARRIER_CONCURRENCY)
 
@@ -86,8 +86,11 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.check_output_data_type(output_data)
 
             # check the outcomes of all states for aborted or preempted
-            # the output data has to be set before this check can be done
+            # check as well if the states were stopped
             for key, state in self.states.iteritems():
+                #This is the case if execution was stopped
+                if state.final_outcome is None:
+                    quit()
                 if state.final_outcome.outcome_id == -1:
                     self.final_outcome = Outcome(-1, "preempted")
                     self.active = False

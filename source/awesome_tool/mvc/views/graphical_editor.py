@@ -611,7 +611,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param pos_x: x coordinate
         :param pos_y: y coordinate
         """
-        glSelectBuffer(64)
+        glSelectBuffer(128)
         viewport = glGetInteger(GL_VIEWPORT)
 
         glMatrixMode(GL_PROJECTION)
@@ -621,7 +621,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         glLoadIdentity()
         # The system y axis is inverse to the OpenGL y axis
-        range = self.pixel_to_size_ratio() / 3.
+        range = 5  # self.pixel_to_size_ratio() / 3.
         gluPickMatrix(pos_x, viewport[3] - pos_y + viewport[1], range, range, viewport)
 
         self._apply_orthogonal_view()

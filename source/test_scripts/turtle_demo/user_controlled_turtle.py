@@ -1,9 +1,9 @@
-import time
+import copy
 
 def execute(self, inputs, outputs, external_modules, gvm):
     print "User controlled turtle state is executing ..."
     print "Waiting for user input"
-    user_input = external_modules["user_input"].instance.get_next_signal()
+    user_input = copy.copy(external_modules["user_input"].instance.get_next_signal(3))
     print user_input
     if user_input == "forward":
         external_modules["ros"].instance.move_turtle("turtle1", 2, 0, 0)

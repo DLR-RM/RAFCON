@@ -12,6 +12,7 @@ from gtkmvc import Observable
 from gtkmvc import ModelMT
 from execution_history import ExecutionHistory
 from statemachine_status import StateMachineStatus, ExecutionMode
+from statemachine.state_machine_manager import StateMachineManager
 from utils import log
 logger = log.get_logger(__name__)
 
@@ -29,10 +30,11 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
     __observables__ = ("execution_engine",)
 
-    def __init__(self):
+    def __init__(self, state_machine_manager):
 
         ModelMT.__init__(self)
         Observable.__init__(self)
+        self.state_machine_manager = state_machine_manager
         self.execution_engine = self
         self._status = None
         self.status = StateMachineStatus(ExecutionMode.STOPPED)
@@ -48,11 +50,16 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
     @Observable.observed
     def start(self):
-        logger.debug("Start statemachine and notify all threads waiting ")
-        self._status.execution_mode = ExecutionMode.RUNNING
-        self._status.execution_condition_variable.acquire()
-        self._status.execution_condition_variable.notify_all()
-        self._status.execution_condition_variable.release()
+        if self._status.execution_mode is ExecutionMode.PAUSED:
+            logger.debug("Start statemachine and notify all threads waiting ")
+            self._status.execution_mode = ExecutionMode.RUNNING
+            self._status.execution_condition_variable.acquire()
+            self._status.execution_condition_variable.notify_all()
+            self._status.execution_condition_variable.release()
+        else:
+            logger.debug("Restart the state machine")
+            self._status.execution_mode = ExecutionMode.RUNNING
+            self.state_machine_manager.root_state.start()
 
     #TODO: stop all external modules
     @Observable.observed
@@ -81,11 +88,12 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             return
 
         elif self._status.execution_mode is ExecutionMode.STOPPED:
-            try:
-                self._status.execution_condition_variable.acquire()
-                self._status.execution_condition_variable.wait()
-            finally:
-                self._status.execution_condition_variable.release()
+            # try:
+            #     self._status.execution_condition_variable.acquire()
+            #     self._status.execution_condition_variable.wait()
+            # finally:
+            #     self._status.execution_condition_variable.release()
+            quit()
 
         elif self._status.execution_mode is ExecutionMode.PAUSED:
             try:

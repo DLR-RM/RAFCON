@@ -69,12 +69,16 @@ def create_models(*args, **kargs):
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_my_output_state2 = state2.add_output_data_port("my_output", "int")
     output_res_state2 = state2.add_output_data_port("res", "int")
-    state4 = State('Nested')
+    state4 = ExecutionState("UserControlledTurtle", path="../../test_scripts/turtle_demo",
+                                       filename="user_controlled_turtle.py")
+    state4.add_outcome("Success", 0)
     output_state4 = state4.add_output_data_port("out", "int")
     state4.add_outcome("success", 0)
     state5 = State('Nested2')
     input_state5 = state5.add_input_data_port("in", "int", 0)
-    state3 = ContainerState(name='State3')
+    state3 = HierarchyState("UserControlledTurtleHierarchyState",
+                                                 path="../../test_scripts/turtle_demo",
+                                                 filename="user_controlled_turtle_hierarchy_state.py")
     input_state3 = state3.add_input_data_port("input", "int", 0)
     output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
@@ -88,6 +92,7 @@ def create_models(*args, **kargs):
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
+    ctr_state.set_start_state(state3.state_id)
     input_ctr_state = ctr_state.add_input_data_port("ctr_in", "int", 0)
     output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)

@@ -29,10 +29,10 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
     yaml_tag = u'!HierarchyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, states=None, transitions=None, data_flows=None, start_state=None,
-                 scoped_variables=None, v_checker=None, path=None, filename=None):
+                 states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
+                 v_checker=None, path=None, filename=None):
 
-        ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, states,
+        ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
                                 transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
                                 state_type=StateType.HIERARCHY)
 
@@ -68,7 +68,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             while not state is self:
                 # depending on the execution mode pause execution
-
                 statemachine.singleton.state_machine_execution_engine.handle_execution_mode()
 
                 logger.debug("Executing next state state with id %s and type %s" %

@@ -537,7 +537,7 @@ def state_without_path_test():
 if __name__ == '__main__':
 
     statemachine.singleton.state_machine_execution_engine.start()
-    start_stop_pause_step_test()
+    #start_stop_pause_step_test()
 
     #scoped_data_test()
     #save_and_load_data_port_test()
@@ -549,7 +549,7 @@ if __name__ == '__main__':
 
     #concurrency_barrier_test()
     #concurrency_barrier_save_load_test()
-    #concurrency_preemption_test()
+    concurrency_preemption_test()
     #concurrency_preemption_save_load_test()
 
     #state_machine_manager_test()
@@ -563,9 +563,9 @@ if __name__ == '__main__':
     #run_library_statemachine()
 
     #save_nested_library_state()
-    print "########################################################"
+    #print "########################################################"
     # you have to run save_nested_library_state() test before you can run run_library_statemachine()
-    run_nested_library_statemachine()
+    #run_nested_library_statemachine()
 
     #TODO: test
     # test data flow in barrier state machine

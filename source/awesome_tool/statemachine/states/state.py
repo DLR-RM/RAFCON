@@ -157,9 +157,6 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
     :ivar _output_data_ports: holds the output data ports of the state
     :ivar _outcomes: holds the state outcomes, which are the connection points for transitions
     :ivar _is_start: indicates if this state is a start state of a hierarchy
-    :ivar _is_final: indicates if this state is a end state of a hierarchy
-    :ivar _sm_status: reference to the status of the state machine
-    :ivar _state_status: holds the status of the state during runtime
     :ivar _script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
     :ivar _input_data: the input data of the state during execution
     :ivar _output_data: the output data of the state during execution
@@ -175,7 +172,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
     #__observables__ = ("input_data_ports", )
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, path=None, filename=None, state_type=None, parent=None):
+                 path=None, filename=None, state_type=None, parent=None):
 
         Observable.__init__(self)
         threading.Thread.__init__(self)
@@ -204,14 +201,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
         self.outcomes = outcomes
 
         self._is_start = None
-        self._is_final = None
 
-        if sm_status is None:
-            self._sm_status = StateMachineStatus()
-        else:
-            self._sm_status = sm_status
-
-        self._state_status = None
         if state_type is StateType.EXECUTION:
             self.script = Script(path, filename, script_type=ScriptType.EXECUTION)
         else:
@@ -599,33 +589,6 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
             raise TypeError("is_final must be of type bool")
         self._is_final = is_final
 
-    @property
-    def sm_status(self):
-        """Property for the _sm_status field
-
-        """
-        return self._sm_status
-
-    @sm_status.setter
-    @Observable.observed
-    def sm_status(self, sm_status):
-        if not isinstance(sm_status, int):
-            raise TypeError("sm_status must be of type int")
-        self._sm_status = sm_status
-
-    @property
-    def state_status(self):
-        """Property for the _state_status field
-
-        """
-        return self._state_status
-
-    @state_status.setter
-    @Observable.observed
-    def state_status(self, state_status):
-        if not isinstance(state_status, StateMachineStatus):
-            raise TypeError("state_status must be of type StatemachineStatus")
-        self._state_status = state_status
 
     @property
     def script(self):

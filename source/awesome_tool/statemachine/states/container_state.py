@@ -39,11 +39,11 @@ class ContainerState(State):
     """
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, states=None, transitions=None, data_flows=None, start_state=None,
+                 states=None, transitions=None, data_flows=None, start_state=None,
                  scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None):
 
         logger.debug("Creating new container state")
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, path, filename,
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                        state_type=state_type)
 
         self._states = None
@@ -190,7 +190,7 @@ class ContainerState(State):
 
         if not to_state_id is None:
             if not (to_state_id in self.states or to_state_id == self.state_id):
-                raise AttributeError("To_state %s does not exit in the container state" % to_state_id.state_id)
+                raise AttributeError("To_state %s does not exist in the container state" % to_state_id.state_id)
 
         # get correct states
         from_state = None
@@ -396,11 +396,11 @@ class ContainerState(State):
         """Get the start state of the container state
 
         """
-        if self._sm_status.dependency_tree is None:
-            return self.states[self.start_state]
-        else:
-            #TODO: do start with state provided by the dependency tree
-            pass
+        return self.states[self.start_state]
+
+        # If there is a value in the dependency tree for this state start with the this one
+        #TODO: do start with state provided by the dependency tree
+
 
     def get_inputs_for_state(self, state):
         """Get all input data of an state

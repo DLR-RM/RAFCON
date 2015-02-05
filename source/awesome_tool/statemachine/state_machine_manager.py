@@ -10,9 +10,6 @@
 
 from gtkmvc import Observable
 
-from statemachine.states.state import State
-
-
 class StateMachineManager(Observable):
 
     """A class for to organizing all main components of a state machine
@@ -47,6 +44,4 @@ class StateMachineManager(Observable):
     @root_state.setter
     @Observable.observed
     def root_state(self, root_state):
-        if not isinstance(root_state, State):
-            raise TypeError("root_state must be of type State")
         self._root_state = root_state

@@ -18,14 +18,20 @@ class RosModule:
         self.my_first_var = 10
         self.my_second_var = 30
         self.turtle1_vel_publisher = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10, latch=True)
-        self.turtle2_vel_publisher = rospy.Publisher('/turtle2/cmd_vel', Twist, queue_size=10, latch=True)
+        self.bot_turtle_vel_publisher = rospy.Publisher('/bot_turtle/cmd_vel', Twist, queue_size=10, latch=True)
 
-        self.turtle1_pos_subscriber = rospy.Subscriber("/turtle1/pose", Pose, self.save_turtle_pose)
+        self.turtle1_pos_subscriber = rospy.Subscriber("/turtle1/pose", Pose, self.save_turtle1_pose)
+
+        self.subscriber_dict = {}
+        self.pose_dict = {}
 
         rospy.init_node('awesome_tool_turtle_commander', anonymous=True)
         self.rate = rospy.Rate(10)
         self.turtle1_pose = None
         #rospy.spin()
+
+    def save_generic_turtle_pose(self, Pose, name):
+        self.pose_dict[name] = Pose
 
     def start(self):
         print "ROS module: started"
@@ -40,7 +46,7 @@ class RosModule:
     def usage(self):
         return "%s [x y]"%sys.argv[0]
 
-    def save_turtle_pose(self, Pose):
+    def save_turtle1_pose(self, Pose):
         #print "The pose of turtle1 was saved"
         self.turtle1_pose = Pose
 
@@ -66,7 +72,7 @@ class RosModule:
             print "ROS external module: executed the ", service, " service"
             print resp1
         except rospy.ServiceException, e:
-            print "Service call failed: %s"%e
+            print "Service call failed: %s" % e
 
     def spawn_turtle(self, turtle_name, x, y, phi):
         service = "/spawn"
@@ -77,7 +83,9 @@ class RosModule:
             print "ROS external module: executed the ", service, " service"
             print resp1
         except rospy.ServiceException, e:
-            print "Service call failed: %s"%e
+            print "Service call failed: %s" % e
+        self.subscriber_dict[turtle_name] = \
+                rospy.Subscriber("/" + turtle_name + "/pose", Pose, self.save_generic_turtle_pose, turtle_name)
 
     def clear_field(self):
         service = "/clear"
@@ -88,7 +96,7 @@ class RosModule:
             print "ROS external module: executed the ", service, " service"
             print resp1
         except rospy.ServiceException, e:
-            print "Service call failed: %s"%e
+            print "Service call failed: %s" % e
 
     def move_turtle(self, turtle_name, x, y, phi):
         position_vector = Vector3(x, y, 0)
@@ -100,12 +108,12 @@ class RosModule:
                 print "publish twist to turtle1"
                 self. turtle1_vel_publisher.publish(twist_msg)
                 self.rate.sleep()
-            elif turtle_name == "turtle2":
-                print "publish twist to turtle2"
-                self. turtle2_vel_publisher.publish(twist_msg)
+            elif turtle_name == "bot_turtle":
+                print "publish twist to bot_turtle"
+                self. bot_turtle_vel_publisher.publish(twist_msg)
                 self.rate.sleep()
-        except rospy.ROSInterruptException:
-            print "Failed to send a velocity command to turtle1"
+        except rospy.ROSInterruptException, e:
+            print "Failed to send a velocity command to turtle %s: %s" % (turtle_name, e)
 
     def kill_turtle(self, turtle_name):
         service = "/kill"
@@ -116,15 +124,27 @@ class RosModule:
             print "ROS external module: executed the ", service, " service"
             print resp1
         except rospy.ServiceException, e:
-            print "Service call failed: %s"%e
+            print "Service call failed: %s" % e
 
-    def get_position_of_turtle(self, turtle_name):
+    def get_position_of_turtle1(self):
         x = self.turtle1_pose.x
         y = self.turtle1_pose.y
         theta = self.turtle1_pose.theta
         linear_velocity = self.turtle1_pose.linear_velocity
         angular_velocity = self.turtle1_pose.angular_velocity
-        print "The pose of turtle 1 is: ", [x, y, theta]
+        print "ROS external module: The pose of turtle 1 is: ", [x, y, theta]
+        return [x, y, theta]
+
+    def get_position_of_turtle(self, turtle_name):
+        while not turtle_name in self.pose_dict:
+            time.sleep(1.0)
+        x = self.pose_dict[turtle_name].x
+        y = self.pose_dict[turtle_name].y
+        theta = self.pose_dict[turtle_name].theta
+        linear_velocity = self.pose_dict[turtle_name].linear_velocity
+        angular_velocity = self.pose_dict[turtle_name].angular_velocity
+        print "ROS external module: The pose of the turtle ", turtle_name, " is: ", x, y, theta
+        return [x, y, theta]
 
 if __name__ == '__main__':
     my_ros_module = RosModule()
@@ -132,7 +152,7 @@ if __name__ == '__main__':
     my_ros_module.teleport_turtle("turtle1", randint(2, 9), randint(2, 9), uniform(0, 3.1415))
     my_ros_module.move_turtle("turtle1", 2, 1, 1)
     time.sleep(2)
-    my_ros_module.get_position_of_turtle("turtle1")
+    my_ros_module.get_position_of_turtle1()
     my_ros_module.clear_field()
     my_ros_module.kill_turtle("turtle2")
 

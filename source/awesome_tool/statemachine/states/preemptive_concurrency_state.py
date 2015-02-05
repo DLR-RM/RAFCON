@@ -24,11 +24,11 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
     yaml_tag = u'!PreemptiveConcurrencyState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None, sm_status=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
                  v_checker=None, path=None, filename=None):
 
-        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, states,
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
                                   transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
                                   state_type = StateType.PREEMPTION_CONCURRENCY)
 
