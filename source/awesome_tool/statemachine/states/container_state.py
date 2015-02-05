@@ -168,6 +168,38 @@ class ContainerState(State):
         for key in keys_to_delete:
             del self.data_flows[key]
 
+    @Observable.observed
+    def remove_outcome(self, outcome_id):
+        """Remove an outcome from the state
+
+        :param outcome_id: the id of the outcome to remove
+
+        """
+        if not outcome_id in self._used_outcome_ids:
+            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
+
+        if outcome_id == -1 or outcome_id == -2:
+            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
+                                 "return aborted or preempted")
+
+        # delete all transitions connected to this outcome
+        if not self.parent is None:
+            transition_ids_to_remove = []
+            for transition_id, transition in self.parent.transitions.iteritems():
+                if transition.from_outcome == outcome_id:
+                    transition_ids_to_remove.append(transition_id)
+
+            for transition_id in transition_ids_to_remove:
+                self.parent.remove_transition(transition_id)
+                # del self.parent.transitions[transition_id]
+
+        for transition_id, transition in self.transitions.iteritems():
+            if transition.to_outcome == outcome_id:
+                self.remove_transition(transition_id)
+
+        # delete outcome it self
+        self._used_outcome_ids.remove(outcome_id)
+        self._outcomes.pop(outcome_id, None)
 
     @Observable.observed
     #Primary key is transition_id
@@ -369,19 +401,44 @@ class ContainerState(State):
         :param scoped_variable_id: the id of the scoped variable to remove
 
         """
-        if scoped_variable_id in self._scoped_variables:
-            del self._scoped_variables[scoped_variable_id]
-        else:
+        if not scoped_variable_id in self._scoped_variables:
             raise AttributeError("A scoped variable with id %s does not exist" % str(scoped_variable_id))
 
+        # delete all data flows connected to scoped_variable
+        self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
+
+        # delete scoped variable
+        del self._scoped_variables[scoped_variable_id]
+
+    def remove_data_flows_with_data_port_id(self, data_port_id):
+        """Remove an data ports whose from_key or to_key equals the passed data_port_id
+
+        :param data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
+                            output data port id
+
+        """
+        # delete all data flows in parent related to data_port_id and self.state_id
+        if not self.parent is None:
+            data_flow_ids_to_remove = []
+            for data_flow_id, data_flow in self.parent.data_flows.iteritems():
+                if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
+                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                    data_flow_ids_to_remove.append(data_flow_id)
+
+            for data_flow_id in data_flow_ids_to_remove:
+                self.parent.remove_data_flow(data_flow_id)
+                # del self.parent.data_flows[data_flow_id]
+
+        # delete all data flows in self related to data_port_id and self.state_id
         data_flow_ids_to_remove = []
         for data_flow_id, data_flow in self.data_flows.iteritems():
-            if data_flow.from_key == scoped_variable_id or data_flow.to_key == scoped_variable_id:
+            if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
+                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                 data_flow_ids_to_remove.append(data_flow_id)
 
         for data_flow_id in data_flow_ids_to_remove:
-            del self.data_flows[data_flow_id]
-
+            self.remove_data_flow(data_flow_id)
+            # del self.data_flows[data_flow_id]
 
     @Observable.observed
     def set_start_state(self, state_id):

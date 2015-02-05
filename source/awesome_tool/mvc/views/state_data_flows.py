@@ -13,7 +13,7 @@ import gtk, gobject
 from gtkmvc import View
 
 
-class DataFlowListView(View):
+class StateDataFlowsListView(View):
     #builder = './glade/DataFlowListWidget.glade'
     #top = 'data_flow_list_view'
     top = 'tree_view'
@@ -43,7 +43,7 @@ class DataFlowListView(View):
         self['from_key_combo'] = self.from_key_cell
         #self.from_key_cell.set_property("width", 30)
         self.from_key_cell.set_property("text-column", 0)
-        self['from_key_col'] = gtk.TreeViewColumn('From-Key', self.from_key_cell, text=2, editable=10)  #, background=6)
+        self['from_key_col'] = gtk.TreeViewColumn('From-Key', self.from_key_cell, text=2, editable=10) # , background=6)
         self.tree_view.append_column(self['from_key_col'])
 
         # Variable to-state
@@ -51,7 +51,7 @@ class DataFlowListView(View):
         self['to_state_combo'] = self.to_state_cell
         self.to_state_cell.set_property("text-column", 0)
         #self.to_state_cell.set_property("width", 30)
-        self['to_state_col'] = gtk.TreeViewColumn('To-State', self.to_state_cell, text=3, editable=10)  #, background=7)
+        self['to_state_col'] = gtk.TreeViewColumn('To-State', self.to_state_cell, text=3, editable=10) # , background=7)
         self.tree_view.append_column(self['to_state_col'])
 
         # Variable to-key
@@ -59,14 +59,14 @@ class DataFlowListView(View):
         self['to_key_combo'] = self.to_key_cell
         self.to_key_cell.set_property("text-column", 0)
         #self.to_outcome_cell.set_property("width", 30)
-        self['to_key_col'] = gtk.TreeViewColumn('To-Key', self.to_key_cell, text=4, editable=10)  #, background=7)
+        self['to_key_col'] = gtk.TreeViewColumn('To-Key', self.to_key_cell, text=4, editable=10)  # , background=7)
         self.tree_view.append_column(self['to_key_col'])
 
         # Variable is_external
         self.external_cell = gtk.CellRendererToggle()
         self['external_toggle'] = self.external_cell
         #self.to_outcome_cell.set_property("width", 30)
-        self['external_col'] = gtk.TreeViewColumn('External', self.external_cell, active=5)  #, cell_background=7)
+        self['external_col'] = gtk.TreeViewColumn('External', self.external_cell, active=5)  # , cell_background=7)
         self.tree_view.append_column(self['external_col'])
 
         self.tree_view.show_all()
@@ -75,3 +75,13 @@ class DataFlowListView(View):
 
     def get_top_widget(self):
         return self.tree_view
+
+
+class StateDataFlowsEditorView(View):
+    builder = './glade/state_data_flows_widget.glade'
+    top = 'vbox1'
+
+    def __init__(self):
+        View.__init__(self)
+        self.data_flows_listView = StateDataFlowsListView()
+        self['dataflows_scroller'].add(self.data_flows_listView.get_top_widget())

@@ -10,7 +10,7 @@ import time
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from math import sqrt
-from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SCROLL_LEFT, SCROLL_RIGHT
+from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SCROLL_LEFT, SCROLL_RIGHT, SHIFT_MASK, CONTROL_MASK
 from gtk.gdk import keyval_name
 # from models.container_state import ContainerStateModel
 
@@ -21,8 +21,6 @@ class GraphicalEditorController(Controller):
     :param mvc.models.ContainerStateModel model: The root container state model containing the data
     :param mvc.views.GraphicalEditorView view: The GTK view having an OpenGL rendering element
     """
-
-    max_depth = 300
 
     def __init__(self, model, view):
         """Constructor
@@ -307,7 +305,6 @@ class GraphicalEditorController(Controller):
         :param widget: The widget beneath the mouse when the click was done
         :param event: Information about the event, e. g. x and y coordinate
         """
-
         mouse_current_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
         rel_x_motion = mouse_current_pos[0] - self.mouse_move_start_pos[0]
         rel_y_motion = mouse_current_pos[1] - self.mouse_move_start_pos[1]
@@ -396,7 +393,7 @@ class GraphicalEditorController(Controller):
             state_editor_data = self.selection.meta['gui']['editor']
             mouse_resize_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
 
-            if self.shift_modifier:
+            if int(event.state & SHIFT_MASK) > 0: # self.shift_modifier:
                 state_size_ratio = state_editor_data['width'] / state_editor_data['height']
                 if rel_x_motion / state_size_ratio < rel_y_motion:
                     mouse_resize_pos = (mouse_resize_pos[0],
@@ -411,7 +408,8 @@ class GraphicalEditorController(Controller):
 
             min_right_edge = state_editor_data['pos_x']
             max_bottom_edge = state_editor_data['pos_y'] + state_editor_data['height']
-            if not self.ctrl_modifier and isinstance(self.selection, ContainerStateModel):
+            # self.ctrl_modifier
+            if int(event.state & CONTROL_MASK) == 0 and isinstance(self.selection, ContainerStateModel):
                 # Check lower right corner of all child states
                 for child_state_m in self.selection.states.itervalues():
                     child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
@@ -435,8 +433,8 @@ class GraphicalEditorController(Controller):
 
             old_width = state_editor_data['width']
             old_height = state_editor_data['height']
-            old_pos_x= state_editor_data['pos_x']
-            old_pos_y= state_editor_data['pos_y']
+            old_pos_x = state_editor_data['pos_x']
+            old_pos_y = state_editor_data['pos_y']
 
             if width > 0:
                 if desired_right_edge > max_right_edge:
@@ -458,7 +456,7 @@ class GraphicalEditorController(Controller):
 
             width_factor = state_editor_data['width'] / old_width
             height_factor = state_editor_data['height'] / old_height
-            if (width_factor != 1 or height_factor != 1) and self.ctrl_modifier:
+            if (width_factor != 1 or height_factor != 1) and int(event.state & CONTROL_MASK) > 0:  # self.ctrl_modifier
 
                 def resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y):
                     def calc_new_pos(old_parent_pos, new_parent_pos, old_self_pos, factor):
@@ -601,7 +599,7 @@ class GraphicalEditorController(Controller):
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
-        if isinstance(state, ContainerStateModel) and depth < self.max_depth:
+        if isinstance(state, ContainerStateModel):
 
             state_ctr = 0
             margin = width / float(25)
@@ -618,7 +616,7 @@ class GraphicalEditorController(Controller):
                 child_pos_y = pos_y + height - child_height - state_ctr * margin
 
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
-                                depth + 1.0)#(1.0 / len(state.states)) + 0.5)
+                                depth + 1)
 
             for transition in state.transitions:
                 # Get id and references to the from and to state
@@ -685,6 +683,10 @@ class GraphicalEditorController(Controller):
                                   state.meta['gui']['editor']['input_pos'].items() +
                                   state.meta['gui']['editor']['output_pos'].items() +
                                   state.meta['gui']['editor']['scoped_pos'].items())
+
+                if not from_key in connectors or not to_key in connectors:
+                    logger.warn("Data flow with non existing port(s): {0}, {1}".format(from_key, to_key))
+                    continue
                 from_x = connectors[from_key][0]
                 from_y = connectors[from_key][1]
                 to_x = connectors[to_key][0]

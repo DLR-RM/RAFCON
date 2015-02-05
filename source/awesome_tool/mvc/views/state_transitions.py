@@ -7,11 +7,11 @@
 
 """
 
-import gtk, gobject
+import gtk  # , gobject
 from gtkmvc import View
 
 
-class TransitionListView(View):
+class StateTransitionsListView(View):
     #builder = './glade/TransitionListWidget.glade'
     #top = 'transition_list_view'
     top = 'tree_view'
@@ -73,3 +73,13 @@ class TransitionListView(View):
 
     def get_top_widget(self):
         return self.tree_view
+
+
+class StateTransitionsEditorView(View):
+    builder = './glade/state_transitions_widget.glade'
+    top = 'vbox2'
+
+    def __init__(self):
+        View.__init__(self)
+        self.transitions_listView = StateTransitionsListView()
+        self['transitions_scroller'].add(self.transitions_listView.get_top_widget())

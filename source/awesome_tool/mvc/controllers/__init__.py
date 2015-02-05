@@ -10,7 +10,7 @@ from external_module_manager import ExternalModuleManagerController
 from state_overview import StateOverviewController
 from source_editor import SourceEditorController
 from state_outcomes import StateOutcomesEditorController
-from state_outcomes import StateOutcomesTreeController
+from state_outcomes import StateOutcomesListController
 from io_data_port_list import DataPortListController
 from mvc.controllers.scoped_variable_list import ScopedVariableListController
 from connections_editor import StateConnectionsEditorController

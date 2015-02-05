@@ -50,7 +50,6 @@ class DataPort(Observable, yaml.YAMLObject):
 
         logger.debug("DataPort with name %s initialized" % self.name)
 
-
     def __str__(self):
         return "DataPort: \n name: %s \n data_type: %s \n default_value: %s " % (self.name, self.data_type,
                                                                                  self.default_value)
@@ -196,7 +195,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
         self._output_data_ports = None
         self.output_data_ports = output_data_ports
 
-        self.__used_outcome_ids = []
+        self._used_outcome_ids = []
         self._outcomes = None
         self.outcomes = outcomes
 
@@ -240,10 +239,10 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
 
         """
         if data_port_id in self._input_data_ports:
+            self.remove_data_flows_with_data_port_id(data_port_id)
             del self._input_data_ports[data_port_id]
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
-        self.remove_data_flows_with_data_port_id(data_port_id)
 
     def remove_data_flows_with_data_port_id(self, data_port_id):
         """Remove an data ports whose from_key or to_key equals the passed data_port_id
@@ -253,13 +252,16 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
 
         """
         if not self.parent is None:
+            # delete all data flows in parent related to data_port_id and self.state_id
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
-                if data_flow.from_key == data_port_id or data_flow.to_key == data_port_id:
+                if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
+                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                     data_flow_ids_to_remove.append(data_flow_id)
 
             for data_flow_id in data_flow_ids_to_remove:
-                del self.parent.data_flows[data_flow_id]
+                self.parent.remove_data_flow(data_flow_id)
+                # del self.parent.data_flows[data_flow_id]
 
     @Observable.observed
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
@@ -283,10 +285,10 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
 
         """
         if data_port_id in self._output_data_ports:
+            self.remove_data_flows_with_data_port_id(data_port_id)
             del self._output_data_ports[data_port_id]
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
-        self.remove_data_flows_with_data_port_id(data_port_id)
 
     def get_io_data_port_id_from_name_and_type(self, name, data_port_type):
         """Returns the data_port_id of a data_port with a certain name and data port type
@@ -332,12 +334,12 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
         if name in self._outcomes:
             logger.error("Two outcomes cannot have the same names")
             return
-        if outcome_id in self.__used_outcome_ids:
+        if outcome_id in self._used_outcome_ids:
             logger.error("Two outcomes cannot have the same outcome_ids")
             return
         outcome = Outcome(outcome_id, name, self.modify_outcome_name)
         self._outcomes[outcome_id] = outcome
-        self.__used_outcome_ids.append(outcome_id)
+        self._used_outcome_ids.append(outcome_id)
         return outcome_id
 
     @Observable.observed
@@ -347,24 +349,27 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
         :param outcome_id: the id of the outcome to remove
 
         """
-        if not outcome_id in self.__used_outcome_ids:
+        if not outcome_id in self._used_outcome_ids:
             raise AttributeError("There is no outcome_id %s" % str(outcome_id))
 
         if outcome_id == -1 or outcome_id == -2:
             raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
                                  "return aborted or preempted")
-        self.__used_outcome_ids.remove(outcome_id)
-        self._outcomes.pop(outcome_id, None)
 
         # delete all transitions connected to this outcome
-        transition_ids_to_remove = []
         if not self.parent is None:
+            transition_ids_to_remove = []
             for transition_id, transition in self.parent.transitions.iteritems():
-                if transition.from_outcome == outcome_id or transition.to_outcome == outcome_id:
+                if transition.from_outcome == outcome_id:
                     transition_ids_to_remove.append(transition_id)
 
-        for transition_id in transition_ids_to_remove:
-            del self.parent.transitions[transition_id]
+            for transition_id in transition_ids_to_remove:
+                self.parent.remove_transition(transition_id)
+                # del self.parent.transitions[transition_id]
+
+        # delete outcome it self
+        self._used_outcome_ids.remove(outcome_id)
+        self._outcomes.pop(outcome_id, None)
 
     @Observable.observed
     def modify_outcome_name(self, name, outcome_id):

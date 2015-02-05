@@ -24,7 +24,7 @@ class ParentObserver(Observer):
             func_handle()
 
 
-class StateOutcomesTreeController(Controller):
+class StateOutcomesListController(Controller):
 
     parent_observer = None
 
@@ -157,30 +157,11 @@ class StateOutcomesTreeController(Controller):
     def on_remove(self, button, info=None):
         # print "remove outcome"
         # print self.model.state.outcomes
-        # self.update_path()
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
         #print path, tree
         tree, iter = self.view.tree_view.get_selection().get_selected()
         if path and not self.tree_store[path[0][0]][6].outcome_id < 0:
             outcome_id = self.tree_store[path[0][0]][6].outcome_id
-            if outcome_id in self.list_to_other_outcome:
-                elem = self.list_to_other_outcome[outcome_id]
-                transition = self.model.parent.state.transitions[elem[2]]  # transition by transition_id
-                # print "remove_to_other_outcome: ", elem[2], transition.transition_id, self.model.parent.state.name, \
-                #     transition.to_outcome, transition.to_state, transition.to_outcome, transition.to_state
-                self.model.parent.state.remove_transition(transition.transition_id)
-            if outcome_id in self.list_to_other_state:
-                elem = self.list_to_other_state[outcome_id]
-                transition = self.model.parent.state.transitions[elem[2]]  # transition by transition_id
-                # print "remove_to_other_state: ", elem[2], transition.transition_id, self.model.parent.state.name, \
-                #     transition.from_outcome, transition.from_state, transition.to_outcome, transition.to_state
-                self.model.parent.state.remove_transition(transition.transition_id)
-            if outcome_id in self.list_from_other_state:
-                for elem in self.list_from_other_state[outcome_id]:
-                    transition = self.model.state.transitions[elem[2]]  # transition by transition_id
-                    # print "remove_from_other_state: ", elem[2], transition.transition_id, self.model.state.name, \
-                    #     transition.to_outcome, transition.to_state
-                    self.model.state.remove_transition(transition.transition_id)
 
             self.model.state.remove_outcome(outcome_id)
             # print path, parent, tree, iter
@@ -281,15 +262,15 @@ class StateOutcomesEditorController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
-        self.tree_ctrl = StateOutcomesTreeController(model, view.treeView)
+        self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
 
     def register_view(self, view):
         """Called when the View was registered
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
 
-        view['add_button'].connect("clicked", self.tree_ctrl.on_add)
-        view['remove_button'].connect("clicked", self.tree_ctrl.on_remove)
+        view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
+        view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
