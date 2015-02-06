@@ -34,14 +34,14 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
     def __init__(self, library_path=None, library_name=None, version=None,  # library state specific attributes
                  # the following are the container state specific attributes
                  name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, states=None, transitions=None, data_flows=None, start_state=None,
-                 scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None):
+                 states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
+                 v_checker=None, path=None, filename=None):
         #logger.debug("------------------------------------------")
         logger.debug("Initialized library state %s" % library_name)
         #logger.debug("------------------------------------------")
         ContainerState.__init__(self, name=library_name, state_id=state_id, input_data_ports=input_data_ports,
-                                output_data_ports=output_data_ports, outcomes=outcomes, sm_status=sm_status,
-                                states=states, transitions=transitions, data_flows=data_flows, start_state=start_state,
+                                output_data_ports=output_data_ports, outcomes=outcomes, states=states,
+                                transitions=transitions, data_flows=data_flows, start_state=start_state,
                                 scoped_variables=scoped_variables, v_checker=v_checker, path=path, filename=filename,
                                 state_type=StateType.LIBRARY)
         Observable.__init__(self)
@@ -61,6 +61,7 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
         target_lib_dict = statemachine.singleton.library_manager.libraries
         for element in path_list:
             target_lib_dict = target_lib_dict[element]
+        print target_lib_dict
         # get a fresh copy of the library state from disk
         [self.state_copy, lib_version, creationtime] = statemachine.singleton.library_manager.storage.\
             load_statemachine_from_yaml(target_lib_dict[library_name])
@@ -96,9 +97,9 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
             'library_name': data.library_name,
             'version': data.version,
         }
-        print "Before: ", dict_representation
+        #print "Before: ", dict_representation
         dict_representation.update(container_dict_representation)
-        print "After: ", dict_representation
+        #print "After: ", dict_representation
         node = dumper.represent_mapping(u'!LibraryState', dict_representation)
         return node
 
@@ -108,11 +109,11 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
         return LibraryState(library_path=dict_representation['library_path'],
                             library_name=dict_representation['library_name'],
                             version=dict_representation['version'],
+                            name=dict_representation['name'],
                             state_id=dict_representation['state_id'],
                             input_data_ports=dict_representation['input_data_ports'],
                             output_data_ports=dict_representation['output_data_ports'],
                             outcomes=dict_representation['outcomes'],
-                            sm_status=None,
                             states=None,
                             transitions=dict_representation['transitions'],
                             data_flows=dict_representation['data_flows'],

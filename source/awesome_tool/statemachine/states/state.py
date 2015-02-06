@@ -144,7 +144,7 @@ StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTI
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 
 
-class State(threading.Thread, Observable, yaml.YAMLObject, object):
+class State(Observable, yaml.YAMLObject, object):
 
     """A class for representing a state in the state machine
 
@@ -156,9 +156,6 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
     :ivar _output_data_ports: holds the output data ports of the state
     :ivar _outcomes: holds the state outcomes, which are the connection points for transitions
     :ivar _is_start: indicates if this state is a start state of a hierarchy
-    :ivar _is_final: indicates if this state is a end state of a hierarchy
-    :ivar _sm_status: reference to the status of the state machine
-    :ivar _state_status: holds the status of the state during runtime
     :ivar _script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
     :ivar _input_data: the input data of the state during execution
     :ivar _output_data: the output data of the state during execution
@@ -174,10 +171,10 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
     #__observables__ = ("input_data_ports", )
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, path=None, filename=None, state_type=None, parent=None):
+                 path=None, filename=None, state_type=None, parent=None):
 
         Observable.__init__(self)
-        threading.Thread.__init__(self)
+        self.thread = None
 
         self._name = None
         self.name = name
@@ -203,14 +200,7 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
         self.outcomes = outcomes
 
         self._is_start = None
-        self._is_final = None
 
-        if sm_status is None:
-            self._sm_status = StateMachineStatus()
-        else:
-            self._sm_status = sm_status
-
-        self._state_status = None
         if state_type is StateType.EXECUTION:
             self.script = Script(path, filename, script_type=ScriptType.EXECUTION)
         else:
@@ -226,6 +216,30 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
         self._active = None
 
         logger.debug("State with id %s initialized" % self._state_id)
+
+    # give the state the appearance of a thread that can be started several times
+    def start(self):
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
+
+    def join(self):
+        self.thread.join()
+
+    def setup_run(self):
+        self.active = True
+        self.preempted = False
+        if not isinstance(self.input_data, dict):
+            raise TypeError("states must be of type dict")
+        if not isinstance(self.output_data, dict):
+            raise TypeError("states must be of type dict")
+        self.check_input_data_type(self.input_data)
+
+    def recursively_preempt_states(self, state):
+        state.preempted = True
+        # only go deeper if the State has a states dictionary = the state is not a Execution State
+        if not state.state_type is StateType.EXECUTION:
+            for key, state in state.states.iteritems():
+                state.recursively_preempt_states(state)
 
     @Observable.observed
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
@@ -425,16 +439,16 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
                     if not isinstance(input_data[data_port.name], getattr(sys.modules[__name__], data_port.data_type)):
                         raise TypeError("Input of execute function must be of type %s" % str(data_port.data_type))
 
-    def check_output_data_type(self, output_data):
+    def check_output_data_type(self):
         """Check the output data types of the state
 
         """
         for output_port_id, output_port in self.output_data_ports.iteritems():
-            if not output_data[output_port.name] is None:
+            if not self.output_data[output_port.name] is None:
                 #check for primitive data types
-                if not str(type(output_data[output_port.name]).__name__) == output_port.data_type:
+                if not str(type(self.output_data[output_port.name]).__name__) == output_port.data_type:
                     #check for classes
-                    if not isinstance(output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
+                    if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
                         raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
 
     def __str__(self):
@@ -604,33 +618,6 @@ class State(threading.Thread, Observable, yaml.YAMLObject, object):
             raise TypeError("is_final must be of type bool")
         self._is_final = is_final
 
-    @property
-    def sm_status(self):
-        """Property for the _sm_status field
-
-        """
-        return self._sm_status
-
-    @sm_status.setter
-    @Observable.observed
-    def sm_status(self, sm_status):
-        if not isinstance(sm_status, int):
-            raise TypeError("sm_status must be of type int")
-        self._sm_status = sm_status
-
-    @property
-    def state_status(self):
-        """Property for the _state_status field
-
-        """
-        return self._state_status
-
-    @state_status.setter
-    @Observable.observed
-    def state_status(self, state_status):
-        if not isinstance(state_status, StateMachineStatus):
-            raise TypeError("state_status must be of type StatemachineStatus")
-        self._state_status = state_status
 
     @property
     def script(self):

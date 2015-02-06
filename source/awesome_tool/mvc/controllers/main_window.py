@@ -1,5 +1,7 @@
 import gtk
 from gtkmvc import Controller
+from utils import log
+logger = log.get_logger(__name__)
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
     SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
@@ -25,6 +27,10 @@ class MainWindowController(Controller):
         self.root_state_model = self.model.root_state
         self.em_module = self.model.root_state
         self.em_module = self.model.root_state
+
+        top_h_pane = view['top_h_pane']
+        left_v_pane = view['left_v_pane']
+        right_v_pane = view['right_v_pane']
 
         ######################################################
         # logging view
@@ -86,7 +92,7 @@ class MainWindowController(Controller):
         ######################################################
         # external module editor
         ######################################################
-        em_global_notebook = view["em_global_notebook"]
+        em_global_notebook = view["right_bottom_notebook"]
         #remove placeholder tab
         external_modules_tab = view['external_modules_placeholder']
         page_num = em_global_notebook.page_num(external_modules_tab)
@@ -121,6 +127,13 @@ class MainWindowController(Controller):
                             str(statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         status_bar3.push(0, status_bar3_string)
 
+        ######################################################
+        # setupt correct sizes
+        ######################################################
+        top_h_pane.set_position(200)
+        left_v_pane.set_position(700)
+        right_v_pane.set_position(600)
+
     @Controller.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
         status_bar3 = self.view["statusbar3"]
@@ -135,22 +148,28 @@ class MainWindowController(Controller):
         pass
 
     def on_backward_step_mode_activate(self, widget, data=None):
+        logger.debug("Backward execution step not implemented yet!")
         pass
 
     def on_step_activate(self, widget, data=None):
-        pass
+        logger.debug("Execution step ...")
+        statemachine.singleton.state_machine_execution_engine.step()
 
     def on_step_mode_activate(self, widget, data=None):
-        pass
+        logger.debug("Activate execution engine step mode ...")
+        statemachine.singleton.state_machine_execution_engine.step_mode()
 
     def on_stop_activate(self, widget, data=None):
-        pass
+        logger.debug("Stop execution engine ...")
+        statemachine.singleton.state_machine_execution_engine.stop()
 
     def on_pause_activate(self, widget, data=None):
-        pass
+        logger.debug("Pause execution engine ...")
+        statemachine.singleton.state_machine_execution_engine.pause()
 
     def on_start_activate(self, widget, data=None):
-        pass
+        logger.debug("Start execution engine ...")
+        statemachine.singleton.state_machine_execution_engine.start()
 
     def on_grid_toggled(self, widget, data=None):
         pass

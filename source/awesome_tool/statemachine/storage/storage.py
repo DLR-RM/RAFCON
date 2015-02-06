@@ -80,6 +80,7 @@ class Storage(Observable):
 
     def load_file_from_yaml_abs(self, abs_path):
         stream = file(abs_path, 'r')
+        print stream
         state = yaml.load(stream)
         return state
 

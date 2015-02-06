@@ -39,11 +39,11 @@ class ContainerState(State):
     """
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 sm_status=None, states=None, transitions=None, data_flows=None, start_state=None,
+                 states=None, transitions=None, data_flows=None, start_state=None,
                  scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None):
 
         logger.debug("Creating new container state")
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, sm_status, path, filename,
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                        state_type=state_type)
 
         self._states = None
@@ -222,7 +222,7 @@ class ContainerState(State):
 
         if not to_state_id is None:
             if not (to_state_id in self.states or to_state_id == self.state_id):
-                raise AttributeError("To_state %s does not exit in the container state" % to_state_id.state_id)
+                raise AttributeError("To_state %s does not exist in the container state" % to_state_id.state_id)
 
         # get correct states
         from_state = None
@@ -453,11 +453,11 @@ class ContainerState(State):
         """Get the start state of the container state
 
         """
-        if self._sm_status.dependency_tree is None:
-            return self.states[self.start_state]
-        else:
-            #TODO: do start with state provided by the dependency tree
-            pass
+        return self.states[self.start_state]
+
+        # If there is a value in the dependency tree for this state start with the this one
+        #TODO: do start with state provided by the dependency tree
+
 
     def get_inputs_for_state(self, state):
         """Get all input data of an state
@@ -480,7 +480,7 @@ class ContainerState(State):
 
         for input_port_key, value in state.input_data_ports.iteritems():
             # at first load all default values
-            result_dict[value.name] = value.default_value
+            result_dict[value.name] = copy.copy(value.default_value)
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
             for data_flow_key, data_flow in self.data_flows.iteritems():
                 #print "data_flow_key: %s - data_flow: %s" % (str(data_flow_key), str(data_flow))
@@ -532,7 +532,7 @@ class ContainerState(State):
                     self.scoped_data[str(output_data_port_key)+state.state_id] =\
                         ScopedData(data_port.name, value, type(value).__name__, state)
 
-    def add_scoped_variables_to_scoped_data(self):
+    def add_default_values_of_scoped_variables_to_scoped_data(self):
         """Add the scoped variables default values to the scoped_data dictionary
 
         """
@@ -575,11 +575,21 @@ class ContainerState(State):
                 if key_svar == sdata.name:
                     dict[key_svar] = sdata.value
 
+    def write_output_data(self):
+        #write output data back to the dictionary
+        for output_name, value in self.output_data.iteritems():
+            output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
+            for data_flow_id, data_flow in self.data_flows.iteritems():
+                if data_flow.to_state is self.state_id:
+                    if data_flow.to_key == output_port_id:
+                        self.output_data[output_name] = \
+                            copy.deepcopy(self.scoped_data[str(data_flow.from_key)+data_flow.from_state].value)
 
     def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
         for key, val in output_dict.iteritems():
             self.scoped_data[key+self.state_id] = ScopedData(key, val, type(val).__name__, self)
 
+    # yaml part
     def get_container_state_yaml_dict(data):
         dict_representation = {
             'name': data.name,

@@ -33,7 +33,8 @@ class LoggingView(View):
                                                      self.textview.get_buffer().get_end_iter())
 
     def print_debug(self, text):
-        self.print_add(text, "set_warning_color")
+        pass
+        # self.print_add(text, "set_warning_color")
 
     def print_error(self, text):
         self.print_add(text, "set_error_color")
