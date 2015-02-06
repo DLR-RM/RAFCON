@@ -24,11 +24,11 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
-                 v_checker=None, path=None, filename=None):
+                 v_checker=None, path=None, filename=None, check_path=True):
 
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state, scoped_variables, v_checker, path,
-                                  filename, state_type = StateType.BARRIER_CONCURRENCY)
+                                  filename, state_type = StateType.BARRIER_CONCURRENCY, check_path=check_path)
 
     def run(self):
 
@@ -121,4 +121,5 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                               scoped_variables=dict_representation['scoped_variables'],
                               v_checker=None,
                               path=dict_representation['path'],
-                              filename=dict_representation['filename'])
+                              filename=dict_representation['filename'],
+                              check_path=False)

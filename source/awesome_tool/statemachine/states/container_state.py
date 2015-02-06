@@ -40,11 +40,10 @@ class ContainerState(State):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state=None,
-                 scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None):
+                 scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None, check_path=True):
 
-        logger.debug("Creating new container state")
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
-                       state_type=state_type)
+                       state_type=state_type, check_path=check_path)
 
         self._states = None
         self.states = states
@@ -61,6 +60,7 @@ class ContainerState(State):
         self._current_state = None
         #condition variable to wait for not connected states
         self._transitions_cv = Condition()
+        logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     def __str__(self):
         return "state type: %s\n%s" % (self.state_type, State.__str__(self))

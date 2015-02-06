@@ -27,9 +27,10 @@ class Script(Observable, yaml.YAMLObject):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _path: the path where the script resides
-    :ivar _filename: the full name of the script file
-    :ivar _compiled_module: holds the compiled module defined in the script file
+    :ivar path: the path where the script resides
+    :ivar filename: the full name of the script file
+    :ivar script_type: the type of the script i.e. Execution or Container
+    :ivar check_path: a flag to indicate if the path should be checked for existence
 
     """
 
@@ -53,7 +54,7 @@ def exit(self, scoped_variables, external_modules, gvm):
 
     yaml_tag = u'!Script'
 
-    def __init__(self, path=None, filename=None, script_type=None):
+    def __init__(self, path=None, filename=None, script_type=None, check_path=True):
 
         Observable.__init__(self)
 
@@ -76,11 +77,12 @@ def exit(self, scoped_variables, external_modules, gvm):
             script_file.write(self.script)
             script_file.close()
 
-        if not os.path.exists(self.path):
-            raise RuntimeError("Path %s does not exist" % self.path)
-        else:
-            if not os.path.exists(os.path.join(self.path, self.filename)):
-                raise RuntimeError("Path %s does not exist" % os.path.join(self.path, self.filename))
+        if check_path:
+            if not os.path.exists(self.path):
+                raise RuntimeError("Path %s does not exist" % self.path)
+            else:
+                if not os.path.exists(os.path.join(self.path, self.filename)):
+                    raise RuntimeError("Path %s does not exist" % os.path.join(self.path, self.filename))
 
 
     def execute(self, state, inputs={}, outputs={}):

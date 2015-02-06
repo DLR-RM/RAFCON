@@ -80,7 +80,6 @@ class Storage(Observable):
 
     def load_file_from_yaml_abs(self, abs_path):
         stream = file(abs_path, 'r')
-        print stream
         state = yaml.load(stream)
         return state
 
@@ -97,53 +96,64 @@ class Storage(Observable):
         yaml.dump(yaml.load(statemachine_content), f, indent=4)
         f.close()
         # add root state recursively
-        self.save_state_recursively(root_state, self.base_path)
+        self.save_state_recursively(root_state, "")
         logger.debug("Successfully saved statemachine!")
 
-    def save_script_file_for_state(self, state, path):
-        shutil.copyfile(os.path.join(state.script.path, state.script.filename), os.path.join(path, self.SCRIPT_FILE))
-        state.script.path = path
+    def save_script_file_for_state(self, state, state_path):
+        state_path_full = os.path.join(self.base_path, state_path)
+        shutil.copyfile(os.path.join(state.script.path, state.script.filename),
+                        os.path.join(state_path_full, self.SCRIPT_FILE))
+        state.script.path = state_path
         state.script.filename = self.SCRIPT_FILE
 
-    def save_state_recursively(self, root_state, parent_path=None):
+    def save_state_recursively(self, state, parent_path):
         #print "Save state %s recursively" % str(root_state.state_id)
-        state_path = os.path.join(parent_path, str(root_state.state_id))
-        self._create_path(state_path)
-        self.save_file_as_yaml_abs(root_state, os.path.join(state_path, self.META_FILE))
-        self.save_script_file_for_state(root_state, state_path)
+        state_path = os.path.join(parent_path, str(state.state_id))
+        state_path_full = os.path.join(self.base_path, state_path)
+        self._create_path(state_path_full)
+        self.save_script_file_for_state(state, state_path)
+        self.save_file_as_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
+        state.script.path = state_path_full
+        state.script.filename = self.SCRIPT_FILE
 
         #create yaml files for all children
-        if not root_state.state_type is statemachine.states.state.StateType.EXECUTION:
+        if not state.state_type is statemachine.states.state.StateType.EXECUTION:
             #print "length of root state: %s" % len(root_state.states)
-            for key, state in root_state.states.iteritems():
+            for key, state in state.states.iteritems():
                 #print "state_path: %s" % str(state_path)
                 self.save_state_recursively(state, state_path)
 
     def load_statemachine_from_yaml(self, base_path=None):
         if not base_path is None:
             self.base_path = base_path
-        #print "Load state machine from path %s" % self.base_path
+        logger.debug("Load state machine from path %s" % str(base_path))
         stream = file(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'r')
         tmp_dict = yaml.load(stream)
         root_state_id = tmp_dict['root_state']
         version = tmp_dict['version']
         creation_time = tmp_dict['creation_time']
         tmp_base_path = os.path.join(self.base_path, root_state_id)
+        logger.debug("Loading root state from path %s" % tmp_base_path)
         root_state = self.load_file_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
+        root_state.script.path = tmp_base_path
         for p in os.listdir(tmp_base_path):
             if os.path.isdir(os.path.join(tmp_base_path, p)):
                 elem = os.path.join(tmp_base_path, p)
+                logger.debug("Going down the statemachine hierarchy recursively to state %s" % str(elem))
                 self.load_state_recursively(root_state, elem)
+                logger.debug("Going up back to state %s" % str(tmp_base_path))
 
         return [root_state, version, creation_time]
 
-    def load_state_recursively(self, root_state, parent_path=None):
-        #print "Path of next state to add: %s" % base_path
-        state = self.load_file_from_yaml_abs(os.path.join(parent_path, self.META_FILE))
+    def load_state_recursively(self, root_state, state_path=None):
+        state = self.load_file_from_yaml_abs(os.path.join(state_path, self.META_FILE))
+        state.script.path = state_path
+        # connect the missing function_handlers for setting the outcome names
+        state.connect_all_outcome_function_handles()
         root_state.add_state(state)
-        for p in os.listdir(parent_path):
-            if os.path.isdir(os.path.join(parent_path, p)):
-                elem = os.path.join(parent_path, p)
+        for p in os.listdir(state_path):
+            if os.path.isdir(os.path.join(state_path, p)):
+                elem = os.path.join(state_path, p)
                 self.load_state_recursively(root_state, elem)
 
     def store_dict(self, rel_path, tmp_dict):
