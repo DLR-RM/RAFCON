@@ -21,7 +21,6 @@ from statemachine.states.state import StateType, DataPortType
 
 class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
-
     yaml_tag = u'!PreemptiveConcurrencyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
@@ -30,21 +29,13 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
                                   transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
-                                  state_type = StateType.PREEMPTION_CONCURRENCY)
+                                  state_type=StateType.PREEMPTION_CONCURRENCY)
 
     def run(self):
-        self.active = True
+        self.setup_run()
 
-        #initialize data structures
-        input_data = self.input_data
-        output_data = self.output_data
-        if not isinstance(input_data, dict):
-            raise TypeError("states must be of type dict")
-        if not isinstance(output_data, dict):
-            raise TypeError("states must be of type dict")
-        self.check_input_data_type(input_data)
-        self.add_input_data_to_scoped_data(input_data, self)
-        self.add_scoped_variables_to_scoped_data()
+        self.add_input_data_to_scoped_data(self.input_data, self)
+        self.add_default_values_of_scoped_variables_to_scoped_data()
 
         try:
             logger.debug("Starting preemptive concurrency state with id %s" % self._state_id)
@@ -72,17 +63,19 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             finished_thread_id = concurrency_queue.get()
             self.states[finished_thread_id].join()
+
+            #print "++++++++ output of execution state: ", self.states[finished_thread_id].output_data
+
             self.add_state_execution_output_to_scoped_data(self.states[finished_thread_id].output_data,
                                                            self.states[finished_thread_id])
             self.update_scoped_variables_with_output_dictionary(self.states[finished_thread_id].output_data,
                                                                 self.states[finished_thread_id])
 
             for key, state in self.states.iteritems():
-                state.preempted = True
+                self.recursively_preempt_states(state)
 
             for key, state in self.states.iteritems():
                 state.join()
-
 
             #handle data for the exit script
             scoped_variables_as_dict = {}
@@ -90,16 +83,15 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
-            #write output data back to the dictionary
-            for output_name, value in output_data.iteritems():
-                output_port_key = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
-                for data_flow_key, data_flow in self.data_flows.iteritems():
-                    if data_flow.to_state is self.state_id:
-                        if data_flow.to_key == output_port_key:
-                            output_data[output_name] =\
-                                self.scoped_results[str(data_flow.from_key)+data_flow.from_state].value()
+            #print "+++++++ scoped data of the preemptive container state %s: %s" % (self.name, str(self.scoped_data))
+            # for key, value in self.scoped_data.iteritems():
+            #     print "Scoped Data key %s: %s" % (key, str(value))
 
-            self.check_output_data_type(output_data)
+            self.write_output_data()
+
+            #print "+++++ output of the preemptive container state: ", self.output_data
+
+            self.check_output_data_type()
 
             # check the outcomes of the finished state for aborted or preempted
             # the output data has to be set before this check can be done
@@ -112,21 +104,29 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 self.active = False
                 return
 
-            #reset concurrency queue and preempted flag for all child states
-            for key, state in self.states.iteritems():
-                state.concurrency_queue = None
-                state.preempted = False
-
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
                 self.active = False
                 return
 
-            self.final_outcome = Outcome(0, "success")
+            transition = self.get_transition_for_outcome(self.states[finished_thread_id],
+                                                         self.states[finished_thread_id].final_outcome)
+            # wait until connection is created by user
+            while not transition:
+                self._transitions_cv.wait(3.0)
+                if self.preempted:
+                    self.final_outcome = Outcome(-2, "preempted")
+                    self.active = False
+                    return
+                transition = self.get_transition_for_outcome(self.states[finished_thread_id],
+                                                             self.states[finished_thread_id].final_outcome)
+
+            self.final_outcome = self.outcomes[transition.to_outcome]
             self.active = False
             return
 
-        except RuntimeError:
+        except RuntimeError, e:
+            logger.error("Runtime error %s" % e)
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
             return
@@ -147,7 +147,6 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                               input_data_ports=dict_representation['input_data_ports'],
                               output_data_ports=dict_representation['output_data_ports'],
                               outcomes=dict_representation['outcomes'],
-                              sm_status=None,
                               states=None,
                               transitions=dict_representation['transitions'],
                               data_flows=dict_representation['data_flows'],

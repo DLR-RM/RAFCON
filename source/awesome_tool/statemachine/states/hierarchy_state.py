@@ -40,21 +40,13 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
     # to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
     def run(self):
 
-        self.active = True
+        self.setup_run()
 
-        #initialize data structures
-        input_data = self.input_data
-        output_data = self.output_data
-        if not isinstance(input_data, dict):
-            raise TypeError("states must be of type dict")
-        if not isinstance(output_data, dict):
-            raise TypeError("states must be of type dict")
-        self.check_input_data_type(input_data)
-        self.add_input_data_to_scoped_data(input_data, self)
-        self.add_scoped_variables_to_scoped_data()
+        self.add_input_data_to_scoped_data(self.input_data, self)
+        self.add_default_values_of_scoped_variables_to_scoped_data()
 
         try:
-            logger.debug("Starting hierarchy state with id %s" % self._state_id)
+            logger.debug("Starting hierarchy state with id %s and name %s" % (self._state_id, self.name))
 
             #handle data for the entry script
             scoped_variables_as_dict = {}
@@ -67,11 +59,15 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             state = self.get_start_state()
 
             while not state is self:
+                if self.preempted:
+                    self.final_outcome = Outcome(-2, "preempted")
+                    self.active = False
+                    return
                 # depending on the execution mode pause execution
                 statemachine.singleton.state_machine_execution_engine.handle_execution_mode()
 
-                logger.debug("Executing next state state with id %s and type %s" %
-                             (state.state_id, str(state.state_type)))
+                logger.debug("Executing next state state with id %s, type %s and name %s" %
+                             (state.state_id, str(state.state_type), state.name))
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)
                 state.input_data = state_input
@@ -93,22 +89,15 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     transition = self.get_transition_for_outcome(state, state.final_outcome)
                 state = self.get_state_for_transition(transition)
 
-            #handle data for the entry script
+            #handle data for the exit script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
-            #write output data back to the dictionary
-            for output_name, value in output_data.iteritems():
-                output_port_key = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
-                for data_flow_key, data_flow in self.data_flows.iteritems():
-                    if data_flow.to_state is self.state_id:
-                        if data_flow.to_key == output_port_key:
-                            output_data[output_name] =\
-                                self.scoped_results[str(data_flow.from_key)+data_flow.from_state].value()
+            self.write_output_data()
 
-            self.check_output_data_type(output_data)
+            self.check_output_data_type()
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
@@ -139,7 +128,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                               input_data_ports=dict_representation['input_data_ports'],
                               output_data_ports=dict_representation['output_data_ports'],
                               outcomes=dict_representation['outcomes'],
-                              sm_status=None,
                               states=None,
                               transitions=dict_representation['transitions'],
                               data_flows=dict_representation['data_flows'],

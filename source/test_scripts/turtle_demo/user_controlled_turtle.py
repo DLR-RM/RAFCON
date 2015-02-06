@@ -1,8 +1,7 @@
 import copy
 
 def execute(self, inputs, outputs, external_modules, gvm):
-    print "User controlled turtle state is executing ..."
-    print "Waiting for user input"
+    print "User controlled turtle state is executing. Waiting for user input ... "
     user_input = copy.copy(external_modules["user_input"].instance.get_next_signal(3))
     print user_input
     if user_input == "forward":

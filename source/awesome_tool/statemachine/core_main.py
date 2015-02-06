@@ -65,7 +65,7 @@ def concurrency_barrier_save_load_test():
     state3.add_output_data_port("out1", "str", "default_output_value")
 
     s.save_statemachine_as_yaml(state3)
-    root_state = s.load_statemachine_from_yaml()
+    [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"in1": "in1_string", "in2": "in2_string"}
     output_data = {"out1": None}
@@ -130,7 +130,7 @@ def concurrency_preemption_save_load_test():
 
 
     s.save_statemachine_as_yaml(state3)
-    root_state = s.load_statemachine_from_yaml()
+    [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"in1": "in1_string", "in2": "in2_string"}
     output_data = {"out1": None}
@@ -190,7 +190,7 @@ def hierarchy_save_load_test():
                          state1.get_io_data_port_id_from_name_and_type("MyFirstDataInputPort", DataPortType.INPUT))
 
     s.save_statemachine_as_yaml(state3)
-    root_state = s.load_statemachine_from_yaml()
+    [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
@@ -363,7 +363,7 @@ def scoped_data_test():
     s = Storage("../../test_scripts/stored_statemachine")
     state3 = return_test_state_machine()
     s.save_statemachine_as_yaml(state3)
-    root_state = s.load_statemachine_from_yaml()
+    [root_state, version, creation_time] = s.load_statemachine_from_yaml()
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
     root_state.input_data = input_data
@@ -391,7 +391,7 @@ def default_data_port_values_test():
     state3.add_output_data_port("out1", "str")
 
     s.save_statemachine_as_yaml(state3)
-    root_state = s.load_statemachine_from_yaml()
+    [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"in1": "input_string", "in2": 2}
     output_data = {"out1": None}
@@ -419,7 +419,7 @@ def save_libraries():
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
-    state3.add_outcome("Container_Outcome", 6)
+    state3.add_outcome("container_outcome", 6)
     state3.add_transition(state2.state_id, 3, None, 6)
     state3.add_transition(state1.state_id, 3, state2.state_id, None)
     input_state3 = state3.add_input_data_port("in1", "str")
@@ -450,7 +450,7 @@ def get_library_statemachine():
     lib_state = LibraryState("test_libraries", "MyFirstLibrary", "0.1")
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
-    library_container_state.add_outcome("Container_Outcome", 6)
+    library_container_state.add_outcome("container_outcome", 6)
     library_container_state.add_transition(lib_state.state_id, 6, None, 6)
     lib_container_input = library_container_state.add_input_data_port("in1", "str")
     library_container_state.add_output_data_port("out1", "str")
@@ -475,8 +475,8 @@ def run_library_statemachine():
 def save_nested_library_state():
     save_libraries()
     library_container_state = get_library_statemachine()
-    statemachine.singleton.global_storage.save_statemachine_as_yaml(library_container_state,
-                                "../../test_scripts/test_libraries/library_with_nested_library", "0.1")
+    statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        library_container_state, "../../test_scripts/test_libraries/library_with_nested_library", "0.1")
 
 
 def run_nested_library_statemachine():
@@ -487,6 +487,7 @@ def run_nested_library_statemachine():
     nested_lib_state.input_data = input_data
     nested_lib_state.output_data = output_data
     statemachine.singleton.state_machine_manager.root_state = nested_lib_state
+    exit()
     statemachine.singleton.state_machine_execution_engine.start()
     nested_lib_state.join()
 
@@ -534,7 +535,6 @@ if __name__ == '__main__':
     #start_stop_pause_step_test()
 
     #scoped_data_test()
-    #save_and_load_data_port_test()
     #default_data_port_values_test()
     scoped_variable_test()
     #hierarchy_test()

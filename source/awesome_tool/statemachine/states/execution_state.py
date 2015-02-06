@@ -48,28 +48,22 @@ class ExecutionState(State, yaml.YAMLObject):
         return self.outcomes[outcome_id]
 
     def run(self):
-        self.active = True
+        self.setup_run()
         try:
 
-            #initialize data structures
-            input_data = self.input_data
-            #print input_data
-            output_data = self.output_data
-            if not isinstance(input_data, dict):
-                raise TypeError("states must be of type dict")
-            if not isinstance(output_data, dict):
-                raise TypeError("states must be of type dict")
-
-            self.check_input_data_type(input_data)
-
-            logger.debug("Starting state with id %s" % self._state_id)
-            outcome = self._execute(input_data, output_data)
+            logger.debug("Starting state with id %s and name %s" % (self._state_id, self.name))
+            outcome = self._execute(self.input_data, self.output_data)
 
             #check output data
-            self.check_output_data_type(output_data)
+            self.check_output_data_type()
 
             if self.concurrency_queue:
                 self.concurrency_queue.put(self.state_id)
+
+            if self.preempted:
+                self.final_outcome = Outcome(-2, "preempted")
+                self.active = False
+                return
 
             self.final_outcome = outcome
             self.active = False
@@ -111,4 +105,4 @@ class ExecutionState(State, yaml.YAMLObject):
         outcomes = dict_representation['outcomes']
         path = dict_representation['path']
         filename = dict_representation['filename']
-        return ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, None, path, filename)
+        return ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, path, filename)

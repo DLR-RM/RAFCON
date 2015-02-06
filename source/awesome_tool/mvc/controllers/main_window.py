@@ -27,6 +27,7 @@ class MainWindowController(Controller):
 
         top_h_pane = view['top_h_pane']
         left_v_pane = view['left_v_pane']
+        right_v_pane = view['right_v_pane']
 
         ######################################################
         # logging view
@@ -123,6 +124,7 @@ class MainWindowController(Controller):
         ######################################################
         top_h_pane.set_position(200)
         left_v_pane.set_position(700)
+        right_v_pane.set_position(600)
 
     @Controller.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):

@@ -47,7 +47,6 @@ class RosModule:
         return "%s [x y]"%sys.argv[0]
 
     def save_turtle1_pose(self, Pose):
-        #print "The pose of turtle1 was saved"
         self.turtle1_pose = Pose
 
     # def add_two_ints_client(self):
@@ -102,7 +101,7 @@ class RosModule:
         position_vector = Vector3(x, y, 0)
         rotation_vector = Vector3(0, 0, phi)
         twist_msg = Twist(position_vector, rotation_vector)
-        print twist_msg
+        #print twist_msg
         try:
             if turtle_name == "turtle1":
                 print "publish twist to turtle1"
@@ -123,6 +122,7 @@ class RosModule:
             resp1 = kill_turtle_service(turtle_name)
             print "ROS external module: executed the ", service, " service"
             print resp1
+            del self.subscriber_dict[turtle_name]
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
@@ -135,7 +135,14 @@ class RosModule:
         print "ROS external module: The pose of turtle 1 is: ", [x, y, theta]
         return [x, y, theta]
 
+    def turtle_exists(self, turtle_name):
+        if turtle_name in self.subscriber_dict:
+            return True
+        else:
+            return False
+
     def get_position_of_turtle(self, turtle_name):
+        #print "ROS external module: ", self.pose_dict
         while not turtle_name in self.pose_dict:
             time.sleep(1.0)
         x = self.pose_dict[turtle_name].x
@@ -143,7 +150,7 @@ class RosModule:
         theta = self.pose_dict[turtle_name].theta
         linear_velocity = self.pose_dict[turtle_name].linear_velocity
         angular_velocity = self.pose_dict[turtle_name].angular_velocity
-        print "ROS external module: The pose of the turtle ", turtle_name, " is: ", x, y, theta
+        #print "ROS external module: The pose of the turtle ", turtle_name, " is: ", x, y, theta
         return [x, y, theta]
 
 if __name__ == '__main__':

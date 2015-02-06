@@ -32,18 +32,10 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
     def run(self):
 
-        self.active = True
+        self.setup_run()
 
-        #initialize data structures
-        input_data = self.input_data
-        output_data = self.output_data
-        if not isinstance(input_data, dict):
-            raise TypeError("states must be of type dict")
-        if not isinstance(output_data, dict):
-            raise TypeError("states must be of type dict")
-        self.check_input_data_type(input_data)
-        self.add_input_data_to_scoped_data(input_data, self)
-        self.add_scoped_variables_to_scoped_data()
+        self.add_input_data_to_scoped_data(self.input_data, self)
+        self.add_default_values_of_scoped_variables_to_scoped_data()
 
         try:
             logger.debug("Starting preemptive concurrency state with id %s" % self._state_id)
@@ -74,16 +66,9 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
-            #write output data back to the dictionary
-            for output_name, value in output_data.iteritems():
-                output_port_key = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
-                for data_flow_key, data_flow in self.data_flows.iteritems():
-                    if data_flow.to_state is self.state_id:
-                        if data_flow.to_key == output_port_key:
-                            output_data[output_name] =\
-                                self.scoped_results[str(data_flow.from_key)+data_flow.from_state].value()
+            self.write_output_data()
 
-            self.check_output_data_type(output_data)
+            self.check_output_data_type()
 
             # check the outcomes of all states for aborted or preempted
             # check as well if the states were stopped
@@ -129,7 +114,6 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                               input_data_ports=dict_representation['input_data_ports'],
                               output_data_ports=dict_representation['output_data_ports'],
                               outcomes=dict_representation['outcomes'],
-                              sm_status=None,
                               states=None,
                               transitions=dict_representation['transitions'],
                               data_flows=dict_representation['data_flows'],

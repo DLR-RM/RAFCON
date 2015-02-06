@@ -11,7 +11,6 @@ from statemachine.storage.storage import Storage
 import statemachine.singleton
 
 import gtk
-import gtkmvc
 from utils import log
 import logging
 import sys
@@ -57,6 +56,11 @@ def create_models(state):
 
 def run_turtle_demo():
 
+
+    ########################################################
+    # state machine creation start
+    ########################################################
+
     #statemachine.singleton.state_machine_execution_engine.start()
 
     turtle_demo_state = BarrierConcurrencyState("TurtleDemo", path="../../test_scripts/turtle_demo",
@@ -79,12 +83,12 @@ def run_turtle_demo():
     user_turtle_hierarchy_state.set_start_state(user_turtle_state.state_id)
 
     turtle_demo_state.add_state(user_turtle_hierarchy_state)
-    # for barrier concurrency container state outcome 0 already exists
-    #turtle_demo_state.add_transition(user_turtle_hierarchy_state.state_id, 0, None, 0)
 
     ########################################################
     # follower turtle bot
     ########################################################
+
+    # the food turtles are created in the entry script
 
     follower_turtle_bot_hierarchy_state = HierarchyState("Follower Turtle Bot", path="../../test_scripts/turtle_demo",
                                                          filename="follower_turtle_bot_hierarchy_state.py")
@@ -93,18 +97,18 @@ def run_turtle_demo():
 
     # create bot turtle
 
-    create_turtle_state = ExecutionState("create bot turtle", path="../../test_scripts/turtle_demo",
+    create_bot_turtle_state = ExecutionState("create bot turtle", path="../../test_scripts/turtle_demo",
                                          filename="create_bot_turtle.py")
-    create_turtle_state.add_outcome("Success", 0)
-    follower_turtle_bot_hierarchy_state.add_state(create_turtle_state)
-    follower_turtle_bot_hierarchy_state.set_start_state(create_turtle_state.state_id)
+    create_bot_turtle_state.add_outcome("Success", 0)
+    follower_turtle_bot_hierarchy_state.add_state(create_bot_turtle_state)
+    follower_turtle_bot_hierarchy_state.set_start_state(create_bot_turtle_state.state_id)
 
     # check for food and follow
 
     check_food_and_follow_state = PreemptiveConcurrencyState("Food and Follow", path="../../test_scripts/turtle_demo",
                                                          filename="check_food_and_follow.py")
     follower_turtle_bot_hierarchy_state.add_state(check_food_and_follow_state)
-    follower_turtle_bot_hierarchy_state.add_transition(create_turtle_state.state_id, 0,
+    follower_turtle_bot_hierarchy_state.add_transition(create_bot_turtle_state.state_id, 0,
                                                        check_food_and_follow_state.state_id, None)
     check_food_and_follow_state.add_outcome("Eat", 0)
 
@@ -114,7 +118,7 @@ def run_turtle_demo():
                                     filename="check_for_food.py")
     check_food_and_follow_state.add_state(check_for_food)
     check_for_food.add_outcome("Success", 0)
-    check_for_food_output = check_for_food.add_output_data_port("target turtle", "str")
+    check_for_food_output = check_for_food.add_output_data_port("target turtle", "str", "default_turtle_value")
     check_for_food_and_follow_output = check_food_and_follow_state.add_output_data_port("target turtle", "str")
     check_food_and_follow_state.add_data_flow(check_for_food.state_id, check_for_food_output,
                                               check_food_and_follow_state.state_id, check_for_food_and_follow_output)
@@ -168,21 +172,15 @@ def run_turtle_demo():
                                                       check_for_food_and_follow_output,
                                                       eat.state_id, eat_input)
     eat.add_outcome("Finished Eating", 0)
-    follower_turtle_bot_hierarchy_state.add_transition(eat.state_id, 0, check_food_and_follow_state.state_id)
-    follower_turtle_bot_hierarchy_state.add_transition(check_food_and_follow_state.state_id, 0, eat.state_id)
+    follower_turtle_bot_hierarchy_state.add_transition(eat.state_id, 0, check_food_and_follow_state.state_id, 0)
+    follower_turtle_bot_hierarchy_state.add_transition(check_food_and_follow_state.state_id, 0, eat.state_id, 0)
 
     ########################################################
-    # food turtle bots
+    # state machine creation end
     ########################################################
 
     #statemachine.singleton.global_storage.save_statemachine_as_yaml(turtle_demo_state, "../../test_scripts/turtle_demo")
     #root_state = statemachine.singleton.global_storage.load_statemachine_from_yaml("../../test_scripts/turtle_demo")
-
-    # input_data = {"MyFirstDataInputPort": "input_string"}
-    # output_data = {"MyFirstDataOutputPort": None}
-    # root_state.input_data = input_data
-    # root_state.output_data = output_data
-
 
     statemachine.singleton.library_manager.initialize()
     logging_view = LoggingView()
@@ -201,7 +199,6 @@ def run_turtle_demo():
     statemachine.singleton.external_module_manager.add_external_module(user_input_module)
     statemachine.singleton.external_module_manager.external_modules["user_input"].connect([])
     #statemachine.singleton.external_module_manager.external_modules["user_input"].start()
-    #statemachine.singleton.external_module_manager.external_modules["user_input"].instance.gtk_worker_thread.join()
 
     # dual_gtk_window = DualGTKWindow()
 
