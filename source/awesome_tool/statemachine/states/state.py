@@ -171,7 +171,7 @@ class State(Observable, yaml.YAMLObject, object):
     #__observables__ = ("input_data_ports", )
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 path=None, filename=None, state_type=None, parent=None):
+                 path=None, filename=None, state_type=None, parent=None, check_path=True):
 
         Observable.__init__(self)
         self.thread = None
@@ -202,9 +202,9 @@ class State(Observable, yaml.YAMLObject, object):
         self._is_start = None
 
         if state_type is StateType.EXECUTION:
-            self.script = Script(path, filename, script_type=ScriptType.EXECUTION)
+            self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path)
         else:
-            self.script = Script(path, filename, script_type=ScriptType.CONTAINER)
+            self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path)
 
         self._input_data = {}
         self._output_data = {}
@@ -215,7 +215,7 @@ class State(Observable, yaml.YAMLObject, object):
 
         self._active = None
 
-        logger.debug("State with id %s initialized" % self._state_id)
+        logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))
 
     # give the state the appearance of a thread that can be started several times
     def start(self):
@@ -397,7 +397,9 @@ class State(Observable, yaml.YAMLObject, object):
 
     @Observable.observed
     def modify_outcome_name(self, name, outcome_id):
+        """Checks if name already exists for the outcomes. If this is the case a unique number is appended to the name
 
+        """
         def define_unique_name(name, dict_of_names, count=0):
             count += 1
             if name + str(count) in dict_of_names.values():
@@ -407,11 +409,8 @@ class State(Observable, yaml.YAMLObject, object):
         dict_of_names = {}
         for o_id, outcome in self._outcomes.items():
             dict_of_names[o_id] = outcome.name
-        #print dict_of_names
 
-        if outcome_id in self._outcomes.keys() and self._outcomes[outcome_id].name == name:
-            name = self._outcomes[outcome_id].name
-        elif name in dict_of_names.values():
+        if name in dict_of_names.values():
             name += str(define_unique_name(name, dict_of_names))
         return name
 
@@ -450,6 +449,13 @@ class State(Observable, yaml.YAMLObject, object):
                     #check for classes
                     if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
                         raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
+
+    def connect_all_outcome_function_handles(self):
+        """In case of the outcomes were created by loading from a yaml file, the function handlers are not set.
+            This method allows to set the handlers for all outcomes.
+        """
+        for outcome_id, outcome in self.outcomes.iteritems():
+            outcome.check_name = self.modify_outcome_name
 
     def __str__(self):
         return "State properties of state: %s \nstate_id: %s" % (self.name, self.state_id)

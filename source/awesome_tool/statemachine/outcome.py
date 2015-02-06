@@ -100,4 +100,6 @@ class Outcome(Observable, yaml.YAMLObject):
 
         if self.check_name is not None:
             self._name = self.check_name(name, self.outcome_id)
+        else:
+            self._name = name
 

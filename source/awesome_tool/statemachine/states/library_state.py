@@ -10,14 +10,14 @@
 from gtkmvc import Observable
 import yaml
 
-from statemachine.states.state import State, StateType
+from statemachine.states.state import StateType
 from statemachine.states.container_state import ContainerState
 import statemachine.singleton
 from utils import log
 logger = log.get_logger(__name__)
 
 
-class LibraryState(ContainerState, Observable, yaml.YAMLObject):
+class LibraryState(ContainerState, yaml.YAMLObject):
 
     """A class to represent a hierarchy state for the state machine
 
@@ -35,16 +35,13 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
                  # the following are the container state specific attributes
                  name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
-                 v_checker=None, path=None, filename=None):
-        #logger.debug("------------------------------------------")
-        logger.debug("Initialized library state %s" % library_name)
-        #logger.debug("------------------------------------------")
-        ContainerState.__init__(self, name=library_name, state_id=state_id, input_data_ports=input_data_ports,
+                 v_checker=None, path=None, filename=None, check_path=True):
+
+        ContainerState.__init__(self, name=name, state_id=state_id, input_data_ports=input_data_ports,
                                 output_data_ports=output_data_ports, outcomes=outcomes, states=states,
                                 transitions=transitions, data_flows=data_flows, start_state=start_state,
                                 scoped_variables=scoped_variables, v_checker=v_checker, path=path, filename=filename,
-                                state_type=StateType.LIBRARY)
-        Observable.__init__(self)
+                                state_type=StateType.LIBRARY, check_path=check_path)
 
         self._library_path = None
         self.library_path = library_path
@@ -59,12 +56,15 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
         #     print element
         path_list = library_path.split("/")
         target_lib_dict = statemachine.singleton.library_manager.libraries
+        # go down the path to the correct library
         for element in path_list:
             target_lib_dict = target_lib_dict[element]
-        print target_lib_dict
+        # print target_lib_dict
         # get a fresh copy of the library state from disk
-        [self.state_copy, lib_version, creationtime] = statemachine.singleton.library_manager.storage.\
+        logger.debug("Load state to which this library state links")
+        root_state, lib_version, creationtime = statemachine.singleton.library_manager.storage.\
             load_statemachine_from_yaml(target_lib_dict[library_name])
+        self.state_copy = root_state
         if not str(lib_version) == version:
             raise AttributeError("Library does not have the correct version!")
 
@@ -72,6 +72,8 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
         self.input_data_ports = self.state_copy.input_data_ports
         self.output_data_ports = self.state_copy.output_data_ports
         self.outcomes = self.state_copy.outcomes
+
+        logger.debug("Initialized library state with name %s" % name)
 
     def __str__(self):
         return str(self.state_copy) + "library_path: %s, library_name: %s, version: %s, state_id: %s" % \
@@ -121,7 +123,8 @@ class LibraryState(ContainerState, Observable, yaml.YAMLObject):
                             scoped_variables=dict_representation['scoped_variables'],
                             v_checker=None,
                             path=dict_representation['path'],
-                            filename=dict_representation['filename'])
+                            filename=dict_representation['filename'],
+                            check_path=False)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

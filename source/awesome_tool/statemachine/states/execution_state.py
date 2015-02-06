@@ -26,10 +26,10 @@ class ExecutionState(State, yaml.YAMLObject):
     yaml_tag = u'!ExecutionState'
 
     def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, path=None,
-                 filename=None):
+                 filename=None, check_path=True):
 
         State.__init__(self, name, state_id, input_keys, output_keys, outcomes, path, filename,
-                       state_type=StateType.EXECUTION)
+                       state_type=StateType.EXECUTION, check_path=check_path)
 
     def print_state_information(self):
         """Prints information about the state
@@ -105,4 +105,5 @@ class ExecutionState(State, yaml.YAMLObject):
         outcomes = dict_representation['outcomes']
         path = dict_representation['path']
         filename = dict_representation['filename']
-        return ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, path, filename)
+        return ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
+                              check_path=False)
