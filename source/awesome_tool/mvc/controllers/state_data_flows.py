@@ -444,7 +444,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             # check if from Self_state
             if model.state.state_id == data_flow.from_state:
                 fstate = model.state
-                from_state = '.self.' + model.state.name + '.' + data_flow.from_state
+                from_state = 'self.' + model.state.name + '.' + data_flow.from_state
             else:
                 if model.parent.state.state_id == data_flow.from_state:
                     fstate = model.parent.state

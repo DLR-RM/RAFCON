@@ -60,6 +60,16 @@ class StateEditorController(Controller):
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
 
+    def model_changed(self, model):
+        self.inputs_ctrl.model = model
+        self.outputs_ctrl.model = model
+        self.scoped_ctrl.model = model
+        self.outcomes_ctrl.model = model
+
+        self.source_ctrl.model = model
+        self.transitions_ctrl.model = model
+        self.data_flows_ctrl.model = model
+
     @Observer.observe("state", after=True)
     def assign_notification_state(self, model, prop_name, info):
         #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
@@ -134,11 +144,17 @@ class StateEditorEggController(Controller):
         self.arrangement_dict['connections_expander'] = {'view': None, 'list_store': None, 'min': 25, 'max': 65, 'act': 25}
         self.arrangement_dict['transitions_expander'] = {'view': 'transitions_view', 'list_store': None, 'min': 55, 'max': 170, 'act': 25}
         self.arrangement_dict['dataflows_expander'] = {'view': 'data_flows_view', 'list_store': None, 'min': 55, 'max': 170, 'act': 25}
+
         self.arrangement_dict['port_expander1']['list_store'] = self.model.input_data_port_list_store
         self.arrangement_dict['port_expander2']['list_store'] = self.model.output_data_port_list_store
-        self.arrangement_dict['port_expander3']['list_store'] = self.model.scoped_variables_list_store
         self.arrangement_dict['port_expander4']['list_store'] = self.outcomes_ctrl.oc_list_ctrl.tree_store
 
+        if hasattr(self.model, 'states'):
+            self.arrangement_dict['port_expander3']['list_store'] = self.model.scoped_variables_list_store
+            self.port_expander = ['port_expander1', 'port_expander2', 'port_expander3', 'port_expander4']
+        else:
+            self.view['port_expander3'].destroy()
+            self.port_expander = ['port_expander1', 'port_expander2', 'port_expander4']
         self.arrangement_dict['transitions_expander']['list_store'] = self.transitions_ctrl.trans_list_ctrl.tree_store
         self.arrangement_dict['dataflows_expander']['list_store'] = self.data_flows_ctrl.df_list_ctrl.tree_store
 
@@ -155,19 +171,26 @@ class StateEditorEggController(Controller):
         if self.view['port_expander'].get_expanded():
             count = 0
             count_rows = 0
-            exp_str = ''
             active_l = {}
-            for i in range(1, 5):
-                expand_id = 'port_expander'+str(i)
+            port_exp_num = len(self.port_expander)
+            for expand_id in self.port_expander:
+
+                # if self.arrangement_dict[expand_id]['list_store'] is None:
+                #     self.view[expand_id].set_size_request(width=-1, height=1)
                 if self.view[expand_id].get_expanded():
                     # print "%s holds %s rows" % (expand_id, len(self.arrangement_dict[expand_id]['list_store']))
-                    active_l[expand_id] = len(self.arrangement_dict[expand_id]['list_store'])
+                    if self.arrangement_dict[expand_id]['list_store'] is not None:
+                        active_l[expand_id] = len(self.arrangement_dict[expand_id]['list_store'])
+                        if active_l[expand_id] == 0:
+                            active_l[expand_id] = 1
+                    else:
+                        active_l[expand_id] = -1
                     if active_l[expand_id] > 4:
                         count_rows += 5
-                        self.view[expand_id].set_size_request(width=-1, height=60+22*5+22)
+                        self.view[expand_id].set_size_request(width=-1, height=70+22*5)
                     else:
-                        count_rows += len(self.arrangement_dict[expand_id]['list_store'])
-                        self.view[expand_id].set_size_request(width=-1, height=60+22*active_l[expand_id]+22)
+                        count_rows += active_l[expand_id]
+                        self.view[expand_id].set_size_request(width=-1, height=70+22*active_l[expand_id])
                     # print "%s is expanded" % ('port_expander'+str(i))
                     count += 1
                     # print self.view[expand_id].get_parent()
@@ -175,17 +198,14 @@ class StateEditorEggController(Controller):
                     if self.view[expand_id] == expander:
                         self.view[expand_id].set_size_request(width=-1, height=-1)
 
-                if expander is self.view[expand_id]:
-                    exp_str = expand_id
-                    # print "expander is %s" % exp_str
-            if count_rows*22+110+count*60 > 500:
+            if count_rows*22+port_exp_num*25+count*60 > 500:
                 self.view['port_expander'].set_size_request(width=-1, height=500)
                 # for expand_id in active_l.keys():
                 #     avg_l = (500-count*60-110)/count
                 #     if avg_l < active_l[key]:
                 #         self.view[expand_id].set_size_request(width=-1, height=60+int(22*avg_l)+22)
             else:
-                self.view['port_expander'].set_size_request(width=-1, height=count*60+22*count_rows+110)
+                self.view['port_expander'].set_size_request(width=-1, height=count*70+22*count_rows+port_exp_num*25)
         else:
             self.view['port_expander'].set_size_request(width=-1, height=-1)
             for i in range(1, 5):
@@ -215,9 +235,6 @@ class StateEditorEggController(Controller):
                 else:
                     if self.view[expand_id] == expander:
                         self.view[expand_id].set_size_request(width=-1, height=-1)
-                if expander is self.view[expand_id]:
-                        exp_str = expand_id
-                        # print "expander is %s" % exp_str
 
             if count_rows*22+65+count*60 > 360:
                 self.view['connections_expander'].set_size_request(width=-1, height=350)

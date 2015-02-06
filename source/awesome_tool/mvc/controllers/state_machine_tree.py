@@ -31,7 +31,7 @@ class StateMachineTreeController(Controller):
                                                (self.model.state.name,
                                                 self.model.state.state_id,
                                                 self.model.state.state_type,
-                                                self.model.state))
+                                                self.model))
         for state_id, smodel in self.model.states.items():
             self.insert_rec(parent, smodel)
 
@@ -41,7 +41,7 @@ class StateMachineTreeController(Controller):
                                                (state_model.state.name,
                                                 state_model.state.state_id,
                                                 state_model.state.state_type,
-                                                state_model.state))
+                                                state_model))
         if type(state_model) is ContainerStateModel:
             #print "Insert container state %s recursively" % state_model.state.name
             for state_id, smodel in state_model.states.items():
@@ -50,7 +50,7 @@ class StateMachineTreeController(Controller):
     def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
         #print "SM_Tree state selected: %s, %s" % (model, row)
-        state = model[row][3]
+        state_model = model[row][3]
         #print library
         print "The view should jump to the selected state and the zoom should be adjusted as well"
         #selected_state = self.model.statemachine.get_graph().find_node(model.get_value(row, 1))

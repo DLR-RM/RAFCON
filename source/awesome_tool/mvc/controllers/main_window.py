@@ -5,6 +5,8 @@ from mvc.controllers import StatePropertiesController, ContainerStateController,
     SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
     LibraryTreeController
 import statemachine.singleton
+from mvc.controllers.states_editor import StatesEditorController
+from mvc.controllers.state_machines_editor import StateMachinesEditorController
 
 
 class MainWindowController(Controller):
@@ -13,15 +15,16 @@ class MainWindowController(Controller):
 
     __observables__ = ("state_machine_execution_engine",)
 
-    def __init__(self, root_state_model, view, em_module, gvm_model):
-        Controller.__init__(self, root_state_model, view)
+    def __init__(self, state_machine_manager_model, view, em_module, gvm_model, editor_type='egg'):
+        Controller.__init__(self, state_machine_manager_model, view)
+
         self.state_machine_execution_engine = statemachine.singleton.state_machine_execution_engine
         self.observe_model(self.state_machine_execution_engine)
         self.state_machine_execution_engine.register_observer(self)
 
-        self.root_state_model = root_state_model
-        self.em_module = root_state_model
-        self.em_module = root_state_model
+        self.root_state_model = self.model.root_state
+        self.em_module = self.model.root_state
+        self.em_module = self.model.root_state
 
         ######################################################
         # logging view
@@ -56,24 +59,29 @@ class MainWindowController(Controller):
         page_num = tree_notebook.page_num(state_machine_tree_tab)
         tree_notebook.remove_page(page_num)
         #append new tab
-        self.state_machine_tree_controller = StateMachineTreeController(root_state_model, view.state_machine_tree)
+        self.state_machine_tree_controller = StateMachineTreeController(self.model.root_state, view.state_machine_tree)
         state_machine_label = gtk.Label('Statemachine Tree')
         tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
 
         ######################################################
-        # graphical editor
-        ######################################################
-        graphical_editor_frame = view['graphical_editor_frame']
-        self.graphical_editor = GraphicalEditorController(root_state_model, view.graphical_editor_view)
-        graphical_editor_frame.add(view.graphical_editor_view['main_frame'])
-        #self.graphical_editor = GraphicalEditorController(model, view.graphical_editor_window.get_top_widget())
-        #test = SingleWidgetWindowController(model, view.graphical_editor_window, GraphicalEditorController)
-
-        ######################################################
         # state editor
         ######################################################
-        this_model = filter(lambda model: model.state.name == 'State3', root_state_model.states.values()).pop()
-        self.state_editor = StateEditorController(root_state_model, view.state_editor)  # .get_top_widget())
+        this_model = filter(lambda model: model.state.name == 'State3', self.model.root_state.states.values()).pop()
+        self.states_editor_ctrl = StatesEditorController(self.model.root_state, view.states_editor, editor_type)
+
+        ######################################################
+        # graphical editor
+        ######################################################
+
+        self.state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
+                                                                        view.state_machines_editor,
+                                                                        self.state_machine_tree_controller,
+                                                                        self.states_editor_ctrl)
+        #self.state_machines_editor_ctrl.add_graphical_state_machine_editor(state_machine_manager_model.root_state)
+
+        # self.graphical_editor_ctrl = GraphicalEditorController(self.model.root_state, view.graphical_editor_view)
+        # #self.graphical_editor = GraphicalEditorController(model, view.graphical_editor_window.get_top_widget())
+        # #test = SingleWidgetWindowController(model, view.graphical_editor_window, GraphicalEditorController)
 
         ######################################################
         # external module editor

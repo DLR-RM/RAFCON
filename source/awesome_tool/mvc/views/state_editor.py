@@ -92,7 +92,7 @@ class StateEditorEggView(View):
 
 
 class StateEditorLDView(View):
-    builder = './glade/state_editor_egg_widget.glade'
+    builder = './glade/state_editor_ld_widget.glade'
     top = 'main_frame_vbox'
 
     def __init__(self):
@@ -116,41 +116,27 @@ class StateEditorLDView(View):
         self['transitions_viewport'].add(self['transitions_view'].get_top_widget())
         self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
 
-        self['port_expander'].connect('size-request', self.resize_port_widget)
-        self['port_expander1'].connect('size-request', self.resize_port_widget)
-        self['port_expander2'].connect('size-request', self.resize_port_widget)
-        self['port_expander3'].connect('size-request', self.resize_port_widget)
-        self['port_expander4'].connect('size-request', self.resize_port_widget)
-        self['connections_expander'].connect('size-request', self.resize_connections_widget)
-        self['connections_view']['transitions_expander'].connect('size-request', self.resize_connections_widget)
-        self['connections_view']['dataflows_expander'].connect('size-request', self.resize_connections_widget)
+        self.top_box = self['vbox1']
+        self.expanders = [self['data_expander'], self['logic_expander']]
+        self['data_expander'].connect('activate', self.resize_logic_data_expander)
+        self['logic_expander'].connect('activate', self.resize_logic_data_expander)
 
-    def resize_port_widget(self, expander, x):
+    def resize_logic_data_expander(self, widget, data=None):
+    # deactivate other expanders
+        for expander in self.expanders:
+            if not expander is widget:
+                expander.set_expanded(False)
+            #print expander.get_expanded()
 
-        if self['port_expander'].get_expanded():
-            count = 0
-            for i in range(1, 5):
-                if self['port_expander'+str(i)].get_expanded():
-                    # print "%s is expanded" % ('port_expander'+str(i))
-                    count += 1
-            self['port_expander'].set_size_request(width=-1, height=count*170+110)
-        else:
-            self['port_expander'].set_size_request(width=-1, height=-1)
+        # set the packing expanded value correct
+        for expander in self.expanders:
+            expand, fill, padding, pack_type = self.top_box.query_child_packing(expander)
+            if expander is widget:
+                self.top_box.set_child_packing(expander, True, fill, padding, pack_type)
+            else:
+                self.top_box.set_child_packing(expander, False, fill, padding, pack_type)
 
-    def resize_connections_widget(self, expander, x):
-
-        if self['connections_expander'].get_expanded():
-            count = 0
-            for expand_id in ['transitions_expander', 'dataflows_expander']:
-                if self['connections_view'][expand_id].get_expanded():
-                    # print "%s is expanded" % expand_id
-                    count += 1
-            self['connections_expander'].set_size_request(width=-1, height=count*150+55)
-            #self['vpaned1'].set_position(1000)
-        else:
-            self['connections_expander'].set_size_request(width=-1, height=-1)
-            #self['vpaned1'].set_position(1000)
-            # print "position: %s" % self.view['vpaned1'].get_position()
+        #print "Reset Expander Values"
 
 
 if __name__ == '__main__':

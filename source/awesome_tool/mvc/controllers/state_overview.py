@@ -46,8 +46,8 @@ class StateOverviewController(Controller):
 
     def change_name(self, entry, otherwidget):
         entry_text = entry.get_text()
-        print "State %s changed name from '%s' to: '%s'\n" % (self.model.state.state_id,
-                                                              self.model.state.name, entry_text)
+        # logger.debug("State %s changed name from '%s' to: '%s'\n" % (self.model.state.state_id,
+        #                                                              self.model.state.name, entry_text))
         self.model.state.name = entry_text
         self.view['entry_name'].set_text(self.model.state.name)
 

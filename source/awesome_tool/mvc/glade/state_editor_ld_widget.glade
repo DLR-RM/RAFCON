@@ -55,110 +55,22 @@
         <property name="can_focus">True</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkExpander" id="source_expander">
+          <object class="GtkViewport" id="source_viewport">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
             <property name="resize_mode">queue</property>
-            <property name="expanded">True</property>
             <child>
-              <object class="GtkViewport" id="source_viewport">
-                <property name="visible">True</property>
-                <property name="resize_mode">queue</property>
-                <child>
-                  <placeholder/>
-                </child>
-              </object>
-            </child>
-            <child type="label">
-              <object class="GtkLabel" id="label_script">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Script</property>
-              </object>
+              <placeholder/>
             </child>
           </object>
           <packing>
-            <property name="resize">True</property>
+            <property name="resize">False</property>
             <property name="shrink">True</property>
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="vbox2">
+          <object class="GtkVBox" id="vbox1">
             <property name="visible">True</property>
             <property name="orientation">vertical</property>
-            <child>
-              <object class="GtkExpander" id="logic_expander">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="resize_mode">queue</property>
-                <child>
-                  <object class="GtkVBox" id="vbox3">
-                    <property name="visible">True</property>
-                    <property name="orientation">vertical</property>
-                    <child>
-                      <object class="GtkExpander" id="logic_expander2">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="label_fill">True</property>
-                        <child>
-                          <object class="GtkViewport" id="outcomes_viewport">
-                            <property name="visible">True</property>
-                            <property name="resize_mode">queue</property>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                        </child>
-                        <child type="label">
-                          <object class="GtkLabel" id="label_script4">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Outcomes</property>
-                          </object>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkExpander" id="logic_expander1">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="label_fill">True</property>
-                        <child>
-                          <object class="GtkViewport" id="transitions_viewport">
-                            <property name="visible">True</property>
-                            <property name="resize_mode">queue</property>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                        </child>
-                        <child type="label">
-                          <object class="GtkLabel" id="label_script5">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Transitions</property>
-                          </object>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                  </object>
-                </child>
-                <child type="label">
-                  <object class="GtkLabel" id="label_logic">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Logical Linkage</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="position">0</property>
-              </packing>
-            </child>
             <child>
               <object class="GtkExpander" id="data_expander">
                 <property name="visible">True</property>
@@ -169,28 +81,50 @@
                     <property name="visible">True</property>
                     <property name="no_show_all">True</property>
                     <child>
-                      <object class="GtkVBox" id="vbox1">
+                      <object class="GtkVBox" id="vbox2">
                         <property name="visible">True</property>
                         <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkExpander" id="data_expander1">
+                          <object class="GtkVPaned" id="vpaned3">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="label_fill">True</property>
+                            <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkVBox" id="input_port_vbox">
+                              <object class="GtkNotebook" id="notebook1">
                                 <property name="visible">True</property>
-                                <property name="orientation">vertical</property>
+                                <property name="can_focus">True</property>
                                 <child>
-                                  <object class="GtkHBox" id="hbox1">
+                                  <object class="GtkVBox" id="input_port_vbox">
                                     <property name="visible">True</property>
-                                    <property name="homogeneous">True</property>
+                                    <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkButton" id="new_input_port_button">
-                                        <property name="label" translatable="yes">New</property>
+                                      <object class="GtkHBox" id="hbox1">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
+                                        <property name="homogeneous">True</property>
+                                        <child>
+                                          <object class="GtkButton" id="new_input_port_button">
+                                            <property name="label" translatable="yes">New</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkButton" id="delete_input_port_button">
+                                            <property name="label" translatable="yes">Delete</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -198,73 +132,62 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkButton" id="delete_input_port_button">
-                                        <property name="label" translatable="yes">Delete</property>
+                                      <object class="GtkScrolledWindow" id="input_ports_scroller">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
+                                        <property name="hscrollbar_policy">automatic</property>
+                                        <property name="vscrollbar_policy">automatic</property>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
                                 </child>
-                                <child>
-                                  <object class="GtkScrolledWindow" id="input_ports_scroller">
-                                    <property name="height_request">130</property>
+                                <child type="tab">
+                                  <object class="GtkLabel" id="label1">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
-                                    <child>
-                                      <placeholder/>
-                                    </child>
+                                    <property name="label" translatable="yes">Input Ports</property>
                                   </object>
                                   <packing>
-                                    <property name="position">1</property>
+                                    <property name="tab_fill">False</property>
                                   </packing>
                                 </child>
-                              </object>
-                            </child>
-                            <child type="label">
-                              <object class="GtkLabel" id="label_script1">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">Inputs</property>
-                                <property name="justify">center</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="padding">1</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkExpander" id="data_expander2">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="label_fill">True</property>
-                            <child>
-                              <object class="GtkVBox" id="output_port_vbox">
-                                <property name="visible">True</property>
-                                <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkHBox" id="hbox2">
+                                  <object class="GtkVBox" id="output_port_vbox">
                                     <property name="visible">True</property>
-                                    <property name="homogeneous">True</property>
+                                    <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkButton" id="new_output_port_button">
-                                        <property name="label" translatable="yes">New</property>
+                                      <object class="GtkHBox" id="hbox2">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
+                                        <property name="homogeneous">True</property>
+                                        <child>
+                                          <object class="GtkButton" id="new_output_port_button">
+                                            <property name="label" translatable="yes">New</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkButton" id="delete_output_port_button">
+                                            <property name="label" translatable="yes">Delete</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -272,72 +195,66 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkButton" id="delete_output_port_button">
-                                        <property name="label" translatable="yes">Delete</property>
+                                      <object class="GtkScrolledWindow" id="output_ports_scroller">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
+                                        <property name="hscrollbar_policy">automatic</property>
+                                        <property name="vscrollbar_policy">automatic</property>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
                                         <property name="position">1</property>
                                       </packing>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkScrolledWindow" id="output_ports_scroller">
-                                    <property name="height_request">150</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
-                                    <child>
-                                      <placeholder/>
                                     </child>
                                   </object>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
-                              </object>
-                            </child>
-                            <child type="label">
-                              <object class="GtkLabel" id="label_script2">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">Outputs</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="padding">1</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkExpander" id="data_expander3">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="label_fill">True</property>
-                            <child>
-                              <object class="GtkVBox" id="scoped_variable_vbox">
-                                <property name="visible">True</property>
-                                <property name="orientation">vertical</property>
-                                <child>
-                                  <object class="GtkHBox" id="hbox3">
+                                <child type="tab">
+                                  <object class="GtkLabel" id="label2">
                                     <property name="visible">True</property>
-                                    <property name="homogeneous">True</property>
+                                    <property name="label" translatable="yes">Output Ports</property>
+                                  </object>
+                                  <packing>
+                                    <property name="position">1</property>
+                                    <property name="tab_fill">False</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkVBox" id="scoped_variable_vbox">
+                                    <property name="visible">True</property>
+                                    <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkButton" id="new_scoped_variable_button">
-                                        <property name="label" translatable="yes">New</property>
+                                      <object class="GtkHBox" id="hbox3">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
+                                        <property name="homogeneous">True</property>
+                                        <child>
+                                          <object class="GtkButton" id="new_scoped_variable_button">
+                                            <property name="label" translatable="yes">New</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkButton" id="delete_scoped_variable_button">
+                                            <property name="label" translatable="yes">Delete</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -345,58 +262,40 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkButton" id="delete_scoped_variable_button">
-                                        <property name="label" translatable="yes">Delete</property>
+                                      <object class="GtkScrolledWindow" id="scoped_variables_scroller">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
+                                        <property name="hscrollbar_policy">automatic</property>
+                                        <property name="vscrollbar_policy">automatic</property>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="position">0</property>
+                                    <property name="position">2</property>
                                   </packing>
                                 </child>
-                                <child>
-                                  <object class="GtkScrolledWindow" id="scoped_variables_scroller">
-                                    <property name="height_request">150</property>
+                                <child type="tab">
+                                  <object class="GtkLabel" id="label3">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
-                                    <child>
-                                      <placeholder/>
-                                    </child>
+                                    <property name="label" translatable="yes">Scoped Variables</property>
                                   </object>
                                   <packing>
-                                    <property name="position">1</property>
+                                    <property name="position">2</property>
+                                    <property name="tab_fill">False</property>
                                   </packing>
                                 </child>
                               </object>
+                              <packing>
+                                <property name="resize">False</property>
+                                <property name="shrink">True</property>
+                              </packing>
                             </child>
-                            <child type="label">
-                              <object class="GtkLabel" id="label_script3">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">Scopes</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="padding">1</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkExpander" id="data_expander4">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="label_fill">True</property>
                             <child>
                               <object class="GtkViewport" id="data_flows_viewport">
                                 <property name="visible">True</property>
@@ -405,17 +304,14 @@
                                   <placeholder/>
                                 </child>
                               </object>
-                            </child>
-                            <child type="label">
-                              <object class="GtkLabel" id="label_script6">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">DataFlows</property>
-                              </object>
+                              <packing>
+                                <property name="resize">True</property>
+                                <property name="shrink">True</property>
+                              </packing>
                             </child>
                           </object>
                           <packing>
-                            <property name="expand">False</property>
-                            <property name="position">3</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                       </object>
@@ -430,20 +326,78 @@
                 </child>
               </object>
               <packing>
-                <property name="padding">2</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkExpander" id="logic_expander">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="resize_mode">queue</property>
+                <child>
+                  <object class="GtkVBox" id="vbox3">
+                    <property name="visible">True</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <object class="GtkVPaned" id="vpaned4">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkViewport" id="outcomes_viewport">
+                            <property name="visible">True</property>
+                            <property name="resize_mode">queue</property>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="resize">False</property>
+                            <property name="shrink">True</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkViewport" id="transitions_viewport">
+                            <property name="visible">True</property>
+                            <property name="resize_mode">queue</property>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="resize">True</property>
+                            <property name="shrink">True</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label_logic">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Logical Linkage</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="pack_type">end</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </object>
           <packing>
             <property name="resize">False</property>
-            <property name="shrink">False</property>
+            <property name="shrink">True</property>
           </packing>
         </child>
       </object>
       <packing>
         <property name="pack_type">end</property>
-        <property name="position">1</property>
+        <property name="position">0</property>
       </packing>
     </child>
   </object>

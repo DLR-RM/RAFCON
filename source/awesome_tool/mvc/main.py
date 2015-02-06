@@ -25,6 +25,8 @@ from mvc.controllers.state_overview import StateOverviewController
 from mvc.views.state_editor import StateEditorEggView, StateEditorLDView
 from mvc.controllers.state_editor import StateEditorEggController, StateEditorLDController
 
+from mvc.models.state_machine_manager import StateMachineManagerModel
+from statemachine.state_machine_manager import StateMachineManager
 from statemachine.states.state import State, DataPort
 from statemachine.states.execution_state import ExecutionState
 from statemachine.states.container_state import ContainerState
@@ -145,6 +147,11 @@ def create_models(*args, **kargs):
 
     return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
 
+import time
+def id_generator2():
+    time.sleep(0.001)
+    return int(time.time()*1000)
+
 
 if __name__ == '__main__':
     statemachine.singleton.library_manager.initialize()
@@ -157,8 +164,11 @@ if __name__ == '__main__':
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
     this_model = filter(lambda model: model.state.name == 'State3', ctr_model.states.values()).pop()
 
+    sm_manager = StateMachineManager(ctr_state)
+    sm_manager_model = StateMachineManagerModel(sm_manager)
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(ctr_model, main_window_view, emm_model, gvm_model)
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model,
+                                                  editor_type='egg')
 
     # sdev = StateDataportEditorView()
     # StateDataPortEditorController(ctr_model, sdev)
