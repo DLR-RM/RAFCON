@@ -164,11 +164,11 @@ if __name__ == '__main__':
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
     this_model = filter(lambda model: model.state.name == 'State3', ctr_model.states.values()).pop()
 
-    sm_manager = StateMachineManager(ctr_state)
-    sm_manager_model = StateMachineManagerModel(sm_manager)
+    statemachine.singleton.state_machine_manager.root_state = ctr_state
+    sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model,
-                                                  editor_type='egg')
+                                                  editor_type='ld')
 
     # sdev = StateDataportEditorView()
     # StateDataPortEditorController(ctr_model, sdev)

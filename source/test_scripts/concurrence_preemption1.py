@@ -4,9 +4,9 @@ def execute(self, inputs, outputs, external_modules, gvm):
     print "concurrence_barrier1: Hello world"
     print inputs
     print outputs
-    outputs["FirstDataOutputPort"] = 10.0
     self.print_state_information()
     for i in range(2):
-        time.sleep(1)
+        time.sleep(inputs["input_data_port1"])
         print "concurrence_barrier1 state active"
+    gvm.set_variable("state1_exit_code", "DF3LF")
     return 3

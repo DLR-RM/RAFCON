@@ -31,7 +31,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     __observables__ = ("execution_engine",)
 
     def __init__(self, state_machine_manager):
-
         ModelMT.__init__(self)
         Observable.__init__(self)
         self.state_machine_manager = state_machine_manager
@@ -42,6 +41,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._validity_checker = None
         self.execution_history = ExecutionHistory()
         logger.debug("Statemachine execution engine initialized")
+        self._execution_started = False
 
     #TODO: pause all external modules
     @Observable.observed
@@ -50,7 +50,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
     @Observable.observed
     def start(self):
-        if self._status.execution_mode is ExecutionMode.PAUSED:
+        if self._execution_started:
             logger.debug("Start statemachine and notify all threads waiting ")
             self._status.execution_mode = ExecutionMode.RUNNING
             self._status.execution_condition_variable.acquire()
@@ -60,16 +60,23 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             logger.debug("Restart the state machine")
             self._status.execution_mode = ExecutionMode.RUNNING
             self.state_machine_manager.root_state.start()
+            self._execution_started = True
 
     #TODO: stop all external modules
     @Observable.observed
     def stop(self):
         self._status.execution_mode = ExecutionMode.STOPPED
+        self._execution_started = False
 
     @Observable.observed
     def step_mode(self):
         logger.debug("Activate step mode")
-        self._status.execution_mode = ExecutionMode.STEPPING
+        if self._execution_started:
+            self._status.execution_mode = ExecutionMode.STEPPING
+        else:
+            self._status.execution_mode = ExecutionMode.STEPPING
+            self.state_machine_manager.root_state.start()
+            self._execution_started = True
 
     @Observable.observed
     def backward_step_mode(self):
@@ -83,7 +90,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
     # depending on the execution state wait for the execution condition variable to be notified
     # list all execution modes to keep the overview
-    def handle_execution_mode(self):
+    def handle_execution_mode(self, state):
         if self._status.execution_mode is ExecutionMode.RUNNING:
             return
 
@@ -93,6 +100,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             #     self._status.execution_condition_variable.wait()
             # finally:
             #     self._status.execution_condition_variable.release()
+            logger.debug("Execution engine stopped. State %s is going to quit!", state.name)
             quit()
 
         elif self._status.execution_mode is ExecutionMode.PAUSED:

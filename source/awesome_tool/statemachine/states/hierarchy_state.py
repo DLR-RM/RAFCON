@@ -36,6 +36,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                                 transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
                                 state_type=StateType.HIERARCHY, check_path=check_path)
 
+        #the execution engine has to be set for some units tests specifically
+        self.execution_engine = None
+
     # the input_data and output_data comes in with a mapping from names to values,
     # to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
     def run(self):
@@ -64,7 +67,10 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     self.active = False
                     return
                 # depending on the execution mode pause execution
-                statemachine.singleton.state_machine_execution_engine.handle_execution_mode()
+                if self.execution_engine:
+                    self.execution_engine.handle_execution_mode(self)
+                else:
+                    statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
 
                 logger.debug("Executing next state state with id %s, type %s and name %s" %
                              (state.state_id, str(state.state_type), state.name))
@@ -74,6 +80,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 state.output_data = state_output
                 #execute the state
                 state.run()
+                print "Hierarchy State: "
+                print state.output_data
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
                 #print "Final outcome of state is " + str(state.final_outcome)
@@ -94,6 +102,12 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+
+            # print "self.scoped_data: ", self.scoped_data
+            # for key, data in self.scoped_data.iteritems():
+            #     print data
+            #     print "From state name: " + data.from_state.name
+            # print "self.output_data: ", self.output_data
 
             self.write_output_data()
 
