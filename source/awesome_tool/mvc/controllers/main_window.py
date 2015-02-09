@@ -72,7 +72,7 @@ class MainWindowController(Controller):
         ######################################################
         # state editor
         ######################################################
-        this_model = filter(lambda model: model.state.name == 'State3', self.model.root_state.states.values()).pop()
+        #this_model = filter(lambda model: model.state.name == 'State3', self.model.root_state.states.values()).pop()
         self.states_editor_ctrl = StatesEditorController(self.model.root_state, view.states_editor, editor_type)
 
         ######################################################

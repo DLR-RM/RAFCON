@@ -1,15 +1,3 @@
-from statemachine.states.state import DataPort, DataPortType
-from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.library_state import LibraryState
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-
-from statemachine.state_machine_manager import StateMachineManager
-from statemachine.external_modules.external_module import ExternalModule
-from statemachine.storage.storage import Storage
-import statemachine.singleton
-
 import gtk
 from utils import log
 import logging
@@ -23,6 +11,19 @@ from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorVi
     GlobalVariableEditorView, ExternalModuleManagerWindowView, ExternalModuleManagerView,  SourceEditorView, \
     SingleWidgetWindowView, StateEditorView, LoggingView, StateMachineTreeView, LibraryTreeView, MainWindowView
 from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
+
+from statemachine.states.state import DataPort, DataPortType
+from statemachine.states.hierarchy_state import HierarchyState
+from statemachine.states.library_state import LibraryState
+from statemachine.states.execution_state import ExecutionState
+from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+
+from statemachine.state_machine_manager import StateMachineManager
+from statemachine.external_modules.external_module import ExternalModule
+from statemachine.storage.storage import Storage
+import statemachine.singleton
+from mvc.models.state_machine_manager import StateMachineManagerModel
 
 
 def setup_logger(logging_view):
@@ -55,7 +56,6 @@ def create_models(state):
 
 
 def run_turtle_demo():
-
 
     ########################################################
     # state machine creation start
@@ -187,7 +187,9 @@ def run_turtle_demo():
     setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models(turtle_demo_state)
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(ctr_model, main_window_view, emm_model, gvm_model)
+    statemachine.singleton.state_machine_manager.root_state = ctr_state
+    sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
     # external modules
     ros_module = ExternalModule(name="ros", module_name="ros_external_module", class_name="RosModule")
