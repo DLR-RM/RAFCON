@@ -337,7 +337,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         p1 = (pos_x + width, pos_y)
         p2 = (p1[0] - resize_length, p1[1])
         p3 = (p1[0], p1[1] + resize_length)
-        self._draw_triangle(p1, p2, p3, depth + 0.01, border_width, fill_color, self.border_color)
+        self._draw_triangle(p1, p2, p3, depth + 0.01, border_width, fill_color, border_color)
 
         # Draw outcomes as circle on the right side of the state
         # Every state has at least the default outcomes "aborted" and "preempted"
@@ -484,9 +484,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPushName(id)
         self._set_closest_stroke_width(width)
 
-        color = self.transition_color
-        if selected:
-            color = self.transition_selected_color
+        color = self.transition_color if not selected else self.transition_selected_color
         color.set()
 
         points = [(from_pos_x, from_pos_y)]
@@ -530,11 +528,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         width /= 2
         self._set_closest_stroke_width(width)
 
-        color = self.data_flow_color
-
-        if selected:
-            color = self.data_flow_selected_color
-
+        color = self.data_flow_color if not selected else self.data_flow_selected_color
         color.set()
 
         points = [(from_pos_x, from_pos_y)]
