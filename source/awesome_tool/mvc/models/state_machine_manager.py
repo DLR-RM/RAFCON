@@ -1,4 +1,5 @@
 from gtkmvc import ModelMT
+from mvc.models.state_machine import StateMachineModel
 from statemachine.state_machine_manager import StateMachineManager
 from mvc.models.container_state import ContainerStateModel
 from utils.vividict import Vividict
@@ -24,8 +25,14 @@ class StateMachineManagerModel(ModelMT):
 
         assert isinstance(state_machine_manager, StateMachineManager)
 
+        self.root_state = None
+        if state_machine_manager.root_state is not None:
+            self.root_state = ContainerStateModel(state_machine_manager.root_state)
+
         self.state_machine_manager = state_machine_manager
-        self.root_state = ContainerStateModel(self.state_machine_manager.root_state)
+        self.state_machines = {}
+        for sm_id, sm in state_machine_manager._state_machines.iteritems():
+            self.state_machines[sm_id] = StateMachineModel(sm)
 
         if isinstance(meta, Vividict):
             self.meta = meta

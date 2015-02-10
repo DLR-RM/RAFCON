@@ -85,6 +85,7 @@ class StatesEditorController(Controller):
 
         state_editor_view.show()
         self.view.notebook.show()
+        print "tab: ", state_identifier
         self.tabs[state_identifier] = {'page': page, 'state_model': state_model, 'ctrl': state_editor_ctrl}
 
         return idx
@@ -113,7 +114,7 @@ class StatesEditorController(Controller):
         #     self.act_model = model
 
     def change_state_editor_selection(self, selected_model):
-        state_identifier = selected_model.state.name + '.' + selected_model.state.state_id
+        state_identifier = selected_model.state.get_path()
         if self.act_model is None or not self.act_model.state.state_id == selected_model.state.state_id:
             print "State %s is SELECTED" % selected_model.state.name
 

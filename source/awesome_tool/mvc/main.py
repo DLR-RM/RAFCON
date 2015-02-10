@@ -34,6 +34,7 @@ from statemachine.transition import Transition
 from statemachine.data_flow import DataFlow
 from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
+from statemachine.state_machine import StateMachine
 from statemachine.states.hierarchy_state import HierarchyState
 
 
@@ -147,11 +148,6 @@ def create_models(*args, **kargs):
 
     return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
 
-import time
-def id_generator2():
-    time.sleep(0.001)
-    return int(time.time()*1000)
-
 
 if __name__ == '__main__':
     statemachine.singleton.library_manager.initialize()
@@ -164,8 +160,9 @@ if __name__ == '__main__':
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
     this_model = filter(lambda model: model.state.name == 'State3', ctr_model.states.values()).pop()
 
-    sm_manager = StateMachineManager(ctr_state)
-    sm_manager_model = StateMachineManagerModel(sm_manager)
+    state_machine = StateMachine(ctr_state)
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model,
                                                   editor_type='egg')
@@ -224,5 +221,6 @@ if __name__ == '__main__':
     # graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     # graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)
 
+    #gtk.gdk.threads_init()
     gtk.main()
     logger.debug("after gtk main")

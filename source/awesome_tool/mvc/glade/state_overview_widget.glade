@@ -77,10 +77,26 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="label_type_value">
+          <object class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">x-type</property>
-            <property name="selectable">True</property>
+            <child>
+              <object class="GtkLabel" id="label_type_value">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">x-type</property>
+                <property name="selectable">True</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="state_type_combo">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="position">1</property>

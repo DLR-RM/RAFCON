@@ -3,6 +3,8 @@ from gtkmvc import Controller
 
 from mvc.views.graphical_editor import GraphicalEditorView
 from mvc.controllers.graphical_editor import GraphicalEditorController
+from utils import log
+logger = log.get_logger(__name__)
 
 
 def create_tab_close_button(callback, *additional_parameters):
@@ -58,11 +60,11 @@ class StateMachinesEditorController(Controller):
 
     def register_view(self, view):
 
-        if type(self.model.root_state) is type(list):
-            for root_state in self.model.root_state:
-                self.add_graphical_state_machine_editor(root_state)
+        if type(self.model.state_machines) is dict:
+            for sm_id, sm in self.model.state_machines.iteritems():
+                self.add_graphical_state_machine_editor(sm.root_state)
         else:
-            self.add_graphical_state_machine_editor(self.model.root_state)
+            logger.debug('ManagerShould have dict as state_machines attr')
 
         self.state_machine_tree_ctrl.view.connect('cursor-changed', self.on_tree_view_state_double_clicked)
 
