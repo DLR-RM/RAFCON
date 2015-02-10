@@ -2,6 +2,7 @@ import gtk
 from utils import log
 import logging
 import sys
+import os
 
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
@@ -242,4 +243,8 @@ class DualGTKWindow:
 
 
 if __name__ == '__main__':
+    cur_path = os.path.abspath(os.path.dirname(__file__))
+    test_script_path = os.path.join(cur_path, os.pardir, os.pardir, 'test_scripts')
+    sys.path.insert(1, test_script_path)
+    print sys.path
     run_turtle_demo()
