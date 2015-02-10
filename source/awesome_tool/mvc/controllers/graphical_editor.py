@@ -291,7 +291,7 @@ class GraphicalEditorController(Controller):
                         dist = sqrt((outcomes[key][0] - click[0]) ** 2 + (outcomes[key][1] - click[1]) ** 2)
                         if dist < outcomes_close_threshold:
                             # This is a possible connection:
-                            # The outcome of a state is connected to ian outcome of its parent state
+                            # The outcome of a state is connected to an outcome of its parent state
                             target_outcome = key
 
                 elif release_selection.parent == self.selection.parent:
@@ -333,13 +333,7 @@ class GraphicalEditorController(Controller):
                         dist = sqrt((connectors[key][0] - click[0]) ** 2 + (connectors[key][1] - click[1]) ** 2)
                         if dist < connectors_close_threshold:
                             # This is a possible connection:
-                            # The outcome of a state is connected to ian outcome of its parent state
                             target_port = key
-
-                elif release_selection.parent == self.selection.parent:
-                    # This is a possible connection:
-                    # The outcome of a state is connected to another state, which is on the same hierarchy
-                    target_state_id = release_selection.state.state_id
 
                 if target_port is not None:
                     from_state_id = self.selection.state.state_id
