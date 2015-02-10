@@ -580,7 +580,7 @@ class ContainerState(State):
         for output_name, value in self.output_data.iteritems():
             output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
             for data_flow_id, data_flow in self.data_flows.iteritems():
-                if data_flow.to_state is self.state_id:
+                if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
                         self.output_data[output_name] = \
                             copy.deepcopy(self.scoped_data[str(data_flow.from_key)+data_flow.from_state].value)

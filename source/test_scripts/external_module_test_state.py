@@ -1,8 +1,7 @@
 def execute(self, inputs, outputs, external_modules, gvm):
-    print "Hello world: Execute"
+    print "External module test is executing... "
     print inputs
     print outputs
-    outputs["MyFirstDataOutputPort"] = 10.0
+    outputs["output_data_port1"] = external_modules["em1"].instance.custom_function_with_parameters(10.0, inputs["input_data_port1"])
     self.print_state_information()
-    external_modules["em1"].instance.custom_function()
     return 3

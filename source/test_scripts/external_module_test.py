@@ -49,3 +49,4 @@ class TestModule:
             xD
         '''
         print "External module: this is a custom function with parameters"
+        return param1 + param2

@@ -165,7 +165,7 @@ if __name__ == '__main__':
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model,
-                                                  editor_type='egg')
+                                                  editor_type='ld')
 
     # sdev = StateDataportEditorView()
     # StateDataPortEditorController(ctr_model, sdev)
@@ -221,6 +221,6 @@ if __name__ == '__main__':
     # graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     # graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)
 
-    #gtk.gdk.threads_init()
+    gtk.gdk.threads_init()
     gtk.main()
     logger.debug("after gtk main")

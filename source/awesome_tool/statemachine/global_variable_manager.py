@@ -141,6 +141,17 @@ class GlobalVariableManager(Observable):
         else:
             raise RuntimeError("Wrong access key for accessing global variable")
 
+    def variable_exist(self, key):
+        """Checks if a global variable exist
+
+        :param key: the name of the global variable
+
+        """
+        if key in self.__global_variable_dictionary:
+            return True
+        else:
+            return False
+
     def locked_status_for_variable(self, key):
         if key in self.__variable_locks:
             return self.__variable_locks[key].locked()
