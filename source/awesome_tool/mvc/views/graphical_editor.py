@@ -108,7 +108,7 @@ class GraphicalEditorView(View):
         # self.win.set_title("Graphical Editor")
         # self.win.set_position(1)
         self.v_box = gtk.VBox()
-        #self.test_label = gtk.Label("Hallo")
+        # self.test_label = gtk.Label("Hallo")
         self.editor = GraphicalEditor(glconfig)
         self.editor.add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
                                gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK)
@@ -138,6 +138,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     state_name_color = Color(0.2, 0.2, 0.2, 1)
     port_color = Color(0.7, 0.7, 0.7, 0.8)
     port_name_color = Color(0.2, 0.2, 0.2, 1)
+    port_connector_fill_color = Color(0.2, 0.2, 0.2, 0.5)
     transition_color = Color(0.4, 0.4, 0.4, 0.8)
     transition_selected_color = Color(0.7, 0, 0, 0.8)
     data_flow_color = Color(0.6, 0.6, 0.6, 0.8)
@@ -173,13 +174,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Connect the relevant signals.
         self.connect_after('realize', self._realize)
         self.connect('configure_event', self._configure)
-        #self.connect('expose_event',    self.expose)
+        # self.connect('expose_event',    self.expose)
 
     @staticmethod
     def _realize(*args):
         # Obtain a reference to the OpenGL drawable
         # and rendering context.
-        #gldrawable = self.get_gl_drawable()
+        # gldrawable = self.get_gl_drawable()
         #glcontext = self.get_gl_context()
 
         glEnable(GL_DEPTH_TEST)  # Draw with respect to the z coordinate (hide objects beneath others)
@@ -203,7 +204,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         gldrawable = self.get_gl_drawable()
         glcontext = self.get_gl_context()
 
-        #logger.debug("configure")
+        # logger.debug("configure")
         # OpenGL begin
         if not gldrawable.gl_begin(glcontext):
             return False
@@ -262,7 +263,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         if not gldrawable.gl_begin(glcontext):
             return False
 
-        #logger.debug("expose_init")
+        # logger.debug("expose_init")
 
         # Reset buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -280,7 +281,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Obtain a reference to the OpenGL drawable
         # and rendering context.
         gldrawable = self.get_gl_drawable()
-        #glcontext = self.get_gl_context()
+        # glcontext = self.get_gl_context()
 
         # Put the buffer on the screen!
         if gldrawable.is_double_buffered():
@@ -368,6 +369,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             i += 1
 
         # Draw input and output data ports
+        port_radius = margin / 4.
         num_ports = len(inputs) + len(outputs)
         input_connector_pos = {}
         output_connector_pos = {}
@@ -407,8 +409,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
                 circle_pos_x = port_pos_left_x if is_input else port_pos_right_x
                 circle_pos_y = string_pos_y - margin / 2.
-                self._draw_circle(circle_pos_x, circle_pos_y, margin / 4., depth + 0.02, stroke_width=margin / 5.,
-                                  border_color=self.port_name_color)
+                self._draw_circle(circle_pos_x, circle_pos_y, port_radius, depth + 0.02, stroke_width=margin / 5.,
+                                  border_color=self.port_name_color, fill_color=self.port_connector_fill_color)
                 return circle_pos_x, circle_pos_y
 
             output_num = 0
@@ -449,16 +451,16 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 self._write_string(port_name, string_pos_x, string_pos_y, str_height, self.port_name_color, False,
                                    False, depth + 0.02)
 
-                #circle_pos_x = string_pos_x + margin/2. + str_width/2.
-                #circle_pos_y = string_pos_y - margin - str_height
                 self._draw_circle(connect[0], connect[1], margin / 4., depth + 0.02,
-                                  stroke_width=border_width / 8., border_color=self.port_name_color)
+                                  stroke_width=border_width / 8., border_color=self.port_name_color,
+                                  fill_color=self.port_connector_fill_color)
                 num += 1
                 scoped_connector_pos[key] = connect
                 pass
 
         glPopName()
-        return id, outcome_pos, outcome_radius, input_connector_pos, output_connector_pos, scoped_connector_pos, \
+        return id, outcome_pos, outcome_radius, \
+               input_connector_pos, output_connector_pos, scoped_connector_pos, port_radius, \
                resize_length
 
     def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False,
@@ -577,7 +579,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         scale_factor = height / font_height
         glScalef(scale_factor, scale_factor, scale_factor)
         for c in string:
-            #glTranslatef(0, 0, 0)
+            # glTranslatef(0, 0, 0)
             glutStrokeCharacter(GLUT_STROKE_ROMAN, ord(c))
             #width = glutStrokeWidth(GLUT_STROKE_ROMAN, ord(c))
 
@@ -630,7 +632,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return hits
 
-    #@staticmethod
+    # @staticmethod
     def _set_closest_stroke_width(self, width):
         """Sets the line width to the closest supported one
 
