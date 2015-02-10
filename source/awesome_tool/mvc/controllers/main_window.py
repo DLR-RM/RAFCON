@@ -27,7 +27,7 @@ class MainWindowController(Controller):
         self.root_state_model = self.model.root_state
         self.em_module = self.model.root_state
         self.em_module = self.model.root_state
-
+        print "Root state", self.model.root_state
         top_h_pane = view['top_h_pane']
         left_v_pane = view['left_v_pane']
         right_v_pane = view['right_v_pane']

@@ -9,6 +9,7 @@ import sys
 import time
 from gtkmvc import Controller
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from mvc.models.state_machine_manager import StateMachineManagerModel
 from math import sqrt
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SCROLL_LEFT, SCROLL_RIGHT, SHIFT_MASK, CONTROL_MASK
 from gtk.gdk import keyval_name
@@ -25,7 +26,9 @@ class GraphicalEditorController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
+        assert isinstance(model, StateMachineManagerModel)
         Controller.__init__(self, model, view)
+        self.root_state_m = model.root_state
 
         self.selection = None
         self.selection_start_pos = (0, 0)
@@ -60,10 +63,7 @@ class GraphicalEditorController(Controller):
         """
         pass
 
-    @Controller.observe("state", after=True)
-    @Controller.observe("states", after=True)
-    @Controller.observe("transitions", after=True)
-    @Controller.observe("data_flows", after=True)
+    @Controller.observe("root_state", after=True)
     def state_machine_change(self, model, property, info):
         self._redraw(True)
 
@@ -78,7 +78,7 @@ class GraphicalEditorController(Controller):
         # Prepare the drawing process
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
-        self.draw_state(self.model)
+        self.draw_state(self.root_state_m)
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
 
@@ -173,7 +173,7 @@ class GraphicalEditorController(Controller):
 
             # Check, whether an outcome was clicked on
             if self.selection is not None and isinstance(self.selection,
-                                                         StateModel) and self.selection is not self.model:
+                                                         StateModel) and self.selection is not self.root_state_m:
                 outcomes_close_threshold = self.selection.meta['gui']['editor']['outcome_radius']
                 outcomes = self.selection.meta['gui']['editor']['outcome_pos']
                 click = self.mouse_move_start_pos
@@ -337,8 +337,9 @@ class GraphicalEditorController(Controller):
             return pos_x, pos_y
 
         # Root container can't be moved
-        if self.selection is not None and isinstance(self.selection, StateModel) and self.selection != self.model and \
-                        self.last_button_pressed == 1 and self.selected_outcome is None and self.selected_resizer is None:
+        if self.selection is not None and isinstance(self.selection, StateModel) and \
+                self.selection != self.root_state_m and \
+                self.last_button_pressed == 1 and self.selected_outcome is None and self.selected_resizer is None:
 
             old_pos_x = self.selection.meta['gui']['editor']['pos_x']
             old_pos_y = self.selection.meta['gui']['editor']['pos_y']
@@ -393,7 +394,7 @@ class GraphicalEditorController(Controller):
             state_editor_data = self.selection.meta['gui']['editor']
             mouse_resize_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
 
-            if int(event.state & SHIFT_MASK) > 0: # self.shift_modifier:
+            if int(event.state & SHIFT_MASK) > 0:  # self.shift_modifier:
                 state_size_ratio = state_editor_data['width'] / state_editor_data['height']
                 if rel_x_motion / state_size_ratio < rel_y_motion:
                     mouse_resize_pos = (mouse_resize_pos[0],
@@ -463,6 +464,7 @@ class GraphicalEditorController(Controller):
                         diff_pos = old_self_pos - old_parent_pos
                         diff_pos *= factor
                         return new_parent_pos + diff_pos
+
                     if isinstance(state_m, ContainerStateModel):
                         for transition_m in state_m.transitions:
                             for i, waypoint in enumerate(transition_m.meta['gui']['editor']['waypoints']):
@@ -485,12 +487,12 @@ class GraphicalEditorController(Controller):
 
                             child_old_pos_x = child_state_m.meta['gui']['editor']['pos_x']
                             new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                                                         child_state_m.meta['gui']['editor']['pos_x'], width_factor)
+                                                     child_state_m.meta['gui']['editor']['pos_x'], width_factor)
                             child_state_m.meta['gui']['editor']['pos_x'] = new_pos_x
 
                             child_old_pos_y = child_state_m.meta['gui']['editor']['pos_y']
                             new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
-                                                         child_state_m.meta['gui']['editor']['pos_y'], height_factor)
+                                                     child_state_m.meta['gui']['editor']['pos_y'], height_factor)
                             child_state_m.meta['gui']['editor']['pos_y'] = new_pos_y
 
                             if isinstance(child_state_m, ContainerStateModel):
@@ -724,7 +726,7 @@ class GraphicalEditorController(Controller):
         self.view.editor.prepare_selection(pos_x, pos_y)
         # draw again
         self.view.editor.expose_init()
-        self.draw_state(self.model)
+        self.draw_state(self.root_state_m)
         self.view.editor.expose_finish()
         # get result
         hits = self.view.editor.find_selection()
@@ -734,7 +736,7 @@ class GraphicalEditorController(Controller):
         try:
             selected_ids = map(lambda hit: hit[2][1], hits)
             # print selected_ids
-            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.model, 1, None, 0,
+            (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
                                                                         only_states)
             # print selection, selection_depth
         except Exception as e:

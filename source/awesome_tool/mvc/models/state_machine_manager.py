@@ -13,8 +13,9 @@ class StateMachineManagerModel(ModelMT):
     """
 
     state_machine_manager = None
+    root_state = None
 
-    __observables__ = ("state_machine_manager",)
+    __observables__ = ("state_machine_manager", "root_state")
 
     def __init__(self, state_machine_manager, meta=None):
         """Constructor
