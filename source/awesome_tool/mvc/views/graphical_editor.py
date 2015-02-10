@@ -2,7 +2,7 @@ from utils import log
 
 logger = log.get_logger(__name__)
 
-from math import sin, cos, pi, floor, ceil
+from math import sin, cos, pi, atan2, sqrt
 from itertools import chain
 from enum import Enum
 
@@ -508,6 +508,21 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         for waypoint in waypoints:
             self._draw_circle(waypoint[0], waypoint[1], width / 6., depth + 1, fill_color=color)
 
+        last_p = (to_pos_x, to_pos_y)
+        sec_last_p = points[len(points) - 2]
+        vec = (last_p[0] - sec_last_p[0], last_p[1] - sec_last_p[1])
+        angle = atan2(vec[1], vec[0])
+        angle -= pi
+        length = min(width, self.dist((from_pos_x, from_pos_y), last_p)/2)
+        t_x = last_p[0] + cos(angle) * length
+        t_y = last_p[1] + sin(angle) * length
+        angle += pi/2
+        dx = cos(angle) * length / 2
+        dy = sin(angle) * length / 2
+        p2 = (t_x + dx, t_y + dy)
+        p3 = (t_x - dx, t_y - dy)
+        self._draw_triangle(last_p, p2, p3, depth+0.01, fill_color=color)
+
         glPopName()
 
         return id
@@ -837,3 +852,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         left, right, bottom, top = self._get_view_coordinates()
         glOrtho(left, right, bottom, top, -10, 0)
 
+    @staticmethod
+    def dist(p1, p2):
+        return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
