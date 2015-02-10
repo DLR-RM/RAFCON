@@ -538,73 +538,76 @@ class GraphicalEditorController(Controller):
             self._redraw()
 
 
-    def draw_state(self, state, pos_x=0.0, pos_y=0.0, width=100.0, height=100.0, depth=1):
+    def draw_state(self, state_m, pos_x=0.0, pos_y=0.0, width=100.0, height=100.0, depth=1):
         """Draws a (container) state with all its content
 
         Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
         done in the view, which is called from this method with the appropriate arguments.
-        :param state: The state to be drawn
+        :param state_m: The state to be drawn
         :param pos_x: The default x position if there is no position stored
         :param pos_y: The default y position if there is no position stored
         :param width: The default width if there is no size stored
         :param height: The default height if there is no size stored
         :param depth: The hierarchy level of the state
         """
-        assert isinstance(state, StateModel)
+        assert isinstance(state_m, StateModel)
 
         # Use default values if no size information is stored
-        if not state.meta['gui']['editor']['width']:
-            state.meta['gui']['editor']['width'] = width
-        if not state.meta['gui']['editor']['height']:
-            state.meta['gui']['editor']['height'] = height
+        if not state_m.meta['gui']['editor']['width']:
+            state_m.meta['gui']['editor']['width'] = width
+        if not state_m.meta['gui']['editor']['height']:
+            state_m.meta['gui']['editor']['height'] = height
 
-        width = state.meta['gui']['editor']['width']
-        height = state.meta['gui']['editor']['height']
+        width = state_m.meta['gui']['editor']['width']
+        height = state_m.meta['gui']['editor']['height']
 
         # Use default values if no size information is stored
         # Here the possible case of pos_x and posy_y == 0 must be handled
-        if not state.meta['gui']['editor']['pos_x'] and state.meta['gui']['editor']['pos_x'] != 0:
-            state.meta['gui']['editor']['pos_x'] = pos_x
-        if not state.meta['gui']['editor']['pos_y'] and state.meta['gui']['editor']['pos_y'] != 0:
-            state.meta['gui']['editor']['pos_y'] = pos_y
+        if not state_m.meta['gui']['editor']['pos_x'] and state_m.meta['gui']['editor']['pos_x'] != 0:
+            state_m.meta['gui']['editor']['pos_x'] = pos_x
+        if not state_m.meta['gui']['editor']['pos_y'] and state_m.meta['gui']['editor']['pos_y'] != 0:
+            state_m.meta['gui']['editor']['pos_y'] = pos_y
 
-        pos_x = state.meta['gui']['editor']['pos_x']
-        pos_y = state.meta['gui']['editor']['pos_y']
+        pos_x = state_m.meta['gui']['editor']['pos_x']
+        pos_y = state_m.meta['gui']['editor']['pos_y']
 
         scoped_ports = {}
-        if isinstance(state, ContainerStateModel):
-            scoped_ports = state.state.scoped_variables
+        if isinstance(state_m, ContainerStateModel):
+            scoped_ports = state_m.state.scoped_variables
 
         # Was the state selected?
-        active = state.meta['gui']['selected']
+        selected = state_m.meta['gui']['selected']
+
+        # Is the state active (executing)?
+        active = state_m.state.active
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
         (id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos, resize_length) = \
             self.view.editor.draw_state(
-                state.state.name,
+                state_m.state.name,
                 pos_x, pos_y, width, height,
-                state.state.outcomes,
-                state.state.input_data_ports,
-                state.state.output_data_ports,
+                state_m.state.outcomes,
+                state_m.state.input_data_ports,
+                state_m.state.output_data_ports,
                 scoped_ports,
-                active, depth)
-        state.meta['gui']['editor']['id'] = id
-        state.meta['gui']['editor']['outcome_pos'] = outcome_pos
-        state.meta['gui']['editor']['outcome_radius'] = outcome_radius
-        state.meta['gui']['editor']['input_pos'] = input_pos
-        state.meta['gui']['editor']['output_pos'] = output_pos
-        state.meta['gui']['editor']['scoped_pos'] = scoped_pos
-        state.meta['gui']['editor']['resize_length'] = resize_length
+                selected, active, depth)
+        state_m.meta['gui']['editor']['id'] = id
+        state_m.meta['gui']['editor']['outcome_pos'] = outcome_pos
+        state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
+        state_m.meta['gui']['editor']['input_pos'] = input_pos
+        state_m.meta['gui']['editor']['output_pos'] = output_pos
+        state_m.meta['gui']['editor']['scoped_pos'] = scoped_pos
+        state_m.meta['gui']['editor']['resize_length'] = resize_length
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
-        if isinstance(state, ContainerStateModel):
+        if isinstance(state_m, ContainerStateModel):
 
             state_ctr = 0
             margin = width / float(25)
 
-            for child_state in state.states.itervalues():
+            for child_state in state_m.states.itervalues():
                 # Calculate default positions for teh child states
                 # Make the inset from the top left corner
                 state_ctr += 1
@@ -618,21 +621,21 @@ class GraphicalEditorController(Controller):
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
                                 depth + 1)
 
-            for transition in state.transitions:
+            for transition in state_m.transitions:
                 # Get id and references to the from and to state
                 from_state_id = transition.transition.from_state
                 to_state_id = transition.transition.to_state
-                from_state = state.states[from_state_id]
-                to_state = None if to_state_id is None else state.states[to_state_id]
+                from_state = state_m.states[from_state_id]
+                to_state = None if to_state_id is None else state_m.states[to_state_id]
 
                 assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
                     id=from_state_id)
 
                 try:
                     # Set the from coordinates to the outcome coordinates received earlier
-                    from_x = state.states[from_state_id].meta['gui']['editor']['outcome_pos'][
+                    from_x = state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
                         transition.transition.from_outcome][0]
-                    from_y = state.states[from_state_id].meta['gui']['editor']['outcome_pos'][
+                    from_y = state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
                         transition.transition.from_outcome][1]
                 except Exception as e:
                     logger.error("""Outcome position was not found. \
@@ -641,8 +644,8 @@ class GraphicalEditorController(Controller):
 
                 if to_state is None:  # Transition goes back to parent
                     # Set the to coordinates to the outcome coordinates received earlier
-                    to_x = state.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][0]
-                    to_y = state.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][1]
+                    to_x = state_m.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][0]
+                    to_y = state_m.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][1]
                 else:
                     # Set the to coordinates to the center of the next state
                     to_x = to_state.meta['gui']['editor']['pos_x'] + to_state.meta['gui']['editor']['width'] / 2
@@ -664,12 +667,12 @@ class GraphicalEditorController(Controller):
                 transition.meta['gui']['editor']['to_pos_x'] = to_x
                 transition.meta['gui']['editor']['to_pos_y'] = to_y
 
-            for data_flow in state.data_flows:
+            for data_flow in state_m.data_flows:
                 # Get id and references to the from and to state
                 from_state_id = data_flow.data_flow.from_state
                 to_state_id = data_flow.data_flow.to_state
-                from_state = state if from_state_id == state.state.state_id else state.states[from_state_id]
-                to_state = state if to_state_id == state.state.state_id else state.states[to_state_id]
+                from_state = state_m if from_state_id == state_m.state.state_id else state_m.states[from_state_id]
+                to_state = state_m if to_state_id == state_m.state.state_id else state_m.states[to_state_id]
 
                 from_key = data_flow.data_flow.from_key
                 to_key = data_flow.data_flow.to_key
@@ -680,9 +683,9 @@ class GraphicalEditorController(Controller):
                                   to_state.meta['gui']['editor']['input_pos'].items() +
                                   to_state.meta['gui']['editor']['output_pos'].items() +
                                   to_state.meta['gui']['editor']['scoped_pos'].items() +
-                                  state.meta['gui']['editor']['input_pos'].items() +
-                                  state.meta['gui']['editor']['output_pos'].items() +
-                                  state.meta['gui']['editor']['scoped_pos'].items())
+                                  state_m.meta['gui']['editor']['input_pos'].items() +
+                                  state_m.meta['gui']['editor']['output_pos'].items() +
+                                  state_m.meta['gui']['editor']['scoped_pos'].items())
 
                 if not from_key in connectors or not to_key in connectors:
                     logger.warn("Data flow with non existing port(s): {0}, {1}".format(from_key, to_key))
@@ -707,10 +710,10 @@ class GraphicalEditorController(Controller):
                 data_flow.meta['gui']['editor']['to_pos_y'] = to_y
 
         if self.selected_outcome is not None and self.last_button_pressed == 1:
-            if self.selected_outcome[0] == state.meta['gui']['editor']['outcome_pos']:
+            if self.selected_outcome[0] == state_m.meta['gui']['editor']['outcome_pos']:
                 outcome = self.selected_outcome[0][self.selected_outcome[1]]
                 cur = self.mouse_move_last_pos
-                line_width = min(state.parent.meta['gui']['editor']['width'], state.parent.meta['gui']['editor'][
+                line_width = min(state_m.parent.meta['gui']['editor']['width'], state_m.parent.meta['gui']['editor'][
                     'height']) / 25.0
                 self.view.editor.draw_transition(outcome[0], outcome[1], cur[0], cur[1], line_width, [], True,
                                                  depth + 0.6)

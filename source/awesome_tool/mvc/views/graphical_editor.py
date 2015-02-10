@@ -132,15 +132,16 @@ class GraphicalEditorView(View):
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     border_color = Color(0.2, 0.2, 0.2, 1)
+    border_active_color = Color(0, 0.8, 0.8, 1)
     state_color = Color(0.9, 0.9, 0.9, 0.8)
-    state_active_color = Color(0.7, 0, 0, 0.8)
+    state_selected_color = Color(0.7, 0, 0, 0.8)
     state_name_color = Color(0.2, 0.2, 0.2, 1)
     port_color = Color(0.7, 0.7, 0.7, 0.8)
     port_name_color = Color(0.2, 0.2, 0.2, 1)
     transition_color = Color(0.4, 0.4, 0.4, 0.8)
-    transition_active_color = Color(0.7, 0, 0, 0.8)
+    transition_selected_color = Color(0.7, 0, 0, 0.8)
     data_flow_color = Color(0.6, 0.6, 0.6, 0.8)
-    data_flow_active_color = Color(0.7, 0, 0, 0.8)
+    data_flow_selected_color = Color(0.7, 0, 0, 0.8)
     outcome_plain_color = Color(0.4, 0.4, 0.4, 0.8)
     outcome_aborted_color = Color(0.6, 0, 0, 0.8)
     outcome_preempted_color = Color(0.1, 0.1, 0.7, 0.8)
@@ -293,7 +294,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         #logger.debug("expose_finish")
 
     def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0, inputs={}, outputs={}, scoped_vars={},
-                   active=False, depth=0):
+                   selected=False, active=False, depth=0):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified (container) state.
@@ -317,14 +318,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self._set_closest_stroke_width(1.5)
 
         # First draw the face of the rectangular, then the outline
-        fill_color = self.state_color
-        if active:
-            fill_color = self.state_active_color
+        fill_color = self.state_color if not selected else self.state_selected_color
 
         border_width = min(width, height) / 10.
 
+        border_color = self.border_color if not active else self.border_active_color
         self._draw_rect(pos_x, pos_x + width, pos_y, pos_y + height, depth, border_width,
-                        fill_color, self.border_color)
+                        fill_color, border_color)
 
         # Put the name of the state in the upper left corner of the state
         margin = min(width, height) / 8.
@@ -387,7 +387,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
             fill_color = self.port_color
             if active:
-                fill_color = self.state_active_color
+                fill_color = self.state_selected_color
             port_width = min(max_name_width, max_allowed_name_width)
             port_pos_left_x = pos_x + (width - port_width - margin) / 2
             port_pos_right_x = port_pos_left_x + port_width + margin
@@ -461,7 +461,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         return id, outcome_pos, outcome_radius, input_connector_pos, output_connector_pos, scoped_connector_pos, \
                resize_length
 
-    def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False,
+    def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False,
                         depth=0):
         """Draw a state with the given properties
 
@@ -473,7 +473,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param to_pos_y: Ending y position
         :param width: A measure for the width of a transition line
         :param waypoints: A list of optional waypoints to connect in between
-        :param active: Whether the transition shell be shown as active/selected
+        :param selected: Whether the transition shell be shown as active/selected
         :param depth: The Z layer
         :return: The OpenGL id of the transition
         """
@@ -485,8 +485,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self._set_closest_stroke_width(width)
 
         color = self.transition_color
-        if active:
-            color = self.transition_active_color
+        if selected:
+            color = self.transition_selected_color
         color.set()
 
         points = [(from_pos_x, from_pos_y)]
@@ -507,7 +507,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return id
 
-    def draw_data_flow(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], active=False, depth=0):
+    def draw_data_flow(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False, depth=0):
         """Draw a data flow connection between two ports
 
         The ports can be input, output or scoped ports and are only specified by their position. Optional waypoints
@@ -519,7 +519,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param to_pos_y: Ending y position
         :param width: A measure for the width of a transition line
         :param waypoints: A list of optional waypoints to connect in between
-        :param active: Whether the transition shell be shown as active/selected
+        :param selected: Whether the transition shell be shown as active/selected
         :param depth: The Z layer
         """
         # "Generate" unique ID for each object
@@ -532,8 +532,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         color = self.data_flow_color
 
-        if active:
-            color = self.data_flow_active_color
+        if selected:
+            color = self.data_flow_selected_color
 
         color.set()
 
