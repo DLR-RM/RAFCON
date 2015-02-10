@@ -710,7 +710,7 @@ class GraphicalEditorController(Controller):
                     to_y = state_m.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][1]
                 else:
                     # Set the to coordinates to the center of the next state
-                    to_x = to_state.meta['gui']['editor']['pos_x'] + to_state.meta['gui']['editor']['width'] / 2
+                    to_x = to_state.meta['gui']['editor']['pos_x']
                     to_y = to_state.meta['gui']['editor']['pos_y'] + to_state.meta['gui']['editor']['height'] / 2
 
                 waypoints = []

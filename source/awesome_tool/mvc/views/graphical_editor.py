@@ -115,7 +115,7 @@ class GraphicalEditorView(View):
         self.editor.set_size_request(500, 500)
         self.editor.set_flags(gtk.CAN_FOCUS)
 
-        #self.v_box.pack_start(self.test_label)
+        # self.v_box.pack_start(self.test_label)
         self.v_box.pack_end(self.editor)
 
         # self.win.add(self.v_box)
@@ -146,6 +146,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     outcome_plain_color = Color(0.4, 0.4, 0.4, 0.8)
     outcome_aborted_color = Color(0.6, 0, 0, 0.8)
     outcome_preempted_color = Color(0.1, 0.1, 0.7, 0.8)
+    income_color = Color(0.4, 0.4, 0.4, 0.8)
 
     def __init__(self, glconfig):
         """The graphical editor manages the OpenGL functions.
@@ -181,7 +182,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Obtain a reference to the OpenGL drawable
         # and rendering context.
         # gldrawable = self.get_gl_drawable()
-        #glcontext = self.get_gl_context()
+        # glcontext = self.get_gl_context()
 
         glEnable(GL_DEPTH_TEST)  # Draw with respect to the z coordinate (hide objects beneath others)
         glEnable(GL_BLEND)  # Make use of alpha channel for colors
@@ -292,7 +293,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # OpenGL end
         gldrawable.gl_end()
 
-        #logger.debug("expose_finish")
+        # logger.debug("expose_finish")
 
     def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0, inputs={}, outputs={}, scoped_vars={},
                    selected=False, active=False, depth=0):
@@ -367,6 +368,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             outcome_pos[key] = (outcome_x, outcome_y)
             self._draw_circle(outcome_x, outcome_y, outcome_radius, depth + 0.1, fill_color=color)
             i += 1
+
+        # Draw "income" as a half circle of the left center
+        self._draw_circle(pos_x, pos_y + height / 2, outcome_radius, depth + 0.1, fill_color=self.income_color,
+                          from_angle=1.5*pi, to_angle=0.5*pi)
 
         # Draw input and output data ports
         port_radius = margin / 4.
@@ -581,7 +586,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         for c in string:
             # glTranslatef(0, 0, 0)
             glutStrokeCharacter(GLUT_STROKE_ROMAN, ord(c))
-            #width = glutStrokeWidth(GLUT_STROKE_ROMAN, ord(c))
+            # width = glutStrokeWidth(GLUT_STROKE_ROMAN, ord(c))
 
         glPopMatrix()
 
@@ -658,7 +663,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # TODO: Think of method to check for visibility
         # visible = False
         # for p in points:
-        #     if not self.point_outside_view(p):
+        # if not self.point_outside_view(p):
         #         visible = True
         #         break
 
@@ -727,7 +732,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return c, visible
 
-    def _draw_circle(self, pos_x, pos_y, radius, depth, stroke_width=1, fill_color=None, border_color=None):
+    def _draw_circle(self, pos_x, pos_y, radius, depth, stroke_width=1, fill_color=None, border_color=None,
+                     from_angle=0, to_angle=2 * pi):
         """Draws a circle
 
         Draws a circle with a line segment a desired position with desired size.
@@ -754,7 +760,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         if not visible:
             return False
 
-        segments = max(4, int(self.pixel_to_size_ratio() * radius * 1.5))
+        angle_sum = to_angle - from_angle
+        if angle_sum < 0:
+            angle_sum = float(to_angle + 2*pi - from_angle)
+        segments = self.pixel_to_size_ratio() * radius * 1.5
+        segments = max(4, segments)
+        segments = int(round(segments * angle_sum / (2.*pi)))
 
         types = []
         if fill_color is not None:
@@ -769,11 +780,16 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 self._set_closest_stroke_width(stroke_width)
                 border_color.set()
             glBegin(type)
+            angle = from_angle
             for i in range(0, segments):
-                angle = 2 * pi / segments * i
                 x = pos_x + cos(angle) * radius
                 y = pos_y + sin(angle) * radius
                 glVertex3f(x, y, depth)
+                angle += angle_sum / (segments - 1)
+                if angle > 2*pi:
+                    angle -= 2*pi
+                if i == segments - 2:
+                    angle = to_angle
             glEnd()
 
         return True
