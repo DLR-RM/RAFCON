@@ -271,7 +271,7 @@ class MainWindowController(Controller):
 
     def on_add_state_activate(self, widget, method=None, *arg):
         logger.debug("Add state in selected state now ..." + str(widget) + str(method))
-        logger.debug("focus is here: " % self.view['main_window'].get_focus())
+        logger.debug("focus is here: %s" % self.view['main_window'].get_focus())
         selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
         # print selection, len(selection), selection.get_num_states(), \
         #    isinstance(selection.get_states()[0], ContainerStateModel)
@@ -279,7 +279,7 @@ class MainWindowController(Controller):
                 isinstance(selection.get_states()[0], ContainerStateModel):
             state = ExecutionState(" ")
             selection.get_states()[0].state.add_state(state)
-            logger.debug("create exec_State: %s" % state)
+            #logger.info("create exec_State: %s" % state)
             selection.set([StateModel(state)])
 
     def on_delete_activate(self, widget, data=None):

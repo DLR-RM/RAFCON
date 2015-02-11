@@ -52,15 +52,12 @@ class StateMachineTreeController(Controller):
     def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
         #print "SM_Tree state selected: %s, %s" % (model, row)
+        logger.debug("The view should jump to the selected state and the zoom should be adjusted as well")
         if row is not None:
             state_model = model[row][3]
             self.model.selection.clear()
 
             self.model.selection.add(state_model)
-        #print library
-        logger.debug("The view should jump to the selected state and the zoom should be adjusted as well")
-        #selected_state = self.model.statemachine.get_graph().find_node(model.get_value(row, 1))
-        #self.model.statemachine.selection.set([selected_state])
 
     # TODO check if delete works for the state_machine_tree, too
     @Observer.observe("state", after=True)
