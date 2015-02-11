@@ -1,4 +1,3 @@
-
 from gtkmvc import ModelMT
 import gobject
 from gtk import ListStore

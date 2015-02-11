@@ -1,17 +1,17 @@
 import gobject
+from gtk import ListStore
+from gtkmvc import ModelMT
+import gtk
+
 from statemachine.states.container_state import ContainerState
 from statemachine.states.state import State
 from mvc.models.state import StateModel
 import mvc.models
 from mvc.models.transition import TransitionModel
 from mvc.models.data_flow import DataFlowModel
-from mvc.models.data_port import DataPortModel
 from mvc.models.scoped_variable import ScopedVariableModel
-from gtk import ListStore
-from gtkmvc import ModelMT
-import gtk
-
 from utils import log
+
 logger = log.get_logger(__name__)
 
 

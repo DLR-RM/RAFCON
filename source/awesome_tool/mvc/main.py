@@ -1,46 +1,21 @@
-
 import sys
-import gtk
 import logging
-from utils import log
-from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
-from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
-    LibraryTreeController, MainWindowController
-from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView, ExternalModuleManagerWindowView, ExternalModuleManagerView,  SourceEditorView, \
-    SingleWidgetWindowView, StateEditorView, LoggingView, StateMachineTreeView, LibraryTreeView, MainWindowView
-from mvc.views.single_widget_window import TestButtonsView
-from mvc.views.state_transitions import StateTransitionsEditorView
-from mvc.controllers.state_transitions import StateTransitionsEditorController
-from mvc.views.state_data_flows import StateDataFlowsEditorView
-from mvc.controllers.state_data_flows import StateDataFlowsEditorController
-from mvc.views.connections_editor import StateConnectionsEditorView
-from mvc.controllers.connections_editor import StateConnectionsEditorController
-from mvc.views.state_outcomes import StateOutcomesEditorView
-from mvc.controllers.state_outcomes import StateOutcomesEditorController
-from mvc.views.state_overview import StateOverviewView
-from mvc.controllers.state_overview import StateOverviewController
-from mvc.views.state_editor import StateEditorEggView, StateEditorLDView
-from mvc.controllers.state_editor import StateEditorEggController, StateEditorLDController
 
+import gtk
+
+from utils import log
+from statemachine.states.state import State
+from mvc.models import ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
+from mvc.controllers import MainWindowController
+from mvc.views import LoggingView, MainWindowView
 from mvc.models.state_machine_manager import StateMachineManagerModel
-from statemachine.state_machine_manager import StateMachineManager
-from statemachine.states.state import State, DataPort
-from statemachine.states.execution_state import ExecutionState
 from statemachine.states.container_state import ContainerState
-from statemachine.transition import Transition
-from statemachine.data_flow import DataFlow
 from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
-from statemachine.states.hierarchy_state import HierarchyState
 
 
 def setup_path():
     """Sets up the python include paths to include needed directories"""
-    import os.path
-    import sys
 
     #sys.path.insert(1, '.')
     #sys.path.insert(0, reduce(os.path.join, (TOPDIR, "resources", "external")))

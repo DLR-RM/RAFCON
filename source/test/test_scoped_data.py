@@ -45,7 +45,7 @@ def create_statemachine():
 # remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
 # states)
 def test_scoped_data():
-    s = Storage("../../test_scripts/stored_statemachine")
+    s = Storage("../test_scripts/stored_statemachine")
 
     state3 = create_statemachine()
 

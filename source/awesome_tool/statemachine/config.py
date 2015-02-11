@@ -10,4 +10,4 @@
 
 STATE_ID_LENGTH = 6
 
-LIBRARY_PATHS = {"test_libraries" : "../../test_scripts/test_libraries"}
+LIBRARY_PATHS = {"test_libraries" : "../test_scripts/test_libraries"}
