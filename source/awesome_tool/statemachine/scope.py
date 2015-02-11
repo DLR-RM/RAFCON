@@ -61,7 +61,6 @@ class ScopedVariable(DataPort, Observable, yaml.YAMLObject):
             'data_type': data.data_type,
             'default_value': data.default_value
         }
-        print dict_representation
         node = dumper.represent_mapping(u'!ScopedVariable', dict_representation)
         return node
 
@@ -147,7 +146,6 @@ class ScopedData(Observable):
     def value(self, value):
         #check for primitive data types
         if not str(type(value).__name__) == self._value_type:
-            print self._value_type
             #check for classes
             if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
                 raise TypeError("result must be of type %s" % str(self._value_type))

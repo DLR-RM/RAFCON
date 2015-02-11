@@ -66,7 +66,6 @@ class Transition(Observable, yaml.YAMLObject):
             'to_state': data.to_state,
             'to_outcome': data.to_outcome
         }
-        print dict_representation
         node = dumper.represent_mapping(u'!Transition', dict_representation)
         return node
 

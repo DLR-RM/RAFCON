@@ -66,8 +66,6 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             finished_thread_id = concurrency_queue.get()
             self.states[finished_thread_id].join()
 
-            #print "++++++++ output of execution state: ", self.states[finished_thread_id].output_data
-
             self.add_state_execution_output_to_scoped_data(self.states[finished_thread_id].output_data,
                                                            self.states[finished_thread_id])
             self.update_scoped_variables_with_output_dictionary(self.states[finished_thread_id].output_data,
@@ -78,6 +76,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             for key, state in self.states.iteritems():
                 state.join()
+                state.concurrency_queue = None
 
             #handle data for the exit script
             scoped_variables_as_dict = {}
@@ -85,15 +84,12 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
-            #print "+++++++ scoped data of the preemptive container state %s: %s" % (self.name, str(self.scoped_data))
-            # for key, value in self.scoped_data.iteritems():
-            #     print "Scoped Data key %s: %s" % (key, str(value))
-
             self.write_output_data()
 
-            #print "+++++ output of the preemptive container state: ", self.output_data
-
             self.check_output_data_type()
+
+            if self.concurrency_queue:
+                self.concurrency_queue.put(self.state_id)
 
             # check the outcomes of the finished state for aborted or preempted
             # the output data has to be set before this check can be done
@@ -137,7 +133,6 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = ContainerState.get_container_state_yaml_dict(data)
-        print dict_representation
         node = dumper.represent_mapping(u'!PreemptiveConcurrencyState', dict_representation)
         return node
 

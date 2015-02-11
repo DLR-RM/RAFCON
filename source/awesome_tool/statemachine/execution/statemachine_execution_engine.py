@@ -101,7 +101,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             # finally:
             #     self._status.execution_condition_variable.release()
             logger.debug("Execution engine stopped. State %s is going to quit!", state.name)
-            quit()
+            return "stop"
 
         elif self._status.execution_mode is ExecutionMode.PAUSED:
             try:
@@ -124,6 +124,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 self._status.execution_condition_variable.wait()
             finally:
                 self._status.execution_condition_variable.release()
+        return "run"
 
     def start_from_selected_state(self, state):
         self._create_dependency_tree(state)

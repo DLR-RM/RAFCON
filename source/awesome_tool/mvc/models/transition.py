@@ -3,6 +3,9 @@ from gtkmvc import ModelMT
 from statemachine.transition import Transition
 from utils.vividict import Vividict
 
+from utils import log
+logger = log.get_logger(__name__)
+
 
 class TransitionModel(ModelMT):
     """This model class manages a Transition
@@ -39,5 +42,5 @@ class TransitionModel(ModelMT):
     def model_changed(self, model, name, info):
 
         if self.parent is not None:
-            print "TRANSITION_MODEL_CHANGED", model, name, info
+            logger.debug("TRANSITION_MODEL_CHANGED %s %s %s" % (str(model), str(name), str(info)))
             self.parent.model_changed(model, name, info)

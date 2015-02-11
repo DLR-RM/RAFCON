@@ -4,6 +4,8 @@ from gtkmvc import Controller
 from gtkmvc import Observer
 
 from mvc.models import ContainerStateModel
+from utils import log
+logger = log.get_logger(__name__)
 
 
 #TODO: comment
@@ -36,30 +38,24 @@ class StateMachineTreeController(Controller):
             self.insert_rec(parent, smodel)
 
     def insert_rec(self, parent, state_model):
-        #print 'Inserting %s' % str((state.title, state.id, utils.const2str(Point.Point, state.type)))
         parent = self.tree_store.insert_before(parent, None,
                                                (state_model.state.name,
                                                 state_model.state.state_id,
                                                 state_model.state.state_type,
                                                 state_model))
         if type(state_model) is ContainerStateModel:
-            #print "Insert container state %s recursively" % state_model.state.name
             for state_id, smodel in state_model.states.items():
                 self.insert_rec(parent, smodel)
 
     def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
-        #print "SM_Tree state selected: %s, %s" % (model, row)
         state_model = model[row][3]
-        #print library
-        print "The view should jump to the selected state and the zoom should be adjusted as well"
+        logger.debug("The view should jump to the selected state and the zoom should be adjusted as well")
         #selected_state = self.model.statemachine.get_graph().find_node(model.get_value(row, 1))
         #self.model.statemachine.selection.set([selected_state])
 
     @Observer.observe("state", after=True)
     def assign_notification_state(self, model, prop_name, info):
-        #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #      (prop_name, info.instance, info.method_name, info.result)
         self.update()
 
 

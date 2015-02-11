@@ -65,7 +65,6 @@ class DataPort(Observable, yaml.YAMLObject):
             'data_type': data.data_type,
             'default_value': data.default_value
         }
-        print dict_representation
         node = dumper.represent_mapping(u'!DataPort', dict_representation)
         return node
 
@@ -135,7 +134,6 @@ class DataPort(Observable, yaml.YAMLObject):
             #check for primitive data types
             if not str(type(default_value).__name__) == self.data_type:
                 #check for classes
-                print type(default_value).__name__
                 if not isinstance(default_value, getattr(sys.modules[__name__], self.data_type)):
                     raise TypeError("Input of execute function must be of type %s" % str(self.data_type))
         self._default_value = default_value
@@ -334,7 +332,6 @@ class State(Observable, yaml.YAMLObject, object):
         if data_port_type is DataPortType.INPUT:
             for ip_id, output_port in self.input_data_ports.iteritems():
                 if output_port.name == name:
-                    #print ip_id
                     return ip_id
             raise AttributeError("Name %s is not in input_data_ports", name)
         elif data_port_type is DataPortType.OUTPUT:
@@ -435,11 +432,6 @@ class State(Observable, yaml.YAMLObject, object):
         """Check the input data types of the state
 
         """
-        # print input_data
-        # for key, idp in self.input_data_ports.iteritems():
-        #     print key
-        #     print idp
-
         for input_data_port_key, data_port in self.input_data_ports.iteritems():
             if input_data_port_key in input_data:
                 if not input_data[data_port.name] is None:
@@ -648,10 +640,7 @@ class State(Observable, yaml.YAMLObject, object):
     def script(self, script):
         if not isinstance(script, Script):
             raise TypeError("script must be of type Script")
-        #if hasattr(self, '_script'):
-        #    print "change script of state.name: %s from script: \n %s" % (self.name, self._script.script)
         self._script = script
-        #print "change script of state: %s state.name: %s to script: \n %s" % (self.state_id, self.name, self._script.script)
 
     @property
     def input_data(self):

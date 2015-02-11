@@ -63,7 +63,6 @@ class DataFlow(Observable, yaml.YAMLObject):
             'to_state': data.to_state,
             'to_key': data.to_key
         }
-        print dict_representation
         node = dumper.represent_mapping(u'!DataFlow', dict_representation)
         return node
 

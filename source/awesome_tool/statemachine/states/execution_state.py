@@ -90,7 +90,6 @@ class ExecutionState(State, yaml.YAMLObject):
             'path': data.script.path,
             'filename': data.script.filename
         }
-        print dict_representation
         node = dumper.represent_mapping(u'!ExecutionState', dict_representation)
         return node
 

@@ -17,10 +17,9 @@ class RosModule:
     def __init__(self):
         self.my_first_var = 10
         self.my_second_var = 30
-        self.turtle1_vel_publisher = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10, latch=True)
-        self.bot_turtle_vel_publisher = rospy.Publisher('/bot_turtle/cmd_vel', Twist, queue_size=10, latch=True)
-
-        self.turtle1_pos_subscriber = rospy.Subscriber("/turtle1/pose", Pose, self.save_turtle1_pose)
+        self.turtle1_vel_publisher = None
+        self.bot_turtle_vel_publisher = None
+        self.turtle1_pos_subscriber = None
 
         self.subscriber_dict = {}
         self.pose_dict = {}
@@ -34,10 +33,17 @@ class RosModule:
         self.pose_dict[name] = Pose
 
     def start(self):
+        self.turtle1_vel_publisher = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10, latch=True)
+        self.bot_turtle_vel_publisher = rospy.Publisher('/bot_turtle/cmd_vel', Twist, queue_size=10, latch=True)
+        self.turtle1_pos_subscriber = rospy.Subscriber("/turtle1/pose", Pose, self.save_turtle1_pose)
+        self.subscriber_dict = {}
         print "ROS module: started"
-        print "ROS module: my_first_var is " + str(self.my_first_var)
 
     def stop(self):
+        del self.turtle1_vel_publisher
+        del self.bot_turtle_vel_publisher
+        del self.turtle1_pos_subscriber
+        del self.subscriber_dict
         print "ROS module: stopped"
 
     def pause(self):
@@ -69,7 +75,6 @@ class RosModule:
             move_turtle = rospy.ServiceProxy(service, TeleportAbsolute)
             resp1 = move_turtle(x, y, phi)
             print "ROS external module: executed the ", service, " service"
-            print resp1
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
@@ -80,7 +85,6 @@ class RosModule:
             spawn_turtle_service = rospy.ServiceProxy(service, Spawn)
             resp1 = spawn_turtle_service(x, y, phi, turtle_name)
             print "ROS external module: executed the ", service, " service"
-            print resp1
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
         self.subscriber_dict[turtle_name] = \
@@ -93,7 +97,6 @@ class RosModule:
             clear_turtle_area_service = rospy.ServiceProxy(service, Empty)
             resp1 = clear_turtle_area_service()
             print "ROS external module: executed the ", service, " service"
-            print resp1
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
@@ -101,7 +104,6 @@ class RosModule:
         position_vector = Vector3(x, y, 0)
         rotation_vector = Vector3(0, 0, phi)
         twist_msg = Twist(position_vector, rotation_vector)
-        #print twist_msg
         try:
             if turtle_name == "turtle1":
                 print "publish twist to turtle1"
@@ -121,7 +123,6 @@ class RosModule:
             kill_turtle_service = rospy.ServiceProxy(service, Kill)
             resp1 = kill_turtle_service(turtle_name)
             print "ROS external module: executed the ", service, " service"
-            print resp1
             del self.subscriber_dict[turtle_name]
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e

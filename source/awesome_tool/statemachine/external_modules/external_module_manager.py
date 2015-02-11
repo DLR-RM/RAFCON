@@ -37,6 +37,13 @@ class ExternalModuleManager(Observable):
         self._external_modules[module.name] = module
         logger.debug("External module %s was added to the manager" % (str(module.name)))
 
+    def stop_all_modules(self):
+        """Stops all registered external modules
+
+        """
+        for key, module in self._external_modules.iteritems():
+            module.stop()
+
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

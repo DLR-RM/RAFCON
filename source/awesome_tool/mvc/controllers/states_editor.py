@@ -3,6 +3,8 @@ from gtkmvc import Controller
 
 from mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
 from mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
+from utils import log
+logger = log.get_logger(__name__)
 
 
 def create_tab_close_button(callback, *additional_parameters):
@@ -85,7 +87,6 @@ class StatesEditorController(Controller):
 
         state_editor_view.show()
         self.view.notebook.show()
-        print "tab: ", state_identifier
         self.tabs[state_identifier] = {'page': page, 'state_model': state_model, 'ctrl': state_editor_ctrl}
 
         return idx
@@ -116,7 +117,7 @@ class StatesEditorController(Controller):
     def change_state_editor_selection(self, selected_model):
         state_identifier = selected_model.state.get_path()
         if self.act_model is None or not self.act_model.state.state_id == selected_model.state.state_id:
-            print "State %s is SELECTED" % selected_model.state.name
+            logger.debug("State %s is SELECTED" % selected_model.state.name)
 
             from mvc.views.state_editor import StateEditorEggView
             from mvc.controllers.state_editor import StateEditorEggController

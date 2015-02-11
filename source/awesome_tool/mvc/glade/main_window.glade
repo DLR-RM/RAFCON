@@ -2,6 +2,7 @@
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy toplevel-contextual -->
+  <object class="GtkAccelGroup" id="accelgroup1"/>
   <object class="GtkWindow" id="main_window">
     <property name="visible">True</property>
     <property name="title" translatable="yes">Awesome Tool</property>
@@ -641,5 +642,4 @@
       </object>
     </child>
   </object>
-  <object class="GtkAccelGroup" id="accelgroup1"/>
 </interface>

@@ -28,11 +28,9 @@ def setup_key_binding(key_map, view, widget):
             try:
                 if not view[item[0]]:
                     view[item[0]] = gtk.MenuItem()
-                    print "NOT_IN", item
-                # print "activate", item, main_widget[item[0]], accelgroup, key, mod, gtk.ACCEL_VISIBLE
                 view[item[0]].add_accelerator("activate", accelgroup, key, mod, gtk.ACCEL_VISIBLE)
             except:
-                print traceback.format_exc()
+                logger.warn(traceback.format_exc())
                 pass
 
 
@@ -52,10 +50,11 @@ class MainWindowController(Controller):
         self.root_state_model = self.model.state_machines.values()[0].root_state
         self.em_module = self.model.state_machines.values()[0].root_state
         self.em_module = self.model.state_machines.values()[0].root_state
-        print "Root state", self.model.root_state
         top_h_pane = view['top_h_pane']
         left_v_pane = view['left_v_pane']
         right_v_pane = view['right_v_pane']
+
+        view.get_top_widget().connect("destroy", self.on_main_window_destroy)
 
         ######################################################
         # logging view
@@ -73,8 +72,6 @@ class MainWindowController(Controller):
         tree_notebook = view["tree_notebook"]
         #remove placeholder tab
         library_tree_tab = view['library_tree_placeholder']
-        #print tree_notebook.get_tab_label(self.library_tree_tab).get_text()
-        #print tree_notebook.page_num(self.library_tree_tab)
         page_num = tree_notebook.page_num(library_tree_tab)
         tree_notebook.remove_page(page_num)
         #append new tab
@@ -186,9 +183,11 @@ class MainWindowController(Controller):
             # 'center_view'   : '<Alt>space',
         }
 
-    def register_view(self, view):
-        print "REGISTER VIEW"
+    def on_main_window_destroy(self, widget, data=None):
+        logger.debug("Main window destroyed")
+        gtk.main_quit()
 
+    def register_view(self, view):
         setup_key_binding(self.key_map, view, view.get_top_widget())
 
         view['add'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
@@ -263,12 +262,9 @@ class MainWindowController(Controller):
 
     def on_add_state_activate(self, widget, method=None, *arg):
         logger.debug("Add state in selected state now ..." + str(widget) + str(method))
-        print "focus is here: ", self.view['main_window'].get_focus()
-        #
 
     def on_delete_activate(self, widget, data=None):
         logger.debug("Delete something selected now ...")
-        print "focus is here: ", self.view['main_window'].get_focus()
 
     def on_paste_activate(self, widget, data=None):
         pass
