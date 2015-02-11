@@ -220,7 +220,6 @@ def run_turtle_demo():
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
-    statemachine.singleton.external_module_manager.stop_all_modules()
     #turtle_demo_state.join()
 
 

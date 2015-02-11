@@ -190,6 +190,7 @@ class MainWindowController(Controller):
 
     def on_main_window_destroy(self, widget, data=None):
         logger.debug("Main window destroyed")
+        statemachine.singleton.external_module_manager.stop_all_modules()
         gtk.main_quit()
 
     def register_view(self, view):
