@@ -156,24 +156,3 @@ class TestButtonsView(View, Controller):
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
-
-
-if __name__ == '__main__':
-    from mvc.views.source_editor import SourceEditorView
-    from mvc.controllers import SourceEditorController, SingleWidgetWindowController
-
-    from statemachine.states.execution_state import ExecutionState as State
-    from mvc.models import StateModel, ContainerStateModel
-    state1 = State('Rico2')
-    m = StateModel(state1)
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
-
-    v = SingleWidgetWindowView(SourceEditorView, title='Source Editor')
-    c = SingleWidgetWindowController(ctr_model, v, SourceEditorController)
-
-    gtk.main()

@@ -75,29 +75,29 @@ class StateConnectionsEditorController(Controller):
         #self.adapt(self.__state_property_adapter("name", "input_name"))
 
     def toggled_button(self, button, name=None):
-
-        if name in ['transitions_external', 'data_flows_external'] and self.model.parent is not None:
-            self.view_dict[name] = button.get_active()
-            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
-        elif not name in ['transitions_internal', 'data_flows_internal']:
-            self.view_dict['transitions_external'] = False
-            self.view_dict['data_flows_external'] = False
-            button.set_active(False)
-
-        if name in ['transitions_internal', 'data_flows_internal'] and hasattr(self.model, 'states'):
-            self.view_dict[name] = button.get_active()
-            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
-        elif not name in ['transitions_external', 'data_flows_external']:
-            self.view_dict['transitions_internal'] = False
-            self.view_dict['data_flows_internal'] = False
-            button.set_active(False)
-
-        self.transitions_ctrl.update_transitions_store()
-        self.transitions_ctrl.update_stores()
-        self.transitions_ctrl.update_model()
-
-        self.data_flows_ctrl.update_stores()
-        self.data_flows_ctrl.update_model()
+        pass
+        # if name in ['transitions_external', 'data_flows_external'] and self.model.parent is not None:
+        #     self.view_dict[name] = button.get_active()
+        #     # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+        # elif not name in ['transitions_internal', 'data_flows_internal']:
+        #     self.view_dict['transitions_external'] = False
+        #     self.view_dict['data_flows_external'] = False
+        #     button.set_active(False)
+        #
+        # if name in ['transitions_internal', 'data_flows_internal'] and hasattr(self.model, 'states'):
+        #     self.view_dict[name] = button.get_active()
+        #     # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
+        # elif not name in ['transitions_external', 'data_flows_external']:
+        #     self.view_dict['transitions_internal'] = False
+        #     self.view_dict['data_flows_internal'] = False
+        #     button.set_active(False)
+        #
+        # self.transitions_ctrl.update_transitions_store()
+        # self.transitions_ctrl.update_stores()
+        # self.transitions_ctrl.update_model()
+        #
+        # self.data_flows_ctrl.update_stores()
+        # self.data_flows_ctrl.update_model()
 
     def __state_property_adapter(self, attr_name, label, view=None, value_error=None):
         """Helper method returning an adapter for a state property
@@ -129,96 +129,3 @@ class StateConnectionsEditorController(Controller):
         logger.warning("Invalid value '{val:s}' for key '{prop:s}'.".format(val=value, prop=prop_name))
         adapt.update_widget()  # Update widget values with values from model
 
-    # @Controller.observe("state", before=True)
-    # def before_state_change(self, model, _, info):
-    #     """Called before an attribute of the state is set
-    #
-    #     The attributes of the state should all be set via function (setters). An observer observes these functions
-    #     and calls this function before the actual setter call. It passes several parameters for information purpose.
-    #
-    #     The function is empty at the moment (except a debug output), but can be filled with logic executed before a
-    #     certain attribute is changed. The method contains a comment with example code.
-    #
-    #     :param mvc.models.StateModel model: The model of the state being handled by the controller
-    #     :param sm.State _: The state that was changed (can also be accessed via the model)
-    #     :param info: Additional information, such as the method name that was called to change an attribute. With
-    #         this method name, the property being changed can be determined. The parameter also contains the new desired
-    #         value.
-    #
-    #     """
-    #
-    #     logger.debug("before_state_change -- Attribute: %s, before: %s, desired: %s",
-    #                  info.method_name, model.state.__getattribute__(info.method_name), info.args[1])
-    #
-    #     # The name of the method called th change the attribute should coincide with the attribute's name
-    #     # attr = info.method_name
-    #     #
-    #     # if attr == "id"
-    #     #     # The ID of the state is being changed
-    #     #     pass
-    #     # elif attr == "name"
-    #     #     # The name of the state is being changed
-    #     #     pass
-    #
-    #     pass
-    #
-    #
-    # @Controller.observe("state", after=True)
-    # def after_state_change(self, model, _, info):
-    #     """Called after an attribute of the state was set
-    #
-    #     The attributes of the state should all be set via function (setters). An observer observes these functions
-    #     and calls this function after the actual setter call. It passes several parameters for information purpose.
-    #
-    #     The function is empty at the moment (except a debug output), but can be filled with logic executed before a
-    #     certain attribute is changed. See :func:`before_state_change` for example code.
-    #
-    #     :param mvc.models.StateModel model: The model of the state being handled by the controller
-    #     :param sm.State _: The state that was changed (can also be accessed via the model)
-    #     :param info: Additional information, such as the method name that was called to change an attribute. With
-    #         this method name, the property being changed can be determined. The parameter also contains the new desired
-    #         value and the return value of the setter function. By comparing the passed attribute with the current
-    #         one, it can be determined whether the value was successfully changed or not.
-    #
-    #     """
-    #
-    #     logger.debug("after_state_change -- Attribute: %s, after: %s, desired: %s, returned: %s",
-    #                  info.method_name, model.state.__getattribute__(info.method_name), info.args[1], info.result)
-    #
-    #     if model.state.__getattribute__(info.method_name) == info.args[1]:  # Change was successful
-    #
-    #         if self.view is None:  # View hasn't been created, yet
-    #             self.model.update_attributes()
-    #
-    #         # If the view has been created, store the current selection of the table and restore the selection,
-    #         # after the table has been updated. This is needed, as the selection is lost when the table is cleared.
-    #         else:
-    #             view = self.view['state_properties_view']
-    #
-    #             selection = view.get_selection()
-    #             (paths, _) = selection.get_selected_rows()
-    #             selected_paths = []
-    #             for path in paths:
-    #                 if selection.path_is_selected(path.path):
-    #                     selected_paths.append(path.path)
-    #
-    #             self.model.update_attributes()
-    #
-    #             for path in selected_paths:
-    #                 selection.select_path(path)
-
-if __name__ == '__main__':
-    from mvc.controllers import SingleWidgetWindowController
-    from mvc.views import StateConnectionsEditorView, SingleWidgetWindowView
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(StateConnectionsEditorView, width=500, height=200, title='Connection Editor')
-    c = SingleWidgetWindowController(ctr_model, v, StateConnectionsEditorController)
-    #c = SingleWidgetWindowController(ctr_model.states.values()[1], v, StateConnectionsEditorController)
-
-    gtk.main()

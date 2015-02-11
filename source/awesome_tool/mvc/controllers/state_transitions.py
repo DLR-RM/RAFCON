@@ -1,12 +1,11 @@
 
-from utils import log
-logger = log.get_logger(__name__)
-
 from gtkmvc import Controller, Observer
 import gtk
 import gobject
 
 from mvc.models import ContainerStateModel, StateModel
+from utils import log
+logger = log.get_logger(__name__)
 
 
 class ParentObserver(Observer):

@@ -22,19 +22,3 @@ class LibraryTreeView(View, gtk.TreeView):
         # tvcolumn_path.add_attribute(cell_renderer_path, 'text', 1)
 
         self['library_tree_view'] = self
-
-
-if __name__ == '__main__':
-    from mvc.views import SingleWidgetWindowView
-    from mvc.controllers import LibraryTreeController, SingleWidgetWindowController
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(LibraryTreeView, width=50, height=100)
-    c = SingleWidgetWindowController(ctr_model, v, LibraryTreeController)
-
-    gtk.main()

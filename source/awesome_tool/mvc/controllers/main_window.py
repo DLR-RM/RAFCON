@@ -1,7 +1,8 @@
+import traceback
+
 import gtk
 from gtkmvc import Controller
-from utils import log
-logger = log.get_logger(__name__)
+
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
     StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
     SourceEditorController, SingleWidgetWindowController, StateEditorController, StateMachineTreeController,\
@@ -9,14 +10,12 @@ from mvc.controllers import StatePropertiesController, ContainerStateController,
 import statemachine.singleton
 from mvc.controllers.states_editor import StatesEditorController
 from mvc.controllers.state_machines_editor import StateMachinesEditorController
-
-import traceback
-
 from statemachine.states.execution_state import ExecutionState
 from mvc.models.container_state import ContainerStateModel
 from mvc.models.state import StateModel
 
-from mvc.controllers.state_data_flows import StateDataFlowsEditorController, StateDataFlowsListController
+from utils import log
+logger = log.get_logger(__name__)
 
 
 def setup_key_binding(key_map, view, widget):
@@ -32,7 +31,7 @@ def setup_key_binding(key_map, view, widget):
             try:
                 if not view[item[0]]:
                     view[item[0]] = gtk.MenuItem()
-                    print "NOT_IN", item
+                    logger.info("NOT_IN key-accelerator %s" % str(item))
                 # print "activate", item, main_widget[item[0]], accelgroup, key, mod, gtk.ACCEL_VISIBLE
                 view[item[0]].add_accelerator("activate", accelgroup, key, mod, gtk.ACCEL_VISIBLE)
             except:
@@ -56,7 +55,7 @@ class MainWindowController(Controller):
         self.root_state_model = self.model.state_machines.values()[0].root_state
         self.em_module = self.model.state_machines.values()[0].root_state
         self.em_module = self.model.state_machines.values()[0].root_state
-        print "Root state", self.model.root_state
+        logger.debug("Root state %s" % self.model.root_state)
         top_h_pane = view['top_h_pane']
         left_v_pane = view['left_v_pane']
         right_v_pane = view['right_v_pane']

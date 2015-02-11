@@ -137,27 +137,3 @@ class StateEditorLDView(View):
                 self.top_box.set_child_packing(expander, False, fill, padding, pack_type)
 
         #print "Reset Expander Values"
-
-
-if __name__ == '__main__':
-    from statemachine.states.execution_state import ExecutionState as State
-    from statemachine.states.container_state import ContainerState
-
-    from mvc.models import StateModel
-    from mvc.views import SingleWidgetWindowView
-    from mvc.controllers import StateEditorController, SingleWidgetWindowController
-
-    state1 = State('state2')
-    m = StateModel(state1)
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(StateEditorView, width=550, height=600, title='State Editor')
-    c = SingleWidgetWindowController(ctr_model, v, StateEditorController)
-    #c = SingleWidgetWindowController(m, v, StateEditorController)
-
-    gtk.main()

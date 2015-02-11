@@ -68,19 +68,3 @@ class StateOverviewController(Controller):
                                                                      self.model.state.description, entry_text)
         self.model.state.description = entry_text
         self.view['description_textview'].get_buffer().set_text(self.model.state.description)
-
-
-if __name__ == '__main__':
-    from statemachine.states.execution_state import ExecutionState as State
-
-    from mvc.models import StateModel
-    from mvc.views import StateOverviewView, SingleWidgetWindowView
-    from mvc.controllers import SingleWidgetWindowController
-
-    state1 = State('state1')
-    m = StateModel(state1)
-
-    v = SingleWidgetWindowView(StateOverviewView, width=500, height=200, title='Source Editor')
-    c = SingleWidgetWindowController(m, v, StateOverviewController)
-
-    gtk.main()

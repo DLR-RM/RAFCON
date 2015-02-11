@@ -657,21 +657,3 @@ class StateDataFlowsEditorController(Controller):
 
         self.df_list_ctrl.update_stores()
         self.df_list_ctrl.update_model()
-
-
-if __name__ == '__main__':
-    from mvc.controllers import SingleWidgetWindowController, StateConnectionsEditorController
-    from mvc.views import StateConnectionsEditorView, SingleWidgetWindowView
-
-    import mvc.main as main
-    import gtk
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(StateConnectionsEditorView, width=500, height=200, title='Connection Editor')
-    c = SingleWidgetWindowController(ctr_model, v, StateConnectionsEditorController)
-    #c = SingleWidgetWindowController(ctr_model.states.values()[1], v, StateConnectionsEditorController)
-
-    gtk.main()

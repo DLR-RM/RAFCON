@@ -1,6 +1,8 @@
 import gtk, gobject
 
 from gtkmvc import Controller, Observer
+from utils import log
+logger = log.get_logger(__name__)
 
 
 class ParentObserver(Observer):
@@ -278,21 +280,3 @@ class StateOutcomesEditorController(Controller):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-
-if __name__ == '__main__':
-    from mvc.controllers import SingleWidgetWindowController
-    from mvc.views import SingleWidgetWindowView, StateOutcomesEditorView, StateOutcomesTreeView
-
-    import mvc.main as main
-    import gtk
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    #tree_view = StateOutcomesTreeView()
-    #tree_ctrl = StateOutcomesTreeController(ctr_model, tree_view)
-    v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
-    c = SingleWidgetWindowController(ctr_model.states.values()[1], v, StateOutcomesEditorController)
-
-    gtk.main()
