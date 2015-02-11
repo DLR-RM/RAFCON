@@ -326,26 +326,3 @@ class StateEditorLDController(Controller):
             model.update_output_data_port_list_store_and_models()
         elif info.method_name == "add_scoped_variable" or info.method_name == "remove_scoped_variable":
             model.update_scoped_variables_list_store()
-
-
-if __name__ == '__main__':
-    from mvc.views import StateEditorView, SingleWidgetWindowView
-    from mvc.controllers import SingleWidgetWindowController
-
-    from statemachine.states.execution_state import ExecutionState as State
-    from mvc.models import StateModel, ContainerStateModel
-
-    state1 = State('state2')
-    m = StateModel(state1)
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state] = main.main()
-
-    v = SingleWidgetWindowView(StateEditorView, width=550, height=550, title='State Editor')
-    c = SingleWidgetWindowController(ctr_model, v, StateEditorController)
-    #c = StateEditorController(m, v)
-
-    gtk.main()

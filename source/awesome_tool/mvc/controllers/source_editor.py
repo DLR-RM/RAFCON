@@ -81,18 +81,3 @@ class SourceEditorController(Controller):
         else:
             logger.debug("File not saved")
         widget.destroy()
-
-if __name__ == '__main__':
-    from mvc.views import SourceEditorView, SingleWidgetWindowView
-    from mvc.controllers import SingleWidgetWindowController
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
-    c = SingleWidgetWindowController(ctr_model, v, SourceEditorController)
-
-    gtk.main()

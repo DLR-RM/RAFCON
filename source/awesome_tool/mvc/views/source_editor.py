@@ -96,19 +96,3 @@ class SourceEditorView(View):
         else:
             self.apply_tag('dead_color')
         self.textview.set_property('editable', on)
-
-
-if __name__ == '__main__':
-    from mvc.controllers import SourceEditorController, SingleWidgetWindowController
-    from mvc.views import SingleWidgetWindowView
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(SourceEditorView, width=550, height=600, title='Source Editor')
-    c = SingleWidgetWindowController(ctr_model, v, SourceEditorController)
-
-    gtk.main()

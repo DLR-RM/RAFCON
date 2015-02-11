@@ -1,6 +1,7 @@
 import gtk
 import gobject
 
+from gtkmvc import Controller
 import statemachine.singleton
 from utils import log
 logger = log.get_logger(__name__)
@@ -13,7 +14,7 @@ class LibraryTreeController():  # (Controller):
     # actually no model needed for non modifiable library tree => take data from the library_manager
     # if libraries can be added by the GUI in the future a model will be needed
     def __init__(self, model=None, view=None):
-        #Controller.__init__(self, model, view)
+        # Controller.__init__(self, model, view)
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT)
         view.set_model(self.library_tree_store)
         self.view = view
@@ -43,19 +44,3 @@ class LibraryTreeController():  # (Controller):
         library_key = model[row][0]
         library = model[row][1]
         logger.debug("The library state should be inserted into the statemachine")
-
-
-if __name__ == '__main__':
-    from mvc.views import LibraryTreeView, SingleWidgetWindowView
-    from mvc.controllers import SingleWidgetWindowController
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(LibraryTreeView, width=50, height=100)
-    c = SingleWidgetWindowController(ctr_model, v, LibraryTreeController)
-
-    gtk.main()

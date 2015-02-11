@@ -90,20 +90,3 @@ class StateOutcomesEditorView(View):
 
     def get_top_widget(self):
         return self.vbox
-
-
-if __name__ == '__main__':
-    from mvc.controllers import SingleWidgetWindowController, StateOutcomesEditorController
-    from mvc.views import SingleWidgetWindowView
-
-    import mvc.main as main
-    import gtk
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
-    c = SingleWidgetWindowController(ctr_model, v, StateOutcomesEditorController)
-
-    gtk.main()

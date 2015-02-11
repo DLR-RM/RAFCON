@@ -31,19 +31,3 @@ class StateMachineTreeView(View, gtk.TreeView):
         tvcolumn.add_attribute(cell, 'text', 2)
 
         self['state_machine_tree_view'] = self
-
-
-if __name__ == '__main__':
-    from mvc.controllers import StateMachineTreeController, SingleWidgetWindowController
-    from mvc.views import SingleWidgetWindowView
-
-    import mvc.main as main
-
-    main.setup_path()
-    main.check_requirements()
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = main.create_models()
-
-    v = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
-    c = SingleWidgetWindowController(ctr_model, v, StateMachineTreeController)
-
-    gtk.main()

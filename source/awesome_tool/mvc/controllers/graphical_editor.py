@@ -146,9 +146,12 @@ class GraphicalEditorController(Controller):
             if new_selection != self.selection:
                 if self.selection is not None:
                     self.selection.meta['gui']['selected'] = False
+                    # clear selection because only single selection in g-editor till now
+                    self.model.selection.clear()
                 self.selection = new_selection
                 if self.selection is not None:
                     self.selection.meta['gui']['selected'] = True
+                    self.model.selection.add(self.selection)
                     # else:
                     # self.selection.meta['gui']['selected'] = False
                     # self.selection = None
@@ -157,6 +160,8 @@ class GraphicalEditorController(Controller):
             if self.selection is not None and isinstance(self.selection, StateModel):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
+                # overwrite selection set
+                self.model.selection.set([self.selection])
 
             # Check, whether a waypoint was clicked on
             if self.selection is not None and \
@@ -172,6 +177,8 @@ class GraphicalEditorController(Controller):
                             self.selection_start_pos = (waypoint[0], waypoint[1])
                             logger.debug('Selected waypoint {0:.1f} - {1:.1f}'.format(click[0], click[1]))
                             break
+                # overwrite selection set
+                self.model.selection.set([self.selection])
 
             # Check, whether an outcome was clicked on
             if self.selection is not None and isinstance(self.selection, StateModel) and \
