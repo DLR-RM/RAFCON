@@ -12,6 +12,7 @@ import string
 import random
 
 
+state_machine_id_counter = 0
 transition_id_counter = 0
 data_flow_id_counter = 0
 # outcome 0 is success, outcome -1 is aborted and outcome -2 is preempted
@@ -21,6 +22,12 @@ script_id_counter = 0
 external_module_id_counter = 0
 
 used_state_ids = []
+
+
+def generate_state_machine_id():
+    global state_machine_id_counter
+    state_machine_id_counter += 1
+    return state_machine_id_counter
 
 
 def generate_transition_id():
@@ -66,6 +73,7 @@ def state_id_generator(size=6, chars=string.ascii_uppercase):
         new_state_id = ''.join(random.choice(chars) for x in range(size))
     used_state_ids.append(new_state_id)
     return new_state_id
+
 
 def global_variable_id_generator(size=10, chars=string.ascii_uppercase):
     return ''.join(random.choice(chars) for x in range(size))

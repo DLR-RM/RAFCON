@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 
 import gtk
 
@@ -14,6 +15,7 @@ from statemachine.states.preemptive_concurrency_state import PreemptiveConcurren
 from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
 from mvc.models.state_machine_manager import StateMachineManagerModel
+from statemachine.state_machine import StateMachine
 
 
 def setup_logger(logging_view):
@@ -177,9 +179,14 @@ def run_turtle_demo():
     setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models(turtle_demo_state)
     main_window_view = MainWindowView(logging_view)
-    statemachine.singleton.state_machine_manager.root_state = ctr_state
+    #statemachine.singleton.state_machine_manager.root_state = ctr_state
+    state_machine = StateMachine(turtle_demo_state)
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
+
+    #graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
+    #graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)
 
     # external modules
     ros_module = ExternalModule(name="ros", module_name="ros_external_module", class_name="RosModule")
@@ -194,7 +201,6 @@ def run_turtle_demo():
 
     # dual_gtk_window = DualGTKWindow()
 
-    statemachine.singleton.state_machine_manager.root_state = turtle_demo_state
     gtk.main()
     #turtle_demo_state.join()
 
@@ -232,4 +238,8 @@ class DualGTKWindow:
 
 
 if __name__ == '__main__':
+    cur_path = os.path.abspath(os.path.dirname(__file__))
+    test_script_path = os.path.join(cur_path, os.pardir, os.pardir, 'test_scripts')
+    sys.path.insert(1, test_script_path)
+    #print sys.path
     run_turtle_demo()

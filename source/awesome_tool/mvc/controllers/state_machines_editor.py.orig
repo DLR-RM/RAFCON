@@ -3,9 +3,12 @@ from gtkmvc import Controller
 
 from mvc.views.graphical_editor import GraphicalEditorView
 from mvc.controllers.graphical_editor import GraphicalEditorController
-from mvc.models.state_machine import StateMachineModel
+<<<<<<< HEAD
 from utils import log
 logger = log.get_logger(__name__)
+=======
+from mvc.models.state_machine_manager import StateMachineManagerModel
+>>>>>>> c13eb4402a325d4e83bc4a7cc0fce1e033fb3e2b
 
 
 def create_tab_close_button(callback, *additional_parameters):
@@ -48,7 +51,6 @@ def create_tab_header(title, close_callback, *additional_parameters):
 
 
 class StateMachinesEditorController(Controller):
-
     def __init__(self, model, view, state_machine_tree_ctrl, states_editor_ctrl):
         Controller.__init__(self, model, view)
         print view
@@ -62,50 +64,50 @@ class StateMachinesEditorController(Controller):
 
     def register_view(self, view):
 
+<<<<<<< HEAD
         if type(self.model.state_machines) is dict:
             for sm_id, sm in self.model.state_machines.iteritems():
-                self.add_graphical_state_machine_editor(sm)
+                self.add_graphical_state_machine_editor(sm.root_state)
         else:
             logger.debug('ManagerShould have dict as state_machines attr')
+=======
+        self.add_graphical_state_machine_editor(self.model)
+>>>>>>> c13eb4402a325d4e83bc4a7cc0fce1e033fb3e2b
 
         self.state_machine_tree_ctrl.view.connect('cursor-changed', self.on_tree_view_state_double_clicked)
 
-    def add_graphical_state_machine_editor(self, state_machine_model):
+    def add_graphical_state_machine_editor(self, sm_manager_model):
 
-        assert isinstance(state_machine_model, StateMachineModel)
+        assert isinstance(sm_manager_model, StateMachineManagerModel)
+        root_state = sm_manager_model.root_state.state
 
-        sm_identifier = state_machine_model.root_state.state.get_path()
+        sm_identifier = root_state.name + '.' + root_state.state_id
 
         graphical_editor_view = GraphicalEditorView()
 
-        graphical_editor_ctrl = GraphicalEditorController(state_machine_model, graphical_editor_view)
-        (event_box, new_label) = create_tab_header(state_machine_model.root_state.state.name,
+        graphical_editor_ctrl = GraphicalEditorController(sm_manager_model, graphical_editor_view)
+        (event_box, new_label) = create_tab_header(root_state.name,
                                                    self.on_close_clicked,
-                                                   state_machine_model, 'refused')
+                                                   sm_manager_model, 'refused')
         graphical_editor_view.get_top_widget().title_label = new_label
 
         idx = self._view.notebook.append_page(graphical_editor_view['main_frame'], event_box)
         page = self._view.notebook.get_nth_page(idx)
         page.show_all()
 
-        self.tabs[sm_identifier] = {'page': page,
-                                    'state_model': state_machine_model,
-                                    'ctrl': graphical_editor_ctrl,
-                                    'connected': False}
-
-        def on_expose_event(widget, event, sm_identifier):
-            if not self.tabs[sm_identifier]['connected']:
-                logger.debug("connect button-release-event with graphical viewer of " + sm_identifier)
-                self.tabs[sm_identifier]['ctrl'].view.editor.connect('button-release-event',
-                                                                     self.on_graphical_state_double_clicked,
-                                                                     sm_identifier)
-                self.tabs[sm_identifier]['connected'] = True
-
-        graphical_editor_view.editor.connect('expose-event', on_expose_event, sm_identifier)
-        #graphical_editor_view.editor.connect('expose-event', self.on_graphical_state_double_clicked, sm_identifier)
-
         graphical_editor_view.show()
         self._view.notebook.show()
+
+        self.tabs[sm_identifier] = {'page': page,
+                                    'state_model': sm_manager_model,
+                                    'ctrl': graphical_editor_ctrl}
+
+        def on_expose_event(widget, event, sm_identifier):
+            self.tabs[sm_identifier]['ctrl'].view.editor.connect('button-release-event',
+                                                                 self.on_graphical_state_double_clicked,
+                                                                 sm_identifier)
+
+        graphical_editor_view.editor.connect('expose-event', on_expose_event, sm_identifier)
 
         return idx
 
@@ -125,7 +127,7 @@ class StateMachinesEditorController(Controller):
         self.states_editor_ctrl.change_state_editor_selection(model[row][3])
 
     def on_graphical_state_double_clicked(self, widget, signal_id, sm_identifier):
-        #print widget, signal_id, sm_identifier
+        # print widget, signal_id, sm_identifier
 
         def find_selected(state_model):
             # print "test state %s " % state_model.state.name
@@ -146,8 +148,5 @@ class StateMachinesEditorController(Controller):
         selected_model = find_selected(self.tabs[sm_identifier]['state_model'])
         if selected_model:
             self.states_editor_ctrl.change_state_editor_selection(selected_model)
-        # else:
-        #     print "no state selected"
-
-    def selcetion_notification(self):
-        pass
+            # else:
+            #     print "no state selected"

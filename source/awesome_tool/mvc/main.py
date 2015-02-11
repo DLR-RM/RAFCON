@@ -4,14 +4,15 @@ import logging
 import gtk
 
 from utils import log
-from statemachine.states.state import State
 from mvc.models import ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
 from mvc.controllers import MainWindowController
 from mvc.views import LoggingView, MainWindowView
 from mvc.models.state_machine_manager import StateMachineManagerModel
-from statemachine.states.container_state import ContainerState
+from statemachine.states.hierarchy_state import HierarchyState
+from statemachine.states.execution_state import ExecutionState
 from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
+from statemachine.state_machine import StateMachine
 
 
 def setup_path():
@@ -48,22 +49,22 @@ def create_models(*args, **kargs):
     logging.getLogger('statemachine.state').setLevel(logging.DEBUG)
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
-    state1 = State('State1')
+    state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
     input_state1 = state1.add_input_data_port("input", "int", 0)
     state1.add_outcome('success', 0)
-    state2 = State('State2')
+    state2 = ExecutionState('State2')
     input_my_input_state2 = state2.add_input_data_port("my_input", "int", 0)
     input_long_state2 = state2.add_input_data_port("longlonginputname", "int", 0)
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_my_output_state2 = state2.add_output_data_port("my_output", "int")
     output_res_state2 = state2.add_output_data_port("res", "int")
-    state4 = State('Nested')
+    state4 = ExecutionState('Nested')
     output_state4 = state4.add_output_data_port("out", "int")
     state4.add_outcome("success", 0)
-    state5 = State('Nested2')
+    state5 = ExecutionState('Nested2')
     input_state5 = state5.add_input_data_port("in", "int", 0)
-    state3 = ContainerState(name='State3')
+    state3 = HierarchyState(name='State3')
     input_state3 = state3.add_input_data_port("input", "int", 0)
     output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
@@ -73,7 +74,7 @@ def create_models(*args, **kargs):
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
 
-    ctr_state = ContainerState(name="Container")
+    ctr_state = HierarchyState(name="Container")
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
@@ -122,11 +123,6 @@ def create_models(*args, **kargs):
 
     return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
 
-import time
-def id_generator2():
-    time.sleep(0.001)
-    return int(time.time()*1000)
-
 
 if __name__ == '__main__':
     statemachine.singleton.library_manager.initialize()
@@ -137,9 +133,9 @@ if __name__ == '__main__':
     logging_view = LoggingView()
     setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
-    this_model = filter(lambda model: model.state.name == 'State3', ctr_model.states.values()).pop()
 
-    statemachine.singleton.state_machine_manager.root_state = ctr_state
+    state_machine = StateMachine(ctr_state)
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model,

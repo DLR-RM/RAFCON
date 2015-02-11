@@ -141,6 +141,7 @@ class DataPort(Observable, yaml.YAMLObject):
         self._default_value = default_value
 
 
+PATH_SEPARATOR = '/'
 class State(Observable, yaml.YAMLObject, object):
 
     """A class for representing a state in the state machine
@@ -310,6 +311,18 @@ class State(Observable, yaml.YAMLObject, object):
             del self._output_data_ports[data_port_id]
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
+
+    def get_path(self, appendix=None):
+        if self.parent:
+            if appendix is None:
+                return self.parent.get_path(self.state_id)
+            else:
+                return self.parent.get_path(self.state_id + PATH_SEPARATOR + appendix)
+        else:
+            if appendix is None:
+                return self.state_id
+            else:
+                return self.state_id + PATH_SEPARATOR + appendix
 
     def get_io_data_port_id_from_name_and_type(self, name, data_port_type):
         """Returns the data_port_id of a data_port with a certain name and data port type

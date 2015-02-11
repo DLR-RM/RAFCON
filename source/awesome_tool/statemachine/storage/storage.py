@@ -109,7 +109,6 @@ class Storage(Observable):
         state.script.filename = self.SCRIPT_FILE
 
     def save_state_recursively(self, state, parent_path):
-        #print "Save state %s recursively" % str(root_state.state_id)
         state_path = os.path.join(parent_path, str(state.state_id))
         state_path_full = os.path.join(self.base_path, state_path)
         self._create_path(state_path_full)
@@ -120,9 +119,7 @@ class Storage(Observable):
 
         #create yaml files for all children
         if not state.state_type is statemachine.states.state.StateType.EXECUTION:
-            #print "length of root state: %s" % len(root_state.states)
             for key, state in state.states.iteritems():
-                #print "state_path: %s" % str(state_path)
                 self.save_state_recursively(state, state_path)
 
     def load_statemachine_from_yaml(self, base_path=None):

@@ -1,6 +1,11 @@
 import gtk
 from gtkmvc import View, Controller
 
+from statemachine.states.state import State, StateType
+from statemachine.states.container_state import ContainerState
+from statemachine.states.concurrency_state import ConcurrencyState
+from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+
 
 class StateOverviewController(Controller):
     """Controller handling the view of properties/attributes of the ContainerStateModel
@@ -26,12 +31,17 @@ class StateOverviewController(Controller):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        # StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY')
+        # self.state_types_dict = {}
+        # self.state_types_dict[type(State)] = {'Enum': StateType.STATE_TYPE}
+        # self.state_types_dict[type(ContainerState)] = {'Enum': StateType.STATE_TYPE}
         view['entry_name'].connect('focus-out-event', self.change_name)
         view['description_textview'].connect('focus-out-event', self.change_description)
         view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
         view['label_type_value'].set_text(str(self.model.state.state_type))
         view['description_textview'].set_buffer(self.model.state.description)
+        #view['state_type_combo'].set_buffer(self.model.state.description)
 
     #def on_window_state_editor_destroy(self):
     #    gtk.main_quit()

@@ -324,3 +324,40 @@ class MaskEditTree(gtk.TreeView):
                 mod_tree_val(text, item, False)
 
         #self.update()
+
+import time
+
+
+def id_generator2():
+    time.sleep(0.001)
+    return int(time.time()*1000)
+
+
+# test for unique id
+import getpass
+import os
+user_name = getpass.getuser()
+from uuid import getnode as get_mac
+mac = get_mac()
+pid = os.getpid()
+
+import time
+old_time = int(time.time()*1000*1000)
+old_num = 0
+old = []
+ids = []  # ''
+for i in range(100):
+    micro_time = int(time.time()*1000*1000)
+    if old_time == micro_time:
+        time.sleep(0.000001)
+        mt = micro_time
+        micro_time = int(time.time()*1000*1000)
+        old_num += 1
+        old.append([old_num, old_time, mt, micro_time])
+    old_time = micro_time
+    # ids += "USER is: mac-address: pid: at time: %s.%s.%s.%s" % (user_name, mac, pid, old_time)
+    # ids.append("USER is: mac-address: pid: at time: %s.%s.%s.%s" % (user_name, mac, pid, old_time))
+    ids.append((user_name, mac, pid, old_time))
+
+# print "USER is: mac-address: pid: at time: %s.%s.%s.%s" % (user_name, mac, pid, old_time)
+# print ids, old

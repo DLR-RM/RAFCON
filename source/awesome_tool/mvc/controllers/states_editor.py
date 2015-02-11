@@ -58,7 +58,7 @@ class StatesEditorController(Controller):
         self.view.notebook.connect('switch-page', self.on_switch_page)
 
     def add_state_editor(self, state_model, editor_type=None):
-        state_identifier = state_model.state.name + '.' + state_model.state.state_id
+        state_identifier = state_model.state.get_path()
         # new StateEditor*View
         # new StateEditor*Controller
         if editor_type == 'mod':
@@ -71,17 +71,21 @@ class StatesEditorController(Controller):
             state_editor_view = StateEditorEggView()
             state_editor_ctrl = StateEditorEggController(state_model, state_editor_view)
 
-        (evtbox, new_label) = create_tab_header(state_model.state.name, self.on_close_clicked,
+        tab_label_text = state_model.state.name
+        if len(state_model.state.name) > 10:
+            tab_label_text = state_model.state.name[:10] + '~'
+        (evtbox, new_label) = create_tab_header(tab_label_text, self.on_close_clicked,
                                                 state_model, 'refused')
         state_editor_view.get_top_widget().title_label = new_label
 
         idx = self.view.notebook.prepend_page(state_editor_view.get_top_widget(), evtbox)
         page = self.view.notebook.get_nth_page(idx)
+        self.view.notebook.set_tab_reorderable(page, True)
         page.show_all()
 
         state_editor_view.show()
         self.view.notebook.show()
-
+        print "tab: ", state_identifier
         self.tabs[state_identifier] = {'page': page, 'state_model': state_model, 'ctrl': state_editor_ctrl}
 
         return idx
@@ -90,7 +94,7 @@ class StatesEditorController(Controller):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         #print event, state_model, result
 
-        state_identifier = state_model.state.name + '.' + state_model.state.state_id
+        state_identifier = state_model.state.get_path()
         page = self.tabs[state_identifier]['page']
         current_idx = self.view.notebook.page_num(page)
 
@@ -110,7 +114,7 @@ class StatesEditorController(Controller):
         #     self.act_model = model
 
     def change_state_editor_selection(self, selected_model):
-        state_identifier = selected_model.state.name + '.' + selected_model.state.state_id
+        state_identifier = selected_model.state.get_path()
         if self.act_model is None or not self.act_model.state.state_id == selected_model.state.state_id:
             print "State %s is SELECTED" % selected_model.state.name
 
