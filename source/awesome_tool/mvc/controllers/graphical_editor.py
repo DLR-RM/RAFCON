@@ -145,16 +145,14 @@ class GraphicalEditorController(Controller):
             # If the object was previously selected, remove the selection
             if new_selection != self.selection:
                 if self.selection is not None:
-                    self.selection.meta['gui']['selected'] = False
-                    # clear selection because only single selection in g-editor till now
                     self.model.selection.clear()
                 self.selection = new_selection
                 if self.selection is not None:
-                    self.selection.meta['gui']['selected'] = True
                     self.model.selection.add(self.selection)
-                    # else:
-                    # self.selection.meta['gui']['selected'] = False
-                    # self.selection = None
+            # Add this if a click shell toggle the selection
+            # else:
+            #   self.model.selection.clear()
+            #   self.selection = None
 
             # If a state was clicked on, store the click coordinates for the drag'ndrop movement
             if self.selection is not None and isinstance(self.selection, StateModel):
@@ -644,7 +642,10 @@ class GraphicalEditorController(Controller):
             scoped_ports = state_m.state.scoped_variables
 
         # Was the state selected?
-        selected = state_m.meta['gui']['selected']
+        selected = False
+        selected_states = self.model.selection.get_states()
+        if state_m in selected_states:
+            selected = True
 
         # Is the state active (executing)?
         active = state_m.state.active
@@ -726,10 +727,12 @@ class GraphicalEditorController(Controller):
 
 
                 # Let the view draw the transition and store the returned OpenGl object id
-                active = transition.meta['gui']['selected']
+                selected = False
+                if transition in self.model.selection.get_transitions():
+                    selected = True
                 line_width = min(width, height) / 25.0
                 id = self.view.editor.draw_transition(from_x, from_y, to_x, to_y, line_width, waypoints,
-                                                      active, depth + 0.5)
+                                                      selected, depth + 0.5)
                 transition.meta['gui']['editor']['id'] = id
                 transition.meta['gui']['editor']['from_pos_x'] = from_x
                 transition.meta['gui']['editor']['from_pos_y'] = from_y
@@ -768,10 +771,12 @@ class GraphicalEditorController(Controller):
                 for waypoint in data_flow.meta['gui']['editor']['waypoints']:
                     waypoints.append((waypoint[0], waypoint[1]))
 
-                active = data_flow.meta['gui']['selected']
+                selected = False
+                if data_flow in self.model.selection.get_data_flows():
+                    selected = True
                 line_width = min(width, height) / 25.0
                 id = self.view.editor.draw_data_flow(from_x, from_y, to_x, to_y, line_width, waypoints,
-                                                     active, depth + 0.5)
+                                                     selected, depth + 0.5)
                 data_flow.meta['gui']['editor']['id'] = id
                 data_flow.meta['gui']['editor']['from_pos_x'] = from_x
                 data_flow.meta['gui']['editor']['from_pos_y'] = from_y
