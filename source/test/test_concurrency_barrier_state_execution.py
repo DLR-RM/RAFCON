@@ -49,7 +49,7 @@ def test_concurrency_barrier_state_execution():
 
 
 def test_concurrency_barrier_save_load():
-    s = Storage("../../test_scripts/stored_statemachine")
+    s = Storage("../test_scripts/stored_statemachine")
 
     concurrency_barrier_state = create_concurrency_barrier_state()
 

@@ -43,7 +43,6 @@ class LibraryManager(Observable):
             else:
                 logger.warn("Wrong path in config for LibraryManager: Path %s does not exist", lib_path)
         logger.debug("Initialization of LibraryManager done.")
-        #print self._libraries
 
     def add_libraries_from_path(self, lib_path, target_dict):
         for lib in os.listdir(lib_path):
@@ -58,7 +57,6 @@ class LibraryManager(Observable):
     def add_library(self, lib, lib_path, target_dict):
         self.storage.base_path = lib_path
         target_dict[lib] = os.path.join(lib_path, lib)  # self._storage.load_statemachine_from_yaml(os.path.join(lib_path, lib))
-        #print self.libraries[lib]
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

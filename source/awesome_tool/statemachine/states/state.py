@@ -17,6 +17,7 @@ import yaml
 
 from utils import log
 logger = log.get_logger(__name__)
+from statemachine.enums import StateType, DataPortType
 from statemachine.outcome import Outcome
 from statemachine.script import Script, ScriptType
 from statemachine.execution.statemachine_status import StateMachineStatus
@@ -140,11 +141,7 @@ class DataPort(Observable, yaml.YAMLObject):
         self._default_value = default_value
 
 
-StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY')
-DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 PATH_SEPARATOR = '/'
-
-
 class State(Observable, yaml.YAMLObject, object):
 
     """A class for representing a state in the state machine
@@ -444,12 +441,13 @@ class State(Observable, yaml.YAMLObject, object):
         #     print idp
 
         for input_data_port_key, data_port in self.input_data_ports.iteritems():
-            if not input_data[data_port.name] is None:
-                #check for primitive data types
-                if not str(type(input_data[data_port.name]).__name__) == data_port.data_type:
-                    #check for classes
-                    if not isinstance(input_data[data_port.name], getattr(sys.modules[__name__], data_port.data_type)):
-                        raise TypeError("Input of execute function must be of type %s" % str(data_port.data_type))
+            if input_data_port_key in input_data:
+                if not input_data[data_port.name] is None:
+                    #check for primitive data types
+                    if not str(type(input_data[data_port.name]).__name__) == data_port.data_type:
+                        #check for classes
+                        if not isinstance(input_data[data_port.name], getattr(sys.modules[__name__], data_port.data_type)):
+                            raise TypeError("Input of execute function must be of type %s" % str(data_port.data_type))
 
     def check_output_data_type(self):
         """Check the output data types of the state

@@ -13,9 +13,7 @@ from statemachine.states.container_state import ContainerState
 from utils import log
 logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome
-from statemachine.states.state import StateType
-from statemachine.scope import ScopedData
-from statemachine.states.state import DataPortType
+from statemachine.enums import StateType
 import statemachine.singleton
 
 
@@ -80,8 +78,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 state.output_data = state_output
                 #execute the state
                 state.run()
-                print "Hierarchy State: "
-                print state.output_data
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
                 #print "Final outcome of state is " + str(state.final_outcome)

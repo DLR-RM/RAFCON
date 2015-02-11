@@ -1,47 +1,22 @@
-
 import sys
-import gtk
 import logging
-from utils import log
-from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
-from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
-    LibraryTreeController, MainWindowController
-from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView, ExternalModuleManagerWindowView, ExternalModuleManagerView,  SourceEditorView, \
-    SingleWidgetWindowView, StateEditorView, LoggingView, StateMachineTreeView, LibraryTreeView, MainWindowView
-from mvc.views.single_widget_window import TestButtonsView
-from mvc.views.state_transitions import StateTransitionsEditorView
-from mvc.controllers.state_transitions import StateTransitionsEditorController
-from mvc.views.state_data_flows import StateDataFlowsEditorView
-from mvc.controllers.state_data_flows import StateDataFlowsEditorController
-from mvc.views.connections_editor import StateConnectionsEditorView
-from mvc.controllers.connections_editor import StateConnectionsEditorController
-from mvc.views.state_outcomes import StateOutcomesEditorView
-from mvc.controllers.state_outcomes import StateOutcomesEditorController
-from mvc.views.state_overview import StateOverviewView
-from mvc.controllers.state_overview import StateOverviewController
-from mvc.views.state_editor import StateEditorEggView, StateEditorLDView
-from mvc.controllers.state_editor import StateEditorEggController, StateEditorLDController
 
+import gtk
+
+from utils import log
+from mvc.models import ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
+from mvc.controllers import MainWindowController
+from mvc.views import LoggingView, MainWindowView
 from mvc.models.state_machine_manager import StateMachineManagerModel
-from statemachine.state_machine_manager import StateMachineManager
-from statemachine.states.state import State, DataPort
+from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.execution_state import ExecutionState
-from statemachine.states.container_state import ContainerState
-from statemachine.transition import Transition
-from statemachine.data_flow import DataFlow
 from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
 from statemachine.state_machine import StateMachine
-from statemachine.states.hierarchy_state import HierarchyState
 
 
 def setup_path():
     """Sets up the python include paths to include needed directories"""
-    import os.path
-    import sys
 
     #sys.path.insert(1, '.')
     #sys.path.insert(0, reduce(os.path.join, (TOPDIR, "resources", "external")))
@@ -74,22 +49,22 @@ def create_models(*args, **kargs):
     logging.getLogger('statemachine.state').setLevel(logging.DEBUG)
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
-    state1 = State('State1')
+    state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
     input_state1 = state1.add_input_data_port("input", "int", 0)
     state1.add_outcome('success', 0)
-    state2 = State('State2')
+    state2 = ExecutionState('State2')
     input_my_input_state2 = state2.add_input_data_port("my_input", "int", 0)
     input_long_state2 = state2.add_input_data_port("longlonginputname", "int", 0)
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_my_output_state2 = state2.add_output_data_port("my_output", "int")
     output_res_state2 = state2.add_output_data_port("res", "int")
-    state4 = State('Nested')
+    state4 = ExecutionState('Nested')
     output_state4 = state4.add_output_data_port("out", "int")
     state4.add_outcome("success", 0)
-    state5 = State('Nested2')
+    state5 = ExecutionState('Nested2')
     input_state5 = state5.add_input_data_port("in", "int", 0)
-    state3 = ContainerState(name='State3')
+    state3 = HierarchyState(name='State3')
     input_state3 = state3.add_input_data_port("input", "int", 0)
     output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
@@ -99,7 +74,7 @@ def create_models(*args, **kargs):
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
 
-    ctr_state = ContainerState(name="Container")
+    ctr_state = HierarchyState(name="Container")
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
@@ -158,7 +133,6 @@ if __name__ == '__main__':
     logging_view = LoggingView()
     setup_logger(logging_view)
     [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
-    this_model = filter(lambda model: model.state.name == 'State3', ctr_model.states.values()).pop()
 
     state_machine = StateMachine(ctr_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -221,6 +195,5 @@ if __name__ == '__main__':
     # graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     # graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)
 
-    gtk.gdk.threads_init()
     gtk.main()
     logger.debug("after gtk main")

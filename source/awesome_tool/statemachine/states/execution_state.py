@@ -10,7 +10,8 @@
 
 import yaml
 
-from statemachine.states.state import State, StateType
+from statemachine.enums import StateType
+from statemachine.states.state import State
 from utils import log
 logger = log.get_logger(__name__)
 from statemachine.outcome import Outcome

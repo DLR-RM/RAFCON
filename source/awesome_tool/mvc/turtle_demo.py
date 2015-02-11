@@ -1,28 +1,18 @@
-import gtk
-from utils import log
 import logging
 import sys
 import os
 
-from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController, SingleWidgetWindowController,StateEditorController, StateMachineTreeController,\
-    LibraryTreeController, MainWindowController
-from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-    GlobalVariableEditorView, ExternalModuleManagerWindowView, ExternalModuleManagerView,  SourceEditorView, \
-    SingleWidgetWindowView, StateEditorView, LoggingView, StateMachineTreeView, LibraryTreeView, MainWindowView
-from mvc.models import StateModel, ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
+import gtk
 
-from statemachine.states.state import DataPort, DataPortType
+from utils import log
+from mvc.controllers import MainWindowController
+from mvc.views import LoggingView, MainWindowView
+from mvc.models import ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
 from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.library_state import LibraryState
 from statemachine.states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-
-from statemachine.state_machine_manager import StateMachineManager
 from statemachine.external_modules.external_module import ExternalModule
-from statemachine.storage.storage import Storage
 import statemachine.singleton
 from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.state_machine import StateMachine
@@ -251,5 +241,5 @@ if __name__ == '__main__':
     cur_path = os.path.abspath(os.path.dirname(__file__))
     test_script_path = os.path.join(cur_path, os.pardir, os.pardir, 'test_scripts')
     sys.path.insert(1, test_script_path)
-    print sys.path
+    #print sys.path
     run_turtle_demo()

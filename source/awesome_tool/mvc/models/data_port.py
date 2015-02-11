@@ -1,4 +1,5 @@
 from gtkmvc import ModelMT
+
 from statemachine.states.state import DataPort
 from utils.vividict import Vividict
 

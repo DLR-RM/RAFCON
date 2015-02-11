@@ -8,10 +8,12 @@
 
 """
 
-from gtkmvc import Observable
 import sys
 import time
 import datetime
+
+from gtkmvc import Observable
+from statemachine.enums import DataPortType
 import yaml
 
 from statemachine.states.state import State, DataPort
@@ -83,12 +85,12 @@ class ScopedData(Observable):
     :ivar _value: the current value of the scoped data
     :ivar _value_type: specifies the type of self._value; the setter of __value will
             only allow assignments that satisfies the data_type constraint
-    :ivar _from_state: the state that wrote to the scoped data last
+    :ivar _from_state: the state_id of the state that wrote to the scoped data last
     :ivar _timestamp: the timestamp when the scoped data was written to last
 
     """
 
-    def __init__(self, name=None, value=None, value_type=None, from_state=None):
+    def __init__(self, name, value, value_type, from_state, data_port_type):
 
         Observable.__init__(self)
 
@@ -102,13 +104,16 @@ class ScopedData(Observable):
         self._value = None
         self.value = value
 
+        self._data_port_type = None
+        self.data_port_type = data_port_type
+
         self._timestamp = generate_time_stamp()
-        # for storage purpose inside the container states (generated from key_name and from_state.state_id
+        # for storage purpose inside the container states (generated from key_name and from_state
         self._primary_key = None
 
     def __str__(self):
         return "ScopedData: \n name: %s \n data_type: %s \n value: %s \n from_state %s" %\
-               (self.name, self.value_type, self.value, self.from_state.state_id)
+               (self.name, self.value_type, self.value, self.from_state)
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
@@ -128,7 +133,7 @@ class ScopedData(Observable):
             raise TypeError("key_name must be of type str")
         self._name = name
         #update key
-        self._primary_key = self._name+self.from_state.state_id
+        self._primary_key = self._name+self.from_state
 
     @property
     def value(self):
@@ -174,12 +179,26 @@ class ScopedData(Observable):
     @Observable.observed
     def from_state(self, from_state):
         if not from_state is None:
-            if not isinstance(from_state, State):
-                raise TypeError("from_state must be of type State")
+            if not isinstance(from_state, str):
+                raise TypeError("from_state must be of type str")
             if not self.name is None:  #this will just happen in __init__ when key_name is not yet initialized
                 #update key
-                self._primary_key = self.name+self._from_state.state_id
+                self._primary_key = self.name+self._from_state
         self._from_state = from_state
+
+    @property
+    def data_port_type(self):
+        """Property for the _data_port_type field
+
+        """
+        return self._data_port_type
+
+    @data_port_type.setter
+    @Observable.observed
+    def data_port_type(self, data_port_type):
+        if not isinstance(data_port_type, DataPortType):
+            raise TypeError("data_port_type must be of type DataPortType")
+        self._data_port_type = data_port_type
 
     @property
     def timestamp(self):

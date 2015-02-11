@@ -84,6 +84,9 @@ def exit(self, scoped_variables, external_modules, gvm):
                 if not os.path.exists(os.path.join(self.path, self.filename)):
                     raise RuntimeError("Path %s does not exist" % os.path.join(self.path, self.filename))
 
+            # load and build the module per default else the default scripts will be loaded in self.script
+            self.load_and_build_module()
+
 
     def execute(self, state, inputs={}, outputs={}):
         return self._compiled_module.execute(state, inputs, outputs,
@@ -112,6 +115,7 @@ def exit(self, scoped_variables, external_modules, gvm):
 
         self.script = script_file.read()
         #print self.script
+        script_file.close()
 
         module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
         #print module_name
@@ -132,8 +136,6 @@ def exit(self, scoped_variables, external_modules, gvm):
 
         # return the module
         self._compiled_module = tmp_module
-
-        script_file.close()
 
     @classmethod
     def to_yaml(cls, dumper, data):

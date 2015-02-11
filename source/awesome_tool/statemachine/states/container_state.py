@@ -7,13 +7,16 @@
 
 
 """
-from gtkmvc import Observable
 from threading import Condition
 import copy
 
+from gtkmvc import Observable
+
 from utils import log
+
 logger = log.get_logger(__name__)
-from statemachine.states.state import State, DataPortType, StateType
+from statemachine.enums import StateType, DataPortType
+from statemachine.states.state import State
 from statemachine.transition import Transition
 from statemachine.outcome import Outcome
 from statemachine.data_flow import DataFlow
@@ -55,6 +58,7 @@ class ContainerState(State):
         self.start_state = start_state
         self._scoped_variables = None
         self.scoped_variables = scoped_variables
+        self.__scoped_variables_names = []
         self._scoped_data = {}
         self._v_checker = v_checker
         self._current_state = None
@@ -288,10 +292,9 @@ class ContainerState(State):
         self._transitions.pop(transition_id, None)
 
     def get_scoped_variable_from_name(self, name):
-        for scoped_id, scoped_variable in self.scoped_variables.iteritems():
+        for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
             if scoped_variable.name == name:
-                #print scoped_id
-                return scoped_id
+                return scoped_variable_id
         raise AttributeError("Name %s is not in scoped_variables", name)
 
     def get_data_port_by_id(self, data_port_id):
@@ -381,7 +384,7 @@ class ContainerState(State):
         """
         self.data_flows.pop(data_flow_id, None)
 
-    #Primary key is the name of scoped variable.
+    #Primary key is the name of scoped variable.str
     @Observable.observed
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
         """Adds a scoped variable to the container state
@@ -391,6 +394,9 @@ class ContainerState(State):
         """
         if scoped_variable_id is None:
             scoped_variable_id = generate_data_flow_id()
+        if name in self.__scoped_variables_names:
+            raise AttributeError("A scoped variable with name %s already exists", name)
+        self.__scoped_variables_names.append(name)
         self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value, scoped_variable_id)
         return scoped_variable_id
 
@@ -407,6 +413,8 @@ class ContainerState(State):
         # delete all data flows connected to scoped_variable
         self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
 
+        # remove scoped variable name
+        self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
 
@@ -487,8 +495,11 @@ class ContainerState(State):
                 if data_flow.to_key == input_port_key:
                     if data_flow.to_state == state.state_id:
                         # fetch data from the scoped_data list: the key is the data_port_key + the state_id
-                        result_dict[value.name] =\
-                            copy.deepcopy(self.scoped_data[str(data_flow.from_key)+data_flow.from_state].value)
+                        key = str(data_flow.from_key)+data_flow.from_state
+                        if key in self.scoped_data:
+                            result_dict[value.name] = copy.deepcopy(self.scoped_data[key].value)
+                        else:  # if there is not value for the data port specified, take the default value
+                            result_dict[value.name] = value.default_value
         return result_dict
 
     def get_outputs_for_state(self, state):
@@ -518,7 +529,7 @@ class ContainerState(State):
             for input_data_port_key, data_port in state.input_data_ports.iteritems():
                 if dict_key == data_port.name:
                     state.scoped_data[str(input_data_port_key)+self.state_id] =\
-                        ScopedData(data_port.name, value, type(value).__name__, state)
+                        ScopedData(data_port.name, value, type(value).__name__, state.state_id, DataPortType.INPUT)
 
     def add_state_execution_output_to_scoped_data(self, dictionary, state):
         """Add a state execution output to the scoped data
@@ -530,7 +541,7 @@ class ContainerState(State):
             for output_data_port_key, data_port in state.output_data_ports.iteritems():
                 if output_name == data_port.name:
                     self.scoped_data[str(output_data_port_key)+state.state_id] =\
-                        ScopedData(data_port.name, value, type(value).__name__, state)
+                        ScopedData(data_port.name, value, type(value).__name__, state.state_id, DataPortType.OUTPUT)
 
     def add_default_values_of_scoped_variables_to_scoped_data(self):
         """Add the scoped variables default values to the scoped_data dictionary
@@ -538,7 +549,7 @@ class ContainerState(State):
         """
         for key, scoped_var in self.scoped_variables.iteritems():
             self.scoped_data[str(scoped_var.data_port_id)+self.state_id] =\
-                ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self)
+                ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id, DataPortType.SCOPED)
 
     def update_scoped_variables_with_output_dictionary(self, dictionary, state):
         """Update the values of the scoped variables with the passed dictionary
@@ -553,7 +564,7 @@ class ContainerState(State):
                     if data_flow.to_key in self.scoped_variables:
                         current_scoped_variable = self.scoped_variables[data_flow.to_key]
                         self.scoped_data[str(data_flow.to_key) + self.state_id] =\
-                            ScopedData(current_scoped_variable.name, value, type(value).__name__, state)
+                            ScopedData(current_scoped_variable.name, value, type(value).__name__, state.state_id, DataPortType.SCOPED)
 
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
@@ -572,8 +583,9 @@ class ContainerState(State):
     def get_scoped_variables_as_dict(self, dict):
         for key_svar, svar in self.scoped_variables.iteritems():
             for key_sdata, sdata in self.scoped_data.iteritems():
-                if key_svar == sdata.name:
-                    dict[key_svar] = sdata.value
+                if svar.name == sdata.name and sdata.from_state == self.state_id:
+                    if sdata.data_port_type is DataPortType.SCOPED:
+                        dict[svar.name] = sdata.value
 
     def write_output_data(self):
         #write output data back to the dictionary
@@ -586,8 +598,12 @@ class ContainerState(State):
                             copy.deepcopy(self.scoped_data[str(data_flow.from_key)+data_flow.from_state].value)
 
     def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
-        for key, val in output_dict.iteritems():
-            self.scoped_data[key+self.state_id] = ScopedData(key, val, type(val).__name__, self)
+        for output_name, output_data in output_dict.iteritems():
+            for key_sdata, sdata in self.scoped_data.iteritems():
+                if sdata.data_port_type is DataPortType.SCOPED and output_name == sdata.name:
+                    scoped_variable_key = self.get_scoped_variable_from_name(output_name)
+                    tmp = ScopedData(output_name, output_data, type(output_data).__name__, self.state_id, DataPortType.SCOPED)
+                    self.scoped_data[str(scoped_variable_key)+self.state_id] = tmp
 
     # yaml part
     def get_container_state_yaml_dict(data):
