@@ -3,6 +3,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from utils import log
+from utils.geometry import point_in_triangle, dist, point_on_line
 
 logger = log.get_logger(__name__)
 import sys
@@ -210,16 +211,6 @@ class GraphicalEditorController(Controller):
                 p2 = (p1[0] - state_editor_data['resize_length'], p1[1])
                 p3 = (p1[0], p1[1] + state_editor_data['resize_length'])
 
-                def point_in_triangle(p, v1, v2, v3):
-                    def _test(p1, p2, p3):
-                        return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
-
-                    b1 = _test(p, v1, v2) < 0.0
-                    b2 = _test(p, v2, v3) < 0.0
-                    b3 = _test(p, v3, v1) < 0.0
-
-                    return (b1 == b2) and (b2 == b3)
-
                 if point_in_triangle(self.mouse_move_start_pos, p1, p2, p3):
                     self.selected_resizer = self.selection
                     # Start resize process
@@ -265,7 +256,7 @@ class GraphicalEditorController(Controller):
                     points.append((connection_model.meta['gui']['editor']['to_pos_x'],
                                    connection_model.meta['gui']['editor']['to_pos_y']))
                     for i in range(len(points) - 1):
-                        if self._point_on_line(click, points[i], points[i + 1]):
+                        if point_on_line(click, points[i], points[i + 1]):
                             connection_model.meta['gui']['editor']['waypoints'].insert(i, (click[0], click[1]))
 
                     logger.debug('Connection waypoint added at {0:.1f} - {1:.1f}'.format(click[0], click[1]))
@@ -335,8 +326,8 @@ class GraphicalEditorController(Controller):
                                       release_selection.meta['gui']['editor']['scoped_pos'].items())
                     click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                     for key in connectors:
-                        dist = sqrt((connectors[key][0] - click[0]) ** 2 + (connectors[key][1] - click[1]) ** 2)
-                        if dist < connectors_close_threshold:
+                        distance = dist((connectors[key][0], connectors[key][1]), (click[0], click[1]))
+                        if distance < connectors_close_threshold:
                             # This is a possible connection:
                             target_port = key
 
@@ -883,14 +874,3 @@ class GraphicalEditorController(Controller):
                     ids.remove(data_flow.meta['gui']['editor']['id'])
 
         return selection, selection_depth
-
-    @staticmethod
-    def _point_on_line(point, line_start, line_end):
-        def distance(a, b):
-            return sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
-
-        ds = 1
-        if -ds < (distance(line_start, point) + distance(point, line_end) - distance(line_start, line_end)) < ds:
-            return True
-
-        return False

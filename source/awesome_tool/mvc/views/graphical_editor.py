@@ -1,4 +1,5 @@
 from utils import log
+from utils.geometry import dist
 
 logger = log.get_logger(__name__)
 
@@ -513,7 +514,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         vec = (last_p[0] - sec_last_p[0], last_p[1] - sec_last_p[1])
         angle = atan2(vec[1], vec[0])
         angle -= pi
-        length = min(width, self.dist((from_pos_x, from_pos_y), last_p)/2)
+        length = min(width, dist((from_pos_x, from_pos_y), last_p)/2)
         t_x = last_p[0] + cos(angle) * length
         t_y = last_p[1] + sin(angle) * length
         angle += pi/2
@@ -851,7 +852,3 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         """
         left, right, bottom, top = self._get_view_coordinates()
         glOrtho(left, right, bottom, top, -10, 0)
-
-    @staticmethod
-    def dist(p1, p2):
-        return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
