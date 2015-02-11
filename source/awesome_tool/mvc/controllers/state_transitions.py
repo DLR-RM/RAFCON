@@ -389,7 +389,8 @@ class StateTransitionsListController(Controller):
     def update_model(self):
 
         self.tree_store.clear()
-        if self.view_dict['transitions_internal'] and len(self.model.state.transitions) > 0:
+        if self.view_dict['transitions_internal'] and hasattr(self.model.state, 'transitions') and \
+                        len(self.model.state.transitions) > 0:
             for transition_id in self.combo['internal'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.state.transitions
                 t = self.model.state.transitions[transition_id]

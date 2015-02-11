@@ -12,6 +12,10 @@ from mvc.controllers.state_machines_editor import StateMachinesEditorController
 
 import traceback
 
+from statemachine.states.execution_state import ExecutionState
+from mvc.models.container_state import ContainerStateModel
+from mvc.models.state import StateModel
+
 from mvc.controllers.state_data_flows import StateDataFlowsEditorController, StateDataFlowsListController
 
 
@@ -78,7 +82,7 @@ class MainWindowController(Controller):
         page_num = tree_notebook.page_num(library_tree_tab)
         tree_notebook.remove_page(page_num)
         #append new tab
-        self.library_controller = LibraryTreeController(None, view.library_tree)
+        self.library_controller = LibraryTreeController(self.model.state_machines.values()[0].root_state, view.library_tree)
         libraries_label = gtk.Label('Libraries')
         tree_notebook.insert_page(view.library_tree, libraries_label, page_num)
 
@@ -90,7 +94,7 @@ class MainWindowController(Controller):
         page_num = tree_notebook.page_num(state_machine_tree_tab)
         tree_notebook.remove_page(page_num)
         #append new tab
-        self.state_machine_tree_controller = StateMachineTreeController(self.model.root_state,
+        self.state_machine_tree_controller = StateMachineTreeController(self.model.state_machines.values()[0],
                                                                         view.state_machine_tree)
         state_machine_label = gtk.Label('Statemachine Tree')
         tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
@@ -160,29 +164,29 @@ class MainWindowController(Controller):
         left_v_pane.set_position(700)
         right_v_pane.set_position(600)
         self.key_map = {
-            'copy'          : '<Control>C',
-            'paste'         : '<Control>V',
-            'cut'           : '<Control>X',
-            'delete'        : 'Delete',
-            'add'           : '<mod>A',
-            'add_state'     : '<Control>A',
-            'delete_state'  : '<Control>D',
-            'group_states'  : '<Control>G',
-            'ungroup_states': '<Control>U',
-            'entry_point'   : '<Control>E',
+            'copy'          : '<Control>C',     # TODO should not be that hart for full states
+            'paste'         : '<Control>V',     # TODO should not be that hart for full states
+            'cut'           : '<Control>X',     # TODO should not be that hart for full states
+            'delete'        : 'Delete',         # DONE - partly TODO could delete DataPorts and Outcomes
+            # 'add'           : '<mod>A',
+            'add_state'     : '<Control>A',     # DONE
+            'delete_state'  : '<Control>D',     # DONE
+            'group_states'  : '<Control>G',     # TODO search all states selected and create hierarchy-state
+            'ungroup_states': '<Control>U',     # TODO search all states, data_flows and trans and move them to parent
+            'entry_point'   : '<Control>E',     # TODO ?
             # 'exit_point'    : '<Control>R',
             'fit'           : '<Control>space',
             'info'          : '<Control>q',
-            'start'         : 'F5',
-            'step_mode'     : 'F6',  # debug
-            'pause'         : 'F7',
-            'stop'          : 'F8',
-            'step'          : 'F4',
+            'start'         : 'F5',             # DONE
+            'step_mode'     : 'F6',             # DONE debug-mode
+            'pause'         : 'F7',             # DONE
+            'stop'          : 'F8',             # DONE
+            'step'          : 'F4',             # DONE
             'backward_step_mode': 'F9',
             # 'reload'        : 'F1',
             # 'reload_env'    : 'F2',
-            'undo'          : '<Control>Z',
-            'redo'          : '<Control>Y',
+            'undo'          : '<Control>Z',     # TODO History is still missing
+            'redo'          : '<Control>Y',     # TODO History is still missing
             # 'center_view'   : '<Alt>space',
         }
 
@@ -191,8 +195,8 @@ class MainWindowController(Controller):
 
         setup_key_binding(self.key_map, view, view.get_top_widget())
 
-        view['add'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
-        view['add_state'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
+        #view['add'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
+        #view['add_state'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
         view['main_window'].connect('destroy', gtk.main_quit)
 
     @Controller.observe("execution_engine", after=True)
@@ -244,9 +248,6 @@ class MainWindowController(Controller):
     def on_group_states_activate(self, widget, data=None):
         pass
 
-    def on_delete_state_activate(self, widget, data=None):
-        logger.debug("Delete selected state now ...")
-
     def delegate_action(self, event, method, *arg):
         """
         @brief when a signal is detected, this call the callback
@@ -261,14 +262,45 @@ class MainWindowController(Controller):
                 ctrl = pdict['ctrl']
         method(ctrl.data_flows_ctrl.df_list_ctrl, event, *arg)
 
+    def on_delete_state_activate(self, widget, data=None):
+        logger.debug("Delete selected state now ...")
+        selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
+        # print selection
+        if len(selection) == 1 and selection.get_num_states() == 1 and selection.get_states()[0].parent is not None:
+            selection.get_states()[0].parent.state.remove_state(selection.get_states()[0].state.state_id)
+
     def on_add_state_activate(self, widget, method=None, *arg):
         logger.debug("Add state in selected state now ..." + str(widget) + str(method))
-        print "focus is here: ", self.view['main_window'].get_focus()
-        #
+        logger.debug("focus is here: " % self.view['main_window'].get_focus())
+        selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
+        # print selection, len(selection), selection.get_num_states(), \
+        #    isinstance(selection.get_states()[0], ContainerStateModel)
+        if len(selection) == 1 and selection.get_num_states() == 1 and \
+                isinstance(selection.get_states()[0], ContainerStateModel):
+            state = ExecutionState(" ")
+            selection.get_states()[0].state.add_state(state)
+            logger.debug("create exec_State: %s" % state)
+            selection.set([StateModel(state)])
 
     def on_delete_activate(self, widget, data=None):
         logger.debug("Delete something selected now ...")
-        print "focus is here: ", self.view['main_window'].get_focus()
+        logger.debug("focus is here: %s" % self.view['main_window'].get_focus())
+        selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
+        # print selection
+        if len(selection) == 1 and selection.get_num_states() == 1 and selection.get_states()[0].parent is not None:
+            # print "remove state: ", selection.get_states()[0].state.name, selection.get_states()[0].state.state_id
+            # print "from state: ", selection.get_states()[0].parent.state.name, selection.get_states()[0].parent.state.state_id
+            selection.get_states()[0].parent.state.remove_state(selection.get_states()[0].state.state_id)
+        elif len(selection) == 1 and selection.get_num_data_flows() == 1:
+            # print selection.get_data_flows()
+            data_flow = selection.get_data_flows()[0].data_flow
+            selection.get_data_flows()[0].parent.state.remove_data_flow(data_flow.data_flow_id)
+        elif len(selection) == 1 and selection.get_num_transitions() == 1:
+            # print selection.get_transitions()
+            transition = selection.get_transitions()[0].transition
+            selection.get_transitions()[0].parent.state.remove_transition(transition.transition_id)
+        else:
+            logger.debug("selection is not to be deletable: %s" % selection)
 
     def on_paste_activate(self, widget, data=None):
         pass

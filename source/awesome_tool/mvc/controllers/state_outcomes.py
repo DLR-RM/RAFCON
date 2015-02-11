@@ -19,9 +19,9 @@ class ParentObserver(Observer):
         # print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #       (prop_name, info.instance, info.method_name, info.result)
         # TODO test with accepting limited methods
-        #if info.method_name in self.method_list:
-        for func_handle in self.func_handle_list:
-            func_handle()
+        if info.method_name in self.method_list:
+            for func_handle in self.func_handle_list:
+                func_handle()
 
 
 class StateOutcomesListController(Controller):

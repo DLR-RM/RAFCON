@@ -250,7 +250,7 @@ class StateDataFlowsListController(Controller):
     def update_model(self):
         self.tree_store.clear()
 
-        if self.view_dict['data_flows_internal']:
+        if self.view_dict['data_flows_internal'] and hasattr(self.model.state, 'data_flows'):
             for data_flow in self.model.state.data_flows.values():
 
                 # print "type: ", type(data_flow)

@@ -13,8 +13,9 @@ class StateMachineModel(ModelMT):
     """
 
     state_machine = None
+    selection = None
 
-    __observables__ = ("state_machine",)
+    __observables__ = ("state_machine", "selection",)
 
     def __init__(self, state_machine, meta=None):
         """Constructor
@@ -40,12 +41,13 @@ class StateMachineModel(ModelMT):
 
 
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from gtkmvc import Observable
 
 
 #===========================================================
 #    Selection
 #===========================================================
-class Selection(ModelMT):
+class Selection(Observable):
     """
     @brief Contains the selected item (States, Transitions and Data Flows)
     of a state_machine
@@ -58,38 +60,41 @@ class Selection(ModelMT):
 
     #===========================================================
     def __init__(self):
-        ModelMT.__init__(self)
-        self.register_observer(self)
+        Observable.__init__(self)
 
         self.__selected = set()
 
     #===========================================================
+    @Observable.observed
     def add(self, item):
-        item.select()
+        # item.select()
         self.__selected.add(item)
 
     #===========================================================
+    @Observable.observed
     def remove(self, item):
-        item.deselect()
+        #item.deselect()
         self.__selected.remove(item)
 
     #===========================================================
+    @Observable.observed
     def append(self, selection):
-        for b in selection:
-            b.select()
+        # for item in selection:
+        #     item.select()
 
         self.__selected.update(selection)
 
     #===========================================================
+    @Observable.observed
     def set(self, selection):
-        for b in self.__selected:
-            b.deselect()
+        # for item in self.__selected:
+        #     item.deselect()
 
         self.__selected.clear()
         self.__selected.update(selection)
 
-        for b in self.__selected:
-            b.select()
+        # for item in self.__selected:
+        #     item.select()
 
     #===========================================================
     def __iter__(self):
@@ -109,19 +114,19 @@ class Selection(ModelMT):
 
     #===========================================================
     def get_transitions(self):
-        return (s for s in self.__selected if not isinstance(s, TransitionModel))
+        return [s for s in self.__selected if isinstance(s, TransitionModel)]
 
     #===========================================================
     def get_num_transitions(self):
-        return sum((1 for s in self.__selected if not isinstance(s, TransitionModel)))
+        return sum((1 for s in self.__selected if isinstance(s, TransitionModel)))
 
     #===========================================================
     def get_data_flows(self):
-        return (s for s in self.__selected if not isinstance(s, DataFlowModel))
+        return [s for s in self.__selected if isinstance(s, DataFlowModel)]
 
     #===========================================================
     def get_num_data_flows(self):
-        return sum((1 for s in self.__selected if not isinstance(s, DataFlowModel)))
+        return sum((1 for s in self.__selected if isinstance(s, DataFlowModel)))
 
     #===========================================================
     def get_first(self):
@@ -131,6 +136,7 @@ class Selection(ModelMT):
             return None
 
     #===========================================================
+    @Observable.observed
     def clear(self):
         self.set([])
 
