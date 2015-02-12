@@ -28,6 +28,7 @@ class StateMachineModel(ModelMT):
         self.state_machine = state_machine
 
         self.root_state = ContainerStateModel(self.state_machine.root_state)
+        self.root_state.register_observer(self)
 
         self.selection = Selection()
 
