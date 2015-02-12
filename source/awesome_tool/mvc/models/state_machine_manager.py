@@ -14,9 +14,9 @@ class StateMachineManagerModel(ModelMT):
     """
 
     state_machine_manager = None
-    root_state = None
+    state_machines = {}
 
-    __observables__ = ("state_machine_manager", "root_state")
+    __observables__ = ("state_machine_manager", "state_machines")
 
     def __init__(self, state_machine_manager, meta=None):
         """Constructor
@@ -26,13 +26,10 @@ class StateMachineManagerModel(ModelMT):
 
         assert isinstance(state_machine_manager, StateMachineManager)
 
-        self.root_state = None
-        if state_machine_manager.root_state is not None:
-            self.root_state = ContainerStateModel(state_machine_manager.root_state)
 
         self.state_machine_manager = state_machine_manager
         self.state_machines = {}
-        for sm_id, sm in state_machine_manager._state_machines.iteritems():
+        for sm_id, sm in state_machine_manager.state_machines.iteritems():
             self.state_machines[sm_id] = StateMachineModel(sm)
 
         if isinstance(meta, Vividict):

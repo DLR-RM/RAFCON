@@ -65,8 +65,10 @@ class GraphicalEditorController(Controller):
         """
         pass
 
-    @Controller.observe("root_state", after=True)
+    @Controller.observe("selection", after=True)
+    @Controller.observe("root_state", after=True, assign=True)
     def state_machine_change(self, model, property, info):
+        print "sm change detected", model, property, info
         self._redraw(True)
 
     def _on_expose_event(self, *args):

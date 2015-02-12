@@ -12,7 +12,8 @@ from mvc.controllers.states_editor import StatesEditorController
 from mvc.controllers.state_machines_editor import StateMachinesEditorController
 from statemachine.states.execution_state import ExecutionState
 from mvc.models.container_state import ContainerStateModel
-# from mvc.models.state import StateModel
+from mvc.models.state_machine import StateMachineModel
+from mvc.models.state_machine_manager import StateMachineManagerModel
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -40,21 +41,26 @@ def setup_key_binding(key_map, view, widget):
 
 class MainWindowController(Controller):
 
-    # state_machine_execution_engine = None
-    #
-    # __observables__ = ("state_machine_execution_engine",)
-
     def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='egg'):
         Controller.__init__(self, state_machine_manager_model, view)
+
+        assert isinstance(state_machine_manager_model, StateMachineManagerModel)
+
+        state_machine_manager = state_machine_manager_model.state_machine_manager
+        active_state_machine_id = state_machine_manager.active_state_machine
+        active_state_machine = None
+        for state_machine_id in state_machine_manager_model.state_machines:
+            if state_machine_id == active_state_machine_id:
+                active_state_machine = state_machine_manager_model.state_machines[state_machine_id]
+                break
+
+        if active_state_machine is None:
+            raise AttributeError("No active state machine found")
 
         self.state_machine_execution_engine = statemachine.singleton.state_machine_execution_engine
         self.observe_model(self.state_machine_execution_engine)
         self.state_machine_execution_engine.register_observer(self)
 
-        self.root_state_model = self.model.state_machines.values()[0].root_state
-        self.em_module = self.model.state_machines.values()[0].root_state
-        self.em_module = self.model.state_machines.values()[0].root_state
-        logger.debug("Root state %s" % self.model.root_state)
         top_h_pane = view['top_h_pane']
         left_v_pane = view['left_v_pane']
         right_v_pane = view['right_v_pane']
@@ -64,7 +70,6 @@ class MainWindowController(Controller):
         ######################################################
         # logging view
         ######################################################
-        left_v_pane = view["left_v_pane"]
         console_scroller = left_v_pane.get_child2()
         left_v_pane.remove(console_scroller)
         view.logging_view.get_top_widget().show()
@@ -80,7 +85,7 @@ class MainWindowController(Controller):
         page_num = tree_notebook.page_num(library_tree_tab)
         tree_notebook.remove_page(page_num)
         #append new tab
-        self.library_controller = LibraryTreeController(self.model.state_machines.values()[0].root_state, view.library_tree)
+        self.library_controller = LibraryTreeController(active_state_machine.root_state, view.library_tree)
         libraries_label = gtk.Label('Libraries')
         tree_notebook.insert_page(view.library_tree, libraries_label, page_num)
 
@@ -92,7 +97,7 @@ class MainWindowController(Controller):
         page_num = tree_notebook.page_num(state_machine_tree_tab)
         tree_notebook.remove_page(page_num)
         #append new tab
-        self.state_machine_tree_controller = StateMachineTreeController(self.model.state_machines.values()[0],
+        self.state_machine_tree_controller = StateMachineTreeController(active_state_machine,
                                                                         view.state_machine_tree)
         state_machine_label = gtk.Label('Statemachine Tree')
         tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
