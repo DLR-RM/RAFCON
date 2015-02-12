@@ -8,13 +8,13 @@
     <child>
       <object class="GtkHBox" id="hbox2">
         <property name="visible">True</property>
-        <property name="homogeneous">True</property>
         <child>
           <object class="GtkLabel" id="label_state_name">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">State Name</property>
+            <property name="label" translatable="yes">        State Name      </property>
           </object>
           <packing>
+            <property name="expand">False</property>
             <property name="position">0</property>
           </packing>
         </child>
@@ -23,6 +23,8 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="invisible_char">&#x25CF;</property>
+            <property name="primary_icon_sensitive">True</property>
+            <property name="secondary_icon_sensitive">True</property>
           </object>
           <packing>
             <property name="position">1</property>
@@ -37,13 +39,13 @@
     <child>
       <object class="GtkHBox" id="hbox3">
         <property name="visible">True</property>
-        <property name="homogeneous">True</property>
         <child>
           <object class="GtkLabel" id="id_label">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">ID</property>
+            <property name="label" translatable="yes">              ID              </property>
           </object>
           <packing>
+            <property name="expand">False</property>
             <property name="position">0</property>
           </packing>
         </child>
@@ -66,36 +68,22 @@
     <child>
       <object class="GtkHBox" id="hbox4">
         <property name="visible">True</property>
-        <property name="homogeneous">True</property>
         <child>
           <object class="GtkLabel" id="type_label">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">Type</property>
+            <property name="label" translatable="yes">            Type            </property>
           </object>
           <packing>
+            <property name="expand">False</property>
             <property name="position">0</property>
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox1">
+          <object class="GtkViewport" id="type_viewport">
             <property name="visible">True</property>
+            <property name="resize_mode">queue</property>
             <child>
-              <object class="GtkLabel" id="label_type_value">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">x-type</property>
-                <property name="selectable">True</property>
-              </object>
-              <packing>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkComboBox" id="state_type_combo">
-                <property name="visible">True</property>
-              </object>
-              <packing>
-                <property name="position">1</property>
-              </packing>
+              <placeholder/>
             </child>
           </object>
           <packing>
@@ -111,13 +99,13 @@
     <child>
       <object class="GtkHBox" id="hbox5">
         <property name="visible">True</property>
-        <property name="homogeneous">True</property>
         <child>
           <object class="GtkLabel" id="description_label">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">Description</property>
+            <property name="label" translatable="yes">        Description       </property>
           </object>
           <packing>
+            <property name="expand">False</property>
             <property name="position">0</property>
           </packing>
         </child>
@@ -125,6 +113,8 @@
           <object class="GtkTextView" id="description_textview">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="pixels_above_lines">4</property>
+            <property name="pixels_below_lines">4</property>
           </object>
           <packing>
             <property name="position">1</property>

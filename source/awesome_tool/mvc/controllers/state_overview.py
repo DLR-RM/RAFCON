@@ -4,7 +4,17 @@ from gtkmvc import View, Controller
 from statemachine.states.state import State, StateType
 from statemachine.states.container_state import ContainerState
 from statemachine.states.concurrency_state import ConcurrencyState
+
+from statemachine.states.execution_state import ExecutionState
+from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from statemachine.states.library_state import LibraryState
+
+from mvc.models import ContainerStateModel, StateModel
+
+from utils import log
+logger = log.get_logger(__name__)
 
 
 class StateOverviewController(Controller):
@@ -32,16 +42,36 @@ class StateOverviewController(Controller):
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         # StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY')
-        # self.state_types_dict = {}
-        # self.state_types_dict[type(State)] = {'Enum': StateType.STATE_TYPE}
-        # self.state_types_dict[type(ContainerState)] = {'Enum': StateType.STATE_TYPE}
+        self.state_types_dict = {}
+        self.state_types_dict[str(StateType.EXECUTION)] = {'Enum': StateType.EXECUTION, 'class': ExecutionState}
+        self.state_types_dict[str(StateType.HIERARCHY)] = {'Enum': StateType.HIERARCHY, 'class': HierarchyState}
+        self.state_types_dict[str(StateType.BARRIER_CONCURRENCY)] = {'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
+        self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY)] = {'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
+        # self.state_types_dict[LibraryState] = {'Enum': StateType.LIBRARY}
+
         view['entry_name'].connect('focus-out-event', self.change_name)
         view['description_textview'].connect('focus-out-event', self.change_description)
-        view['entry_name'].set_text(self.model.state.name)
+        if self.model.state.name:
+            view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
-        view['label_type_value'].set_text(str(self.model.state.state_type))
+        #view['label_type_value'].set_text(str(self.model.state.state_type))
         view['description_textview'].set_buffer(self.model.state.description)
-        #view['state_type_combo'].set_buffer(self.model.state.description)
+        l_store = gtk.ListStore(str)
+        combo = gtk.ComboBox()
+        combo.set_model(l_store)
+        cell = gtk.CellRendererText()
+        combo.pack_start(cell, True)
+        combo.add_attribute(cell, 'text', 0)
+        combo.show_all()
+        view['type_viewport'].add(combo)
+        view['type_viewport'].show()
+        l_store.append([str(self.model.state.state_type)])
+        for key in self.state_types_dict.keys():
+            if not key == str(self.model.state.state_type):
+                l_store.append([key])
+        combo.set_active(0)
+        view['type_combobox'] = combo
+        view['type_combobox'].connect('changed', self.change_type)
 
     #def on_window_state_editor_destroy(self):
     #    gtk.main_quit()
@@ -56,15 +86,39 @@ class StateOverviewController(Controller):
 
     def change_name(self, entry, otherwidget):
         entry_text = entry.get_text()
-        # logger.debug("State %s changed name from '%s' to: '%s'\n" % (self.model.state.state_id,
-        #                                                              self.model.state.name, entry_text))
-        self.model.state.name = entry_text
-        self.view['entry_name'].set_text(self.model.state.name)
+        if len(entry_text) > 0:
+            logger.debug("State %s changed name from '%s' to: '%s'\n" % (self.model.state.state_id,
+                                                                         self.model.state.name, entry_text))
+            self.model.state.name = entry_text
+            self.view['entry_name'].set_text(self.model.state.name)
 
     def change_description(self, textview, otherwidget):
         tbuffer = textview.get_buffer()
         entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-        print "State %s changed description from '%s' to: '%s'\n" % (self.model.state.state_id,
-                                                                     self.model.state.description, entry_text)
-        self.model.state.description = entry_text
-        self.view['description_textview'].get_buffer().set_text(self.model.state.description)
+
+        if len(entry_text) > 0:
+            logger.debug("State %s changed description from '%s' to: '%s'\n" % (self.model.state.state_id,
+                                                                                self.model.state.description, entry_text))
+            self.model.state.description = entry_text
+            self.view['description_textview'].get_buffer().set_text(self.model.state.description)
+
+    def change_type(self, widget, model=None, info=None):
+        # TODO this function should be realized by a call of the ContainerState (change_type)
+        type_text = widget.get_active_text()
+        if not type_text == str(self.model.state.state_type) and type_text in self.state_types_dict:
+            state_name = self.model.state.name
+            state_id = self.model.state.state_id
+            logger.debug("change type of State %s from %s to %s" % (state_name, self.model.state.state_type, type_text))
+
+            if not self.model.parent:
+                logger.warning("ROOT_STATE types could not be changed!!!")
+                return
+
+            new_state = self.state_types_dict[type_text]['class'](state_name, state_id)
+            parent_state_model = self.model.parent
+            self.relieve_model(self.model)
+            parent_state_model.state.remove_state(state_id)
+            parent_state_model.state.add_state(new_state)
+            state_model = parent_state_model.states[state_id]
+            self.observe_model(state_model)
+            self.model = state_model
