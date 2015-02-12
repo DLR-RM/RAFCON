@@ -22,13 +22,12 @@ class UserInput(object):
         self.builder.get_object("window1").hide()
 
     def start(self):
-        print "UserInput: started"
         self.builder.get_object("window1").show()
-        #gtk.main()
+        print "UserInput: started"
 
     def stop(self):
         self.builder.get_object("window1").hide()
-        #gtk.main_quit()
+        print "UserInput: stopped"
 
     def pause(self):
         #how to pause?

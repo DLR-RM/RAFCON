@@ -25,11 +25,9 @@ class LibraryTreeController():  # (Controller):
         pass
 
     def update(self):
-        print "Update of library_tree controller called"
+        logger.debug("Update of library_tree controller called")
         self.library_tree_store.clear()
         for library_key, library_item in statemachine.singleton.library_manager.libraries.iteritems():
-            #print library_key
-            #print library
             self.insert_rec(None, library_key, library_item)
 
     def insert_rec(self, parent, library_key, library_item):
@@ -45,5 +43,4 @@ class LibraryTreeController():  # (Controller):
         # path = model.get_path(row)
         library_key = model[row][0]
         library = model[row][1]
-        #print "Model and selected row: %s, %s" % (model, row)
-        print "The library state should be inserted into the statemachine"
+        logger.debug("The library state should be inserted into the statemachine")

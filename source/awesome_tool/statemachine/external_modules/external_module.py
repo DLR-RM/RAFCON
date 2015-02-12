@@ -105,7 +105,6 @@ class ExternalModule(Observable):
         module class to the custom functions of external module
 
         """
-        #print self._status
         if not self._status is EMStatus.DISCONNECTED:
             logger.debug("module %s is already connected" % str(self._module_name))
             return
@@ -118,10 +117,6 @@ class ExternalModule(Observable):
         if not isinstance(list_arguments, list):
             raise TypeError("list_arguments should be of type list")
         self.__instance = self.__external_module_class(*self._list_params, **self._dict_params)
-        #print "functions of class: ", dir(self.__class)
-        #import inspect
-        #print inspect.getmembers(self.__class, predicate=inspect.ismethod)
-        #print inspect.getdoc(getattr(self.__class, "custom_function"))
         #try:
         self.__start_method = self.__external_module_class.start
         self.__stop_method = self.__external_module_class.stop

@@ -32,10 +32,9 @@ def setup_key_binding(key_map, view, widget):
                 if not view[item[0]]:
                     view[item[0]] = gtk.MenuItem()
                     logger.info("NOT_IN key-accelerator %s" % str(item))
-                # print "activate", item, main_widget[item[0]], accelgroup, key, mod, gtk.ACCEL_VISIBLE
                 view[item[0]].add_accelerator("activate", accelgroup, key, mod, gtk.ACCEL_VISIBLE)
             except:
-                print traceback.format_exc()
+                logger.warn(traceback.format_exc())
                 pass
 
 
@@ -60,6 +59,8 @@ class MainWindowController(Controller):
         left_v_pane = view['left_v_pane']
         right_v_pane = view['right_v_pane']
 
+        view.get_top_widget().connect("destroy", self.on_main_window_destroy)
+
         ######################################################
         # logging view
         ######################################################
@@ -76,8 +77,6 @@ class MainWindowController(Controller):
         tree_notebook = view["tree_notebook"]
         #remove placeholder tab
         library_tree_tab = view['library_tree_placeholder']
-        #print tree_notebook.get_tab_label(self.library_tree_tab).get_text()
-        #print tree_notebook.page_num(self.library_tree_tab)
         page_num = tree_notebook.page_num(library_tree_tab)
         tree_notebook.remove_page(page_num)
         #append new tab
@@ -189,9 +188,12 @@ class MainWindowController(Controller):
             # 'center_view'   : '<Alt>space',
         }
 
-    def register_view(self, view):
-        print "REGISTER VIEW"
+    def on_main_window_destroy(self, widget, data=None):
+        logger.debug("Main window destroyed")
+        statemachine.singleton.external_module_manager.stop_all_modules()
+        gtk.main_quit()
 
+    def register_view(self, view):
         setup_key_binding(self.key_map, view, view.get_top_widget())
 
         #view['add'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)

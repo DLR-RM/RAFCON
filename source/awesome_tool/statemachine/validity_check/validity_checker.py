@@ -10,6 +10,8 @@
 
 from gtkmvc import Observable
 
+from utils import log
+logger = log.get_logger(__name__)
 import vc_strategy
 import vc_implementations
 
@@ -52,5 +54,5 @@ class ValidityChecker(Observable):
 
         if not isinstance(c_state, smcs.ContainerState):
             raise TypeError("Check() can only be applied onto ContainerStates")
-        print "Check the validity of the container state with id %s " % str(c_state.state_id())
+        logger.debug("Check the validity of the container state with id %s " % str(c_state.state_id()))
         return self._strategy_instance.check(c_state)

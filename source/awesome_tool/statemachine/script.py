@@ -114,11 +114,9 @@ def exit(self, scoped_variables, external_modules, gvm):
             raise IOError("File could not be opened!")
 
         self.script = script_file.read()
-        #print self.script
         script_file.close()
 
         module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
-        #print module_name
 
         # here is the pretty way for loading a module
         tmp_module = imp.new_module(module_name)
@@ -143,7 +141,6 @@ def exit(self, scoped_variables, external_modules, gvm):
             'path': data.path,
             'filename': data.filename,
         }
-        print dict_representation
         node = dumper.represent_mapping(u'!Script', dict_representation)
         return node
 

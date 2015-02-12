@@ -106,10 +106,9 @@ class ContainerState(State):
             raise TypeError("ID must be of type State")
         if not isinstance(outcome, Outcome):
             raise TypeError("outcome must be of type Outcome")
-        logger.debug("Return transition for a specific child state and its specific outcome")
+        logger.debug("Return transition for state %s and outcome %s" % (state.name, outcome))
         result_transition = None
         for key, transition in self.transitions.iteritems():
-            #print "outcome: key: %s transition: %s" % (str(key), str(transition))
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
         if result_transition is None:
@@ -474,24 +473,12 @@ class ContainerState(State):
 
         """
         result_dict = {}
-        # print self.scoped_data
-        # print "Scoped data dictionary"
-        # for key, sd in self.scoped_data.iteritems():
-        #     print key
-        #     print sd
-        #
-        # print "Data flows dictionary"
-        # for key, df in self.data_flows.iteritems():
-        #     print df
-        #
-        # print "The current state", state
 
         for input_port_key, value in state.input_data_ports.iteritems():
             # at first load all default values
             result_dict[value.name] = copy.copy(value.default_value)
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
             for data_flow_key, data_flow in self.data_flows.iteritems():
-                #print "data_flow_key: %s - data_flow: %s" % (str(data_flow_key), str(data_flow))
                 if data_flow.to_key == input_port_key:
                     if data_flow.to_state == state.state_id:
                         # fetch data from the scoped_data list: the key is the data_port_key + the state_id

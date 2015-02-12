@@ -113,7 +113,6 @@ class ContainerStateModel(StateModel):
 
     @ModelMT.observe("state", after=True)
     def update_child_models(self, _, name, info):
-        #print name, info.method_name
         model_list = None
 
         def get_model_info(model):

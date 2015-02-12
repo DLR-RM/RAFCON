@@ -85,7 +85,6 @@ class GlobalVariableManager(Observable):
             raise AttributeError("Global variable %s does not exist!" % str(key))
         self.__dictionary_lock.release()
         logger.debug("Global variable %s was deleted!" % str(key))
-        print self.__global_variable_dictionary
 
     @Observable.observed
     def lock_variable(self, key):

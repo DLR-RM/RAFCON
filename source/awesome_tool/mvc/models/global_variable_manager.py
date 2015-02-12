@@ -28,11 +28,8 @@ class GlobalVariableManagerModel(ModelMT):
         self.update_global_variables_list_store()
 
     def update_global_variables_list_store(self):
-        #print "update_global_variables_list_store"
         tmp = ListStore(gobject.TYPE_PYOBJECT)
         for key, value in self.global_variable_manager.global_variable_dictionary.iteritems():
-            #print "global_key: ", key
-            #print "global value: ", value
             tmp.append([[key, value]])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
@@ -48,10 +45,8 @@ class GlobalVariableManagerModel(ModelMT):
         path2 = treemodel.get_path(iter2)[0]
         # get key of first variable
         name1 = treemodel[path1][0][0]
-        #print "name1: ", name1
         # get key of second variable
         name2 = treemodel[path2][0][0]
-        #print "name2: ", name2
         name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
         name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
         if name1_as_bits == name2_as_bits:

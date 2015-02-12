@@ -71,16 +71,12 @@ class DataPortListController(Controller):
         """
 
     def on_name_changed(self, widget, path, text):
-        print path
         import copy
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-        print self.view.get_top_widget().get_selection().get_selected_rows()
         key = self.dataport_list_store[int(path)][0].data_port_id
         old_data_port = copy.copy(self.state_dataport_dict[key])
 
-        print self.state_dataport_dict[key]
         del self.state_dataport_dict[key]
-        print self.dataport_list_store[int(path)]
         del self.dataport_list_store[int(path)]
 
         #the text is the new key
@@ -125,16 +121,12 @@ class DataPortListController(Controller):
 
         #self.model.update_input_data_port_list_store_and_models()
     def on_data_type_changed(self, widget, path, text):
-        print path
         old_data_port = self.dataport_list_store[int(path)][0]
-        print old_data_port
         self.state_dataport_dict[old_data_port.data_port_id].data_type = text
         self.state_dataport_dict[old_data_port.data_port_id].default_value = None
 
     def on_default_value_changed(self, widget, path, text):
-        print path
         old_data_port = self.dataport_list_store[int(path)][0]
-        print old_data_port
         converted_value = None
 
         #TODO: how to support more data types (especially classes)

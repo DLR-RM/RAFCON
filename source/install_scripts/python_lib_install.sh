@@ -1,7 +1,25 @@
 #!/bin/bash
+# The following packages that are going to be installed:
+# PyGObject 2.28.3
+# PyGTK 2.24
+# Pycairo 1.10.0
+# gtkmvc 1.99.1
+# enum34 1.0.4
+# PyOpenGL 3.1.0
+# logilab-common 0.63.2
+# astroid 1.3.4
+# pylint 1.4.1
+# pygtkglext 1.1.0
+# PyGTKSourceView 2.10.1
 
-export PYTHONPATH=$PYTHONPATH:$1:$1/lib/python2.7/site-packages/:$1/lib/python2.7/site-packages/gtk-2.0
-export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$1/lib/pkgconfig
+# source python 2.7 etc.
+source /volume/USERSTORE/lehn_pt/ros/indigo/setup.bash
+
+export PYTHONPATH=$1:$1/lib/python2.7/site-packages:$1/lib/python2.7/site-packages/gtk-2.0:$PYTHONPATH
+export PKG_CONFIG_PATH=$1/lib/pkgconfig:$PKG_CONFIG_PATH
+echo "PYTHONPATH $PYTHONPATH"
+echo "PKG_CONFIG_PATH $PKG_CONFIG_PATH"
+echo "PY_LIB_PATH $1"
 
 mkdir -p $1
 cd $1
@@ -40,7 +58,7 @@ make install
 cd ..
 
 # gtkmvc 1.99.1
-wget http://sourceforge.net/projects/pygtkmvc/files/pygtkmvc/1.99.1/python-gtkmvc-1.99.1.tar.gz/download 
+wget http://sourceforge.net/projects/pygtkmvc/files/pygtkmvc/1.99.1/python-gtkmvc-1.99.1.tar.gz
 tar xzf python-gtkmvc-1.99.1.tar.gz
 cd python-gtkmvc-1.99.1
 python setup.py install --prefix=$1
@@ -82,7 +100,7 @@ python setup.py install --prefix=$1
 cd ..
 
 # pygtkglext 1.1.0
-wget http://sourceforge.net/projects/gtkglext/files/pygtkglext/1.1.0/pygtkglext-1.1.0.tar.gz/download
+wget http://sourceforge.net/projects/gtkglext/files/pygtkglext/1.1.0/pygtkglext-1.1.0.tar.gz
 tar xzf pygtkglext-1.1.0.tar.gz
 cd pygtkglext-1.1.0
 ./configure --prefix=$1

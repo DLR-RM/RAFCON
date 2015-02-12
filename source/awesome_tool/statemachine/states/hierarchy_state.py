@@ -65,10 +65,14 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     self.active = False
                     return
                 # depending on the execution mode pause execution
+                execution_signal = None
                 if self.execution_engine:
-                    self.execution_engine.handle_execution_mode(self)
+                    execution_signal = self.execution_engine.handle_execution_mode(self)
                 else:
-                    statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+                    execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+                if execution_signal == "stop":
+                    # this will be catched at the end of the run method
+                    raise RuntimeError("state stopped")
 
                 logger.debug("Executing next state state with id %s, type %s and name %s" %
                              (state.state_id, str(state.state_type), state.name))
@@ -80,7 +84,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 state.run()
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
-                #print "Final outcome of state is " + str(state.final_outcome)
                 # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
                 transition = self.get_transition_for_outcome(state, state.final_outcome)
 
@@ -99,15 +102,13 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
-            # print "self.scoped_data: ", self.scoped_data
-            # for key, data in self.scoped_data.iteritems():
-            #     print data
-            #     print "From state name: " + data.from_state.name
-            # print "self.output_data: ", self.output_data
-
             self.write_output_data()
 
             self.check_output_data_type()
+
+            # notify other threads that wait for this thread to finish
+            if self.concurrency_queue:
+                self.concurrency_queue.put(self.state_id)
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
@@ -118,7 +119,14 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.active = False
             return
 
-        except RuntimeError:
+        except RuntimeError, e:
+            if str(e) == "state stopped":
+                logger.debug("State %s was stopped!" % self.name)
+            else:
+                logger.error("State %s had an internal error: %s" % (self.name, str(e)))
+            # notify other threads that wait for this thread to finish
+            if self.concurrency_queue:
+                self.concurrency_queue.put(self.state_id)
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
             return
@@ -126,7 +134,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = ContainerState.get_container_state_yaml_dict(data)
-        print dict_representation
         node = dumper.represent_mapping(u'!HierarchyState', dict_representation)
         return node
 

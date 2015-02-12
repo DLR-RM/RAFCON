@@ -38,7 +38,6 @@ class StateDataportEditorView(View):
         for expander in self.expanders:
             if not expander is widget:
                 expander.set_expanded(False)
-            #print expander.get_expanded()
 
         # set the packing expanded value correct
         for expander in self.expanders:
@@ -47,5 +46,3 @@ class StateDataportEditorView(View):
                 self.top_box.set_child_packing(expander, True, fill, padding, pack_type)
             else:
                 self.top_box.set_child_packing(expander, False, fill, padding, pack_type)
-
-        #print "Reset Expander Values"

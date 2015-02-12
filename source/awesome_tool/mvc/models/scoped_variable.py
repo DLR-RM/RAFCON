@@ -35,6 +35,5 @@ class ScopedVariableModel(ModelMT):
 
     @ModelMT.observe("scoped_variable", after=True)
     def model_changed(self, model, prop_name, info):
-        print "laksdhfkjashdkhf"
         if not self.parent is None:
             self.parent.update_scoped_variables_list_store()

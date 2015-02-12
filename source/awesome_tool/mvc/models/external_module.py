@@ -37,6 +37,5 @@ class ExternalModuleModel(ModelMT):
 
     @ModelMT.observe("external_module", after=True)
     def model_changed(self, model, name, info):
-        #print "external module changed!"
         if self.external_module_manager_model is not None:
             self.external_module_manager_model.update_external_modules_list_store()

@@ -70,6 +70,9 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             self.check_output_data_type()
 
+            if self.concurrency_queue:
+                self.concurrency_queue.put(self.state_id)
+
             # check the outcomes of all states for aborted or preempted
             # check as well if the states were stopped
             for key, state in self.states.iteritems():
@@ -102,7 +105,6 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = ContainerState.get_container_state_yaml_dict(data)
-        print dict_representation
         node = dumper.represent_mapping(u'!BarrierConcurrencyState', dict_representation)
         return node
 

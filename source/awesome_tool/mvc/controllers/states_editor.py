@@ -87,7 +87,6 @@ class StatesEditorController(Controller):
 
         state_editor_view.show()
         self.view.notebook.show()
-        # print "tab: ", state_identifier
         self.tabs[state_identifier] = {'page': page, 'state_model': state_model, 'ctrl': state_editor_ctrl}
 
         return idx

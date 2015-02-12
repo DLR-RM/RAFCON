@@ -53,14 +53,11 @@ class LibraryState(ContainerState, yaml.YAMLObject):
 
         self._state_copy = None
 
-        # for element in library_path.split("/"):
-        #     print element
         path_list = library_path.split("/")
         target_lib_dict = statemachine.singleton.library_manager.libraries
         # go down the path to the correct library
         for element in path_list:
             target_lib_dict = target_lib_dict[element]
-        # print target_lib_dict
         # get a fresh copy of the library state from disk
         logger.debug("Load state to which this library state links")
         root_state, lib_version, creationtime = statemachine.singleton.library_manager.storage.\
@@ -100,9 +97,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
             'library_name': data.library_name,
             'version': data.version,
         }
-        #print "Before: ", dict_representation
         dict_representation.update(container_dict_representation)
-        #print "After: ", dict_representation
         node = dumper.represent_mapping(u'!LibraryState', dict_representation)
         return node
 

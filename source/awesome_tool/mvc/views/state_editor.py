@@ -58,7 +58,6 @@ class StateEditorView(View):
             count = 0
             for i in range(1, 4):
                 if self['port_expander'+str(i)].get_expanded():
-                    # print "%s is expanded" % ('port_expander'+str(i))
                     count += 1
             self['port_expander'].set_size_request(width=-1, height=count*170+85)
         else:
@@ -126,7 +125,6 @@ class StateEditorLDView(View):
         for expander in self.expanders:
             if not expander is widget:
                 expander.set_expanded(False)
-            #print expander.get_expanded()
 
         # set the packing expanded value correct
         for expander in self.expanders:
@@ -136,4 +134,3 @@ class StateEditorLDView(View):
             else:
                 self.top_box.set_child_packing(expander, False, fill, padding, pack_type)
 
-        #print "Reset Expander Values"

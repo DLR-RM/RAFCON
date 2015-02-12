@@ -3,6 +3,9 @@ from gtkmvc import View
 from gtkmvc import Controller
 from statemachine.states.execution_state import ExecutionState
 import statemachine.singleton
+from utils import log
+logger = log.get_logger(__name__)
+
 
 
 class SingleWidgetWindowView(View):
@@ -111,42 +114,42 @@ class TestButtonsView(View, Controller):
         self['window_with_test_buttons'] = window
 
     def destroy(self, widget, data=None):
-        print "destroy signal occurred"
+        logger.debug("destroy signal occurred")
         gtk.main_quit()
 
     def on_add_state_button_pressed(self, widget, data=None):
-        print "Add state button pressed"
+        logger.debug("Add state button pressed")
         execution_state = ExecutionState("Test Execution State")
         self.model.state.add_state(execution_state)
 
     def on_data_port_change_button_pressed(self, widget, data=None):
-        print "Data port change button pressed"
+        logger.debug("Data port change button pressed")
         key = self.model.state.input_data_ports.keys()[0]
         self.model.state.input_data_ports[key].name = "New name for input port"
 
     def on_scoped_variable_change_button_pressed(self, widget, data=None):
-        print "Scoped variable change button pressed"
+        logger.debug("Scoped variable change button pressed")
         key = self.model.state.scoped_variables.keys()[0]
         self.model.state.scoped_variables[key].name = "New name for scoped variable"
 
     def on_button2_pressed(self, widget, data=None):
-        print "Step button pressed"
+        logger.debug("Step button pressed")
         statemachine.singleton.state_machine_execution_engine.step()
 
     def on_button3_pressed(self, widget, data=None):
-        print "Start button pressed"
+        logger.debug("Start button pressed")
         statemachine.singleton.state_machine_execution_engine.start()
 
     def on_button4_pressed(self, widget, data=None):
-        print "Stop button pressed"
+        logger.debug("Stop button pressed")
         statemachine.singleton.state_machine_execution_engine.stop()
 
     def on_button5_pressed(self, widget, data=None):
-        print "Pause button pressed"
+        logger.debug("Pause button pressed")
         statemachine.singleton.state_machine_execution_engine.pause()
 
     def on_button6_pressed(self, widget, data=None):
-        print "Step-mode button pressed"
+        logger.debug("Step-mode button pressed")
         statemachine.singleton.state_machine_execution_engine.step_mode()
 
     def register_view(self, view):

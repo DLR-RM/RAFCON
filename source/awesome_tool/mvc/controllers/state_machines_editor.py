@@ -69,7 +69,6 @@ class StateMachinesEditorController(Controller):
 
     def __init__(self, model, view, state_machine_tree_ctrl, states_editor_ctrl):
         Controller.__init__(self, model, view)
-        # print view
 
         self.state_machine_tree_ctrl = state_machine_tree_ctrl
         self.states_editor_ctrl = states_editor_ctrl

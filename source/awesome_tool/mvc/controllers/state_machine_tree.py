@@ -57,10 +57,9 @@ class StateMachineTreeController(Controller):
         # self.path_store[self.model.root_state.state.get_path()] = parent
         for state_id, smodel in self.model.root_state.states.items():
             self.insert_rec(parent, smodel)
-        print "PATH_STORE: ", self.path_store
+        # logger.debug("PATH_STORE: %s" % self.path_store)
 
     def insert_rec(self, parent, state_model):
-        #print 'Inserting %s' % str((state.title, state.id, utils.const2str(Point.Point, state.type)))
         parent = self.tree_store.insert_before(parent, None,
                                                (state_model.state.name,
                                                 state_model.state.state_id,
@@ -68,13 +67,11 @@ class StateMachineTreeController(Controller):
                                                 state_model))
         # self.path_store[state_model.state.get_path()] = parent
         if type(state_model) is ContainerStateModel:
-            #print "Insert container state %s recursively" % state_model.state.name
             for state_id, smodel in state_model.states.items():
                 self.insert_rec(parent, smodel)
 
     def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
-        #print "SM_Tree state selected: %s, %s" % (model, row)
         logger.debug("The view should jump to the selected state and the zoom should be adjusted as well")
         if row is not None:
             state_model = model[row][3]

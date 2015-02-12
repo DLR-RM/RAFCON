@@ -54,7 +54,6 @@ class Outcome(Observable, yaml.YAMLObject):
             'outcome_id': data.outcome_id,
             'name': data.name,
         }
-        print dict_representation
         node = dumper.represent_mapping(u'!Outcome', dict_representation)
         return node
 

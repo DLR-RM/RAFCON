@@ -106,15 +106,31 @@ def run_turtle_demo():
 
     #check for food
 
+    check_for_food_hierarchy = HierarchyState("Check for food hierarchy", path="../../test_scripts/turtle_demo",
+                                              filename="check_for_food_hierarchy.py")
+    check_for_food_hierarchy_output = \
+        check_for_food_hierarchy.add_output_data_port("target turtle", "str", "default_turtle_value")
+    check_for_food_hierarchy.add_outcome("Success", 0)
     check_for_food = ExecutionState("Check for food", path="../../test_scripts/turtle_demo",
                                     filename="check_for_food.py")
-    check_food_and_follow_state.add_state(check_for_food)
+    check_for_food_hierarchy.add_state(check_for_food)
+    check_for_food_hierarchy.set_start_state(check_for_food.state_id)
     check_for_food.add_outcome("Success", 0)
+    check_for_food.add_outcome("Nothing found", 1)
     check_for_food_output = check_for_food.add_output_data_port("target turtle", "str", "default_turtle_value")
+
+    check_for_food_hierarchy.add_transition(check_for_food.state_id, 0, None, 0)
+    check_for_food_hierarchy.add_transition(check_for_food.state_id, 1, check_for_food.state_id, None)
+    # pass turtle to the outer hierarchy state
+    check_for_food_hierarchy.add_data_flow(check_for_food.state_id, check_for_food_output,
+                                              check_for_food_hierarchy.state_id, check_for_food_hierarchy_output)
+
+    check_food_and_follow_state.add_state(check_for_food_hierarchy)
+    # pass turtle to the
     check_for_food_and_follow_output = check_food_and_follow_state.add_output_data_port("target turtle", "str")
-    check_food_and_follow_state.add_data_flow(check_for_food.state_id, check_for_food_output,
+    check_food_and_follow_state.add_transition(check_for_food_hierarchy.state_id, 0, None, 0)
+    check_food_and_follow_state.add_data_flow(check_for_food_hierarchy.state_id, check_for_food_hierarchy_output,
                                               check_food_and_follow_state.state_id, check_for_food_and_follow_output)
-    check_food_and_follow_state.add_transition(check_for_food.state_id, 0, None, 0)
 
     #follow user turtle
 
@@ -164,6 +180,7 @@ def run_turtle_demo():
                                                       check_for_food_and_follow_output,
                                                       eat.state_id, eat_input)
     eat.add_outcome("Finished Eating", 0)
+
     follower_turtle_bot_hierarchy_state.add_transition(eat.state_id, 0, check_food_and_follow_state.state_id, 0)
     follower_turtle_bot_hierarchy_state.add_transition(check_food_and_follow_state.state_id, 0, eat.state_id, 0)
 
@@ -202,6 +219,7 @@ def run_turtle_demo():
     # dual_gtk_window = DualGTKWindow()
 
     gtk.main()
+    logger.debug("Gtk main loop exited!")
     #turtle_demo_state.join()
 
 
