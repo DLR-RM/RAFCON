@@ -1,9 +1,9 @@
 import gtk
 import gobject
 from gtkmvc import Controller
-from gtkmvc import Observer
 
 from mvc.models import ContainerStateModel
+from mvc.models.state_machine import StateMachineModel
 from utils import log
 logger = log.get_logger(__name__)
 
@@ -13,12 +13,16 @@ class StateMachineTreeController(Controller):
 
     def __init__(self, model, view):
         """Constructor
-        :param StateMachineModel model should be exchangeable
+        :param model StateMachineModel should be exchangeable
         """
-        Controller.__init__(self, model, view)
-        # self.model = model
+        assert isinstance(model, StateMachineModel)
+
+        Controller.__init__(self, model, view, spurious=True)
+        #self.relieve_model(model)
+        self.observe_model(model.root_state)
         self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT)
         view.set_model(self.tree_store)
+        self.path_store = {}
 
     def register_view(self, view):
         self.view.connect('cursor-changed', self.on_cursor_changed)
@@ -27,15 +31,33 @@ class StateMachineTreeController(Controller):
     def register_adapters(self):
         pass
 
-    def update(self):
+    # TODO the update
+    def update(self, changed_state_model=None):
+        # if changed_state_model:
+        #     print "PATH of container_changed: ", changed_state_model.state.get_path(), changed_state_model.state.state_id
+        #     #find_state
+        #     # find the changed state and modify tree
+        #     print "search: %s" % changed_state_model.state.name
+        #     for row in self.tree_store:
+        #         if row[3] is changed_state_model:
+        #             print "found changed container_state %s" % row
+        #             for child in row:
+        #                 print child
+        #             # for state_model in changed_state_model.states:
+        #             #     # check if missing
+        #             #     # check if in
+        # #else:
+        # self.path_store.clear()
         self.tree_store.clear()
         parent = self.tree_store.insert_before(None, None,
                                                (self.model.root_state.state.name,
                                                 self.model.root_state.state.state_id,
                                                 self.model.root_state.state.state_type,
                                                 self.model.root_state))
+        # self.path_store[self.model.root_state.state.get_path()] = parent
         for state_id, smodel in self.model.root_state.states.items():
             self.insert_rec(parent, smodel)
+        print "PATH_STORE: ", self.path_store
 
     def insert_rec(self, parent, state_model):
         #print 'Inserting %s' % str((state.title, state.id, utils.const2str(Point.Point, state.type)))
@@ -44,6 +66,7 @@ class StateMachineTreeController(Controller):
                                                 state_model.state.state_id,
                                                 state_model.state.state_type,
                                                 state_model))
+        # self.path_store[state_model.state.get_path()] = parent
         if type(state_model) is ContainerStateModel:
             #print "Insert container state %s recursively" % state_model.state.name
             for state_id, smodel in state_model.states.items():
@@ -59,9 +82,12 @@ class StateMachineTreeController(Controller):
 
             self.model.selection.add(state_model)
 
-    # TODO check if delete works for the state_machine_tree, too
-    @Observer.observe("root_state.state", after=True)
+    @Controller.observe("states", after=True)
     def assign_notification_state(self, model, prop_name, info):
-        print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-              (prop_name, info.instance, info.method_name, info.result)
-        self.update()
+        logger.debug("SM Tree State %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+                    (self.model.root_state.state.state_id, prop_name, info.instance, info.method_name, info))
+        print "info: ", info
+        if hasattr(info.kwargs, 'model'):
+            self.update(info.kwargs.model)
+        else:
+            self.update()
