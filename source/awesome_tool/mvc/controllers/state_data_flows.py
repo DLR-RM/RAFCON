@@ -23,12 +23,12 @@ class ParentObserver(Observer):
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):
-        # print "parent data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
+        logger.debug("parent %s data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+                     (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
         # TODO Test with accepting limited methods
-        #if info.method_name in self.method_list:
-        for func_handle in self.func_handle_list:
-            func_handle()
+        if info.method_name in self.method_list and model.state.state_id == info.instance.state_id:
+            for func_handle in self.func_handle_list:
+                func_handle()
 
 
 class StateDataFlowsListController(Controller):
@@ -287,15 +287,15 @@ class StateDataFlowsListController(Controller):
 
     @Controller.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
-        # print "data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
+        # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
         if info.method_name in ["add_data_flow", "remove_data_flow",
                                 "add_input_data_port", "remove_input_data_port",
                                 "add_output_data_port", "remove_output_data_port",
                                 "add_output_data_port", "remove_output_data_port",
                                 "add_scoped_variable", "remove_scoped_variable",
                                 "add_state", "remove_state",
-                                "modify_outcome_name"]:
+                                "modify_outcome_name"] and model.state.state_id == info.instance.state_id:
             self.update_stores()
             self.update_model()
 

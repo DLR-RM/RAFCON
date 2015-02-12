@@ -59,8 +59,8 @@ class ChildObserver(Observer):
     def notification(self, model, prop_name, info):
         # limit methods
         if info.method_name in self.method_list:
-            # print "parent data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-            #       (prop_name, info.instance, info.method_name, info.result)
+            # logger.debug("SM State %s selection call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+            #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
             for func_handle in self.func_handle_list:
                 func_handle(model, prop_name, info)
 

@@ -12,7 +12,7 @@ from mvc.controllers.states_editor import StatesEditorController
 from mvc.controllers.state_machines_editor import StateMachinesEditorController
 from statemachine.states.execution_state import ExecutionState
 from mvc.models.container_state import ContainerStateModel
-from mvc.models.state import StateModel
+# from mvc.models.state import StateModel
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -264,42 +264,46 @@ class MainWindowController(Controller):
     def on_delete_state_activate(self, widget, data=None):
         logger.debug("Delete selected state now ...")
         selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
-        # print selection
-        if len(selection) == 1 and selection.get_num_states() == 1 and selection.get_states()[0].parent is not None:
-            selection.get_states()[0].parent.state.remove_state(selection.get_states()[0].state.state_id)
+        selected_state_model = selection.get_selected_state()
+
+        if selected_state_model and selected_state_model.parent is not None:
+            selected_state_model.parent.state.remove_state(selected_state_model.state.state_id)
+            selection.remove(selected_state_model)
 
     def on_add_state_activate(self, widget, method=None, *arg):
-        logger.debug("Add state in selected state now ..." + str(widget) + str(method))
-        logger.debug("focus is here: %s" % self.view['main_window'].get_focus())
+
         selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
-        # print selection, len(selection), selection.get_num_states(), \
-        #    isinstance(selection.get_states()[0], ContainerStateModel)
-        if len(selection) == 1 and selection.get_num_states() == 1 and \
-                isinstance(selection.get_states()[0], ContainerStateModel):
-            state = ExecutionState(" ")
-            selection.get_states()[0].state.add_state(state)
+        selected_state_model = selection.get_selected_state()
+        logger.debug("Add state in selected state %s now ..." % selected_state_model.state.name)
+
+        if selected_state_model and isinstance(selected_state_model, ContainerStateModel):
+            state = ExecutionState("~")
+            selected_state_model.state.add_state(state)
+            state_model = selected_state_model.states[state.state_id]
             #logger.info("create exec_State: %s" % state)
-            selection.set([StateModel(state)])
+            selection.set([state_model])
+        else:
+            logger.warning("Add state FAILED: State has to be inheritor of type ContainerState!!!")
 
     def on_delete_activate(self, widget, data=None):
-        logger.debug("Delete something selected now ...")
-        logger.debug("focus is here: %s" % self.view['main_window'].get_focus())
+        logger.debug("Delete something that is selected now ...")
+        #logger.debug("focus is here: %s" % self.view['main_window'].get_focus())
+
         selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
-        # print selection
-        if len(selection) == 1 and selection.get_num_states() == 1 and selection.get_states()[0].parent is not None:
-            # print "remove state: ", selection.get_states()[0].state.name, selection.get_states()[0].state.state_id
-            # print "from state: ", selection.get_states()[0].parent.state.name, selection.get_states()[0].parent.state.state_id
-            selection.get_states()[0].parent.state.remove_state(selection.get_states()[0].state.state_id)
+        if selection.get_selected_state() and selection.get_selected_state().parent is not None:
+            selected_state_model = selection.get_selected_state()
+            selected_state_model.parent.state.remove_state(selected_state_model.state.state_id)
+            selection.remove(selected_state_model)
         elif len(selection) == 1 and selection.get_num_data_flows() == 1:
-            # print selection.get_data_flows()
             data_flow = selection.get_data_flows()[0].data_flow
             selection.get_data_flows()[0].parent.state.remove_data_flow(data_flow.data_flow_id)
+            selection.remove(selection.get_data_flows()[0])
         elif len(selection) == 1 and selection.get_num_transitions() == 1:
-            # print selection.get_transitions()
             transition = selection.get_transitions()[0].transition
             selection.get_transitions()[0].parent.state.remove_transition(transition.transition_id)
+            selection.remove(selection.get_transitions()[0])
         else:
-            logger.debug("selection is not to be deletable: %s" % selection)
+            logger.debug("in selection is nothing deletable: %s" % selection)
 
     def on_paste_activate(self, widget, data=None):
         pass

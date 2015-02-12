@@ -74,7 +74,7 @@ class StatesEditorController(Controller):
             state_editor_ctrl = StateEditorEggController(state_model, state_editor_view)
 
         tab_label_text = state_model.state.name
-        if len(state_model.state.name) > 10:
+        if not state_model.state.name and len(state_model.state.name) > 10:
             tab_label_text = state_model.state.name[:10] + '~'
         (evtbox, new_label) = create_tab_header(tab_label_text, self.on_close_clicked,
                                                 state_model, 'refused')
