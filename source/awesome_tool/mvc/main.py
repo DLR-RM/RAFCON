@@ -106,8 +106,6 @@ def create_models(*args, **kargs):
     #ctr_state.add_data_flow(ctr_state.state_id, scoped_variable2_ctr_state, ctr_state.state_id, output_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    ctr_model = ContainerStateModel(ctr_state)
-
     external_module_manager_model = ExternalModuleManagerModel()
     sys.path.insert(0, '../../test_scripts')
     em = ExternalModule(name="External Module 1", module_name="external_module_test", class_name="TestModule")
@@ -121,7 +119,7 @@ def create_models(*args, **kargs):
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
-    return ctr_model, logger, ctr_state, global_var_manager_model, external_module_manager_model
+    return logger, ctr_state, global_var_manager_model, external_module_manager_model
 
 
 if __name__ == '__main__':
@@ -132,7 +130,7 @@ if __name__ == '__main__':
     #setup_logger(logging_view['main_frame'])
     logging_view = LoggingView()
     setup_logger(logging_view)
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models()
+    [logger, ctr_state, gvm_model, emm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)

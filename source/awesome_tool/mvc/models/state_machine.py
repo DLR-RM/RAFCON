@@ -14,20 +14,21 @@ class StateMachineModel(ModelMT):
 
     state_machine = None
     selection = None
+    root_state = None
 
-    __observables__ = ("state_machine", "selection",)
+    __observables__ = ("state_machine", "root_state", "selection")
 
     def __init__(self, state_machine, meta=None):
         """Constructor
         """
         ModelMT.__init__(self)  # pass columns as separate parameters
-        self.register_observer(self)
 
         assert isinstance(state_machine, StateMachine)
 
         self.state_machine = state_machine
 
         self.root_state = ContainerStateModel(self.state_machine.root_state)
+
         self.selection = Selection()
 
         if isinstance(meta, Vividict):
@@ -35,9 +36,25 @@ class StateMachineModel(ModelMT):
         else:
             self.meta = Vividict()
 
-    @ModelMT.observe("state_machine_manager", after=True)
-    def model_changed(self, model, prop_name, info):
-        pass
+
+    @ModelMT.observe("state", before=True)
+    @ModelMT.observe("states", before=True)
+    @ModelMT.observe("transitions", before=True)
+    @ModelMT.observe("data_flows", before=True)
+    @ModelMT.observe("input_data_ports", before=True)
+    @ModelMT.observe("scoped_variables", before=True)
+    def root_state_model_changed(self, model, prop_name, info):
+        self.notify_method_before_change("root_state", info['instance'], info['method_name'], None, kwargs=info)
+
+    @ModelMT.observe("state", after=True)
+    @ModelMT.observe("states", after=True)
+    @ModelMT.observe("transitions", after=True)
+    @ModelMT.observe("data_flows", after=True)
+    @ModelMT.observe("input_data_ports", after=True)
+    @ModelMT.observe("output_data_ports", after=True)
+    @ModelMT.observe("scoped_variables", after=True)
+    def root_state_model_changed(self, model, prop_name, info):
+        self.notify_method_after_change("root_state", info['instance'], info['method_name'], None, kwargs=info)
 
 
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
@@ -56,8 +73,6 @@ class Selection(Observable):
     """
     __selected = None
 
-    __observable__ = ("__selected",)
-
     #===========================================================
     def __init__(self):
         Observable.__init__(self)
@@ -67,13 +82,11 @@ class Selection(Observable):
     #===========================================================
     @Observable.observed
     def add(self, item):
-        # item.select()
         self.__selected.add(item)
 
     #===========================================================
     @Observable.observed
     def remove(self, item):
-        #item.deselect()
         self.__selected.remove(item)
 
     #===========================================================

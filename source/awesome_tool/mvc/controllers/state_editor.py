@@ -7,6 +7,7 @@ from mvc.controllers import StateOverviewController, StateConnectionsEditorContr
 
 from mvc.controllers.state_transitions import StateTransitionsEditorController
 from mvc.controllers.state_data_flows import StateDataFlowsEditorController
+from mvc.models import StateModel
 
 
 class StateEditorController(Controller):
@@ -19,6 +20,8 @@ class StateEditorController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
+        assert isinstance(model, StateModel)
+
         self.properties_ctrl = StateOverviewController(model, view['properties_view'])
 
         self.inputs_ctrl = DataPortListController(model, view['inputs_view'], "input")

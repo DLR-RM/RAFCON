@@ -22,23 +22,17 @@ class StateMachineManager(Observable):
     :ivar _root_state: the root state of the state machine
 
     """
-    _state_machines = {}
-    __observable__ = ('_state_machines',)
 
     def __init__(self, state_machines=None):
 
         Observable.__init__(self)
         self._root_state = None
-        if state_machines is not None:
-            self.root_state = state_machines.values()[0].root_state
+        self._state_machines = {}
+        self._active_state_machine = None
 
-        # if type(state_machines) is list:
-        #     for directory in state_machines:
-        #         if os.path.isdir(directory):
-        #             # TODO check if statemachine is in
-        #             self.load_state_machine(directory)
-        # else:
-        #     logger.debug('state_machines has to be type-list of directories or instance of class-StateMachine')
+        if state_machines is not None:
+            for state_machine in state_machines:
+                self.add_state_machine(state_machine)
 
     def start(self):
         self._root_state.start()
@@ -50,10 +44,9 @@ class StateMachineManager(Observable):
 
     @Observable.observed
     def add_state_machine(self, state_machine):
-        logger.debug("StateMachine should be added to StateMachineManager")
         self._state_machines[state_machine.state_machine_id] = state_machine
-        if self._root_state is None:
-            self.root_state = state_machine.root_state
+        if self.active_state_machine is None:
+            self.active_state_machine = state_machine.state_machine_id
 
     @Observable.observed
     def remove_state_machine(self, state_machine_id=None):
@@ -67,13 +60,22 @@ class StateMachineManager(Observable):
 #########################################################################
 
     @property
-    def root_state(self):
-        """Property for the _root_state field
+    def state_machines(self):
+        """Returns a reference to the list of state machines
 
+        Please use this with care and do not alter the list in any way!
         """
-        return self._root_state
+        return self._state_machines
 
-    @root_state.setter
+    @property
+    def active_state_machine(self):
+        """Return the currently active state machine
+        """
+        return self._active_state_machine
+
+    @active_state_machine.setter
     @Observable.observed
-    def root_state(self, root_state):
-        self._root_state = root_state
+    def active_state_machine(self, state_machine_id):
+        if state_machine_id not in self.state_machines.keys():
+            raise AttributeError("State machine not in list of all state machines")
+        self._active_state_machine = state_machine_id

@@ -3,6 +3,7 @@ from gtkmvc import Controller, Observer
 
 from mvc.views.graphical_editor import GraphicalEditorView
 from mvc.controllers.graphical_editor import GraphicalEditorController
+from mvc.models.state_machine_manager import StateMachineManagerModel
 from mvc.models.state_machine import StateMachineModel
 from utils import log
 logger = log.get_logger(__name__)
@@ -59,16 +60,18 @@ class ChildObserver(Observer):
     def notification(self, model, prop_name, info):
         # limit methods
         if info.method_name in self.method_list:
-            # print "parent data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-            #       (prop_name, info.instance, info.method_name, info.result)
+            # logger.debug("SM State %s selection call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+            #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
             for func_handle in self.func_handle_list:
                 func_handle(model, prop_name, info)
 
 
 class StateMachinesEditorController(Controller):
 
-    def __init__(self, model, view, state_machine_tree_ctrl, states_editor_ctrl):
-        Controller.__init__(self, model, view)
+    def __init__(self, sm_manager_model, view, state_machine_tree_ctrl, states_editor_ctrl):
+        Controller.__init__(self, sm_manager_model, view)
+
+        assert isinstance(sm_manager_model, StateMachineManagerModel)
 
         self.state_machine_tree_ctrl = state_machine_tree_ctrl
         self.states_editor_ctrl = states_editor_ctrl
@@ -78,14 +81,8 @@ class StateMachinesEditorController(Controller):
         self._view = view
 
     def register_view(self, view):
-
-        if type(self.model.state_machines) is dict:
-            for sm_id, sm in self.model.state_machines.iteritems():
-                self.add_graphical_state_machine_editor(sm)
-        else:
-            logger.debug('ManagerShould have dict as state_machines attr')
-
-        #self.state_machine_tree_ctrl.view.connect('cursor-changed', self.on_tree_view_state_double_clicked)
+        for sm_id, sm in self.model.state_machines.iteritems():
+            self.add_graphical_state_machine_editor(sm)
 
     def add_graphical_state_machine_editor(self, state_machine_model):
 

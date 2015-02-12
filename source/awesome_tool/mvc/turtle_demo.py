@@ -36,15 +36,13 @@ def create_models(state):
     logging.getLogger('statemachine.state').setLevel(logging.DEBUG)
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
-    ctr_model = ContainerStateModel(state)
-
     external_module_manager_model = ExternalModuleManagerModel()
 
     global_var_manager_model = GlobalVariableManagerModel()
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
-    return ctr_model, logger, state, global_var_manager_model, external_module_manager_model
+    return logger, state, global_var_manager_model, external_module_manager_model
 
 
 def run_turtle_demo():
@@ -194,7 +192,7 @@ def run_turtle_demo():
     statemachine.singleton.library_manager.initialize()
     logging_view = LoggingView()
     setup_logger(logging_view)
-    [ctr_model, logger, ctr_state, gvm_model, emm_model] = create_models(turtle_demo_state)
+    [logger, ctr_state, gvm_model, emm_model] = create_models(turtle_demo_state)
     main_window_view = MainWindowView(logging_view)
     #statemachine.singleton.state_machine_manager.root_state = ctr_state
     state_machine = StateMachine(turtle_demo_state)
