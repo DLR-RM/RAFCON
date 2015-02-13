@@ -23,9 +23,9 @@ class ParentObserver(Observer):
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):
-        logger.debug("parent %s data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-                     (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
-        # TODO Test with accepting limited methods
+        # logger.debug("parent %s data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
+
         if info.method_name in self.method_list and model.state.state_id == info.instance.state_id:
             for func_handle in self.func_handle_list:
                 func_handle()

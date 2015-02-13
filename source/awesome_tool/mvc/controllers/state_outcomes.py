@@ -12,18 +12,20 @@ class ParentObserver(Observer):
         self.func_handle_list = funct_handle_list
         self.method_list = ["add_transition", "remove_transition", "add_outcome", "remove_outcome",
                             "modify_outcome_name"]
+        self.state_model = model
         # # dynamically
         # self.func_handle_list = func_handle_list
         # self.observe(self.notification, "state", after=True)
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):
-        # print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
+        # logger.debug("Outcomes parent %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        #              (self.state_model.parent.state.name, prop_name, info.instance, info.method_name, info))
+
         # TODO test with accepting limited methods
-        if info.method_name in self.method_list:
-            for func_handle in self.func_handle_list:
-                func_handle()
+        # if info.method_name in self.method_list and self.state_model.parent.state.state_id == info.instance.state_id:
+        for func_handle in self.func_handle_list:
+            func_handle()
 
 
 class StateOutcomesListController(Controller):
@@ -250,8 +252,8 @@ class StateOutcomesListController(Controller):
 
     @Controller.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
-        # print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
+        # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        #              (prop_name, info.instance, info.method_name, info.result))
         if info.method_name in ["add_outcome", "remove_outcome", "add_transition", "remove_transition",
                                 "modify_outcome_name"]:
             self.update_stores()

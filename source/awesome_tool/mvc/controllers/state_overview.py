@@ -86,7 +86,7 @@ class StateOverviewController(Controller):
 
     def change_name(self, entry, otherwidget):
         entry_text = entry.get_text()
-        if len(entry_text) > 0:
+        if len(entry_text) > 0 and not self.model.state.name == entry_text:
             logger.debug("State %s changed name from '%s' to: '%s'\n" % (self.model.state.state_id,
                                                                          self.model.state.name, entry_text))
             self.model.state.name = entry_text
