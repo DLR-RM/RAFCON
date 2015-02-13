@@ -20,6 +20,7 @@ import sys
 
 class NoHigherLevelFilter(logging.Filter):
     def __init__(self, level):
+        logging.Filter.__init__(self)
         self.level = level
 
     def filter(self, record):
@@ -28,6 +29,7 @@ class NoHigherLevelFilter(logging.Filter):
 
 class DebugTextViewFilter(logging.Filter):
     def __init__(self):
+        logging.Filter.__init__(self)
         self.logging_text_view = None
 
     def set_logging_test_view(self, logging_test_view):
