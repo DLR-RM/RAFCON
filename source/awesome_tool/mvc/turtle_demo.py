@@ -18,6 +18,9 @@ from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.state_machine import StateMachine
 
 
+import gobject
+gobject.threads_init()
+
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
     log.error_filter.set_logging_test_view(logging_view)
@@ -158,6 +161,7 @@ def run_turtle_demo():
     follow_user_turtle_hierarchy.add_state(calculate_position_difference)
     follow_user_turtle_hierarchy.add_state(move_difference)
 
+
     follow_user_turtle_hierarchy.add_transition(check_user_turtle_position.state_id, 0,
                                                 calculate_position_difference.state_id, None)
     follow_user_turtle_hierarchy.add_transition(calculate_position_difference.state_id, 0,
@@ -212,9 +216,12 @@ def run_turtle_demo():
     user_input_module = ExternalModule(name="user_input", module_name="user_input_external_module", class_name="UserInput")
     statemachine.singleton.external_module_manager.add_external_module(user_input_module)
     statemachine.singleton.external_module_manager.external_modules["user_input"].connect([])
+
     #statemachine.singleton.external_module_manager.external_modules["user_input"].start()
 
     # dual_gtk_window = DualGTKWindow()
+
+    print "before main loop"
 
     gtk.main()
     logger.debug("Gtk main loop exited!")

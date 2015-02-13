@@ -26,16 +26,12 @@ class StateMachineManager(Observable):
     def __init__(self, state_machines=None):
 
         Observable.__init__(self)
-        self._root_state = None
         self._state_machines = {}
         self._active_state_machine = None
 
         if state_machines is not None:
             for state_machine in state_machines:
                 self.add_state_machine(state_machine)
-
-    def start(self):
-        self._root_state.start()
 
     def load_state_machine(self, directory):
         logger.debug("StateMachine should be loaded now ... directory: %s" % directory)

@@ -81,9 +81,9 @@ class StateMachineTreeController(Controller):
 
     @Controller.observe("states", after=True)
     def assign_notification_state(self, model, prop_name, info):
-        logger.debug("SM Tree State %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-                    (self.model.root_state.state.state_id, prop_name, info.instance, info.method_name, info))
-        print "info: ", info
+        # logger.debug("SM Tree State %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        #             (self.model.root_state.state.state_id, prop_name, info.instance, info.method_name, info))
+        #print "info: ", info
         if hasattr(info.kwargs, 'model'):
             self.update(info.kwargs.model)
         else:

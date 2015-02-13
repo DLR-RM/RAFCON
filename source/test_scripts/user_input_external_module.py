@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
 
 import gtk
-from threading import Thread, Condition
-import gobject
+from threading import Condition
 import time
 
 
@@ -12,14 +10,13 @@ class UserInput(object):
     def __init__(self):
         print "User Input initialized"
         self.builder = gtk.Builder()
-        #self.builder.add_from_file("user_input.glade")
         self.builder.add_from_file("../../test_scripts/user_input.glade")
         self.builder.connect_signals(self)
+        self.builder.get_object("window1").hide()
         self.next_signal = None
         self.next_signal_condition = Condition()
         self.thread_running = True
         self.thread_currently_notifying = False
-        self.builder.get_object("window1").hide()
 
     def start(self):
         self.builder.get_object("window1").show()
@@ -33,17 +30,8 @@ class UserInput(object):
         #how to pause?
         print "UserInput: paused"
 
-    def check_exit_flag(self):
-        if not self.thread_running:
-            print "window1 destroyed"
-            self.builder.get_object("window1").hide()
-            #gtk.main_quit()
-            print "after gtk.main_quit"
-            return
-        gobject.timeout_add(100, self.check_exit_flag)
-
-    def get_widget(self, name):
-        return self.builder.get_object(name)
+    # def get_widget(self, name):
+    #     return self.builder.get_object(name)
 
     def on_window1_destroy(self, *args):
         print "window1 destroyed"

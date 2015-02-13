@@ -109,13 +109,14 @@ class MainWindowController(Controller):
         self.states_editor_ctrl = StatesEditorController(self.model.state_machines.values()[0].root_state, view.states_editor, editor_type)
 
         ######################################################
-        # graphical editor
+        # state machines editor
         ######################################################
 
         self.state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
                                                                         view.state_machines_editor,
                                                                         self.state_machine_tree_controller,
                                                                         self.states_editor_ctrl)
+
         #self.state_machines_editor_ctrl.add_graphical_state_machine_editor(state_machine_manager_model.root_state)
 
         # self.graphical_editor_ctrl = GraphicalEditorController(self.model.root_state, view.graphical_editor_view)
@@ -194,7 +195,10 @@ class MainWindowController(Controller):
         }
 
     def on_main_window_destroy(self, widget, data=None):
+        self.view.logging_view.quit_flag = True
         logger.debug("Main window destroyed")
+        log.debug_filter.set_logging_test_view(None)
+        log.error_filter.set_logging_test_view(None)
         statemachine.singleton.external_module_manager.stop_all_modules()
         gtk.main_quit()
 

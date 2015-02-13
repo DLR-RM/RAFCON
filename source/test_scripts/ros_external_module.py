@@ -156,6 +156,7 @@ class RosModule:
 
 if __name__ == '__main__':
     my_ros_module = RosModule()
+    my_ros_module.start()
     my_ros_module.spawn_turtle("turtle2", 4, 4, 1)
     my_ros_module.teleport_turtle("turtle1", randint(2, 9), randint(2, 9), uniform(0, 3.1415))
     my_ros_module.move_turtle("turtle1", 2, 1, 1)
