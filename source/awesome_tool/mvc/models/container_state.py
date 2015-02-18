@@ -78,7 +78,7 @@ class ContainerStateModel(StateModel):
 
     def update_scoped_variables_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
-        for scoped_variable in self.container_state.scoped_variables.itervalues():
+        for scoped_variable in self.state.scoped_variables.itervalues():
             tmp.append([scoped_variable])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
@@ -91,7 +91,7 @@ class ContainerStateModel(StateModel):
 
     def update_scoped_variables_models(self):
         self.scoped_variables = []
-        for scoped_variable in self.container_state.scoped_variables.itervalues():
+        for scoped_variable in self.state.scoped_variables.itervalues():
             self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
 
     def update_scoped_variables_list_store_and_models(self):
@@ -123,8 +123,15 @@ class ContainerStateModel(StateModel):
             state models
             scoped variable models
         """
-        #TODO: scoped variables
+
         model_list = None
+        # TODO to lower computation load only called with if reasonable
+        if True:  # and info.method_name in ['add_input_data_port', 'remove_input_data_port',
+                  #                      'add_output_data_port', 'remove_output_data_port',
+                  #                      'add_outcome', 'remove_outcome', 'modify_outcome_name']:
+            StateModel.update_child_models(self, _, name, info)
+
+        #TODO: scoped variables
 
         def get_model_info(model):
             model_list = None
@@ -137,7 +144,7 @@ class ContainerStateModel(StateModel):
                 data_list = self.state.transitions
                 model_name = "transition"
                 model_class = TransitionModel
-            elif model ==  "data_flow":
+            elif model == "data_flow":
                 model_list = self.data_flows
                 data_list = self.state.data_flows
                 model_name = "data_flow"

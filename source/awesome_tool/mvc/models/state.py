@@ -107,6 +107,7 @@ class StateModel(ModelMT):
             outcome models
         """
         # TODO
+        # print "NOTIFY CHANGED STATE_MODEL", self.state.name
         pass
 
     def reload_input_data_port_list_store(self):
