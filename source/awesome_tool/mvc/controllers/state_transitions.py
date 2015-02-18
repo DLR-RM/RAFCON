@@ -308,10 +308,8 @@ class StateTransitionsListController(Controller):
         # print "update store"
 
         def update_transition_list_store(model):
-            model.transitions = []
             model.transition_list_store.clear()
             for transition in model.state.transitions.values():
-                model.transitions.append(TransitionModel(transition, model))
                 # print "insert: ", transition
                 model.transition_list_store.append([transition])
 

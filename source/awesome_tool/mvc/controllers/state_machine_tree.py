@@ -150,18 +150,24 @@ class StateMachineTreeController(Controller):
                 # work around to force selection to state-editor
                 self.model.selection.set([self.model.selection.get_selected_state()])
 
-    @Controller.observe("selection", after=True)
-    @Controller.observe("states", after=True)
-    @Controller.observe("root_state", after=True)
-    def assign_notification_state(self, model, prop_name, info):
-        # logger.debug("SM Tree State %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-        #             (self.model.root_state.state.state_id, prop_name, info.instance, info.method_name, info))
-        # print "info: ", info
         # if hasattr(info.kwargs, 'model'):
         #     self.update(info.kwargs.model)
         # else:
+        # TODO make it work without the next line
         self.update(self.model.root_state)
 
+    # # TEST ARENA
+    # @Controller.observe("root_state", after=True)
+    # def assign_notification_root_state(self, model, prop_name, info):
+    #     print "ROOT_STATE_CHANGED"
+    #
+    # @Controller.observe("states", after=True)
+    # def assign_notification_states(self, model, prop_name, info):
+    #     print "STATES_CHANGED"
+    #
     # @Controller.observe("selection", after=True)
-    # def assign_notification(self, model, prop_name, info):
-    #     self.update(self.model.root_state)
+    # def assign_notification_selections(self, model, prop_name, info):
+    #     print "STATES_SELECTIONS"
+    # # @Controller.observe("selection", after=True)
+    # # def assign_notification(self, model, prop_name, info):
+    # #     self.update(self.model.root_state)
