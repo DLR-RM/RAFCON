@@ -54,3 +54,11 @@ class StateMachine(Observable):
     @Observable.observed
     def root_state(self, root_state):
         self._root_state = root_state
+
+    @Observable.observed
+    def root_state_before_change(self, model, prop_name, instance, method_name, args, kwargs):
+        pass
+
+    @Observable.observed
+    def root_state_after_change(self, model, prop_name, instance, method_name, result, args, kwargs):
+        pass
