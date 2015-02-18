@@ -387,16 +387,13 @@ class State(Observable, yaml.YAMLObject, object):
             raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
                                  "return aborted or preempted")
 
-        # delete all transitions connected to this outcome
+        # delete possible transition connected to this outcome
         if not self.parent is None:
-            transition_ids_to_remove = []
             for transition_id, transition in self.parent.transitions.iteritems():
                 if transition.from_outcome == outcome_id:
-                    transition_ids_to_remove.append(transition_id)
-
-            for transition_id in transition_ids_to_remove:
-                self.parent.remove_transition(transition_id)
-                # del self.parent.transitions[transition_id]
+                    self.parent.remove_transition(transition_id)
+                    # del self.parent.transitions[transition_id]
+                    break  # found the one outgoing transition
 
         # delete outcome it self
         self._used_outcome_ids.remove(outcome_id)
