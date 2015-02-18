@@ -68,7 +68,7 @@ class GraphicalEditorController(Controller):
     @Controller.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
         if 'method_name' in info and  info['method_name'] == 'root_state_after_change':
-            logger.debug("SM change detected, redraw...")
+            logger.debug("Change in SM, redraw...")
             self._redraw(True)
 
     @Controller.observe("root_state", after=True)
@@ -81,7 +81,12 @@ class GraphicalEditorController(Controller):
 
     @Controller.observe("selection", after=True)
     def selection_change(self, model, prop_name, info):
-        self._redraw(True)
+        selection = None
+        for selection in self.model.selection:
+            pass
+        if self.selection != selection:
+            self.selection = selection
+            self._redraw(True)
 
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
