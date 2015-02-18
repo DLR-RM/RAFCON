@@ -65,10 +65,22 @@ class GraphicalEditorController(Controller):
         """
         pass
 
+    @Controller.observe("state_machine", after=True)
+    def state_machine_change(self, model, prop_name, info):
+        if 'method_name' in info and  info['method_name'] == 'root_state_after_change':
+            logger.debug("SM change detected, redraw...")
+            self._redraw(True)
+
+    @Controller.observe("root_state", after=True)
+    def root_state_change(self, model, prop_name, info):
+        if self.root_state_m is not model.root_state:
+            logger.debug("The root state was exchanged")
+            self.root_state_m = model.root_state
+            self._redraw(True)
+
+
     @Controller.observe("selection", after=True)
-    @Controller.observe("root_state", after=True, assign=True)
-    def state_machine_change(self, model, property, info):
-        #print "sm change detected", model, property, info
+    def selection_change(self, model, prop_name, info):
         self._redraw(True)
 
     def _on_expose_event(self, *args):

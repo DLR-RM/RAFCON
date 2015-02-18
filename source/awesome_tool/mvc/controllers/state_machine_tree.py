@@ -120,7 +120,6 @@ class StateMachineTreeController(Controller):
         logger.debug("The view jumps to the selected state and the zoom should be adjusted as well")
         if row is not None:
             state_model = model[row][3]
-            print "IN TREE: ", state_model
             self.model.selection.clear()
 
             self.model.selection.add(state_model)

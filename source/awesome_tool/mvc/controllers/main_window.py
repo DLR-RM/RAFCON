@@ -296,7 +296,7 @@ class MainWindowController(Controller):
         selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
         selected_state_model = selection.get_selected_state()
         logger.debug("Add state in selected state %s now ..." % selected_state_model.state.name)
-        logger.info("Add state %s now ..." % selected_state_model)
+        # logger.info("Add state %s now ..." % selected_state_model)
 
         if selected_state_model and isinstance(selected_state_model, ContainerStateModel):
             state = ExecutionState("~")

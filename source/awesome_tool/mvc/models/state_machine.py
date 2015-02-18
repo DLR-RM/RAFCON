@@ -45,8 +45,10 @@ class StateMachineModel(ModelMT):
     @ModelMT.observe("data_flows", before=True)
     @ModelMT.observe("input_data_ports", before=True)
     @ModelMT.observe("scoped_variables", before=True)
-    def root_state_model_changed(self, model, prop_name, info):
-        self.notify_method_before_change("state_machine", info['instance'], info['method_name'], None, kwargs=info)
+    def root_state_model_before_change(self, model, prop_name, info):
+        self.state_machine.root_state_before_change(info['model'], info['prop_name'], info['instance'],
+                                                    info['method_name'], info['args'], info['kwargs'])
+
 
     @ModelMT.observe("state", after=True)
     @ModelMT.observe("states", after=True)
@@ -55,9 +57,9 @@ class StateMachineModel(ModelMT):
     @ModelMT.observe("input_data_ports", after=True)
     @ModelMT.observe("output_data_ports", after=True)
     @ModelMT.observe("scoped_variables", after=True)
-    def root_state_model_changed(self, model, prop_name, info):
-        #print prop_name, info
-        self.notify_method_after_change("state_machine", info['instance'], info['method_name'], info['result'], None, kwargs=info)
+    def root_state_model_after_change(self, model, prop_name, info):
+        self.state_machine.root_state_after_change(info['model'], info['prop_name'], info['instance'],
+                                                   info['method_name'], info['result'], info['args'], info['kwargs'])
 
 
 class Selection(Observable):

@@ -114,3 +114,6 @@ class StateMachinesEditorController(Controller):
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
         del self.tabs[state_identifier]
+
+        selection = info.instance
+        assert isinstance(selection, Selection)

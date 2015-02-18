@@ -6,6 +6,7 @@ from gtkmvc import Controller
 from mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
 from mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
 from mvc.models.state_machine_manager import StateMachineManagerModel
+from mvc.models.state_machine import Selection
 from utils import log
 logger = log.get_logger(__name__)
 
@@ -166,11 +167,13 @@ class StatesEditorController(Controller):
 
     @Controller.observe("selection", after=True)
     def selection_notification(self, model, property, info):
+        selection = info.instance
+        assert isinstance(selection, Selection)
         # logger.debug("The viewer should jump as selected to tab in states_editor %s %s %s" % (info.instance, model, property))
         if info.instance.get_num_states() == 1 and len(info.instance) == 1:
             self.change_state_editor_selection(info.instance.get_states()[0])
 
-    #@Controller.observe("state", after=True)
+    @Controller.observe("state", after=True)
     @Controller.observe("states", after=True)
     def notify_state(self, model, prop_name, info):
         # TODO in combination with state type change (remove - add -state) there exist sometimes inconsistencies
