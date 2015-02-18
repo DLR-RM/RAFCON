@@ -56,6 +56,8 @@ class StateOverviewController(Controller):
         view['label_id_value'].set_text(self.model.state.state_id)
         #view['label_type_value'].set_text(str(self.model.state.state_type))
         view['description_textview'].set_buffer(self.model.state.description)
+        view['description_textview'].set_accepts_tab(False)
+
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
         combo.set_model(l_store)

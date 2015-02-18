@@ -16,6 +16,7 @@ class StateMachineTreeController(Controller):
         """Constructor
         :param model StateMachineModel should be exchangeable
         """
+        # TODO auf state machine manager und active state umstellen
         assert isinstance(model, StateMachineModel)
 
         Controller.__init__(self, model, view)
@@ -24,6 +25,7 @@ class StateMachineTreeController(Controller):
         # model.root_state.register_observer(self)
         self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT)
         view.set_model(self.tree_store)
+        #view.set_hover_expand(True)
         self.path_store = {}
 
     def register_view(self, view):
@@ -55,10 +57,10 @@ class StateMachineTreeController(Controller):
         if not changed_state_model.state.get_path() in self.path_store:
             own_root_state__model = ContainerStateModel(self.model.root_state.state)
             parent_iter = self.tree_store.insert_before(parent_iter, None,
-                                                   (self.model.root_state.state.name,
-                                                    self.model.root_state.state.state_id,
-                                                    self.model.root_state.state.state_type,
-                                                    self.model.root_state))
+                                                        (self.model.root_state.state.name,
+                                                         self.model.root_state.state.state_id,
+                                                         self.model.root_state.state.state_type,
+                                                         self.model.root_state))
             #self.tree_store.row_inserted(path=self.tree_store.get_path(parent_iter), iter=parent_iter)
             self.path_store[self.model.root_state.state.get_path()] = parent_iter
         else:
@@ -83,10 +85,10 @@ class StateMachineTreeController(Controller):
         # check if in
         if not state_model.state.get_path() in self.path_store:
             parent_iter = self.tree_store.insert_before(parent_iter, None,
-                                                   (state_model.state.name,
-                                                    state_model.state.state_id,
-                                                    state_model.state.state_type,
-                                                    state_model))
+                                                        (state_model.state.name,
+                                                         state_model.state.state_id,
+                                                         state_model.state.state_type,
+                                                         state_model))
             #self.tree_store.row_inserted(path=self.tree_store.get_path(parent_iter), iter=parent_iter)
             self.path_store[state_model.state.get_path()] = parent_iter
         else:
@@ -96,6 +98,7 @@ class StateMachineTreeController(Controller):
             if not state_model.state.state_type == model[path][2] or not state_model.state.name == model[path][0]:
                 model[path][0] = state_model.state.name
                 model[path][2] = state_model.state.state_type
+                model[path][3] = state_model
 
         # check if child are all in
         if type(state_model) is ContainerStateModel:
@@ -114,17 +117,43 @@ class StateMachineTreeController(Controller):
 
     def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
-        logger.debug("The view should jump to the selected state and the zoom should be adjusted as well")
+        logger.debug("The view jumps to the selected state and the zoom should be adjusted as well")
         if row is not None:
             state_model = model[row][3]
+            print "IN TREE: ", state_model
             self.model.selection.clear()
 
             self.model.selection.add(state_model)
 
+    @Controller.observe("selection", after=True)
+    def assign_notification_selection(self, model, prop_name, info):
+        if self.model.selection.get_selected_state():
+
+            # work around to avoid already selected but not insert state rows
+            if not self.model.selection.get_selected_state().state.get_path() in self.path_store:
+                self.update(self.model.root_state)
+
+            (model, actual_iter) = self.view.get_selection().get_selected()
+            selected_iter = self.path_store[self.model.selection.get_selected_state().state.get_path()]
+            # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_iter, selected_iter))
+            selected_path = self.tree_store.get_path(selected_iter)
+            if actual_iter is None:
+                actual_path = None
+            else:
+                actual_path = self.tree_store.get_path(actual_iter)
+            # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_path, selected_path))
+            if not selected_path == actual_path:
+                logger.info("reselect state machine tree-selection")
+                # if single selection-mode is set no unselect is needed
+                #self.view.get_selection().unselect_path(actual_path)
+                self.view.expand_to_path(selected_path)
+                self.view.get_selection().select_iter(selected_iter)
+                # work around to force selection to state-editor
+                self.model.selection.set([self.model.selection.get_selected_state()])
 
     @Controller.observe("selection", after=True)
-    # # @Controller.observe("states", after=True)
-    # @Controller.observe("state_machine", after=True)
+    @Controller.observe("states", after=True)
+    @Controller.observe("root_state", after=True)
     def assign_notification_state(self, model, prop_name, info):
         # logger.debug("SM Tree State %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #             (self.model.root_state.state.state_id, prop_name, info.instance, info.method_name, info))

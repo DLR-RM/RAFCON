@@ -1,3 +1,5 @@
+import pango
+
 import gtk
 from gtkmvc import Controller, Observer
 
@@ -28,9 +30,6 @@ def create_tab_close_button(callback, *additional_parameters):
     return closebutton
 
 
-import pango
-
-
 def create_tab_header(title, close_callback, *additional_parameters):
     hbox = gtk.HBox()
     hbox.set_size_request(width=-1, height=14)  # safe two pixel
@@ -46,24 +45,6 @@ def create_tab_header(title, close_callback, *additional_parameters):
     hbox.show_all()
 
     return hbox, label
-
-
-class ChildObserver(Observer):
-
-    def __init__(self, model, funct_handle_list):
-        Observer.__init__(self, model)
-        self.func_handle_list = funct_handle_list
-        # self.observe(self.notify, "state", after=True)
-        self.method_list = ["add", "remove", "clear", "append", "set"]
-
-    @Observer.observe('selection', after=True)
-    def notification(self, model, prop_name, info):
-        # limit methods
-        if info.method_name in self.method_list:
-            # logger.debug("SM State %s selection call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-            #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
-            for func_handle in self.func_handle_list:
-                func_handle(model, prop_name, info)
 
 
 class StateMachinesEditorController(Controller):
@@ -88,8 +69,6 @@ class StateMachinesEditorController(Controller):
 
         assert isinstance(state_machine_model, StateMachineModel)
 
-        observer = ChildObserver(state_machine_model, [self.selection_notification])
-
         sm_identifier = state_machine_model.root_state.state.get_path()
 
         graphical_editor_view = GraphicalEditorView()
@@ -107,8 +86,7 @@ class StateMachinesEditorController(Controller):
         self.tabs[sm_identifier] = {'page': page,
                                     'state_model': state_machine_model,
                                     'ctrl': graphical_editor_ctrl,
-                                    'connected': False,
-                                    'observer': observer,}
+                                    'connected': False,}
 
         # def on_expose_event(widget, event, sm_identifier):
         #     if not self.tabs[sm_identifier]['connected']:
@@ -136,38 +114,3 @@ class StateMachinesEditorController(Controller):
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
         del self.tabs[state_identifier]
-
-    def on_tree_view_state_double_clicked(self, model, property, info):
-        (model, row) = self.state_machine_tree_ctrl.view.get_selection().get_selected()
-        #if row is not None:
-        #    self.states_editor_ctrl.change_state_editor_selection(model[row][3])
-
-    # def on_graphical_state_double_clicked(self, widget, signal_id, sm_identifier):
-    #     print widget, signal_id, sm_identifier
-    #
-    #     def find_selected(state_model):
-    #         # print "test state %s " % state_model.state.name
-    #         if state_model.meta['gui']['selected']:
-    #             return state_model
-    #         else:
-    #             if hasattr(state_model, 'states'):
-    #                 result = None
-    #                 # print state_model.states
-    #                 for state_id, state_model in state_model.states.iteritems():
-    #                     result = find_selected(state_model)
-    #                     if result:
-    #                         break
-    #                 return result
-    #             else:
-    #                 return None
-    #
-    #     selected_model = find_selected(self.tabs[sm_identifier]['state_model'])
-    #     if selected_model:
-    #         self.states_editor_ctrl.change_state_editor_selection(selected_model)
-    #     # else:
-    #     #     print "no state selected"
-
-    def selection_notification(self, model, property, info):
-        # logger.debug("The viewer should jump as selected to tab in states_editor %s %s %s" % (info.instance, model, property))
-        if info.instance.get_num_states() == 1 and len(info.instance) == 1:
-            self.states_editor_ctrl.change_state_editor_selection(info.instance.get_states()[0])

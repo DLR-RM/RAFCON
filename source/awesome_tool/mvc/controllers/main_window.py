@@ -46,7 +46,7 @@ def setup_key_binding(key_map, view, widget):
 
 class MainWindowController(Controller):
 
-    def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='egg'):
+    def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='PortConnectionGrouped'):
         Controller.__init__(self, state_machine_manager_model, view)
 
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
@@ -111,7 +111,12 @@ class MainWindowController(Controller):
         # state editor
         ######################################################
         # this_model = filter(lambda model: model.state.name == 'State3', self.model.root_state.states.values()).pop()
-        self.states_editor_ctrl = StatesEditorController(self.model.state_machines.values()[0].root_state, view.states_editor, editor_type)
+        # self.states_editor_ctrl = StatesEditorController(self.model.state_machines.values()[0].root_state,
+        #                                                  view.states_editor,
+        #                                                  editor_type)
+        self.states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
+                                                         view.states_editor,
+                                                         editor_type)
 
         ######################################################
         # state machines editor
@@ -291,6 +296,7 @@ class MainWindowController(Controller):
         selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
         selected_state_model = selection.get_selected_state()
         logger.debug("Add state in selected state %s now ..." % selected_state_model.state.name)
+        logger.info("Add state %s now ..." % selected_state_model)
 
         if selected_state_model and isinstance(selected_state_model, ContainerStateModel):
             state = ExecutionState("~")
