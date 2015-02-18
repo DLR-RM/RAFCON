@@ -19,7 +19,7 @@ class ParentObserver(Observer):
                             "add_output_data_port", "remove_output_data_port",
                             "add_scoped_variable", "remove_scoped_variable",
                             "add_state", "remove_state",
-                            "modify_outcome_name",]
+                            "modify_outcome_name", "name"]
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):

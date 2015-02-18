@@ -39,7 +39,6 @@ class StateMachineModel(ModelMT):
         else:
             self.meta = Vividict()
 
-
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("states", before=True)
     @ModelMT.observe("transitions", before=True)
@@ -81,7 +80,8 @@ class Selection(Observable):
 
     @Observable.observed
     def remove(self, item):
-        self.__selected.remove(item)
+        if item in self.__selected:
+            self.__selected.remove(item)
 
     @Observable.observed
     def append(self, selection):
