@@ -316,14 +316,20 @@ class MainWindowController(Controller):
             selected_state_model = selection.get_selected_state()
             selected_state_model.parent.state.remove_state(selected_state_model.state.state_id)
             selection.remove(selected_state_model)
+            logger.debug("Delete State: %s, %s" % (selected_state_model.state.state_id,
+                                                   selected_state_model.state.name))
         elif len(selection) == 1 and selection.get_num_data_flows() == 1:
             data_flow = selection.get_data_flows()[0].data_flow
             selection.get_data_flows()[0].parent.state.remove_data_flow(data_flow.data_flow_id)
             selection.remove(selection.get_data_flows()[0])
+            logger.debug("Delete DataFlow: from %s to %s" % (data_flow.from_state,
+                                                             data_flow.to_state))
         elif len(selection) == 1 and selection.get_num_transitions() == 1:
             transition = selection.get_transitions()[0].transition
             selection.get_transitions()[0].parent.state.remove_transition(transition.transition_id)
             selection.remove(selection.get_transitions()[0])
+            logger.debug("Delete Transition: from %s, %s to %s, %s" % (transition.from_state, transition.from_outcome,
+                                                                       transition.to_state, transition.to_outcome))
         else:
             logger.debug("in selection is nothing deletable: %s" % selection)
 

@@ -139,6 +139,10 @@ class StateDataFlowsListController(Controller):
         else:
                 logger.warning("NO OPTION TO ADD TRANSITION")
 
+        # set focus on this new element
+        # - at the moment every new element is the last -> easy work around :(
+        self.view.tree_view.set_cursor(len(self.tree_store)-1)
+
     def on_remove(self, button, info=None):
         # print "remove dataflow"
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
@@ -156,6 +160,14 @@ class StateDataFlowsListController(Controller):
             # self.view.tree_view.get_selection().select_all()
         else:
             logger.warning("NO selection to remove data-flow")
+
+        # selection to next element
+        row_number = path[0][0]
+        if len(self.tree_store) > row_number:
+            self.view.tree_view.set_cursor(path[0][0])
+        elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
+            self.view.tree_view.set_cursor(path[0][0]-1)
+
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
