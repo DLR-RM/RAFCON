@@ -4,7 +4,7 @@ from gtkmvc import Controller, Observer
 from mvc.views.graphical_editor import GraphicalEditorView
 from mvc.controllers.graphical_editor import GraphicalEditorController
 from mvc.models.state_machine_manager import StateMachineManagerModel
-from mvc.models.state_machine import StateMachineModel
+from mvc.models.state_machine import StateMachineModel, Selection
 from utils import log
 logger = log.get_logger(__name__)
 
@@ -168,6 +168,8 @@ class StateMachinesEditorController(Controller):
     #     #     print "no state selected"
 
     def selection_notification(self, model, property, info):
+        selection = info.instance
+        assert isinstance(selection, Selection)
         # logger.debug("The viewer should jump as selected to tab in states_editor %s %s %s" % (info.instance, model, property))
-        if info.instance.get_num_states() == 1 and len(info.instance) == 1:
-            self.states_editor_ctrl.change_state_editor_selection(info.instance.get_states()[0])
+        if selection.get_num_states() == 1 and len(selection) == 1:
+            self.states_editor_ctrl.change_state_editor_selection(selection.get_states()[0])
