@@ -6,7 +6,7 @@
 .. moduleauthor:: Rico Belder
 
 """
-
+import pango
 
 import gtk
 from gtkmvc import View, Controller
@@ -79,6 +79,17 @@ class StateEditorEggView(View):
         self['source_view'] = SourceEditorView()
         self['transitions_view'] = StateTransitionsEditorView()
         self['data_flows_view'] = StateDataFlowsEditorView()
+
+        fontdesc = pango.FontDescription("Bold")
+        self['label_dataport'].modify_font(fontdesc)
+        self['label_script'].modify_font(fontdesc)
+        self['label_connections'].modify_font(fontdesc)
+        self['label_script1'].modify_font(fontdesc)
+        self['label_script2'].modify_font(fontdesc)
+        self['label_script3'].modify_font(fontdesc)
+        self['label_script4'].modify_font(fontdesc)
+        self['label_script5'].modify_font(fontdesc)
+        self['label_script6'].modify_font(fontdesc)
 
         self['properties_viewport'].add(self['properties_view'].get_top_widget())
         self['input_ports_scroller'].add(self['inputs_view'].get_top_widget())
