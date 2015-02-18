@@ -137,7 +137,7 @@ if __name__ == '__main__':
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model,
-                                                  editor_type='ld')
+                                                  editor_type='LogicDataGrouped')
 
     # sdev = StateDataportEditorView()
     # StateDataPortEditorController(ctr_model, sdev)

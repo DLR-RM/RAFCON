@@ -15,7 +15,7 @@ from gtkmvc import Observable
 
 class StateMachineManager(Observable):
 
-    """A class for to organizing all main components of a state machine
+    """A class to organize all main components of a state machine
 
     It inherits from Observable to make a change of its fields observable.
 
@@ -75,3 +75,4 @@ class StateMachineManager(Observable):
         if state_machine_id not in self.state_machines.keys():
             raise AttributeError("State machine not in list of all state machines")
         self._active_state_machine = state_machine_id
+

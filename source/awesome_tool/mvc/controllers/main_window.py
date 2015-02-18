@@ -21,9 +21,14 @@ logger = log.get_logger(__name__)
 
 def setup_key_binding(key_map, view, widget):
         """
-        @brief read config.py and add key accelerators according to the
+        Read the Key_map and add key accelerators according to the
         name of field key_map, adds AccelGroup to widget and add accelerator to dict of view.
+
+        :param key_map dict that holds as key the name of menu-button and as value the accelerator-key
+        :param view View in which the widget-dict is used to update MenuItems and to insert new (not visualized ones)
+        :param widget gtk.Window that could add accelerator-groups and have a menu
         """
+
         accelgroup = gtk.AccelGroup()
         widget.add_accel_group(accelgroup)
 
@@ -32,7 +37,7 @@ def setup_key_binding(key_map, view, widget):
             try:
                 if not view[item[0]]:
                     view[item[0]] = gtk.MenuItem()
-                    logger.info("NOT_IN key-accelerator %s" % str(item))
+                    logger.info("NOT_IN key-accelerator %s insert a not visualized MenuItem with connected accelerator-key" % str(item))
                 view[item[0]].add_accelerator("activate", accelgroup, key, mod, gtk.ACCEL_VISIBLE)
             except:
                 logger.warn(traceback.format_exc())
@@ -41,7 +46,7 @@ def setup_key_binding(key_map, view, widget):
 
 class MainWindowController(Controller):
 
-    def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='egg'):
+    def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='PortConnectionGrouped'):
         Controller.__init__(self, state_machine_manager_model, view)
 
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
@@ -106,7 +111,12 @@ class MainWindowController(Controller):
         # state editor
         ######################################################
         # this_model = filter(lambda model: model.state.name == 'State3', self.model.root_state.states.values()).pop()
-        self.states_editor_ctrl = StatesEditorController(self.model.state_machines.values()[0].root_state, view.states_editor, editor_type)
+        # self.states_editor_ctrl = StatesEditorController(self.model.state_machines.values()[0].root_state,
+        #                                                  view.states_editor,
+        #                                                  editor_type)
+        self.states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
+                                                         view.states_editor,
+                                                         editor_type)
 
         ######################################################
         # state machines editor
@@ -260,8 +270,8 @@ class MainWindowController(Controller):
 
     def delegate_action(self, event, method, *arg):
         """
-        @brief when a signal is detected, this call the callback
-        corresponding to the currently active bubble area.
+        Is a test function to be used in future to insert key-accelerator
+        into the currently active widget (e.g. Delete to tree/list widget of DataFlows).
         """
 
         idx = self.states_editor_ctrl.view.notebook.get_current_page()
@@ -286,6 +296,7 @@ class MainWindowController(Controller):
         selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
         selected_state_model = selection.get_selected_state()
         logger.debug("Add state in selected state %s now ..." % selected_state_model.state.name)
+        # logger.info("Add state %s now ..." % selected_state_model)
 
         if selected_state_model and isinstance(selected_state_model, ContainerStateModel):
             state = ExecutionState("~")

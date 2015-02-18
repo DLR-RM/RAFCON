@@ -153,10 +153,8 @@ class ContainerState(State):
         """
         if not state_id in self.states:
             raise AttributeError("State_id %s doe not exit" % state_id)
-        del self.states[state_id]
 
-        #delete all transitions and data_flows connected to this state
-
+        #first delete all transitions and data_flows connected to this state
         keys_to_delete = []
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state_id or transition.to_state == state_id:
@@ -170,6 +168,9 @@ class ContainerState(State):
                 keys_to_delete.append(key)
         for key in keys_to_delete:
             del self.data_flows[key]
+
+        # delete the state it self
+        del self.states[state_id]
 
     @Observable.observed
     def remove_outcome(self, outcome_id):
@@ -187,18 +188,21 @@ class ContainerState(State):
 
         # delete all transitions connected to this outcome
         if not self.parent is None:
-            transition_ids_to_remove = []
+            # delete external -> should be only one
             for transition_id, transition in self.parent.transitions.iteritems():
                 if transition.from_outcome == outcome_id:
-                    transition_ids_to_remove.append(transition_id)
+                    self.parent.remove_transition(transition_id)
+                    # del self.parent.transitions[transition_id]
+                    break  # found the one outgoing transition
 
-            for transition_id in transition_ids_to_remove:
-                self.parent.remove_transition(transition_id)
-                # del self.parent.transitions[transition_id]
-
+        # delete internal -> could be multiple
+        transition_ids_to_remove = []
         for transition_id, transition in self.transitions.iteritems():
             if transition.to_outcome == outcome_id:
-                self.remove_transition(transition_id)
+                transition_ids_to_remove.append(transition_id)
+
+        for transition_id in transition_ids_to_remove:
+            self.remove_transition(transition_id)
 
         # delete outcome it self
         self._used_outcome_ids.remove(outcome_id)

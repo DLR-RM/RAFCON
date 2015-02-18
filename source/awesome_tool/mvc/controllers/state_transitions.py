@@ -20,11 +20,11 @@ class ParentObserver(Observer):
 
     @Observer.observe('state', after=True)
     def notification(self, model, prop_name, info):
-        # print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
-        #if info.method_name in self.method_list:
-        for func_handle in self.func_handle_list:
-            func_handle()
+        # logger.debug("parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        #              (prop_name, info.instance, info.method_name, info.result))
+        if info.method_name in self.method_list:
+            for func_handle in self.func_handle_list:
+                func_handle()
 
 
 class StateTransitionsListController(Controller):
@@ -308,10 +308,8 @@ class StateTransitionsListController(Controller):
         # print "update store"
 
         def update_transition_list_store(model):
-            model.transitions = []
             model.transition_list_store.clear()
             for transition in model.state.transitions.values():
-                model.transitions.append(TransitionModel(transition, model))
                 # print "insert: ", transition
                 model.transition_list_store.append([transition])
 

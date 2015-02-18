@@ -270,7 +270,9 @@ class StateEditorEggController(Controller):
 
 
 class StateEditorLDController(Controller):
-    """Controller handling the view of properties/attributes of the
+    """Controller handles the organization of the Logic-Data oriented State-Editor.
+    Widgets concerning logic flow (outcomes and transitions) are grouped in the Logic Linkage expander.
+    Widgets concerning data flow (data-ports and data-flows) are grouped in the data linkage expander.
     """
 
     def __init__(self, model, view):
