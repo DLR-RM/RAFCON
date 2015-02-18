@@ -37,8 +37,6 @@ class ContainerStateModel(StateModel):
         #ContainerState.__init__(self, container_state, parent, meta)
         StateModel.__init__(self, container_state, parent, meta)
 
-        self.container_state = container_state
-
         self.states = {}
         self.transitions = []
         self.data_flows = []
@@ -103,6 +101,10 @@ class ContainerStateModel(StateModel):
 
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, name, info):
+        """ This method is always triggered when the state model changes
+
+            It basically triggers its own parent, and the list of its state models
+        """
         if self is not model:
             if hasattr(info, 'before') and info['before']:
                 self.states._notify_method_before(self.state, "state_change", (model,), info)
@@ -113,6 +115,15 @@ class ContainerStateModel(StateModel):
 
     @ModelMT.observe("state", after=True)
     def update_child_models(self, _, name, info):
+        """ This method is always triggered when the state model changes
+
+            It keeps the following models/model-lists consistent:
+            transition models
+            data-flow models
+            state models
+            scoped variable models
+        """
+        #TODO: scoped variables
         model_list = None
 
         def get_model_info(model):
@@ -169,36 +180,6 @@ class ContainerStateModel(StateModel):
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
                 if len(self.data_flows) == num_data_flows:
                     break
-
-    def add_missing_model(self, model_list, data_list, model_name, model_class, model_key):
-        for data in data_list.itervalues():
-            found = False
-            for model_item in model_list:
-                model = model_item if model_key is None else model_list[model_item]
-                if data is getattr(model, model_name):
-                    found = True
-                    break
-            if not found:
-                if model_key is None:
-                    model_list.append(model_class(data, self))
-                else:
-                    model_list[getattr(data, model_key)] = model_class(data, self)
-                return
-
-    def remove_additional_model(self, model_list, data_list, model_name, model_key):
-        for model_item in model_list:
-            model = model_item if model_key is None else model_list[model_item]
-            found = False
-            for data in data_list.itervalues():
-                if data is getattr(model, model_name):
-                    found = True
-                    break
-            if not found:
-                if model_key is None:
-                    model_list.remove(model)
-                else:
-                    del model_list[model_item]
-                return
 
     @staticmethod
     def state_to_state_model(state):
