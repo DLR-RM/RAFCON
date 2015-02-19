@@ -87,6 +87,7 @@ def run_turtle_demo():
                                                          filename="follower_turtle_bot_hierarchy_state.py")
     follower_turtle_bot_hierarchy_state.add_outcome("Success", 0)
     turtle_demo_state.add_state(follower_turtle_bot_hierarchy_state)
+    follower_turtle_bot_hierarchy_state.add_scoped_variable("demo_scoped_variable", "str", "demo_default_value")
 
     # create bot turtle
 
@@ -202,7 +203,8 @@ def run_turtle_demo():
     state_machine = StateMachine(turtle_demo_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model, editor_type="ld")
+    #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
     #graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     #graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)

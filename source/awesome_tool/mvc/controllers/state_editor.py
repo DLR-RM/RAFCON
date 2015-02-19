@@ -73,17 +73,13 @@ class StateEditorController(Controller):
         self.transitions_ctrl.model = model
         self.data_flows_ctrl.model = model
 
-    @Observer.observe("state", after=True)
-    def assign_notification_state(self, model, prop_name, info):
-        #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #      (prop_name, info.instance, info.method_name, info.result)
-        #model.update_input_data_port_list_store_and_models()
-        if info.method_name == "add_input_data_port" or info.method_name == "remove_input_data_port":
-            model.update_input_data_port_list_store_and_models()
-        elif info.method_name == "add_output_data_port" or info.method_name == "remove_output_data_port":
-            model.update_output_data_port_list_store_and_models()
-        elif info.method_name == "add_scoped_variable" or info.method_name == "remove_scoped_variable":
-            model.update_scoped_variables_list_store()
+    @Controller.observe("input_data_ports", after=True)
+    def input_data_ports_changed(self, model, prop_name, info):
+        self.model.reload_input_data_port_list_store()
+
+    @Controller.observe("output_data_ports", after=True)
+    def output_data_ports_changed(self, model, prop_name, info):
+        self.model.reload_output_data_port_list_store()
 
 
 class StateEditorEggController(Controller):
@@ -262,9 +258,9 @@ class StateEditorEggController(Controller):
         #      (prop_name, info.instance, info.method_name, info.result)
         #model.update_input_data_port_list_store_and_models()
         if info.method_name == "add_input_data_port" or info.method_name == "remove_input_data_port":
-            model.update_input_data_port_list_store_and_models()
+            model.reload_input_data_port_list_store_and_models()
         elif info.method_name == "add_output_data_port" or info.method_name == "remove_output_data_port":
-            model.update_output_data_port_list_store_and_models()
+            model.reload_output_data_port_list_store_and_models()
         elif info.method_name == "add_scoped_variable" or info.method_name == "remove_scoped_variable":
             model.update_scoped_variables_list_store()
 
@@ -326,8 +322,8 @@ class StateEditorLDController(Controller):
         #      (prop_name, info.instance, info.method_name, info.result)
         #model.update_input_data_port_list_store_and_models()
         if info.method_name == "add_input_data_port" or info.method_name == "remove_input_data_port":
-            model.update_input_data_port_list_store_and_models()
+            model.reload_input_data_port_list_store_and_models()
         elif info.method_name == "add_output_data_port" or info.method_name == "remove_output_data_port":
-            model.update_output_data_port_list_store_and_models()
+            model.reload_output_data_port_list_store_and_models()
         elif info.method_name == "add_scoped_variable" or info.method_name == "remove_scoped_variable":
             model.update_scoped_variables_list_store()

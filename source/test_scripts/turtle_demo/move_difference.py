@@ -1,6 +1,5 @@
 import time
 import math
-import numpy
 
 max_x_move = 1.0
 min_x_move = 0.3

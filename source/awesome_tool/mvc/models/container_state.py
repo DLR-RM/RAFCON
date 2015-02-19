@@ -34,7 +34,6 @@ class ContainerStateModel(StateModel):
         """Constructor
         """
         assert isinstance(container_state, ContainerState)
-        #ContainerState.__init__(self, container_state, parent, meta)
         StateModel.__init__(self, container_state, parent, meta)
 
         self.states = {}
@@ -78,21 +77,21 @@ class ContainerStateModel(StateModel):
 
     def update_scoped_variables_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
-        for scoped_variable in self.container_state.scoped_variables.itervalues():
-            tmp.append([scoped_variable])
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, mvc.models.state.dataport_compare_method)
-        tms.sort_column_changed()
-        tmp = tms
-        self.scoped_variables_list_store.clear()
-        for elem in tmp:
-            self.scoped_variables_list_store.append(elem)
+        # for scoped_variable in self.container_state.scoped_variables.itervalues():
+        #     tmp.append([scoped_variable])
+        # tms = gtk.TreeModelSort(tmp)
+        # tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        # tms.set_sort_func(0, mvc.models.state.dataport_compare_method)
+        # tms.sort_column_changed()
+        # tmp = tms
+        # self.scoped_variables_list_store.clear()
+        # for elem in tmp:
+        #     self.scoped_variables_list_store.append(elem)
 
     def update_scoped_variables_models(self):
         self.scoped_variables = []
-        for scoped_variable in self.container_state.scoped_variables.itervalues():
-            self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
+        # for scoped_variable in self.container_state.scoped_variables.itervalues():
+        #     self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
 
     def update_scoped_variables_list_store_and_models(self):
         self.update_scoped_variables_models()
@@ -125,6 +124,7 @@ class ContainerStateModel(StateModel):
         """
         #TODO: scoped variables
         model_list = None
+        StateModel.update_models(self, _, name, info)
 
         def get_model_info(model):
             model_list = None
@@ -137,7 +137,7 @@ class ContainerStateModel(StateModel):
                 data_list = self.state.transitions
                 model_name = "transition"
                 model_class = TransitionModel
-            elif model ==  "data_flow":
+            elif model == "data_flow":
                 model_list = self.data_flows
                 data_list = self.state.data_flows
                 model_name = "data_flow"
@@ -163,23 +163,6 @@ class ContainerStateModel(StateModel):
                 self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
-
-        if info.method_name in ("remove_state", "remove_outcome"):
-            (model_list, data_list, model_name, _, model_key) = get_model_info("transition")
-            while True:
-                num_transitions = len(self.transitions)
-                self.remove_additional_model(model_list, data_list, model_name, model_key)
-                if len(self.transitions) == num_transitions:
-                    break
-
-        if info.method_name in ("remove_state", "remove_scoped_variable", "remove_input_data_port",
-                                "remove_output_data_port"):
-            (model_list, data_list, model_name, _, model_key) = get_model_info("data_flow")
-            while True:
-                num_data_flows = len(self.data_flows)
-                self.remove_additional_model(model_list, data_list, model_name, model_key)
-                if len(self.data_flows) == num_data_flows:
-                    break
 
     @staticmethod
     def state_to_state_model(state):
