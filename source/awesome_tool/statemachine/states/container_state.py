@@ -96,25 +96,9 @@ class ContainerState(State):
         self.script.load_and_build_module()
         self.script.exit(self, scoped_variables_dict)
 
-    def get_transition_for_outcome(self, state, outcome):
-        """Determines the next transition of a state.
-
-        :param state: The state for which the transition is determined
-        :param outcome: The outcome of the state, that is given in the first parameter
-        """
-        if not isinstance(state, State):
-            raise TypeError("ID must be of type State")
-        if not isinstance(outcome, Outcome):
-            raise TypeError("outcome must be of type Outcome")
-        logger.debug("Return transition for state %s and outcome %s" % (state.name, outcome))
-        result_transition = None
-        for key, transition in self.transitions.iteritems():
-            if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
-                result_transition = transition
-        if result_transition is None:
-            logger.debug("No transition found!")
-            exit()
-        return result_transition
+    # ---------------------------------------------------------------------------------------------
+    # -------------------------------------- state functions --------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     @Observable.observed
     # Primary key is state_id, as one should be able to change the name of the state without updating all connections
@@ -182,40 +166,26 @@ class ContainerState(State):
         del self.states[state_id]
 
     @Observable.observed
-    def remove_outcome(self, outcome_id):
-        """Remove an outcome from the state
+    def set_start_state(self, state_id):
+        """Adds a data_flow to the container state
 
-        :param outcome_id: the id of the outcome to remove
+        :param state_id: The state_id (that was already added to the container) that will be the start state
 
         """
-        if not outcome_id in self._used_outcome_ids:
-            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
+        self._start_state = state_id
 
-        if outcome_id == -1 or outcome_id == -2:
-            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
-                                 "return aborted or preempted")
+    def get_start_state(self):
+        """Get the start state of the container state
 
-        # delete all transitions connected to this outcome
-        if not self.parent is None:
-            # delete external -> should be only one
-            for transition_id, transition in self.parent.transitions.iteritems():
-                if transition.from_outcome == outcome_id:
-                    self.parent.remove_transition(transition_id)
-                    # del self.parent.transitions[transition_id]
-                    break  # found the one outgoing transition
+        """
+        return self.states[self.start_state]
 
-        # delete internal -> could be multiple
-        transition_ids_to_remove = []
-        for transition_id, transition in self.transitions.iteritems():
-            if transition.to_outcome == outcome_id:
-                transition_ids_to_remove.append(transition_id)
+        # If there is a value in the dependency tree for this state start with the this one
+        #TODO: do start with state provided by the dependency tree
 
-        for transition_id in transition_ids_to_remove:
-            self.remove_transition(transition_id)
-
-        # delete outcome it self
-        self._used_outcome_ids.remove(outcome_id)
-        self._outcomes.pop(outcome_id, None)
+    # ---------------------------------------------------------------------------------------------
+    # ---------------------------------- transition functions -------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     @Observable.observed
     #Primary key is transition_id
@@ -290,6 +260,26 @@ class ContainerState(State):
 
         return transition_id
 
+    def get_transition_for_outcome(self, state, outcome):
+        """Determines the next transition of a state.
+
+        :param state: The state for which the transition is determined
+        :param outcome: The outcome of the state, that is given in the first parameter
+        """
+        if not isinstance(state, State):
+            raise TypeError("ID must be of type State")
+        if not isinstance(outcome, Outcome):
+            raise TypeError("outcome must be of type Outcome")
+        logger.debug("Return transition for state %s and outcome %s" % (state.name, outcome))
+        result_transition = None
+        for key, transition in self.transitions.iteritems():
+            if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
+                result_transition = transition
+        if result_transition is None:
+            logger.debug("No transition found!")
+            exit()
+        return result_transition
+
     @Observable.observed
     def remove_transition(self, transition_id):
         """Removes a transition from the container state
@@ -303,25 +293,46 @@ class ContainerState(State):
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
         self._transitions.pop(transition_id, None)
 
-    def get_scoped_variable_from_name(self, name):
-        for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
-            if scoped_variable.name == name:
-                return scoped_variable_id
-        raise AttributeError("Name %s is not in scoped_variables", name)
 
-    def get_data_port_by_id(self, data_port_id):
-        """ Returns the io-data_port or scoped_variable with a certain data_id
-        :param port_id:
-        :return:
+    @Observable.observed
+    def remove_outcome(self, outcome_id):
+        """Remove an outcome from the state
+
+        :param outcome_id: the id of the outcome to remove
+
         """
-        if data_port_id in self.input_data_ports:
-            return self.input_data_ports[data_port_id]
-        elif data_port_id in self.output_data_ports:
-            return self.output_data_ports[data_port_id]
-        elif data_port_id in self.scoped_variables:
-            return self.scoped_variables[data_port_id]
-        else:
-            raise AttributeError("Data_Port_id %s is not in input_data_ports, output_data_ports or scoped_variables", data_port_id)
+        if not outcome_id in self._used_outcome_ids:
+            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
+
+        if outcome_id == -1 or outcome_id == -2:
+            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
+                                 "return aborted or preempted")
+
+        # delete all transitions connected to this outcome
+        if not self.parent is None:
+            # delete external -> should be only one
+            for transition_id, transition in self.parent.transitions.iteritems():
+                if transition.from_outcome == outcome_id:
+                    self.parent.remove_transition(transition_id)
+                    # del self.parent.transitions[transition_id]
+                    break  # found the one outgoing transition
+
+        # delete internal -> could be multiple
+        transition_ids_to_remove = []
+        for transition_id, transition in self.transitions.iteritems():
+            if transition.to_outcome == outcome_id:
+                transition_ids_to_remove.append(transition_id)
+
+        for transition_id in transition_ids_to_remove:
+            self.remove_transition(transition_id)
+
+        # delete outcome it self
+        self._used_outcome_ids.remove(outcome_id)
+        self._outcomes.pop(outcome_id, None)
+
+    # ---------------------------------------------------------------------------------------------
+    # ----------------------------------- data-flow functions -------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     @Observable.observed
     #Primary key is data_flow_id.
@@ -396,6 +407,47 @@ class ContainerState(State):
         """
         self.data_flows.pop(data_flow_id, None)
 
+
+    def remove_data_flows_with_data_port_id(self, data_port_id):
+        """Remove an data ports whose from_key or to_key equals the passed data_port_id
+
+        :param data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
+                            output data port id
+
+        """
+        # delete all data flows in parent related to data_port_id and self.state_id
+        if not self.parent is None:
+            data_flow_ids_to_remove = []
+            for data_flow_id, data_flow in self.parent.data_flows.iteritems():
+                if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
+                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                    data_flow_ids_to_remove.append(data_flow_id)
+
+            for data_flow_id in data_flow_ids_to_remove:
+                self.parent.remove_data_flow(data_flow_id)
+                # del self.parent.data_flows[data_flow_id]
+
+        # delete all data flows in self related to data_port_id and self.state_id
+        data_flow_ids_to_remove = []
+        for data_flow_id, data_flow in self.data_flows.iteritems():
+            if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
+                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                data_flow_ids_to_remove.append(data_flow_id)
+
+        for data_flow_id in data_flow_ids_to_remove:
+            self.remove_data_flow(data_flow_id)
+            # del self.data_flows[data_flow_id]
+
+    # ---------------------------------------------------------------------------------------------
+    # ---------------------------- scoped variables functions --------.----------------------------
+    # ---------------------------------------------------------------------------------------------
+
+    def get_scoped_variable_from_name(self, name):
+        for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
+            if scoped_variable.name == name:
+                return scoped_variable_id
+        raise AttributeError("Name %s is not in scoped_variables", name)
+
     #Primary key is the name of scoped variable.str
     @Observable.observed
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
@@ -430,54 +482,51 @@ class ContainerState(State):
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
 
-    def remove_data_flows_with_data_port_id(self, data_port_id):
-        """Remove an data ports whose from_key or to_key equals the passed data_port_id
-
-        :param data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
-                            output data port id
+    @Observable.observed
+    def modify_scoped_variable_name(self, name, data_port_id):
+        """Changes the name of the scoped variable specified by data_port_id
 
         """
-        # delete all data flows in parent related to data_port_id and self.state_id
-        if not self.parent is None:
-            data_flow_ids_to_remove = []
-            for data_flow_id, data_flow in self.parent.data_flows.iteritems():
-                if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
-                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
-                    data_flow_ids_to_remove.append(data_flow_id)
-
-            for data_flow_id in data_flow_ids_to_remove:
-                self.parent.remove_data_flow(data_flow_id)
-                # del self.parent.data_flows[data_flow_id]
-
-        # delete all data flows in self related to data_port_id and self.state_id
-        data_flow_ids_to_remove = []
-        for data_flow_id, data_flow in self.data_flows.iteritems():
-            if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
-                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
-                data_flow_ids_to_remove.append(data_flow_id)
-
-        for data_flow_id in data_flow_ids_to_remove:
-            self.remove_data_flow(data_flow_id)
-            # del self.data_flows[data_flow_id]
+        self.scoped_variables[data_port_id].name = name
 
     @Observable.observed
-    def set_start_state(self, state_id):
-        """Adds a data_flow to the container state
-
-        :param state_id: The state_id (that was already added to the container) that will be the start state
+    def modify_scoped_variable_data_type(self, data_type, data_port_id):
+        """Changes the name of the scoped variable specified by data_port_id
 
         """
-        self._start_state = state_id
+        self.scoped_variables[data_port_id].default_value = None
+        self.scoped_variables[data_port_id].data_type = data_type
 
-    def get_start_state(self):
-        """Get the start state of the container state
+    @Observable.observed
+    def modify_scoped_variable_default_value(self, default_value, data_port_id):
+        """Changes the default value of the scoped variable specified by data_port_id
 
         """
-        return self.states[self.start_state]
+        val = self.convert_string_to_type(default_value, self.scoped_variables[data_port_id].data_type)
+        if not val is None:
+            self.scoped_variables[data_port_id].default_value = val
 
-        # If there is a value in the dependency tree for this state start with the this one
-        #TODO: do start with state provided by the dependency tree
+    # ---------------------------------------------------------------------------------------------
+    # ---------------------------- scoped variables functions end ---------------------------------
+    # ---------------------------------------------------------------------------------------------
 
+    def get_data_port_by_id(self, data_port_id):
+        """ Returns the io-data_port or scoped_variable with a certain data_id
+        :param port_id:
+        :return:
+        """
+        if data_port_id in self.input_data_ports:
+            return self.input_data_ports[data_port_id]
+        elif data_port_id in self.output_data_ports:
+            return self.output_data_ports[data_port_id]
+        elif data_port_id in self.scoped_variables:
+            return self.scoped_variables[data_port_id]
+        else:
+            raise AttributeError("Data_Port_id %s is not in input_data_ports, output_data_ports or scoped_variables", data_port_id)
+
+    # ---------------------------------------------------------------------------------------------
+    # ------------------------------- input / output data handling --------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     def get_inputs_for_state(self, state):
         """Get all input data of an state
@@ -565,6 +614,10 @@ class ContainerState(State):
                         current_scoped_variable = self.scoped_variables[data_flow.to_key]
                         self.scoped_data[str(data_flow.to_key) + self.state_id] =\
                             ScopedData(current_scoped_variable.name, value, type(value).__name__, state.state_id, DataPortType.SCOPED)
+
+    # ---------------------------------------------------------------------------------------------
+    # ------------------------ functions to modify the scoped data end ----------------------------
+    # ---------------------------------------------------------------------------------------------
 
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition

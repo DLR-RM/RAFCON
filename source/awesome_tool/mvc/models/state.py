@@ -173,9 +173,9 @@ class StateModel(ModelMT):
         """Reloads the output data port list store from the data port models
         """
         tmp = ListStore(str, str, str, int)
-        for idp_model in self.output_data_ports:
-            tmp.append([idp_model.data_port.name, idp_model.data_port.data_type, idp_model.data_port.default_value,
-                        idp_model.data_port.data_port_id])
+        for odp_model in self.output_data_ports:
+            tmp.append([odp_model.data_port.name, odp_model.data_port.data_type, odp_model.data_port.default_value,
+                        odp_model.data_port.data_port_id])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
         tms.set_sort_func(0, dataport_compare_method)

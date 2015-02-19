@@ -79,7 +79,6 @@ class DataPortListController(Controller):
 
     def on_name_changed(self, widget, path, text):
         #logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-        print path
         data_port_id = self.dataport_list_store[int(path)][3]
 
         if self.type == "input":
