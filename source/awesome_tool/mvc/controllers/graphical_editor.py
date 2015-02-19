@@ -303,8 +303,8 @@ class GraphicalEditorController(Controller):
                     outcomes = self.selection.parent.meta['gui']['editor']['outcome_pos']
                     click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                     for key in outcomes:
-                        dist = sqrt((outcomes[key][0] - click[0]) ** 2 + (outcomes[key][1] - click[1]) ** 2)
-                        if dist < outcomes_close_threshold:
+                        distance = sqrt((outcomes[key][0] - click[0]) ** 2 + (outcomes[key][1] - click[1]) ** 2)
+                        if distance < outcomes_close_threshold:
                             # This is a possible connection:
                             # The outcome of a state is connected to an outcome of its parent state
                             target_outcome = key
@@ -323,7 +323,7 @@ class GraphicalEditorController(Controller):
                     except AttributeError as e:
                         logger.debug("Transition couldn't be added: {0}".format(e))
                     except Exception as e:
-                        logger.error("Unexpected exception: {0}".format(e))
+                        logger.error("Unexpected exception while creating transition: {0}".format(e))
 
             self.selected_outcome = None
             self._redraw(True)
@@ -363,9 +363,9 @@ class GraphicalEditorController(Controller):
                         responsible_parent.state.add_data_flow(from_state_id, from_port,
                                                                target_state_id, target_port)
                     except AttributeError as e:
-                        logger.debug("Transition couldn't be added: {0}".format(e))
+                        logger.debug("Data flow couldn't be added: {0}".format(e))
                     except Exception as e:
-                        logger.error("Unexpected exception: {0}".format(e))
+                        logger.error("Unexpected exception while creating data flow: {0}".format(e))
 
             self.selected_port = None
             self._redraw(True)
