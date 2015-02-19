@@ -82,7 +82,7 @@ class ContainerState(State):
         Here initializations of scoped variables and modules that are supposed to be used by the children take place.
         This method calls the custom entry function provided by a python script.
         """
-        logger.debug("Calling enter() script of container state with id %s", self._state_id)
+        logger.debug("Calling enter() script of container state with name %s", self.name)
         self.script.load_and_build_module()
         self.script.enter(self, scoped_variables_dict)
 
@@ -92,7 +92,7 @@ class ContainerState(State):
         Clean up code for the state and its variables is executed here. This method calls the custom exit function
         provided by a python script.
         """
-        logger.debug("Calling exit() script of container state with id %s", self._state_id)
+        logger.debug("Calling exit() script of container state with name %s", self.name)
         self.script.load_and_build_module()
         self.script.exit(self, scoped_variables_dict)
 
@@ -276,8 +276,7 @@ class ContainerState(State):
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
         if result_transition is None:
-            logger.debug("No transition found!")
-            exit()
+            logger.debug("No transition found for state with name %s!" % self.name)
         return result_transition
 
     @Observable.observed

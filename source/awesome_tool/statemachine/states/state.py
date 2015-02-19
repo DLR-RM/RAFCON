@@ -233,7 +233,7 @@ class State(Observable, yaml.YAMLObject, object):
     def recursively_preempt_states(self, state):
         state.preempted = True
         # only go deeper if the State has a states dictionary = the state is not a Execution State
-        if not state.state_type is StateType.EXECUTION:
+        if state.state_type is not StateType.EXECUTION:
             for key, state in state.states.iteritems():
                 state.recursively_preempt_states(state)
 

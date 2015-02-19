@@ -99,8 +99,9 @@ def run_turtle_demo():
 
     # check for food and follow
 
-    check_food_and_follow_state = PreemptiveConcurrencyState("Food and Follow", path="../../test_scripts/turtle_demo",
-                                                         filename="check_food_and_follow.py")
+    check_food_and_follow_state = PreemptiveConcurrencyState("Check Food and Follow",
+                                                             path="../../test_scripts/turtle_demo",
+                                                             filename="check_food_and_follow.py")
     follower_turtle_bot_hierarchy_state.add_state(check_food_and_follow_state)
     follower_turtle_bot_hierarchy_state.add_transition(create_bot_turtle_state.state_id, 0,
                                                        check_food_and_follow_state.state_id, None)

@@ -61,6 +61,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             while not state is self:
                 if self.preempted:
+                    if self.concurrency_queue:
+                        self.concurrency_queue.put(self.state_id)
                     self.final_outcome = Outcome(-2, "preempted")
                     self.active = False
                     return
@@ -88,8 +90,25 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 transition = self.get_transition_for_outcome(state, state.final_outcome)
 
                 while not transition:
+                    # aborted case
+                    if state.final_outcome.outcome_id == -1:
+                        if self.concurrency_queue:
+                            self.concurrency_queue.put(self.state_id)
+                        self.final_outcome = Outcome(-1, "aborted")
+                        self.active = False
+                        return
+                    # preempted case
+                    elif state.final_outcome.outcome_id == -2:
+                        if self.concurrency_queue:
+                            self.concurrency_queue.put(self.state_id)
+                        self.final_outcome = Outcome(-2, "preempted")
+                        self.active = False
+                        return
+                    # wait until the user connects the outcome of the state with a transition
                     self._transitions_cv.wait(3.0)
                     if self.preempted:
+                        if self.concurrency_queue:
+                            self.concurrency_queue.put(self.state_id)
                         self.final_outcome = Outcome(-2, "preempted")
                         self.active = False
                         return
