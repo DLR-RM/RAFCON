@@ -235,7 +235,7 @@ class GraphicalEditorController(Controller):
                     # Start resize process
                     pass
 
-            self._redraw()
+            self._redraw(True)
 
         if event.button == 3:  # right mouse button
 
@@ -259,7 +259,7 @@ class GraphicalEditorController(Controller):
                             connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
                             waypoint_removed = True
                             logger.debug('Connection waypoint removed')
-                            self._redraw()
+                            self._redraw(True)
                             break
 
                 if not waypoint_removed:
@@ -279,7 +279,7 @@ class GraphicalEditorController(Controller):
                             connection_model.meta['gui']['editor']['waypoints'].insert(i, (click[0], click[1]))
 
                     logger.debug('Connection waypoint added at {0:.1f} - {1:.1f}'.format(click[0], click[1]))
-                    self._redraw()
+                    self._redraw(True)
 
 
     def _on_mouse_release(self, widget, event):
