@@ -122,9 +122,11 @@ class ContainerStateModel(StateModel):
             state models
             scoped variable models
         """
-        #TODO: scoped variables
+
         model_list = None
+
         StateModel.update_models(self, _, name, info)
+        #TODO: scoped variables
 
         def get_model_info(model):
             model_list = None

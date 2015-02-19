@@ -21,13 +21,13 @@ class ScopedVariableListController(Controller):
             col = column.get_name()
             scoped_variable = model.get_value(iter, 0)
             if col == 'name_col':
-                name = container_model.container_state.scoped_variables[scoped_variable.data_port_id].name
+                name = container_model.state.scoped_variables[scoped_variable.data_port_id].name
                 cell_renderer.set_property('text', name)
             elif col == 'data_type_col':
-                data_type = container_model.container_state.scoped_variables[scoped_variable.data_port_id].data_type
+                data_type = container_model.state.scoped_variables[scoped_variable.data_port_id].data_type
                 cell_renderer.set_property('text', data_type)
             elif col == 'default_value_col':
-                default_value = container_model.container_state.scoped_variables[scoped_variable.data_port_id].default_value
+                default_value = container_model.state.scoped_variables[scoped_variable.data_port_id].default_value
                 cell_renderer.set_property('text', default_value)
             else:
                 logger.error("Unknown column '{col:s}' in ScopedVariableListView".format(col=col))
@@ -59,7 +59,7 @@ class ScopedVariableListController(Controller):
         new_sv_name = "a_new_scoped_variable%s" % str(self.new_sv_counter)
         if hasattr(self.model, 'states'):
             self.new_sv_counter += 1
-            self.model.container_state.add_scoped_variable(new_sv_name, "str", "val")
+            self.model.state.add_scoped_variable(new_sv_name, "str", "val")
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
         tree_view = self.view["scoped_variables_tree_view"]
@@ -67,7 +67,7 @@ class ScopedVariableListController(Controller):
             path = tree_view.get_cursor()[0]
             if path is not None:
                 key = self.model.scoped_variables_list_store[int(path[0])][0].data_port_id
-                self.model.container_state.remove_scoped_variable(key)
+                self.model.state.remove_scoped_variable(key)
 
     def on_name_changed(self, widget, path, text):
         #print path
@@ -75,11 +75,11 @@ class ScopedVariableListController(Controller):
         #logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         #print self.view.get_top_widget().get_selection().get_selected_rows()
         key = self.model.scoped_variables_list_store[int(path)][0].data_port_id
-        old_scoped_variable = copy.copy(self.model.container_state.scoped_variables[key])
-        del self.model.container_state.scoped_variables[key]
+        old_scoped_variable = copy.copy(self.model.state.scoped_variables[key])
+        del self.model.state.scoped_variables[key]
         #print old_scoped_variable
         #the text is the new key
-        self.model.container_state.add_scoped_variable(text, old_scoped_variable.data_type,
+        self.model.state.add_scoped_variable(text, old_scoped_variable.data_type,
                                                        old_scoped_variable.default_value)
         self.view.get_top_widget().set_model(self.model.scoped_variables_list_store)
         self.model.update_scoped_variables_list_store()
@@ -88,8 +88,8 @@ class ScopedVariableListController(Controller):
         #print path
         old_data_port = self.model.scoped_variables_list_store[int(path)][0]
         #print old_data_port
-        self.model.container_state.scoped_variables[old_data_port.data_port_id].data_type = text
-        self.model.container_state.scoped_variables[old_data_port.data_port_id].default_value = None
+        self.model.state.scoped_variables[old_data_port.data_port_id].data_type = text
+        self.model.state.scoped_variables[old_data_port.data_port_id].default_value = None
 
     def on_default_value_changed(self, widget, path, text):
         #print path
@@ -107,4 +107,4 @@ class ScopedVariableListController(Controller):
         if scoped_variable.data_type == "float":
             converted_value = float(text)
 
-        self.model.container_state.scoped_variables[scoped_variable.data_port_id].default_value = converted_value
+        self.model.state.scoped_variables[scoped_variable.data_port_id].default_value = converted_value

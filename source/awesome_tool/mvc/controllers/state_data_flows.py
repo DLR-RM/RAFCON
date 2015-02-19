@@ -139,6 +139,10 @@ class StateDataFlowsListController(Controller):
         else:
                 logger.warning("NO OPTION TO ADD TRANSITION")
 
+        # set focus on this new element
+        # - at the moment every new element is the last -> easy work around :(
+        self.view.tree_view.set_cursor(len(self.tree_store)-1)
+
     def on_remove(self, button, info=None):
         # print "remove dataflow"
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
@@ -156,6 +160,14 @@ class StateDataFlowsListController(Controller):
             # self.view.tree_view.get_selection().select_all()
         else:
             logger.warning("NO selection to remove data-flow")
+
+        # selection to next element
+        row_number = path[0][0]
+        if len(self.tree_store) > row_number:
+            self.view.tree_view.set_cursor(path[0][0])
+        elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
+            self.view.tree_view.set_cursor(path[0][0]-1)
+
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -384,7 +396,8 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
             from_key_label = from_key_port.data_type + '.' + from_key_port.name + '.' + str(data_flow.from_key)
             to_key_port = tstate.get_data_port_by_id(data_flow.to_key)
-            to_key_label = to_key_port.data_type + '.' + to_key_port.name + '.' + str(data_flow.to_key)
+
+            to_key_label = (to_key_port.data_type or 'None') + '.' + to_key_port.name + '.' + str(data_flow.to_key)
             data_flow_dict['internal'][data_flow.data_flow_id] = {'from_state': from_state,
                                                                   'from_key': from_key_label,
                                                                   'to_state': to_state,

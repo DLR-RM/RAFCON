@@ -179,6 +179,7 @@ class StatesEditorController(Controller):
         # TODO in combination with state type change (remove - add -state) there exist sometimes inconsistencies
         # logger.debug("In States-Editor state %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #              ("X", prop_name, info.instance, info.method_name, info))
+        # print self.tabs.keys()
         if hasattr(info, "kwargs") and info.method_name == 'state_change':
             if info.kwargs.method_name == 'remove_state':
                 logger.debug("remove tab for state %s and search for others to remove" % info.kwargs.args[1])
@@ -190,9 +191,12 @@ class StatesEditorController(Controller):
                 #self.remove_search()
             if info.kwargs.method_name == 'name':
                 self.check_name()
-        if info.method_name in ['__delitem__', 'remove_state']:
+        if info.method_name in ['__delitem__']:  # , 'remove_state']: taken by state_change
             # self.remove_search()  # this could remove pages of states that are from the other open state machines
-            state_model = self.tabs[model.state.get_path() + '/' + info.args[0]]['state_model']
+            if info.method_name == '__delitem__':
+                state_model = self.tabs[model.state.get_path() + '/' + info.args[0]]['state_model']
+            else:  # state
+                state_model = self.tabs[model.state.get_path() + '/' + info.args[1]]['state_model']
             self.on_close_clicked(event=None, state_model=state_model, result=None)
         if info.method_name == 'name':
                 self.check_name()

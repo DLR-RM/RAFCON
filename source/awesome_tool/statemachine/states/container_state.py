@@ -152,24 +152,33 @@ class ContainerState(State):
 
         """
         if not state_id in self.states:
-            raise AttributeError("State_id %s doe not exit" % state_id)
+            raise AttributeError("State_id %s does not exist" % state_id)
 
-        #first delete all transitions and data_flows connected to this state
+        #first delete all transitions and data_flows in this state
         keys_to_delete = []
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state_id or transition.to_state == state_id:
                 keys_to_delete.append(key)
         for key in keys_to_delete:
-            del self.transitions[key]
+            self.remove_transition(key)
 
         keys_to_delete = []
         for key, data_flow in self.data_flows.iteritems():
             if data_flow.from_state == state_id or data_flow.to_state == state_id:
                 keys_to_delete.append(key)
         for key in keys_to_delete:
-            del self.data_flows[key]
+            self.remove_data_flow(key)
 
-        # delete the state it self
+        # second delete all states in this state
+        if isinstance(self.states[state_id], ContainerState):
+            for child_state_id in self.states[state_id].states.keys():
+                self.states[state_id].remove_state(child_state_id)
+            for transition_id in self.states[state_id].transitions.keys():
+                self.states[state_id].remove_transition(transition_id)
+            for data_flow_id in self.states[state_id].data_flows.keys():
+                self.states[state_id].remove_data_flow(data_flow_id)
+
+        # final delete the state it self
         del self.states[state_id]
 
     @Observable.observed
