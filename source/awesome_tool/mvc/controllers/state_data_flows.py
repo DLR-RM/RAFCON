@@ -396,7 +396,8 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
             from_key_label = from_key_port.data_type + '.' + from_key_port.name + '.' + str(data_flow.from_key)
             to_key_port = tstate.get_data_port_by_id(data_flow.to_key)
-            to_key_label = to_key_port.data_type + '.' + to_key_port.name + '.' + str(data_flow.to_key)
+
+            to_key_label = (to_key_port.data_type or 'None') + '.' + to_key_port.name + '.' + str(data_flow.to_key)
             data_flow_dict['internal'][data_flow.data_flow_id] = {'from_state': from_state,
                                                                   'from_key': from_key_label,
                                                                   'to_state': to_state,
