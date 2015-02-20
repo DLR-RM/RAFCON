@@ -233,7 +233,7 @@ class State(Observable, yaml.YAMLObject, object):
     def recursively_preempt_states(self, state):
         state.preempted = True
         # only go deeper if the State has a states dictionary = the state is not a Execution State
-        if not state.state_type is StateType.EXECUTION:
+        if state.state_type is not StateType.EXECUTION:
             for key, state in state.states.iteritems():
                 state.recursively_preempt_states(state)
 
@@ -417,6 +417,66 @@ class State(Observable, yaml.YAMLObject, object):
         if name in dict_of_names.values() and not outcome.name == name:
             name += str(define_unique_name(name, dict_of_names))
         return name
+
+    @Observable.observed
+    def modify_input_data_port_name(self, name, data_port_id):
+        """Changes the name of the input data port specified by data_port_id
+
+        """
+        self.input_data_ports[data_port_id].name = name
+
+    @Observable.observed
+    def modify_output_data_port_name(self, name, data_port_id):
+        """Changes the name of the output data port specified by data_port_id
+
+        """
+        self.output_data_ports[data_port_id].name = name
+
+    @Observable.observed
+    def modify_input_data_port_data_type(self, data_type, data_port_id):
+        """Changes the name of the input data port specified by data_port_id
+
+        """
+        self.input_data_ports[data_port_id].default_value = None
+        self.input_data_ports[data_port_id].data_type = data_type
+
+    @Observable.observed
+    def modify_output_data_port_data_type(self, data_type, data_port_id):
+        """Changes the name of the output data port specified by data_port_id
+
+        """
+        self.output_data_ports[data_port_id].default_value = None
+        self.output_data_ports[data_port_id].data_type = data_type
+
+    def convert_string_to_type(self, string_value, data_type):
+        converted_value = None
+        if data_type == "str":
+            converted_value = str(string_value)
+        elif data_type == "int":
+            converted_value = int(string_value)
+        elif data_type == "float":
+            converted_value = float(string_value)
+        else:
+            logger.debug("Wrong default value specified!")
+        return converted_value
+
+    @Observable.observed
+    def modify_input_data_port_default_value(self, default_value, data_port_id):
+        """Changes the default value of the input data port specified by data_port_id
+
+        """
+        val = self.convert_string_to_type(default_value, self.input_data_ports[data_port_id].data_type)
+        if not val is None:
+            self.input_data_ports[data_port_id].default_value = val
+
+    @Observable.observed
+    def modify_output_data_port_default_value(self, default_value, data_port_id):
+        """Changes the default value of the output data port specified by data_port_id
+
+        """
+        val = self.convert_string_to_type(default_value, self.output_data_ports[data_port_id].data_type)
+        if not val is None:
+            self.output_data_ports[data_port_id].default_value = val
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`

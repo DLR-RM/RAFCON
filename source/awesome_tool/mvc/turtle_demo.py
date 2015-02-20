@@ -87,6 +87,7 @@ def run_turtle_demo():
                                                          filename="follower_turtle_bot_hierarchy_state.py")
     follower_turtle_bot_hierarchy_state.add_outcome("Success", 0)
     turtle_demo_state.add_state(follower_turtle_bot_hierarchy_state)
+    follower_turtle_bot_hierarchy_state.add_scoped_variable("demo_scoped_variable", "str", "demo_default_value")
 
     # create bot turtle
 
@@ -98,8 +99,9 @@ def run_turtle_demo():
 
     # check for food and follow
 
-    check_food_and_follow_state = PreemptiveConcurrencyState("Food and Follow", path="../../test_scripts/turtle_demo",
-                                                         filename="check_food_and_follow.py")
+    check_food_and_follow_state = PreemptiveConcurrencyState("Check Food and Follow",
+                                                             path="../../test_scripts/turtle_demo",
+                                                             filename="check_food_and_follow.py")
     follower_turtle_bot_hierarchy_state.add_state(check_food_and_follow_state)
     follower_turtle_bot_hierarchy_state.add_transition(create_bot_turtle_state.state_id, 0,
                                                        check_food_and_follow_state.state_id, None)
@@ -202,7 +204,8 @@ def run_turtle_demo():
     state_machine = StateMachine(turtle_demo_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model, editor_type="ld")
+    #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
     #graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     #graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)

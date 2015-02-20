@@ -27,15 +27,15 @@ class StateDataPortEditorController(Controller):
         view['delete_output_port_button'].connect('clicked', self.odp_list_ctrl.on_delete_output_port_button_clicked)
         view['delete_scoped_variable_button'].connect('clicked',
                                                       self.sv_list_ctrl.on_delete_scoped_variable_button_clicked)
+        print "Init of state-data-port-editor ", model
 
     def register_view(self, view):
         view['state_dataport_editor'].connect('destroy', gtk.main_quit)
 
-    @Observer.observe("state", after=True)
-    def assign_notification_state(self, model, prop_name, info):
-        if info.method_name == "add_input_data_port" or info.method_name == "remove_input_data_port":
-            model.update_input_data_port_list_store_and_models()
-        elif info.method_name == "add_output_data_port" or info.method_name == "remove_output_data_port":
-            model.update_output_data_port_list_store_and_models()
-        elif info.method_name == "add_scoped_variable" or info.method_name == "remove_scoped_variable":
-            model.update_scoped_variables_list_store()
+    @Controller.observe("input_data_ports", after=True)
+    def input_data_ports_changed(self, model, prop_name, info):
+        self.model.reload_input_data_port_list_store()
+
+    @Controller.observe("output_data_ports", after=True)
+    def output_data_ports_changed(self, model, prop_name, info):
+        self.model.reload_output_data_port_list_store()

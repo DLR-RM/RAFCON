@@ -129,8 +129,8 @@ def exit(self, scoped_variables, external_modules, gvm):
 
         try:
             exec code in tmp_module.__dict__
-        except:
-            raise IOError("Something went wrong during compilation of the module")
+        except RuntimeError, e:
+            raise IOError("Something went wrong during compilation of the module - error message: %s" % str(e))
 
         # return the module
         self._compiled_module = tmp_module

@@ -69,18 +69,18 @@ class Storage(Observable):
         #f.write(stream)
         f.close()
 
-    def save_file_as_yaml_abs(self, state, abs_path):
+    def save_object_to_yaml_abs(self, state, abs_path):
         f = open(abs_path, 'w')
         with Capturing() as output:
             yaml.dump(state, f, indent=4)
         f.close()
 
-    def load_file_from_yaml_rel(self, rel_path):
+    def load_object_from_yaml_rel(self, rel_path):
         stream = file(os.path.join(self.base_path, rel_path), 'r')
         state = yaml.load(stream)
         return state
 
-    def load_file_from_yaml_abs(self, abs_path):
+    def load_object_from_yaml_abs(self, abs_path):
         stream = file(abs_path, 'r')
         state = yaml.load(stream)
         return state
@@ -113,7 +113,7 @@ class Storage(Observable):
         state_path_full = os.path.join(self.base_path, state_path)
         self._create_path(state_path_full)
         self.save_script_file_for_state(state, state_path)
-        self.save_file_as_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
+        self.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
         state.script.path = state_path_full
         state.script.filename = self.SCRIPT_FILE
 
@@ -133,7 +133,7 @@ class Storage(Observable):
         creation_time = tmp_dict['creation_time']
         tmp_base_path = os.path.join(self.base_path, root_state_id)
         logger.debug("Loading root state from path %s" % tmp_base_path)
-        root_state = self.load_file_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
+        root_state = self.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
         root_state.script.path = tmp_base_path
         # load_and_build the module to load the correct content into root_state.script.script
@@ -148,7 +148,7 @@ class Storage(Observable):
         return [root_state, version, creation_time]
 
     def load_state_recursively(self, root_state, state_path=None):
-        state = self.load_file_from_yaml_abs(os.path.join(state_path, self.META_FILE))
+        state = self.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
         state.script.path = state_path
         # connect the missing function_handlers for setting the outcome names
         state.connect_all_outcome_function_handles()
@@ -199,32 +199,3 @@ class Storage(Observable):
             raise TypeError("base_path must be of type str")
 
         self._base_path = base_path
-
-    #######################################################
-    # Functions that are not needed right now
-    #######################################################
-    def is_statemachine_path(self, path=None):
-        if not path:
-            path = self.base_path
-        return os.path.exists(os.path.join(path, self.STATEMACHINE_FILE))
-
-    def get_statemachine_root(self, path):
-        """Walk up the path until a statemachine file was found
-
-        """
-        while not self.is_statemachine_path(path):
-            path_components = os.path.split(path)
-            if len(path_components[1]) == 0:
-                return None
-            path = path_components[0]
-        return path
-
-    def remove(self, path):
-        """ Remove the state machine at the given path
-        """
-        for p in os.listdir(path):
-            elem = os.path.join(path, p)
-            if os.path.isdir(elem):
-                shutil.rmtree(elem)
-            else:
-                os.remove(elem)
