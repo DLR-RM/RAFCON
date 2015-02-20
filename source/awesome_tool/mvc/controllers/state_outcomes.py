@@ -256,6 +256,7 @@ class StateOutcomesListController(Controller):
             self.tree_store.append(None, [outcome.outcome_id, outcome.name, to_state, to_outcome,
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
 
+    # NEW
     # @Controller.observe("outcomes", after=True)  # do not exist at the moment
     @Controller.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
@@ -264,6 +265,7 @@ class StateOutcomesListController(Controller):
         self.update_internal_data_base()
         self.update_tree_store()
 
+    # OLD
     @Controller.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
         # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %

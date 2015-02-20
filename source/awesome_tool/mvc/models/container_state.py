@@ -125,10 +125,10 @@ class ContainerStateModel(StateModel):
         """
 
         model_list = None
-        # TODO to lower computation load only called with if reasonable
-        if True:  # and info.method_name in ['add_input_data_port', 'remove_input_data_port',
-                  #                      'add_output_data_port', 'remove_output_data_port',
-                  #                      'add_outcome', 'remove_outcome', 'modify_outcome_name']:
+        # TODO to lower computation load only called if reasonable
+        if True:  # not info.method_name in ['add_data_flow', 'remove_data_flow',
+                  #                      'add_transition', 'remove_transition',
+                  #                      'add_scoped_variable', 'remove_scoped_variable']:  # container_state-functions
             StateModel.update_child_models(self, _, name, info)
 
         #TODO: scoped variables
