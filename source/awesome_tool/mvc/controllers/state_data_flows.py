@@ -47,9 +47,6 @@ class StateDataFlowsListController(Controller):
         """Constructor
         """
         Controller.__init__(self, model, view)
-        if model.parent is not None:
-            self.parent_observer = ParentObserver(model.parent, "state", [self.update_stores, self.update_model])
-            #self.parent_observer.observe(model.parent)
 
         # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
         #                   name-color, to-state-color, data-flow-object, state-object, is_editable
@@ -62,10 +59,16 @@ class StateDataFlowsListController(Controller):
         self.data_flow_dict = {'internal':    {},
                                'external':    {}}
 
-        self.update_stores()
-        self.new_version = True
-        if self.new_version:
-            view.get_top_widget().set_model(self.tree_store)
+        if model.parent is not None:
+            # OLD
+            self.parent_observer = ParentObserver(model.parent, "state", [self.update_internal_data_base,
+                                                                          self.update_tree_store])
+            # NEW
+            # self.observe_model(model.parent)
+
+        self.update_internal_data_base()
+        self.update_tree_store()
+        view.get_top_widget().set_model(self.tree_store)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -96,8 +99,6 @@ class StateDataFlowsListController(Controller):
             else:
                 logger.warning("Column has no cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
-        self.update_model()
-
         view['from_state_col'].set_cell_data_func(view['from_state_combo'], cell_text, self.model)
         view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
         view['from_key_col'].set_cell_data_func(view['from_key_combo'], cell_text, self.model)
@@ -108,10 +109,18 @@ class StateDataFlowsListController(Controller):
         view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
         view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
         #view['external_toggle'].connect("edited", self.on_external_toggled)
+        view.tree_view.connect("grab-focus", self.on_focus)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
+
+    def on_focus(self, widget, data=None):
+        logger.debug("DATAFLOWS_LIST get new FOCUS")
+        path = self.view.tree_view.get_cursor()
+        self.update_data_flow_dicts()
+        self.update_tree_store()
+        self.view.tree_view.set_cursor(path[0])
 
     def on_add(self, button, info=None):
         # print "ADD DATA_FLOW"
@@ -167,7 +176,6 @@ class StateDataFlowsListController(Controller):
             self.view.tree_view.set_cursor(path[0][0])
         elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
             self.view.tree_view.set_cursor(path[0][0]-1)
-
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -252,14 +260,14 @@ class StateDataFlowsListController(Controller):
             self.model.state.remove_data_flow(df_id)
             self.model.state.add_data_flow(fs, fk, ts,  to_data_port_id=int(text[-1]), data_flow_id=df_id)
 
-    def update_stores(self):
+    def update_internal_data_base(self):
          [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
          self.free_to_port_internal = free_to_int
          self.free_to_port_external = free_to_ext
          self.from_port_internal = from_int
          self.from_port_external = from_ext
 
-    def update_model(self):
+    def update_tree_store(self):
         self.tree_store.clear()
 
         if self.view_dict['data_flows_internal'] and hasattr(self.model.state, 'data_flows'):
@@ -297,6 +305,18 @@ class StateDataFlowsListController(Controller):
                                                   True,
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
+    # NEW
+    # @Controller.observe("input_data_ports", after=True)
+    # @Controller.observe("output_data_ports", after=True)
+    # @Controller.observe("scoped_variables", after=True)
+    # @Controller.observe("data_flows", after=True)
+    # def assign_notification_parent_state(self, model, prop_name, info):
+    #     # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+    #     #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
+    #     self.update_stores()
+    #     self.update_model()
+
+    # OLD
     @Controller.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
         # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
@@ -308,8 +328,8 @@ class StateDataFlowsListController(Controller):
                                 "add_scoped_variable", "remove_scoped_variable",
                                 "add_state", "remove_state",
                                 "modify_outcome_name"] and model.state.state_id == info.instance.state_id:
-            self.update_stores()
-            self.update_model()
+            self.update_internal_data_base()
+            self.update_tree_store()
 
 
 def get_key_combos(ports, keys_store, port_type, not_key=None):
@@ -667,5 +687,5 @@ class StateDataFlowsEditorController(Controller):
             self.df_list_ctrl.view_dict['data_flows_internal'] = False
             button.set_active(False)
 
-        self.df_list_ctrl.update_stores()
-        self.df_list_ctrl.update_model()
+        self.df_list_ctrl.update_internal_data_base()
+        self.df_list_ctrl.update_tree_store()
