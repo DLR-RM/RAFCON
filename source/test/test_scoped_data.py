@@ -5,6 +5,8 @@ from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.state import StateType, DataPortType
 from statemachine.storage.storage import Storage
 import statemachine.singleton
+from statemachine.state_machine import StateMachine
+import variables_for_pytest
 
 
 def create_statemachine():
@@ -57,10 +59,15 @@ def test_scoped_data():
     root_state.input_data = input_data
     root_state.output_data = output_data
 
-    statemachine.singleton.state_machine_manager.root_state = root_state
+    state_machine = StateMachine(root_state)
+
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
+    variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["data_output_port1"]
     assert output_data["data_output_port1"] == 42.0

@@ -219,6 +219,10 @@ class State(Observable, yaml.YAMLObject, object):
         self.thread.start()
 
     def join(self):
+        # import time
+        # while self.thread is None:
+        #     logger.debug("Thread is waiting for thread to be started")
+        #     time.sleep(0.1)
         self.thread.join()
 
     def setup_run(self):
@@ -518,7 +522,7 @@ class State(Observable, yaml.YAMLObject, object):
             outcome.check_name = self.modify_outcome_name
 
     def __str__(self):
-        return "State properties of state: %s \nstate_id: %s" % (self.name, self.state_id)
+        return "State properties of state: \nname%s \nstate_id: %s" % (self.name, self.state_id)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

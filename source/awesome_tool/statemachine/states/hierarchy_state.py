@@ -34,9 +34,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                                 transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
                                 state_type=StateType.HIERARCHY, check_path=check_path)
 
-        #the execution engine has to be set for some units tests specifically
-        self.execution_engine = None
-
     # the input_data and output_data comes in with a mapping from names to values,
     # to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
     def run(self):
@@ -66,12 +63,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     self.final_outcome = Outcome(-2, "preempted")
                     self.active = False
                     return
+
                 # depending on the execution mode pause execution
-                execution_signal = None
-                if self.execution_engine:
-                    execution_signal = self.execution_engine.handle_execution_mode(self)
-                else:
-                    execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+                execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
                 if execution_signal == "stop":
                     # this will be catched at the end of the run method
                     raise RuntimeError("state stopped")

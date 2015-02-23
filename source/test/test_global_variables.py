@@ -4,6 +4,8 @@ from pytest import raises
 from statemachine.states.execution_state import ExecutionState
 from statemachine.states.hierarchy_state import HierarchyState
 import statemachine.singleton
+from statemachine.state_machine import StateMachine
+import variables_for_pytest
 
 
 def create_state_machine():
@@ -33,10 +35,14 @@ def test_concurrency_barrier_state_execution():
     output_data = {"output_data_port1": None}
     container_state.input_data = input_data
     container_state.output_data = output_data
-    statemachine.singleton.state_machine_manager.root_state = container_state
+    state_machine = StateMachine(container_state)
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     container_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
+    variables_for_pytest.test_multithrading_lock.release()
 
     assert output_data["output_data_port1"] == 42
 

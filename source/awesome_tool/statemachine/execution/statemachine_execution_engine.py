@@ -76,7 +76,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             self._status.execution_mode = ExecutionMode.STEPPING
         else:
             self._status.execution_mode = ExecutionMode.STEPPING
-            self.state_machine_manager.root_state.start()
+            self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine].root_state.start()
             self._execution_started = True
 
     @Observable.observed

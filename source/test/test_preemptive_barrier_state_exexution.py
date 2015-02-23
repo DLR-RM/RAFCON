@@ -5,6 +5,8 @@ from statemachine.states.execution_state import ExecutionState
 from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import statemachine.singleton
 from statemachine.storage.storage import Storage
+from statemachine.state_machine import StateMachine
+import variables_for_pytest
 
 
 def create_preemption_statemachine():
@@ -37,12 +39,17 @@ def test_concurrency_preemption_state_execution():
     input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
     preemption_state.input_data = input_data
     preemption_state.output_data = {}
-    statemachine.singleton.state_machine_manager.root_state = preemption_state
+    state_machine = StateMachine(preemption_state)
+
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     preemption_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
 
     assert statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+    variables_for_pytest.test_multithrading_lock.release()
 
 
 def test_concurrency_preemption_save_load():
@@ -57,12 +64,16 @@ def test_concurrency_preemption_save_load():
     output_data = {"output_data_port1": None}
     preemption_state.input_data = input_data
     preemption_state.output_data = output_data
-    statemachine.singleton.state_machine_manager.root_state = preemption_state
+    state_machine = StateMachine(preemption_state)
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     preemption_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
 
     assert statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+    variables_for_pytest.test_multithrading_lock.release()
 
 if __name__ == '__main__':
     pytest.main()
