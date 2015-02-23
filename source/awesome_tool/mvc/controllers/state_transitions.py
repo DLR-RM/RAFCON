@@ -301,13 +301,15 @@ class StateTransitionsListController(Controller):
             else:
                 from_state_combo.append([state_model.state.name + '.' + state_model.state.state_id])
 
-        # for to-state-combo  filter self state
+        # for to-state-combo filter from_state ... put it at the end
         to_state_models = filter(lambda s: not s.state.state_id == trans.from_state, model.states.values())
         for state_model in to_state_models:
             if state_model.state.state_id == self_model.state.state_id:
                 to_state_combo.append(["self." + state_model.state.state_id])
             else:
                 to_state_combo.append([state_model.state.name + '.' + state_model.state.state_id])
+        from_state = model.states[trans.from_state].state
+        to_state_combo.append([from_state.name + '.' + from_state.state_id])
 
         # for to-outcome-combo use parent combos
         to_outcome = model.state.outcomes.values()
@@ -363,7 +365,7 @@ class StateTransitionsListController(Controller):
                 # print "FREE: ", self.combo['free_from_outcomes_dict'].keys(), self.combo['free_from_outcomes_dict']
 
         if hasattr(model, 'parent') and self.model.parent is not None:
-            # check for internal combos
+            # check for external combos
             for transition_id, transition in model.parent.state.transitions.items():
                 if transition.from_state == model.state.state_id or transition.to_state == model.state.state_id:
                     self.combo['external'][transition_id] = {}
@@ -417,7 +419,8 @@ class StateTransitionsListController(Controller):
                                               False,  # is_external
                                               '#f0E5C7', '#f0E5c7', t, self.model.state, True])
 
-        if self.view_dict['transitions_external'] and len(self.model.parent.state.transitions) > 0:
+        if self.view_dict['transitions_external'] and self.model.parent and \
+                        len(self.model.parent.state.transitions) > 0:
             for transition_id in self.combo['external'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
                 t = self.model.parent.state.transitions[transition_id]
