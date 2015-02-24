@@ -7,6 +7,8 @@ from statemachine.states.library_state import LibraryState
 import statemachine.singleton
 from statemachine.states.state import DataPortType
 from statemachine.storage.storage import Storage
+from statemachine.state_machine import StateMachine
+import variables_for_pytest
 
 
 def save_libraries():
@@ -92,10 +94,15 @@ def test_library_state_machine():
     library_container_state.input_data = input_data
     library_container_state.output_data = output_data
 
-    statemachine.singleton.state_machine_manager.root_state = library_container_state
+    state_machine = StateMachine(library_container_state)
+
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     library_container_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
+    variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["data_output_port1"]
     assert output_data["data_output_port1"] == 42.0
@@ -108,10 +115,15 @@ def test_nested_library_state_machine():
     output_data = {"data_output_port1": None}
     nested_library_state.input_data = input_data
     nested_library_state.output_data = output_data
-    statemachine.singleton.state_machine_manager.root_state = nested_library_state
+    state_machine = StateMachine(nested_library_state)
+
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     nested_library_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
+    variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["data_output_port1"]
     assert output_data["data_output_port1"] == 42.0

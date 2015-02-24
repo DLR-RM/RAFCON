@@ -27,7 +27,7 @@ class StateMachineManager(Observable):
 
         Observable.__init__(self)
         self._state_machines = {}
-        self._active_state_machine = None
+        self._active_state_machine_id = None
 
         if state_machines is not None:
             for state_machine in state_machines:
@@ -41,8 +41,8 @@ class StateMachineManager(Observable):
     @Observable.observed
     def add_state_machine(self, state_machine):
         self._state_machines[state_machine.state_machine_id] = state_machine
-        if self.active_state_machine is None:
-            self.active_state_machine = state_machine.state_machine_id
+        if self.active_state_machine_id is None:
+            self.active_state_machine_id = state_machine.state_machine_id
 
     @Observable.observed
     def remove_state_machine(self, state_machine_id=None):
@@ -50,6 +50,11 @@ class StateMachineManager(Observable):
             del self._state_machines[state_machine_id]
         else:
             logger.error("there is no valid argument state_machine_id: %s" % state_machine_id)
+
+    def get_active_state_machine(self):
+        """Return a reference to the active statemachine
+        """
+        return self._state_machines[self._active_state_machine_id]
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -64,15 +69,15 @@ class StateMachineManager(Observable):
         return self._state_machines
 
     @property
-    def active_state_machine(self):
+    def active_state_machine_id(self):
         """Return the currently active state machine
         """
-        return self._active_state_machine
+        return self._active_state_machine_id
 
-    @active_state_machine.setter
+    @active_state_machine_id.setter
     @Observable.observed
-    def active_state_machine(self, state_machine_id):
+    def active_state_machine_id(self, state_machine_id):
         if state_machine_id not in self.state_machines.keys():
             raise AttributeError("State machine not in list of all state machines")
-        self._active_state_machine = state_machine_id
+        self._active_state_machine_id = state_machine_id
 

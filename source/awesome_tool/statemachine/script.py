@@ -43,7 +43,7 @@ def execute(self, inputs, outputs, external_modules, gvm):
 """
     DEFAULT_SCRIPT_CONTAINER = """
 
-def entry(self, scoped_variables, external_modules, gvm):
+def enter(self, scoped_variables, external_modules, gvm):
     pass
 
 def exit(self, scoped_variables, external_modules, gvm):

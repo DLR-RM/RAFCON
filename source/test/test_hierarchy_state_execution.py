@@ -6,6 +6,8 @@ from statemachine.states.hierarchy_state import HierarchyState
 import statemachine.singleton
 from statemachine.states.state import DataPortType
 from statemachine.storage.storage import Storage
+from statemachine.state_machine import StateMachine
+import variables_for_pytest
 
 
 def create_hierarchy_state():
@@ -38,10 +40,15 @@ def test_hierarchy_state_execution():
     output_data = {"output1": None}
     hierarchy_state.input_data = input_data
     hierarchy_state.output_data = output_data
-    statemachine.singleton.state_machine_manager.root_state = hierarchy_state
+    state_machine = StateMachine(hierarchy_state)
+
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     hierarchy_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
+    variables_for_pytest.test_multithrading_lock.release()
 
     assert output_data["output1"] == 52.0
 
@@ -57,10 +64,15 @@ def test_hierarchy_save_load_test():
     output_data = {"output1": None}
     hierarchy_state.input_data = input_data
     hierarchy_state.output_data = output_data
-    statemachine.singleton.state_machine_manager.root_state = hierarchy_state
+    state_machine = StateMachine(hierarchy_state)
+
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     hierarchy_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
+    variables_for_pytest.test_multithrading_lock.release()
 
     assert output_data["output1"] == 52.0
 

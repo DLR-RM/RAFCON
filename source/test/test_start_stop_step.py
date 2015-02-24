@@ -5,6 +5,8 @@ from statemachine.storage.storage import Storage
 
 from statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from statemachine.state_machine_manager import StateMachineManager
+from statemachine.state_machine import StateMachine
+import variables_for_pytest
 
 import pytest
 import time
@@ -45,21 +47,24 @@ def test_start_stop_pause_step():
 
     # care for old statemachines that were started in previous tests
     my_state_machine_manager = StateMachineManager()
-    my_execution_engine = StatemachineExecutionEngine(my_state_machine_manager)
-    my_state_machine_manager.root_state = root_state
-    root_state.execution_engine = my_execution_engine
-    my_execution_engine.step_mode()
+    state_machine = StateMachine(root_state)
+
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    statemachine.singleton.state_machine_execution_engine.step_mode()
 
     for i in range(5):
         time.sleep(0.1)
-        my_execution_engine.step()
+        statemachine.singleton.state_machine_execution_engine.step()
 
-    my_execution_engine.stop()
+    statemachine.singleton.state_machine_execution_engine.stop()
     root_state.join()
 
     assert statemachine.singleton.global_variable_manager.get_variable("counter") == 5
+    variables_for_pytest.test_multithrading_lock.release()
     # gtk.main()
 
 if __name__ == '__main__':
-    pytest.main()
-    #test_start_stop_pause_step()
+    #pytest.main()
+    test_start_stop_pause_step()

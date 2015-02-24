@@ -2,11 +2,17 @@ from gtkmvc import ModelMT
 import gobject
 from gtk import ListStore
 import gtk
+import os
 
 from statemachine.states.state import State
 from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
 from utils.vividict import Vividict
 from mvc.models.data_port import DataPortModel
+import statemachine.singleton
+from statemachine.storage.storage import Storage
+from utils import log
+
+logger = log.get_logger(__name__)
 
 
 class StateModel(ModelMT):
@@ -227,6 +233,20 @@ class StateModel(ModelMT):
                 else:
                     del model_list[model_item]
                 return
+
+    # ---------------------------------------- storage functions ---------------------------------------------
+    def load_meta_data_for_state(self):
+        logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
+        meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
+        if os.path.exists(meta_path):
+            self.meta = statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
+        else:
+            logger.warn("path to load meta data for state model of state %s does not exist" % self.state.name)
+
+    def store_meta_data_for_state(self):
+        logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
+        meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
+        self.meta = statemachine.singleton.global_storage.write_dict_to_yaml(self.meta, meta_path)
 
 
 def dataport_compare_method(treemodel, iter1, iter2, user_data=None):

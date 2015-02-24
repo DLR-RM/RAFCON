@@ -5,6 +5,9 @@ from statemachine.states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 import statemachine.singleton
 from statemachine.storage.storage import Storage
+from statemachine.state_machine import StateMachine
+
+import variables_for_pytest
 
 
 def create_concurrency_barrier_state():
@@ -39,13 +42,18 @@ def test_concurrency_barrier_state_execution():
     output_data = {"output_data_port1": None}
     concurrency_barrier_state.input_data = input_data
     concurrency_barrier_state.output_data = output_data
-    statemachine.singleton.state_machine_manager.root_state = concurrency_barrier_state
+
+    state_machine = StateMachine(concurrency_barrier_state)
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     concurrency_barrier_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
 
     assert statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
     assert statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
+    variables_for_pytest.test_multithrading_lock.release()
 
 
 def test_concurrency_barrier_save_load():
@@ -60,7 +68,11 @@ def test_concurrency_barrier_save_load():
     output_data = {"output_data_port1": None}
     root_state.input_data = input_data
     root_state.output_data = output_data
-    statemachine.singleton.state_machine_manager.root_state = root_state
+
+    state_machine = StateMachine(root_state)
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
@@ -68,7 +80,8 @@ def test_concurrency_barrier_save_load():
     assert statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
     assert statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
 
+    variables_for_pytest.test_multithrading_lock.release()
 
 if __name__ == '__main__':
-    pytest.main()
-    #test_concurrency_barrier_save_load()
+    #pytest.main()
+    test_concurrency_barrier_save_load()

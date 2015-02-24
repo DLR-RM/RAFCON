@@ -61,7 +61,7 @@ class Storage(Observable):
         self.base_path = os.path.abspath(base_path)
         logger.debug("Storage class initialized!")
 
-    def save_file_as_yaml_rel(self, state, rel_path):
+    def save_object_to_yaml_rel(self, state, rel_path):
         f = open(os.path.join(self.base_path, rel_path), 'w')
         with Capturing() as output:
             yaml.dump(state, f, indent=4)
@@ -80,18 +80,29 @@ class Storage(Observable):
         state = yaml.load(stream)
         return state
 
+    def write_dict_to_yaml(self, dict_to_write, path):
+        f = open(path, 'w')
+        yaml.dump(dict_to_write, f, indent=4)
+        f.close()
+
+    def load_dict_from_yaml(self, path):
+        stream = file(path, 'r')
+        yaml_object = yaml.load(stream)
+        return yaml_object
+
     def load_object_from_yaml_abs(self, abs_path):
         stream = file(abs_path, 'r')
         state = yaml.load(stream)
         return state
 
     def save_statemachine_as_yaml(self, root_state, base_path=None, version=None):
-        if not base_path is None:
+        if base_path is not None:
             self.base_path = base_path
         # clean old path first
         if self._exists_path(self.base_path):
             self._remove_path(self.base_path)
-        self._create_path(self.base_path)
+        if not self._exists_path(self.base_path):
+            self._create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
         statemachine_content = "root_state: %s\nversion: %s\ncreation_time: %s"\
                                % (root_state.state_id, version, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
@@ -156,14 +167,14 @@ class Storage(Observable):
         for p in os.listdir(state_path):
             if os.path.isdir(os.path.join(state_path, p)):
                 elem = os.path.join(state_path, p)
-                self.load_state_recursively(root_state, elem)
+                self.load_state_recursively(state, elem)
 
-    def store_dict(self, rel_path, tmp_dict):
+    def write_dict_to_json(self, rel_path, tmp_dict):
         f = open(os.path.join(self.base_path, rel_path), 'w')
         json.dump(tmp_dict, f, indent=4)
         f.close()
 
-    def load_dict(self, rel_path):
+    def load_dict_from_json(self, rel_path):
         f = open(os.path.join(self.base_path, rel_path), 'r')
         result = json.load(f)
         f.close()
