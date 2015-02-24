@@ -1,7 +1,7 @@
 """
 .. module:: transition
    :platform: Unix, Windows
-   :synopsis: A module to represent a transition in the statemachine
+   :synopsis: A module to represent a transition in the state machine
 
 .. moduleauthor:: Sebastian Brunner
 
@@ -21,6 +21,7 @@ class Transition(Observable, yaml.YAMLObject):
 
     It inherits from Observable to make a change of its fields observable.
 
+    :ivar transition_id: the id of the transition
     :ivar _from_state: the source state of the transition
     :ivar _from_outcome: the outcome of the source state
     :ivar _to_state: the target state of the transition

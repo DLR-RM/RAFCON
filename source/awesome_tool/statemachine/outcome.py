@@ -24,8 +24,10 @@ class Outcome(Observable, yaml.YAMLObject):
     As the name of an outcome can be changes without modifying the transitions the primary key of an outcome is its
     id and not its name.
 
-    :ivar _outcome_id: the id of the outcome, must be unique on one hierarchy level
-    :ivar _name: the human readable name of the outcome
+    :ivar outcome_id: the id of the outcome, must be unique on one hierarchy level
+    :ivar name: the human readable name of the outcome
+    :ivar check_name: a function handle to a function checking the integrity of the outcome name. Used in the setter
+            of the name
 
     """
 

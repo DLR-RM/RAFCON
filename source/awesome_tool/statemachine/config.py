@@ -3,7 +3,7 @@
    :platform: Unix, Windows
    :synopsis: Config module to specify global constants
 
-.. moduleauthor:: Sebastian Brunner
+.. moduleauthor::
 
 
 """

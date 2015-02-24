@@ -26,8 +26,8 @@ class StateMachineStatus(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar execution_mode: the execution mode of the statemachine
-                        (i.e. running, paused, stopped, stepping or backward-stepping)
+    :ivar execution_mode: the execution mode of the state machine
+                        (i.e. running, paused, stopped, stepping)
     :ivar _dependency_tree: when starting the state machine from an arbitrary child state, a dependency tree is
                             calculated and stored here
     :ivar _thread_histories: set of threads that are currently executing inside the state machine
@@ -46,12 +46,23 @@ class StateMachineStatus(Observable):
         self._dependency_tree = None
         self._thread_histories = []
 
-    def set_thread_history(self, hid, execution_history):
+    def set_thread_history(self, history_id, execution_history):
+        """ Sets the execution history for a certain history_id
+
+        :param history_id: the id of the history
+        :param execution_history: the execution history of a certain thread
+        :return:
+        """
         if not isinstance(execution_history, ExecutionHistory):
             raise TypeError("execution_history must be of type ExecutionHistory")
-        self._thread_histories[hid] = execution_history
+        self._thread_histories[history_id] = execution_history
 
     def set_execution_mode(self, execution_mode):
+        """ Sets the current execution mode
+
+        :param execution_mode: the new execution mode to set
+        :return:
+        """
         self.execution_mode = execution_mode
 
 

@@ -24,6 +24,7 @@ class LibraryManager(Observable):
     Libraries are essentially just (reusable) state machines.
 
     :ivar _libraries: a dictionary to hold  all libraries
+    :ivar storage: the storage object to be able to load and save states
     """
 
     def __init__(self):
@@ -32,9 +33,15 @@ class LibraryManager(Observable):
         logger.debug("Initializing Storage object ...")
         self.storage = Storage("../")
 
-    # cannot be done in the __init__ function as the library_manager can be compiled and executed by singleton.py
-    # before the state*.pys are loaded
     def initialize(self):
+        """
+        Initializes the library manager. It searches through all library paths given in the config file for
+        libraries, and loads the states.
+
+        This cannot be done in the __init__ function as the library_manager can be compiled and executed by
+        singleton.py before the state*.pys are loaded
+        :return:
+        """
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
         for lib_key, lib_path in config.LIBRARY_PATHS.iteritems():
             if os.path.exists(lib_path):
@@ -45,6 +52,12 @@ class LibraryManager(Observable):
         logger.debug("Initialization of LibraryManager done.")
 
     def add_libraries_from_path(self, lib_path, target_dict):
+        """
+        Adds all libraries specified in a given path and stores them into the provided library dictionary
+        :param lib_path: the path to add all libraries from
+        :param target_dict: the target dictionary to store all loaded libraries to
+        :return:
+        """
         for lib in os.listdir(lib_path):
             #logger.debug(str(lib))
             if os.path.isdir(os.path.join(lib_path, lib)):
@@ -55,6 +68,13 @@ class LibraryManager(Observable):
                     self.add_libraries_from_path(os.path.join(lib_path, lib), target_dict[lib])
 
     def add_library(self, lib, lib_path, target_dict):
+        """
+        Adds a single library to the specified library dictionary.
+        :param lib: the library to add
+        :param lib_path: the path to the library specified in lib
+        :param target_dict: the library dictionary to save the loaded library to
+        :return:
+        """
         self.storage.base_path = lib_path
         target_dict[lib] = os.path.join(lib_path, lib)  # self._storage.load_statemachine_from_yaml(os.path.join(lib_path, lib))
 

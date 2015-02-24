@@ -13,7 +13,7 @@ from statemachine.states.container_state import ContainerState
 
 class ConcurrencyState(ContainerState):
 
-    """A class tto represent a concurrency state for the state machine
+    """A class to represent a concurrency state for the state machine
 
     The concurrency state holds several child states, that can be container states again
     """

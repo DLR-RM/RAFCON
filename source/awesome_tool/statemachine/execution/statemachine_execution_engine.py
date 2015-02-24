@@ -21,8 +21,10 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
     """A class that cares for the execution of the statemachine
 
-    :ivar _statemachine_status: holds the status of the statemachine
-    :ivar _validity_checker: holds a class instance that assures the validity of the statemachine
+    :ivar state_machine_manager: holds the state machine manager of all states that can be executed
+    :ivar status: holds the current execution status of the state machine
+    :ivar _validity_checker: holds a class instance that assures the validity of the state machine
+    :ivar execution_history: the history of the execution TODO: should be an list
 
     """
 
@@ -37,7 +39,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self.execution_engine = self
         self._status = None
         self.status = StateMachineStatus(ExecutionMode.STOPPED)
-        # TODO: write validity checker of the statemachine; Should this include the validity checkers of the state
+        # TODO: write validity checker of the statemachine
         self._validity_checker = None
         self.execution_history = ExecutionHistory()
         logger.debug("Statemachine execution engine initialized")
@@ -46,10 +48,14 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     #TODO: pause all external modules
     @Observable.observed
     def pause(self):
+        """Set the execution mode to paused
+        """
         self._status.execution_mode = ExecutionMode.PAUSED
 
     @Observable.observed
     def start(self):
+        """Set the execution mode to started
+        """
         if self._execution_started:
             logger.debug("Start statemachine and notify all threads waiting ")
             self._status.execution_mode = ExecutionMode.RUNNING
@@ -66,11 +72,15 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     #TODO: stop all external modules
     @Observable.observed
     def stop(self):
+        """Set the execution mode to stopped
+        """
         self._status.execution_mode = ExecutionMode.STOPPED
         self._execution_started = False
 
     @Observable.observed
     def step_mode(self):
+        """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
+        """
         logger.debug("Activate step mode")
         if self._execution_started:
             self._status.execution_mode = ExecutionMode.STEPPING
@@ -81,9 +91,13 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
     @Observable.observed
     def backward_step_mode(self):
+        """Take a backward step for all active states in the state machine
+        """
         self._status.execution_mode = ExecutionMode.BACKWARD_STEPPING
 
     def step(self):
+        """Take a forward step for all active states in the state machine
+        """
         logger.debug("Notify all threads waiting for the the execution condition variable")
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
@@ -92,6 +106,16 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     # depending on the execution state wait for the execution condition variable to be notified
     # list all execution modes to keep the overview
     def handle_execution_mode(self, state):
+        """Checks the current execution status and returns stop in the case. If the execution mode is "STEPPING",
+        a condition variable stops the current execution, until it gets notified by the step() or backward_step()
+        function.
+
+        :param state: the state that as for the execution mode is only passed for debugging reasons
+
+        :return: "stop" if the state machine must stop the execution, else "run"
+
+        This functions is called by the hierarchy states.
+        """
         if self._status.execution_mode is ExecutionMode.RUNNING:
             return
 
@@ -128,6 +152,10 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         return "run"
 
     def start_from_selected_state(self, state):
+        """Starts the active statemachine from a given state
+
+        :param state: the state the execution should start at
+        """
         self._create_dependency_tree(state)
         self._start_tree()
 

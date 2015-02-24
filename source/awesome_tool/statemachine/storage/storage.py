@@ -21,24 +21,6 @@ from utils import log
 
 logger = log.get_logger(__name__)
 
-##############################################################################
-from cStringIO import StringIO
-import sys
-
-#hack to omit output of the yaml.dump function; did not find another way
-#found at: http://stackoverflow.com/questions/16571150/how-to-capture-stdout-output-from-a-python-function-call
-class Capturing(list):
-
-    def __enter__(self):
-        self._stdout = sys.stdout
-        sys.stdout = self._stringio = StringIO()
-        return self
-
-    def __exit__(self, *args):
-        self.extend(self._stringio.getvalue().splitlines())
-        sys.stdout = self._stdout
-##############################################################################
-
 
 class Storage(Observable):
 
@@ -61,41 +43,79 @@ class Storage(Observable):
         self.base_path = os.path.abspath(base_path)
         logger.debug("Storage class initialized!")
 
-    def save_object_to_yaml_rel(self, state, rel_path):
+    def save_object_to_yaml_rel(self, object, rel_path):
+        """
+        Saves an object, which inherits from yaml.YAMLObject, to yaml file
+        :param object: the object to be saved
+        :param rel_path: the relative path of the target yaml file
+        :return:
+        """
         f = open(os.path.join(self.base_path, rel_path), 'w')
-        with Capturing() as output:
-            yaml.dump(state, f, indent=4)
-        #stream = yaml.dump(state, indent=4)
-        #f.write(stream)
+        yaml.dump(object, f, indent=4)
         f.close()
 
-    def save_object_to_yaml_abs(self, state, abs_path):
+    def save_object_to_yaml_abs(self, object, abs_path):
+        """
+        Saves an object, which inherits from yaml.YAMLObject, to yaml file
+        :param object: the object to be saved
+        :param abs_path: the absolute path of the target yaml file
+        :return:
+        """
         f = open(abs_path, 'w')
-        with Capturing() as output:
-            yaml.dump(state, f, indent=4)
+        yaml.dump(object, f, indent=4)
         f.close()
 
     def load_object_from_yaml_rel(self, rel_path):
+        """
+        Loads an object, which inherits from yaml.YAMLObject, from a yaml file
+        :param object: the object to be saved
+        :param abs_path: the relative path of the target yaml file
+        :return:
+        """
         stream = file(os.path.join(self.base_path, rel_path), 'r')
         state = yaml.load(stream)
         return state
 
+    def load_object_from_yaml_abs(self, abs_path):
+        """
+        Loads an object, which inherits from yaml.YAMLObject, from a yaml file
+        :param object: the object to be saved
+        :param abs_path: the absolute path of the target yaml file
+        :return:
+        """
+        stream = file(abs_path, 'r')
+        state = yaml.load(stream)
+        return state
+
     def write_dict_to_yaml(self, dict_to_write, path):
+        """
+        Writes a dictionary to a yaml file
+        :param dict_to_write:  the dictionary to be writte
+        :param path: the absolute path of the target yaml file
+        :return:
+        """
         f = open(path, 'w')
         yaml.dump(dict_to_write, f, indent=4)
         f.close()
 
     def load_dict_from_yaml(self, path):
+        """
+        Loads a dictionary from a yaml file
+        :param path: the absolute path of the target yaml file
+        :return:
+        """
         stream = file(path, 'r')
         yaml_object = yaml.load(stream)
         return yaml_object
 
-    def load_object_from_yaml_abs(self, abs_path):
-        stream = file(abs_path, 'r')
-        state = yaml.load(stream)
-        return state
-
     def save_statemachine_as_yaml(self, root_state, base_path=None, version=None):
+        """
+        Saves a root state to a yaml file.
+        :param root_state: container state to be saved
+        :param base_path: base_path to which all further relative paths refers to
+        :param version: the version of the statemachine to save
+        :return:
+        """
         if base_path is not None:
             self.base_path = base_path
         # clean old path first
@@ -113,6 +133,13 @@ class Storage(Observable):
         logger.debug("Successfully saved statemachine!")
 
     def save_script_file_for_state(self, state, state_path):
+        """
+        Saves the script file for state to the path of the state and fixed script name provided in the SCRIPT_FILE
+        constant.
+        :param state: The state of which the script file should be saved
+        :param state_path: The path of the state meta file
+        :return:
+        """
         state_path_full = os.path.join(self.base_path, state_path)
         shutil.copyfile(os.path.join(state.script.path, state.script.filename),
                         os.path.join(state_path_full, self.SCRIPT_FILE))
@@ -120,6 +147,12 @@ class Storage(Observable):
         state.script.filename = self.SCRIPT_FILE
 
     def save_state_recursively(self, state, parent_path):
+        """
+        Recursively saves a state to a yaml file. It calls this method on all its substates.
+        :param state:
+        :param parent_path:
+        :return:
+        """
         state_path = os.path.join(parent_path, str(state.state_id))
         state_path_full = os.path.join(self.base_path, state_path)
         self._create_path(state_path_full)
@@ -134,6 +167,13 @@ class Storage(Observable):
                 self.save_state_recursively(state, state_path)
 
     def load_statemachine_from_yaml(self, base_path=None):
+        """
+        Loads a state machine from a given path. If no path is specified the state machine is tried to be loaded
+        from the base path.
+        :param base_path: An optional base path for the state machine.
+        :return: a tuple of: the loaded container state, the version of the state and the creation time of when the
+                state was saved
+        """
         if not base_path is None:
             self.base_path = base_path
         logger.debug("Load state machine from path %s" % str(base_path))
@@ -159,6 +199,12 @@ class Storage(Observable):
         return [root_state, version, creation_time]
 
     def load_state_recursively(self, root_state, state_path=None):
+        """
+        Recursively loads the state. It calls this method on each substate of a container state.
+        :param root_state:  the root state of the last load call to which the loaded state will be added
+        :param state_path: the path on the filesystem where to find eht meta file for the state
+        :return:
+        """
         state = self.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
         state.script.path = state_path
         # connect the missing function_handlers for setting the outcome names
@@ -170,26 +216,57 @@ class Storage(Observable):
                 self.load_state_recursively(state, elem)
 
     def write_dict_to_json(self, rel_path, tmp_dict):
+        """
+        Write a dictionary to a json file.
+        :param rel_path: The relative path to save the dictionary to
+        :param tmp_dict: The dictionary to get saved
+        :return:
+        """
         f = open(os.path.join(self.base_path, rel_path), 'w')
         json.dump(tmp_dict, f, indent=4)
         f.close()
 
     def load_dict_from_json(self, rel_path):
+        """
+        Loads a dictionary from a json file.
+        :param rel_path: The relative path of the json file.
+        :return: The dictionary specified in the json file
+        """
         f = open(os.path.join(self.base_path, rel_path), 'r')
         result = json.load(f)
         f.close()
         return result
 
     def _create_path(self, path):
+        """ Creats a absolute path in the file system.
+
+        :param path: The path to be created
+        :return:
+        """
         os.makedirs(path)
 
     def _remove_path(self, path):
+        """ Removes an absolute path in the file system
+
+        :param path: The path to be removed
+        :return:
+        """
         shutil.rmtree(path)
 
     def _remove_file(self, path):
+        """
+        Removes a file in the file system.
+        :param path: The absolute path of the file to be removed.
+        :return:
+        """
         os.remove(path)
 
     def _exists_path(self, path):
+        """
+        Checks if a certain path exists in the file system.
+        :param path: The path to be checked
+        :return:
+        """
         return os.path.exists(path)
 
     #########################################################################

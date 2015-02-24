@@ -8,6 +8,9 @@ from statemachine.storage.storage import Storage
 import statemachine.singleton
 from statemachine.enums import DataPortType, StateType
 
+"""
+A module to test different features of the state machine
+"""
 
 def ros_external_module_test():
     state1 = ExecutionState("MyFirstState", path="../../test_scripts", filename="ros_test_state.py")

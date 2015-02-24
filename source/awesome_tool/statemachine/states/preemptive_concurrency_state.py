@@ -22,6 +22,11 @@ from statemachine.enums import StateType
 
 
 class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
+    """ The preemptive concurrency state has a set of substates which are started when the preemptive concurrency state
+    executes. The execution of preemptive concurrency state waits for the first substate to return, preempts all other
+    substates and finally returns self.
+
+    """
 
     yaml_tag = u'!PreemptiveConcurrencyState'
 
@@ -34,6 +39,10 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                                   state_type=StateType.PREEMPTION_CONCURRENCY, check_path=check_path)
 
     def run(self):
+        """ This defines the sequence of actions that are taken when the preemptive concurrency state is executed
+
+        :return:
+        """
         self.setup_run()
 
         self.add_input_data_to_scoped_data(self.input_data, self)

@@ -16,7 +16,6 @@ from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
 from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.state_machine import StateMachine
-from utils.vividict import Vividict
 
 
 import gobject
