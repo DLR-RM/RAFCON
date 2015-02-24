@@ -44,7 +44,7 @@ def test_hierarchy_state_execution():
 
     variables_for_pytest.test_multithrading_lock.acquire()
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     hierarchy_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
@@ -68,7 +68,7 @@ def test_hierarchy_save_load_test():
 
     variables_for_pytest.test_multithrading_lock.acquire()
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     hierarchy_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()

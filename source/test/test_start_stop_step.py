@@ -51,7 +51,7 @@ def test_start_stop_pause_step():
 
     variables_for_pytest.test_multithrading_lock.acquire()
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.step_mode()
 
     for i in range(5):

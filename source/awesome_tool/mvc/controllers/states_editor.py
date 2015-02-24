@@ -79,11 +79,11 @@ class StatesEditorController(Controller):
 
     def register(self):
         # get active state machine
-        if not self.model.state_machine_manager.active_state_machine == self.active_state_machine_id:
+        if not self.model.state_machine_manager.active_state_machine_id == self.active_state_machine_id:
             if self.active_state_machine_id:
                 self.relieve_model(self.active_state_machine_model.root_state)
                 self.relieve_model(self.active_state_machine_model)
-            self.active_state_machine_id = self.model.state_machine_manager.active_state_machine
+            self.active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
             self.active_state_machine_model = self.model.state_machines[self.active_state_machine_id]
             self.observe_model(self.active_state_machine_model.root_state)
             self.observe_model(self.active_state_machine_model)  # for selection

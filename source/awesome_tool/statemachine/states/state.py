@@ -60,7 +60,7 @@ class DataPort(Observable, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = {
-            'data_port_id' : data.data_port_id,
+            'data_port_id': data.data_port_id,
             'name': data.name,
             'data_type': data.data_type,
             'default_value': data.default_value
@@ -223,7 +223,10 @@ class State(Observable, yaml.YAMLObject, object):
         # while self.thread is None:
         #     logger.debug("Thread is waiting for thread to be started")
         #     time.sleep(0.1)
-        self.thread.join()
+        if self.thread:
+            self.thread.join()
+        else:
+            logger.warn("State %s was not started yet, cannot join" % self.name)
 
     def setup_run(self):
         self.active = True
@@ -522,7 +525,8 @@ class State(Observable, yaml.YAMLObject, object):
             outcome.check_name = self.modify_outcome_name
 
     def __str__(self):
-        return "State properties of state: \nname%s \nstate_id: %s" % (self.name, self.state_id)
+        return "State properties of state: %s \nstate_id: %s \nstate_type: %s" \
+               % (self.name, self.state_id, self.state_type)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

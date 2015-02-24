@@ -90,4 +90,10 @@ test_scripts/stored_statemachine
 test_scripts/libraries
 test_scripts/test_libraries
 
+#
+# Do not commit gui files
+#
+
+**/gui_gtk.yaml
+
 

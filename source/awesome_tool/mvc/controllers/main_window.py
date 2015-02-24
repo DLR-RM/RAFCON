@@ -52,7 +52,7 @@ class MainWindowController(Controller):
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
 
         state_machine_manager = state_machine_manager_model.state_machine_manager
-        active_state_machine_id = state_machine_manager.active_state_machine
+        active_state_machine_id = state_machine_manager.active_state_machine_id
         active_state_machine = None
         for state_machine_id in state_machine_manager_model.state_machines:
             if state_machine_id == active_state_machine_id:

@@ -16,6 +16,7 @@ from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
 from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.state_machine import StateMachine
+from utils.vividict import Vividict
 
 
 import gobject
@@ -26,7 +27,7 @@ def setup_logger(logging_view):
     log.error_filter.set_logging_test_view(logging_view)
 
 
-def create_models(state):
+def create_models():
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
     #logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
@@ -45,12 +46,10 @@ def create_models(state):
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
-    return logger, state, global_var_manager_model, external_module_manager_model
+    return logger, global_var_manager_model, external_module_manager_model
 
-
-def run_turtle_demo():
-
-    ########################################################
+def create_turtle_statemachine():
+     ########################################################
     # state machine creation start
     ########################################################
 
@@ -187,23 +186,36 @@ def run_turtle_demo():
 
     follower_turtle_bot_hierarchy_state.add_transition(eat.state_id, 0, check_food_and_follow_state.state_id, 0)
     follower_turtle_bot_hierarchy_state.add_transition(check_food_and_follow_state.state_id, 0, eat.state_id, 0)
+    return turtle_demo_state
 
-    ########################################################
-    # state machine creation end
-    ########################################################
 
-    #statemachine.singleton.global_storage.save_statemachine_as_yaml(turtle_demo_state, "../../test_scripts/turtle_demo")
-    #root_state = statemachine.singleton.global_storage.load_statemachine_from_yaml("../../test_scripts/turtle_demo")
+def run_turtle_demo():
+
+    turtle_demo_state = create_turtle_statemachine()
+
+    ####################################################################
+    # comment these lines out to save the modified statemachine
+    #####################################################################
+    # statemachine.singleton.global_storage.base_path = "../../test_scripts/turtle_demo_state_machine"
+    # statemachine.singleton.global_storage.save_statemachine_as_yaml(turtle_demo_state)
+    # print "#################################################################"
+    # print "load turtle state machine from disk"
+    # print "#################################################################"
+    [turtle_demo_state, version, creation_time] = \
+        statemachine.singleton.global_storage.load_statemachine_from_yaml("../../test_scripts/turtle_demo_state_machine")
 
     statemachine.singleton.library_manager.initialize()
     logging_view = LoggingView()
     setup_logger(logging_view)
-    [logger, ctr_state, gvm_model, emm_model] = create_models(turtle_demo_state)
+    [logger, gvm_model, emm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
-    #statemachine.singleton.state_machine_manager.root_state = ctr_state
     state_machine = StateMachine(turtle_demo_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
+
+    # load the meta data for the state machine
+    sm_manager_model.get_active_state_machine_model().root_state.load_meta_data_for_state()
+
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model, editor_type="ld")
     #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
@@ -219,7 +231,6 @@ def run_turtle_demo():
     user_input_module = ExternalModule(name="user_input", module_name="user_input_external_module", class_name="UserInput")
     statemachine.singleton.external_module_manager.add_external_module(user_input_module)
     statemachine.singleton.external_module_manager.external_modules["user_input"].connect([])
-
     #statemachine.singleton.external_module_manager.external_modules["user_input"].start()
 
     # dual_gtk_window = DualGTKWindow()
@@ -228,7 +239,9 @@ def run_turtle_demo():
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
-    #turtle_demo_state.join()
+    # save the meta data for the state machine
+    sm_manager_model.get_active_state_machine_model().root_state.store_meta_data_for_state()
+    statemachine.singleton.state_machine_manager.get_active_state_machine().root_state.join()
 
 
 class DualGTKWindow:

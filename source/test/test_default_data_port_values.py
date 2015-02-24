@@ -51,7 +51,7 @@ def test_default_values_of_data_ports():
     state_machine = StateMachine(root_state)
     variables_for_pytest.test_multithrading_lock.acquire()
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()

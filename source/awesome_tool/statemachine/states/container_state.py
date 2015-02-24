@@ -67,7 +67,7 @@ class ContainerState(State):
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     def __str__(self):
-        return "state type: %s\n%s" % (self.state_type, State.__str__(self))
+        return "%s\nnumber of substates: %s" % (State.__str__(self), len(self.states))
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`

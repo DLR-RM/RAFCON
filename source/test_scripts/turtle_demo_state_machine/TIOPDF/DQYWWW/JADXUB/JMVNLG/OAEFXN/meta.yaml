@@ -1,0 +1,14 @@
+!ExecutionState
+filename: script.py
+input_data_ports: {}
+name: Check user turtle position
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: Success, outcome_id: 0}
+output_data_ports:
+    7: !DataPort {data_port_id: 7, data_type: dict, default_value: null, name: user
+            turtle position}
+path: TIOPDF/DQYWWW/JADXUB/JMVNLG/OAEFXN
+state_id: OAEFXN
+state_type: STATE_TYPE.EXECUTION

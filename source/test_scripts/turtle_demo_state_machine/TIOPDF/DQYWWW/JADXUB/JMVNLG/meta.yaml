@@ -1,0 +1,20 @@
+!HierarchyState
+data_flows:
+    11: !DataFlow {from_key: 7, from_state: OAEFXN, to_key: 8, to_state: GIXGKB}
+    12: !DataFlow {from_key: 9, from_state: GIXGKB, to_key: 10, to_state: XUNBRP}
+filename: script.py
+input_data_ports: {}
+name: Follow User Turtle Hierarchy
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+output_data_ports: {}
+path: TIOPDF/DQYWWW/JADXUB/JMVNLG
+scoped_variables: {}
+start_state: OAEFXN
+state_id: JMVNLG
+state_type: STATE_TYPE.HIERARCHY
+transitions:
+    6: !Transition {from_outcome: 0, from_state: OAEFXN, to_outcome: null, to_state: GIXGKB}
+    7: !Transition {from_outcome: 0, from_state: GIXGKB, to_outcome: null, to_state: XUNBRP}
+    8: !Transition {from_outcome: 0, from_state: XUNBRP, to_outcome: null, to_state: OAEFXN}

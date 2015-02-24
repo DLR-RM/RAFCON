@@ -38,7 +38,7 @@ def test_concurrency_barrier_state_execution():
     state_machine = StateMachine(container_state)
     variables_for_pytest.test_multithrading_lock.acquire()
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     statemachine.singleton.state_machine_execution_engine.start()
     container_state.join()
     statemachine.singleton.state_machine_execution_engine.stop()
