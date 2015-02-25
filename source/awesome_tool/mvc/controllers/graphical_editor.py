@@ -870,10 +870,10 @@ class GraphicalEditorController(Controller):
         :param parent_height: The height of the container state
         :param parent_depth: The depth of the container state
         """
-        for transition in parent_state_m.transitions:
+        for transition_m in parent_state_m.transitions:
             # Get id and references to the from and to state
-            from_state_id = transition.transition.from_state
-            to_state_id = transition.transition.to_state
+            from_state_id = transition_m.transition.from_state
+            to_state_id = transition_m.transition.to_state
             from_state = parent_state_m.states[from_state_id]
             to_state = None if to_state_id is None else parent_state_m.states[to_state_id]
 
@@ -883,9 +883,9 @@ class GraphicalEditorController(Controller):
             try:
                 # Set the from coordinates to the outcome coordinates received earlier
                 from_x = parent_state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
-                    transition.transition.from_outcome][0]
+                    transition_m.transition.from_outcome][0]
                 from_y = parent_state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
-                    transition.transition.from_outcome][1]
+                    transition_m.transition.from_outcome][1]
             except Exception as e:
                 logger.error("""Outcome position was not found. \
                             maybe the outcome for the transition was not found: {err}""".format(err=e))
@@ -893,29 +893,29 @@ class GraphicalEditorController(Controller):
 
             if to_state is None:  # Transition goes back to parent
                 # Set the to coordinates to the outcome coordinates received earlier
-                to_x = parent_state_m.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][0]
-                to_y = parent_state_m.meta['gui']['editor']['outcome_pos'][transition.transition.to_outcome][1]
+                to_x = parent_state_m.meta['gui']['editor']['outcome_pos'][transition_m.transition.to_outcome][0]
+                to_y = parent_state_m.meta['gui']['editor']['outcome_pos'][transition_m.transition.to_outcome][1]
             else:
                 # Set the to coordinates to the center of the next state
                 to_x = to_state.meta['gui']['editor']['pos_x']
                 to_y = to_state.meta['gui']['editor']['pos_y'] + to_state.meta['gui']['editor']['height'] / 2
 
             waypoints = []
-            for waypoint in transition.meta['gui']['editor']['waypoints']:
+            for waypoint in transition_m.meta['gui']['editor']['waypoints']:
                 waypoints.append((waypoint[0], waypoint[1]))
 
             # Let the view draw the transition and store the returned OpenGl object id
             selected = False
-            if transition in self.model.selection.get_transitions():
+            if transition_m in self.model.selection.get_transitions():
                 selected = True
             line_width = min(parent_width, parent_height) / 25.0
             opengl_id = self.view.editor.draw_transition(from_x, from_y, to_x, to_y, line_width, waypoints,
                                                          selected, parent_depth + 0.5)
-            transition.meta['gui']['editor']['id'] = opengl_id
-            transition.meta['gui']['editor']['from_pos_x'] = from_x
-            transition.meta['gui']['editor']['from_pos_y'] = from_y
-            transition.meta['gui']['editor']['to_pos_x'] = to_x
-            transition.meta['gui']['editor']['to_pos_y'] = to_y
+            transition_m.meta['gui']['editor']['id'] = opengl_id
+            transition_m.meta['gui']['editor']['from_pos_x'] = from_x
+            transition_m.meta['gui']['editor']['from_pos_y'] = from_y
+            transition_m.meta['gui']['editor']['to_pos_x'] = to_x
+            transition_m.meta['gui']['editor']['to_pos_y'] = to_y
 
     def draw_data_flows(self, parent_state_m, parent_width, parent_height, parent_depth):
         """Draw all data flows contained in the given container state
@@ -927,51 +927,49 @@ class GraphicalEditorController(Controller):
         :param parent_height: The height of the container state
         :param parent_depth: The depth pf the container state
         """
-        for data_flow in parent_state_m.data_flows:
+        for data_flow_m in parent_state_m.data_flows:
             # Get id and references to the from and to state
-            from_state_id = data_flow.data_flow.from_state
-            to_state_id = data_flow.data_flow.to_state
+            from_state_id = data_flow_m.data_flow.from_state
+            to_state_id = data_flow_m.data_flow.to_state
             from_state = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
                 from_state_id]
             to_state = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
                 to_state_id]
 
-            from_key = data_flow.data_flow.from_key
-            to_key = data_flow.data_flow.to_key
+            from_key = data_flow_m.data_flow.from_key
+            to_key = data_flow_m.data_flow.to_key
 
-            connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
-                              from_state.meta['gui']['editor']['output_pos'].items() +
-                              from_state.meta['gui']['editor']['scoped_pos'].items() +
-                              to_state.meta['gui']['editor']['input_pos'].items() +
-                              to_state.meta['gui']['editor']['output_pos'].items() +
-                              to_state.meta['gui']['editor']['scoped_pos'].items() +
-                              parent_state_m.meta['gui']['editor']['input_pos'].items() +
-                              parent_state_m.meta['gui']['editor']['output_pos'].items() +
-                              parent_state_m.meta['gui']['editor']['scoped_pos'].items())
+            from_connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
+                                   from_state.meta['gui']['editor']['scoped_pos'].items() +
+                                   from_state.meta['gui']['editor']['output_pos'].items())
+            to_connectors = dict(to_state.meta['gui']['editor']['input_pos'].items() +
+                                 to_state.meta['gui']['editor']['scoped_pos'].items() +
+                                 to_state.meta['gui']['editor']['output_pos'].items())
 
-            if not from_key in connectors or not to_key in connectors:
+            if from_key not in from_connectors or to_key not in to_connectors:
                 logger.warn("Data flow with non existing port(s): {0}, {1}".format(from_key, to_key))
                 continue
-            from_x = connectors[from_key][0]
-            from_y = connectors[from_key][1]
-            to_x = connectors[to_key][0]
-            to_y = connectors[to_key][1]
+
+            from_x = from_connectors[from_key][0]
+            from_y = from_connectors[from_key][1]
+            to_x = to_connectors[to_key][0]
+            to_y = to_connectors[to_key][1]
 
             waypoints = []
-            for waypoint in data_flow.meta['gui']['editor']['waypoints']:
+            for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
                 waypoints.append((waypoint[0], waypoint[1]))
 
             selected = False
-            if data_flow in self.model.selection.get_data_flows():
+            if data_flow_m in self.model.selection.get_data_flows():
                 selected = True
             line_width = min(parent_width, parent_height) / 25.0
             opengl_id = self.view.editor.draw_data_flow(from_x, from_y, to_x, to_y, line_width, waypoints,
                                                         selected, parent_depth + 0.5)
-            data_flow.meta['gui']['editor']['id'] = opengl_id
-            data_flow.meta['gui']['editor']['from_pos_x'] = from_x
-            data_flow.meta['gui']['editor']['from_pos_y'] = from_y
-            data_flow.meta['gui']['editor']['to_pos_x'] = to_x
-            data_flow.meta['gui']['editor']['to_pos_y'] = to_y
+            data_flow_m.meta['gui']['editor']['id'] = opengl_id
+            data_flow_m.meta['gui']['editor']['from_pos_x'] = from_x
+            data_flow_m.meta['gui']['editor']['from_pos_y'] = from_y
+            data_flow_m.meta['gui']['editor']['to_pos_x'] = to_x
+            data_flow_m.meta['gui']['editor']['to_pos_y'] = to_y
 
     def handle_new_transition(self, parent_state_m, parent_depth):
         """Responsible for drawing new transition the user creates
