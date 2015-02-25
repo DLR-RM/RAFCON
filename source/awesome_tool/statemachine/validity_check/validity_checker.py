@@ -23,7 +23,7 @@ class ValidityChecker(Observable):
     It inherits from Observable to make a change of its fields observable.
 
     :ivar _strategy: defines the strategy of the validity checker
-    :ivar _vcInstance: instance of the validity checker incarnating a specific strategy
+    :ivar _strategy_instance: instance of the validity checker incarnating a specific strategy
 
     """
 
@@ -47,6 +47,7 @@ class ValidityChecker(Observable):
         """The interface function to trigger the check of a container state
 
         :param c_state: the container class to  be checked
+        :return: True if the check was successfull
 
         """
         #TODO: deferred import: can this be somehow solved otherwise???

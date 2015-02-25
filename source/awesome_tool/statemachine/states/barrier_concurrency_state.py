@@ -19,7 +19,9 @@ from statemachine.enums import StateType
 
 
 class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
-
+    """ The barrier concurrency holds a list of states that are executed in parallel. It waits until all states
+        finished their execution before it returns.
+    """
     yaml_tag = u'!BarrierConcurrencyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
@@ -31,7 +33,10 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                                   filename, state_type = StateType.BARRIER_CONCURRENCY, check_path=check_path)
 
     def run(self):
+        """ This defines the sequence of actions that are taken when the barrier concurrency state is executed
 
+        :return:
+        """
         self.setup_run()
 
         self.add_input_data_to_scoped_data(self.input_data, self)

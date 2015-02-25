@@ -20,10 +20,19 @@ from statemachine.states.state import State, DataPort
 
 
 def generate_time_stamp():
+    """
+    Generate a time stamp for the current time.
+    :return:
+    """
     return time.time()
 
 
 def get_human_readable_time(timestamp):
+    """
+    Converts a timestamp to a human readable format.
+    :param timestamp: the timestamp to be converted
+    :return: the converted timestamp
+    """
     return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -31,6 +40,7 @@ class ScopedVariable(DataPort, Observable, yaml.YAMLObject):
 
     """A class for representing a scoped variable in a container state
 
+    It inherits from the DataPort class as it needs exactly the same class fields.
     It inherits from Observable to make a change of its fields observable.
 
     :ivar _name: the key of the scoped variable
@@ -80,11 +90,12 @@ class ScopedData(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _name: the name of the scoped data
-    :ivar _value: the current value of the scoped data
-    :ivar _value_type: specifies the type of self._value; the setter of __value will
+    :ivar name: the name of the scoped data
+    :ivar from_state: the state_id of the state that wrote to the scoped data last
+    :ivar value_type: specifies the type of self._value; the setter of __value will
             only allow assignments that satisfies the data_type constraint
-    :ivar _from_state: the state_id of the state that wrote to the scoped data last
+    :ivar value: the current value of the scoped data
+    :ivar data_port_type: the type of the data port that wrote to the scoped data last
     :ivar _timestamp: the timestamp when the scoped data was written to last
 
     """

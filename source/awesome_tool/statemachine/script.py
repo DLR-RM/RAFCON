@@ -29,6 +29,8 @@ class Script(Observable, yaml.YAMLObject):
 
     :ivar path: the path where the script resides
     :ivar filename: the full name of the script file
+    :ivar _compiled_module: the compiled module
+    :ivar _script_id: the id of the script
     :ivar script_type: the type of the script i.e. Execution or Container
     :ivar check_path: a flag to indicate if the path should be checked for existence
 
@@ -50,7 +52,6 @@ def exit(self, scoped_variables, external_modules, gvm):
     pass
 
 """
-
 
     yaml_tag = u'!Script'
 
@@ -89,16 +90,37 @@ def exit(self, scoped_variables, external_modules, gvm):
 
 
     def execute(self, state, inputs={}, outputs={}):
+        """
+        Execute the custom "execute" function specified in the script.
+        :param state: the state to which runs the execute function
+        :param inputs: the input data of the script
+        :param outputs: the output data of the script
+        :return:
+        """
         return self._compiled_module.execute(state, inputs, outputs,
                                              statemachine.singleton.external_module_manager.external_modules,
                                              statemachine.singleton.global_variable_manager)
 
     def enter(self, state, scoped_variables={}):
+        """
+        Execute the custom "enter" function specified in the script.
+        :param state: the state to which runs the execute function
+        :param inputs: the input data of the script
+        :param outputs: the output data of the script
+        :return:
+        """
         return self._compiled_module.enter(state, scoped_variables,
                                            statemachine.singleton.external_module_manager.external_modules,
                                            statemachine.singleton.global_variable_manager)
 
     def exit(self, state, scoped_variables={}):
+        """
+        Execute the custom "exit" function specified in the script.
+        :param state: the state to which runs the execute function
+        :param inputs: the input data of the script
+        :param outputs: the output data of the script
+        :return:
+        """
         return self._compiled_module.exit(state, scoped_variables,
                                           statemachine.singleton.external_module_manager.external_modules,
                                           statemachine.singleton.global_variable_manager)

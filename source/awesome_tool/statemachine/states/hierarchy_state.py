@@ -21,7 +21,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
     """A class tto represent a hierarchy state for the state machine
 
-    The hierarchy state holds several child states, that can be container states again
+    The hierarchy state holds several child states, that can be container states on their own
     """
 
     yaml_tag = u'!HierarchyState'
@@ -34,10 +34,13 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                                 transitions, data_flows, start_state, scoped_variables, v_checker, path, filename,
                                 state_type=StateType.HIERARCHY, check_path=check_path)
 
-    # the input_data and output_data comes in with a mapping from names to values,
-    # to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
     def run(self):
+        """ This defines the sequence of actions that are taken when the hierarchy state is executed
 
+        The input_data and output_data comes with a mapping from names to values,
+        to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
+        :return:
+        """
         self.setup_run()
 
         self.add_input_data_to_scoped_data(self.input_data, self)

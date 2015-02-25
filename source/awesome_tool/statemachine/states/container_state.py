@@ -81,6 +81,8 @@ class ContainerState(State):
 
         Here initializations of scoped variables and modules that are supposed to be used by the children take place.
         This method calls the custom entry function provided by a python script.
+
+        :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
         logger.debug("Calling enter() script of container state with name %s", self.name)
         self.script.load_and_build_module()
@@ -91,6 +93,7 @@ class ContainerState(State):
 
         Clean up code for the state and its variables is executed here. This method calls the custom exit function
         provided by a python script.
+        :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
         logger.debug("Calling exit() script of container state with name %s", self.name)
         self.script.load_and_build_module()
@@ -107,7 +110,7 @@ class ContainerState(State):
 
         :param name: the name of the new state
         :param state_id: the optional state_id for the new state
-
+        :return state_id: the state_id of the created state
         """
         if state_id is None:
             state_id = state_id_generator(STATE_ID_LENGTH)
@@ -181,7 +184,7 @@ class ContainerState(State):
         return self.states[self.start_state]
 
         # If there is a value in the dependency tree for this state start with the this one
-        #TODO: do start with state provided by the dependency tree
+        #TODO: start execution with the state provided by the dependency tree
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- transition functions -------------------------------------
@@ -198,6 +201,7 @@ class ContainerState(State):
         :param from_outcome: The outcome of the source state to connect the transition to
         :param to_state_id: The target state of the transition
         :param to_outcome: The target outcome of a container state
+        :param transition_id: An optional transition id for the new transition
         """
         if transition_id is None:
             transition_id = generate_transition_id()
@@ -265,6 +269,7 @@ class ContainerState(State):
 
         :param state: The state for which the transition is determined
         :param outcome: The outcome of the state, that is given in the first parameter
+        :return: the transition specified by the the state and the outcome
         """
         if not isinstance(state, State):
             raise TypeError("ID must be of type State")
@@ -342,6 +347,7 @@ class ContainerState(State):
         :param from_data_port_id: The output_key of the source state
         :param to_state_id: The id target state of the data_flow
         :param to_data_port_id: The input_key of the target state
+        :param data_flow_id: an optional id for the data flow
 
         """
         if data_flow_id is None:
@@ -442,6 +448,11 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
 
     def get_scoped_variable_from_name(self, name):
+        """ Get the scoped variable for a unique name
+
+        :param name: the unique name of the scoped variable
+        :return: the scoped variable specified by the name
+        """
         for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
             if scoped_variable.name == name:
                 return scoped_variable_id
@@ -450,10 +461,13 @@ class ContainerState(State):
     #Primary key is the name of scoped variable.str
     @Observable.observed
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
-        """Adds a scoped variable to the container state
+        """ Adds a scoped variable to the container state
 
         :param name: The name of the scoped variable
-
+        :param data_type: An optional data type of the scoped variable
+        :param default_value: An optional default value of the scoped variable
+        :param scoped_variable_id: An optional scoped variable id of the
+        :return: the unique id of the added scoped variable
         """
         if scoped_variable_id is None:
             scoped_variable_id = generate_data_flow_id()
@@ -468,7 +482,6 @@ class ContainerState(State):
         """Remove a scoped variable from the container state
 
         :param scoped_variable_id: the id of the scoped variable to remove
-
         """
         if not scoped_variable_id in self._scoped_variables:
             raise AttributeError("A scoped variable with id %s does not exist" % str(scoped_variable_id))
@@ -483,23 +496,32 @@ class ContainerState(State):
 
     @Observable.observed
     def modify_scoped_variable_name(self, name, data_port_id):
-        """Changes the name of the scoped variable specified by data_port_id
+        """ Changes the name of the scoped variable specified by data_port_id
 
+        :param name: the new name of the scoped variable
+        :param data_port_id: the unique id of the scoped variable
+        :return:
         """
         self.scoped_variables[data_port_id].name = name
 
     @Observable.observed
     def modify_scoped_variable_data_type(self, data_type, data_port_id):
-        """Changes the name of the scoped variable specified by data_port_id
+        """ Changes the name of the scoped variable specified by data_port_id
 
+        :param data_type: the new data type of the scoped variable
+        :param data_port_id: the unique id of the scoped variable
+        :return:
         """
         self.scoped_variables[data_port_id].default_value = None
         self.scoped_variables[data_port_id].data_type = data_type
 
     @Observable.observed
     def modify_scoped_variable_default_value(self, default_value, data_port_id):
-        """Changes the default value of the scoped variable specified by data_port_id
+        """ Changes the name of the scoped variable specified by data_port_id
 
+        :param default_value: the new default variable of the scoped variable
+        :param data_port_id: the unique id of the scoped variable
+        :return:
         """
         val = self.convert_string_to_type(default_value, self.scoped_variables[data_port_id].data_type)
         if not val is None:
@@ -511,8 +533,9 @@ class ContainerState(State):
 
     def get_data_port_by_id(self, data_port_id):
         """ Returns the io-data_port or scoped_variable with a certain data_id
-        :param port_id:
-        :return:
+
+        :param data_port_id: the unique id of the target data port
+        :return: the data port specified by the data port
         """
         if data_port_id in self.input_data_ports:
             return self.input_data_ports[data_port_id]
@@ -531,7 +554,7 @@ class ContainerState(State):
         """Get all input data of an state
 
         :param state: the state of which the input data is determined
-
+        :return: the input data of the target state
         """
         result_dict = {}
 
@@ -553,6 +576,8 @@ class ContainerState(State):
     def get_outputs_for_state(self, state):
         """Return empty output dictionary for a state
 
+        :param state: the state of which the output data is determined
+        :return: the output data of the target state
         """
         result_dict = {}
         for key, data_port in state.output_data_ports.iteritems():
@@ -633,6 +658,11 @@ class ContainerState(State):
             return self.states[transition.to_state]
 
     def get_scoped_variables_as_dict(self, dict):
+        """ Get the scoped variables of the state as dictionary
+
+        :param dict: the dict that is filled with the scoped variables
+        :return:
+        """
         for key_svar, svar in self.scoped_variables.iteritems():
             for key_sdata, sdata in self.scoped_data.iteritems():
                 if svar.name == sdata.name and sdata.from_state == self.state_id:
@@ -640,7 +670,10 @@ class ContainerState(State):
                         dict[svar.name] = sdata.value
 
     def write_output_data(self):
-        #write output data back to the dictionary
+        """ Write the scoped data to output of the state. Called before exiting the container state.
+
+        :return:
+        """
         for output_name, value in self.output_data.iteritems():
             output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
             for data_flow_id, data_flow in self.data_flows.iteritems():
@@ -650,6 +683,11 @@ class ContainerState(State):
                             copy.deepcopy(self.scoped_data[str(data_flow.from_key)+data_flow.from_state].value)
 
     def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
+        """ Copy the data of the enter/exit scripts to the scoped data
+
+        :param output_dict: the output dictionary of the scripts
+        :return:
+        """
         for output_name, output_data in output_dict.iteritems():
             for key_sdata, sdata in self.scoped_data.iteritems():
                 if sdata.data_port_type is DataPortType.SCOPED and output_name == sdata.name:

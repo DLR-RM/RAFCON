@@ -22,7 +22,8 @@ class StateMachine(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _root_state: the root state of the state machine
+    :ivar state_machine_id: the id of the state machine
+    :ivar root_state: the root state of the state machine
 
     """
 
@@ -37,6 +38,10 @@ class StateMachine(Observable):
         self.root_state = root_state
 
     def start(self):
+        """
+        Starts the execution of the root state.
+        :return:
+        """
         self._root_state.start()
 
 #########################################################################

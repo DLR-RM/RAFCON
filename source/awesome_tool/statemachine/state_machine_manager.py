@@ -19,7 +19,8 @@ class StateMachineManager(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _root_state: the root state of the state machine
+    :ivar _state_machine: a list of all state machine that are managed by the state machine manager
+    :ivar _active_state_machine_id: the id of the currently active state machine
 
     """
 
@@ -34,12 +35,23 @@ class StateMachineManager(Observable):
                 self.add_state_machine(state_machine)
 
     def load_state_machine(self, directory):
+        """
+        Loads a state machine from a directory.
+        :param directory: the directory where the state machine should be loaded from
+        :return:
+        """
+        # TODO: implement
         logger.debug("StateMachine should be loaded now ... directory: %s" % directory)
         # load state machine
         # add state machine
 
     @Observable.observed
     def add_state_machine(self, state_machine):
+        """
+        Add a state machine to the list of managed state machines. If there is no active state set yet, the active state
+        :param state_machine:
+        :return:
+        """
         self._state_machines[state_machine.state_machine_id] = state_machine
         if self.active_state_machine_id is None:
             self.active_state_machine_id = state_machine.state_machine_id

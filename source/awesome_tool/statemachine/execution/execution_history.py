@@ -3,7 +3,7 @@
    :platform: Unix, Windows
    :synopsis: A module for the history of one thread during state machine execution
 
-.. moduleauthor:: Sebastian Brunner
+.. moduleauthor:: TODO
 
 
 """

@@ -315,9 +315,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :return: The OpenGL id and the positions of teh outcomes (as dictionary with outcome id as key)
         """
         # "Generate" unique ID for each object
-        id = self.name_counter
+        opengl_id = self.name_counter
         self.name_counter += 1
-        glPushName(id)
+        glPushName(opengl_id)
         self._set_closest_stroke_width(1.5)
 
         # First draw the face of the rectangular, then the outline
@@ -393,9 +393,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                     if str_width > max_name_width:
                         max_name_width = str_width
 
-            fill_color = self.port_color
-            if active:
-                fill_color = self.state_selected_color
+            fill_color = self.port_color if not selected else self.state_selected_color
+            
             port_width = min(max_name_width, max_allowed_name_width)
             port_pos_left_x = pos_x + (width - port_width - margin) / 2
             port_pos_right_x = port_pos_left_x + port_width + margin
@@ -465,7 +464,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 pass
 
         glPopName()
-        return id, outcome_pos, outcome_radius, \
+        return opengl_id, outcome_pos, outcome_radius, \
                input_connector_pos, output_connector_pos, scoped_connector_pos, port_radius, \
                resize_length
 

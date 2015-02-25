@@ -104,6 +104,7 @@ class GlobalVariableManager(Observable):
         """Unlocks a global variable
 
         :param key: the key of the global variable to be unlocked
+        :param access_key: the access key to be able to unlock the global variable
 
         """
         if self.__access_keys[key] == access_key:
@@ -152,6 +153,11 @@ class GlobalVariableManager(Observable):
             return False
 
     def locked_status_for_variable(self, key):
+        """
+        Returns the status of the lock of a global variable
+        :param key: the unique key of the global variable
+        :return:
+        """
         if key in self.__variable_locks:
             return self.__variable_locks[key].locked()
 

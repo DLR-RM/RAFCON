@@ -206,4 +206,7 @@ def test_port_and_outcome_removal():
 
 
 if __name__ == '__main__':
-    pytest.main()
+    #pytest.main()
+    test_create_state()
+    test_create_container_state()
+    test_port_and_outcome_removal()

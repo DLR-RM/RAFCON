@@ -49,6 +49,10 @@ class ExecutionState(State, yaml.YAMLObject):
         return self.outcomes[outcome_id]
 
     def run(self):
+        """ This defines the sequence of actions that are taken when the execution state is executed
+
+        :return:
+        """
         self.setup_run()
         try:
 

@@ -77,8 +77,12 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         return str(self.state_copy) + "library_path: %s, library_name: %s, version: %s, state_id: %s" % \
                (self.library_path, self.library_name, self.version, self.state_id)
 
-    #just call the run method of the container state
     def run(self):
+        """ This defines the sequence of actions that are taken when the library state is executed
+
+        It basically just calls the run method of the container state
+        :return:
+        """
         self.active = True
         logger.debug("Entering library state %s" % self.library_name)
         self.state_copy.input_data = self.input_data

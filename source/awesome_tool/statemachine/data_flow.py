@@ -20,10 +20,10 @@ class DataFlow(Observable, yaml.YAMLObject):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _from_state: the id of the source state of the data flow connection
-    :ivar _from_key: the id of the data port / scoped variable of the source state
-    :ivar _to_state: the id of the target state of the data flow connection
-    :ivar _to_key: the id of the data port /scoped variable of the target state
+    :ivar from_state: the id of the source state of the data flow connection
+    :ivar to_state: the id of the target state of the data flow connection
+    :ivar from_key: the id of the data port / scoped variable of the source state
+    :ivar to_key: the id of the data port /scoped variable of the target state
 
     """
 

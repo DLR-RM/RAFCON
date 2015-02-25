@@ -29,8 +29,9 @@ class DataPort(Observable, yaml.YAMLObject):
     #TODO: should the value of the data port be stored here as well?
     """A class for representing a data ports in a state
 
-    :ivar _name: the name of the data port
-    :ivar _data_type: the value type of the port
+    :ivar name: the name of the data port
+    :ivar data_type: the value type of the data port
+    ::ivar default_value: the default value of the data port
 
     """
     def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None):
@@ -146,20 +147,23 @@ class State(Observable, yaml.YAMLObject, object):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _state_id: the id of the state
-    :ivar _name: the name of the state
-    :ivar _input_data_ports: holds the input data ports of the state
-    :ivar _output_data_ports: holds the output data ports of the state
-    :ivar _outcomes: holds the state outcomes, which are the connection points for transitions
-    :ivar _is_start: indicates if this state is a start state of a hierarchy
-    :ivar _script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
+    :ivar state_id: the id of the state
+    :ivar name: the name of the state
+    :ivar parent: the parent of the state
+    :ivar state_type: the type of the container state (i.e. hierarchy, concurrency etc.)
+    :ivar input_data_ports: holds the input data ports of the state
+    :ivar output_data_ports: holds the output data ports of the state
+    :ivar outcomes: holds the state outcomes, which are the connection points for transitions
+    :ivar is_start: indicates if this state is a start state of a hierarchy
+    :ivar script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
     :ivar _input_data: the input data of the state during execution
     :ivar _output_data: the output data of the state during execution
     :ivar _preempted: a flag to show if the state was preempted from outside
     :ivar _concurrency_queue: a queue to signal a preemptive concurrency state, that the execution of the state
                                 finished
     :ivar _final_outcome: the final outcome of a state, when it finished execution
-    :ivar _state_type: the type of the container state (i.e. hierarchy, concurrency etc.)
+    :ivar description: a human readable description of the state
+    :ivar _active: a flag that shows if the state is currently running
 
     """
 
@@ -215,10 +219,17 @@ class State(Observable, yaml.YAMLObject, object):
 
     # give the state the appearance of a thread that can be started several times
     def start(self):
+        """ Starts the execution of the state in a new thread.
+
+        :return:
+        """
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 
     def join(self):
+        """ Waits until the state finished execution.
+
+        """
         # import time
         # while self.thread is None:
         #     logger.debug("Thread is waiting for thread to be started")
@@ -229,6 +240,10 @@ class State(Observable, yaml.YAMLObject, object):
             logger.warn("State %s was not started yet, cannot join" % self.name)
 
     def setup_run(self):
+        """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
+
+        :return:
+        """
         self.active = True
         self.preempted = False
         if not isinstance(self.input_data, dict):
@@ -238,6 +253,10 @@ class State(Observable, yaml.YAMLObject, object):
         self.check_input_data_type(self.input_data)
 
     def recursively_preempt_states(self, state):
+        """ Preempt the provided state and all it subsstates.
+        :param state: The that is going to be preempted recursively.
+        :return:
+        """
         state.preempted = True
         # only go deeper if the State has a states dictionary = the state is not a Execution State
         if state.state_type is not StateType.EXECUTION:
@@ -318,6 +337,11 @@ class State(Observable, yaml.YAMLObject, object):
             raise AttributeError("output data port with name %s does not exit", data_port_id)
 
     def get_path(self, appendix=None):
+        """ Recursively create the path of the state. In bottom up method i.e. from the nested child states to the root
+        state.
+        :param appendix: the part of the path that was already calculated by previous function calls
+        :return: the full path to the root state
+        """
         if self.parent:
             if appendix is None:
                 return self.parent.get_path(self.state_id)
@@ -334,7 +358,7 @@ class State(Observable, yaml.YAMLObject, object):
 
         :param name: the name of the target data_port
         :param data_port_type: the data port type of the target data port
-
+        :return: the data port specified by the name and the type
         """
         if data_port_type is DataPortType.INPUT:
             for ip_id, output_port in self.input_data_ports.iteritems():
@@ -349,8 +373,8 @@ class State(Observable, yaml.YAMLObject, object):
 
     def get_data_port_by_id(self, id):
         """ Returns the io-data_port or scoped_variable with a certain id
-        :param port_id:
-        :return:
+        :param id: the id of the target data port
+        :return: the data port specified by the id
         """
         if id in self.input_data_ports:
             return self.input_data_ports[id]
@@ -365,6 +389,8 @@ class State(Observable, yaml.YAMLObject, object):
 
         :param name: the name of the outcome to add
         :param outcome_id: the optional outcome_id of the new outcome
+
+        :return: outcome_id: the outcome if of the generated state
 
         """
         if outcome_id is None:
@@ -408,8 +434,10 @@ class State(Observable, yaml.YAMLObject, object):
 
     @Observable.observed
     def modify_outcome_name(self, name, outcome):
-        """Checks if name already exists for the outcomes. If this is the case a unique number is appended to the name
+        """Checks if the outcome name already exists. If this is the case a unique number is appended to the name
 
+        :param name: the desired name of a possibly new outcome
+        :return: name: a unique outcome name for the state
         """
         def define_unique_name(name, dict_of_names, count=0):
             count += 1
@@ -427,35 +455,53 @@ class State(Observable, yaml.YAMLObject, object):
 
     @Observable.observed
     def modify_input_data_port_name(self, name, data_port_id):
-        """Changes the name of the input data port specified by data_port_id
+        """ Changes the name of the input data port specified by data_port_id
 
+        :param name: the new name of the data port
+        :param data_port_id: the unique id of the data port
+        :return:
         """
         self.input_data_ports[data_port_id].name = name
 
     @Observable.observed
     def modify_output_data_port_name(self, name, data_port_id):
-        """Changes the name of the output data port specified by data_port_id
+        """ Changes the name of the output data port specified by data_port_id
 
+        :param name: the new name of the data port
+        :param data_port_id: the unique id of the data port
+        :return:
         """
         self.output_data_ports[data_port_id].name = name
 
     @Observable.observed
     def modify_input_data_port_data_type(self, data_type, data_port_id):
-        """Changes the name of the input data port specified by data_port_id
+        """ Changes the data type of the input data port specified by data_port_id
 
+        :param data_type: the new data type of the data port
+        :param data_port_id: the unique id of the data port
+        :return:
         """
         self.input_data_ports[data_port_id].default_value = None
         self.input_data_ports[data_port_id].data_type = data_type
 
     @Observable.observed
     def modify_output_data_port_data_type(self, data_type, data_port_id):
-        """Changes the name of the output data port specified by data_port_id
+        """ Changes the data type of the output data port specified by data_port_id
 
+        :param data_type: the new data type of the data port
+        :param data_port_id: the unique id of the data port
+        :return:
         """
         self.output_data_ports[data_port_id].default_value = None
         self.output_data_ports[data_port_id].data_type = data_type
 
     def convert_string_to_type(self, string_value, data_type):
+        """ Helper function to convert a given string to a given data type
+
+        :param string_value: the string to convert
+        :param data_type: the target data type
+        :return: the converted value
+        """
         converted_value = None
         if data_type == "str":
             converted_value = str(string_value)
@@ -469,8 +515,11 @@ class State(Observable, yaml.YAMLObject, object):
 
     @Observable.observed
     def modify_input_data_port_default_value(self, default_value, data_port_id):
-        """Changes the default value of the input data port specified by data_port_id
+        """ Changes the default value of the input data port specified by data_port_id
 
+        :param default_value: the new default value of the data port
+        :param data_port_id: the unique id of the data port
+        :return:
         """
         val = self.convert_string_to_type(default_value, self.input_data_ports[data_port_id].data_type)
         if not val is None:
@@ -478,8 +527,11 @@ class State(Observable, yaml.YAMLObject, object):
 
     @Observable.observed
     def modify_output_data_port_default_value(self, default_value, data_port_id):
-        """Changes the default value of the output data port specified by data_port_id
+        """ Changes the default value of the output data port specified by data_port_id
 
+        :param default_value: the new default value of the data port
+        :param data_port_id: the unique id of the data port
+        :return:
         """
         val = self.convert_string_to_type(default_value, self.output_data_ports[data_port_id].data_type)
         if not val is None:
@@ -495,6 +547,7 @@ class State(Observable, yaml.YAMLObject, object):
     def check_input_data_type(self, input_data):
         """Check the input data types of the state
 
+        :param input_data: the input_data dictionary to check
         """
         for input_data_port_key, data_port in self.input_data_ports.iteritems():
             if input_data_port_key in input_data:
