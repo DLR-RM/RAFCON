@@ -12,6 +12,7 @@ import yaml
 
 from statemachine.enums import StateType
 from statemachine.states.container_state import ContainerState
+from statemachine.states.state import State
 import statemachine.singleton
 from utils import log
 
@@ -38,6 +39,9 @@ class LibraryState(ContainerState, yaml.YAMLObject):
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
                  v_checker=None, path=None, filename=None, check_path=True):
 
+        # this variable is set to true if the state initialization is finished! after initialization no change to the
+        # library state is allowed any more
+        self.initialized = False
         ContainerState.__init__(self, name=name, state_id=state_id, input_data_ports=input_data_ports,
                                 output_data_ports=output_data_ports, outcomes=outcomes, states=states,
                                 transitions=transitions, data_flows=data_flows, start_state=start_state,
@@ -56,6 +60,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         path_list = library_path.split("/")
         target_lib_dict = statemachine.singleton.library_manager.libraries
         # go down the path to the correct library
+        # TODO: make this more robust
         for element in path_list:
             target_lib_dict = target_lib_dict[element]
         # get a fresh copy of the library state from disk
@@ -72,6 +77,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         self.outcomes = self.state_copy.outcomes
 
         logger.debug("Initialized library state with name %s" % name)
+        self.initialized = True
 
     def __str__(self):
         return str(self.state_copy) + "library_path: %s, library_name: %s, version: %s, state_id: %s" % \
@@ -92,6 +98,55 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         logger.debug("Exiting library state %s" % self.library_name)
         self.active = False
 
+    def add_outcome(self, name, outcome_id=None):
+        """Overwrites the add_outcome of the ContainerState class. Prevents user from adding a
+        outcome to the library state.
+
+        For further documentation, look at the State class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a outcome to a library state")
+        else:
+            return ContainerState.add_outcome(self, name, outcome_id)
+
+    def add_state(self, state):
+        """Overwrites the add_state of the ContainerState class. Prevents user from adding a state to the library state.
+
+        For further documentation, look at the ContainerState class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a state to a library state")
+        else:
+            return ContainerState.add_state(self, state)
+
+    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
+        """Overwrites the add_transition of the ContainerState class. Prevents user from adding a
+        transition to the library state.
+
+        For further documentation, look at the ContainerState class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a transition to a library state")
+        else:
+            return ContainerState.add_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+
+    def add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id=None):
+        """Overwrites the add_data_flow of the ContainerState class. Prevents user from adding a
+        data_flow to the library state.
+
+        For further documentation, look at the ContainerState class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a data flow to a library state")
+        else:
+            return ContainerState.add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id,
+                                                data_flow_id)
+
+    #TODO: input data port, output data port, scoped variable
 
     @classmethod
     def to_yaml(cls, dumper, data):

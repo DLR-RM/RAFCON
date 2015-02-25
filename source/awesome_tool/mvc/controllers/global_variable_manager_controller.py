@@ -24,7 +24,6 @@ class GlobalVariableManagerController(Controller, Observer):
         new_global_variable = "a_new_global_variable%s" % self.new_gv_counter
         self.new_gv_counter += 1
         self.model.global_variable_manager.set_variable(new_global_variable, "val")
-        pass
 
     #delete buttons
     def on_delete_global_variable_button_clicked(self, widget, data=None):

@@ -7,12 +7,11 @@ import gtk
 from utils import log
 from mvc.controllers import MainWindowController
 from mvc.views import LoggingView, MainWindowView
-from mvc.models import ContainerStateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
+from mvc.models import ContainerStateModel, GlobalVariableManagerModel
 from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
 from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.state_machine import StateMachine
@@ -39,13 +38,11 @@ def create_models():
     logging.getLogger('statemachine.state').setLevel(logging.DEBUG)
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
-    external_module_manager_model = ExternalModuleManagerModel()
-
     global_var_manager_model = GlobalVariableManagerModel()
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
-    return logger, global_var_manager_model, external_module_manager_model
+    return logger, global_var_manager_model
 
 def create_turtle_statemachine():
      ########################################################
@@ -206,7 +203,7 @@ def run_turtle_demo():
     statemachine.singleton.library_manager.initialize()
     logging_view = LoggingView()
     setup_logger(logging_view)
-    [logger, gvm_model, emm_model] = create_models()
+    [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
     state_machine = StateMachine(turtle_demo_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -215,22 +212,11 @@ def run_turtle_demo():
     # load the meta data for the state machine
     sm_manager_model.get_active_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model, editor_type="ld")
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model, editor_type="ld")
     #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
     #graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     #graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)
-
-    # external modules
-    ros_module = ExternalModule(name="ros", module_name="ros_external_module", class_name="RosModule")
-    statemachine.singleton.external_module_manager.add_external_module(ros_module)
-    statemachine.singleton.external_module_manager.external_modules["ros"].connect([])
-    statemachine.singleton.external_module_manager.external_modules["ros"].start()
-
-    user_input_module = ExternalModule(name="user_input", module_name="user_input_external_module", class_name="UserInput")
-    statemachine.singleton.external_module_manager.add_external_module(user_input_module)
-    statemachine.singleton.external_module_manager.external_modules["user_input"].connect([])
-    #statemachine.singleton.external_module_manager.external_modules["user_input"].start()
 
     # dual_gtk_window = DualGTKWindow()
 

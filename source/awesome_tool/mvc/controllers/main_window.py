@@ -4,7 +4,7 @@ import gtk
 from gtkmvc import Controller
 
 from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
+    StateDataPortEditorController, GlobalVariableManagerController,\
     SourceEditorController, SingleWidgetWindowController, StateEditorController, StateMachineTreeController,\
     LibraryTreeController
 import statemachine.singleton
@@ -46,7 +46,7 @@ def setup_key_binding(key_map, view, widget):
 
 class MainWindowController(Controller):
 
-    def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='PortConnectionGrouped'):
+    def __init__(self, state_machine_manager_model, view, gvm_model, editor_type='PortConnectionGrouped'):
         Controller.__init__(self, state_machine_manager_model, view)
 
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
@@ -72,6 +72,9 @@ class MainWindowController(Controller):
 
         view.get_top_widget().connect("destroy", self.on_main_window_destroy)
 
+        right_bottom_notebook = view["right_bottom_notebook"]
+        tree_notebook = view["tree_notebook"]
+
         ######################################################
         # logging view
         ######################################################
@@ -84,15 +87,11 @@ class MainWindowController(Controller):
         ######################################################
         # library tree
         ######################################################
-        tree_notebook = view["tree_notebook"]
-        #remove placeholder tab
-        library_tree_tab = view['library_tree_placeholder']
-        page_num = tree_notebook.page_num(library_tree_tab)
-        tree_notebook.remove_page(page_num)
-        #append new tab
         self.library_controller = LibraryTreeController(active_state_machine.root_state, view.library_tree)
-        libraries_label = gtk.Label('Libraries')
-        tree_notebook.insert_page(view.library_tree, libraries_label, page_num)
+        view['library_vbox'].remove(view['library_tree_placeholder'])
+        view['library_vbox'].pack_start(view.library_tree, True, True, 0)
+        view['add_library_button'].connect("clicked", self.library_controller.add_library_button_clicked,
+                                           state_machine_manager_model)
 
         ######################################################
         # statemachine tree
@@ -134,29 +133,16 @@ class MainWindowController(Controller):
         # #test = SingleWidgetWindowController(model, view.graphical_editor_window, GraphicalEditorController)
 
         ######################################################
-        # external module editor
-        ######################################################
-        em_global_notebook = view["right_bottom_notebook"]
-        #remove placeholder tab
-        external_modules_tab = view['external_modules_placeholder']
-        page_num = em_global_notebook.page_num(external_modules_tab)
-        em_global_notebook.remove_page(page_num)
-        #append new tab
-        self.external_modules_controller = ExternalModuleManagerController(emm_model, view.external_module_manager_view)
-        external_modules_label = gtk.Label('External Modules')
-        em_global_notebook.insert_page(view.external_module_manager_view.get_top_widget(), external_modules_label, page_num)
-
-        ######################################################
         # global variable editor
         ######################################################
         #remove placeholder tab
         global_variables_tab = view['global_variables_placeholder']
-        page_num = em_global_notebook.page_num(global_variables_tab)
-        em_global_notebook.remove_page(page_num)
+        page_num = right_bottom_notebook.page_num(global_variables_tab)
+        right_bottom_notebook.remove_page(page_num)
         #append new tab
         self.external_modules_controller = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         global_variables_label = gtk.Label('Global Variables')
-        em_global_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
+        right_bottom_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
 
         ######################################################
         # status bar
@@ -300,10 +286,11 @@ class MainWindowController(Controller):
 
         if selected_state_model and isinstance(selected_state_model, ContainerStateModel):
             state = ExecutionState("~")
-            selected_state_model.state.add_state(state)
-            state_model = selected_state_model.states[state.state_id]
-            #logger.info("create exec_State: %s" % state)
-            selection.set([state_model])
+            state_id = selected_state_model.state.add_state(state)
+            if state_id:
+                state_model = selected_state_model.states[state.state_id]
+                #logger.info("create exec_State: %s" % state)
+                selection.set([state_model])
         else:
             logger.warning("Add state FAILED: State has to be inheritor of type ContainerState!!!")
 

@@ -1,7 +1,7 @@
 
 from gtkmvc import View
 from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-     GlobalVariableEditorView, ExternalModuleManagerView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
+     GlobalVariableEditorView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
      LoggingView, StateMachineTreeView, LibraryTreeView
 from mvc.views.states_editor import StatesEditorView
 from mvc.views.state_machines_editor import StateMachinesEditorView
@@ -22,9 +22,6 @@ class MainWindowView(View):
 
         self.state_machine_tree = StateMachineTreeView()
         self.state_machine_tree.show()
-
-        self.external_module_manager_view = ExternalModuleManagerView()
-        self.external_module_manager_view.show()
 
         self.global_var_manager_view = GlobalVariableEditorView()
         self.global_var_manager_view.show()

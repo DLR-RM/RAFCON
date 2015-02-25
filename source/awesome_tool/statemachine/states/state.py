@@ -141,6 +141,8 @@ class DataPort(Observable, yaml.YAMLObject):
 
 
 PATH_SEPARATOR = '/'
+
+
 class State(Observable, yaml.YAMLObject, object):
 
     """A class for representing a state in the state machine

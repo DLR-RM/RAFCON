@@ -415,15 +415,36 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <child>
-                          <object class="GtkLabel" id="library_tree_placeholder">
+                          <object class="GtkVBox" id="library_vbox">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">placeholder against warnings</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkButton" id="add_library_button">
+                                <property name="label" translatable="yes">Add library</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="library_tree_placeholder">
+                                <property name="visible">True</property>
+                                <property name="label" translatable="yes">placeholder against warnings</property>
+                              </object>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
                           </object>
                         </child>
                         <child type="tab">
                           <object class="GtkLabel" id="library_tree_tab">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Libraries</property>
+                            <property name="label" translatable="yes">Library Tree</property>
                           </object>
                           <packing>
                             <property name="tab_fill">False</property>
@@ -534,28 +555,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <child>
-                      <object class="GtkLabel" id="external_modules_placeholder">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">placeholder against warnings</property>
-                      </object>
-                    </child>
-                    <child type="tab">
-                      <object class="GtkLabel" id="external_modules_tab">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">External Modules</property>
-                      </object>
-                      <packing>
-                        <property name="tab_fill">False</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkLabel" id="global_variables_placeholder">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">placeholder against warnings</property>
                       </object>
-                      <packing>
-                        <property name="position">1</property>
-                      </packing>
                     </child>
                     <child type="tab">
                       <object class="GtkLabel" id="global_variables_tab">
@@ -563,7 +566,6 @@
                         <property name="label" translatable="yes">Global Variables</property>
                       </object>
                       <packing>
-                        <property name="position">1</property>
                         <property name="tab_fill">False</property>
                       </packing>
                     </child>
@@ -573,7 +575,7 @@
                         <property name="label" translatable="yes">Placeholder against warnings</property>
                       </object>
                       <packing>
-                        <property name="position">2</property>
+                        <property name="position">1</property>
                       </packing>
                     </child>
                     <child type="tab">
@@ -582,9 +584,15 @@
                         <property name="label" translatable="yes">History</property>
                       </object>
                       <packing>
-                        <property name="position">2</property>
+                        <property name="position">1</property>
                         <property name="tab_fill">False</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child type="tab">
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>

@@ -4,5 +4,3 @@ from transition import TransitionModel
 from data_flow import DataFlowModel
 from data_port import DataPortModel
 from global_variable_manager import GlobalVariableManagerModel
-from external_module_manager import ExternalModuleManagerModel
-from external_module import ExternalModule
