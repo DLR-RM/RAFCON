@@ -1,6 +1,6 @@
 import time
 
-def execute(self, inputs, outputs, external_modules, gvm):
+def execute(self, inputs, outputs, gvm):
     print "Hello world: Execute loop state 2"
     # time.sleep(1)
     counter = gvm.get_variable("counter")

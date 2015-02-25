@@ -232,7 +232,6 @@ def run_turtle_demo():
 class DualGTKWindow:
 
     def __init__(self):
-        self.external_module_stopped = False
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_title("DualGTKWindoTest!")
         self.window.connect("delete_event", self.delete_event)
@@ -252,9 +251,6 @@ class DualGTKWindow:
 
     def callback(self, widget, data):
         print "Hello again - %s was pressed" % data
-        if not self.external_module_stopped:
-            statemachine.singleton.external_module_manager.external_modules["user_input"].stop()
-            self.external_module_stopped = True
 
     def delete_event(self, widget, event, data=None):
         gtk.main_quit()

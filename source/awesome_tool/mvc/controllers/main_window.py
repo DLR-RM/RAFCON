@@ -140,7 +140,7 @@ class MainWindowController(Controller):
         page_num = right_bottom_notebook.page_num(global_variables_tab)
         right_bottom_notebook.remove_page(page_num)
         #append new tab
-        self.external_modules_controller = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
+        self.global_variable_manager_controller = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         global_variables_label = gtk.Label('Global Variables')
         right_bottom_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
 
@@ -195,7 +195,6 @@ class MainWindowController(Controller):
         logger.debug("Main window destroyed")
         log.debug_filter.set_logging_test_view(None)
         log.error_filter.set_logging_test_view(None)
-        statemachine.singleton.external_module_manager.stop_all_modules()
         gtk.main_quit()
 
     def register_view(self, view):

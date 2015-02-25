@@ -129,8 +129,8 @@ def test_nested_library_state_machine():
     assert output_data["data_output_port1"] == 42.0
 
 if __name__ == '__main__':
-    pytest.main()
-    #save_libraries()
-    #save_nested_library_state()
-    #test_library_state_machine()
-    #test_nested_library_state_machine()
+    #pytest.main()
+    save_libraries()
+    save_nested_library_state()
+    test_library_state_machine()
+    test_nested_library_state_machine()

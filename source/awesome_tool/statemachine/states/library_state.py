@@ -99,7 +99,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         self.active = False
 
     def add_outcome(self, name, outcome_id=None):
-        """Overwrites the add_outcome of the ContainerState class. Prevents user from adding a
+        """Overwrites the add_outcome of the State class. Prevents user from adding a
         outcome to the library state.
 
         For further documentation, look at the State class.
@@ -109,6 +109,30 @@ class LibraryState(ContainerState, yaml.YAMLObject):
             logger.error("It is not allowed to add a outcome to a library state")
         else:
             return ContainerState.add_outcome(self, name, outcome_id)
+
+    def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
+        """Overwrites the add_output_data_port of the State class. Prevents user from adding a
+        output data port to the library state.
+
+        For further documentation, look at the State class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a output data port to a library state")
+        else:
+            return ContainerState.add_output_data_port(self, name, data_type, default_value, data_port_id)
+
+    def add_input_data_port(self, name, data_type, default_value=None, data_port_id=None):
+        """Overwrites the add_input_data_port of the State class. Prevents user from adding a
+        output data port to the library state.
+
+        For further documentation, look at the State class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a input data port to a library state")
+        else:
+            return ContainerState.add_input_data_port(self, name, data_type, default_value, data_port_id)
 
     def add_state(self, state):
         """Overwrites the add_state of the ContainerState class. Prevents user from adding a state to the library state.
@@ -146,7 +170,17 @@ class LibraryState(ContainerState, yaml.YAMLObject):
             return ContainerState.add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id,
                                                 data_flow_id)
 
-    #TODO: input data port, output data port, scoped variable
+    def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
+        """Overwrites the add_scoped_variable of the ContainerState class. Prevents user from adding a
+        scoped_variable to the library state.
+
+        For further documentation, look at the ContainerState class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a scoped_variable to a library state")
+        else:
+            return ContainerState.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
 
     @classmethod
     def to_yaml(cls, dumper, data):

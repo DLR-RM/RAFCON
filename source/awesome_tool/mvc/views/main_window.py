@@ -57,10 +57,6 @@ class MainWindowView(View):
         self["state_editor"].add(self.states_editor.get_top_widget())
         self.states_editor.show()
 
-
-        # insert environment-manager
-        #self['external_module_manager_vbox'].add(self['external_module_manager'].get_top_widget())
-
         # insert global-variable-manager
         #self['global_variable_manager_vbox'].add(self.global_variable_manager.get_top_widget())
 

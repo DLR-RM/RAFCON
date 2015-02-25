@@ -106,15 +106,6 @@ def create_models(*args, **kargs):
     #ctr_state.add_data_flow(ctr_state.state_id, scoped_variable2_ctr_state, ctr_state.state_id, output_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    external_module_manager_model = ExternalModuleManagerModel()
-    sys.path.insert(0, '../../test_scripts')
-    em = ExternalModule(name="External Module 1", module_name="external_module_test", class_name="TestModule")
-    external_module_manager_model.external_module_manager.add_external_module(em)
-    external_module_manager_model.external_module_manager.external_modules["External Module 1"].connect([])
-    external_module_manager_model.external_module_manager.external_modules["External Module 1"].start()
-    em = ExternalModule(name="External Module 2", module_name="external_module_test2", class_name="TestModule2")
-    external_module_manager_model.external_module_manager.add_external_module(em)
-
     global_var_manager_model = GlobalVariableManagerModel()
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
@@ -154,10 +145,6 @@ if __name__ == '__main__':
 
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
-
-    # external_module_manager_view = SingleWidgetWindowView(ExternalModuleManagerView, width=500, height=200, title='External Module Manager')
-    # external_module_manger_controller = SingleWidgetWindowController(emm_model, external_module_manager_view, ExternalModuleManagerController)
-    # external_module_manger_controller.set_source_view(src_view.widget_view)
 
     # prop_view = SingleWidgetWindowView(StateOverviewView, width=400, height=100, title='Properties Editor')
     # prop_ctrl = SingleWidgetWindowController(this_model, prop_view, StateOverviewController)

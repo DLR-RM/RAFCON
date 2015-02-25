@@ -19,7 +19,6 @@ data_flow_id_counter = 0
 outcome_id_counter = 0
 data_port_id_counter = 0
 script_id_counter = 0
-external_module_id_counter = 0
 
 used_state_ids = []
 used_global_variable_ids = []
@@ -63,12 +62,6 @@ def generate_script_id():
     global script_id_counter
     script_id_counter += 1
     return script_id_counter
-
-
-def generate_external_module_id():
-    global external_module_id_counter
-    external_module_id_counter += 1
-    return external_module_id_counter
 
 
 def state_id_generator(size=6, chars=string.ascii_uppercase):

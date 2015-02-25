@@ -205,6 +205,8 @@ class State(Observable, yaml.YAMLObject, object):
 
         if state_type is StateType.EXECUTION:
             self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path)
+        elif state_type is StateType.LIBRARY:
+            self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path)
         else:
             self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path)
 

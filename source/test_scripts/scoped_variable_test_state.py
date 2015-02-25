@@ -1,4 +1,4 @@
-def execute(self, inputs, outputs, external_modules, gvm):
+def execute(self, inputs, outputs, gvm):
     print "Executing scoped variable test state ..."
     print inputs
     tmp = inputs["input_data_port1"] + inputs["input_data_port2"]
