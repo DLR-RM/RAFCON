@@ -275,7 +275,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
     @state_copy.setter
     @Observable.observed
     def state_copy(self, state_copy):
-        if not isinstance(state_copy, ContainerState):
-            raise TypeError("state_copy must be of type ContainerState")
+        if not isinstance(state_copy, State):
+            raise TypeError("state_copy must be of type State")
 
         self._state_copy = state_copy

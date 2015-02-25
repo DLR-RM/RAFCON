@@ -47,20 +47,24 @@ def save_libraries():
                          state3.state_id,
                          output_state3)
 
-    s.save_statemachine_as_yaml(state3, "../test_scripts/test_libraries/library1", "0.1")
-    state3.name = "library_hierarchy_state2"
-    s.save_statemachine_as_yaml(state3, "../test_scripts/test_libraries/library2", "0.1")
+    # save hierarchy state as state machine
+    s.save_statemachine_as_yaml(state3, "../test_scripts/test_libraries/hierarchy_library", "0.1")
+
+    # save execution state as state machine
+    s.save_statemachine_as_yaml(state1, "../test_scripts/test_libraries/execution_library", "0.1")
+
+    # save hierarchy state as nested state machines
     state3.name = "library_nested1"
     s.save_statemachine_as_yaml(state3, "../test_scripts/test_libraries/library_container/library_nested1", "0.1")
     state3.name = "library_nested2"
     s.save_statemachine_as_yaml(state3, "../test_scripts/test_libraries/library_container/library_nested2", "0.1")
 
 
-def create_library_statemachine():
+def create_hierarchy_state_library_state_machine():
     statemachine.singleton.library_manager.initialize()
     library_container_state = HierarchyState("LibContainerState", path="../test_scripts",
                                              filename="hierarchy_state.py")
-    lib_state = LibraryState("test_libraries", "library1", "0.1", "library_state")
+    lib_state = LibraryState("test_libraries", "hierarchy_library", "0.1", "library_state")
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
 
@@ -71,23 +75,50 @@ def create_library_statemachine():
     library_container_state.add_data_flow(library_container_state.state_id,
                                           lib_container_input,
                                           lib_state.state_id,
-                                          lib_state.get_io_data_port_id_from_name_and_type("data_input_port1", DataPortType.INPUT))
+                                          lib_state.get_io_data_port_id_from_name_and_type("data_input_port1",
+                                                                                           DataPortType.INPUT))
     library_container_state.add_data_flow(lib_state.state_id,
-                                          lib_state.get_io_data_port_id_from_name_and_type("data_output_port1", DataPortType.OUTPUT),
+                                          lib_state.get_io_data_port_id_from_name_and_type("data_output_port1",
+                                                                                           DataPortType.OUTPUT),
+                                          library_container_state.state_id,
+                                          lib_container_output)
+    return library_container_state
+
+
+def create_execution_state_library_state_machine():
+    statemachine.singleton.library_manager.initialize()
+    library_container_state = HierarchyState("LibContainerState", path="../test_scripts",
+                                             filename="hierarchy_state.py")
+    lib_state = LibraryState("test_libraries", "execution_library", "0.1", "library_state")
+    library_container_state.add_state(lib_state)
+    library_container_state.set_start_state(lib_state.state_id)
+
+    library_container_state.add_outcome("success", 0)
+    library_container_state.add_transition(lib_state.state_id, 0, None, 0)
+    lib_container_input = library_container_state.add_input_data_port("data_input_port1", "float")
+    lib_container_output = library_container_state.add_output_data_port("data_output_port1", "float")
+    library_container_state.add_data_flow(library_container_state.state_id,
+                                          lib_container_input,
+                                          lib_state.state_id,
+                                          lib_state.get_io_data_port_id_from_name_and_type("data_input_port1",
+                                                                                           DataPortType.INPUT))
+    library_container_state.add_data_flow(lib_state.state_id,
+                                          lib_state.get_io_data_port_id_from_name_and_type("data_output_port1",
+                                                                                           DataPortType.OUTPUT),
                                           library_container_state.state_id,
                                           lib_container_output)
     return library_container_state
 
 
 def save_nested_library_state():
-    library_with_nested_library = create_library_statemachine()
+    library_with_nested_library = create_hierarchy_state_library_state_machine()
 
     statemachine.singleton.global_storage.save_statemachine_as_yaml(
         library_with_nested_library, "../test_scripts/test_libraries/library_with_nested_library", "0.1")
 
 
-def test_library_state_machine():
-    library_container_state = create_library_statemachine()
+def test_hierarchy_state_library():
+    library_container_state = create_hierarchy_state_library_state_machine()
 
     input_data = {"data_input_port1": 22.0}
     output_data = {"data_output_port1": None}
@@ -104,7 +135,29 @@ def test_library_state_machine():
     statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
-    #print output_data["data_output_port1"]
+    # print output_data["data_output_port1"]
+    assert output_data["data_output_port1"] == 42.0
+
+
+def test_execution_state_library():
+    library_container_state = create_execution_state_library_state_machine()
+
+    input_data = {"data_input_port1": 32.0}
+    output_data = {"data_output_port1": None}
+    library_container_state.input_data = input_data
+    library_container_state.output_data = output_data
+
+    state_machine = StateMachine(library_container_state)
+
+    variables_for_pytest.test_multithrading_lock.acquire()
+    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    statemachine.singleton.state_machine_execution_engine.start()
+    library_container_state.join()
+    statemachine.singleton.state_machine_execution_engine.stop()
+    variables_for_pytest.test_multithrading_lock.release()
+
+    # print output_data["data_output_port1"]
     assert output_data["data_output_port1"] == 42.0
 
 
@@ -131,6 +184,11 @@ def test_nested_library_state_machine():
 if __name__ == '__main__':
     #pytest.main()
     save_libraries()
+    # print "\n################### next function #########################\n"
     save_nested_library_state()
-    test_library_state_machine()
+    # print "\n################### next function #########################\n"
+    test_hierarchy_state_library()
+    # print "\n################### next function #########################\n"
+    test_execution_state_library()
+    # print "\n################### next function #########################\n"
     test_nested_library_state_machine()
