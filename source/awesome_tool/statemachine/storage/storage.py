@@ -108,7 +108,7 @@ class Storage(Observable):
         yaml_object = yaml.load(stream)
         return yaml_object
 
-    def save_statemachine_as_yaml(self, root_state, base_path=None, version=None):
+    def save_statemachine_as_yaml(self, root_state, base_path, version=None, delete_old_state_machine=False):
         """
         Saves a root state to a yaml file.
         :param root_state: container state to be saved
@@ -120,7 +120,8 @@ class Storage(Observable):
             self.base_path = base_path
         # clean old path first
         if self._exists_path(self.base_path):
-            self._remove_path(self.base_path)
+            if delete_old_state_machine:
+                self.remove_path(self.base_path)
         if not self._exists_path(self.base_path):
             self._create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
@@ -134,17 +135,20 @@ class Storage(Observable):
 
     def save_script_file_for_state(self, state, state_path):
         """
-        Saves the script file for state to the path of the state and fixed script name provided in the SCRIPT_FILE
+        Saves the script file for a state to the directory of the state. The script name will be set to the SCRIPT_FILE
         constant.
         :param state: The state of which the script file should be saved
         :param state_path: The path of the state meta file
         :return:
         """
         state_path_full = os.path.join(self.base_path, state_path)
-        shutil.copyfile(os.path.join(state.script.path, state.script.filename),
-                        os.path.join(state_path_full, self.SCRIPT_FILE))
-        state.script.path = state_path
-        state.script.filename = self.SCRIPT_FILE
+        source_script_file = os.path.join(state.script.path, state.script.filename)
+        destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
+        if not source_script_file == destination_script_file:
+            shutil.copyfile(source_script_file,
+                            destination_script_file)
+            state.script.path = state_path
+            state.script.filename = self.SCRIPT_FILE
 
     def save_state_recursively(self, state, parent_path):
         """
@@ -243,9 +247,10 @@ class Storage(Observable):
         :param path: The path to be created
         :return:
         """
-        os.makedirs(path)
+        if not self._exists_path(path):
+            os.makedirs(path)
 
-    def _remove_path(self, path):
+    def remove_path(self, path):
         """ Removes an absolute path in the file system
 
         :param path: The path to be removed

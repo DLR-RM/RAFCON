@@ -1,7 +1,6 @@
 import logging
 import sys
 import os
-
 import gtk
 
 from utils import log
@@ -13,6 +12,7 @@ from statemachine.states.execution_state import ExecutionState
 import statemachine.singleton
 from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.state_machine import StateMachine
+from statemachine.states.library_state import LibraryState
 
 
 import gobject
@@ -48,12 +48,10 @@ def create_turtle_statemachine():
                                              filename="root_state.py")
     basic_turtle_demo_state.add_outcome("Success", 0)
 
-    init_turtle_state = ExecutionState("InitTurtle", path="../../test_scripts/basic_turtle_demo",
-                                       filename="init_turtle.py")
-    init_turtle_state.add_outcome("Success", 0)
+    lib_state = LibraryState("ros_libraries", "init_ros_node", "0.1", "init ros node")
 
-    basic_turtle_demo_state.add_state(init_turtle_state)
-    basic_turtle_demo_state.set_start_state(init_turtle_state.state_id)
+    basic_turtle_demo_state.add_state(lib_state)
+    basic_turtle_demo_state.set_start_state(lib_state.state_id)
 
     # basic_turtle_demo_state.add_transition(basic_turtle_demo_state.state_id, 0, init_turtle_state.state_id, None)
 
@@ -62,18 +60,12 @@ def create_turtle_statemachine():
 
 def run_turtle_demo():
 
+    statemachine.singleton.library_manager.initialize()
+
     basic_turtle_demo_state = create_turtle_statemachine()
 
-    ####################################################################
-    # comment these lines out to save the modified statemachine
-    #####################################################################
-    # statemachine.singleton.global_storage.base_path = "../../test_scripts/basic_turtle_demo_state_machine"
-    # statemachine.singleton.global_storage.save_statemachine_as_yaml(basic_turtle_demo_state)
-    # print "#################################################################"
-    # print "load turtle state machine from disk"
-    # print "#################################################################"
-    # [turtle_demo_state, version, creation_time] = statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_state_machine")
+    [basic_turtle_demo_state, version, creation_time] = statemachine.singleton.\
+        global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
 
     statemachine.singleton.library_manager.initialize()
     logging_view = LoggingView()
@@ -85,17 +77,24 @@ def run_turtle_demo():
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
 
     # load the meta data for the state machine
-    # sm_manager_model.get_active_state_machine_model().root_state.load_meta_data_for_state()
+    sm_manager_model.get_active_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model, editor_type="ld")
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
+                                                  editor_type="LogicDataGrouped")
     #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
-
-    print "before main loop"
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
+
+    #save state machine
+    statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        sm_manager_model.get_active_state_machine_model().root_state.state,
+        "../../test_scripts/basic_turtle_demo_sm",
+        delete_old_state_machine=False)
+
     # save the meta data for the state machine
-    # sm_manager_model.get_active_state_machine_model().root_state.store_meta_data_for_state()
+    sm_manager_model.get_active_state_machine_model().root_state.store_meta_data_for_state()
+
     statemachine.singleton.state_machine_manager.get_active_state_machine().root_state.join()
 
 

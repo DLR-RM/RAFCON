@@ -65,9 +65,9 @@ class SourceEditorController(Controller):
             message.connect('response', self.on_message_dialog_response_signal, current_text)
             message.show()
         else:
-            self.model.state.script.script = current_text
+            if self.model.state.set_script_text(current_text):
+                logger.debug("File saved")
             self.view.set_text(self.model.state.script.script)
-            logger.debug("File saved")
 
     #===============================================================
     def cancel_clicked(self, button):

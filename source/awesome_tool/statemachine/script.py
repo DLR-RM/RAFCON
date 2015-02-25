@@ -17,6 +17,8 @@ from enum import Enum
 
 from statemachine.id_generator import *
 import statemachine.singleton
+from utils import log
+logger = log.get_logger(__name__)
 
 
 ScriptType = Enum('SCRIPT_TYPE', 'EXECUTION CONTAINER LIBRARY')
@@ -142,6 +144,7 @@ def exit(self, scoped_variables, gvm):
         try:
             script_file = open(script_path, 'r')
         except:
+            logger.error("Script file could not be opened at the following path: %s" % str(script_path))
             raise IOError("File could not be opened!")
 
         self.script = script_file.read()

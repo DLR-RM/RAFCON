@@ -68,11 +68,9 @@ class MainWindowController(Controller):
 
         top_h_pane = view['top_h_pane']
         left_v_pane = view['left_v_pane']
-        right_v_pane = view['right_v_pane']
 
         view.get_top_widget().connect("destroy", self.on_main_window_destroy)
 
-        right_bottom_notebook = view["right_bottom_notebook"]
         tree_notebook = view["tree_notebook"]
 
         ######################################################
@@ -103,7 +101,7 @@ class MainWindowController(Controller):
         #append new tab
         self.state_machine_tree_controller = StateMachineTreeController(active_state_machine,
                                                                         view.state_machine_tree)
-        state_machine_label = gtk.Label('Statemachine Tree')
+        state_machine_label = gtk.Label('Statemachine')
         tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
 
         ######################################################
@@ -137,12 +135,12 @@ class MainWindowController(Controller):
         ######################################################
         #remove placeholder tab
         global_variables_tab = view['global_variables_placeholder']
-        page_num = right_bottom_notebook.page_num(global_variables_tab)
-        right_bottom_notebook.remove_page(page_num)
+        page_num = tree_notebook.page_num(global_variables_tab)
+        tree_notebook.remove_page(page_num)
         #append new tab
         self.global_variable_manager_controller = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         global_variables_label = gtk.Label('Global Variables')
-        right_bottom_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
+        tree_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
 
         ######################################################
         # status bar
@@ -162,7 +160,6 @@ class MainWindowController(Controller):
         ######################################################
         top_h_pane.set_position(200)
         left_v_pane.set_position(700)
-        right_v_pane.set_position(600)
         self.key_map = {
             'copy'          : '<Control>C',     # TODO should not be that hart for full states
             'paste'         : '<Control>V',     # TODO should not be that hart for full states

@@ -70,7 +70,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 # depending on the execution mode pause execution
                 execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
                 if execution_signal == "stop":
-                    # this will be catched at the end of the run method
+                    # this will be caught at the end of the run method
                     raise RuntimeError("state stopped")
 
                 logger.debug("Executing next state state with id %s, type %s and name %s" %
@@ -87,6 +87,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 transition = self.get_transition_for_outcome(state, state.final_outcome)
 
                 while not transition:
+
                     # aborted case
                     if state.final_outcome.outcome_id == -1:
                         if self.concurrency_queue:
@@ -101,15 +102,25 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         self.final_outcome = Outcome(-2, "preempted")
                         self.active = False
                         return
-                    # wait until the user connects the outcome of the state with a transition
-                    self._transitions_cv.wait(3.0)
                     if self.preempted:
                         if self.concurrency_queue:
                             self.concurrency_queue.put(self.state_id)
                         self.final_outcome = Outcome(-2, "preempted")
                         self.active = False
                         return
+
+                    # depending on the execution mode pause execution
+                    execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+                    if execution_signal == "stop":
+                        # this will be caught at the end of the run method
+                        raise RuntimeError("state stopped")
+
+                    # wait until the user connects the outcome of the state with a transition
+                    self._transitions_cv.acquire()
+                    self._transitions_cv.wait(3.0)
+                    self._transitions_cv.release()
                     transition = self.get_transition_for_outcome(state, state.final_outcome)
+
                 state = self.get_state_for_transition(transition)
 
             #handle data for the exit script

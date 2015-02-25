@@ -581,6 +581,17 @@ class State(Observable, yaml.YAMLObject, object):
         for outcome_id, outcome in self.outcomes.iteritems():
             outcome.check_name = self.modify_outcome_name
 
+    def set_script_text(self, new_text):
+        """
+        Sets the text of the script. This function can be overridden to prevent setting the script under certain
+        circumstances.
+        :param new_text: The new text to replace to old text with.
+        :return: Returns True if the script was successfully set.
+        """
+        self.script.script = new_text
+        return True
+
+
     def __str__(self):
         return "State properties of state: %s \nstate_id: %s \nstate_type: %s" \
                % (self.name, self.state_id, self.state_type)

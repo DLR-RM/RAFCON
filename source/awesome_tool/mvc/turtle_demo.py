@@ -220,8 +220,6 @@ def run_turtle_demo():
 
     # dual_gtk_window = DualGTKWindow()
 
-    print "before main loop"
-
     gtk.main()
     logger.debug("Gtk main loop exited!")
     # save the meta data for the state machine

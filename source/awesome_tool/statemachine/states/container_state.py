@@ -9,11 +9,10 @@
 """
 from threading import Condition
 import copy
-
 from gtkmvc import Observable
+import os
 
 from utils import log
-
 logger = log.get_logger(__name__)
 from statemachine.enums import StateType, DataPortType
 from statemachine.states.state import State
@@ -24,6 +23,7 @@ from statemachine.scope import ScopedData, ScopedVariable
 from statemachine.id_generator import *
 from statemachine.config import *
 from statemachine.validity_check.validity_checker import ValidityChecker
+import statemachine.singleton
 
 
 class ContainerState(State):
@@ -140,6 +140,9 @@ class ContainerState(State):
         """
         if not state_id in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
+
+        # remove script folder
+        statemachine.singleton.global_storage.remove_path(self.states[state_id].script.path)
 
         #first delete all transitions and data_flows in this state
         keys_to_delete = []
