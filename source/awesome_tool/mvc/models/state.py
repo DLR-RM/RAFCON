@@ -11,6 +11,7 @@ from mvc.models.data_port import DataPortModel
 import statemachine.singleton
 from statemachine.storage.storage import Storage
 from utils import log
+from statemachine.enums import StateType
 
 logger = log.get_logger(__name__)
 
@@ -239,13 +240,43 @@ class StateModel(ModelMT):
         logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
-            self.meta = statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
+            tmp_meta = statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
+
+            if self.state.state_type is not StateType.EXECUTION:
+                # add meta to transition and data flow
+                counter = 0
+                for transition_model in self.transitions:
+                    transition_model.meta = tmp_meta["transition" + str(counter)]
+                    counter += 1
+                counter = 0
+                for data_flow_model in self.data_flows:
+                    data_flow_model.meta = tmp_meta["data_flow" + str(counter)]
+                    counter += 1
+                # delete transition and data flow from tmp data
+                for i in range(len(self.transitions)):
+                    del tmp_meta["transition" + str(i)]
+                for i in range(len(self.data_flows)):
+                    del tmp_meta["data_flow" + str(i)]
+            # assign the meta data to the state
+            self.meta = tmp_meta
         else:
             logger.warn("path to load meta data for state model of state %s does not exist" % self.state.name)
 
     def store_meta_data_for_state(self):
         logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
+
+        # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file
+        if self.state.state_type is not StateType.EXECUTION:
+            counter = 0
+            for transition_model in self.transitions:
+                self.meta["transition" + str(counter)] = transition_model.meta
+                counter += 1
+            counter = 0
+            for data_flow_model in self.data_flows:
+                self.meta["data_flow" + str(counter)] = data_flow_model.meta
+                counter += 1
+
         self.meta = statemachine.singleton.global_storage.write_dict_to_yaml(self.meta, meta_path)
 
 
