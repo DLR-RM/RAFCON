@@ -1,7 +1,7 @@
 !ExecutionState
 filename: script.py
 input_data_ports:
-    14: !DataPort {data_port_id: 14, data_type: str, default_value: new_turtle, name: turtle_name}
+    13: !DataPort {data_port_id: 13, data_type: str, default_value: new_turtle, name: turtle_name}
 name: kill_turtle
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}

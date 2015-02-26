@@ -5,6 +5,7 @@ from pylint import epylint as lint
 from utils import log
 logger = log.get_logger(__name__)
 import statemachine.singleton
+from statemachine.enums import StateType
 
 
 #TODO: comment
@@ -35,6 +36,12 @@ class SourceEditorController(Controller):
 
     #===============================================================
     def apply_clicked(self, button):
+
+        if self.model.state.state_type is StateType.LIBRARY:
+            logger.warn("It is not allowed to change the library script file!")
+            self.view.set_text(self.model.state.script.script)
+            return
+
         logger.debug("Apply button pressed!")
         tbuffer = self.view.get_buffer()
         current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())

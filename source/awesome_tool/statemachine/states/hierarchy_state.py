@@ -75,7 +75,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     # this will be caught at the end of the run method
                     raise RuntimeError("state stopped")
 
-                logger.debug("Executing next state state with id %s, type %s and name %s" %
+                logger.debug("Executing next state state with id \"%s\", type \"%s\" and name \"%s\"" %
                              (state.state_id, str(state.state_type), state.name))
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)

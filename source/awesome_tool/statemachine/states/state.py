@@ -398,7 +398,7 @@ class State(Observable, yaml.YAMLObject, object):
 
         """
         if outcome_id is None:
-            outcome_id = generate_outcome_id()
+            outcome_id = generate_outcome_id(self._used_outcome_ids)
         if name in self._outcomes:
             logger.error("Two outcomes cannot have the same names")
             return
@@ -730,6 +730,8 @@ class State(Observable, yaml.YAMLObject, object):
                 self.add_outcome("aborted", -1)
             if not -2 in outcomes:
                 self.add_outcome("preempted", -2)
+            for id, o in outcomes.iteritems():
+                self._used_outcome_ids.append(id)
 
 
     @property

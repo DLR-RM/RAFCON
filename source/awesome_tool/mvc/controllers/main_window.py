@@ -91,6 +91,8 @@ class MainWindowController(Controller):
         view['add_library_button'].connect("clicked", self.library_controller.add_library_button_clicked,
                                            state_machine_manager_model)
 
+        view['button_save'].connect("clicked", self.on_save_activate)
+
         ######################################################
         # statemachine tree
         ######################################################
@@ -335,7 +337,12 @@ class MainWindowController(Controller):
         pass
 
     def on_save_activate(self, widget, data=None):
-        pass
+        statemachine.singleton.global_storage.save_statemachine_as_yaml(
+            self.model.get_active_state_machine_model().root_state.state,
+            statemachine.singleton.global_storage.base_path,
+            delete_old_state_machine=False)
+
+        self.model.get_active_state_machine_model().root_state.store_meta_data_for_state()
 
     def on_open_activate(self, widget, data=None):
         pass

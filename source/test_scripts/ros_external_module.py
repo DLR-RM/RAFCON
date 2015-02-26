@@ -15,8 +15,6 @@ from std_srvs.srv import Empty
 class RosModule:
 
     def __init__(self):
-        self.my_first_var = 10
-        self.my_second_var = 30
         self.turtle1_vel_publisher = None
         self.bot_turtle_vel_publisher = None
         self.turtle1_pos_subscriber = None

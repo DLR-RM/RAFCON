@@ -2,9 +2,8 @@
 filename: script.py
 input_data_ports:
     10: !DataPort {data_port_id: 10, data_type: str, default_value: new_turtle, name: turtle_name}
-    11: !DataPort {data_port_id: 11, data_type: float, default_value: 1.0, name: x_dir}
-    12: !DataPort {data_port_id: 12, data_type: float, default_value: 0.0, name: y_dir}
-    13: !DataPort {data_port_id: 13, data_type: float, default_value: 0.3, name: phi_dir}
+    11: !DataPort {data_port_id: 11, data_type: float, default_value: 1.0, name: x_vel}
+    12: !DataPort {data_port_id: 12, data_type: float, default_value: 0.3, name: phi_vel}
 name: move_turtle
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}

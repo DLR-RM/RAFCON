@@ -277,7 +277,7 @@ class StateModel(ModelMT):
                 self.meta["data_flow" + str(counter)] = data_flow_model.meta
                 counter += 1
 
-        self.meta = statemachine.singleton.global_storage.write_dict_to_yaml(self.meta, meta_path)
+        statemachine.singleton.global_storage.write_dict_to_yaml(self.meta, meta_path)
 
 
 def dataport_compare_method(treemodel, iter1, iter2, user_data=None):

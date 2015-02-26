@@ -376,7 +376,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="button_save_as">
+              <object class="GtkToolButton" id="button_save">
                 <property name="visible">True</property>
                 <property name="tooltip_text" translatable="yes">Save the state machine.</property>
                 <property name="is_important">True</property>

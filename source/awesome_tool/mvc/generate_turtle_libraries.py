@@ -65,9 +65,8 @@ def set_velocity_for_turtle_library():
     set_velocity = ExecutionState("move_turtle", state_id="SET_VELOCITY", path="../../test_scripts/turtle_libraries", filename="set_velocity.py")
     set_velocity.add_outcome("success", 0)
     name_input = set_velocity.add_input_data_port("turtle_name", "str", "new_turtle")
-    x_dir_input = set_velocity.add_input_data_port("x_dir", "float", 1.0)
-    y_dir_input = set_velocity.add_input_data_port("y_dir", "float", 0.0)
-    phi_dir_input = set_velocity.add_input_data_port("phi_dir", "float", 0.3)
+    x_vel_input = set_velocity.add_input_data_port("x_vel", "float", 1.0)
+    phi_vel_input = set_velocity.add_input_data_port("phi_vel", "float", 0.3)
 
     storage.save_statemachine_as_yaml(set_velocity,
                                       "../../test_scripts/turtle_libraries/set_velocity",
@@ -93,6 +92,11 @@ def turtle_position_subscriber_library():
                                                 filename="turtle_position_subscriber.py")
     turtle_position_subscriber.add_outcome("success", 0)
     name_input = turtle_position_subscriber.add_input_data_port("turtle_name", "str", "new_turtle")
+    global_storage_id_input = turtle_position_subscriber.add_input_data_port("global_storage_id_of_turtle_pos", "str", "new_turtle")
+
+    x_pos_output = turtle_position_subscriber.add_output_data_port("x_pos", "float")
+    y_pos_output = turtle_position_subscriber.add_output_data_port("y_pos", "float")
+    phi_output = turtle_position_subscriber.add_output_data_port("phi", "float")
 
     storage.save_statemachine_as_yaml(turtle_position_subscriber,
                                       "../../test_scripts/turtle_libraries/turtle_position_subscriber",
@@ -106,10 +110,11 @@ def move_to_position_library():
                                  path="../../test_scripts/turtle_libraries",
                                  filename="move_to_position.py")
     move_turtle.add_outcome("success", 0)
+    move_turtle.add_outcome("position_not_reached_yet", 1)
+    global_storage_id_input = move_turtle.add_input_data_port("global_storage_id_of_turtle_pos", "str", "new_turtle")
     name_input = move_turtle.add_input_data_port("turtle_name", "str", "new_turtle")
-    x_pos_input = move_turtle.add_input_data_port("x_pos", "float", 5.0)
+    x_pos_input = move_turtle.add_input_data_port("x_pos", "float", 9.0)
     y_pos_input = move_turtle.add_input_data_port("y_pos", "float", 5.0)
-    phi_input = move_turtle.add_input_data_port("phi", "float", 1.0)
 
     storage.save_statemachine_as_yaml(move_turtle,
                                       "../../test_scripts/turtle_libraries/move_to_position",
