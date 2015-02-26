@@ -4,7 +4,7 @@ from utils.geometry import point_in_triangle, dist, point_on_line
 logger = log.get_logger(__name__)
 import sys
 import time
-from gtkmvc import Controller
+from mvc.controllers.extended_controller import ExtendedController
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from mvc.models.state_machine import StateMachineModel
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK
@@ -12,7 +12,7 @@ from gtk.gdk import keyval_name
 # from models.container_state import ContainerStateModel
 
 
-class GraphicalEditorController(Controller):
+class GraphicalEditorController(ExtendedController):
     """Controller handling the graphical editor
 
     :param mvc.models.ContainerStateModel model: The root container state model containing the data
@@ -23,7 +23,7 @@ class GraphicalEditorController(Controller):
         """Constructor
         """
         assert isinstance(model, StateMachineModel)
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.root_state_m = model.root_state
 
         self.selection = None
@@ -60,7 +60,16 @@ class GraphicalEditorController(Controller):
         """
         pass
 
-    @Controller.observe("state_machine", after=True)
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        print "register callbacks for graphical editor"
+        shortcut_manager.add_callback_for_action("delete", self._delete_selection)
+        shortcut_manager.add_callback_for_action("add", self._add_execution_state)
+
+    @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
         """Called on any change within th state machine
 
@@ -74,7 +83,7 @@ class GraphicalEditorController(Controller):
             logger.debug("Change in SM, redraw...")
             self._redraw(True)
 
-    @Controller.observe("root_state", after=True)
+    @ExtendedController.observe("root_state", after=True)
     def root_state_change(self, model, prop_name, info):
         """Called when the root state was exchanged
 
@@ -89,7 +98,7 @@ class GraphicalEditorController(Controller):
             self._redraw(True)
 
 
-    @Controller.observe("selection", after=True)
+    @ExtendedController.observe("selection", after=True)
     def selection_change(self, model, prop_name, info):
         """Called when the selection was changed externally
 
@@ -1098,3 +1107,9 @@ class GraphicalEditorController(Controller):
                     ids.remove(data_flow.meta['gui']['editor']['id'])
 
         return selection, selection_depth
+
+    def _delete_selection(self, *args):
+        print "TODO: delete selection"
+
+    def _add_execution_state(self, *args):
+        print "TODO: add execution state"

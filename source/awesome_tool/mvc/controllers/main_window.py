@@ -14,7 +14,6 @@ from utils import log
 logger = log.get_logger(__name__)
 
 
-
 class MainWindowController(ExtendedController):
 
     def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='PortConnectionGrouped'):
@@ -63,7 +62,7 @@ class MainWindowController(ExtendedController):
         tree_notebook.remove_page(page_num)
         #append new tab
         library_controller = LibraryTreeController(active_state_machine.root_state, view.library_tree)
-        self.child_controllers['library_controller'] = library_controller
+        self.add_controller('library_controller', library_controller)
         libraries_label = gtk.Label('Libraries')
         tree_notebook.insert_page(view.library_tree, libraries_label, page_num)
 
@@ -76,7 +75,7 @@ class MainWindowController(ExtendedController):
         tree_notebook.remove_page(page_num)
         #append new tab
         state_machine_tree_controller = StateMachineTreeController(active_state_machine, view.state_machine_tree)
-        self.child_controllers['state_machine_tree_controller'] = state_machine_tree_controller
+        self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
         state_machine_label = gtk.Label('Statemachine Tree')
         tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
 
@@ -90,7 +89,7 @@ class MainWindowController(ExtendedController):
         states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
                                                          view.states_editor,
                                                          editor_type)
-        self.child_controllers['states_editor_ctrl'] = states_editor_ctrl
+        self.add_controller('states_editor_ctrl', states_editor_ctrl)
         ######################################################
         # state machines editor
         ######################################################
@@ -99,7 +98,7 @@ class MainWindowController(ExtendedController):
                                                                         view.state_machines_editor,
                                                                         state_machine_tree_controller,
                                                                         states_editor_ctrl)
-        self.child_controllers['state_machines_editor_ctrl'] = state_machines_editor_ctrl
+        self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
         #self.state_machines_editor_ctrl.add_graphical_state_machine_editor(state_machine_manager_model.root_state)
 
         # self.graphical_editor_ctrl = GraphicalEditorController(self.model.root_state, view.graphical_editor_view)
@@ -116,7 +115,7 @@ class MainWindowController(ExtendedController):
         em_global_notebook.remove_page(page_num)
         #append new tab
         external_modules_controller = ExternalModuleManagerController(emm_model, view.external_module_manager_view)
-        self.child_controllers['external_modules_controller'] = external_modules_controller
+        self.add_controller('external_modules_controller', external_modules_controller)
         external_modules_label = gtk.Label('External Modules')
         em_global_notebook.insert_page(view.external_module_manager_view.get_top_widget(), external_modules_label, page_num)
 
@@ -129,7 +128,7 @@ class MainWindowController(ExtendedController):
         em_global_notebook.remove_page(page_num)
         #append new tab
         global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
-        self.child_controllers['global_variable_manager_ctrl'] = global_variable_manager_ctrl
+        self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
         global_variables_label = gtk.Label('Global Variables')
         em_global_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
 
@@ -191,8 +190,6 @@ class MainWindowController(ExtendedController):
         self.shortcut_manager = ShortcutManager(self.view['main_window'])
         self.register_actions(self.shortcut_manager)
 
-        #view['add'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
-        #view['add_state'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
         view['main_window'].connect('destroy', gtk.main_quit)
 
     @ExtendedController.observe("execution_engine", after=True)

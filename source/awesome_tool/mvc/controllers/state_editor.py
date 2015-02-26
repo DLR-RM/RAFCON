@@ -22,16 +22,16 @@ class StateEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         assert isinstance(model, StateModel)
 
-        self.child_controllers['properties_ctrl'] = StateOverviewController(model, view['properties_view'])
+        self.child_controller['properties_ctrl'] = StateOverviewController(model, view['properties_view'])
 
-        self.child_controllers['inputs_ctrl'] = DataPortListController(model, view['inputs_view'], "input")
-        self.child_controllers['outputs_ctrl'] = DataPortListController(model, view['outputs_view'], "output")
-        self.child_controllers['scoped_ctrl'] = ScopedVariableListController(model, view['scopes_view'])
-        self.child_controllers['outcomes_ctrl'] = StateOutcomesEditorController(model, view['outcomes_view'])
+        self.child_controller['inputs_ctrl'] = DataPortListController(model, view['inputs_view'], "input")
+        self.child_controller['outputs_ctrl'] = DataPortListController(model, view['outputs_view'], "output")
+        self.child_controller['scoped_ctrl'] = ScopedVariableListController(model, view['scopes_view'])
+        self.child_controller['outcomes_ctrl'] = StateOutcomesEditorController(model, view['outcomes_view'])
 
-        self.child_controllers['source_ctrl'] = SourceEditorController(model, view['source_view'])
-        self.child_controllers['transitions_ctrl'] = StateTransitionsEditorController(model, view['transitions_view'])
-        self.child_controllers['data_flows_ctrl'] = StateDataFlowsEditorController(model, view['data_flows_view'])
+        self.child_controller['source_ctrl'] = SourceEditorController(model, view['source_view'])
+        self.child_controller['transitions_ctrl'] = StateTransitionsEditorController(model, view['transitions_view'])
+        self.child_controller['data_flows_ctrl'] = StateDataFlowsEditorController(model, view['data_flows_view'])
 
         view['inputs_view'].show()
         view['outputs_view'].show()
@@ -46,14 +46,19 @@ class StateEditorController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        view['new_input_port_button'].connect('clicked', self.child_controllers['inputs_ctrl'].on_new_input_port_button_clicked)
-        view['new_output_port_button'].connect('clicked', self.child_controllers['outputs_ctrl'].on_new_output_port_button_clicked)
-        view['new_scoped_variable_button'].connect('clicked', self.child_controllers['scoped_ctrl'].on_new_scoped_variable_button_clicked)
+        view['new_input_port_button'].connect('clicked', self.get_controller(
+            'inputs_ctrl').on_new_input_port_button_clicked)
+        view['new_output_port_button'].connect('clicked', self.get_controller(
+            'outputs_ctrl').on_new_output_port_button_clicked)
+        view['new_scoped_variable_button'].connect('clicked', self.get_controller(
+            'scoped_ctrl').on_new_scoped_variable_button_clicked)
 
-        view['delete_input_port_button'].connect('clicked', self.child_controllers['inputs_ctrl'].on_delete_input_port_button_clicked)
-        view['delete_output_port_button'].connect('clicked', self.child_controllers['outputs_ctrl'].on_delete_output_port_button_clicked)
-        view['delete_scoped_variable_button'].connect('clicked', self.child_controllers[
-                                                          'scoped_ctrl'].on_delete_scoped_variable_button_clicked)
+        view['delete_input_port_button'].connect('clicked', self.get_controller(
+            'inputs_ctrl').on_delete_input_port_button_clicked)
+        view['delete_output_port_button'].connect('clicked', self.get_controller(
+            'outputs_ctrl').on_delete_output_port_button_clicked)
+        view['delete_scoped_variable_button'].connect('clicked', self.get_controller(
+            'scoped_ctrl').on_delete_scoped_variable_button_clicked)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -67,7 +72,7 @@ class StateEditorController(ExtendedController):
         pass
 
     def model_changed(self, model):
-        for controller in self.child_controllers.itervalues():
+        for controller in self.get_child_controllers():
             controller.model = model
 
     @ExtendedController.observe("input_data_ports", after=True)
@@ -88,16 +93,16 @@ class StateEditorEggController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
 
-        self.child_controllers['properties_ctrl'] = StateOverviewController(model, view['properties_view'])
+        self.add_controller('properties_ctrl', StateOverviewController(model, view['properties_view']))
 
-        self.child_controllers['inputs_ctrl'] = DataPortListController(model, view['inputs_view'], "input")
-        self.child_controllers['outputs_ctrl'] = DataPortListController(model, view['outputs_view'], "output")
-        self.child_controllers['scoped_ctrl'] = ScopedVariableListController(model, view['scopes_view'])
-        self.child_controllers['outcomes_ctrl'] = StateOutcomesEditorController(model, view['outcomes_view'])
+        self.add_controller('inputs_ctrl', DataPortListController(model, view['inputs_view'], "input"))
+        self.add_controller('outputs_ctrl', DataPortListController(model, view['outputs_view'], "output"))
+        self.add_controller('scoped_ctrl', ScopedVariableListController(model, view['scopes_view']))
+        self.add_controller('outcomes_ctrl', StateOutcomesEditorController(model, view['outcomes_view']))
 
-        self.child_controllers['source_ctrl'] = SourceEditorController(model, view['source_view'])
-        self.child_controllers['transitions_ctrl'] = StateTransitionsEditorController(model, view['transitions_view'])
-        self.child_controllers['data_flows_ctrl'] = StateDataFlowsEditorController(model, view['data_flows_view'])
+        self.add_controller('source_ctrl', SourceEditorController(model, view['source_view']))
+        self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view['transitions_view']))
+        self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view['data_flows_view']))
 
         self.arrangement_dict = {}
 
@@ -114,14 +119,19 @@ class StateEditorEggController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        view['new_input_port_button'].connect('clicked', self.child_controllers['inputs_ctrl'].on_new_input_port_button_clicked)
-        view['new_output_port_button'].connect('clicked', self.child_controllers['outputs_ctrl'].on_new_output_port_button_clicked)
-        view['new_scoped_variable_button'].connect('clicked', self.child_controllers['scoped_ctrl'].on_new_scoped_variable_button_clicked)
+        view['new_input_port_button'].connect('clicked', self.get_controller(
+            'inputs_ctrl').on_new_input_port_button_clicked)
+        view['new_output_port_button'].connect('clicked', self.get_controller(
+            'outputs_ctrl').on_new_output_port_button_clicked)
+        view['new_scoped_variable_button'].connect('clicked', self.get_controller(
+            'scoped_ctrl').on_new_scoped_variable_button_clicked)
 
-        view['delete_input_port_button'].connect('clicked', self.child_controllers['inputs_ctrl'].on_delete_input_port_button_clicked)
-        view['delete_output_port_button'].connect('clicked', self.child_controllers['outputs_ctrl'].on_delete_output_port_button_clicked)
-        view['delete_scoped_variable_button'].connect('clicked',
-                                                      self.child_controllers['scoped_ctrl'].on_delete_scoped_variable_button_clicked)
+        view['delete_input_port_button'].connect('clicked', self.get_controller(
+            'inputs_ctrl').on_delete_input_port_button_clicked)
+        view['delete_output_port_button'].connect('clicked', self.get_controller(
+            'outputs_ctrl').on_delete_output_port_button_clicked)
+        view['delete_scoped_variable_button'].connect('clicked', self.get_controller(
+            'scoped_ctrl').on_delete_scoped_variable_button_clicked)
 
         view['port_expander'].connect('size-request', self.resize_port_widget)
         view['port_expander1'].connect('size-request', self.resize_port_widget)
@@ -276,16 +286,16 @@ class StateEditorLDController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
 
-        self.child_controllers['properties_ctrl'] = StateOverviewController(model, view['properties_view'])
+        self.add_controller('properties_ctrl', StateOverviewController(model, view['properties_view']))
 
-        self.child_controllers['inputs_ctrl'] = DataPortListController(model, view['inputs_view'], "input")
-        self.child_controllers['outputs_ctrl'] = DataPortListController(model, view['outputs_view'], "output")
-        self.child_controllers['scoped_ctrl'] = ScopedVariableListController(model, view['scopes_view'])
-        self.child_controllers['outcomes_ctrl'] = StateOutcomesEditorController(model, view['outcomes_view'])
+        self.add_controller('inputs_ctrl', DataPortListController(model, view['inputs_view'], "input"))
+        self.add_controller('outputs_ctrl', DataPortListController(model, view['outputs_view'], "output"))
+        self.add_controller('scoped_ctrl', ScopedVariableListController(model, view['scopes_view']))
+        self.add_controller('outcomes_ctrl', StateOutcomesEditorController(model, view['outcomes_view']))
 
-        self.child_controllers['source_ctrl'] = SourceEditorController(model, view['source_view'])
-        self.child_controllers['transitions_ctrl'] = StateTransitionsEditorController(model, view['transitions_view'])
-        self.child_controllers['data_flows_ctrl'] = StateDataFlowsEditorController(model, view['data_flows_view'])
+        self.add_controller('source_ctrl', SourceEditorController(model, view['source_view']))
+        self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view['transitions_view']))
+        self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view['data_flows_view']))
 
         view['inputs_view'].show()
         view['outputs_view'].show()
@@ -300,14 +310,19 @@ class StateEditorLDController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        view['new_input_port_button'].connect('clicked', self.child_controllers['inputs_ctrl'].on_new_input_port_button_clicked)
-        view['new_output_port_button'].connect('clicked', self.child_controllers['outputs_ctrl'].on_new_output_port_button_clicked)
-        view['new_scoped_variable_button'].connect('clicked', self.child_controllers['scoped_ctrl'].on_new_scoped_variable_button_clicked)
+        view['new_input_port_button'].connect('clicked', self.get_controller(
+            'inputs_ctrl').on_new_input_port_button_clicked)
+        view['new_output_port_button'].connect('clicked', self.get_controller(
+            'outputs_ctrl').on_new_output_port_button_clicked)
+        view['new_scoped_variable_button'].connect('clicked', self.get_controller(
+            'scoped_ctrl').on_new_scoped_variable_button_clicked)
 
-        view['delete_input_port_button'].connect('clicked', self.child_controllers['inputs_ctrl'].on_delete_input_port_button_clicked)
-        view['delete_output_port_button'].connect('clicked', self.child_controllers['outputs_ctrl'].on_delete_output_port_button_clicked)
-        view['delete_scoped_variable_button'].connect('clicked', self.child_controllers[
-                                                          'scoped_ctrl'].on_delete_scoped_variable_button_clicked)
+        view['delete_input_port_button'].connect('clicked', self.get_controller(
+            'inputs_ctrl').on_delete_input_port_button_clicked)
+        view['delete_output_port_button'].connect('clicked', self.get_controller(
+            'outputs_ctrl').on_delete_output_port_button_clicked)
+        view['delete_scoped_variable_button'].connect('clicked', self.get_controller(
+            'scoped_ctrl').on_delete_scoped_variable_button_clicked)
 
     def register_adapters(self):
         """Adapters should be registered in this method call

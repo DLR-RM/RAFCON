@@ -106,7 +106,7 @@ class StatesEditorController(ExtendedController):
         else:  # editor_type == 'PortConnectionGrouped':
             state_editor_view = StateEditorEggView()
             state_editor_ctrl = StateEditorEggController(state_model, state_editor_view)
-        self.child_controllers[state_model.state.state_id] = state_editor_ctrl
+        self.add_controller(state_model.state.state_id, state_editor_ctrl)
 
         tab_label_text = limit_tab_label_text(state_model.state.name)
         (evtbox, new_label) = create_tab_header(tab_label_text, self.on_close_clicked,
