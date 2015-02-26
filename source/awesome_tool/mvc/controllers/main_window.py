@@ -44,6 +44,102 @@ def setup_key_binding(key_map, view, widget):
                 pass
 
 
+class ShortcutManager():
+    """Handles shortcuts
+
+    Holds a mapping between shortcuts and action. Actions can be subscribed to. When a listed shortcut is triggered,
+    all subscribers are notified.
+    """
+    __action_to_shortcuts = dict()
+    __action_to_callbacks = dict()
+
+    def __init__(self):
+        self.__init_shortcuts()
+        self.__action_to_callbacks = dict()
+
+    def __init_shortcuts(self):
+
+        self.__action_to_shortcuts = {
+            'copy': '<Control>C',
+            'paste': '<Control>V',
+            'cut': '<Control>X',
+            'delete': 'Delete',
+            'add': '<Control>A',
+            'delete': ['<Control>D', '<Delete>'],
+            'group': '<Control>G',
+            'ungroup': '<Control>U',
+            'entry': '<Control>E',
+            'fit': '<Control>space',
+            'info': '<Control>q',
+            'start': 'F5',
+            'step_mode': 'F6',
+            'pause': 'F7',
+            'stop': 'F8',
+            'step': 'F4',
+            'backward_step_mode': 'F9',
+            'reload': 'F5',
+            'undo': '<Control>Z',
+            'redo': ['<Control>Y', '<Control><Shift>Z']
+        }
+
+    def __on_shortcut(self, shortcut):
+        action = self.__get_action_for_shortcut(shortcut)
+
+    def _get_action_for_shortcut(self, lookup_shortcut):
+        for action in self.__action_to_shortcuts:
+            shortcuts = self.__action_to_shortcuts[action]
+            if not isinstance(shortcuts, list):
+                shortcuts = [shortcuts]
+            for shortcut in shortcuts:
+                if shortcut == lookup_shortcut:
+                    return action
+        return None
+
+    def add_callback(self, action, callback):
+        """Adds a callback function to an action
+
+        The method checks whether both action and callback are valid. If so, the callback is added to the list of
+        functions called when the action is triggered.
+        :param action: An action like 'add', 'copy', 'info'
+        :param callback: A callback function, which is called when action is triggered. It retrieves the event as
+        parameter
+        :return: True is the parameters are valid and the callback is registered, False else
+        """
+        if action in self.__action_to_shortcuts:  # Is the action valid?
+            if hasattr(callback, '__call__'):  # Is the callback really a function?
+                if action not in self.__action_to_callbacks:
+                    self.__action_to_callbacks[action] = []
+                assert isinstance(self.__action_to_callbacks[action], list)
+                self.__action_to_callbacks[action].append(callback)
+                return True
+        return False
+
+    def get_shortcut_for_action(self, action):
+        """Get the shortcut(s) for the specified action
+        :param action: An action like 'add', 'copy', 'info'
+        :return: None, if no action is not valid or no shortcut is exiting, a single shortcut or a list of shortcuts
+        if one or more shortcuts are registered for that action.
+        """
+        if action in self.__action_to_shortcuts:
+            return self.__action_to_shortcuts[action]
+        return None
+
+    def trigger_action(self, action, event=None):
+        """Calls the appropriate callback function for the given action
+
+        :param action:
+        :param event:
+        :return:
+        """
+
+        if action in self.__action_to_callbacks:
+            for callback_function in self.__action_to_callbacks.itervalues():
+                try:
+                    callback_function(event)
+                except Exception as e:
+                    logger.error('Exception while calling callback methods for action "{0}": {1}'.format(action, e.message))
+
+
 class MainWindowController(Controller):
 
     def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='PortConnectionGrouped'):
