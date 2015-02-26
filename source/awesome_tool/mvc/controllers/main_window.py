@@ -18,6 +18,7 @@ from mvc.models.state_machine_manager import StateMachineManagerModel
 from utils import log
 logger = log.get_logger(__name__)
 
+from functools import partial
 
 def setup_key_binding(key_map, view, widget):
         """
@@ -51,21 +52,26 @@ class ShortcutManager():
     all subscribers are notified.
     """
     __action_to_shortcuts = dict()
-    __action_to_callbacks = dict()
 
-    def __init__(self):
+
+    def __init__(self, window):
+        # Setup window to listen for accelerators
+        self.main_window = window
+        self.accel_group = gtk.AccelGroup()
+        self.main_window.add_accel_group(self.accel_group)
+
         self.__init_shortcuts()
+        self.__register_shortcuts()
         self.__action_to_callbacks = dict()
 
-    def __init_shortcuts(self):
 
+    def __init_shortcuts(self):
         self.__action_to_shortcuts = {
             'copy': '<Control>C',
             'paste': '<Control>V',
             'cut': '<Control>X',
-            'delete': 'Delete',
             'add': '<Control>A',
-            'delete': ['<Control>D', '<Delete>'],
+            'delete': ['<Control>D', 'Delete'],
             'group': '<Control>G',
             'ungroup': '<Control>U',
             'entry': '<Control>E',
@@ -82,14 +88,28 @@ class ShortcutManager():
             'redo': ['<Control>Y', '<Control><Shift>Z']
         }
 
-    def __on_shortcut(self, shortcut):
-        action = self.__get_action_for_shortcut(shortcut)
+    def __register_shortcuts(self):
+        for action in self.__action_to_shortcuts:
+            # Make sure, all shortcuts are in a list
+            shortcuts = self.__action_to_shortcuts[action]
+            if not isinstance(shortcuts, list):
+                shortcuts = [shortcuts]
+                self.__action_to_shortcuts[action] = shortcuts
+            # Now register the shortcuts in the window to trigger the shortcut signal
+            for shortcut in shortcuts:
+                keyval, modifier_mask = gtk.accelerator_parse(shortcut)
+                if keyval == 0 and modifier_mask == 0:  # No valid shortcut
+                    continue
+                callback = partial(self.__on_shortcut, action)  # Bind the action to the callback function
+                self.accel_group.connect_group(keyval, modifier_mask, gtk.ACCEL_VISIBLE, callback)
+
+    def __on_shortcut(self, action, accel_group, window, keyval, modifier_mask):
+        print "shortcut triggered", action, accel_group, keyval, modifier_mask
+        self.trigger_action(action, keyval, modifier_mask)
 
     def _get_action_for_shortcut(self, lookup_shortcut):
         for action in self.__action_to_shortcuts:
             shortcuts = self.__action_to_shortcuts[action]
-            if not isinstance(shortcuts, list):
-                shortcuts = [shortcuts]
             for shortcut in shortcuts:
                 if shortcut == lookup_shortcut:
                     return action
@@ -124,7 +144,7 @@ class ShortcutManager():
             return self.__action_to_shortcuts[action]
         return None
 
-    def trigger_action(self, action, event=None):
+    def trigger_action(self, action, keyval, modifier_mask):
         """Calls the appropriate callback function for the given action
 
         :param action:
@@ -133,11 +153,12 @@ class ShortcutManager():
         """
 
         if action in self.__action_to_callbacks:
-            for callback_function in self.__action_to_callbacks.itervalues():
+            for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    callback_function(event)
+                    callback_function(keyval, modifier_mask)
                 except Exception as e:
-                    logger.error('Exception while calling callback methods for action "{0}": {1}'.format(action, e.message))
+                    logger.error('Exception while calling callback methods for action "{0}": {1}'.format(
+                        action, e.message))
 
 
 class MainWindowController(Controller):
