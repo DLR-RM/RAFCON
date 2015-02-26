@@ -11,6 +11,6 @@ outcomes:
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports: {}
-path: DATMZL
-state_id: DATMZL
+path: SPAWN_TURTLE
+state_id: SPAWN_TURTLE
 state_type: STATE_TYPE.EXECUTION

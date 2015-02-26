@@ -62,7 +62,7 @@ def run_turtle_demo():
 
     statemachine.singleton.library_manager.initialize()
 
-    basic_turtle_demo_state = create_turtle_statemachine()
+    # basic_turtle_demo_state = create_turtle_statemachine()
 
     [basic_turtle_demo_state, version, creation_time] = statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")

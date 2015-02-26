@@ -4,6 +4,7 @@ from pylint import epylint as lint
 
 from utils import log
 logger = log.get_logger(__name__)
+import statemachine.singleton
 
 
 #TODO: comment
@@ -42,11 +43,11 @@ class SourceEditorController(Controller):
         text_file.close()
 
         (pylint_stdout, pylint_stderr) = lint.py_run('/tmp/file_to_get_pylinted.py', True)
-        pylint_stdout_data=pylint_stdout.readlines()
-        pylint_stderr_data=pylint_stdout.readlines()
+        pylint_stdout_data = pylint_stdout.readlines()
+        pylint_stderr_data = pylint_stderr.readlines()
 
         logger.debug("pylint_stdout_data: %s" % pylint_stdout_data)
-        logger.debug("pylint_stderr: %s" % pylint_stderr)
+        logger.debug("pylint_stderr: %s" % pylint_stderr_data)
 
         invalid_sytax = False
         for elem in pylint_stdout_data:
@@ -67,6 +68,7 @@ class SourceEditorController(Controller):
         else:
             if self.model.state.set_script_text(current_text):
                 logger.debug("File saved")
+                statemachine.singleton.global_storage.save_script_file(self.model.state)
             self.view.set_text(self.model.state.script.script)
 
     #===============================================================

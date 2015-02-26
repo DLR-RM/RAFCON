@@ -284,7 +284,7 @@ class ContainerState(State):
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
         if result_transition is None:
-            logger.debug("No transition found for state with name %s!" % self.name)
+            logger.warn("No transition found for state with name %s!" % self.name)
         return result_transition
 
     @Observable.observed

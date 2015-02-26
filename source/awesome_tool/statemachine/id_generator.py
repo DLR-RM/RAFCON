@@ -16,7 +16,7 @@ state_machine_id_counter = 0
 transition_id_counter = 0
 data_flow_id_counter = 0
 # outcome 0 is success, outcome -1 is aborted and outcome -2 is preempted
-outcome_id_counter = 0
+outcome_id_counter = -1
 data_port_id_counter = 0
 script_id_counter = 0
 
@@ -45,7 +45,7 @@ def generate_data_flow_id():
     data_flow_id_counter += 1
     return data_flow_id_counter
 
-# outcome id will start with value 1
+# outcome id will start with value 0
 def generate_outcome_id():
     global outcome_id_counter
     outcome_id_counter += 1

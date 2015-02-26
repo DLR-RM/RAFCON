@@ -65,6 +65,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         self.concurrency_queue.put(self.state_id)
                     self.final_outcome = Outcome(-2, "preempted")
                     self.active = False
+                    logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
+                                 "was preempted!" % self.name)
                     return
 
                 # depending on the execution mode pause execution
@@ -94,6 +96,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                             self.concurrency_queue.put(self.state_id)
                         self.final_outcome = Outcome(-1, "aborted")
                         self.active = False
+                        logger.debug("Exit hierarchy state %s with outcome aborted, as the child state returned "
+                                     "aborted and no transition was added to the aborted outcome!" % self.name)
                         return
                     # preempted case
                     elif state.final_outcome.outcome_id == -2:
@@ -101,12 +105,16 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                             self.concurrency_queue.put(self.state_id)
                         self.final_outcome = Outcome(-2, "preempted")
                         self.active = False
+                        logger.debug("Exit hierarchy state %s with outcome preempted, as the child state returned "
+                                     "preempted and no transition was added to the preempted outcome!" % self.name)
                         return
                     if self.preempted:
                         if self.concurrency_queue:
                             self.concurrency_queue.put(self.state_id)
                         self.final_outcome = Outcome(-2, "preempted")
                         self.active = False
+                        logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
+                                     "was preempted!" % self.name)
                         return
 
                     # depending on the execution mode pause execution

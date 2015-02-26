@@ -1,0 +1,16 @@
+!ExecutionState
+filename: script.py
+input_data_ports:
+    6: !DataPort {data_port_id: 6, data_type: str, default_value: new_turtle, name: turtle_name}
+    7: !DataPort {data_port_id: 7, data_type: float, default_value: 1.0, name: x_pos}
+    8: !DataPort {data_port_id: 8, data_type: float, default_value: 1.0, name: y_pos}
+    9: !DataPort {data_port_id: 9, data_type: float, default_value: 1.0, name: phi}
+name: teleport_turtle
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+output_data_ports: {}
+path: TELEPORT_TURTLE
+state_id: TELEPORT_TURTLE
+state_type: STATE_TYPE.EXECUTION
