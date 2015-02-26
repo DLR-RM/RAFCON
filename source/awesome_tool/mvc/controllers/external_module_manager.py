@@ -1,19 +1,18 @@
 import inspect
 import gtk
-from gtkmvc import Controller
-from gtkmvc import Observer
+from mvc.controllers.extended_controller import ExtendedController
 
 from utils import log
 logger = log.get_logger(__name__)
 from statemachine.external_modules.external_module import EMStatus
 
 
-class ExternalModuleManagerController(Controller, Observer):
+class ExternalModuleManagerController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         view['connect_button'].connect('clicked', self.on_connect_button_clicked)
         view['disconnect_button'].connect('clicked', self.on_disconnect_button_clicked)
@@ -69,7 +68,7 @@ class ExternalModuleManagerController(Controller, Observer):
             #print "Trigger disconnect for external module: ", external_module_name
             self.model.external_module_manager.external_modules[external_module_name].pause()
 
-    @Observer.observe("external_module_manager", after=True)
+    @ExtendedController.observe("external_module_manager", after=True)
     def assign_notification_external_module_manager(self, model, prop_name, info):
         #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #      (prop_name, info.instance, info.method_name, info.result)

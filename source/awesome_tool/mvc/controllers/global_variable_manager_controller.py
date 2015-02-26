@@ -2,17 +2,16 @@ from utils import log
 logger = log.get_logger(__name__)
 
 import gtk
-from gtkmvc import Controller
-from gtkmvc import Observer
+from mvc.controllers.extended_controller import ExtendedController
 
 #TODO: comment
 
-class GlobalVariableManagerController(Controller, Observer):
+class GlobalVariableManagerController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
         view['delete_global_variable_button'].connect('clicked', self.on_delete_global_variable_button_clicked)
@@ -35,7 +34,7 @@ class GlobalVariableManagerController(Controller, Observer):
             #print "key to remove: ", key
             self.model.global_variable_manager.delete_global_variable(key)
 
-    @Observer.observe("global_variable_manager", after=True)
+    @ExtendedController.observe("global_variable_manager", after=True)
     def assign_notification_state(self, model, prop_name, info):
         #print "call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #      (prop_name, info.instance, info.method_name, info.result)

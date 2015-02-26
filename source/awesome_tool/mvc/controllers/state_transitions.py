@@ -1,5 +1,6 @@
 
-from gtkmvc import Controller, Observer
+from gtkmvc import Observer
+from mvc.controllers.extended_controller import ExtendedController
 import gtk
 import gobject
 
@@ -27,7 +28,7 @@ class ParentObserver(Observer):
                 func_handle()
 
 
-class StateTransitionsListController(Controller):
+class StateTransitionsListController(ExtendedController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -42,7 +43,7 @@ class StateTransitionsListController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         if model.parent is not None:
             self.parent_observer = ParentObserver(model.parent, "state", [self.update_stores, self.update_model])
@@ -465,7 +466,7 @@ class StateTransitionsListController(Controller):
                                               True,  # is_external
                                               '#f0E5C7', '#f0E5c7', t, self.model.state, True])
 
-    @Controller.observe("state", after=True)
+    @ExtendedController.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
         # print "transition_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #       (prop_name, info.instance, info.method_name, info.result)
@@ -475,10 +476,10 @@ class StateTransitionsListController(Controller):
             self.update_model()
 
 
-class StateTransitionsEditorController(Controller):
+class StateTransitionsEditorController(ExtendedController):
 
     def __init__(self, model, view):
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.trans_list_ctrl = StateTransitionsListController(model, view.transitions_listView)
 
     def register_view(self, view):

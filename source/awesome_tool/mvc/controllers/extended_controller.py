@@ -12,7 +12,7 @@ class ExtendedController(Controller):
         self.__action_registered_controllers = []
 
     def add_controller(self, key, controller):
-        #assert isinstance(controller, ExtendedController)
+        assert isinstance(controller, ExtendedController)
         self.__child_controllers[key] = controller
         if self.__shortcut_manager is not None and controller not in self.__action_registered_controllers:
             controller.register_actions(self.__shortcut_manager)
@@ -58,3 +58,6 @@ class ExtendedController(Controller):
             register_function = getattr(controller, "register_actions", None)
             if hasattr(register_function, '__call__'):
                 register_function(self.__shortcut_manager)
+
+    def register_view(self, view):
+        pass

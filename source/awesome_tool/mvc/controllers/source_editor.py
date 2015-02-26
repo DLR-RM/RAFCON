@@ -1,5 +1,5 @@
 import gtk
-from gtkmvc import Controller
+from mvc.controllers.extended_controller import ExtendedController
 from pylint import epylint as lint
 
 from utils import log
@@ -8,7 +8,7 @@ logger = log.get_logger(__name__)
 
 #TODO: comment
 
-class SourceEditorController(Controller):
+class SourceEditorController(ExtendedController):
     # TODO Missing functions
     # - Code function-expander
     # - Code completion
@@ -16,7 +16,7 @@ class SourceEditorController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
     def register_view(self, view):
         view.get_buffer().connect('changed', self.code_changed)

@@ -1,6 +1,7 @@
 import gtk, gobject
 
-from gtkmvc import Controller, Observer
+from gtkmvc import Observer
+from mvc.controllers.extended_controller import ExtendedController
 from utils import log
 logger = log.get_logger(__name__)
 
@@ -28,14 +29,14 @@ class ParentObserver(Observer):
             func_handle()
 
 
-class StateOutcomesListController(Controller):
+class StateOutcomesListController(ExtendedController):
 
     parent_observer = None
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         if model.parent is not None:
             self.parent_observer = ParentObserver(model.parent, "state", [self.update_stores, self.update_model])
@@ -250,7 +251,7 @@ class StateOutcomesListController(Controller):
             self.tree_store.append(None, [outcome.outcome_id, outcome.name, to_state, to_outcome,
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
 
-    @Controller.observe("state", after=True)
+    @ExtendedController.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
         # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #              (prop_name, info.instance, info.method_name, info.result))
@@ -260,12 +261,12 @@ class StateOutcomesListController(Controller):
             self.update_model()
 
 
-class StateOutcomesEditorController(Controller):
+class StateOutcomesEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
 
     def register_view(self, view):

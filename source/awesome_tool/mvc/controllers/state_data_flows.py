@@ -1,7 +1,8 @@
 
 import gobject
 from gtk import ListStore, TreeStore
-from gtkmvc import Controller, Observer
+from gtkmvc import Observer
+from mvc.controllers.extended_controller import ExtendedController
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -31,7 +32,7 @@ class ParentObserver(Observer):
                 func_handle()
 
 
-class StateDataFlowsListController(Controller):
+class StateDataFlowsListController(ExtendedController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -46,7 +47,7 @@ class StateDataFlowsListController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         if model.parent is not None:
             self.parent_observer = ParentObserver(model.parent, "state", [self.update_stores, self.update_model])
             #self.parent_observer.observe(model.parent)
@@ -297,7 +298,7 @@ class StateDataFlowsListController(Controller):
                                                   True,
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
-    @Controller.observe("state", after=True)
+    @ExtendedController.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
         # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
@@ -617,12 +618,12 @@ def find_free_keys(model):
     return free_to_ports, from_ports
 
 
-class StateDataFlowsEditorController(Controller):
+class StateDataFlowsEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.df_list_ctrl = StateDataFlowsListController(model, view.data_flows_listView)
 
     def register_view(self, view):
