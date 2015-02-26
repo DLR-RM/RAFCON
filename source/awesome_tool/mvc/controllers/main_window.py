@@ -2,47 +2,17 @@ import traceback
 
 import gtk
 
-from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController, SingleWidgetWindowController, StateEditorController, StateMachineTreeController,\
-    LibraryTreeController
+from mvc.controllers import GlobalVariableManagerController, ExternalModuleManagerController, \
+    StateMachineTreeController, LibraryTreeController
 import statemachine.singleton
 from mvc.controllers.extended_controller import ExtendedController
 from mvc.controllers.states_editor import StatesEditorController
 from mvc.controllers.state_machines_editor import StateMachinesEditorController
-from statemachine.states.execution_state import ExecutionState
-from mvc.models.container_state import ContainerStateModel
-from mvc.models.state_machine import StateMachineModel
 from mvc.models.state_machine_manager import StateMachineManagerModel
-
 from utils import log
 logger = log.get_logger(__name__)
 
 from functools import partial
-
-def setup_key_binding(key_map, view, widget):
-        """
-        Read the Key_map and add key accelerators according to the
-        name of field key_map, adds AccelGroup to widget and add accelerator to dict of view.
-
-        :param key_map dict that holds as key the name of menu-button and as value the accelerator-key
-        :param view View in which the widget-dict is used to update MenuItems and to insert new (not visualized ones)
-        :param widget gtk.Window that could add accelerator-groups and have a menu
-        """
-
-        accelgroup = gtk.AccelGroup()
-        widget.add_accel_group(accelgroup)
-
-        for item in key_map.iteritems():
-            key, mod = gtk.accelerator_parse(str(item[1]))
-            try:
-                if not view[item[0]]:
-                    view[item[0]] = gtk.MenuItem()
-                    logger.info("NOT_IN key-accelerator %s insert a not visualized MenuItem with connected accelerator-key" % str(item))
-                view[item[0]].add_accelerator("activate", accelgroup, key, mod, gtk.ACCEL_VISIBLE)
-            except:
-                logger.warn(traceback.format_exc())
-                pass
 
 
 class ShortcutManager():
@@ -53,7 +23,6 @@ class ShortcutManager():
     """
     __action_to_shortcuts = dict()
 
-
     def __init__(self, window):
         # Setup window to listen for accelerators
         self.main_window = window
@@ -63,7 +32,6 @@ class ShortcutManager():
         self.__init_shortcuts()
         self.__register_shortcuts()
         self.__action_to_callbacks = dict()
-
 
     def __init_shortcuts(self):
         self.__action_to_shortcuts = {
@@ -103,11 +71,10 @@ class ShortcutManager():
                 callback = partial(self.__on_shortcut, action)  # Bind the action to the callback function
                 self.accel_group.connect_group(keyval, modifier_mask, gtk.ACCEL_VISIBLE, callback)
 
-    def __on_shortcut(self, action, accel_group, window, keyval, modifier_mask):
-        print "shortcut triggered", action, accel_group, keyval, modifier_mask
-        self.trigger_action(action, keyval, modifier_mask)
+    def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
+        self.trigger_action(action, key_value, modifier_mask)
 
-    def _get_action_for_shortcut(self, lookup_shortcut):
+    def __get_action_for_shortcut(self, lookup_shortcut):
         for action in self.__action_to_shortcuts:
             shortcuts = self.__action_to_shortcuts[action]
             for shortcut in shortcuts:
@@ -144,18 +111,17 @@ class ShortcutManager():
             return self.__action_to_shortcuts[action]
         return None
 
-    def trigger_action(self, action, keyval, modifier_mask):
-        """Calls the appropriate callback function for the given action
+    def trigger_action(self, action, key_value, modifier_mask):
+        """Calls the appropriate callback function(s) for the given action
 
-        :param action:
-        :param event:
-        :return:
+        :param action: The name of the action that was triggered
+        :param key_value: The key value of the shortcut that caused the trigger
+        :param modifier_mask: The modifier mask of the shortcut that caused the trigger
         """
-
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    callback_function(keyval, modifier_mask)
+                    callback_function(key_value, modifier_mask)
                 except Exception as e:
                     logger.error('Exception while calling callback methods for action "{0}": {1}'.format(
                         action, e.message))
@@ -168,6 +134,7 @@ class MainWindowController(ExtendedController):
 
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
 
+        self.shortcut_manager = None
         state_machine_manager = state_machine_manager_model.state_machine_manager
         active_state_machine_id = state_machine_manager.active_state_machine_id
         active_state_machine = None
@@ -333,8 +300,6 @@ class MainWindowController(ExtendedController):
         gtk.main_quit()
 
     def register_view(self, view):
-        setup_key_binding(self.key_map, view, view.get_top_widget())
-
         self.shortcut_manager = ShortcutManager(self.view['main_window'])
         self.register_actions(self.shortcut_manager)
 
