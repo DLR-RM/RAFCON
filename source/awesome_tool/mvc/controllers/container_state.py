@@ -2,14 +2,12 @@
 from utils import log
 logger = log.get_logger(__name__)
 
-import gtk
-from gtkmvc import Controller
-from gtkmvc.adapters import UserClassAdapter
+from mvc.controllers.extended_controller import ExtendedController
 from mvc.controllers.state_transitions import StateTransitionsListController
 from mvc.controllers.state_data_flows import StateDataFlowsListController
 
 
-class ContainerStateController(Controller):
+class ContainerStateController(ExtendedController):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -24,7 +22,7 @@ class ContainerStateController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.transition_list_controller = StateTransitionsListController(model, view.transition_list_view)
         self.data_flow_list_controller = StateDataFlowsListController(model, view.data_flow_list_view)
 

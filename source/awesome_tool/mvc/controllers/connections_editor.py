@@ -2,14 +2,12 @@
 from utils import log
 logger = log.get_logger(__name__)
 
-import gtk
-from gtkmvc import Controller
-from gtkmvc.adapters import UserClassAdapter
+from mvc.controllers.extended_controller import ExtendedController
 from mvc.controllers.state_transitions import StateTransitionsListController, StateTransitionsEditorController
 from mvc.controllers.state_data_flows import StateDataFlowsListController, StateDataFlowsEditorController
 
 
-class StateConnectionsEditorController(Controller):
+class StateConnectionsEditorController(ExtendedController):
 
     """Controller handling the view of properties/attributes of the ContainerStateModel and StateModel
 
@@ -25,7 +23,7 @@ class StateConnectionsEditorController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         # self.transitions_ctrl = StateTransitionsListController(model, view.transitions_view)
         # self.data_flows_ctrl = StateDataFlowsListController(model, view.data_flows_view)
         self.trans_editor_ctrl = StateTransitionsEditorController(model, view.transitions_view)

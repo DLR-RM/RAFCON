@@ -1,15 +1,16 @@
 import gtk
-from gtkmvc import Controller
+from mvc.controllers.extended_controller import ExtendedController
+from mvc.shortcut_manager import ShortcutManager
 
-
-class SingleWidgetWindowController(Controller):
+class SingleWidgetWindowController(ExtendedController):
     """Controller handling the view of properties/attributes of ...
     """
 
     def __init__(self, model, view, ctrl_class):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
+        self.shortcut_manager = None
         self.widget_ctrl = ctrl_class(model, view.get_top_widget())
 
     def register_view(self, view):
@@ -17,6 +18,9 @@ class SingleWidgetWindowController(Controller):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        self.shortcut_manager = ShortcutManager(self.view['main_window'])
+        self.register_actions(self.shortcut_manager)
+
         view['main_window'].connect('destroy', gtk.main_quit)
         #view.get_top_widget().connect('destroy', gtk.main_quit)
 
