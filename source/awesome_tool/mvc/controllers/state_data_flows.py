@@ -13,6 +13,7 @@ class ParentObserver(Observer):
         Observer.__init__(self, model)
         self.func_handle_list = funct_handle_list
         # self.observe(self.notify, "state", after=True)
+        self.got_model = model
         self.method_list = ["add_data_flow", "remove_data_flow",
                             "add_input_data_port", "remove_input_data_port",
                             "add_output_data_port", "remove_output_data_port",
@@ -21,14 +22,20 @@ class ParentObserver(Observer):
                             "add_state", "remove_state",
                             "modify_outcome_name", "name"]
 
-    @Observer.observe('state', after=True)
-    def notification(self, model, prop_name, info):
-        # logger.debug("parent %s data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-        #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
-
-        if info.method_name in self.method_list and model.state.state_id == info.instance.state_id:
-            for func_handle in self.func_handle_list:
-                func_handle()
+    @Observer.observe("data_flows", after=True)
+    def assign_notification_parent_state(self, model, prop_name, info):
+        print "AWEFULL PARENT", info.method_name, self.got_model.state.state_id
+        for func_handle in self.func_handle_list:
+            func_handle()
+#
+    # @Observer.observe('state', after=True)
+    # def notification(self, model, prop_name, info):
+    #     # logger.debug("parent %s data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+    #     #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
+    #
+    #     if info.method_name in self.method_list and model.state.state_id == info.instance.state_id:
+    #         for func_handle in self.func_handle_list:
+    #             func_handle()
 
 
 class StateDataFlowsListController(Controller):
@@ -120,7 +127,8 @@ class StateDataFlowsListController(Controller):
         logger.debug("DATAFLOWS_LIST get new FOCUS %s" % str(path[0]))
         self.update_internal_data_base()
         self.update_tree_store()
-        self.view.tree_view.set_cursor(path[0])
+        if path[0]:
+            self.view.tree_view.set_cursor(path[0])
 
     def on_add(self, button, info=None):
         # print "ADD DATA_FLOW"
@@ -178,17 +186,10 @@ class StateDataFlowsListController(Controller):
         text = text.split('.')
         df_id = self.tree_store[path][0]
         # df = self.tree_store[path][8]
-        #fs = df.from_state
         fk = None  # df.from_key
-        # ts = df.to_state
-        # tk = df.to_key
         if self.tree_store[path][5]:  # external
-            # fk = self.from_port_external[text[-1]][0].data_port_id
-            # self.model.parent.state.remove_data_flow(df_id)
-            # self.model.parent.state.add_data_flow(text[-1], fk, ts, tk, data_flow_id=df_id)
-            print df_id,  self.model.parent.state.data_flows[df_id], text[-1]
-            self.model.parent.state.data_flows[df_id].from_state = text[-1]
-            print self.model.state.parent.data_flows[df_id]
+            fk = self.from_port_external[text[-1]][0].data_port_id
+            self.model.parent.state.change_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
         else:
             state_model = get_state_model(self.model, text[-1])
             if state_model.state.state_id == self.model.state.state_id:
@@ -200,11 +201,7 @@ class StateDataFlowsListController(Controller):
                 if state_model.state.output_data_ports:
                     fk = state_model.state.output_data_ports.values()[0].data_port_id
             if fk:
-                # self.model.state.remove_data_flow(df_id)
-                # self.model.state.add_data_flow(text[-1], fk, ts, tk, data_flow_id=df_id)
-                print df_id,  self.model.state.data_flows[df_id], text[-1]
-                self.model.state.data_flows[df_id].from_state = text[-1]
-                print self.model.state.data_flows[df_id]
+                self.model.state.change_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
 
     def on_combo_changed_from_key(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -212,17 +209,10 @@ class StateDataFlowsListController(Controller):
             return
         text = text.split('.')
         df_id = self.tree_store[path][0]
-        df = self.tree_store[path][8]
-        fs = df.from_state
-        #fk = df.from_key
-        ts = df.to_state
-        tk = df.to_key
         if self.tree_store[path][5]:  # external
-            self.model.parent.state.remove_data_flow(df_id)
-            self.model.parent.state.add_data_flow(fs, int(text[-1]), ts, tk, data_flow_id=df_id)
+            self.model.parent.state.change_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
         else:
-            self.model.state.remove_data_flow(df_id)
-            self.model.state.add_data_flow(fs, int(text[-1]), ts, tk, data_flow_id=df_id)
+            self.model.state.change_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
 
     def on_combo_changed_to_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -231,17 +221,12 @@ class StateDataFlowsListController(Controller):
         #self.combo['free_ext_from_outcomes_dict']
         text = text.split('.')
         df_id = self.tree_store[path][0]
-        df = self.tree_store[path][8]
-        fs = df.from_state
-        fk = df.from_key
         if self.tree_store[path][5]:  # external
-            self.model.parent.state.remove_data_flow(df_id)
             tk = self.free_to_port_external[text[-1]][0].data_port_id
-            self.model.parent.state.add_data_flow(fs, fk, to_state_id=text[-1],  to_data_port_id=tk, data_flow_id=df_id)
+            self.model.parent.state.change_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
         else:
-            self.model.state.remove_data_flow(df_id)
             tk = self.free_to_port_internal[text[-1]][0].data_port_id
-            self.model.state.add_data_flow(fs, fk, to_state_id=text[-1],  to_data_port_id=tk, data_flow_id=df_id)
+            self.model.state.change_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
 
     def on_combo_changed_to_key(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -249,16 +234,10 @@ class StateDataFlowsListController(Controller):
             return
         text = text.split('.')
         df_id = self.tree_store[path][0]
-        df = self.tree_store[path][8]
-        fs = df.from_state
-        fk = df.from_key
-        ts = df.to_state
         if self.tree_store[path][5]:  # external
-            self.model.parent.state.remove_data_flow(df_id)
-            self.model.parent.state.add_data_flow(fs, fk, ts,  to_data_port_id=int(text[-1]), data_flow_id=df_id)
+            self.model.state.change_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
         else:
-            self.model.state.remove_data_flow(df_id)
-            self.model.state.add_data_flow(fs, fk, ts,  to_data_port_id=int(text[-1]), data_flow_id=df_id)
+            self.model.state.change_data_flow_to_state(data_flow_id=df_id, to_key=int(text[-1]))
 
     def update_internal_data_base(self):
          [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
@@ -306,30 +285,31 @@ class StateDataFlowsListController(Controller):
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
     # NEW
-    # @Controller.observe("input_data_ports", after=True)
-    # @Controller.observe("output_data_ports", after=True)
-    # @Controller.observe("scoped_variables", after=True)
+    @Controller.observe("input_data_ports", after=True)
+    @Controller.observe("output_data_ports", after=True)
+    @Controller.observe("scoped_variables", after=True)
     @Controller.observe("data_flows", after=True)
-    def assign_notification_parent_state(self, model, prop_name, info):
-        logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-                     (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
-    #     self.update_internal_data_base()
-    #     self.update_tree_store()
+    def assign_notification_state(self, model, prop_name, info):
+        print "AWEFULL STATE", info.method_name, self.model.state.state_id
+        # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER %s: \n-%s\n-%s\n-%s\n-%s\n" %
+        #              (str(info.after), model.state.state_id, prop_name, info.instance, info.method_name, info.result))
+        self.update_internal_data_base()
+        self.update_tree_store()
 
-    # OLD
-    @Controller.observe("state", after=True)
-    def assign_notification_parent_state(self, model, prop_name, info):
-        # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-        #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
-        if info.method_name in ["add_data_flow", "remove_data_flow",
-                                "add_input_data_port", "remove_input_data_port",
-                                "add_output_data_port", "remove_output_data_port",
-                                "add_output_data_port", "remove_output_data_port",
-                                "add_scoped_variable", "remove_scoped_variable",
-                                "add_state", "remove_state",
-                                "modify_outcome_name"] and model.state.state_id == info.instance.state_id:
-            self.update_internal_data_base()
-            self.update_tree_store()
+    # # OLD
+    # @Controller.observe("state", after=True)
+    # def assign_notification_parent_state(self, model, prop_name, info):
+    #     # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+    #     #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
+    #     if info.method_name in ["add_data_flow", "remove_data_flow",
+    #                             "add_input_data_port", "remove_input_data_port",
+    #                             "add_output_data_port", "remove_output_data_port",
+    #                             "add_output_data_port", "remove_output_data_port",
+    #                             "add_scoped_variable", "remove_scoped_variable",
+    #                             "add_state", "remove_state",
+    #                             "modify_outcome_name"] and model.state.state_id == info.instance.state_id:
+    #         self.update_internal_data_base()
+    #         self.update_tree_store()
 
 
 def get_key_combos(ports, keys_store, port_type, not_key=None):

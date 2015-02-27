@@ -5,10 +5,15 @@ import gtk
 
 from statemachine.states.container_state import ContainerState
 from statemachine.states.state import State
+from statemachine.data_flow import DataFlow
+from statemachine.transition import Transition
+from statemachine.states.state import DataPort
+from statemachine.scope import ScopedVariable
 from mvc.models.state import StateModel
 import mvc.models
 from mvc.models.transition import TransitionModel
 from mvc.models.data_flow import DataFlowModel
+
 from mvc.models.scoped_variable import ScopedVariableModel
 from utils import log
 
@@ -115,6 +120,30 @@ class ContainerStateModel(StateModel):
                 self.states._notify_method_before(self.state, "state_change", (model,), info)
             elif hasattr(info, 'after') and info['after']:
                 self.states._notify_method_after(self.state, "state_change", None, (model,), info)
+
+        if hasattr(info, 'before') and info['before'] and self is model:
+            if "change_data_flow" in info.method_name:  # isinstance(info.instance, DataFlow):
+                self.data_flows._notify_method_before(info.instance, "data_flow_change", (model,), info)
+            if isinstance(info.instance, Transition):
+                self.transitions._notify_method_before(info.instance, "transition_change", (model,), info)
+            if isinstance(info.instance, ScopedVariable):
+                self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
+            if isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.input_data_ports:
+                self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
+            if isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.output_data_ports:
+                self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
+        elif hasattr(info, 'after') and info['after'] and self is model:
+            if "change_data_flow" in info.method_name:  # isinstance(info.instance, DataFlow):
+                self.data_flows._notify_method_after(info.instance, "data_flow_change", None, (model,), info)
+            if isinstance(info.instance, Transition):
+                self.transitions._notify_method_after(info.instance, "transition_change", None, (model,), info)
+            if isinstance(info.instance, ScopedVariable):
+                self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
+            if isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.input_data_ports:
+                self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
+            if isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.output_data_ports:
+                self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
+
         if self.parent is not None:
             self.parent.model_changed(model, name, info)
 
