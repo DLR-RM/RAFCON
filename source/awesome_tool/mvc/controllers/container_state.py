@@ -23,8 +23,9 @@ class ContainerStateController(ExtendedController):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
-        self.transition_list_controller = StateTransitionsListController(model, view.transition_list_view)
-        self.data_flow_list_controller = StateDataFlowsListController(model, view.data_flow_list_view)
+        self.add_controller('transition_list_controller', StateTransitionsListController(model,
+                                                                                           view.transition_list_view))
+        self.add_controller('data_flow_list_controller', StateDataFlowsListController(model, view.data_flow_list_view))
 
     def register_view(self, view):
         """Called when the View was registered

@@ -54,8 +54,8 @@ class StateMachinesEditorController(ExtendedController):
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
 
-        self.state_machine_tree_ctrl = state_machine_tree_ctrl
-        self.states_editor_ctrl = states_editor_ctrl
+        self.add_controller('state_machine_tree_ctrl', state_machine_tree_ctrl)
+        self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         self.tabs = {}
         self.act_model = None
@@ -69,12 +69,12 @@ class StateMachinesEditorController(ExtendedController):
 
         assert isinstance(state_machine_model, StateMachineModel)
 
-        sm_identifier = state_machine_model.root_state.state.get_path()
+        sm_identifier = state_machine_model.state_machine.state_machine_id
 
         graphical_editor_view = GraphicalEditorView()
 
         graphical_editor_ctrl = GraphicalEditorController(state_machine_model, graphical_editor_view)
-        self.add_controller(state_machine_model.state_machine.state_machine_id, graphical_editor_ctrl)
+        self.add_controller(sm_identifier, graphical_editor_ctrl)
         (event_box, new_label) = create_tab_header(state_machine_model.root_state.state.name,
                                                    self.on_close_clicked,
                                                    state_machine_model, 'refused')
@@ -105,13 +105,14 @@ class StateMachinesEditorController(ExtendedController):
 
         return idx
 
-    def on_close_clicked(self, event, state_model, result):
+    def on_close_clicked(self, event, state_machine_model, result):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         # print event, state_model, result
 
-        state_identifier = state_model.state.name + '.' + state_model.state.state_id
-        page = self.tabs[state_identifier]['page']
+        sm_identifier = state_machine_model.state_machine.state_machine_id
+        page = self.tabs[sm_identifier]['page']
         current_idx = self.view.notebook.page_num(page)
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
-        del self.tabs[state_identifier]
+        del self.tabs[sm_identifier]
+        self.remove_controller()

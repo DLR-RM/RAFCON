@@ -13,18 +13,23 @@ class StateDataPortEditorController(ExtendedController):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
-        self.idp_list_ctrl = DataPortListController(model, view.input_port_list_view, "input")
-        self.odp_list_ctrl = DataPortListController(model, view.output_port_list_view, "output")
-        self.sv_list_ctrl = ScopedVariableListController(model, view.scoped_variables_list_view)
+        self.add_controller('idp_list_ctrl', DataPortListController(model, view.input_port_list_view, "input"))
+        self.add_controller('odp_list_ctrl', DataPortListController(model, view.output_port_list_view, "output"))
+        self.add_controller('sv_list_ctrl', ScopedVariableListController(model, view.scoped_variables_list_view))
 
-        view['new_input_port_button'].connect('clicked', self.idp_list_ctrl.on_new_input_port_button_clicked)
-        view['new_output_port_button'].connect('clicked', self.odp_list_ctrl.on_new_output_port_button_clicked)
-        view['new_scoped_variable_button'].connect('clicked', self.sv_list_ctrl.on_new_scoped_variable_button_clicked)
+        view['new_input_port_button'].connect('clicked', self.get_controller(
+            'idp_list_ctrl').on_new_input_port_button_clicked)
+        view['new_output_port_button'].connect('clicked', self.get_controller(
+            'odp_list_ctrl').on_new_output_port_button_clicked)
+        view['new_scoped_variable_button'].connect('clicked', self.get_controller(
+            'sv_list_ctrl').on_new_scoped_variable_button_clicked)
 
-        view['delete_input_port_button'].connect('clicked', self.idp_list_ctrl.on_delete_input_port_button_clicked)
-        view['delete_output_port_button'].connect('clicked', self.odp_list_ctrl.on_delete_output_port_button_clicked)
-        view['delete_scoped_variable_button'].connect('clicked',
-                                                      self.sv_list_ctrl.on_delete_scoped_variable_button_clicked)
+        view['delete_input_port_button'].connect('clicked', self.get_controller(
+            'idp_list_ctrl').on_delete_input_port_button_clicked)
+        view['delete_output_port_button'].connect('clicked', self.get_controller(
+            'odp_list_ctrl').on_delete_output_port_button_clicked)
+        view['delete_scoped_variable_button'].connect('clicked', self.get_controller(
+            'sv_list_ctrl').on_delete_scoped_variable_button_clicked)
         print "Init of state-data-port-editor ", model
 
     def register_view(self, view):

@@ -26,8 +26,8 @@ class StateConnectionsEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         # self.transitions_ctrl = StateTransitionsListController(model, view.transitions_view)
         # self.data_flows_ctrl = StateDataFlowsListController(model, view.data_flows_view)
-        self.trans_editor_ctrl = StateTransitionsEditorController(model, view.transitions_view)
-        self.df_editor_ctrl = StateDataFlowsEditorController(model, view.data_flows_view)
+        self.add_controller('trans_editor_ctrl', StateTransitionsEditorController(model, view.transitions_view))
+        self.add_controller('f_editor_ctrl', StateDataFlowsEditorController(model, view.data_flows_view))
         # self.view_dict = {'transitions_internal': True, 'transitions_external': True,
         #                   'data_flows_internal': True, 'data_flows_external': True}
         # self.data_flows_ctrl.view_dict = self.view_dict

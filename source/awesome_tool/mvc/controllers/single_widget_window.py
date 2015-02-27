@@ -11,7 +11,7 @@ class SingleWidgetWindowController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
         self.shortcut_manager = None
-        self.widget_ctrl = ctrl_class(model, view.get_top_widget())
+        self.add_controller('widget_ctrl', ctrl_class(model, view.get_top_widget()))
 
     def register_view(self, view):
         """Called when the View was registered

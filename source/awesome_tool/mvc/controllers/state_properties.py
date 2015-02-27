@@ -22,7 +22,7 @@ class StatePropertiesController(ExtendedController):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
 
     def register_view(self, view):

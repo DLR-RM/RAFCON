@@ -137,6 +137,7 @@ class StatesEditorController(ExtendedController):
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
         del self.tabs[state_identifier]
+        self.remove_controller(state_model.state.state_id)
 
     def on_switch_page(self, notebook, page, page_num, user_param1=None):
         #logger.debug("switch page %s %s" % (page_num, page))
