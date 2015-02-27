@@ -1,0 +1,24 @@
+!LibraryState
+data_flows: {}
+filename: script.py
+input_data_ports:
+    19: !DataPort {data_port_id: 19, data_type: str, default_value: new_turtle, name: global_storage_id_of_turtle_pos}
+    20: !DataPort {data_port_id: 20, data_type: str, default_value: new_turtle, name: turtle_name}
+    21: !DataPort {data_port_id: 21, data_type: float, default_value: 9.0, name: x_pos}
+    22: !DataPort {data_port_id: 22, data_type: float, default_value: 5.0, name: y_pos}
+library_name: move_to_position
+library_path: turtle_libraries
+name: move to position
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+    1: !Outcome {name: position_not_reached_yet, outcome_id: 1}
+output_data_ports: {}
+path: ../../test_scripts/basic_turtle_demo_sm/XBMYHQ/XYEQEX/KSWUOO/VYHJKM
+scoped_variables: {}
+start_state: null
+state_id: VYHJKM
+state_type: STATE_TYPE.LIBRARY
+transitions: {}
+version: '0.1'

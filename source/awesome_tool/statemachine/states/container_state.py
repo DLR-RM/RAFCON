@@ -99,6 +99,60 @@ class ContainerState(State):
         self.script.load_and_build_module()
         self.script.exit(self, scoped_variables_dict)
 
+    def handle_no_transition(self, state):
+        """
+        This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
+        condition variable to a new transition that will be connected by the programmer or GUI-user.
+        :param state: The substate to find a transition for
+        :return: The transition for the target state.
+        """
+        transition = None
+        while not transition:
+
+            # aborted case for child state
+            if state.final_outcome.outcome_id == -1:
+                if self.concurrency_queue:
+                    self.concurrency_queue.put(self.state_id)
+                self.final_outcome = Outcome(-1, "aborted")
+                self.active = False
+                logger.debug("Exit hierarchy state %s with outcome aborted, as the child state returned "
+                             "aborted and no transition was added to the aborted outcome!" % self.name)
+                return None
+
+            # preempted case for child state
+            elif state.final_outcome.outcome_id == -2:
+                if self.concurrency_queue:
+                    self.concurrency_queue.put(self.state_id)
+                self.final_outcome = Outcome(-2, "preempted")
+                self.active = False
+                logger.debug("Exit hierarchy state %s with outcome preempted, as the child state returned "
+                             "preempted and no transition was added to the preempted outcome!" % self.name)
+                return None
+
+            # preempted case
+            if self.preempted:
+                if self.concurrency_queue:
+                    self.concurrency_queue.put(self.state_id)
+                self.final_outcome = Outcome(-2, "preempted")
+                self.active = False
+                logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
+                             "was preempted!" % self.name)
+                return None
+
+            # depending on the execution mode pause execution
+            execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+            if execution_signal == "stop":
+                # this will be caught at the end of the run method
+                raise RuntimeError("state stopped")
+
+            # wait until the user connects the outcome of the state with a transition
+            self._transitions_cv.acquire()
+            self._transitions_cv.wait(3.0)
+            self._transitions_cv.release()
+            transition = self.get_transition_for_outcome(state, state.final_outcome)
+
+        return transition
+
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- state functions --------------------------------------
     # ---------------------------------------------------------------------------------------------

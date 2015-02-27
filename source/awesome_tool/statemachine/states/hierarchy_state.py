@@ -88,46 +88,11 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
                 transition = self.get_transition_for_outcome(state, state.final_outcome)
 
-                while not transition:
-
-                    # aborted case
-                    if state.final_outcome.outcome_id == -1:
-                        if self.concurrency_queue:
-                            self.concurrency_queue.put(self.state_id)
-                        self.final_outcome = Outcome(-1, "aborted")
-                        self.active = False
-                        logger.debug("Exit hierarchy state %s with outcome aborted, as the child state returned "
-                                     "aborted and no transition was added to the aborted outcome!" % self.name)
-                        return
-                    # preempted case
-                    elif state.final_outcome.outcome_id == -2:
-                        if self.concurrency_queue:
-                            self.concurrency_queue.put(self.state_id)
-                        self.final_outcome = Outcome(-2, "preempted")
-                        self.active = False
-                        logger.debug("Exit hierarchy state %s with outcome preempted, as the child state returned "
-                                     "preempted and no transition was added to the preempted outcome!" % self.name)
-                        return
-                    if self.preempted:
-                        if self.concurrency_queue:
-                            self.concurrency_queue.put(self.state_id)
-                        self.final_outcome = Outcome(-2, "preempted")
-                        self.active = False
-                        logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
-                                     "was preempted!" % self.name)
-                        return
-
-                    # depending on the execution mode pause execution
-                    execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
-                    if execution_signal == "stop":
-                        # this will be caught at the end of the run method
-                        raise RuntimeError("state stopped")
-
-                    # wait until the user connects the outcome of the state with a transition
-                    self._transitions_cv.acquire()
-                    self._transitions_cv.wait(3.0)
-                    self._transitions_cv.release()
-                    transition = self.get_transition_for_outcome(state, state.final_outcome)
+                if transition is None:
+                    transition = self.handle_no_transition(state)
+                # it the transition is still None, then the state was preempted or aborted, in this case return
+                if transition is None:
+                    return
 
                 state = self.get_state_for_transition(transition)
 

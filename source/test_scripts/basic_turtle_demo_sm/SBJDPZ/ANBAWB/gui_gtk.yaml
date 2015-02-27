@@ -1,0 +1,59 @@
+!Vividict
+vivid_dict_content:
+    gui: !Vividict
+        vivid_dict_content:
+            editor: !Vividict
+                vivid_dict_content:
+                    height: 20.0
+                    id: 2
+                    input_pos:
+                        1: !!python/tuple
+                        - 32.99229583975347
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                EF/Xbu9ZSUA=
+                    outcome_pos:
+                        -2: !!python/tuple
+                        - 48.99229583975347
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                EF/Xbu9ZT0A=
+                        -1: !!python/tuple
+                        - 48.99229583975347
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                iK9rt/fsUEA=
+                        0: !!python/tuple
+                        - 48.99229583975347
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                EF/Xbu/ZTEA=
+                    outcome_radius: 1.3333333333333333
+                    output_pos: {}
+                    port_radius: 0.625
+                    pos_x: 28.99229583975347
+                    pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                    - !!python/object/apply:numpy.dtype
+                        args: [f8, 0, 1]
+                        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+                    - !!binary |
+                        EF/Xbu9ZSkA=
+                    resize_length: 2.5
+                    scoped_pos: {}
+                    width: 20.0

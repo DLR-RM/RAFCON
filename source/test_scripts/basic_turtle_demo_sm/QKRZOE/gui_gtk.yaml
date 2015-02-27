@@ -1,0 +1,67 @@
+!Vividict
+vivid_dict_content:
+    gui: !Vividict
+        vivid_dict_content:
+            editor: !Vividict
+                vivid_dict_content:
+                    height: 100.0
+                    id: 1
+                    input_pos: {}
+                    outcome_pos:
+                        -2: !!python/tuple [100.0, 50.0]
+                        -1: !!python/tuple [100.0, 75.0]
+                        0: !!python/tuple [100.0, 25.0]
+                    outcome_radius: 5
+                    output_pos: {}
+                    port_radius: 3.125
+                    pos_x: 0.0
+                    pos_y: 0.0
+                    resize_length: 12.5
+                    scoped_pos: {}
+                    width: 100.0
+                    width): !Vividict
+                        vivid_dict_content: {}
+    transition0: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 31.89830508474577
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                HyTOVyPAQ0A=
+                            id: 29
+                            to_pos_x: 52.041294298921414
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                tmbSiYGuRUA=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}
+    transition1: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 72.04129429892141
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                tmbSiYEuQ0A=
+                            id: 30
+                            to_pos_x: 100.0
+                            to_pos_y: 25.0
+                            waypoints: !Vividict
+                                vivid_dict_content: {}

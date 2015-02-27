@@ -16,6 +16,7 @@ def save_turtle1_pose(pose):
     x = pose.x
     y = pose.y
     theta = pose.theta
+    # print "positions of received turtle pose", x, y, theta
 
 
 def execute(self, inputs, outputs, gvm):

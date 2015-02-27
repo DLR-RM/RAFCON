@@ -1,0 +1,279 @@
+!Vividict
+vivid_dict_content:
+    gui: !Vividict
+        vivid_dict_content:
+            editor: !Vividict
+                vivid_dict_content:
+                    height: !!python/object/apply:numpy.core.multiarray.scalar
+                    - !!python/object/apply:numpy.dtype
+                        args: [f8, 0, 1]
+                        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+                    - !!binary |
+                        ZR+ckOMHY0A=
+                    id: 1
+                    input_pos: {}
+                    outcome_pos:
+                        -2: !!python/tuple
+                        - 285.8048761213342
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                TIKPvXHgN0A=
+                        -1: !!python/tuple
+                        - 285.8048761213342
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                jOBjbxz4TkA=
+                        0: !!python/tuple
+                        - 285.8048761213342
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                /HhRx6peLMA=
+                    outcome_radius: 5
+                    output_pos: {}
+                    port_radius: !!python/object/apply:numpy.core.multiarray.scalar
+                    - !!python/object/apply:numpy.dtype
+                        args: [f8, 0, 1]
+                        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+                    - !!binary |
+                        ZR+ckOMHE0A=
+                    pos_x: 0.0
+                    pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                    - !!python/object/apply:numpy.dtype
+                        args: [f8, 0, 1]
+                        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+                    - !!binary |
+                        pH1wQo4fSsA=
+                    resize_length: !!python/object/apply:numpy.core.multiarray.scalar
+                    - !!python/object/apply:numpy.dtype
+                        args: [f8, 0, 1]
+                        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+                    - !!binary |
+                        ZR+ckOMHM0A=
+                    scoped_pos: {}
+                    width: 285.8048761213342
+                    width): !Vividict
+                        vivid_dict_content: {}
+    transition0: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 36.752299431877276
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                dLegiQjoQUA=
+                            id: 10
+                            to_pos_x: 47.50908526297808
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                5LJymnFOREA=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}
+    transition1: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 78.91793940108954
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                JJWXOULNQUA=
+                            id: 11
+                            to_pos_x: 91.20631990016723
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                thQUG6xxREA=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}
+    transition2: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 116.38445229964982
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                Wzd2DTb/QUA=
+                            id: 12
+                            to_pos_x: 132.08138235244863
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                F//L0aAUREA=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}
+    transition3: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 160.31328612331654
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                5+XearMnQUA=
+                            id: 13
+                            to_pos_x: 176.08754568064597
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                9U+nBsvBQ0A=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}
+    transition4: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 203.22466931314023
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                lu74uJ3mQEA=
+                            id: 14
+                            to_pos_x: 24.319678679910897
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                FHy5ZNnXKsA=
+                            waypoints:
+                            - !!python/tuple
+                                - 223.4742819699829
+                                - !!python/object/apply:numpy.core.multiarray.scalar
+                                    - !!python/object/apply:numpy.dtype
+                                        args: [f8, 0, 1]
+                                        state: !!python/tuple [3, <, null, null, null,
+                                            -1, -1, 0]
+                                    - !!binary |
+                                        vCAFm/84QUA=
+                            - !!python/tuple
+                                - 223.3263620932495
+                                - !!python/object/apply:numpy.core.multiarray.scalar
+                                    - !!python/object/apply:numpy.dtype
+                                        args: [f8, 0, 1]
+                                        state: !!python/tuple [3, <, null, null, null,
+                                            -1, -1, 0]
+                                    - !!binary |
+                                        MFdL+UhPIEA=
+                            - !!python/tuple
+                                - 14.38953620727106
+                                - !!python/object/apply:numpy.core.multiarray.scalar
+                                    - !!python/object/apply:numpy.dtype
+                                        args: [f8, 0, 1]
+                                        state: !!python/tuple [3, <, null, null, null,
+                                            -1, -1, 0]
+                                    - !!binary |
+                                        MDuaceDPIUA=
+                            - !!python/tuple
+                                - 14.447317409120068
+                                - !!python/object/apply:numpy.core.multiarray.scalar
+                                    - !!python/object/apply:numpy.dtype
+                                        args: [f8, 0, 1]
+                                        state: !!python/tuple [3, <, null, null, null,
+                                            -1, -1, 0]
+                                    - !!binary |
+                                        eE4xq16QKsA=
+            waypoints: !Vividict
+                vivid_dict_content: {}
+    transition5: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 56.814241093326345
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                ZRiJIz4wNMA=
+                            id: 15
+                            to_pos_x: 72.40495708280304
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                yvpm5zBULMA=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}
+    transition6: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 103.77707349966825
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                MKPr0qUPNcA=
+                            id: 16
+                            to_pos_x: 120.86300781497692
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                pAfftiO0IsA=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}

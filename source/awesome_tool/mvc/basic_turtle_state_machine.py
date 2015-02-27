@@ -10,6 +10,7 @@ from mvc.models import ContainerStateModel, GlobalVariableManagerModel
 from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.execution_state import ExecutionState
 from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import statemachine.singleton
 from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.state_machine import StateMachine
@@ -58,11 +59,13 @@ def create_turtle_statemachine():
     # Turtle Concurrency State
     ########################################################
 
-    barrier_concurrency_state = BarrierConcurrencyState("Turtle Concurrency State",
+    preemptive_concurrency_state = PreemptiveConcurrencyState("Turtle Concurrency State",
                                                         path="../../test_scripts/basic_turtle_demo",
                                                         filename="root_state.py")
-    basic_turtle_demo_state.add_state(barrier_concurrency_state)
-    basic_turtle_demo_state.add_transition(init_ros_node.state_id, 0, barrier_concurrency_state.state_id, None)
+    preemptive_concurrency_state.add_outcome("Success", 0)
+    basic_turtle_demo_state.add_state(preemptive_concurrency_state)
+    basic_turtle_demo_state.add_transition(init_ros_node.state_id, 0, preemptive_concurrency_state.state_id, None)
+    basic_turtle_demo_state.add_transition(preemptive_concurrency_state.state_id, 0, None, 0)
 
     ########################################################
     # Subscribe to turtle position concurrency State
@@ -72,7 +75,7 @@ def create_turtle_statemachine():
                                                      path="../../test_scripts/basic_turtle_demo",
                                                      filename="root_state.py")
 
-    barrier_concurrency_state.add_state(subscribe_to_turtle_position_hierarchy_state)
+    preemptive_concurrency_state.add_state(subscribe_to_turtle_position_hierarchy_state)
 
     spawn_turtle = LibraryState("turtle_libraries", "turtle_position_subscriber", "0.1", "subscribe to turtle position")
     subscribe_to_turtle_position_hierarchy_state.add_state(spawn_turtle)
@@ -85,7 +88,9 @@ def create_turtle_statemachine():
     move_turtle_hierarchy_state = HierarchyState("Move Turtle Hierarchy State",
                                                  path="../../test_scripts/basic_turtle_demo",
                                                  filename="root_state.py")
-    barrier_concurrency_state.add_state(move_turtle_hierarchy_state)
+    move_turtle_hierarchy_state.add_outcome("Success", 0)
+    preemptive_concurrency_state.add_state(move_turtle_hierarchy_state)
+    preemptive_concurrency_state.add_transition(move_turtle_hierarchy_state.state_id, 0, None, 0)
 
     spawn_turtle = LibraryState("turtle_libraries", "spawn_turtle", "0.1", "spawn turtle")
     move_turtle_hierarchy_state.add_state(spawn_turtle)
@@ -109,7 +114,7 @@ def create_turtle_statemachine():
     move_turtle_hierarchy_state.add_state(clear_field)
     move_turtle_hierarchy_state.add_transition(wait2.state_id, 0, clear_field.state_id, None)
 
-    wait3 = ExecutionState("Wait2", path="../../test_scripts/basic_turtle_demo", filename="wait.py")
+    wait3 = ExecutionState("Wait3", path="../../test_scripts/basic_turtle_demo", filename="wait.py")
     wait3.add_outcome("Success", 0)
     move_turtle_hierarchy_state.add_state(wait3)
     move_turtle_hierarchy_state.add_transition(clear_field.state_id, 0, wait3.state_id, None)
@@ -118,7 +123,7 @@ def create_turtle_statemachine():
     move_turtle_hierarchy_state.add_state(set_velocity1)
     move_turtle_hierarchy_state.add_transition(wait3.state_id, 0, set_velocity1.state_id, None)
 
-    wait4 = ExecutionState("Wait3", path="../../test_scripts/basic_turtle_demo", filename="wait_medium.py")
+    wait4 = ExecutionState("Wait4", path="../../test_scripts/basic_turtle_demo", filename="wait_medium.py")
     wait4.add_outcome("Success", 0)
     move_turtle_hierarchy_state.add_state(wait4)
     move_turtle_hierarchy_state.add_transition(set_velocity1.state_id, 0, wait4.state_id, None)
@@ -136,8 +141,12 @@ def create_turtle_statemachine():
 
     move_turtle_hierarchy_state.add_transition(move_to_position.state_id, 1, move_to_position.state_id, None)
 
+    kill_turtle = LibraryState("turtle_libraries", "kill_turtle", "0.1", "kill turtle")
+    move_turtle_hierarchy_state.add_state(kill_turtle)
+    move_turtle_hierarchy_state.add_transition(move_to_position.state_id, 0, kill_turtle.state_id, None)
 
-    # basic_turtle_demo_state.add_transition(basic_turtle_demo_state.state_id, 0, init_turtle_state.state_id, None)
+    move_turtle_hierarchy_state.add_transition(kill_turtle.state_id, 0, None, 0)
+
 
     return basic_turtle_demo_state
 
@@ -146,7 +155,7 @@ def run_turtle_demo():
 
     statemachine.singleton.library_manager.initialize()
 
-    basic_turtle_demo_state = create_turtle_statemachine()
+    # basic_turtle_demo_state = create_turtle_statemachine()
 
     # set base path of global storage
     statemachine.singleton.global_storage.base_path = "../../test_scripts/basic_turtle_demo_sm"

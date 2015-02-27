@@ -1,0 +1,27 @@
+!HierarchyState
+data_flows: {}
+filename: script.py
+input_data_ports: {}
+name: Move Turtle Hierarchy State
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success1, outcome_id: 0}
+output_data_ports: {}
+path: ../../test_scripts/basic_turtle_demo_sm/XBMYHQ/XYEQEX/KSWUOO
+scoped_variables: {}
+start_state: VQHJQW
+state_id: KSWUOO
+state_type: STATE_TYPE.HIERARCHY
+transitions:
+    3: !Transition {from_outcome: 0, from_state: VQHJQW, to_outcome: null, to_state: AWUQSV}
+    4: !Transition {from_outcome: 0, from_state: AWUQSV, to_outcome: null, to_state: WIVAQB}
+    5: !Transition {from_outcome: 0, from_state: WIVAQB, to_outcome: null, to_state: SMALXN}
+    6: !Transition {from_outcome: 0, from_state: SMALXN, to_outcome: null, to_state: ZMHQVT}
+    7: !Transition {from_outcome: 0, from_state: ZMHQVT, to_outcome: null, to_state: IYRZTD}
+    8: !Transition {from_outcome: 0, from_state: IYRZTD, to_outcome: null, to_state: RNTVIC}
+    9: !Transition {from_outcome: 0, from_state: RNTVIC, to_outcome: null, to_state: LWLQPP}
+    10: !Transition {from_outcome: 0, from_state: LWLQPP, to_outcome: null, to_state: VYHJKM}
+    11: !Transition {from_outcome: 1, from_state: VYHJKM, to_outcome: null, to_state: VYHJKM}
+    26: !Transition {from_outcome: 0, from_state: VYHJKM, to_outcome: null, to_state: QZHLHI}
+    29: !Transition {from_outcome: 0, from_state: QZHLHI, to_outcome: 0, to_state: null}

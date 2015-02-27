@@ -54,6 +54,9 @@ def execute(self, inputs, outputs, gvm):
     my_y = gvm.get_variable(global_storage_id_of_turtle_pose + "/" + "y")
     my_phi = gvm.get_variable(global_storage_id_of_turtle_pose + "/" + "phi")
 
+    if (my_x or my_y or my_phi) is None:
+        return 1
+
     print "my_x: ", my_x
     print "my_y: ", my_y
     print "my_phi: ", my_phi

@@ -1,0 +1,16 @@
+!HierarchyState
+data_flows: {}
+filename: script.py
+input_data_ports: {}
+name: BasicTurtleDemo
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: Success, outcome_id: 0}
+output_data_ports: {}
+path: LHDXHZ
+scoped_variables: {}
+start_state: GPMYGJ
+state_id: LHDXHZ
+state_type: STATE_TYPE.HIERARCHY
+transitions: {}

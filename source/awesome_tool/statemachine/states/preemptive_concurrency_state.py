@@ -118,15 +118,12 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             transition = self.get_transition_for_outcome(self.states[finished_thread_id],
                                                          self.states[finished_thread_id].final_outcome)
-            # wait until connection is created by user
-            while not transition:
-                self._transitions_cv.wait(3.0)
-                if self.preempted:
-                    self.final_outcome = Outcome(-2, "preempted")
-                    self.active = False
-                    return
-                transition = self.get_transition_for_outcome(self.states[finished_thread_id],
-                                                             self.states[finished_thread_id].final_outcome)
+
+            if transition is None:
+                transition = self.handle_no_transition(self.states[finished_thread_id])
+            # it the transition is still None, then the state was preempted or aborted, in this case return
+            if transition is None:
+                return
 
             self.final_outcome = self.outcomes[transition.to_outcome]
             self.active = False
