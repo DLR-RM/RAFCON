@@ -204,11 +204,11 @@ class State(Observable, yaml.YAMLObject, object):
         self._is_start = None
 
         if state_type is StateType.EXECUTION:
-            self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path)
+            self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
         elif state_type is StateType.LIBRARY:
-            self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path)
+            self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path, state=self)
         else:
-            self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path)
+            self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
         self._input_data = {}
         self._output_data = {}

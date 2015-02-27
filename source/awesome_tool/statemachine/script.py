@@ -67,7 +67,7 @@ def exit(self, scoped_variables, gvm):
 
     yaml_tag = u'!Script'
 
-    def __init__(self, path=None, filename=None, script_type=None, check_path=True):
+    def __init__(self, path=None, filename=None, script_type=None, check_path=True, state=None):
 
         Observable.__init__(self)
 
@@ -84,7 +84,7 @@ def exit(self, scoped_variables, gvm):
         else:
             self.script = Script.DEFAULT_SCRIPT_CONTAINER
         if path is None:
-            self.path = "/tmp/DFC"
+            self.path = "/tmp/DFC/" + state.get_path()
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
             self.filename = "Script_%s.file" % str(self._script_id)

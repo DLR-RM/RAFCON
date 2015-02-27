@@ -54,7 +54,7 @@ class ContainerState(State):
         self.transitions = transitions
         self._data_flows = None
         self.data_flows = data_flows
-        self._start_state = None
+        self._start_state_id = None
         self.start_state = start_state
         self._scoped_variables = None
         self.scoped_variables = scoped_variables
@@ -226,13 +226,17 @@ class ContainerState(State):
         del self.states[state_id]
 
     @Observable.observed
-    def set_start_state(self, state_id):
-        """Adds a data_flow to the container state
+    def set_start_state(self, state):
+        """Sets the start state of a container state
 
-        :param state_id: The state_id (that was already added to the container) that will be the start state
+        :param state: The state_id of a state or a direct reference ot he state (that was already added
+        to the container) that will be the start state of this container state.
 
         """
-        self._start_state = state_id
+        if isinstance(state, State):
+            self._start_state_id = state.state_id
+        else:
+            self._start_state_id = state
 
     def get_start_state(self):
         """Get the start state of the container state
@@ -839,7 +843,7 @@ class ContainerState(State):
         """Property for the _start_state field
 
         """
-        return self._start_state
+        return self._start_state_id
 
     @start_state.setter
     @Observable.observed
@@ -847,7 +851,7 @@ class ContainerState(State):
         if not start_state is None:
             if not isinstance(start_state, str):
                 raise TypeError("start_state must be of type str")
-        self._start_state = start_state
+        self._start_state_id = start_state
 
     @property
     def scoped_variables(self):
