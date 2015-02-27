@@ -4,9 +4,11 @@ from utils.geometry import point_in_triangle, dist, point_on_line
 logger = log.get_logger(__name__)
 import sys
 import time
+from statemachine.enums import StateType
 from mvc.controllers.extended_controller import ExtendedController
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from mvc.models.state_machine import StateMachineModel
+from mvc.statemachine_helper import StateMachineHelper
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK
 from gtk.gdk import keyval_name
 # from models.container_state import ContainerStateModel
@@ -1109,7 +1111,14 @@ class GraphicalEditorController(ExtendedController):
         return selection, selection_depth
 
     def _delete_selection(self, *args):
-        print "TODO: delete selection"
+        StateMachineHelper.delete_models(self.model.selection.get_all())
 
     def _add_execution_state(self, *args):
-        print "TODO: add execution state"
+        selection = self.model.selection.get_all()
+        if len(selection) > 0:
+            model = selection[0]
+
+            if isinstance(model, StateModel):
+                StateMachineHelper.add_state(model, StateType.EXECUTION)
+            if isinstance(model, TransitionModel) or isinstance(model, DataFlowModel):
+                StateMachineHelper.add_state(model.parent, StateType.EXECUTION)
