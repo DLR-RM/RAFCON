@@ -100,6 +100,9 @@ class Selection(Observable):
     def __len__(self):
         return len(self.__selected)
 
+    def get_all(self):
+        return [s for s in self.__selected]
+
     def get_states(self):
         return [s for s in self.__selected if isinstance(s, StateModel)]
 
