@@ -802,7 +802,7 @@ class State(Observable, yaml.YAMLObject, object):
     @Observable.observed
     def output_data(self, output_data):
         if not isinstance(output_data, dict):
-            raise TypeError("output_data must be of type script")
+            raise TypeError("output_data must be of type dict")
         self._output_data = output_data
 
     @property

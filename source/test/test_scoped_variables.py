@@ -57,7 +57,7 @@ def test_scoped_variables():
 
     root_state = create_statemachine()
 
-    s.save_statemachine_as_yaml(root_state)
+    s.save_statemachine_as_yaml(root_state, "../test_scripts/stored_statemachine")
     [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"input_data_port1": 10.0}
@@ -80,5 +80,5 @@ def test_scoped_variables():
 
 
 if __name__ == '__main__':
-    pytest.main()
-    #test_scoped_variables()
+    #pytest.main()
+    test_scoped_variables()

@@ -82,7 +82,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
 
     def __str__(self):
         return str(self.state_copy) + "library_path: %s, library_name: %s, version: %s, state_id: %s" % \
-               (self.library_path, self.library_name, self.version, self.state_id)
+                                      (self.library_path, self.library_name, self.version, self.state_id)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the library state is executed

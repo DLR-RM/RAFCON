@@ -17,8 +17,8 @@ import yaml
 from gtkmvc import Observable
 
 import statemachine.states.state
+from statemachine.enums import StateType
 from utils import log
-
 logger = log.get_logger(__name__)
 
 
@@ -225,7 +225,10 @@ class Storage(Observable):
         # connect the missing function_handlers for setting the outcome names
         state.connect_all_outcome_function_handles()
         root_state.add_state(state)
-        self.load_script_file(state)
+        # the library state sets his script file to the script file of the root state of its library, thus it should
+        # not be overwritten in this case
+        if state.state_type is not StateType.LIBRARY:
+            self.load_script_file(state)
         for p in os.listdir(state_path):
             if os.path.isdir(os.path.join(state_path, p)):
                 elem = os.path.join(state_path, p)

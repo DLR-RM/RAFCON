@@ -37,7 +37,7 @@ def test_start_stop_pause_step():
     statemachine.singleton.global_variable_manager.set_variable("counter", 0)
 
     s = Storage("../test_scripts/stored_statemachine")
-    s.save_statemachine_as_yaml(state3)
+    s.save_statemachine_as_yaml(state3, "../test_scripts/stored_statemachine")
     root_state, version, creation_time = s.load_statemachine_from_yaml()
 
     # ctr_model = ContainerStateModel(root_state)
