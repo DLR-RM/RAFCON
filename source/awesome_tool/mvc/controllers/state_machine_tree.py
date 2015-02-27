@@ -1,7 +1,7 @@
 import gtk
 import gobject
-from gtkmvc import Controller
 
+from mvc.controllers.extended_controller import ExtendedController
 from mvc.models import ContainerStateModel
 from mvc.models.state_machine import StateMachineModel
 from utils import log
@@ -10,7 +10,7 @@ logger = log.get_logger(__name__)
 #TODO: comment
 
 
-class StateMachineTreeController(Controller):
+class StateMachineTreeController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
@@ -19,7 +19,7 @@ class StateMachineTreeController(Controller):
         # TODO auf state machine manager und active state umstellen
         assert isinstance(model, StateMachineModel)
 
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         # self.relieve_model(model)
         # self.observe_model(model.root_state)
         # model.root_state.register_observer(self)
@@ -124,7 +124,7 @@ class StateMachineTreeController(Controller):
 
             self.model.selection.add(state_model)
 
-    @Controller.observe("selection", after=True)
+    @ExtendedController.observe("selection", after=True)
     def assign_notification_selection(self, model, prop_name, info):
         if self.model.selection.get_selected_state():
 

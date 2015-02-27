@@ -1,17 +1,16 @@
 from utils import log
 logger = log.get_logger(__name__)
 
-from gtkmvc import Controller
+from mvc.controllers.extended_controller import ExtendedController
 import copy
-from mvc.models import DataPortModel
 
 
-class DataPortListController(Controller):
+class DataPortListController(ExtendedController):
 
     def __init__(self, model, view, io_type):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.type = io_type
         self.state_dataport_dict = None
         self.dataport_list_store = None

@@ -178,6 +178,8 @@ class State(Observable, yaml.YAMLObject, object):
         Observable.__init__(self)
         self.thread = None
 
+        if name is None:
+            name = "Untitled"
         self._name = None
         self.name = name
         if state_id is None:

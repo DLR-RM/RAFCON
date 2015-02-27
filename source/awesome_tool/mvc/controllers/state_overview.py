@@ -1,5 +1,5 @@
 import gtk
-from gtkmvc import View, Controller
+from mvc.controllers.extended_controller import ExtendedController
 
 from statemachine.states.state import State, StateType
 from statemachine.states.container_state import ContainerState
@@ -17,7 +17,7 @@ from utils import log
 logger = log.get_logger(__name__)
 
 
-class StateOverviewController(Controller):
+class StateOverviewController(ExtendedController):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -34,7 +34,7 @@ class StateOverviewController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
     def register_view(self, view):
         """Called when the View was registered

@@ -1,8 +1,8 @@
 import pango
 
 import gtk
-from gtkmvc import Controller
 
+from mvc.controllers.extended_controller import ExtendedController
 from mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
 from mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
 from mvc.models.state_machine_manager import StateMachineManagerModel
@@ -60,13 +60,13 @@ def create_tab_header(title, close_callback, *additional_parameters):
     return hbox, label
 
 
-class StatesEditorController(Controller):
+class StatesEditorController(ExtendedController):
     active_state_machine_id = None
 
     def __init__(self, model, view, editor_type):
 
         assert isinstance(model, StateMachineManagerModel)
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         #self.active_state_machine_id = None
 
@@ -96,6 +96,7 @@ class StatesEditorController(Controller):
         state_identifier = state_model.state.get_path()
         # new StateEditor*View
         # new StateEditor*Controller
+
         if editor_type == 'CommonGrouped':
             state_editor_view = StateEditorView()
             state_editor_ctrl = StateEditorController(state_model, state_editor_view)
@@ -105,6 +106,7 @@ class StatesEditorController(Controller):
         else:  # editor_type == 'PortConnectionGrouped':
             state_editor_view = StateEditorEggView()
             state_editor_ctrl = StateEditorEggController(state_model, state_editor_view)
+        self.add_controller(state_model.state.state_id, state_editor_ctrl)
 
         tab_label_text = limit_tab_label_text(state_model.state.name)
         (evtbox, new_label) = create_tab_header(tab_label_text, self.on_close_clicked,
@@ -135,6 +137,7 @@ class StatesEditorController(Controller):
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
         del self.tabs[state_identifier]
+        self.remove_controller(state_model.state.state_id)
 
     def on_switch_page(self, notebook, page, page_num, user_param1=None):
         #logger.debug("switch page %s %s" % (page_num, page))
@@ -165,7 +168,7 @@ class StatesEditorController(Controller):
                 self.view.notebook.set_current_page(idx)
             self.act_model = selected_model
 
-    @Controller.observe("selection", after=True)
+    @ExtendedController.observe("selection", after=True)
     def selection_notification(self, model, property, info):
         selection = info.instance
         assert isinstance(selection, Selection)
@@ -173,8 +176,8 @@ class StatesEditorController(Controller):
         if info.instance.get_num_states() == 1 and len(info.instance) == 1:
             self.change_state_editor_selection(info.instance.get_states()[0])
 
-    @Controller.observe("state", after=True)
-    @Controller.observe("states", after=True)
+    @ExtendedController.observe("state", after=True)
+    @ExtendedController.observe("states", after=True)
     def notify_state(self, model, prop_name, info):
         # TODO in combination with state type change (remove - add -state) there exist sometimes inconsistencies
         # logger.debug("In States-Editor state %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %

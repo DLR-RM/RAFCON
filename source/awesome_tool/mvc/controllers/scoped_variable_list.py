@@ -1,17 +1,17 @@
 from utils import log
 logger = log.get_logger(__name__)
 
-from gtkmvc import Controller
+from mvc.controllers.extended_controller import ExtendedController
 import gtk
 import gobject
 
 
-class ScopedVariableListController(Controller):
+class ScopedVariableListController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         self.new_sv_counter = 0
 
@@ -40,7 +40,7 @@ class ScopedVariableListController(Controller):
         """Adapters should be registered in this method call
         """
 
-    @Controller.observe("scoped_variables", after=True)
+    @ExtendedController.observe("scoped_variables", after=True)
     def input_data_ports_changed(self, model, prop_name, info):
         self.model.reload_scoped_variables_list_store()
 

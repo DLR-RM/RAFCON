@@ -1,7 +1,7 @@
 import gtk
 import gobject
 
-from gtkmvc import Controller
+from mvc.controllers.extended_controller import ExtendedController
 import statemachine.singleton
 from utils import log
 logger = log.get_logger(__name__)
@@ -11,20 +11,22 @@ from statemachine.states.library_state import LibraryState
 
 #TODO: comment
 
-class LibraryTreeController():  # (Controller):
+class LibraryTreeController(ExtendedController):  # (Controller):
 
     # actually no model needed for non modifiable library tree => take data from the library_manager
     # if libraries can be added by the GUI in the future a model will be needed
     def __init__(self, model=None, view=None):
-        # Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         view.set_model(self.library_tree_store)
-        self.view = view
-        self.view.connect('cursor-changed', self.on_cursor_changed)
+
         self.update()
 
     def register_adapters(self):
         pass
+
+    def register_view(self, view):
+        self.view.connect('cursor-changed', self.on_cursor_changed)
 
     def update(self):
         logger.debug("Update of library_tree controller called")
