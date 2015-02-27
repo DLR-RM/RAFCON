@@ -4,13 +4,12 @@ import logging
 import gtk
 
 from utils import log
-from mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
+from mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
 from mvc.controllers import MainWindowController, StateDataPortEditorController
 from mvc.views import LoggingView, MainWindowView, StateDataportEditorView
 from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.execution_state import ExecutionState
-from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
 from statemachine.state_machine import StateMachine
 
@@ -110,7 +109,7 @@ def create_models(*args, **kargs):
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
-    return state5, logger, ctr_state, global_var_manager_model, external_module_manager_model
+    return state5, logger, ctr_state, global_var_manager_model
 
 
 if __name__ == '__main__':
@@ -121,13 +120,13 @@ if __name__ == '__main__':
     #setup_logger(logging_view['main_frame'])
     logging_view = LoggingView()
     setup_logger(logging_view)
-    [execution_state, logger, ctr_state, gvm_model, emm_model] = create_models()
+    [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model,
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
                                                   editor_type='LogicDataGrouped')
 
     # ctr_model = ContainerStateModel(ctr_state)
