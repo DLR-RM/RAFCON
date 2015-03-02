@@ -443,7 +443,7 @@ class ContainerState(State):
             # del self.data_flows[data_flow_id]
 
     @Observable.observed
-    def change_data_flow_from_state(self, data_flow_id, from_state, from_key):
+    def modify_data_flow_from_state(self, data_flow_id, from_state, from_key):
         """The function accepts consistent changes of from_state with respective from_key.
 
         :param from_state: string of this state- or one of its child-state-state_id
@@ -471,7 +471,7 @@ class ContainerState(State):
         self.data_flows[data_flow_id].from_key = from_key
 
     @Observable.observed
-    def change_data_flow_from_key(self, data_flow_id, from_key):
+    def modify_data_flow_from_key(self, data_flow_id, from_key):
         """The function accepts consistent change from_key.
 
         :param from_key: the for respective from_state unique data_port_id
@@ -494,7 +494,7 @@ class ContainerState(State):
         self.data_flows[data_flow_id].from_key = from_key
 
     @Observable.observed
-    def change_data_flow_to_state(self, data_flow_id, to_state, to_key):
+    def modify_data_flow_to_state(self, data_flow_id, to_state, to_key):
         """The function accepts consistent changes of to_state with respective to_key.
 
         :param to_state: string of this state- or one of its child-state-state_id
@@ -522,7 +522,7 @@ class ContainerState(State):
         self.data_flows[data_flow_id].to_key = to_key
 
     @Observable.observed
-    def change_data_flow_to_key(self, data_flow_id, to_key):
+    def modify_data_flow_to_key(self, data_flow_id, to_key):
         """The function accepts consistent change to_key.
 
         :param to_key: the for respective to_state unique data_port_id
