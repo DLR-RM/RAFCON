@@ -117,6 +117,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             self.final_outcome = self.outcomes[transition.to_outcome]
             self.active = False
+            logger.debug("Return from hierarchy state %s", self.name)
             return
 
         except RuntimeError, e:
