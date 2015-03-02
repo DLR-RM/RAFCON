@@ -87,7 +87,6 @@ class DataFlow(Observable, yaml.YAMLObject):
         return self._from_state
 
     @from_state.setter
-    @Observable.observed
     def from_state(self, from_state):
         if not isinstance(from_state, str):
             raise TypeError("from_state must be of type str")
@@ -102,7 +101,6 @@ class DataFlow(Observable, yaml.YAMLObject):
         return self._from_key
 
     @from_key.setter
-    @Observable.observed
     def from_key(self, from_key):
         if not isinstance(from_key, int):
             raise TypeError("from_key must be of type int")
@@ -117,7 +115,6 @@ class DataFlow(Observable, yaml.YAMLObject):
         return self._to_state
 
     @to_state.setter
-    @Observable.observed
     def to_state(self, to_state):
         if not isinstance(to_state, str):
             raise TypeError("to_state must be of type str")
@@ -132,7 +129,6 @@ class DataFlow(Observable, yaml.YAMLObject):
         return self._to_key
 
     @to_key.setter
-    @Observable.observed
     def to_key(self, to_key):
         if not isinstance(to_key, int):
             raise TypeError("to_key must be of type int")

@@ -100,7 +100,7 @@ class Outcome(Observable, yaml.YAMLObject):
             raise TypeError("name must be of type str")
 
         if self.check_name is not None:
-            self._name = self.check_name(name, self.outcome_id)
+            self._name = self.check_name(name, self)
         else:
             self._name = name
 

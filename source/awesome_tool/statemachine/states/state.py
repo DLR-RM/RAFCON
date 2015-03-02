@@ -439,7 +439,7 @@ class State(Observable, yaml.YAMLObject, object):
         self._outcomes.pop(outcome_id, None)
 
     @Observable.observed
-    def modify_outcome_name(self, name, outcome_id):
+    def modify_outcome_name(self, name, outcome):
         """Checks if the outcome name already exists. If this is the case a unique number is appended to the name
 
         :param name: the desired name of a possibly new outcome
@@ -452,10 +452,10 @@ class State(Observable, yaml.YAMLObject, object):
             return count
 
         dict_of_names = {}
-        for o_id, outcome in self._outcomes.items():
-            dict_of_names[o_id] = outcome.name
+        for o_id, o in self._outcomes.items():
+            dict_of_names[o_id] = o.name
 
-        if name in dict_of_names.values():
+        if name in dict_of_names.values() and not outcome.name == name:
             name += str(define_unique_name(name, dict_of_names))
         return name
 

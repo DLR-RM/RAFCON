@@ -6,27 +6,27 @@ from utils import log
 logger = log.get_logger(__name__)
 
 
-class ParentObserver(Observer):
-
-    def __init__(self, model, key, funct_handle_list):
-        Observer.__init__(self, model)
-        self.func_handle_list = funct_handle_list
-        self.method_list = ["add_transition", "remove_transition", "add_outcome", "remove_outcome",
-                            "modify_outcome_name"]
-        self.state_model = model
-        # # dynamically
-        # self.func_handle_list = func_handle_list
-        # self.observe(self.notification, "state", after=True)
-
-    @Observer.observe('state', after=True)
-    def notification(self, model, prop_name, info):
-        # logger.debug("Outcomes parent %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-        #              (self.state_model.parent.state.name, prop_name, info.instance, info.method_name, info))
-
-        # TODO test with accepting limited methods
-        # if info.method_name in self.method_list and self.state_model.parent.state.state_id == info.instance.state_id:
-        for func_handle in self.func_handle_list:
-            func_handle()
+# class ParentObserver(Observer):
+#
+#     def __init__(self, model, key, funct_handle_list):
+#         Observer.__init__(self, model)
+#         self.func_handle_list = funct_handle_list
+#         self.method_list = ["add_transition", "remove_transition", "add_outcome", "remove_outcome",
+#                             "modify_outcome_name"]
+#         self.state_model = model
+#         # # dynamically
+#         # self.func_handle_list = func_handle_list
+#         # self.observe(self.notification, "state", after=True)
+#
+#     @Observer.observe('state', after=True)
+#     def notification(self, model, prop_name, info):
+#         # logger.debug("Outcomes parent %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+#         #              (self.state_model.parent.state.name, prop_name, info.instance, info.method_name, info))
+#
+#         # TODO test with accepting limited methods
+#         # if info.method_name in self.method_list and self.state_model.parent.state.state_id == info.instance.state_id:
+#         for func_handle in self.func_handle_list:
+#             func_handle()
 
 
 class StateOutcomesListController(ExtendedController):
@@ -38,9 +38,6 @@ class StateOutcomesListController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
 
-        if model.parent is not None:
-            self.parent_observer = ParentObserver(model.parent, "state", [self.update_stores, self.update_model])
-            #self.parent_observer.observe(model.parent)
         self.tree_store = view.tree_store
 
         self.to_state_combo_list = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
@@ -48,7 +45,16 @@ class StateOutcomesListController(ExtendedController):
         self.list_to_other_state = {}
         self.list_to_other_outcome = {}
         self.list_from_other_state = {}
-        self.update_stores()
+
+        if model.parent is not None:
+            # OLD
+            # self.parent_observer = ParentObserver(model.parent, "state", [self.update_internal_data_base,
+            #                                                               self.update_tree_store])
+            # NEW
+            self.observe_model(model.parent)
+
+        self.update_internal_data_base()
+        self.update_tree_store()
 
     def register_view(self, view):
         """Called when the View was registered
@@ -79,8 +85,6 @@ class StateOutcomesListController(ExtendedController):
             else:
                 logger.warning("Column do not has cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
-        self.update_model()
-
         view['tree_view'].set_model(self.tree_store)
         view['id_col'].set_cell_data_func(view['id_cell'], cell_text, self.model)
         view['name_col'].set_cell_data_func(view['name_cell'], cell_text, self.model)
@@ -90,14 +94,21 @@ class StateOutcomesListController(ExtendedController):
         view['name_cell'].connect('edited', self.on_name_modification)
         view['to_state_combo'].connect("edited", self.on_to_state_modification)
         view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
+        view.tree_view.connect("grab-focus", self.on_focus)
+
+    def on_focus(self, widget, data=None):
+        logger.debug("OUTCOMES_LIST get new FOCUS")
+        path = self.view.tree_view.get_cursor()
+        self.update_internal_data_base()
+        self.update_tree_store()
+        self.view.tree_view.set_cursor(path[0])
 
     def on_name_modification(self, widget, path, text):
         self.tree_store[path][1] = text
         self.model.state.outcomes[self.tree_store[path][6].outcome_id].name = text
-        # because observer is on modify_outcome_name in state not on name in outcome
+        # TWICE because observer is on modify_outcome_name in state not on name in outcome
         self.model.state.outcomes[self.tree_store[path][6].outcome_id].name = text
-        #self.model.model_changed(self.model, 'outcome.name', 'after')
-        # print "change name of outcome: ", path, self.model.state.outcomes[self.tree_store[path][6].outcome_id].name
+        logger.debug("change name of outcome: %s %s" % (path, self.model.state.outcomes[self.tree_store[path][6].outcome_id].name))
 
     def on_to_state_modification(self, widget, path, text):
 
@@ -155,28 +166,23 @@ class StateOutcomesListController(ExtendedController):
                                                    to_state_id=None, to_outcome=to_outcome, transition_id=transition_id)
 
     def on_add(self, button, info=None):
-        # print "add outcome"
-        outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
-        outcome = self.model.state.outcomes[outcome_id]
+        # logger.debug("add outcome")
+        self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
 
     def on_remove(self, button, info=None):
-        # print "remove outcome"
-        # print self.model.state.outcomes
+
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        #print path, tree
-        tree, iter = self.view.tree_view.get_selection().get_selected()
+        # print path, tree
         if path and not self.tree_store[path[0][0]][6].outcome_id < 0:
             outcome_id = self.tree_store[path[0][0]][6].outcome_id
-
             self.model.state.remove_outcome(outcome_id)
-            # print path, parent, tree, iter
         # print self.model.state.outcomes
 
-    def update_stores(self):
+    def update_internal_data_base(self):
 
         model = self.model
 
-        # print "clean stores"
+        # print "clean data base"
         self.to_state_combo_list.clear()
         self.to_state_combo_list.append([None, None, None])
         self.to_outcome_combo_list.clear()
@@ -233,7 +239,7 @@ class StateOutcomesListController(ExtendedController):
         # print "from state: ", self.list_from_other_state
         # print "state.name: ", self.model.state.name
 
-    def update_model(self):
+    def update_tree_store(self):
 
         self.tree_store.clear()
         for outcome in self.model.state.outcomes.values():
@@ -251,14 +257,22 @@ class StateOutcomesListController(ExtendedController):
             self.tree_store.append(None, [outcome.outcome_id, outcome.name, to_state, to_outcome,
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
 
-    @ExtendedController.observe("state", after=True)
+    # NEW
+    # @ExtendedController.observe("outcomes", after=True)  # do not exist at the moment
+    @ExtendedController.observe("transitions", after=True)
+    def outcomes_changed(self, model, prop_name, info):
+        # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        #              (prop_name, info.instance, info.method_name, info.result))
+        self.update_internal_data_base()
+        self.update_tree_store()
+
+    # OLD
     def assign_notification_parent_state(self, model, prop_name, info):
         # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #              (prop_name, info.instance, info.method_name, info.result))
-        if info.method_name in ["add_outcome", "remove_outcome", "add_transition", "remove_transition",
-                                "modify_outcome_name"]:
-            self.update_stores()
-            self.update_model()
+        if info.method_name in ["modify_outcome_name"]:
+            self.update_internal_data_base()
+            self.update_tree_store()
 
 
 class StateOutcomesEditorController(ExtendedController):

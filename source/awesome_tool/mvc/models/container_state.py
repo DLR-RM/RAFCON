@@ -5,10 +5,15 @@ import gtk
 
 from statemachine.states.container_state import ContainerState
 from statemachine.states.state import State
+from statemachine.data_flow import DataFlow
+from statemachine.transition import Transition
+from statemachine.states.state import DataPort
+from statemachine.scope import ScopedVariable
 from mvc.models.state import StateModel
 import mvc.models
 from mvc.models.transition import TransitionModel
 from mvc.models.data_flow import DataFlowModel
+from mvc.models.data_port import DataPortModel
 from mvc.models.scoped_variable import ScopedVariableModel
 from utils import log
 
@@ -115,8 +120,20 @@ class ContainerStateModel(StateModel):
                 self.states._notify_method_before(self.state, "state_change", (model,), info)
             elif hasattr(info, 'after') and info['after']:
                 self.states._notify_method_after(self.state, "state_change", None, (model,), info)
-        if self.parent is not None:
-            self.parent.model_changed(model, name, info)
+
+        if hasattr(info, 'before') and info['before'] and self is model:
+            #print info.method_name, info
+            if "modify_data_flow" in info.method_name:  # isinstance(info.instance, DataFlow):
+                self.data_flows._notify_method_before(info.instance, "data_flow_change", (model,), info)
+            if "modify_transition" in info.method_name:  # isinstance(info.instance, Transition):
+                self.transitions._notify_method_before(info.instance, "transition_change", (model,), info)
+        elif hasattr(info, 'after') and info['after'] and self is model:
+            if "modify_data_flow" in info.method_name:  # isinstance(info.instance, DataFlow):
+                self.data_flows._notify_method_after(info.instance, "data_flow_change", None, (model,), info)
+            if "modify_transition" in info.method_name:  # isinstance(info.instance, Transition):
+                self.transitions._notify_method_after(info.instance, "transition_change", None, (model,), info)
+
+        StateModel.model_changed(self, model, name, info)
 
     @ModelMT.observe("state", after=True)
     def update_child_models(self, _, name, info):
@@ -130,7 +147,12 @@ class ContainerStateModel(StateModel):
         """
 
         model_list = None
-
+        
+        # TODO to lower computation load only called if reasonable
+        # if not info.method_name in ['add_data_flow', 'remove_data_flow',
+        #                             'add_transition', 'remove_transition',
+        #                             'add_scoped_variable', 'remove_scoped_variable']:  # container_state-functions
+        #     StateModel.update_models(self, _, name, info)
         StateModel.update_models(self, _, name, info)
 
         def get_model_info(model):

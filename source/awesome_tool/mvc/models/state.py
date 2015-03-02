@@ -102,6 +102,60 @@ class StateModel(ModelMT):
 
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, name, info):
+
+        if hasattr(info, 'before') and info['before'] and isinstance(model, DataPortModel) and self is model.parent:
+            #print info.method_name, "modify_input_data_port" in info.method_name, info
+            if "modify_input_data_port" in info.method_name:
+                # print "before IP"
+                self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
+            if "modify_output_data_port" in info.method_name:
+                # print "before OP"
+                self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
+            if "modify_scoped_variable" in info.method_name:  # isinstance(info.instance, ScopedVariable):
+                # print "before SP"
+                self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
+        elif hasattr(info, 'after') and info['after'] and isinstance(model, DataPortModel) and self is model.parent:
+            if "modify_input_data_port" in info.method_name:  # isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.input_data_ports:
+                # print "after IP"
+                self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
+            if "modify_output_data_port" in info.method_name:  # isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.output_data_ports:
+                # print "after OP"
+                self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
+            if "modify_scoped_variable" in info.method_name:  # isinstance(info.instance, ScopedVariable):
+                # print "after SP"
+                self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
+
+        if hasattr(info, 'before'):
+            # print "before", hasattr(info, 'before'), info['before']
+            pass
+        if isinstance(model, DataPortModel):
+            # print "PortModel", model.parent.state.state_id, self.state.state_id, info.instance, model.data_port is model.parent, self, "\n"
+            pass
+
+        if hasattr(info, 'before') and info['before'] and isinstance(model, DataPortModel):
+            # print "before", model.parent.state.state_id, self.state.state_id, model, self
+            pass
+        #     if model.data_port.data_port_id in self.state.input_data_ports and model.parent.state.state_id in self.state.state_id:
+        #         print "before IP"
+        #         self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
+        #     if model.data_port.data_port_id in self.state.output_data_ports and \
+        #             model.parent.state.state_id in self.state.state_id:
+        #         print "before OP"
+        #         self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
+        #     if isinstance(info.instance, ScopedVariable):
+        #         print "before SP"
+        #         self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
+
+            # if isinstance(info.instance, ScopedVariable):
+            #     print "after SP"
+            #     self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
+            # if isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.input_data_ports:
+            #     print "after IP"
+            #     self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
+            # if isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.output_data_ports:
+            #     print "after OP"
+            #     self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
+
         if self.parent is not None:
             self.parent.model_changed(model, name, info)
 
@@ -152,6 +206,7 @@ class StateModel(ModelMT):
         """
         tmp = ListStore(str, str, str, int)
         for idp_model in self.input_data_ports:
+            # print idp_model.parent.state.state_id, self.state.state_id
             tmp.append([idp_model.data_port.name, idp_model.data_port.data_type, idp_model.data_port.default_value,
                         idp_model.data_port.data_port_id])
         tms = gtk.TreeModelSort(tmp)
