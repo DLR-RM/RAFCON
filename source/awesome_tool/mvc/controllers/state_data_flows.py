@@ -24,18 +24,18 @@ class ParentObserver(Observer):
 
     @Observer.observe("data_flows", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
-        print "AWEFULL PARENT", info.method_name, self.got_model.state.state_id
+        # print "AWEFULL PARENT", info.method_name, self.got_model.state.state_id
         for func_handle in self.func_handle_list:
             func_handle()
 #
     # @Observer.observe('state', after=True)
     # def notification(self, model, prop_name, info):
-    #     # logger.debug("parent %s data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-    #     #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
-    #
-    #     if info.method_name in self.method_list and model.state.state_id == info.instance.state_id:
-    #         for func_handle in self.func_handle_list:
-    #             func_handle()
+    #     logger.debug("parent %s data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+    #                  (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
+    # #
+    # #     if info.method_name in self.method_list and model.state.state_id == info.instance.state_id:
+    # #         for func_handle in self.func_handle_list:
+    # #             func_handle()
 
 
 class StateDataFlowsListController(Controller):
@@ -189,7 +189,7 @@ class StateDataFlowsListController(Controller):
         fk = None  # df.from_key
         if self.tree_store[path][5]:  # external
             fk = self.from_port_external[text[-1]][0].data_port_id
-            self.model.parent.state.change_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
+            self.model.parent.state.modify_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
         else:
             state_model = get_state_model(self.model, text[-1])
             if state_model.state.state_id == self.model.state.state_id:
@@ -201,7 +201,7 @@ class StateDataFlowsListController(Controller):
                 if state_model.state.output_data_ports:
                     fk = state_model.state.output_data_ports.values()[0].data_port_id
             if fk:
-                self.model.state.change_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
+                self.model.state.modify_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
 
     def on_combo_changed_from_key(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -210,9 +210,9 @@ class StateDataFlowsListController(Controller):
         text = text.split('.')
         df_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # external
-            self.model.parent.state.change_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
+            self.model.parent.state.modify_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
         else:
-            self.model.state.change_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
+            self.model.state.modify_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
 
     def on_combo_changed_to_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -223,10 +223,10 @@ class StateDataFlowsListController(Controller):
         df_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # external
             tk = self.free_to_port_external[text[-1]][0].data_port_id
-            self.model.parent.state.change_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
+            self.model.parent.state.modify_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
         else:
             tk = self.free_to_port_internal[text[-1]][0].data_port_id
-            self.model.state.change_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
+            self.model.state.modify_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
 
     def on_combo_changed_to_key(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -235,9 +235,9 @@ class StateDataFlowsListController(Controller):
         text = text.split('.')
         df_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # external
-            self.model.state.change_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
+            self.model.state.modify_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
         else:
-            self.model.state.change_data_flow_to_state(data_flow_id=df_id, to_key=int(text[-1]))
+            self.model.state.modify_data_flow_to_state(data_flow_id=df_id, to_key=int(text[-1]))
 
     def update_internal_data_base(self):
          [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
@@ -290,11 +290,24 @@ class StateDataFlowsListController(Controller):
     @Controller.observe("scoped_variables", after=True)
     @Controller.observe("data_flows", after=True)
     def assign_notification_state(self, model, prop_name, info):
-        print "AWEFULL STATE", info.method_name, self.model.state.state_id
+        # print "AWEFULL STATE", info.method_name, self.model.state.state_id
         # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER %s: \n-%s\n-%s\n-%s\n-%s\n" %
         #              (str(info.after), model.state.state_id, prop_name, info.instance, info.method_name, info.result))
         self.update_internal_data_base()
         self.update_tree_store()
+
+    # @Controller.observe("scoped_variables", after=True)
+    # def assign_notification_scoped(self, model, prop_name, info):
+    #     print "SCOPED IN DATAFLOWS"
+    #
+    # @Controller.observe("input_data_ports", after=True)
+    # def assign_notification_input(self, model, prop_name, info):
+    #     print "INPUT IN DATAFLOWS"
+    #
+    # @Controller.observe("output_data_ports", after=True)
+    # def assign_notification_output(self, model, prop_name, info):
+    #     print "OUTPUTS IN DATAFLOWS"
+
 
     # # OLD
     # @Controller.observe("state", after=True)
