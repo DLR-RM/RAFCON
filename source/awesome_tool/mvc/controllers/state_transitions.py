@@ -1,7 +1,9 @@
 
-from gtkmvc import Controller, Observer
+from gtkmvc import Observer
 import gtk
 import gobject
+
+from mvc.controllers.extended_controller import ExtendedController
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -26,7 +28,7 @@ class ParentObserver(Observer):
                 func_handle()
 
 
-class StateTransitionsListController(Controller):
+class StateTransitionsListController(ExtendedController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -41,7 +43,7 @@ class StateTransitionsListController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable
@@ -195,7 +197,6 @@ class StateTransitionsListController(Controller):
         text = text.split('.')
         t_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # is external
-
             fo = self.combo['free_ext_from_outcomes_dict'][text[-1]][0].outcome_id
             self.model.parent.state.transitions[t_id].from_state = text[-1]
             self.model.parent.state.transitions[t_id].from_outcome = fo
@@ -230,12 +231,12 @@ class StateTransitionsListController(Controller):
         t_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # is external
             self.model.parent.state.transitions[t_id].to_state = text[-1]
-            if self.model.parent.state.transitions[t_id].to_outcome:
-                self.model.parent.state.transitions[t_id].to_outcome = None
+            # if self.model.parent.state.transitions[t_id].to_outcome:
+            #     self.model.parent.state.transitions[t_id].to_outcome = None
         else:
             self.model.state.transitions[t_id].to_state = text[-1]
-            if self.model.state.transitions[t_id].to_outcome:
-                self.model.state.transitions[t_id].to_outcome = None
+            # if self.model.state.transitions[t_id].to_outcome:
+            #     self.model.state.transitions[t_id].to_outcome = None
 
     def on_combo_changed_to_outcome(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -249,12 +250,12 @@ class StateTransitionsListController(Controller):
         t_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # is external
             self.model.parent.state.transitions[t_id].to_outcome = int(text[-1])
-            if self.model.parent.state.transitions[t_id].to_state:
-                self.model.parent.state.transitions[t_id].to_state = None
+            # if self.model.parent.state.transitions[t_id].to_state:
+            #     self.model.parent.state.transitions[t_id].to_state = None
         else:
             self.model.state.transitions[t_id].to_outcome = int(text[-1])
-            if self.model.state.transitions[t_id].to_state:
-                self.model.state.transitions[t_id].to_state = None
+            # if self.model.state.transitions[t_id].to_state:
+            #     self.model.state.transitions[t_id].to_state = None
 
     @staticmethod
     def get_possible_combos_for_transition(trans, model, self_model, is_external=False):
@@ -459,9 +460,9 @@ class StateTransitionsListController(Controller):
                                               '#f0E5C7', '#f0E5c7', t, self.model.state, True])
 
     # NEW
-    @Controller.observe("states", after=True)
-    # @Controller.observe("outcomes", after=True)  # do not exist at the moment
-    @Controller.observe("transitions", after=True)
+    @ExtendedController.observe("states", after=True)
+    # @ExtendedController.observe("outcomes", after=True)  # do not exist at the moment
+    @ExtendedController.observe("transitions", after=True)
     def transition_changed_parent_and_self_state(self, model, prop_name, info):
         # print "transition_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
         #       (prop_name, info.instance, info.method_name, info.result)
@@ -469,7 +470,7 @@ class StateTransitionsListController(Controller):
         self.update_tree_store()
 
     # OLD
-    # @Controller.observe("state", after=True)
+    # @ExtendedController.observe("state", after=True)
     # def assign_notification_parent_and_self_state(self, model, prop_name, info):
     #     # print "transition_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
     #     #       (prop_name, info.instance, info.method_name, info.result)
@@ -479,10 +480,10 @@ class StateTransitionsListController(Controller):
     #         self.update_model()
 
 
-class StateTransitionsEditorController(Controller):
+class StateTransitionsEditorController(ExtendedController):
 
     def __init__(self, model, view):
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.trans_list_ctrl = StateTransitionsListController(model, view.transitions_listView)
 
     def register_view(self, view):

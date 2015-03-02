@@ -1,7 +1,8 @@
 
 import gobject
 from gtk import ListStore, TreeStore
-from gtkmvc import Controller, Observer
+from gtkmvc import Observer
+from mvc.controllers.extended_controller import ExtendedController
 
 from utils import log
 logger = log.get_logger(__name__)
@@ -38,7 +39,7 @@ class ParentObserver(Observer):
     # #             func_handle()
 
 
-class StateDataFlowsListController(Controller):
+class StateDataFlowsListController(ExtendedController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -53,7 +54,7 @@ class StateDataFlowsListController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
         #                   name-color, to-state-color, data-flow-object, state-object, is_editable
@@ -285,10 +286,10 @@ class StateDataFlowsListController(Controller):
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
     # NEW
-    @Controller.observe("input_data_ports", after=True)
-    @Controller.observe("output_data_ports", after=True)
-    @Controller.observe("scoped_variables", after=True)
-    @Controller.observe("data_flows", after=True)
+    @ExtendedController.observe("input_data_ports", after=True)
+    @ExtendedController.observe("output_data_ports", after=True)
+    @ExtendedController.observe("scoped_variables", after=True)
+    @ExtendedController.observe("data_flows", after=True)
     def assign_notification_state(self, model, prop_name, info):
         # print "AWEFULL STATE", info.method_name, self.model.state.state_id
         # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER %s: \n-%s\n-%s\n-%s\n-%s\n" %
@@ -630,12 +631,12 @@ def find_free_keys(model):
     return free_to_ports, from_ports
 
 
-class StateDataFlowsEditorController(Controller):
+class StateDataFlowsEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.df_list_ctrl = StateDataFlowsListController(model, view.data_flows_listView)
 
     def register_view(self, view):

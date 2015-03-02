@@ -1,6 +1,7 @@
 import gtk, gobject
 
-from gtkmvc import Controller, Observer
+from gtkmvc import Observer
+from mvc.controllers.extended_controller import ExtendedController
 from utils import log
 logger = log.get_logger(__name__)
 
@@ -28,14 +29,14 @@ logger = log.get_logger(__name__)
 #             func_handle()
 
 
-class StateOutcomesListController(Controller):
+class StateOutcomesListController(ExtendedController):
 
     parent_observer = None
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
         self.tree_store = view.tree_store
 
@@ -257,8 +258,8 @@ class StateOutcomesListController(Controller):
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
 
     # NEW
-    # @Controller.observe("outcomes", after=True)  # do not exist at the moment
-    @Controller.observe("transitions", after=True)
+    # @ExtendedController.observe("outcomes", after=True)  # do not exist at the moment
+    @ExtendedController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
         # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #              (prop_name, info.instance, info.method_name, info.result))
@@ -266,7 +267,6 @@ class StateOutcomesListController(Controller):
         self.update_tree_store()
 
     # OLD
-    @Controller.observe("state", after=True)
     def assign_notification_parent_state(self, model, prop_name, info):
         # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #              (prop_name, info.instance, info.method_name, info.result))
@@ -275,12 +275,12 @@ class StateOutcomesListController(Controller):
             self.update_tree_store()
 
 
-class StateOutcomesEditorController(Controller):
+class StateOutcomesEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
         self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
 
     def register_view(self, view):

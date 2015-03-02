@@ -51,7 +51,7 @@ def test_scoped_data():
 
     state3 = create_statemachine()
 
-    s.save_statemachine_as_yaml(state3)
+    s.save_statemachine_as_yaml(state3, "../test_scripts/stored_statemachine")
     [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"data_input_port1": 22.0}
@@ -73,5 +73,5 @@ def test_scoped_data():
     assert output_data["data_output_port1"] == 42.0
 
 if __name__ == '__main__':
-    pytest.main()
-    #test_scoped_data()
+    #pytest.main()
+    test_scoped_data()

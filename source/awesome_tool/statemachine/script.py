@@ -17,9 +17,11 @@ from enum import Enum
 
 from statemachine.id_generator import *
 import statemachine.singleton
+from utils import log
+logger = log.get_logger(__name__)
 
 
-ScriptType = Enum('SCRIPT_TYPE', 'EXECUTION CONTAINER')
+ScriptType = Enum('SCRIPT_TYPE', 'EXECUTION CONTAINER LIBRARY')
 
 class Script(Observable, yaml.YAMLObject):
 
@@ -38,24 +40,34 @@ class Script(Observable, yaml.YAMLObject):
 
     DEFAULT_SCRIPT_EXECUTION = """
 
-def execute(self, inputs, outputs, external_modules, gvm):
+def execute(self, inputs, outputs, gvm):
     print "Hello world"
     return 0
 
 """
+
     DEFAULT_SCRIPT_CONTAINER = """
 
-def enter(self, scoped_variables, external_modules, gvm):
+def enter(self, scoped_variables, gvm):
     pass
 
-def exit(self, scoped_variables, external_modules, gvm):
+def exit(self, scoped_variables, gvm):
     pass
+
+"""
+
+    DEFAULT_SCRIPT_LIBRARY = """
+
+###########################################################
+# Do not add anything here, as it won't be executed anyway!
+# For further information please refer to the API.
+###########################################################
 
 """
 
     yaml_tag = u'!Script'
 
-    def __init__(self, path=None, filename=None, script_type=None, check_path=True):
+    def __init__(self, path=None, filename=None, script_type=None, check_path=True, state=None):
 
         Observable.__init__(self)
 
@@ -67,10 +79,12 @@ def exit(self, scoped_variables, external_modules, gvm):
         self._script_id = generate_script_id()
         if script_type == ScriptType.EXECUTION:
             self.script = Script.DEFAULT_SCRIPT_EXECUTION
+        elif script_type == ScriptType.LIBRARY:
+            self.script = Script.DEFAULT_SCRIPT_LIBRARY
         else:
             self.script = Script.DEFAULT_SCRIPT_CONTAINER
         if path is None:
-            self.path = "/tmp/DFC"
+            self.path = "/tmp/DFC/" + state.get_path()
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
             self.filename = "Script_%s.file" % str(self._script_id)
@@ -98,7 +112,6 @@ def exit(self, scoped_variables, external_modules, gvm):
         :return:
         """
         return self._compiled_module.execute(state, inputs, outputs,
-                                             statemachine.singleton.external_module_manager.external_modules,
                                              statemachine.singleton.global_variable_manager)
 
     def enter(self, state, scoped_variables={}):
@@ -110,7 +123,6 @@ def exit(self, scoped_variables, external_modules, gvm):
         :return:
         """
         return self._compiled_module.enter(state, scoped_variables,
-                                           statemachine.singleton.external_module_manager.external_modules,
                                            statemachine.singleton.global_variable_manager)
 
     def exit(self, state, scoped_variables={}):
@@ -122,7 +134,6 @@ def exit(self, scoped_variables, external_modules, gvm):
         :return:
         """
         return self._compiled_module.exit(state, scoped_variables,
-                                          statemachine.singleton.external_module_manager.external_modules,
                                           statemachine.singleton.global_variable_manager)
 
     def load_and_build_module(self):
@@ -133,6 +144,7 @@ def exit(self, scoped_variables, external_modules, gvm):
         try:
             script_file = open(script_path, 'r')
         except:
+            logger.error("Script file could not be opened at the following path: %s" % str(script_path))
             raise IOError("File could not be opened!")
 
         self.script = script_file.read()

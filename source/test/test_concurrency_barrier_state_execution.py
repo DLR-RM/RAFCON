@@ -61,7 +61,7 @@ def test_concurrency_barrier_save_load():
 
     concurrency_barrier_state = create_concurrency_barrier_state()
 
-    s.save_statemachine_as_yaml(concurrency_barrier_state)
+    s.save_statemachine_as_yaml(concurrency_barrier_state, "../test_scripts/stored_statemachine")
     root_state, version, creation_time = s.load_statemachine_from_yaml()
 
     input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}

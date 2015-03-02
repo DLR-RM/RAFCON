@@ -53,7 +53,8 @@ class LibraryManager(Observable):
 
     def add_libraries_from_path(self, lib_path, target_dict):
         """
-        Adds all libraries specified in a given path and stores them into the provided library dictionary
+        Adds all libraries specified in a given path and stores them into the provided library dictionary. The library
+        entries in the dictionary consist only of the path to the library in the file system.
         :param lib_path: the path to add all libraries from
         :param target_dict: the target dictionary to store all loaded libraries to
         :return:
@@ -69,7 +70,7 @@ class LibraryManager(Observable):
 
     def add_library(self, lib, lib_path, target_dict):
         """
-        Adds a single library to the specified library dictionary.
+        Adds a single library path to the specified library dictionary.
         :param lib: the library to add
         :param lib_path: the path to the library specified in lib
         :param target_dict: the library dictionary to save the loaded library to

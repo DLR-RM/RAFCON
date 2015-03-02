@@ -57,11 +57,11 @@ def test_concurrency_preemption_save_load():
 
     preemption_state = create_preemption_statemachine()
 
-    s.save_statemachine_as_yaml(preemption_state)
+    s.save_statemachine_as_yaml(preemption_state, "../test_scripts/stored_statemachine")
     [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
-    output_data = {"output_data_port1": None}
+    output_data = {}
     preemption_state.input_data = input_data
     preemption_state.output_data = output_data
     state_machine = StateMachine(preemption_state)
@@ -76,5 +76,6 @@ def test_concurrency_preemption_save_load():
     variables_for_pytest.test_multithrading_lock.release()
 
 if __name__ == '__main__':
-    pytest.main()
-    #test_concurrency_preemption_state_execution()
+    #pytest.main()
+    test_concurrency_preemption_state_execution()
+    test_concurrency_preemption_save_load()

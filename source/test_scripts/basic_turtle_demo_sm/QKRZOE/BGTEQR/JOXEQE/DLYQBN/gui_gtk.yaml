@@ -1,0 +1,59 @@
+!Vividict
+vivid_dict_content:
+    gui: !Vividict
+        vivid_dict_content:
+            editor: !Vividict
+                vivid_dict_content:
+                    height: 0.8
+                    id: 9
+                    input_pos:
+                        13: !!python/tuple
+                        - 63.09493116593734
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                Ir++o+9/REA=
+                    outcome_pos:
+                        -2: !!python/tuple
+                        - 63.736046926048914
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                X8mVR2C9REA=
+                        -1: !!python/tuple
+                        - 63.736046926048914
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                +WIv4fnWREA=
+                        0: !!python/tuple
+                        - 63.736046926048914
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                xi/8rcajREA=
+                    outcome_radius: 0.05333333333333334
+                    output_pos: {}
+                    port_radius: 0.025
+                    pos_x: 62.93604692604892
+                    pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                    - !!python/object/apply:numpy.dtype
+                        args: [f8, 0, 1]
+                        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+                    - !!binary |
+                        LJZiFC2KREA=
+                    resize_length: 0.1
+                    scoped_pos: {}
+                    width: 0.8

@@ -1,4 +1,4 @@
-def execute(self, inputs, outputs, external_modules, gvm):
+def execute(self, inputs, outputs, gvm):
     print "Executing first execution state ..."
     print inputs
     print outputs

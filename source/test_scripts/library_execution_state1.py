@@ -1,4 +1,4 @@
-def execute(self, inputs, outputs, external_modules, gvm):
+def execute(self, inputs, outputs, gvm):
     print "Executing library_execution_state1 ..."
     print inputs
     print outputs

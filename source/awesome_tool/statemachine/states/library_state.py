@@ -12,6 +12,7 @@ import yaml
 
 from statemachine.enums import StateType
 from statemachine.states.container_state import ContainerState
+from statemachine.states.state import State
 import statemachine.singleton
 from utils import log
 
@@ -38,6 +39,9 @@ class LibraryState(ContainerState, yaml.YAMLObject):
                  states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
                  v_checker=None, path=None, filename=None, check_path=True):
 
+        # this variable is set to true if the state initialization is finished! after initialization no change to the
+        # library state is allowed any more
+        self.initialized = False
         ContainerState.__init__(self, name=name, state_id=state_id, input_data_ports=input_data_ports,
                                 output_data_ports=output_data_ports, outcomes=outcomes, states=states,
                                 transitions=transitions, data_flows=data_flows, start_state=start_state,
@@ -56,6 +60,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         path_list = library_path.split("/")
         target_lib_dict = statemachine.singleton.library_manager.libraries
         # go down the path to the correct library
+        # TODO: make this more robust
         for element in path_list:
             target_lib_dict = target_lib_dict[element]
         # get a fresh copy of the library state from disk
@@ -72,10 +77,12 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         self.outcomes = self.state_copy.outcomes
 
         logger.debug("Initialized library state with name %s" % name)
+        self.script.script = self.state_copy.script.script
+        self.initialized = True
 
     def __str__(self):
         return str(self.state_copy) + "library_path: %s, library_name: %s, version: %s, state_id: %s" % \
-               (self.library_path, self.library_name, self.version, self.state_id)
+                                      (self.library_path, self.library_name, self.version, self.state_id)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the library state is executed
@@ -92,6 +99,102 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         logger.debug("Exiting library state %s" % self.library_name)
         self.active = False
 
+    def add_outcome(self, name, outcome_id=None):
+        """Overwrites the add_outcome method of the State class. Prevents user from adding a
+        outcome to the library state.
+
+        For further documentation, look at the State class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a outcome to a library state")
+        else:
+            return ContainerState.add_outcome(self, name, outcome_id)
+
+    def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
+        """Overwrites the add_output_data_port method of the State class. Prevents user from adding a
+        output data port to the library state.
+
+        For further documentation, look at the State class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a output data port to a library state")
+        else:
+            return ContainerState.add_output_data_port(self, name, data_type, default_value, data_port_id)
+
+    def add_input_data_port(self, name, data_type, default_value=None, data_port_id=None):
+        """Overwrites the add_input_data_port method of the State class. Prevents user from adding a
+        output data port to the library state.
+
+        For further documentation, look at the State class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a input data port to a library state")
+        else:
+            return ContainerState.add_input_data_port(self, name, data_type, default_value, data_port_id)
+
+    def add_state(self, state):
+        """Overwrites the add_state method of the ContainerState class. Prevents user from adding a state to the library state.
+
+        For further documentation, look at the ContainerState class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a state to a library state")
+        else:
+            return ContainerState.add_state(self, state)
+
+    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
+        """Overwrites the add_transition method of the ContainerState class. Prevents user from adding a
+        transition to the library state.
+
+        For further documentation, look at the ContainerState class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a transition to a library state")
+        else:
+            return ContainerState.add_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+
+    def add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id=None):
+        """Overwrites the add_data_flow method of the ContainerState class. Prevents user from adding a
+        data_flow to the library state.
+
+        For further documentation, look at the ContainerState class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a data flow to a library state")
+        else:
+            return ContainerState.add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id,
+                                                data_flow_id)
+
+    def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
+        """Overwrites the add_scoped_variable method of the ContainerState class. Prevents user from adding a
+        scoped_variable to the library state.
+
+        For further documentation, look at the ContainerState class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a scoped_variable to a library state")
+        else:
+            return ContainerState.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
+
+    def set_script_text(self, new_text):
+        """
+        Overwrites the set_script_text method of the
+        circumstances.
+        :param new_text: the new text
+        :return:
+        """
+        if self.initialized:
+            logger.error("It is not allowed to set the script text of a library state")
+            return False
+        else:
+            return ContainerState.set_script_text(self, new_text)
 
     @classmethod
     def to_yaml(cls, dumper, data):
@@ -186,7 +289,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
     @state_copy.setter
     @Observable.observed
     def state_copy(self, state_copy):
-        if not isinstance(state_copy, ContainerState):
-            raise TypeError("state_copy must be of type ContainerState")
+        if not isinstance(state_copy, State):
+            raise TypeError("state_copy must be of type State")
 
         self._state_copy = state_copy

@@ -1,8 +1,8 @@
 import pango
 
 import gtk
-from gtkmvc import Controller, Observer
 
+from mvc.controllers.extended_controller import ExtendedController
 from mvc.views.graphical_editor import GraphicalEditorView
 from mvc.controllers.graphical_editor import GraphicalEditorController
 from mvc.models.state_machine_manager import StateMachineManagerModel
@@ -47,15 +47,15 @@ def create_tab_header(title, close_callback, *additional_parameters):
     return hbox, label
 
 
-class StateMachinesEditorController(Controller):
+class StateMachinesEditorController(ExtendedController):
 
     def __init__(self, sm_manager_model, view, state_machine_tree_ctrl, states_editor_ctrl):
-        Controller.__init__(self, sm_manager_model, view)
+        ExtendedController.__init__(self, sm_manager_model, view)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
 
-        self.state_machine_tree_ctrl = state_machine_tree_ctrl
-        self.states_editor_ctrl = states_editor_ctrl
+        self.add_controller('state_machine_tree_ctrl', state_machine_tree_ctrl)
+        self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         self.tabs = {}
         self.act_model = None
@@ -69,11 +69,12 @@ class StateMachinesEditorController(Controller):
 
         assert isinstance(state_machine_model, StateMachineModel)
 
-        sm_identifier = state_machine_model.root_state.state.get_path()
+        sm_identifier = state_machine_model.state_machine.state_machine_id
 
         graphical_editor_view = GraphicalEditorView()
 
         graphical_editor_ctrl = GraphicalEditorController(state_machine_model, graphical_editor_view)
+        self.add_controller(sm_identifier, graphical_editor_ctrl)
         (event_box, new_label) = create_tab_header(state_machine_model.root_state.state.name,
                                                    self.on_close_clicked,
                                                    state_machine_model, 'refused')
@@ -86,7 +87,7 @@ class StateMachinesEditorController(Controller):
         self.tabs[sm_identifier] = {'page': page,
                                     'state_model': state_machine_model,
                                     'ctrl': graphical_editor_ctrl,
-                                    'connected': False,}
+                                    'connected': False}
 
         # def on_expose_event(widget, event, sm_identifier):
         #     if not self.tabs[sm_identifier]['connected']:
@@ -104,16 +105,14 @@ class StateMachinesEditorController(Controller):
 
         return idx
 
-    def on_close_clicked(self, event, state_model, result):
+    def on_close_clicked(self, event, state_machine_model, result):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         # print event, state_model, result
 
-        state_identifier = state_model.state.name + '.' + state_model.state.state_id
-        page = self.tabs[state_identifier]['page']
+        sm_identifier = state_machine_model.state_machine.state_machine_id
+        page = self.tabs[sm_identifier]['page']
         current_idx = self.view.notebook.page_num(page)
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
-        del self.tabs[state_identifier]
-
-        selection = info.instance
-        assert isinstance(selection, Selection)
+        del self.tabs[sm_identifier]
+        self.remove_controller()

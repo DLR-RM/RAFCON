@@ -1,0 +1,50 @@
+!Vividict
+vivid_dict_content:
+    gui: !Vividict
+        vivid_dict_content:
+            editor: !Vividict
+                vivid_dict_content:
+                    height: 20.0
+                    id: 3
+                    input_pos: {}
+                    outcome_pos:
+                        -2: !!python/tuple
+                        - 72.04129429892141
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                tmbSiYGuRUA=
+                        -1: !!python/tuple
+                        - 72.04129429892141
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                tmbSiYEuSEA=
+                        0: !!python/tuple
+                        - 72.04129429892141
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                tmbSiYEuQ0A=
+                    outcome_radius: 1.3333333333333333
+                    output_pos: {}
+                    port_radius: 0.625
+                    pos_x: 52.041294298921414
+                    pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                    - !!python/object/apply:numpy.dtype
+                        args: [f8, 0, 1]
+                        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+                    - !!binary |
+                        tmbSiYGuQEA=
+                    resize_length: 2.5
+                    scoped_pos: {}
+                    width: 20.0

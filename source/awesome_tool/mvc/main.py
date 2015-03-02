@@ -4,13 +4,12 @@ import logging
 import gtk
 
 from utils import log
-from mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel, ExternalModuleManagerModel
+from mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
 from mvc.controllers import MainWindowController, StateDataPortEditorController
 from mvc.views import LoggingView, MainWindowView, StateDataportEditorView
 from mvc.models.state_machine_manager import StateMachineManagerModel
 from statemachine.states.hierarchy_state import HierarchyState
 from statemachine.states.execution_state import ExecutionState
-from statemachine.external_modules.external_module import ExternalModule
 import statemachine.singleton
 from statemachine.state_machine import StateMachine
 
@@ -106,20 +105,11 @@ def create_models(*args, **kargs):
     #ctr_state.add_data_flow(ctr_state.state_id, scoped_variable2_ctr_state, ctr_state.state_id, output_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    external_module_manager_model = ExternalModuleManagerModel()
-    sys.path.insert(0, '../../test_scripts')
-    em = ExternalModule(name="External Module 1", module_name="external_module_test", class_name="TestModule")
-    external_module_manager_model.external_module_manager.add_external_module(em)
-    external_module_manager_model.external_module_manager.external_modules["External Module 1"].connect([])
-    external_module_manager_model.external_module_manager.external_modules["External Module 1"].start()
-    em = ExternalModule(name="External Module 2", module_name="external_module_test2", class_name="TestModule2")
-    external_module_manager_model.external_module_manager.add_external_module(em)
-
     global_var_manager_model = GlobalVariableManagerModel()
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
-    return state5, logger, ctr_state, global_var_manager_model, external_module_manager_model
+    return state5, logger, ctr_state, global_var_manager_model
 
 
 if __name__ == '__main__':
@@ -130,13 +120,13 @@ if __name__ == '__main__':
     #setup_logger(logging_view['main_frame'])
     logging_view = LoggingView()
     setup_logger(logging_view)
-    [execution_state, logger, ctr_state, gvm_model, emm_model] = create_models()
+    [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model,
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
                                                   editor_type='LogicDataGrouped')
 
     # ctr_model = ContainerStateModel(ctr_state)
@@ -154,10 +144,6 @@ if __name__ == '__main__':
 
     #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
-
-    # external_module_manager_view = SingleWidgetWindowView(ExternalModuleManagerView, width=500, height=200, title='External Module Manager')
-    # external_module_manger_controller = SingleWidgetWindowController(emm_model, external_module_manager_view, ExternalModuleManagerController)
-    # external_module_manger_controller.set_source_view(src_view.widget_view)
 
     # prop_view = SingleWidgetWindowView(StateOverviewView, width=400, height=100, title='Properties Editor')
     # prop_ctrl = SingleWidgetWindowController(this_model, prop_view, StateOverviewController)

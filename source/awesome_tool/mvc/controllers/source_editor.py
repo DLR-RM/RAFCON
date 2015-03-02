@@ -1,14 +1,16 @@
 import gtk
-from gtkmvc import Controller
+from mvc.controllers.extended_controller import ExtendedController
 from pylint import epylint as lint
 
 from utils import log
 logger = log.get_logger(__name__)
+import statemachine.singleton
+from statemachine.enums import StateType
 
 
 #TODO: comment
 
-class SourceEditorController(Controller):
+class SourceEditorController(ExtendedController):
     # TODO Missing functions
     # - Code function-expander
     # - Code completion
@@ -16,7 +18,7 @@ class SourceEditorController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
     def register_view(self, view):
         view.get_buffer().connect('changed', self.code_changed)
@@ -34,6 +36,12 @@ class SourceEditorController(Controller):
 
     #===============================================================
     def apply_clicked(self, button):
+
+        if self.model.state.state_type is StateType.LIBRARY:
+            logger.warn("It is not allowed to change the library script file!")
+            self.view.set_text(self.model.state.script.script)
+            return
+
         logger.debug("Apply button pressed!")
         tbuffer = self.view.get_buffer()
         current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
@@ -42,11 +50,11 @@ class SourceEditorController(Controller):
         text_file.close()
 
         (pylint_stdout, pylint_stderr) = lint.py_run('/tmp/file_to_get_pylinted.py', True)
-        pylint_stdout_data=pylint_stdout.readlines()
-        pylint_stderr_data=pylint_stdout.readlines()
+        pylint_stdout_data = pylint_stdout.readlines()
+        pylint_stderr_data = pylint_stderr.readlines()
 
         logger.debug("pylint_stdout_data: %s" % pylint_stdout_data)
-        logger.debug("pylint_stderr: %s" % pylint_stderr)
+        logger.debug("pylint_stderr: %s" % pylint_stderr_data)
 
         invalid_sytax = False
         for elem in pylint_stdout_data:
@@ -65,9 +73,10 @@ class SourceEditorController(Controller):
             message.connect('response', self.on_message_dialog_response_signal, current_text)
             message.show()
         else:
-            self.model.state.script.script = current_text
+            if self.model.state.set_script_text(current_text):
+                logger.debug("File saved")
+                statemachine.singleton.global_storage.save_script_file(self.model.state)
             self.view.set_text(self.model.state.script.script)
-            logger.debug("File saved")
 
     #===============================================================
     def cancel_clicked(self, button):

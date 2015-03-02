@@ -40,7 +40,7 @@ def test_default_values_of_data_ports():
 
     root_state = create_statemachine()
 
-    s.save_statemachine_as_yaml(root_state)
+    s.save_statemachine_as_yaml(root_state, "../test_scripts/stored_statemachine")
     [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {}

@@ -9,7 +9,7 @@ class LibraryTreeView(View, gtk.TreeView):
         View.__init__(self)
         gtk.TreeView.__init__(self)
 
-        tvcolumn_name = gtk.TreeViewColumn('Name')
+        tvcolumn_name = gtk.TreeViewColumn('Library Name')
         self.append_column(tvcolumn_name)
         cell_renderer_name = gtk.CellRendererText()
         tvcolumn_name.pack_start(cell_renderer_name, True)

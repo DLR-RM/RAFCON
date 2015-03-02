@@ -17,8 +17,8 @@ import yaml
 from gtkmvc import Observable
 
 import statemachine.states.state
+from statemachine.enums import StateType
 from utils import log
-
 logger = log.get_logger(__name__)
 
 
@@ -108,7 +108,7 @@ class Storage(Observable):
         yaml_object = yaml.load(stream)
         return yaml_object
 
-    def save_statemachine_as_yaml(self, root_state, base_path=None, version=None):
+    def save_statemachine_as_yaml(self, root_state, base_path, version=None, delete_old_state_machine=False):
         """
         Saves a root state to a yaml file.
         :param root_state: container state to be saved
@@ -120,7 +120,8 @@ class Storage(Observable):
             self.base_path = base_path
         # clean old path first
         if self._exists_path(self.base_path):
-            self._remove_path(self.base_path)
+            if delete_old_state_machine:
+                self.remove_path(self.base_path)
         if not self._exists_path(self.base_path):
             self._create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
@@ -132,19 +133,32 @@ class Storage(Observable):
         self.save_state_recursively(root_state, "")
         logger.debug("Successfully saved statemachine!")
 
-    def save_script_file_for_state(self, state, state_path):
+    def save_script_file_for_state_and_source_path(self, state, state_path):
         """
-        Saves the script file for state to the path of the state and fixed script name provided in the SCRIPT_FILE
+        Saves the script file for a state to the directory of the state. The script name will be set to the SCRIPT_FILE
         constant.
         :param state: The state of which the script file should be saved
         :param state_path: The path of the state meta file
         :return:
         """
         state_path_full = os.path.join(self.base_path, state_path)
-        shutil.copyfile(os.path.join(state.script.path, state.script.filename),
-                        os.path.join(state_path_full, self.SCRIPT_FILE))
-        state.script.path = state_path
-        state.script.filename = self.SCRIPT_FILE
+        source_script_file = os.path.join(state.script.path, state.script.filename)
+        destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
+        if not source_script_file == destination_script_file:
+            shutil.copyfile(source_script_file,
+                            destination_script_file)
+            state.script.path = state_path
+            state.script.filename = self.SCRIPT_FILE
+        else:  # load text into script file
+            script_file = open(source_script_file, 'w')
+            script_file.write(state.script.script)
+            script_file.close()
+
+    def save_script_file(self, state):
+        script_file_path = os.path.join(state.script.path, state.script.filename)
+        script_file = open(script_file_path, 'w')
+        script_file.write(state.script.script)
+        script_file.close()
 
     def save_state_recursively(self, state, parent_path):
         """
@@ -156,7 +170,7 @@ class Storage(Observable):
         state_path = os.path.join(parent_path, str(state.state_id))
         state_path_full = os.path.join(self.base_path, state_path)
         self._create_path(state_path_full)
-        self.save_script_file_for_state(state, state_path)
+        self.save_script_file_for_state_and_source_path(state, state_path)
         self.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
         state.script.path = state_path_full
         state.script.filename = self.SCRIPT_FILE
@@ -189,6 +203,7 @@ class Storage(Observable):
         root_state.script.path = tmp_base_path
         # load_and_build the module to load the correct content into root_state.script.script
         root_state.script.load_and_build_module()
+        self.load_script_file(root_state)
         for p in os.listdir(tmp_base_path):
             if os.path.isdir(os.path.join(tmp_base_path, p)):
                 elem = os.path.join(tmp_base_path, p)
@@ -210,10 +225,20 @@ class Storage(Observable):
         # connect the missing function_handlers for setting the outcome names
         state.connect_all_outcome_function_handles()
         root_state.add_state(state)
+        # the library state sets his script file to the script file of the root state of its library, thus it should
+        # not be overwritten in this case
+        if state.state_type is not StateType.LIBRARY:
+            self.load_script_file(state)
         for p in os.listdir(state_path):
             if os.path.isdir(os.path.join(state_path, p)):
                 elem = os.path.join(state_path, p)
                 self.load_state_recursively(state, elem)
+
+    def load_script_file(self, state):
+        script_file = open(os.path.join(state.script.path, self.SCRIPT_FILE), 'r')
+        text = script_file.read()
+        script_file.close()
+        state.script.script = text
 
     def write_dict_to_json(self, rel_path, tmp_dict):
         """
@@ -243,9 +268,10 @@ class Storage(Observable):
         :param path: The path to be created
         :return:
         """
-        os.makedirs(path)
+        if not self._exists_path(path):
+            os.makedirs(path)
 
-    def _remove_path(self, path):
+    def remove_path(self, path):
         """ Removes an absolute path in the file system
 
         :param path: The path to be removed

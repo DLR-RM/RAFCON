@@ -3,11 +3,11 @@ from utils import log
 logger = log.get_logger(__name__)
 
 import gtk
-from gtkmvc import Controller
+from mvc.controllers.extended_controller import ExtendedController
 from gtkmvc.adapters import UserClassAdapter
 
 
-class StatePropertiesController(Controller):
+class StatePropertiesController(ExtendedController):
     """Controller handling the table view of properties of the StateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK table view
@@ -22,7 +22,7 @@ class StatePropertiesController(Controller):
     def __init__(self, model, view):
         """Constructor
         """
-        Controller.__init__(self, model, view)
+        ExtendedController.__init__(self, model, view)
 
 
     def register_view(self, view):
@@ -79,7 +79,7 @@ class StatePropertiesController(Controller):
         logger.warning("Invalid value '{val:s}' for key '{prop:s}'.".format(val=value, prop=prop_name))
         adapt.update_widget()  # Update widget values with values from model
 
-    @Controller.observe("state", before=True)
+    @ExtendedController.observe("state", before=True)
     def before_state_change(self, model, _, info):
         """Called before an attribute of the state is set
 
@@ -114,7 +114,7 @@ class StatePropertiesController(Controller):
 
 
 
-    @Controller.observe("state", after=True)
+    @ExtendedController.observe("state", after=True)
     def after_state_change(self, model, _, info):
         """Called after an attribute of the state was set
 

@@ -1,56 +1,26 @@
 import traceback
 
 import gtk
-from gtkmvc import Controller
 
-from mvc.controllers import StatePropertiesController, ContainerStateController, GraphicalEditorController,\
-    StateDataPortEditorController, GlobalVariableManagerController, ExternalModuleManagerController,\
-    SourceEditorController, SingleWidgetWindowController, StateEditorController, StateMachineTreeController,\
-    LibraryTreeController
+from mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, LibraryTreeController
 import statemachine.singleton
+from mvc.controllers.extended_controller import ExtendedController
 from mvc.controllers.states_editor import StatesEditorController
 from mvc.controllers.state_machines_editor import StateMachinesEditorController
-from statemachine.states.execution_state import ExecutionState
-from mvc.models.container_state import ContainerStateModel
-from mvc.models.state_machine import StateMachineModel
 from mvc.models.state_machine_manager import StateMachineManagerModel
-
+from mvc.shortcut_manager import ShortcutManager
 from utils import log
 logger = log.get_logger(__name__)
 
 
-def setup_key_binding(key_map, view, widget):
-        """
-        Read the Key_map and add key accelerators according to the
-        name of field key_map, adds AccelGroup to widget and add accelerator to dict of view.
+class MainWindowController(ExtendedController):
 
-        :param key_map dict that holds as key the name of menu-button and as value the accelerator-key
-        :param view View in which the widget-dict is used to update MenuItems and to insert new (not visualized ones)
-        :param widget gtk.Window that could add accelerator-groups and have a menu
-        """
-
-        accelgroup = gtk.AccelGroup()
-        widget.add_accel_group(accelgroup)
-
-        for item in key_map.iteritems():
-            key, mod = gtk.accelerator_parse(str(item[1]))
-            try:
-                if not view[item[0]]:
-                    view[item[0]] = gtk.MenuItem()
-                    logger.info("NOT_IN key-accelerator %s insert a not visualized MenuItem with connected accelerator-key" % str(item))
-                view[item[0]].add_accelerator("activate", accelgroup, key, mod, gtk.ACCEL_VISIBLE)
-            except:
-                logger.warn(traceback.format_exc())
-                pass
-
-
-class MainWindowController(Controller):
-
-    def __init__(self, state_machine_manager_model, view, emm_model, gvm_model, editor_type='PortConnectionGrouped'):
-        Controller.__init__(self, state_machine_manager_model, view)
+    def __init__(self, state_machine_manager_model, view, gvm_model, editor_type='PortConnectionGrouped'):
+        ExtendedController.__init__(self, state_machine_manager_model, view)
 
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
 
+        self.shortcut_manager = None
         state_machine_manager = state_machine_manager_model.state_machine_manager
         active_state_machine_id = state_machine_manager.active_state_machine_id
         active_state_machine = None
@@ -68,15 +38,16 @@ class MainWindowController(Controller):
 
         top_h_pane = view['top_h_pane']
         left_v_pane = view['left_v_pane']
-        right_v_pane = view['right_v_pane']
 
         view.get_top_widget().connect("destroy", self.on_main_window_destroy)
+
+        tree_notebook = view["tree_notebook"]
 
         ######################################################
         # logging view
         ######################################################
-        console_scroller = left_v_pane.get_child2()
-        left_v_pane.remove(console_scroller)
+        self.console_scroller = left_v_pane.get_child2()
+        left_v_pane.remove(self.console_scroller)
         view.logging_view.get_top_widget().show()
         left_v_pane.add2(view.logging_view.get_top_widget())
         #console_scroller.add(view.logging_view["textview"])
@@ -84,15 +55,14 @@ class MainWindowController(Controller):
         ######################################################
         # library tree
         ######################################################
-        tree_notebook = view["tree_notebook"]
-        #remove placeholder tab
-        library_tree_tab = view['library_tree_placeholder']
-        page_num = tree_notebook.page_num(library_tree_tab)
-        tree_notebook.remove_page(page_num)
-        #append new tab
-        self.library_controller = LibraryTreeController(active_state_machine.root_state, view.library_tree)
-        libraries_label = gtk.Label('Libraries')
-        tree_notebook.insert_page(view.library_tree, libraries_label, page_num)
+        library_controller = LibraryTreeController(active_state_machine.root_state, view.library_tree)
+        self.add_controller('library_controller', library_controller)
+        view['library_vbox'].remove(view['library_tree_placeholder'])
+        view['library_vbox'].pack_start(view.library_tree, True, True, 0)
+        view['add_library_button'].connect("clicked", library_controller.add_library_button_clicked,
+                                           state_machine_manager_model)
+
+        view['button_save'].connect("clicked", self.on_save_activate)
 
         ######################################################
         # statemachine tree
@@ -102,9 +72,9 @@ class MainWindowController(Controller):
         page_num = tree_notebook.page_num(state_machine_tree_tab)
         tree_notebook.remove_page(page_num)
         #append new tab
-        self.state_machine_tree_controller = StateMachineTreeController(active_state_machine,
-                                                                        view.state_machine_tree)
-        state_machine_label = gtk.Label('Statemachine Tree')
+        state_machine_tree_controller = StateMachineTreeController(active_state_machine, view.state_machine_tree)
+        self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
+        state_machine_label = gtk.Label('Statemachine')
         tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
 
         ######################################################
@@ -114,19 +84,19 @@ class MainWindowController(Controller):
         # self.states_editor_ctrl = StatesEditorController(self.model.state_machines.values()[0].root_state,
         #                                                  view.states_editor,
         #                                                  editor_type)
-        self.states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
+        states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
                                                          view.states_editor,
                                                          editor_type)
-
+        self.add_controller('states_editor_ctrl', states_editor_ctrl)
         ######################################################
         # state machines editor
         ######################################################
 
-        self.state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
+        state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
                                                                         view.state_machines_editor,
-                                                                        self.state_machine_tree_controller,
-                                                                        self.states_editor_ctrl)
-
+                                                                        state_machine_tree_controller,
+                                                                        states_editor_ctrl)
+        self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
         #self.state_machines_editor_ctrl.add_graphical_state_machine_editor(state_machine_manager_model.root_state)
 
         # self.graphical_editor_ctrl = GraphicalEditorController(self.model.root_state, view.graphical_editor_view)
@@ -134,29 +104,17 @@ class MainWindowController(Controller):
         # #test = SingleWidgetWindowController(model, view.graphical_editor_window, GraphicalEditorController)
 
         ######################################################
-        # external module editor
-        ######################################################
-        em_global_notebook = view["right_bottom_notebook"]
-        #remove placeholder tab
-        external_modules_tab = view['external_modules_placeholder']
-        page_num = em_global_notebook.page_num(external_modules_tab)
-        em_global_notebook.remove_page(page_num)
-        #append new tab
-        self.external_modules_controller = ExternalModuleManagerController(emm_model, view.external_module_manager_view)
-        external_modules_label = gtk.Label('External Modules')
-        em_global_notebook.insert_page(view.external_module_manager_view.get_top_widget(), external_modules_label, page_num)
-
-        ######################################################
         # global variable editor
         ######################################################
         #remove placeholder tab
         global_variables_tab = view['global_variables_placeholder']
-        page_num = em_global_notebook.page_num(global_variables_tab)
-        em_global_notebook.remove_page(page_num)
+        page_num = tree_notebook.page_num(global_variables_tab)
+        tree_notebook.remove_page(page_num)
         #append new tab
-        self.external_modules_controller = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
+        global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
+        self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
         global_variables_label = gtk.Label('Global Variables')
-        em_global_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
+        tree_notebook.insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
 
         ######################################################
         # status bar
@@ -176,7 +134,6 @@ class MainWindowController(Controller):
         ######################################################
         top_h_pane.set_position(200)
         left_v_pane.set_position(700)
-        right_v_pane.set_position(600)
         self.key_map = {
             'copy'          : '<Control>C',     # TODO should not be that hart for full states
             'paste'         : '<Control>V',     # TODO should not be that hart for full states
@@ -209,17 +166,15 @@ class MainWindowController(Controller):
         logger.debug("Main window destroyed")
         log.debug_filter.set_logging_test_view(None)
         log.error_filter.set_logging_test_view(None)
-        statemachine.singleton.external_module_manager.stop_all_modules()
         gtk.main_quit()
 
     def register_view(self, view):
-        setup_key_binding(self.key_map, view, view.get_top_widget())
+        self.shortcut_manager = ShortcutManager(self.view['main_window'])
+        self.register_actions(self.shortcut_manager)
 
-        #view['add'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
-        #view['add_state'].connect('activate', self.delegate_action, StateDataFlowsListController.on_add)
         view['main_window'].connect('destroy', gtk.main_quit)
 
-    @Controller.observe("execution_engine", after=True)
+    @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
         status_bar3 = self.view["statusbar3"]
         status_bar3_string = "Execution status: " + \
@@ -274,17 +229,17 @@ class MainWindowController(Controller):
         into the currently active widget (e.g. Delete to tree/list widget of DataFlows).
         """
 
-        idx = self.states_editor_ctrl.view.notebook.get_current_page()
-        page = self.states_editor_ctrl.view.notebook.get_nth_page(idx)
+        idx = self.child_controllers['states_editor_ctrl'].view.notebook.get_current_page()
+        page = self.child_controllers['states_editor_ctrl'].view.notebook.get_nth_page(idx)
         ctrl = None
-        for identifier, pdict in self.states_editor_ctrl.tabs.iteritems():
+        for identifier, pdict in self.child_controllers['states_editor_ctrl'].tabs.iteritems():
             if page is pdict['page']:
                 ctrl = pdict['ctrl']
         method(ctrl.data_flows_ctrl.df_list_ctrl, event, *arg)
 
     def on_delete_state_activate(self, widget, data=None):
         logger.debug("Delete selected state now ...")
-        selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
+        selection = self.child_controllers['state_machines_editor_ctrl'].model.state_machines.values()[0].selection
         selected_state_model = selection.get_selected_state()
 
         if selected_state_model and selected_state_model.parent is not None:
@@ -293,17 +248,18 @@ class MainWindowController(Controller):
 
     def on_add_state_activate(self, widget, method=None, *arg):
 
-        selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
+        selection = self.child_controllers['state_machines_editor_ctrl'].model.state_machines.values()[0].selection
         selected_state_model = selection.get_selected_state()
         logger.debug("Add state in selected state %s now ..." % selected_state_model.state.name)
         # logger.info("Add state %s now ..." % selected_state_model)
 
         if selected_state_model and isinstance(selected_state_model, ContainerStateModel):
             state = ExecutionState("~")
-            selected_state_model.state.add_state(state)
-            state_model = selected_state_model.states[state.state_id]
-            #logger.info("create exec_State: %s" % state)
-            selection.set([state_model])
+            state_id = selected_state_model.state.add_state(state)
+            if state_id:
+                state_model = selected_state_model.states[state.state_id]
+                #logger.info("create exec_State: %s" % state)
+                selection.set([state_model])
         else:
             logger.warning("Add state FAILED: State has to be inheritor of type ContainerState!!!")
 
@@ -311,7 +267,7 @@ class MainWindowController(Controller):
         logger.debug("Delete something that is selected now ...")
         #logger.debug("focus is here: %s" % self.view['main_window'].get_focus())
 
-        selection = self.state_machines_editor_ctrl.model.state_machines.values()[0].selection
+        selection = self.child_controllers['state_machines_editor_ctrl'].model.state_machines.values()[0].selection
         if selection.get_selected_state() and selection.get_selected_state().parent is not None:
             selected_state_model = selection.get_selected_state()
             selected_state_model.parent.state.remove_state(selected_state_model.state.state_id)
@@ -352,7 +308,12 @@ class MainWindowController(Controller):
         pass
 
     def on_save_activate(self, widget, data=None):
-        pass
+        statemachine.singleton.global_storage.save_statemachine_as_yaml(
+            self.model.get_active_state_machine_model().root_state.state,
+            statemachine.singleton.global_storage.base_path,
+            delete_old_state_machine=False)
+
+        self.model.get_active_state_machine_model().root_state.store_meta_data_for_state()
 
     def on_open_activate(self, widget, data=None):
         pass

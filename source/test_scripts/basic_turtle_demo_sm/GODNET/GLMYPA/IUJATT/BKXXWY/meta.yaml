@@ -1,0 +1,24 @@
+!LibraryState
+data_flows: {}
+filename: script.py
+input_data_ports:
+    14: !DataPort {data_port_id: 14, data_type: str, default_value: new_turtle, name: turtle_name}
+    15: !DataPort {data_port_id: 15, data_type: str, default_value: new_turtle, name: global_storage_id_of_turtle_pos}
+library_name: turtle_position_subscriber
+library_path: turtle_libraries
+name: subscribe to turtle position
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+output_data_ports:
+    16: !DataPort {data_port_id: 16, data_type: float, default_value: null, name: x_pos}
+    17: !DataPort {data_port_id: 17, data_type: float, default_value: null, name: y_pos}
+    18: !DataPort {data_port_id: 18, data_type: float, default_value: null, name: phi}
+path: GODNET/GLMYPA/IUJATT/BKXXWY
+scoped_variables: {}
+start_state: null
+state_id: BKXXWY
+state_type: STATE_TYPE.LIBRARY
+transitions: {}
+version: '0.1'

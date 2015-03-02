@@ -1,0 +1,22 @@
+!Vividict
+vivid_dict_content:
+    gui: !Vividict
+        vivid_dict_content:
+            editor: !Vividict
+                vivid_dict_content:
+                    height: 20.0
+                    id: 2
+                    input_pos:
+                        1: !!python/tuple [8.0, 74.0]
+                    outcome_pos:
+                        -2: !!python/tuple [24.0, 86.0]
+                        -1: !!python/tuple [24.0, 91.0]
+                        0: !!python/tuple [24.0, 81.0]
+                    outcome_radius: 1.3333333333333333
+                    output_pos: {}
+                    port_radius: 0.625
+                    pos_x: 4.0
+                    pos_y: 76.0
+                    resize_length: 2.5
+                    scoped_pos: {}
+                    width: 20.0

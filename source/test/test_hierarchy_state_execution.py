@@ -57,7 +57,7 @@ def test_hierarchy_save_load_test():
 
     hierarchy_state = create_hierarchy_state()
 
-    s.save_statemachine_as_yaml(hierarchy_state)
+    s.save_statemachine_as_yaml(hierarchy_state, "../test_scripts/stored_statemachine")
     [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"input1": 42.0}
@@ -77,5 +77,5 @@ def test_hierarchy_save_load_test():
     assert output_data["output1"] == 52.0
 
 if __name__ == '__main__':
-    #test_hierarchy_save_load_test()
-    pytest.main()
+    #pytest.main()
+    test_hierarchy_save_load_test()

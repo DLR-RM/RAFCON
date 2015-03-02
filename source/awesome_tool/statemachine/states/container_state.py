@@ -9,11 +9,10 @@
 """
 from threading import Condition
 import copy
-
 from gtkmvc import Observable
+import os
 
 from utils import log
-
 logger = log.get_logger(__name__)
 from statemachine.enums import StateType, DataPortType
 from statemachine.states.state import State
@@ -24,6 +23,7 @@ from statemachine.scope import ScopedData, ScopedVariable
 from statemachine.id_generator import *
 from statemachine.config import *
 from statemachine.validity_check.validity_checker import ValidityChecker
+import statemachine.singleton
 
 
 class ContainerState(State):
@@ -54,7 +54,7 @@ class ContainerState(State):
         self.transitions = transitions
         self._data_flows = None
         self.data_flows = data_flows
-        self._start_state = None
+        self._start_state_id = None
         self.start_state = start_state
         self._scoped_variables = None
         self.scoped_variables = scoped_variables
@@ -99,6 +99,60 @@ class ContainerState(State):
         self.script.load_and_build_module()
         self.script.exit(self, scoped_variables_dict)
 
+    def handle_no_transition(self, state):
+        """
+        This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
+        condition variable to a new transition that will be connected by the programmer or GUI-user.
+        :param state: The substate to find a transition for
+        :return: The transition for the target state.
+        """
+        transition = None
+        while not transition:
+
+            # aborted case for child state
+            if state.final_outcome.outcome_id == -1:
+                if self.concurrency_queue:
+                    self.concurrency_queue.put(self.state_id)
+                self.final_outcome = Outcome(-1, "aborted")
+                self.active = False
+                logger.debug("Exit hierarchy state %s with outcome aborted, as the child state returned "
+                             "aborted and no transition was added to the aborted outcome!" % self.name)
+                return None
+
+            # preempted case for child state
+            elif state.final_outcome.outcome_id == -2:
+                if self.concurrency_queue:
+                    self.concurrency_queue.put(self.state_id)
+                self.final_outcome = Outcome(-2, "preempted")
+                self.active = False
+                logger.debug("Exit hierarchy state %s with outcome preempted, as the child state returned "
+                             "preempted and no transition was added to the preempted outcome!" % self.name)
+                return None
+
+            # preempted case
+            if self.preempted:
+                if self.concurrency_queue:
+                    self.concurrency_queue.put(self.state_id)
+                self.final_outcome = Outcome(-2, "preempted")
+                self.active = False
+                logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
+                             "was preempted!" % self.name)
+                return None
+
+            # depending on the execution mode pause execution
+            execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+            if execution_signal == "stop":
+                # this will be caught at the end of the run method
+                raise RuntimeError("state stopped")
+
+            # wait until the user connects the outcome of the state with a transition
+            self._transitions_cv.acquire()
+            self._transitions_cv.wait(3.0)
+            self._transitions_cv.release()
+            transition = self.get_transition_for_outcome(state, state.final_outcome)
+
+        return transition
+
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- state functions --------------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -141,6 +195,9 @@ class ContainerState(State):
         if not state_id in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
 
+        # remove script folder
+        statemachine.singleton.global_storage.remove_path(self.states[state_id].script.path)
+
         #first delete all transitions and data_flows in this state
         keys_to_delete = []
         for key, transition in self.transitions.iteritems():
@@ -169,13 +226,17 @@ class ContainerState(State):
         del self.states[state_id]
 
     @Observable.observed
-    def set_start_state(self, state_id):
-        """Adds a data_flow to the container state
+    def set_start_state(self, state):
+        """Sets the start state of a container state
 
-        :param state_id: The state_id (that was already added to the container) that will be the start state
+        :param state: The state_id of a state or a direct reference ot he state (that was already added
+        to the container) that will be the start state of this container state.
 
         """
-        self._start_state = state_id
+        if isinstance(state, State):
+            self._start_state_id = state.state_id
+        else:
+            self._start_state_id = state
 
     def get_start_state(self):
         """Get the start state of the container state
@@ -281,7 +342,7 @@ class ContainerState(State):
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
         if result_transition is None:
-            logger.debug("No transition found for state with name %s!" % self.name)
+            logger.warn("No transition found for state with name %s!" % self.name)
         return result_transition
 
     @Observable.observed
@@ -883,7 +944,7 @@ class ContainerState(State):
         """Property for the _start_state field
 
         """
-        return self._start_state
+        return self._start_state_id
 
     @start_state.setter
     @Observable.observed
@@ -891,7 +952,7 @@ class ContainerState(State):
         if not start_state is None:
             if not isinstance(start_state, str):
                 raise TypeError("start_state must be of type str")
-        self._start_state = start_state
+        self._start_state_id = start_state
 
     @property
     def scoped_variables(self):

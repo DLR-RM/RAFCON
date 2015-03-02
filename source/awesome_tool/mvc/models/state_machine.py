@@ -30,7 +30,7 @@ class StateMachineModel(ModelMT):
         self.state_machine = state_machine
 
         self.root_state = ContainerStateModel(self.state_machine.root_state)
-        #self.root_state.register_observer(self)
+        self.root_state.register_observer(self)
 
         self.selection = Selection()
 
@@ -99,6 +99,9 @@ class Selection(Observable):
 
     def __len__(self):
         return len(self.__selected)
+
+    def get_all(self):
+        return [s for s in self.__selected]
 
     def get_states(self):
         return [s for s in self.__selected if isinstance(s, StateModel)]

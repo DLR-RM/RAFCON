@@ -1,0 +1,22 @@
+!HierarchyState
+data_flows: {}
+filename: script.py
+input_data_ports: {}
+name: BasicTurtleDemo
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: Success, outcome_id: 0}
+output_data_ports: {}
+path: ../../test_scripts/basic_turtle_demo_sm/FNYQYV
+scoped_variables: {}
+start_state: CBQEYN
+state_id: FNYQYV
+state_type: STATE_TYPE.HIERARCHY
+transitions:
+    1: !Transition {from_outcome: 0, from_state: CBQEYN, to_outcome: null, to_state: JVMPTR}
+    2: !Transition {from_outcome: 0, from_state: JVMPTR, to_outcome: null, to_state: PSSHEH}
+    3: !Transition {from_outcome: 0, from_state: PSSHEH, to_outcome: null, to_state: XGRXDU}
+    4: !Transition {from_outcome: 0, from_state: XGRXDU, to_outcome: null, to_state: XJICPT}
+    6: !Transition {from_outcome: 0, from_state: VHZXRA, to_outcome: null, to_state: DRPLPE}
+    7: !Transition {from_outcome: 0, from_state: DRPLPE, to_outcome: null, to_state: LWJSRK}

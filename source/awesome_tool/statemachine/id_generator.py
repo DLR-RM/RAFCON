@@ -15,11 +15,8 @@ import random
 state_machine_id_counter = 0
 transition_id_counter = 0
 data_flow_id_counter = 0
-# outcome 0 is success, outcome -1 is aborted and outcome -2 is preempted
-outcome_id_counter = 0
 data_port_id_counter = 0
 script_id_counter = 0
-external_module_id_counter = 0
 
 used_state_ids = []
 used_global_variable_ids = []
@@ -46,10 +43,15 @@ def generate_data_flow_id():
     data_flow_id_counter += 1
     return data_flow_id_counter
 
-# outcome id will start with value 1
-def generate_outcome_id():
-    global outcome_id_counter
-    outcome_id_counter += 1
+
+# outcome id will start with value 0
+def generate_outcome_id(used_outcomes_list):
+    outcome_id_counter = -1
+    outcome_found = False
+    while not outcome_found:
+        outcome_id_counter += 1
+        if outcome_id_counter not in used_outcomes_list:
+            break
     return outcome_id_counter
 
 
@@ -63,12 +65,6 @@ def generate_script_id():
     global script_id_counter
     script_id_counter += 1
     return script_id_counter
-
-
-def generate_external_module_id():
-    global external_module_id_counter
-    external_module_id_counter += 1
-    return external_module_id_counter
 
 
 def state_id_generator(size=6, chars=string.ascii_uppercase):

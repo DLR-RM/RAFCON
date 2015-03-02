@@ -141,6 +141,8 @@ class DataPort(Observable, yaml.YAMLObject):
 
 
 PATH_SEPARATOR = '/'
+
+
 class State(Observable, yaml.YAMLObject, object):
 
     """A class for representing a state in the state machine
@@ -176,6 +178,8 @@ class State(Observable, yaml.YAMLObject, object):
         Observable.__init__(self)
         self.thread = None
 
+        if name is None:
+            name = "Untitled"
         self._name = None
         self.name = name
         if state_id is None:
@@ -202,9 +206,11 @@ class State(Observable, yaml.YAMLObject, object):
         self._is_start = None
 
         if state_type is StateType.EXECUTION:
-            self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path)
+            self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
+        elif state_type is StateType.LIBRARY:
+            self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path, state=self)
         else:
-            self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path)
+            self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
         self._input_data = {}
         self._output_data = {}
@@ -394,7 +400,7 @@ class State(Observable, yaml.YAMLObject, object):
 
         """
         if outcome_id is None:
-            outcome_id = generate_outcome_id()
+            outcome_id = generate_outcome_id(self._used_outcome_ids)
         if name in self._outcomes:
             logger.error("Two outcomes cannot have the same names")
             return
@@ -577,6 +583,17 @@ class State(Observable, yaml.YAMLObject, object):
         for outcome_id, outcome in self.outcomes.iteritems():
             outcome.check_name = self.modify_outcome_name
 
+    def set_script_text(self, new_text):
+        """
+        Sets the text of the script. This function can be overridden to prevent setting the script under certain
+        circumstances.
+        :param new_text: The new text to replace to old text with.
+        :return: Returns True if the script was successfully set.
+        """
+        self.script.script = new_text
+        return True
+
+
     def __str__(self):
         return "State properties of state: %s \nstate_id: %s \nstate_type: %s" \
                % (self.name, self.state_id, self.state_type)
@@ -715,6 +732,8 @@ class State(Observable, yaml.YAMLObject, object):
                 self.add_outcome("aborted", -1)
             if not -2 in outcomes:
                 self.add_outcome("preempted", -2)
+            for id, o in outcomes.iteritems():
+                self._used_outcome_ids.append(id)
 
 
     @property
@@ -785,7 +804,7 @@ class State(Observable, yaml.YAMLObject, object):
     @Observable.observed
     def output_data(self, output_data):
         if not isinstance(output_data, dict):
-            raise TypeError("output_data must be of type script")
+            raise TypeError("output_data must be of type dict")
         self._output_data = output_data
 
     @property

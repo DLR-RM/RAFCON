@@ -48,5 +48,5 @@ def test_concurrency_barrier_state_execution():
 
 
 if __name__ == '__main__':
-    pytest.main()
-    #test_concurrency_barrier_state_execution()
+    #pytest.main()
+    test_concurrency_barrier_state_execution()
