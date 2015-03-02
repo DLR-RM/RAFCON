@@ -134,6 +134,11 @@ class StatesEditorController(Controller):
         current_idx = self.view.notebook.page_num(page)
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
+        # TODO the ctrl of the page has to be destroyed fully ... till now that does not work!!!
+        # del page
+        # ctrl = self.tabs[state_identifier]['ctrl']
+        # ctrl.relieve_model(ctrl.model)
+        # del ctrl.model
         del self.tabs[state_identifier]
 
     def on_switch_page(self, notebook, page, page_num, user_param1=None):

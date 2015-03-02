@@ -35,6 +35,12 @@ class DataPortModel(ModelMT):
     @ModelMT.observe("data_port", after=True)
     def model_changed(self, model, prop_name, info):
         if not self.parent is None:
-            # TODO: how to check if its input or output data port?
+            # print "UPDATE PORT PARENT", model.parent.state.state_id, self.parent.state.state_id
+            # if model.data_port.data_port_id in self.parent.state.input_data_ports:
+            #     self.parent.reload_input_data_port_list_store()
+            # if model.data_port.data_port_id in self.parent.state.output_data_ports:
+            #     self.parent.reload_output_data_port_list_store()
             self.parent.reload_input_data_port_list_store()
             self.parent.reload_output_data_port_list_store()
+
+            self.parent.model_changed(model, prop_name, info)

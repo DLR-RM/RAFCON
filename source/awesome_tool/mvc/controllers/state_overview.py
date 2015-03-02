@@ -90,6 +90,7 @@ class StateOverviewController(Controller):
         #self.adapt(self.__state_property_adapter("name", "input_name"))
 
     def on_toggle_is_start_state(self, button):
+        # TODO should be moved to state and container_state
         if self.model.parent and not (self.view['is_start_state_checkbutton'].get_active() == self.model.state.is_start):
             start_states = filter(lambda state_model:
                                   not state_model.state.state_id == self.model.state.state_id and state_model.state.is_start,
