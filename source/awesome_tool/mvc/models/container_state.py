@@ -157,6 +157,8 @@ class ContainerStateModel(StateModel):
             if len(state_list) > 1:
                 logger.warning("There are more then one start state.")
             for state_model in state_list:
+                logger.debug("State %s %s is no longer start state" % (state_model.state.state_id,
+                                                                       state_model.state.name))
                 state_model.is_start = False
 
         model_list = None

@@ -988,7 +988,7 @@ class ContainerState(State):
         return self._scoped_data
 
     @scoped_data.setter
-    @Observable.observed
+    #@Observable.observed
     def scoped_data(self, scoped_data):
         if not isinstance(scoped_data, dict):
             raise TypeError("scoped_results must be of type dict")
@@ -1005,7 +1005,7 @@ class ContainerState(State):
         return self._current_state
 
     @current_state.setter
-    @Observable.observed
+    #@Observable.observed
     def current_state(self, current_state):
         if not isinstance(current_state, State):
             raise TypeError("current_state must be of type State")
@@ -1019,7 +1019,7 @@ class ContainerState(State):
         return self._v_checker
 
     @v_checker.setter
-    @Observable.observed
+    #@Observable.observed
     def v_checker(self, v_checker):
         if not isinstance(v_checker, ValidityChecker):
             raise TypeError("validity_check must be of type ValidityChecker")

@@ -754,7 +754,7 @@ class State(Observable, yaml.YAMLObject, object):
         return self._input_data
 
     @input_data.setter
-    @Observable.observed
+    #@Observable.observed
     def input_data(self, input_data):
         if not isinstance(input_data, dict):
             raise TypeError("input_data must be of type dict")
@@ -768,7 +768,7 @@ class State(Observable, yaml.YAMLObject, object):
         return self._output_data
 
     @output_data.setter
-    @Observable.observed
+    #@Observable.observed
     def output_data(self, output_data):
         if not isinstance(output_data, dict):
             raise TypeError("output_data must be of type dict")
@@ -782,7 +782,7 @@ class State(Observable, yaml.YAMLObject, object):
         return self._preempted
 
     @preempted.setter
-    @Observable.observed
+    #@Observable.observed
     def preempted(self, preempted):
         if not isinstance(preempted, bool):
             raise TypeError("preempted must be of type bool")
@@ -796,7 +796,7 @@ class State(Observable, yaml.YAMLObject, object):
         return self._concurrency_queue
 
     @concurrency_queue.setter
-    @Observable.observed
+    #@Observable.observed
     def concurrency_queue(self, concurrency_queue):
         if not isinstance(concurrency_queue, Queue.Queue):
             if not concurrency_queue is None:
@@ -814,7 +814,7 @@ class State(Observable, yaml.YAMLObject, object):
         return self._final_outcome
 
     @final_outcome .setter
-    @Observable.observed
+    #@Observable.observed
     def final_outcome(self, final_outcome):
         if not isinstance(final_outcome, Outcome):
             raise TypeError("final_outcome must be of type Outcome")

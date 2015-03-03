@@ -1,5 +1,14 @@
 import rospy
 from turtlesim.srv import *
+from turtlesim.msg import *
+
+
+pose_received = False
+
+
+def check_turtle_pose(pose):
+    global pose_received
+    pose_received = True
 
 
 def execute(self, inputs, outputs, gvm):
@@ -17,5 +26,13 @@ def execute(self, inputs, outputs, gvm):
             print "ROS external module: executed the ", service, " service"
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
+
+        turtle_pos_subscriber = rospy.Subscriber("/" + turtle_name + "/pose", Pose, check_turtle_pose)
+
+        r = rospy.Rate(10)
+        global pose_received
+        # wait until the first pose message was received
+        while not pose_received:
+            r.sleep()
 
         return 0

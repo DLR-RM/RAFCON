@@ -16,12 +16,10 @@ def ros_init_node_library():
 
     node_name_input = init_ros_node.add_input_data_port("node_name", "str", "new_ros_node")
 
-
     storage.save_statemachine_as_yaml(init_ros_node,
                                       "../../test_scripts/ros_libraries/init_ros_node",
                                       "0.1",
                                       delete_old_state_machine=True)
-
 
 def spawn_turtle_library():
     spawn_turtle = ExecutionState("spawn_turtle", state_id="SPAWN_TURTLE", path="../../test_scripts/turtle_libraries", filename="spawn_turtle.py")
