@@ -20,7 +20,8 @@ class ExtendedController(Controller):
 
     def remove_controller(self, controller):
         if isinstance(controller, ExtendedController):
-            self.__action_registered_controllers.remove(self.__child_controllers[controller])
+            if controller in self.__child_controllers.keys():
+                self.__action_registered_controllers.remove(self.__child_controllers[controller])
             for key, child_controller in self.__child_controllers.iteritems():
                 if controller is child_controller:
                     del self.__child_controllers[key]

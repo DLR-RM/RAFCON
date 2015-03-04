@@ -4,6 +4,8 @@ import gtk
 
 from mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, LibraryTreeController
 import statemachine.singleton
+from statemachine.state_machine import StateMachine
+from statemachine.states.hierarchy_state import HierarchyState
 from mvc.controllers.extended_controller import ExtendedController
 from mvc.controllers.states_editor import StatesEditorController
 from mvc.controllers.state_machines_editor import StateMachinesEditorController
@@ -23,11 +25,7 @@ class MainWindowController(ExtendedController):
         self.shortcut_manager = None
         state_machine_manager = state_machine_manager_model.state_machine_manager
         active_state_machine_id = state_machine_manager.active_state_machine_id
-        active_state_machine = None
-        for state_machine_id in state_machine_manager_model.state_machines:
-            if state_machine_id == active_state_machine_id:
-                active_state_machine = state_machine_manager_model.state_machines[state_machine_id]
-                break
+        active_state_machine = state_machine_manager_model.state_machines[active_state_machine_id]
 
         if active_state_machine is None:
             raise AttributeError("No active state machine found")
@@ -63,6 +61,7 @@ class MainWindowController(ExtendedController):
                                            state_machine_manager_model)
 
         view['button_save'].connect("clicked", self.on_save_activate)
+        view['button_new'].connect("clicked", self.on_new_activate)
 
         ######################################################
         # statemachine tree
@@ -305,18 +304,41 @@ class MainWindowController(ExtendedController):
         pass
 
     def on_save_as_activate(self, widget, data=None):
-        pass
+
+        dialog = gtk.FileChooserDialog("Please choose a file",
+                                       None,
+                                       gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
+                                       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            logger.debug("File selected: " + dialog.get_filename())
+        elif response == gtk.RESPONSE_CANCEL:
+            logger.debug("No file selected")
+            dialog.destroy()
+            return
+        self.model.get_active_state_machine_model().state_machine.base_path = dialog.get_filename()
+        dialog.destroy()
+        self.on_save_activate(widget, data)
 
     def on_save_activate(self, widget, data=None):
+        save_path = self.model.get_active_state_machine_model().state_machine.base_path
+        logger.debug("Saving state machine in %s" % save_path)
+        if save_path is None:
+            self.on_save_as_activate(widget, data=None)
         statemachine.singleton.global_storage.save_statemachine_as_yaml(
-            self.model.get_active_state_machine_model().root_state.state,
-            statemachine.singleton.global_storage.base_path,
+            self.model.get_active_state_machine_model(),
+            self.model.get_active_state_machine_model().state_machine.base_path,
             delete_old_state_machine=False)
 
         self.model.get_active_state_machine_model().root_state.store_meta_data_for_state()
+        logger.debug("Successfully saved graphics meta data.")
 
     def on_open_activate(self, widget, data=None):
         pass
 
     def on_new_activate(self, widget, data=None):
-        pass
+        logger.debug("Creating new statemachine ...")
+        root_state = HierarchyState("new_root_state")
+        sm = StateMachine(root_state)
+        statemachine.singleton.state_machine_manager.add_state_machine(sm)

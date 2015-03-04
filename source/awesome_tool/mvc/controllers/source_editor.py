@@ -85,6 +85,7 @@ class SourceEditorController(ExtendedController):
     def on_message_dialog_response_signal(self, widget, response_id, current_text):
         if response_id == 42:
             self.model.state.script.script = current_text
+            statemachine.singleton.global_storage.save_script_file(self.model.state)
             self.view.set_text(self.model.state.script.script)
             logger.debug("File saved")
         else:

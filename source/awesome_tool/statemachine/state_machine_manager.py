@@ -11,6 +11,7 @@ import os
 from utils import log
 logger = log.get_logger(__name__)
 from gtkmvc import Observable
+from statemachine.state_machine import StateMachine
 
 
 class StateMachineManager(Observable):
@@ -52,12 +53,19 @@ class StateMachineManager(Observable):
         :param state_machine:
         :return:
         """
+        if not isinstance(state_machine, StateMachine):
+            raise AttributeError("state_machine must be of type StateMachine")
         self._state_machines[state_machine.state_machine_id] = state_machine
         if self.active_state_machine_id is None:
             self.active_state_machine_id = state_machine.state_machine_id
 
     @Observable.observed
-    def remove_state_machine(self, state_machine_id=None):
+    def remove_state_machine(self, state_machine_id):
+        """
+        Remove the state machine for a specified state machine id from the list of registered state machines.
+        :param state_machine_id: the id of the state machine to remove
+        :return:
+        """
         if state_machine_id in self._state_machines:
             del self._state_machines[state_machine_id]
         else:

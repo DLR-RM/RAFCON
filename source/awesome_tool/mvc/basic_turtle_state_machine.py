@@ -161,7 +161,7 @@ def run_turtle_demo():
     statemachine.singleton.global_storage.base_path = "../../test_scripts/basic_turtle_demo_sm"
 
     #load the state machine
-    [basic_turtle_demo_state, version, creation_time] = statemachine.singleton.\
+    [state_machine, version, creation_time] = statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
 
     statemachine.singleton.library_manager.initialize()
@@ -169,7 +169,6 @@ def run_turtle_demo():
     setup_logger(logging_view)
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
-    state_machine = StateMachine(basic_turtle_demo_state)
     statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
 

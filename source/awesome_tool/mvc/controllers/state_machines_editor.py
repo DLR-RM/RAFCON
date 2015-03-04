@@ -60,10 +60,22 @@ class StateMachinesEditorController(ExtendedController):
         self.tabs = {}
         self.act_model = None
         self._view = view
+        self.registered_state_machines = {}
 
     def register_view(self, view):
+        self.view.notebook.connect('switch-page', self.on_switch_page)
         for sm_id, sm in self.model.state_machines.iteritems():
             self.add_graphical_state_machine_editor(sm)
+
+    def on_switch_page(self, notebook, page, page_num):
+        logger.debug("switch to page number %s (for page %s)" % (page_num, page))
+        page = notebook.get_nth_page(page_num)
+        for identifier, meta in self.tabs.iteritems():
+            if meta['page'] is page:
+                model = meta['state_machine_model']
+                logger.debug("state machine id of current state machine page %s" % model.state_machine.state_machine_id)
+                self.model.state_machine_manager.active_state_machine_id = model.state_machine.state_machine_id
+                return
 
     def add_graphical_state_machine_editor(self, state_machine_model):
 
@@ -85,7 +97,7 @@ class StateMachinesEditorController(ExtendedController):
         page.show_all()
 
         self.tabs[sm_identifier] = {'page': page,
-                                    'state_model': state_machine_model,
+                                    'state_machine_model': state_machine_model,
                                     'ctrl': graphical_editor_ctrl,
                                     'connected': False}
 
@@ -103,16 +115,29 @@ class StateMachinesEditorController(ExtendedController):
         graphical_editor_view.show()
         self._view.notebook.show()
 
+        self.registered_state_machines[state_machine_model.state_machine.state_machine_id] = graphical_editor_ctrl
         return idx
+
+    @ExtendedController.observe("state_machines", after=True)
+    def model_changed(self, model, prop_name, info):
+        logger.debug("Register a new graphical editor!")
+        for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
+            if sm_id not in self.registered_state_machines:
+                self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
 
     def on_close_clicked(self, event, state_machine_model, result):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         # print event, state_model, result
 
         sm_identifier = state_machine_model.state_machine.state_machine_id
+        self.remove_controller(self.registered_state_machines[sm_identifier])
+
+        del self.registered_state_machines[sm_identifier]
+
         page = self.tabs[sm_identifier]['page']
         current_idx = self.view.notebook.page_num(page)
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
         del self.tabs[sm_identifier]
-        self.remove_controller()
+
+        self.model.state_machine_manager.remove_state_machine(sm_identifier)

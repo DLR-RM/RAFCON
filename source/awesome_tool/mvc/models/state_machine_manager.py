@@ -3,6 +3,9 @@ from mvc.models.state_machine import StateMachineModel
 from statemachine.state_machine_manager import StateMachineManager
 from utils.vividict import Vividict
 
+from utils import log
+logger = log.get_logger(__name__)
+
 
 class StateMachineManagerModel(ModelMT):
     """This model class manages a StateMachineManager
@@ -43,7 +46,21 @@ class StateMachineManagerModel(ModelMT):
 
     @ModelMT.observe("state_machine_manager", after=True)
     def model_changed(self, model, prop_name, info):
-        pass
+        if info["method_name"] == "add_state_machine":
+            logger.debug("Add new state machine model ... ")
+            for sm_id, sm in self.state_machine_manager.state_machines.iteritems():
+                if sm_id not in self.state_machines:
+                    logger.debug("Create new state machine model for state machine with id %s", sm.state_machine_id)
+                    self.state_machines[sm_id] = StateMachineModel(sm)
+        elif info["method_name"] == "remove_state_machine":
+            sm_id_to_delete = None
+            for sm_id, sm_m in self.state_machines.iteritems():
+                if sm_id not in self.state_machine_manager.state_machines:
+                    sm_id_to_delete = sm_id
+                    break
+            logger.debug("Delete state machine model for state machine with id %s", sm_id_to_delete)
+            del self.state_machines[sm_id_to_delete]
+
 
     def get_active_state_machine_model(self):
         return self.state_machines[self.state_machine_manager.active_state_machine_id]

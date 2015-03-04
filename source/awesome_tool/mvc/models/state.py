@@ -292,7 +292,7 @@ class StateModel(ModelMT):
 
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
-        logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
+        #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
             tmp_meta = statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
@@ -318,7 +318,7 @@ class StateModel(ModelMT):
             logger.warn("path to load meta data for state model of state %s does not exist" % self.state.name)
 
     def store_meta_data_for_state(self):
-        logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
+        #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
 
         # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file

@@ -17,6 +17,7 @@ import yaml
 from gtkmvc import Observable
 
 import statemachine.states.state
+from statemachine.state_machine import StateMachine
 from statemachine.enums import StateType
 from utils import log
 logger = log.get_logger(__name__)
@@ -108,16 +109,18 @@ class Storage(Observable):
         yaml_object = yaml.load(stream)
         return yaml_object
 
-    def save_statemachine_as_yaml(self, root_state, base_path, version=None, delete_old_state_machine=False):
+    def save_statemachine_as_yaml(self, statemachine, base_path, version=None, delete_old_state_machine=False):
         """
         Saves a root state to a yaml file.
-        :param root_state: container state to be saved
+        :param statemachine: the statemachine to be saved
         :param base_path: base_path to which all further relative paths refers to
         :param version: the version of the statemachine to save
         :return:
         """
         if base_path is not None:
             self.base_path = base_path
+
+        root_state = statemachine.root_state.state
         # clean old path first
         if self._exists_path(self.base_path):
             if delete_old_state_machine:
@@ -198,20 +201,22 @@ class Storage(Observable):
         creation_time = tmp_dict['creation_time']
         tmp_base_path = os.path.join(self.base_path, root_state_id)
         logger.debug("Loading root state from path %s" % tmp_base_path)
-        root_state = self.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
+        sm = StateMachine()
+        sm.base_path = base_path
+        sm.root_state = self.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
-        root_state.script.path = tmp_base_path
+        sm.root_state.script.path = tmp_base_path
         # load_and_build the module to load the correct content into root_state.script.script
-        root_state.script.load_and_build_module()
-        self.load_script_file(root_state)
+        sm.root_state.script.load_and_build_module()
+        self.load_script_file(sm.root_state)
         for p in os.listdir(tmp_base_path):
             if os.path.isdir(os.path.join(tmp_base_path, p)):
                 elem = os.path.join(tmp_base_path, p)
                 logger.debug("Going down the statemachine hierarchy recursively to state %s" % str(elem))
-                self.load_state_recursively(root_state, elem)
+                self.load_state_recursively(sm.root_state, elem)
                 logger.debug("Going up back to state %s" % str(tmp_base_path))
 
-        return [root_state, version, creation_time]
+        return [sm, version, creation_time]
 
     def load_state_recursively(self, root_state, state_path=None):
         """
