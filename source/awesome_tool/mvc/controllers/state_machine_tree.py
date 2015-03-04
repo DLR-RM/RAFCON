@@ -55,7 +55,6 @@ class StateMachineTreeController(ExtendedController):
             self.tree_store.clear()
 
         if not changed_state_model.state.get_path() in self.path_store:
-            own_root_state__model = ContainerStateModel(self.model.root_state.state)
             parent_iter = self.tree_store.insert_before(parent_iter, None,
                                                         (self.model.root_state.state.name,
                                                          self.model.root_state.state.state_id,

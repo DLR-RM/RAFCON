@@ -1,5 +1,5 @@
 from gtkmvc import ModelMT
-import gobject
+
 from gtk import ListStore
 import gtk
 import os
@@ -24,11 +24,12 @@ class StateModel(ModelMT):
     :param State state: The state to be managed
      """
 
+    is_start = None
     state = None
     input_data_ports = []
     output_data_ports = []
 
-    __observables__ = ("state", "input_data_ports", "output_data_ports")
+    __observables__ = ("state", "input_data_ports", "output_data_ports", "is_start")
 
     _table = TableDescriptor()
     _table.add_column(ColumnDescriptor(0, 'key', str))
@@ -45,6 +46,9 @@ class StateModel(ModelMT):
         assert isinstance(state, State)
 
         self.state = state
+
+        # True if no parent (for root_state) or state is parent start_state else False
+        self.is_start = True if state.parent is None or state.state_id == state.parent.start_state else False
 
         if isinstance(meta, Vividict):
             self.meta = meta
@@ -95,10 +99,6 @@ class StateModel(ModelMT):
         except ValueError as error:
             return error
         return True
-
-    # @ModelMT.observe("state", after=True)
-    # def _model_changed(self, model, name, info):
-    #     self.model_changed(model, name, info, self)
 
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, name, info):

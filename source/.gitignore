@@ -89,6 +89,7 @@ target/
 test_scripts/stored_statemachine
 test_scripts/libraries
 test_scripts/test_libraries
+test_scripts/basic_turtle_demo_sm
 
 #
 # Do not commit gui files

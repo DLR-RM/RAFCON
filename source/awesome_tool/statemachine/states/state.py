@@ -156,7 +156,6 @@ class State(Observable, yaml.YAMLObject, object):
     :ivar input_data_ports: holds the input data ports of the state
     :ivar output_data_ports: holds the output data ports of the state
     :ivar outcomes: holds the state outcomes, which are the connection points for transitions
-    :ivar is_start: indicates if this state is a start state of a hierarchy
     :ivar script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
     :ivar _input_data: the input data of the state during execution
     :ivar _output_data: the output data of the state during execution
@@ -202,8 +201,6 @@ class State(Observable, yaml.YAMLObject, object):
         self._used_outcome_ids = []
         self._outcomes = None
         self.outcomes = outcomes
-
-        self._is_start = None
 
         if state_type is StateType.EXECUTION:
             self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
@@ -734,36 +731,6 @@ class State(Observable, yaml.YAMLObject, object):
                 self.add_outcome("preempted", -2)
             for id, o in outcomes.iteritems():
                 self._used_outcome_ids.append(id)
-
-
-    @property
-    def is_start(self):
-        """Property for the _is_start field
-
-        """
-        return self._is_start
-
-    @is_start.setter
-    #@Observable.observed
-    def is_start(self, is_start):
-        if not isinstance(is_start, bool):
-            raise TypeError("is_start must be of type bool")
-        self._is_start = is_start
-
-    @property
-    def is_final(self):
-        """Property for the _is_final field
-
-        """
-        return self._is_final
-
-    @is_final.setter
-    #@Observable.observed
-    def is_final(self, is_final):
-        if not isinstance(is_final, bool):
-            raise TypeError("is_final must be of type bool")
-        self._is_final = is_final
-
 
     @property
     def script(self):

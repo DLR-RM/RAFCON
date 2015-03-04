@@ -1,5 +1,6 @@
 import gtk
 from mvc.controllers.extended_controller import ExtendedController
+from gtkmvc import Controller, Model
 
 from statemachine.states.state import State, StateType
 from statemachine.states.container_state import ContainerState
@@ -17,7 +18,7 @@ from utils import log
 logger = log.get_logger(__name__)
 
 
-class StateOverviewController(ExtendedController):
+class StateOverviewController(ExtendedController, Model):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -34,6 +35,7 @@ class StateOverviewController(ExtendedController):
     def __init__(self, model, view):
         """Constructor
         """
+        print "++++++++++ ", model, model.state.name
         ExtendedController.__init__(self, model, view)
 
     def register_view(self, view):
@@ -75,11 +77,8 @@ class StateOverviewController(ExtendedController):
         view['type_combobox'] = combo
         view['type_combobox'].connect('changed', self.change_type)
 
-        view['is_start_state_checkbutton'].set_active(bool(self.model.state.is_start))
+        view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
         view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)
-
-    #def on_window_state_editor_destroy(self):
-    #    gtk.main_quit()
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -90,34 +89,19 @@ class StateOverviewController(ExtendedController):
         #self.adapt(self.__state_property_adapter("name", "input_name"))
 
     def on_toggle_is_start_state(self, button):
-        # TODO should be moved to state and container_state
-        if self.model.parent and not (self.view['is_start_state_checkbutton'].get_active() == self.model.state.is_start):
-            start_states = filter(lambda state_model:
-                                  not state_model.state.state_id == self.model.state.state_id and state_model.state.is_start,
-                                  self.model.parent.states.values())
-            if len(start_states) > 0:
-                if len(start_states) > 1:
-                    logger.error("There are multiple states which are start states  in this container state %s" %
-                                 [(state_model.state.name, state_model.state.state_id) for state_model in start_states])
-                else:
-                    logger.info("There is another state which is start state in this container state %s" %
-                                [(state_model.state.name, state_model.state.state_id) for state_model in start_states])
-            else:
-                self.model.state.is_start = not self.model.state.is_start
-                logger.debug("State %s %s is_start is toggled to %s" % (self.model.state.name,
-                                                                        self.model.state.state_id,
-                                                                        self.model.state.is_start))
-        else:
-            if not self.view['is_start_state_checkbutton'].get_active() == self.model.state.is_start:
-                self.model.state.is_start = not self.model.state.is_start
-                logger.debug("State %s %s is_start is toggled to %s" % (self.model.state.name,
-                                                                        self.model.state.state_id,
-                                                                        self.model.state.is_start))
-            else:
-                logger.debug("State %s %s is_start does not change")  # should not happen
 
-        if not self.view['is_start_state_checkbutton'].get_active() == self.model.state.is_start:
-            self.view['is_start_state_checkbutton'].set_active(bool(self.model.state.is_start))
+        if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
+            if self.view['is_start_state_checkbutton'].get_active():
+                logger.debug("set start_state %s" % self.model.state.state_id)
+                self.model.parent.state.start_state = self.model.state.state_id
+            else:
+                logger.debug("set start_state %s" % str(None))
+                self.model.parent.state.start_state = None
+
+    @Model.observe('is_start', assign=True)
+    def notify_is_start(self, model, prop_name, info):
+        if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
+            self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
 
     def change_name(self, entry, otherwidget):
         entry_text = entry.get_text()

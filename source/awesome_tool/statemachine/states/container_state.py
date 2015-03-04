@@ -242,7 +242,13 @@ class ContainerState(State):
         """Get the start state of the container state
 
         """
-        return self.states[self.start_state]
+        if self.start_state is not None:
+            return self.states[self.start_state]
+        else:
+            logger.warning("The container state %s with name %s does not has start state! %s" % (self.state_id,
+                                                                                                 self.name,
+                                                                                                 self.get_path()))
+            return None
 
         # If there is a value in the dependency tree for this state start with the this one
         #TODO: start execution with the state provided by the dependency tree
