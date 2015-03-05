@@ -78,6 +78,7 @@ class Selection(Observable):
 
     @Observable.observed
     def add(self, item):
+        print item
         self.__selected.add(item)
 
     @Observable.observed

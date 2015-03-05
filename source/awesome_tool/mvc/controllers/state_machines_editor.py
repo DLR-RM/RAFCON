@@ -49,12 +49,11 @@ def create_tab_header(title, close_callback, *additional_parameters):
 
 class StateMachinesEditorController(ExtendedController):
 
-    def __init__(self, sm_manager_model, view, state_machine_tree_ctrl, states_editor_ctrl):
+    def __init__(self, sm_manager_model, view, states_editor_ctrl):
         ExtendedController.__init__(self, sm_manager_model, view)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
 
-        self.add_controller('state_machine_tree_ctrl', state_machine_tree_ctrl)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         self.tabs = {}
@@ -140,4 +139,19 @@ class StateMachinesEditorController(ExtendedController):
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
         del self.tabs[sm_identifier]
 
+        # TODO: Should the state machine be removed here?
         self.model.state_machine_manager.remove_state_machine(sm_identifier)
+        sm_keys = self.model.state_machine_manager.state_machines.keys()
+        self.model.state_machine_manager.active_state_machine_id = \
+            self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
+
+    def close_all_tabs(self):
+        """
+        Closes all tabs of the state machines editor
+        :return:
+        """
+        state_machine_model_list = []
+        for s_id, tab in self.tabs.iteritems():
+            state_machine_model_list.append(tab['state_machine_model'])
+        for state_model in state_machine_model_list:
+            self.on_close_clicked(None, state_model, None)

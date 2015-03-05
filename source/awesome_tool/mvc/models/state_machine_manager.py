@@ -1,5 +1,5 @@
 from gtkmvc import ModelMT
-from mvc.models.state_machine import StateMachineModel
+from mvc.models.state_machine import StateMachineModel, Selection
 from statemachine.state_machine_manager import StateMachineManager
 from utils.vividict import Vividict
 
@@ -19,10 +19,11 @@ class StateMachineManagerModel(ModelMT):
     """
 
     state_machine_manager = None
-    selected_state_machine = None
+    #selected_state_machine = None
     state_machines = {}
 
-    __observables__ = ("state_machine_manager", "selected_state_machine", "state_machines")
+    #__observables__ = ("state_machine_manager", "selected_state_machine", "state_machines")
+    __observables__ = ("state_machine_manager", "state_machines")
 
     def __init__(self, state_machine_manager, meta=None):
         """Constructor
@@ -37,12 +38,17 @@ class StateMachineManagerModel(ModelMT):
         for sm_id, sm in state_machine_manager.state_machines.iteritems():
             self.state_machines[sm_id] = StateMachineModel(sm)
 
-        self.selected_state_machine = self.state_machines.keys()[0]
+        #self.selected_state_machine = self.state_machines.keys()[0]
 
         if isinstance(meta, Vividict):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+    def delete_state_machine_models(self):
+        sm_keys = self.state_machines.keys()
+        for key in sm_keys:
+            del self.state_machines[key]
 
     @ModelMT.observe("state_machine_manager", after=True)
     def model_changed(self, model, prop_name, info):
@@ -52,6 +58,9 @@ class StateMachineManagerModel(ModelMT):
                 if sm_id not in self.state_machines:
                     logger.debug("Create new state machine model for state machine with id %s", sm.state_machine_id)
                     self.state_machines[sm_id] = StateMachineModel(sm)
+                    #TODO: check when meta data cannot be loaded
+                    logger.debug("Load meta data for state machine with state machine id %s " % str(sm_id))
+                    self.state_machines[sm_id].root_state.load_meta_data_for_state()
         elif info["method_name"] == "remove_state_machine":
             sm_id_to_delete = None
             for sm_id, sm_m in self.state_machines.iteritems():

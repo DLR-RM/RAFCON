@@ -19,6 +19,7 @@ class ExtendedController(Controller):
             self.__action_registered_controllers.append(controller)
 
     def remove_controller(self, controller):
+        # remove controller if controller is ExtendedController
         if isinstance(controller, ExtendedController):
             if controller in self.__child_controllers.keys():
                 self.__action_registered_controllers.remove(self.__child_controllers[controller])
@@ -26,6 +27,7 @@ class ExtendedController(Controller):
                 if controller is child_controller:
                     del self.__child_controllers[key]
                     return True
+        # remove controller if controller is a string
         key = controller
         if key in self.__child_controllers:
             self.__action_registered_controllers.remove(self.__child_controllers[controller])

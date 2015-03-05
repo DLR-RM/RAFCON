@@ -9,8 +9,11 @@ from statemachine.states.hierarchy_state import HierarchyState
 from mvc.controllers.extended_controller import ExtendedController
 from mvc.controllers.states_editor import StatesEditorController
 from mvc.controllers.state_machines_editor import StateMachinesEditorController
-from mvc.models.state_machine_manager import StateMachineManagerModel
+from mvc.models.state_machine_manager import StateMachineManagerModel, Selection
+from mvc.models.library_manager import LibraryManagerModel
 from mvc.shortcut_manager import ShortcutManager
+from mvc.views.state_machines_editor import StateMachinesEditorView
+from mvc.views.states_editor import StatesEditorView
 from utils import log
 logger = log.get_logger(__name__)
 
@@ -20,6 +23,7 @@ class MainWindowController(ExtendedController):
     def __init__(self, state_machine_manager_model, view, gvm_model, editor_type='PortConnectionGrouped'):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
+        self.editor_type = editor_type
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
 
         self.shortcut_manager = None
@@ -41,6 +45,12 @@ class MainWindowController(ExtendedController):
 
         tree_notebook = view["tree_notebook"]
 
+        # connect buttons
+        view['button_save'].connect("clicked", self.on_save_activate)
+        view['button_new'].connect("clicked", self.on_new_activate)
+        view['button_refresh'].connect("clicked", self.on_refresh_lib_and_sm_activate)
+        view['button_refresh_libs'].connect("clicked", self.on_refresh_lib_activate)
+
         ######################################################
         # logging view
         ######################################################
@@ -53,28 +63,28 @@ class MainWindowController(ExtendedController):
         ######################################################
         # library tree
         ######################################################
-        library_controller = LibraryTreeController(active_state_machine.root_state, view.library_tree)
+        library_manager_model = LibraryManagerModel(statemachine.singleton.library_manager)
+        library_controller = LibraryTreeController(library_manager_model, view.library_tree)
         self.add_controller('library_controller', library_controller)
         view['library_vbox'].remove(view['library_tree_placeholder'])
         view['library_vbox'].pack_start(view.library_tree, True, True, 0)
         view['add_library_button'].connect("clicked", library_controller.add_library_button_clicked,
                                            state_machine_manager_model)
 
-        view['button_save'].connect("clicked", self.on_save_activate)
-        view['button_new'].connect("clicked", self.on_new_activate)
-
         ######################################################
         # statemachine tree
         ######################################################
         #remove placeholder tab
-        state_machine_tree_tab = view['state_machine_tree_placeholder']
-        page_num = tree_notebook.page_num(state_machine_tree_tab)
-        tree_notebook.remove_page(page_num)
-        #append new tab
-        state_machine_tree_controller = StateMachineTreeController(active_state_machine, view.state_machine_tree)
-        self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
-        state_machine_label = gtk.Label('Statemachine')
-        tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
+
+        # state_machine_tree_tab = view['state_machine_tree_placeholder']
+        # page_num = tree_notebook.page_num(state_machine_tree_tab)
+        # tree_notebook.remove_page(page_num)
+        # #append new tab
+        # #TODO: this is not always the active state machine
+        # state_machine_tree_controller = StateMachineTreeController(active_state_machine, view.state_machine_tree)
+        # self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
+        # state_machine_label = gtk.Label('Statemachine')
+        # tree_notebook.insert_page(view.state_machine_tree, state_machine_label, page_num)
 
         ######################################################
         # state editor
@@ -93,9 +103,9 @@ class MainWindowController(ExtendedController):
 
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
                                                                         view.state_machines_editor,
-                                                                        state_machine_tree_controller,
                                                                         states_editor_ctrl)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
+
         #self.state_machines_editor_ctrl.add_graphical_state_machine_editor(state_machine_manager_model.root_state)
 
         # self.graphical_editor_ctrl = GraphicalEditorController(self.model.root_state, view.graphical_editor_view)
@@ -129,36 +139,10 @@ class MainWindowController(ExtendedController):
         status_bar3.push(0, status_bar3_string)
 
         ######################################################
-        # setupt correct sizes
+        # setup correct sizes
         ######################################################
         top_h_pane.set_position(200)
         left_v_pane.set_position(700)
-        self.key_map = {
-            'copy'          : '<Control>C',     # TODO should not be that hart for full states
-            'paste'         : '<Control>V',     # TODO should not be that hart for full states
-            'cut'           : '<Control>X',     # TODO should not be that hart for full states
-            'delete'        : 'Delete',         # DONE - partly TODO could delete DataPorts and Outcomes
-            # 'add'           : '<mod>A',
-            'add_state'     : '<Control>A',     # DONE
-            'delete_state'  : '<Control>D',     # DONE
-            'group_states'  : '<Control>G',     # TODO search all states selected and create hierarchy-state
-            'ungroup_states': '<Control>U',     # TODO search all states, data_flows and trans and move them to parent
-            'entry_point'   : '<Control>E',     # TODO ?
-            # 'exit_point'    : '<Control>R',
-            'fit'           : '<Control>space',
-            'info'          : '<Control>q',
-            'start'         : 'F5',             # DONE
-            'step_mode'     : 'F6',             # DONE debug-mode
-            'pause'         : 'F7',             # DONE
-            'stop'          : 'F8',             # DONE
-            'step'          : 'F4',             # DONE
-            'backward_step_mode': 'F9',
-            # 'reload'        : 'F1',
-            # 'reload_env'    : 'F2',
-            'undo'          : '<Control>Z',     # TODO History is still missing
-            'redo'          : '<Control>Y',     # TODO History is still missing
-            # 'center_view'   : '<Alt>space',
-        }
 
     def on_main_window_destroy(self, widget, data=None):
         self.view.logging_view.quit_flag = True
@@ -246,21 +230,8 @@ class MainWindowController(ExtendedController):
             selection.remove(selected_state_model)
 
     def on_add_state_activate(self, widget, method=None, *arg):
-
-        selection = self.child_controllers['state_machines_editor_ctrl'].model.state_machines.values()[0].selection
-        selected_state_model = selection.get_selected_state()
-        logger.debug("Add state in selected state %s now ..." % selected_state_model.state.name)
-        # logger.info("Add state %s now ..." % selected_state_model)
-
-        if selected_state_model and isinstance(selected_state_model, ContainerStateModel):
-            state = ExecutionState("~")
-            state_id = selected_state_model.state.add_state(state)
-            if state_id:
-                state_model = selected_state_model.states[state.state_id]
-                #logger.info("create exec_State: %s" % state)
-                selection.set([state_model])
-        else:
-            logger.warning("Add state FAILED: State has to be inheritor of type ContainerState!!!")
+        # TODO: use method from helper class
+        pass
 
     def on_delete_activate(self, widget, data=None):
         logger.debug("Delete something that is selected now ...")
@@ -326,10 +297,11 @@ class MainWindowController(ExtendedController):
         logger.debug("Saving state machine in %s" % save_path)
         if save_path is None:
             self.on_save_as_activate(widget, data=None)
-        statemachine.singleton.global_storage.save_statemachine_as_yaml(
-            self.model.get_active_state_machine_model(),
-            self.model.get_active_state_machine_model().state_machine.base_path,
-            delete_old_state_machine=False)
+        else:
+            statemachine.singleton.global_storage.save_statemachine_as_yaml(
+                self.model.get_active_state_machine_model().state_machine,
+                self.model.get_active_state_machine_model().state_machine.base_path,
+                delete_old_state_machine=False)
 
         self.model.get_active_state_machine_model().root_state.store_meta_data_for_state()
         logger.debug("Successfully saved graphics meta data.")
@@ -342,3 +314,76 @@ class MainWindowController(ExtendedController):
         root_state = HierarchyState("new_root_state")
         sm = StateMachine(root_state)
         statemachine.singleton.state_machine_manager.add_state_machine(sm)
+        statemachine.singleton.global_storage.mark_dirty(sm.state_machine_id)
+
+    def on_refresh_lib_activate(self, widget, data=None):
+        """
+        Deletes and reloads all libraries from the filesystem.
+        :param widget: the main widget
+        :param data: optional data
+        :return:
+        """
+        statemachine.singleton.library_manager.refresh_libraries()
+
+    def on_refresh_lib_and_sm_activate(self, widget, data=None):
+        """
+        Reloads all libraries and thus all state machines as well.
+        :param widget: the main widget
+        :param data: optional data
+        :return:
+        """
+        if len(statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
+            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+            message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
+                             "The following state machines were modified and not saved: "
+            for sm_id in statemachine.singleton.global_storage.ids_of_modified_state_machines:
+                message_string = "%s %s " % (message_string, str(sm_id))
+            message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
+                             "before will be deleted!)" % message_string
+            message.set_markup(message_string)
+            message.add_button("Yes", 42)
+            message.add_button("No", 43)
+            message.connect('response', self.on_refresh_message_dialog_response_signal)
+            message.show()
+        else:
+            self.refresh_libs_and_statemachines()
+
+    def on_refresh_message_dialog_response_signal(self, widget, response_id):
+        if response_id == 42:
+            self.refresh_libs_and_statemachines()
+        else:
+            logger.debug("Refresh canceled")
+        widget.destroy()
+
+    def refresh_libs_and_statemachines(self):
+        """
+        Deletes all libraries and state machines and reloads them freshly from the file system.
+        :return:
+        """
+        statemachine.singleton.library_manager.refresh_libraries()
+
+        # delete dirty flags for state machines
+        statemachine.singleton.global_storage.reset_dirty_flags()
+
+        # create a dictionary from state machine id to state machine path
+        state_machine_id_to_path = {}
+        sm_keys = []
+        for sm_id, sm in statemachine.singleton.state_machine_manager.state_machines.iteritems():
+            # the sm.base_path is only None if the state machine has never been loaded or saved before
+            if sm.base_path is not None:
+                #print sm.root_state.script.path
+                # cut the last directory from the path
+                path_items = sm.root_state.script.path.split("/")
+                new_path = path_items[0]
+                for i in range(len(path_items) - 2):
+                    new_path = "%s/%s" % (new_path, path_items[i+1])
+                #print new_path
+                state_machine_id_to_path[sm_id] = new_path
+                sm_keys.append(sm_id)
+
+        self.get_controller('states_editor_ctrl').close_all_tabs()
+        self.get_controller('state_machines_editor_ctrl').close_all_tabs()
+
+        # reload state machines from file system
+        statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
+

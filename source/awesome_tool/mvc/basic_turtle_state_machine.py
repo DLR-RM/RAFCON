@@ -182,7 +182,9 @@ def run_turtle_demo():
     gtk.main()
     logger.debug("Gtk main loop exited!")
 
-    statemachine.singleton.state_machine_manager.get_active_state_machine().root_state.join()
+    sm = statemachine.singleton.state_machine_manager.get_active_state_machine()
+    if sm:
+        sm.root_state.join()
 
 
 if __name__ == '__main__':

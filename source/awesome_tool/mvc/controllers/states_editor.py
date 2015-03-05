@@ -68,25 +68,33 @@ class StatesEditorController(ExtendedController):
         assert isinstance(model, StateMachineManagerModel)
         ExtendedController.__init__(self, model, view)
 
-        #self.active_state_machine_id = None
-
-        self.register()
-
+        self.active_state_machine_id = None
+        self._active_state_machine_model = None
         self.editor_type = editor_type
 
         self.tabs = {}
         self.act_model = None
+        self.register()
+
+    @ExtendedController.observe("state_machine_manager", after=True)
+    def state_machine_manager_notification(self, model, property, info):
+        self.register()
 
     def register(self):
+        """
+        Change the state machine that is observed for new selected states to the active state machine.
+        :return:
+        """
         # get active state machine
         if not self.model.state_machine_manager.active_state_machine_id == self.active_state_machine_id:
             if self.active_state_machine_id:
-                self.relieve_model(self.active_state_machine_model.root_state)
-                self.relieve_model(self.active_state_machine_model)
+                self.relieve_model(self._active_state_machine_model.root_state)
+                self.relieve_model(self._active_state_machine_model)
             self.active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
-            self.active_state_machine_model = self.model.state_machines[self.active_state_machine_id]
-            self.observe_model(self.active_state_machine_model.root_state)
-            self.observe_model(self.active_state_machine_model)  # for selection
+            if self.active_state_machine_id in self.model.state_machines:
+                self._active_state_machine_model = self.model.state_machines[self.active_state_machine_id]
+                self.observe_model(self._active_state_machine_model.root_state)
+                self.observe_model(self._active_state_machine_model)  # for selection
 
     def register_view(self, view):
         # sniffing the graphical viewer selection
@@ -144,6 +152,17 @@ class StatesEditorController(ExtendedController):
         del self.tabs[state_identifier]
         self.remove_controller(state_model.state.state_id)
 
+    def close_all_tabs(self):
+        """
+        Closes all tabs of the states editor
+        :return:
+        """
+        state_model_list = []
+        for s_id, tab in self.tabs.iteritems():
+            state_model_list.append(tab['state_model'])
+        for state_model in state_model_list:
+            self.on_close_clicked(None, state_model, None)
+
     def on_switch_page(self, notebook, page, page_num, user_param1=None):
         #logger.debug("switch page %s %s" % (page_num, page))
         page = notebook.get_nth_page(page_num)
@@ -151,8 +170,8 @@ class StatesEditorController(ExtendedController):
             if meta['page'] is page:
                 model = meta['state_model']
                 logger.debug("switch-page %s" % model.state.name)
-                if not self.active_state_machine_model.selection.get_selected_state() == model:
-                    self.active_state_machine_model.selection.set([model])
+                if not self._active_state_machine_model.selection.get_selected_state() == model:
+                    self._active_state_machine_model.selection.set([model])
                     self.act_model = model
                 return
 

@@ -9,12 +9,11 @@ from statemachine.enums import StateType
 from statemachine.states.library_state import LibraryState
 
 
-#TODO: comment
-
 class LibraryTreeController(ExtendedController):  # (Controller):
 
-    # actually no model needed for non modifiable library tree => take data from the library_manager
-    # if libraries can be added by the GUI in the future a model will be needed
+    """
+
+    """
     def __init__(self, model=None, view=None):
         ExtendedController.__init__(self, model, view)
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
@@ -28,8 +27,12 @@ class LibraryTreeController(ExtendedController):  # (Controller):
     def register_view(self, view):
         self.view.connect('cursor-changed', self.on_cursor_changed)
 
+    @ExtendedController.observe("library_manager", after=True)
+    def model_changed(self, model, prop_name, info):
+        self.update()
+
     def update(self):
-        logger.debug("Update of library_tree controller called")
+        #logger.debug("Update of library_tree controller called")
         self.library_tree_store.clear()
         for library_key, library_item in statemachine.singleton.library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")

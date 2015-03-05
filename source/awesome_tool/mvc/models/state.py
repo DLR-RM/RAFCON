@@ -103,6 +103,10 @@ class StateModel(ModelMT):
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, name, info):
 
+        # mark the state machine this state belongs to as dirty
+        own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
+        statemachine.singleton.global_storage.mark_dirty(own_sm_id)
+
         if hasattr(info, 'before') and info['before'] and isinstance(model, DataPortModel) and self is model.parent:
             #print info.method_name, "modify_input_data_port" in info.method_name, info
             if "modify_input_data_port" in info.method_name:
