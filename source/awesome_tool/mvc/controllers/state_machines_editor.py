@@ -49,27 +49,39 @@ def create_tab_header(title, close_callback, *additional_parameters):
 
 class StateMachinesEditorController(ExtendedController):
 
-    def __init__(self, sm_manager_model, view, state_machine_tree_ctrl, states_editor_ctrl):
+    def __init__(self, sm_manager_model, view, states_editor_ctrl):
         ExtendedController.__init__(self, sm_manager_model, view)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
 
-        self.add_controller('state_machine_tree_ctrl', state_machine_tree_ctrl)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         self.tabs = {}
         self.act_model = None
         self._view = view
+        self.registered_state_machines = {}
 
     def register_view(self, view):
+        self.view.notebook.connect('switch-page', self.on_switch_page)
         for sm_id, sm in self.model.state_machines.iteritems():
             self.add_graphical_state_machine_editor(sm)
+
+    def on_switch_page(self, notebook, page, page_num):
+        logger.debug("switch to page number %s (for page %s)" % (page_num, page))
+        page = notebook.get_nth_page(page_num)
+        for identifier, meta in self.tabs.iteritems():
+            if meta['page'] is page:
+                model = meta['state_machine_model']
+                logger.debug("state machine id of current state machine page %s" % model.state_machine.state_machine_id)
+                self.model.selected_state_machine_id = model.state_machine.state_machine_id
+                return
 
     def add_graphical_state_machine_editor(self, state_machine_model):
 
         assert isinstance(state_machine_model, StateMachineModel)
 
         sm_identifier = state_machine_model.state_machine.state_machine_id
+        logger.debug("Create new graphical editor for state machine model with sm id %s" % str(sm_identifier))
 
         graphical_editor_view = GraphicalEditorView()
 
@@ -85,7 +97,7 @@ class StateMachinesEditorController(ExtendedController):
         page.show_all()
 
         self.tabs[sm_identifier] = {'page': page,
-                                    'state_model': state_machine_model,
+                                    'state_machine_model': state_machine_model,
                                     'ctrl': graphical_editor_ctrl,
                                     'connected': False}
 
@@ -103,16 +115,49 @@ class StateMachinesEditorController(ExtendedController):
         graphical_editor_view.show()
         self._view.notebook.show()
 
+        self.registered_state_machines[state_machine_model.state_machine.state_machine_id] = graphical_editor_ctrl
         return idx
+
+    @ExtendedController.observe("state_machines", after=True)
+    def model_changed(self, model, prop_name, info):
+        logger.debug("State machine model changed!")
+        for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
+            if sm_id not in self.registered_state_machines:
+                self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
 
     def on_close_clicked(self, event, state_machine_model, result):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         # print event, state_model, result
 
         sm_identifier = state_machine_model.state_machine.state_machine_id
+        self.remove_controller(self.registered_state_machines[sm_identifier])
+
+        del self.registered_state_machines[sm_identifier]
+
         page = self.tabs[sm_identifier]['page']
         current_idx = self.view.notebook.page_num(page)
 
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
         del self.tabs[sm_identifier]
-        self.remove_controller()
+
+        # TODO: Should the state machine be removed here?
+        self.model.state_machine_manager.remove_state_machine(sm_identifier)
+        sm_keys = self.model.state_machine_manager.state_machines.keys()
+        if len(sm_keys) > 0:
+            self.model.selected_state_machine_id = \
+                self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
+        else:
+            logger.warn("No state machine left to be the selected state machine. "
+                        "The selected state machine id will be None!")
+            self.model.selected_state_machine_id = None
+
+    def close_all_tabs(self):
+        """
+        Closes all tabs of the state machines editor
+        :return:
+        """
+        state_machine_model_list = []
+        for s_id, tab in self.tabs.iteritems():
+            state_machine_model_list.append(tab['state_machine_model'])
+        for state_model in state_machine_model_list:
+            self.on_close_clicked(None, state_model, None)

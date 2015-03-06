@@ -192,11 +192,16 @@ class ContainerState(State):
         :param state_id: the id of the state to remove
 
         """
-        if not state_id in self.states:
+        if state_id not in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
 
         # remove script folder
-        statemachine.singleton.global_storage.remove_path(self.states[state_id].script.path)
+        own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+        if own_sm_id is None:
+            raise RuntimeError("Something is going wrong during state removal. State does not belong to "
+                               "a state machine!")
+        statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
+                                                                              self.states[state_id].script.path)
 
         #first delete all transitions and data_flows in this state
         keys_to_delete = []
@@ -242,13 +247,7 @@ class ContainerState(State):
         """Get the start state of the container state
 
         """
-        if self.start_state is not None:
-            return self.states[self.start_state]
-        else:
-            logger.warning("The container state %s with name %s does not has start state! %s" % (self.state_id,
-                                                                                                 self.name,
-                                                                                                 self.get_path()))
-            return None
+        return self.states[self.start_state]
 
         # If there is a value in the dependency tree for this state start with the this one
         #TODO: start execution with the state provided by the dependency tree

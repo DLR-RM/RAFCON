@@ -57,6 +57,7 @@ class ShortcutManager():
             for shortcut in shortcuts:
                 keyval, modifier_mask = gtk.accelerator_parse(shortcut)
                 if keyval == 0 and modifier_mask == 0:  # No valid shortcut
+                    logger.warn("No valid shortcut for shortcut %s" % str(shortcut))
                     continue
                 callback = partial(self.__on_shortcut, action)  # Bind the action to the callback function
                 self.accel_group.connect_group(keyval, modifier_mask, gtk.ACCEL_VISIBLE, callback)
@@ -82,14 +83,14 @@ class ShortcutManager():
         parameter
         :return: True is the parameters are valid and the callback is registered, False else
         """
-        print "check add callback"
+        #print "check add callback"
         if action in self.__action_to_shortcuts:  # Is the action valid?
             if hasattr(callback, '__call__'):  # Is the callback really a function?
                 if action not in self.__action_to_callbacks:
                     self.__action_to_callbacks[action] = []
                 assert isinstance(self.__action_to_callbacks[action], list)
                 self.__action_to_callbacks[action].append(callback)
-                print "add callback"
+                #print "add callback"
                 return True
         return False
 

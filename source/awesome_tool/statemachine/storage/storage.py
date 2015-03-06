@@ -17,6 +17,7 @@ import yaml
 from gtkmvc import Observable
 
 import statemachine.states.state
+from statemachine.state_machine import StateMachine
 from statemachine.enums import StateType
 from utils import log
 logger = log.get_logger(__name__)
@@ -29,6 +30,9 @@ class Storage(Observable):
     The data storage format is a directory system.
 
     :ivar base_path: the base path to resolve all relative paths
+    :ivar _paths_to_remove_before_sm_save: each state machine holds a list of paths that are going to be removed while
+                                            saving the state machine
+    :ivar ids_of_modified_state_machines: each state machine has a flag if it was modified since the last saving
     """
 
     GRAPHICS_FILE = 'gui_gtk.yaml'
@@ -42,6 +46,38 @@ class Storage(Observable):
         self._base_path = None
         self.base_path = os.path.abspath(base_path)
         logger.debug("Storage class initialized!")
+        self._paths_to_remove_before_sm_save = {}
+        self.ids_of_modified_state_machines = []
+
+    def reset_dirty_flags(self):
+        """
+        Resets the dirty flags of all state machines.
+        :return:
+        """
+        self.ids_of_modified_state_machines = []
+
+    def mark_dirty(self, sm_id):
+        """
+        Marks the sate machine as dirty i.e. the state machine is changed since the last saving
+        :param sm_id: the state machine id of the state machine to mark as dirty
+        :return:
+        """
+        if sm_id not in self.ids_of_modified_state_machines:
+            logger.debug("State machine with state machine id %s was marked as dirty!" % str(sm_id))
+            self.ids_of_modified_state_machines.append(sm_id)
+
+    def mark_path_for_removal_for_sm_id(self, state_machine_id, path):
+        """
+        Marks a path for removal. The path is removed if the state machine of the specified state machine id is saved.
+        :param state_machine_id: the state machine id the path belongs to
+        :param path: the path to a state that was deleted
+        :return:
+        """
+        if state_machine_id not in self._paths_to_remove_before_sm_save.iterkeys():
+            self._paths_to_remove_before_sm_save[state_machine_id] = []
+            logger.debug("path %s for state machine id %s is going to be deleted during saving of the state machine" %
+                         (str(path), str(state_machine_id)))
+        self._paths_to_remove_before_sm_save[state_machine_id].append(path)
 
     def save_object_to_yaml_rel(self, object, rel_path):
         """
@@ -108,16 +144,23 @@ class Storage(Observable):
         yaml_object = yaml.load(stream)
         return yaml_object
 
-    def save_statemachine_as_yaml(self, root_state, base_path, version=None, delete_old_state_machine=False):
+    def save_statemachine_as_yaml(self, statemachine, base_path, version=None, delete_old_state_machine=False):
         """
         Saves a root state to a yaml file.
-        :param root_state: container state to be saved
+        :param statemachine: the statemachine to be saved
         :param base_path: base_path to which all further relative paths refers to
         :param version: the version of the statemachine to save
         :return:
         """
         if base_path is not None:
             self.base_path = base_path
+
+        # remove all paths that were marked to be removed
+        if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
+            for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
+                self.remove_path(path)
+
+        root_state = statemachine.root_state
         # clean old path first
         if self._exists_path(self.base_path):
             if delete_old_state_machine:
@@ -131,6 +174,9 @@ class Storage(Observable):
         f.close()
         # add root state recursively
         self.save_state_recursively(root_state, "")
+        if statemachine.state_machine_id in self.ids_of_modified_state_machines:
+            self.ids_of_modified_state_machines.remove(statemachine.state_machine_id)
+        statemachine.base_path = self.base_path
         logger.debug("Successfully saved statemachine!")
 
     def save_script_file_for_state_and_source_path(self, state, state_path):
@@ -188,7 +234,7 @@ class Storage(Observable):
         :return: a tuple of: the loaded container state, the version of the state and the creation time of when the
                 state was saved
         """
-        if not base_path is None:
+        if base_path is not None:
             self.base_path = base_path
         logger.debug("Load state machine from path %s" % str(base_path))
         stream = file(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'r')
@@ -198,20 +244,23 @@ class Storage(Observable):
         creation_time = tmp_dict['creation_time']
         tmp_base_path = os.path.join(self.base_path, root_state_id)
         logger.debug("Loading root state from path %s" % tmp_base_path)
-        root_state = self.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
+        sm = StateMachine()
+        sm.base_path = base_path
+        sm.root_state = self.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
-        root_state.script.path = tmp_base_path
+        sm.root_state.script.path = tmp_base_path
         # load_and_build the module to load the correct content into root_state.script.script
-        root_state.script.load_and_build_module()
-        self.load_script_file(root_state)
+        sm.root_state.script.load_and_build_module()
+        self.load_script_file(sm.root_state)
         for p in os.listdir(tmp_base_path):
             if os.path.isdir(os.path.join(tmp_base_path, p)):
                 elem = os.path.join(tmp_base_path, p)
                 logger.debug("Going down the statemachine hierarchy recursively to state %s" % str(elem))
-                self.load_state_recursively(root_state, elem)
+                self.load_state_recursively(sm.root_state, elem)
                 logger.debug("Going up back to state %s" % str(tmp_base_path))
 
-        return [root_state, version, creation_time]
+        sm.base_path = self.base_path
+        return [sm, version, creation_time]
 
     def load_state_recursively(self, root_state, state_path=None):
         """

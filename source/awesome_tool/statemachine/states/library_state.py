@@ -65,9 +65,9 @@ class LibraryState(ContainerState, yaml.YAMLObject):
             target_lib_dict = target_lib_dict[element]
         # get a fresh copy of the library state from disk
         logger.debug("Load state to which this library state links")
-        root_state, lib_version, creationtime = statemachine.singleton.library_manager.storage.\
+        state_machine, lib_version, creationtime = statemachine.singleton.library_manager.storage.\
             load_statemachine_from_yaml(target_lib_dict[library_name])
-        self.state_copy = root_state
+        self.state_copy = state_machine.root_state
         if not str(lib_version) == version:
             raise AttributeError("Library does not have the correct version!")
 

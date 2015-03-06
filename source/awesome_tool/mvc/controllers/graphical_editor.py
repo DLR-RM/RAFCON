@@ -67,7 +67,6 @@ class GraphicalEditorController(ExtendedController):
 
         :param mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        print "register callbacks for graphical editor"
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
         shortcut_manager.add_callback_for_action("add", self._add_execution_state)
 

@@ -10,7 +10,8 @@
 
 from gtkmvc import Observable
 
-from statemachine.states.container_state import ContainerState
+# from statemachine.states.container_state import ContainerState
+# from statemachine.states.state import State
 from statemachine.id_generator import generate_state_machine_id
 from utils import log
 logger = log.get_logger(__name__)
@@ -24,18 +25,21 @@ class StateMachine(Observable):
 
     :ivar state_machine_id: the id of the state machine
     :ivar root_state: the root state of the state machine
+    :ivar base_path: the path, where to save the state machine
 
     """
 
-    def __init__(self, root_state):
+    def __init__(self, root_state=None):
 
         Observable.__init__(self)
 
-        assert isinstance(root_state, ContainerState)
+        # if root_state is not None:
+        #     assert isinstance(root_state, State)
 
         self.state_machine_id = generate_state_machine_id()
         self._root_state = None
         self.root_state = root_state
+        self.base_path = None
 
     def start(self):
         """
@@ -58,6 +62,8 @@ class StateMachine(Observable):
     @root_state.setter
     @Observable.observed
     def root_state(self, root_state):
+        # if not isinstance(root_state, State):
+        #     raise AttributeError("root_state has to be of type State")
         self._root_state = root_state
 
     @Observable.observed

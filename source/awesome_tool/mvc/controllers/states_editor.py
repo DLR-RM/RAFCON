@@ -61,32 +61,41 @@ def create_tab_header(title, close_callback, *additional_parameters):
 
 
 class StatesEditorController(ExtendedController):
-    active_state_machine_id = None
 
     def __init__(self, model, view, editor_type):
 
         assert isinstance(model, StateMachineManagerModel)
         ExtendedController.__init__(self, model, view)
 
-        #self.active_state_machine_id = None
-
-        self.register()
-
+        self.__my_selected_state_machine_id = None
+        self._selected_state_machine_model = None
         self.editor_type = editor_type
 
         self.tabs = {}
         self.act_model = None
+        self.register()
+
+    @ExtendedController.observe("selected_state_machine_id", assign=True)
+    def state_machine_manager_notification(self, model, property, info):
+        self.register()
 
     def register(self):
-        # get active state machine
-        if not self.model.state_machine_manager.active_state_machine_id == self.active_state_machine_id:
-            if self.active_state_machine_id:
-                self.relieve_model(self.active_state_machine_model.root_state)
-                self.relieve_model(self.active_state_machine_model)
-            self.active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
-            self.active_state_machine_model = self.model.state_machines[self.active_state_machine_id]
-            self.observe_model(self.active_state_machine_model.root_state)
-            self.observe_model(self.active_state_machine_model)  # for selection
+        """
+        Change the state machine that is observed for new selected states to the selected state machine.
+        :return:
+        """
+        print "register"
+        # relieve old models
+        if self.__my_selected_state_machine_id is not None:  # no old models available
+            self.relieve_model(self._selected_state_machine_model.root_state)
+            self.relieve_model(self._selected_state_machine_model)
+        # set own selected state machine id
+        self.__my_selected_state_machine_id = self.model.selected_state_machine_id
+        if self.__my_selected_state_machine_id is not None:
+            # observe new models
+            self._selected_state_machine_model = self.model.state_machines[self.__my_selected_state_machine_id]
+            self.observe_model(self._selected_state_machine_model.root_state)
+            self.observe_model(self._selected_state_machine_model)  # for selection
 
     def register_view(self, view):
         # sniffing the graphical viewer selection
@@ -123,7 +132,8 @@ class StatesEditorController(ExtendedController):
         state_editor_view.show()
         self.view.notebook.show()
         self.tabs[state_identifier] = {'page': page, 'state_model': state_model,
-                                       'ctrl': state_editor_ctrl, 'sm_id': self.active_state_machine_id}
+                                       'ctrl': state_editor_ctrl, 'sm_id': self.__my_selected_state_machine_id,
+                                       'view': state_editor_view}
 
         return idx
 
@@ -135,14 +145,22 @@ class StatesEditorController(ExtendedController):
         page = self.tabs[state_identifier]['page']
         current_idx = self.view.notebook.page_num(page)
 
-        self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
-        # TODO the ctrl of the page has to be destroyed fully ... till now that does not work!!!
-        # del page
-        # ctrl = self.tabs[state_identifier]['ctrl']
-        # ctrl.relieve_model(ctrl.model)
-        # del ctrl.model
+        self.view.notebook.remove_page(current_idx)
+        del self.tabs[state_identifier]['ctrl']
+        del self.tabs[state_identifier]['view']
         del self.tabs[state_identifier]
         self.remove_controller(state_model.state.state_id)
+
+    def close_all_tabs(self):
+        """
+        Closes all tabs of the states editor
+        :return:
+        """
+        state_model_list = []
+        for s_id, tab in self.tabs.iteritems():
+            state_model_list.append(tab['state_model'])
+        for state_model in state_model_list:
+            self.on_close_clicked(None, state_model, None)
 
     def on_switch_page(self, notebook, page, page_num, user_param1=None):
         #logger.debug("switch page %s %s" % (page_num, page))
@@ -151,8 +169,8 @@ class StatesEditorController(ExtendedController):
             if meta['page'] is page:
                 model = meta['state_model']
                 logger.debug("switch-page %s" % model.state.name)
-                if not self.active_state_machine_model.selection.get_selected_state() == model:
-                    self.active_state_machine_model.selection.set([model])
+                if not self._selected_state_machine_model.selection.get_selected_state() == model:
+                    self._selected_state_machine_model.selection.set([model])
                     self.act_model = model
                 return
 

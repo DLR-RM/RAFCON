@@ -119,6 +119,10 @@ class StateModel(ModelMT):
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, name, info):
 
+    	# mark the state machine this state belongs to as dirty
+        own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
+        statemachine.singleton.global_storage.mark_dirty(own_sm_id)
+    
         # TODO delete # prints if there is no bug ... latest 15th of march
         if hasattr(info, 'before') and info['before'] and (self is model.parent or isinstance(info.instance, DataPort)):
             #print info.method_name, "modify_input_data_port" in info.method_name, info
@@ -303,7 +307,7 @@ class StateModel(ModelMT):
 
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
-        logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
+        #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
             tmp_meta = statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
@@ -329,7 +333,7 @@ class StateModel(ModelMT):
             logger.warn("path to load meta data for state model of state %s does not exist" % self.state.name)
 
     def store_meta_data_for_state(self):
-        logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
+        #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
 
         # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file

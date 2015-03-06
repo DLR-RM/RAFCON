@@ -26,7 +26,6 @@ class LibraryManager(Observable):
     :ivar _libraries: a dictionary to hold  all libraries
     :ivar storage: the storage object to be able to load and save states
     """
-
     def __init__(self):
         Observable.__init__(self)
         self._libraries = {}
@@ -43,6 +42,7 @@ class LibraryManager(Observable):
         :return:
         """
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
+        self._libraries = {}
         for lib_key, lib_path in config.LIBRARY_PATHS.iteritems():
             if os.path.exists(lib_path):
                 self._libraries[lib_key] = {}
@@ -78,6 +78,14 @@ class LibraryManager(Observable):
         """
         self.storage.base_path = lib_path
         target_dict[lib] = os.path.join(lib_path, lib)  # self._storage.load_statemachine_from_yaml(os.path.join(lib_path, lib))
+
+    @Observable.observed
+    def refresh_libraries(self):
+        """
+        Deletes all loaded libraries and reloads them from the file system.
+        :return:
+        """
+        self.initialize()
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

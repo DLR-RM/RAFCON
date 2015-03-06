@@ -255,13 +255,13 @@ class ContainerStateModel(StateModel):
 
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
-        logger.debug("load recursively graphics file from yaml for state model of state %s" % self.state.name)
+        #logger.debug("load recursively graphics file from yaml for state model of state %s" % self.state.name)
         StateModel.load_meta_data_for_state(self)
         for state_key, state in self.states.iteritems():
             state.load_meta_data_for_state()
 
     def store_meta_data_for_state(self):
-        logger.debug("store recursively graphics file to yaml for state model of state %s" % self.state.name)
+        #logger.debug("store recursively graphics file to yaml for state model of state %s" % self.state.name)
         StateModel.store_meta_data_for_state(self)
         for state_key, state in self.states.iteritems():
             state.store_meta_data_for_state()
