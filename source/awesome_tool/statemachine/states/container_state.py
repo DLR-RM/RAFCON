@@ -364,6 +364,75 @@ class ContainerState(State):
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
         self._transitions.pop(transition_id, None)
 
+    def is_valid_transition_id(self, transition_id):
+        #check if types are valid
+        if not isinstance(transition_id, int):
+            raise TypeError("transition_id must be of type int")
+        # consistency check
+        if transition_id not in self.transitions:
+            raise AttributeError("transition_id %s has to be in container_state %s transitions-list" %
+                                 (transition_id, self.state_id))
+
+    def is_valid_data_flow_id(self, data_flow_id):
+        #check if types are valid
+        if not isinstance(data_flow_id, int):
+            raise TypeError("data_flow_id must be of type int")
+        # consistency check
+        if data_flow_id not in self.data_flows:
+            raise AttributeError("data_flow_id %s has to be in container_state %s data_flows-list" %
+                                 (data_flow_id, self.state_id))
+
+    def is_valid_outcome_id(self, outcome_id):
+        #check if types are valid
+        if not isinstance(outcome_id, int):
+            raise TypeError("outcome_id must be of type int")
+        # consistency check
+        if outcome_id not in self.outcomes:
+            raise AttributeError("outcome_id %s has to be in container_state %s outcomes-list" %
+                                 (outcome_id, self.state_id))
+
+    def is_valid_state_id(self, state_id):
+        #check if types are valid
+        if not isinstance(state_id, str):
+            raise TypeError("state_id must be of type str")
+        # consistency check
+        if state_id not in self.states:
+            raise AttributeError("state_id %s has to be child of container_state %s" %
+                                 (state_id, self.state_id))
+
+    @Observable.observed
+    def modify_transition_from_state(self, transition_id, from_state, from_outcome):
+        # validity checks
+        self.is_valid_transition_id(transition_id)
+        self.is_valid_state_id(from_state)
+        self.states[from_state].is_valid_outcome_id(from_outcome)
+        # set properties
+        self.transitions[transition_id].from_state = from_state
+        self.transitions[transition_id]._from_outcome = from_outcome
+
+    @Observable.observed
+    def modify_transition_to_outcome(self, transition_id, to_outcome):
+        # validity checks
+        self.is_valid_transition_id(transition_id)
+        self.is_valid_outcome_id(to_outcome)
+        # set properties
+        self.transitions[transition_id].to_outcome = to_outcome
+
+    @Observable.observed
+    def modify_transition_to_state(self, transition_id, to_state):
+        # validity checks
+        self.is_valid_transition_id(transition_id)
+        self.is_valid_state_id(to_state)
+        # set properties
+        self.transitions[transition_id].to_state = to_state
+
+    @Observable.observed
+    def modify_transition_to_outcome(self, transition_id, to_outcome):
+        # validity checks
+        self.is_valid_transition_id(transition_id)
+        self.is_valid_outcome_id(to_outcome)
+        # set properties
+        self.transitions[transition_id].to_outcome = to_outcome
 
     @Observable.observed
     def remove_outcome(self, outcome_id):
@@ -474,15 +543,16 @@ class ContainerState(State):
     def remove_data_flow(self, data_flow_id):
         """ Removes a data flow from the container state
 
-        :param data_flow_id: the id of the data_flow to remove
+        :param int data_flow_id: the id of the data_flow to remove
 
         """
+        self.is_valid_data_flow_id(data_flow_id)
         self.data_flows.pop(data_flow_id, None)
 
     def remove_data_flows_with_data_port_id(self, data_port_id):
         """Remove an data ports whose from_key or to_key equals the passed data_port_id
 
-        :param data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
+        :param int data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
                             output data port id
 
         """
@@ -513,12 +583,13 @@ class ContainerState(State):
     def modify_data_flow_from_state(self, data_flow_id, from_state, from_key):
         """The function accepts consistent changes of from_state with respective from_key.
 
-        :param from_state: string of this state- or one of its child-state-state_id
-        :param from_key: the for respective from_state unique data_port_id
+        :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
+        :param str from_state: string of this state- or one of its child-state-state_id
+        :param int from_key: the for respective from_state unique data_port_id
         :return:
         """
-
         #check if types are valid
+        self.is_valid_data_flow_id(data_flow_id)
         if from_state is not None and not type(from_state) == str:
             raise TypeError("from_state must be of type str")
         if from_key is not None and not type(from_key) == int:
@@ -526,13 +597,13 @@ class ContainerState(State):
 
         # consistency check
         if from_state == self.state_id:
-            if not from_key in self.input_data_ports and not from_key in self.scoped_variables:
+            if not (from_key in self.input_data_ports or from_key in self.scoped_variables):
                 raise AttributeError("from_key must be in list of output_data_ports or scoped_variables")
         else:  # child
             if not from_state in self.states:
                 raise AttributeError("from_state must be in list of child-states")
             if not from_key in self.states[from_state].output_data_ports:
-                raise AttributeError("from_key must be in list of child-state input_data_ports")
+                raise AttributeError("from_key must be in list of child-state output_data_ports")
         # set properties
         self.data_flows[data_flow_id].from_state = from_state
         self.data_flows[data_flow_id].from_key = from_key
@@ -541,18 +612,20 @@ class ContainerState(State):
     def modify_data_flow_from_key(self, data_flow_id, from_key):
         """The function accepts consistent change from_key.
 
-        :param from_key: the for respective from_state unique data_port_id
+        :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
+        :param int from_key: the for respective from_state unique data_port_id
         :return:
         """
         #check if type is valid
+        self.is_valid_data_flow_id(data_flow_id)
         if from_key is not None and not type(from_key) == int:
             raise TypeError("from_key must be of type int")
 
         # consistency check
         from_state = self.data_flows[data_flow_id].from_state
         if from_state == self.state_id:
-            if not from_key in self.input_data_ports and not from_key in self.scoped_variables:
-                raise AttributeError("from_key must be in list of output_data_ports or scoped_variables")
+            if not (from_key in self.input_data_ports or from_key in self.scoped_variables):
+                raise AttributeError("from_key must be in list of input_data_ports or scoped_variables")
         else:  # child
             if not from_key in self.states[from_state].output_data_ports:
                 raise AttributeError("from_key must be in list of child-state input_data_ports")
@@ -564,24 +637,27 @@ class ContainerState(State):
     def modify_data_flow_to_state(self, data_flow_id, to_state, to_key):
         """The function accepts consistent changes of to_state with respective to_key.
 
-        :param to_state: string of this state- or one of its child-state-state_id
-        :param to_key: the for respective to_state unique data_port_id
+        :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
+        :param str to_state: string of this state- or one of its child-state-state_id
+        :param int to_key: the for respective to_state unique data_port_id
         :return:
         """
         # check if types are valid
-        if type(to_state) == str:
+        self.is_valid_data_flow_id(data_flow_id)
+        if not type(to_state) == str:
             raise TypeError("to_state must be of type str")
-        if type(to_key) == int:
+        if not type(to_key) == int:
             raise TypeError("to_key must be of type int")
 
         # consistency check
         if to_state == self.state_id:
-            if not to_key in self.input_data_ports and not to_key in self.scoped_variables:
-                raise AttributeError("to_key must be in list of child-state input_data_ports")
+            if not (to_key in self.scoped_variables or to_key in self.output_data_ports):
+                print to_key, self.scoped_variables.keys(), self.input_data_ports.keys()
+                raise AttributeError("to_key must be in list of child-state input_data_ports or own scoped_variables")
         else:  # child
             if not to_state in self.states:
                 raise AttributeError("to_state must be in list of child-states")
-            if not to_key in self.states[to_state].output_data_ports:
+            if not to_key in self.states[to_state].input_data_ports:
                 raise AttributeError("to_key must be in list of child-state input_data_ports")
 
         # set properties
@@ -590,22 +666,24 @@ class ContainerState(State):
 
     @Observable.observed
     def modify_data_flow_to_key(self, data_flow_id, to_key):
-        """The function accepts consistent change to_key.
+        """The function accepts consistent change of to_key.
 
-        :param to_key: the for respective to_state unique data_port_id
+        :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
+        :param int to_key: the for respective to_state unique data_port_id
         :return:
         """
         # check if type is valid
-        if type(to_key) == int:
+        self.is_valid_data_flow_id(data_flow_id)
+        if not type(to_key) == int:
             raise TypeError("from_key must be of type int")
 
         # consistency check
         to_state = self.data_flows[data_flow_id].to_state
         if to_state == self.state_id:
-            if not to_key in self.input_data_ports and not to_key in self.scoped_variables:
-                raise AttributeError("to_key must be in list of child-state input_data_ports")
+            if not (to_key in self.output_data_ports or to_key in self.scoped_variables):
+                raise AttributeError("to_key must be in list of child-state output_data_ports or scoped_variables")
         else:  # child
-            if not to_key in self.states[to_state].output_data_ports:
+            if not to_key in self.states[to_state].input_data_ports:
                 raise AttributeError("to_key must be in list of child-state input_data_ports")
 
         # set property

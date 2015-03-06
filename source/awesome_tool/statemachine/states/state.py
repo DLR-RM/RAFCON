@@ -256,7 +256,7 @@ class State(Observable, yaml.YAMLObject, object):
         self.check_input_data_type(self.input_data)
 
     def recursively_preempt_states(self, state):
-        """ Preempt the provided state and all it subsstates.
+        """ Preempt the provided state and all it sub-states.
         :param state: The that is going to be preempted recursively.
         :return:
         """
@@ -589,7 +589,6 @@ class State(Observable, yaml.YAMLObject, object):
         """
         self.script.script = new_text
         return True
-
 
     def __str__(self):
         return "State properties of state: %s \nstate_id: %s \nstate_type: %s" \
