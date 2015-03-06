@@ -74,7 +74,8 @@ class StateOutcomesListController(ExtendedController):
         path = self.view.tree_view.get_cursor()
         self.update_internal_data_base()
         self.update_tree_store()
-        self.view.tree_view.set_cursor(path[0])
+        if path[0]:  # if valid
+            self.view.tree_view.set_cursor(path[0])
 
     def on_name_modification(self, widget, path, text):
         logger.debug("OUTCOME gets new NAME")
@@ -85,7 +86,7 @@ class StateOutcomesListController(ExtendedController):
         logger.debug("change name of outcome: %s %s" % (path, self.model.state.outcomes[self.tree_store[path][6].outcome_id].name))
 
     def on_to_state_modification(self, widget, path, text):
-
+        # TODO don't to it everytime with remove
         transition_id = None
         outcome_id = int(self.tree_store[path][0])
         if outcome_id in self.list_to_other_state.keys():

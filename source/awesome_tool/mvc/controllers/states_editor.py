@@ -172,8 +172,8 @@ class StatesEditorController(ExtendedController):
                 model = meta['state_model']
                 logger.debug("switch-page %s" % model.state.name)
                 if not self._selected_state_machine_model.selection.get_selected_state() == model:
-                    self._selected_state_machine_model.selection.set([model])
                     self.model.selected_state_machine_id = int(identifier.split('|')[0])
+                    self._selected_state_machine_model.selection.set([model])
                     self.act_model = model
                 return
 
