@@ -163,7 +163,26 @@ class MainWindowController(ExtendedController):
         statemachine.singleton.global_storage.mark_dirty(sm.state_machine_id)
 
     def on_open_activate(self, widget, data=None):
-        pass
+        dialog = gtk.FileChooserDialog("Please choose a folder",
+                               None,
+                               gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            logger.debug("Folder selected: " + dialog.get_filename())
+        elif response == gtk.RESPONSE_CANCEL:
+            logger.debug("No folder selected")
+            dialog.destroy()
+            return
+        load_path = dialog.get_filename()
+        dialog.destroy()
+
+        [state_machine, version, creation_time] = statemachine.singleton.\
+            global_storage.load_statemachine_from_yaml(load_path)
+        statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+
 
     def on_save_activate(self, widget, data=None):
         save_path = self.model.get_active_state_machine_model().state_machine.base_path
