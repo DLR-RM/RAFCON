@@ -76,6 +76,3 @@ class StateMachineManagerModel(ModelMT):
     def get_selected_state_machine_model(self):
         return self.state_machines[self.selected_state_machine_id]
 
-    # def get_active_state_machine_model(self):
-    #     return self.state_machines[self.state_machine_manager.active_state_machine_id]
-

@@ -185,17 +185,17 @@ class MainWindowController(ExtendedController):
 
 
     def on_save_activate(self, widget, data=None):
-        save_path = self.model.get_active_state_machine_model().state_machine.base_path
+        save_path = self.model.get_selected_state_machine_model().state_machine.base_path
         logger.debug("Saving state machine in %s" % save_path)
         if save_path is None:
             self.on_save_as_activate(widget, data=None)
         else:
             statemachine.singleton.global_storage.save_statemachine_as_yaml(
-                self.model.get_active_state_machine_model().state_machine,
-                self.model.get_active_state_machine_model().state_machine.base_path,
+                self.model.get_selected_state_machine_model().state_machine,
+                self.model.get_selected_state_machine_model().state_machine.base_path,
                 delete_old_state_machine=False)
 
-        self.model.get_active_state_machine_model().root_state.store_meta_data_for_state()
+        self.model.get_selected_state_machine_model().root_state.store_meta_data_for_state()
         logger.debug("Successfully saved graphics meta data.")
 
     def on_save_as_activate(self, widget, data=None):
@@ -212,7 +212,7 @@ class MainWindowController(ExtendedController):
             logger.debug("No file selected")
             dialog.destroy()
             return
-        self.model.get_active_state_machine_model().state_machine.base_path = dialog.get_filename()
+        self.model.get_selected_state_machine_model().state_machine.base_path = dialog.get_filename()
         dialog.destroy()
         self.on_save_activate(widget, data)
 
