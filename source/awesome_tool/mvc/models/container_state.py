@@ -109,29 +109,58 @@ class ContainerStateModel(StateModel):
         self.reload_scoped_variables_models()
         self.reload_scoped_variables_list_store()
 
+    def is_element_of_self(self, instance):
+
+        #print info.method_name, info
+        if isinstance(instance, DataFlow) and instance.data_flow_id in self.state.data_flows:
+            return True
+        if isinstance(instance, Transition) and instance.transition_id in self.state.transitions:
+            return True
+        if isinstance(instance, ScopedVariable) and instance.data_port_id in self.state.scoped_variables:
+            return True
+        return StateModel.is_element_of_self(self, instance)
+
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, name, info):
         """ This method is always triggered when the state model changes
 
             It basically triggers its own parent, and the list of its state models
         """
-        if self is not model:
+        if self is not model and not self.is_element_of_self(info.instance):
             if hasattr(info, 'before') and info['before']:
                 self.states._notify_method_before(self.state, "state_change", (model,), info)
             elif hasattr(info, 'after') and info['after']:
                 self.states._notify_method_after(self.state, "state_change", None, (model,), info)
 
-        if hasattr(info, 'before') and info['before'] and self is model:
-            #print info.method_name, info
-            if "modify_data_flow" in info.method_name:  # isinstance(info.instance, DataFlow):
+        # TODO delete # prints if there is no bug ... latest 15th of march
+        if hasattr(info, 'before') and info['before']:
+
+            if "modify_data_flow" in info.method_name and self is model or \
+                    isinstance(info.instance, DataFlow) and info.instance.data_flow_id in self.state.data_flows:
+                # print "NOTIFY DATA_FLOWS before"
                 self.data_flows._notify_method_before(info.instance, "data_flow_change", (model,), info)
-            if "modify_transition" in info.method_name:  # isinstance(info.instance, Transition):
+            if "modify_transition" in info.method_name and self is model or \
+                    isinstance(info.instance, Transition) and info.instance.transition_id in self.state.transitions:
+                # print "NOTIFY TRANSITIONS Before"
                 self.transitions._notify_method_before(info.instance, "transition_change", (model,), info)
-        elif hasattr(info, 'after') and info['after'] and self is model:
-            if "modify_data_flow" in info.method_name:  # isinstance(info.instance, DataFlow):
+            if "modify_scoped_variable" in info.method_name and self is model or \
+                    isinstance(info.instance, ScopedVariable) and info.instance.data_port_id in self.state.scoped_variables:
+                # print "NOTIFY before SCOPED_VARIABLES"
+                self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
+
+        elif hasattr(info, 'after') and info['after']:
+            if "modify_data_flow" in info.method_name and self is model or \
+                    isinstance(info.instance, DataFlow) and info.instance.data_flow_id in self.state.data_flows:
+                # print "NOTIFY DATA_FLOWS after"
                 self.data_flows._notify_method_after(info.instance, "data_flow_change", None, (model,), info)
-            if "modify_transition" in info.method_name:  # isinstance(info.instance, Transition):
+            if "modify_transition" in info.method_name and self is model or \
+                    isinstance(info.instance, Transition) and info.instance.transition_id in self.state.transitions:
+                # print "NOTIFY TRANSITIONS after"
                 self.transitions._notify_method_after(info.instance, "transition_change", None, (model,), info)
+            if "modify_scoped_variable" in info.method_name and self is model or \
+                    isinstance(info.instance, ScopedVariable) and info.instance.data_port_id in self.state.scoped_variables:
+                # print "NOTIFY after SCOPED_VARIABLES"
+                self.scoped_variables._notify_method_after(info.instance, "scoped_variable_change", None, (model,), info)
 
         StateModel.model_changed(self, model, name, info)
 
