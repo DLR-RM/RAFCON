@@ -82,6 +82,8 @@ class StateMachineManager(Observable):
         :param state_machine_id: the id of the state machine to remove
         :return:
         """
+        if state_machine_id is self.active_state_machine_id:
+            self.active_state_machine_id = None
         if state_machine_id in self._state_machines:
             del self._state_machines[state_machine_id]
         else:
@@ -116,7 +118,8 @@ class StateMachineManager(Observable):
     @active_state_machine_id.setter
     @Observable.observed
     def active_state_machine_id(self, state_machine_id):
-        if state_machine_id not in self.state_machines.keys():
-            raise AttributeError("State machine not in list of all state machines")
+        if state_machine_id is not None:
+            if state_machine_id not in self.state_machines.keys():
+                raise AttributeError("State machine not in list of all state machines")
         self._active_state_machine_id = state_machine_id
 

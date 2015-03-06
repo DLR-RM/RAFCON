@@ -73,7 +73,7 @@ class StateMachinesEditorController(ExtendedController):
             if meta['page'] is page:
                 model = meta['state_machine_model']
                 logger.debug("state machine id of current state machine page %s" % model.state_machine.state_machine_id)
-                self.model.state_machine_manager.active_state_machine_id = model.state_machine.state_machine_id
+                self.model.selected_state_machine_id = model.state_machine.state_machine_id
                 return
 
     def add_graphical_state_machine_editor(self, state_machine_model):
@@ -81,6 +81,7 @@ class StateMachinesEditorController(ExtendedController):
         assert isinstance(state_machine_model, StateMachineModel)
 
         sm_identifier = state_machine_model.state_machine.state_machine_id
+        logger.debug("Create new graphical editor for state machine model with sm id %s" % str(sm_identifier))
 
         graphical_editor_view = GraphicalEditorView()
 
@@ -119,7 +120,7 @@ class StateMachinesEditorController(ExtendedController):
 
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
-        logger.debug("Register a new graphical editor!")
+        logger.debug("State machine model changed!")
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
             if sm_id not in self.registered_state_machines:
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
@@ -142,8 +143,13 @@ class StateMachinesEditorController(ExtendedController):
         # TODO: Should the state machine be removed here?
         self.model.state_machine_manager.remove_state_machine(sm_identifier)
         sm_keys = self.model.state_machine_manager.state_machines.keys()
-        self.model.state_machine_manager.active_state_machine_id = \
-            self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
+        if len(sm_keys) > 0:
+            self.model.selected_state_machine_id = \
+                self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
+        else:
+            logger.warn("No state machine left to be the selected state machine. "
+                        "The selected state machine id will be None!")
+            self.model.selected_state_machine_id = None
 
     def close_all_tabs(self):
         """

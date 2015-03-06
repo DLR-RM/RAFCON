@@ -173,7 +173,7 @@ def run_turtle_demo():
     sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
 
     # load the meta data for the state machine
-    sm_manager_model.get_active_state_machine_model().root_state.load_meta_data_for_state()
+    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
                                                   editor_type="LogicDataGrouped")

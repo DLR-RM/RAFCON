@@ -83,6 +83,31 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkImageMenuItem" id="refresh_all">
+                        <property name="label">Refresh All</property>
+                        <property name="visible">True</property>
+                        <property name="image">image2</property>
+                        <property name="use_stock">False</property>
+                        <property name="accel_group">accelgroup1</property>
+                        <signal name="activate" handler="on_refresh_all_activate"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="refresh_libraries">
+                        <property name="label">Refresh Libraries</property>
+                        <property name="visible">True</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                        <property name="accel_group">accelgroup1</property>
+                        <signal name="activate" handler="on_refresh_libraries_activate"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem" id="menu_file_sep2">
+                        <property name="visible">True</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkImageMenuItem" id="quit">
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
@@ -230,6 +255,7 @@
                         <property name="tooltip_text" translatable="yes">Reload svg files</property>
                         <property name="label" translatable="yes">expert view</property>
                         <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_expert_view_activate"/>
                       </object>
                     </child>
                   </object>
@@ -361,12 +387,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="button_load">
+              <object class="GtkToolButton" id="button_open">
                 <property name="visible">True</property>
                 <property name="has_tooltip">True</property>
                 <property name="tooltip_text" translatable="yes">Load an existing state machine.</property>
                 <property name="is_important">True</property>
-                <property name="label" translatable="yes">Load Statemachine</property>
+                <property name="label" translatable="yes">Open Statemachine</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-open</property>
               </object>
@@ -639,5 +665,13 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-refresh</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="stock">gtk-refresh</property>
   </object>
 </interface>
