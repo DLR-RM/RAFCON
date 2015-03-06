@@ -66,6 +66,21 @@ class StateMachine(Observable):
         #     raise AttributeError("root_state has to be of type State")
         self._root_state = root_state
 
+    def get_state_by_path(self, path):
+        path_item_list = path.split('/')
+
+        state = None
+        if path_item_list.pop(0) == self.root_state.state_id:
+            state = self.root_state
+            for state_id in path_item_list:
+                try:
+                    state = state.states[state_id]
+                except:
+                    logger.warning("----- STATE MACHINE NOT FOUND ----- for path %s and state %s" % (path, state))
+                    state = None
+                    break
+        return state
+
     @Observable.observed
     def root_state_before_change(self, model, prop_name, instance, method_name, args, kwargs):
         pass

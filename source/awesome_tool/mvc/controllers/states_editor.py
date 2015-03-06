@@ -84,7 +84,7 @@ class StatesEditorController(ExtendedController):
         Change the state machine that is observed for new selected states to the selected state machine.
         :return:
         """
-        print "register"
+        # print "register"
         # relieve old models
         if self.__my_selected_state_machine_id is not None:  # no old models available
             self.relieve_model(self._selected_state_machine_model.root_state)
@@ -102,7 +102,8 @@ class StatesEditorController(ExtendedController):
         self.view.notebook.connect('switch-page', self.on_switch_page)
 
     def add_state_editor(self, state_model, editor_type=None):
-        state_identifier = state_model.state.get_path()
+        sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
+        state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
         # new StateEditor*View
         # new StateEditor*Controller
 
@@ -117,10 +118,10 @@ class StatesEditorController(ExtendedController):
             state_editor_ctrl = StateEditorEggController(state_model, state_editor_view)
         self.add_controller(state_model.state.state_id, state_editor_ctrl)
 
-        tab_label_text = limit_tab_label_text(state_model.state.name)
+        tab_label_text = limit_tab_label_text("%s|%s" % (sm_id, str(state_model.state.name)))
         (evtbox, new_label) = create_tab_header(tab_label_text, self.on_close_clicked,
                                                 state_model, 'refused')
-        new_label.set_tooltip_text(str(state_model.state.name))
+        new_label.set_tooltip_text("%s|%s" % (sm_id, str(state_model.state.name)))
 
         state_editor_view.get_top_widget().title_label = new_label
 
@@ -140,8 +141,9 @@ class StatesEditorController(ExtendedController):
     def on_close_clicked(self, event, state_model, result):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         #print event, state_model, result
+        sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
+        state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
 
-        state_identifier = state_model.state.get_path()
         page = self.tabs[state_identifier]['page']
         current_idx = self.view.notebook.page_num(page)
 
@@ -157,7 +159,7 @@ class StatesEditorController(ExtendedController):
         :return:
         """
         state_model_list = []
-        for s_id, tab in self.tabs.iteritems():
+        for identifier, tab in self.tabs.iteritems():
             state_model_list.append(tab['state_model'])
         for state_model in state_model_list:
             self.on_close_clicked(None, state_model, None)
@@ -171,11 +173,13 @@ class StatesEditorController(ExtendedController):
                 logger.debug("switch-page %s" % model.state.name)
                 if not self._selected_state_machine_model.selection.get_selected_state() == model:
                     self._selected_state_machine_model.selection.set([model])
+                    self.model.selected_state_machine_id = int(identifier.split('|')[0])
                     self.act_model = model
                 return
 
     def change_state_editor_selection(self, selected_model):
-        state_identifier = selected_model.state.get_path()
+        state_identifier = "%s|%s" % (self.model.state_machine_manager.get_sm_id_for_state(selected_model.state),
+                                       selected_model.state.get_path())
         if self.act_model is None or not self.act_model.state.state_id == selected_model.state.state_id:
             logger.debug("State %s is SELECTED" % selected_model.state.name)
 
@@ -188,7 +192,8 @@ class StatesEditorController(ExtendedController):
                 page = self.tabs[state_identifier]['page']
                 idx = self.view.notebook.page_num(page)
                 # print idx
-                self.view.notebook.set_current_page(idx)
+                if not self.view.notebook.get_current_page() == idx:
+                    self.view.notebook.set_current_page(idx)
             self.act_model = selected_model
 
     @ExtendedController.observe("selection", after=True)
@@ -210,8 +215,10 @@ class StatesEditorController(ExtendedController):
             if info.kwargs.method_name == 'remove_state':
                 logger.debug("remove tab for state %s and search for others to remove" % info.kwargs.args[1])
                 #check if state in notebook
-                if info.kwargs.args[0].get_path() + '/' + info.kwargs.args[1] in self.tabs:
-                    state_model = self.tabs[info.kwargs.args[0].get_path() + '/' + info.kwargs.args[1]]['state_model']
+                sm_id = self.model.state_machine_manager.get_sm_id_for_state(info.kwargs.args[0])
+                identifier = str(sm_id) + '|' + info.kwargs.args[0].get_path() + '/' + info.kwargs.args[1]
+                if identifier in self.tabs:
+                    state_model = self.tabs[identifier]['state_model']
                     self.on_close_clicked(event=None, state_model=state_model, result=None)
                 # search actual not necessary
                 #self.remove_search()
@@ -219,10 +226,12 @@ class StatesEditorController(ExtendedController):
                 self.check_name()
         if info.method_name in ['__delitem__']:  # , 'remove_state']: taken by state_change
             # self.remove_search()  # this could remove pages of states that are from the other open state machines
+            sm_id = self.model.state_machine_manager.get_sm_id_for_state(model.state)
+            parent_identifier = str(sm_id) + '|' + model.state.get_path()
             if info.method_name == '__delitem__':
-                state_model = self.tabs[model.state.get_path() + '/' + info.args[0]]['state_model']
+                state_model = self.tabs[parent_identifier + '/' + info.args[0]]['state_model']
             else:  # state
-                state_model = self.tabs[model.state.get_path() + '/' + info.args[1]]['state_model']
+                state_model = self.tabs[parent_identifier + '/' + info.args[1]]['state_model']
             self.on_close_clicked(event=None, state_model=state_model, result=None)
         if info.method_name == 'name':
                 self.check_name()
@@ -238,9 +247,11 @@ class StatesEditorController(ExtendedController):
             self.on_close_clicked(event=None, state_model=state_model, result=None)
 
     def check_name(self):
-        for path, page_dict in self.tabs.items():
-            if not page_dict['page'].title_label.get_tooltip_text() == page_dict['state_model'].state.name:
-                page_dict['page'].title_label.set_text(limit_tab_label_text(page_dict['state_model'].state.name))
+        for identifier, page_dict in self.tabs.items():
+            identifier_list = identifier.split('|')
+            tab_label = identifier_list[0] + '|' + page_dict['state_model'].state.name
+            if not page_dict['page'].title_label.get_tooltip_text() == tab_label:
+                page_dict['page'].title_label.set_text(limit_tab_label_text(tab_label))
                 fontdesc = pango.FontDescription("Serif Bold 12")
                 page_dict['page'].title_label.modify_font(fontdesc)
-                page_dict['page'].title_label.set_tooltip_text(page_dict['state_model'].state.name)
+                page_dict['page'].title_label.set_tooltip_text(tab_label)

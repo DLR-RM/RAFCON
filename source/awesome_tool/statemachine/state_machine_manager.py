@@ -56,9 +56,13 @@ class StateMachineManager(Observable):
         state_path = state.get_path()
         path_item_list = state_path.split('/')
         root_state_id = path_item_list[0]
+
         for sm_id, sm in self.state_machines.iteritems():
+
             if sm.root_state.state_id == root_state_id:
-                return sm_id
+                sm_state = sm.get_state_by_path(state_path)
+                if sm_state and sm_state is state:
+                    return sm_id
         return None
 
     @Observable.observed

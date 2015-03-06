@@ -53,7 +53,6 @@ class StateMachinesEditorController(ExtendedController):
         ExtendedController.__init__(self, sm_manager_model, view)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
-
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         self.tabs = {}
@@ -73,7 +72,8 @@ class StateMachinesEditorController(ExtendedController):
             if meta['page'] is page:
                 model = meta['state_machine_model']
                 logger.debug("state machine id of current state machine page %s" % model.state_machine.state_machine_id)
-                self.model.selected_state_machine_id = model.state_machine.state_machine_id
+                if not model.state_machine.state_machine_id == self.model.selected_state_machine_id:
+                    self.model.selected_state_machine_id = model.state_machine.state_machine_id
                 return
 
     def add_graphical_state_machine_editor(self, state_machine_model):
@@ -101,22 +101,19 @@ class StateMachinesEditorController(ExtendedController):
                                     'ctrl': graphical_editor_ctrl,
                                     'connected': False}
 
-        # def on_expose_event(widget, event, sm_identifier):
-        #     if not self.tabs[sm_identifier]['connected']:
-        #         logger.debug("connect button-release-event with graphical viewer of " + sm_identifier)
-        #         self.tabs[sm_identifier]['ctrl'].view.editor.connect('button-release-event',
-        #                                                              self.on_graphical_state_double_clicked,
-        #                                                              sm_identifier)
-        #         self.tabs[sm_identifier]['connected'] = True
-        #
-        # graphical_editor_view.editor.connect('expose-event', on_expose_event, sm_identifier)
-        # #graphical_editor_view.editor.connect('expose-event', self.on_graphical_state_double_clicked, sm_identifier)
-
         graphical_editor_view.show()
         self._view.notebook.show()
 
         self.registered_state_machines[state_machine_model.state_machine.state_machine_id] = graphical_editor_ctrl
         return idx
+
+    @ExtendedController.observe("selected_state_machine_id", assign=True)
+    def notifcation_selected_sm_changed(self, model, prop_name, info):
+        page = self.tabs[self.model.selected_state_machine_id]['page']
+        idx = self.view.notebook.page_num(page)
+        # print idx, self.view.notebook.get_current_page()
+        if not self.view.notebook.get_current_page() == idx:
+            self.view.notebook.set_current_page(idx)
 
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
