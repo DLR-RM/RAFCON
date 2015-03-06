@@ -364,6 +364,11 @@ class ContainerState(State):
         self._transitions.pop(transition_id, None)
 
     def is_valid_transition_id(self, transition_id):
+        """Checks if transition_id valid type and points to element of state.
+
+        :param int transition_id:
+        :return:
+        """
         #check if types are valid
         if not isinstance(transition_id, int):
             raise TypeError("transition_id must be of type int")
@@ -373,6 +378,11 @@ class ContainerState(State):
                                  (transition_id, self.state_id))
 
     def is_valid_data_flow_id(self, data_flow_id):
+        """Checks if data_flow_id valid type and points to element of state.
+
+        :param int data_flow_id:
+        :return:
+        """
         #check if types are valid
         if not isinstance(data_flow_id, int):
             raise TypeError("data_flow_id must be of type int")
@@ -382,6 +392,11 @@ class ContainerState(State):
                                  (data_flow_id, self.state_id))
 
     def is_valid_outcome_id(self, outcome_id):
+        """Checks if outcome_id valid type and points to element of state.
+
+        :param int outcome_id:
+        :return:
+        """
         #check if types are valid
         if not isinstance(outcome_id, int):
             raise TypeError("outcome_id must be of type int")
@@ -391,6 +406,11 @@ class ContainerState(State):
                                  (outcome_id, self.state_id))
 
     def is_valid_state_id(self, state_id):
+        """Checks if state_id valid type and points to element of state.
+
+        :param str state_id:
+        :return:
+        """
         #check if types are valid
         if not isinstance(state_id, str):
             raise TypeError("state_id must be of type str")
@@ -401,6 +421,12 @@ class ContainerState(State):
 
     @Observable.observed
     def modify_transition_from_state(self, transition_id, from_state, from_outcome):
+        """The function accepts consistent transition changes of from_state with respective from_outcome.
+
+        :param int transition_id: a valid transition_id of ContainerState.transitions
+        :param str from_state: string of one of self.states-state_id's
+        :param int from_outcome: the for respective from_state unique outcome_id
+        """
         # validity checks
         self.is_valid_transition_id(transition_id)
         self.is_valid_state_id(from_state)
@@ -410,15 +436,25 @@ class ContainerState(State):
         self.transitions[transition_id]._from_outcome = from_outcome
 
     @Observable.observed
-    def modify_transition_to_outcome(self, transition_id, to_outcome):
+    def modify_transition_from_outcome(self, transition_id, from_outcome):
+        """The function accepts consistent transition changes of from_outcome.
+
+        :param int transition_id: a valid transition_id of ContainerState.transitions
+        :param int from_outcome: the for respective from_state unique outcome_id
+        """
         # validity checks
         self.is_valid_transition_id(transition_id)
-        self.is_valid_outcome_id(to_outcome)
+        self.states[self.transitions[transition_id].from_state].is_valid_outcome_id(from_outcome)
         # set properties
-        self.transitions[transition_id].to_outcome = to_outcome
+        self.transitions[transition_id].to_outcome = from_outcome
 
     @Observable.observed
     def modify_transition_to_state(self, transition_id, to_state):
+        """The function accepts consistent transition changes of to_state.
+
+        :param int transition_id: a valid transition_id of ContainerState.transitions
+        :param str to_state: string of one of self.states-state_id's
+        """
         # validity checks
         self.is_valid_transition_id(transition_id)
         self.is_valid_state_id(to_state)
@@ -427,6 +463,11 @@ class ContainerState(State):
 
     @Observable.observed
     def modify_transition_to_outcome(self, transition_id, to_outcome):
+        """The function accepts consistent transition changes of to_outcome.
+
+        :param int transition_id: a valid transition_id of ContainerState.transitions
+        :param int to_outcome: a in self existing outcome
+        """
         # validity checks
         self.is_valid_transition_id(transition_id)
         self.is_valid_outcome_id(to_outcome)
@@ -580,12 +621,11 @@ class ContainerState(State):
 
     @Observable.observed
     def modify_data_flow_from_state(self, data_flow_id, from_state, from_key):
-        """The function accepts consistent changes of from_state with respective from_key.
+        """The function accepts consistent data_flow changes of from_state with respective from_key.
 
         :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
         :param str from_state: string of this state- or one of its child-state-state_id
         :param int from_key: the for respective from_state unique data_port_id
-        :return:
         """
         #check if types are valid
         self.is_valid_data_flow_id(data_flow_id)
@@ -609,11 +649,10 @@ class ContainerState(State):
 
     @Observable.observed
     def modify_data_flow_from_key(self, data_flow_id, from_key):
-        """The function accepts consistent change from_key.
+        """The function accepts consistent data_flow change of from_key.
 
         :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
         :param int from_key: the for respective from_state unique data_port_id
-        :return:
         """
         #check if type is valid
         self.is_valid_data_flow_id(data_flow_id)
@@ -634,12 +673,11 @@ class ContainerState(State):
 
     @Observable.observed
     def modify_data_flow_to_state(self, data_flow_id, to_state, to_key):
-        """The function accepts consistent changes of to_state with respective to_key.
+        """The function accepts consistent data_flow changes of to_state with respective to_key.
 
         :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
         :param str to_state: string of this state- or one of its child-state-state_id
         :param int to_key: the for respective to_state unique data_port_id
-        :return:
         """
         # check if types are valid
         self.is_valid_data_flow_id(data_flow_id)
@@ -665,11 +703,10 @@ class ContainerState(State):
 
     @Observable.observed
     def modify_data_flow_to_key(self, data_flow_id, to_key):
-        """The function accepts consistent change of to_key.
+        """The function accepts consistent data_flow change of to_key.
 
         :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
         :param int to_key: the for respective to_state unique data_port_id
-        :return:
         """
         # check if type is valid
         self.is_valid_data_flow_id(data_flow_id)
