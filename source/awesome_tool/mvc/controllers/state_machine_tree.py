@@ -17,7 +17,6 @@ class StateMachineTreeController(ExtendedController):
         """Constructor
         :param model StateMachineModel should be exchangeable
         """
-        # TODO auf state machine manager und active state umstellen
         assert isinstance(model, StateMachineManagerModel)
 
         ExtendedController.__init__(self, model, view)
@@ -52,7 +51,7 @@ class StateMachineTreeController(ExtendedController):
         if self.__my_selected_sm_id is not None:
             # observe new models
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
-            print "+++++++ NEW SM SELECTION ", self._selected_sm_model
+            logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
             self.observe_model(self._selected_sm_model.root_state)
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
@@ -85,7 +84,6 @@ class StateMachineTreeController(ExtendedController):
             self.path_store.clear()
             self.tree_store.clear()
             if self._selected_sm_model:
-                print self._selected_sm_model
                 changed_state_model = self._selected_sm_model.root_state
             else:
                 return
@@ -159,6 +157,7 @@ class StateMachineTreeController(ExtendedController):
 
             self._selected_sm_model.selection.add(state_model)
 
+    # TODO should observe the states changes, too, for changed names or types
     @ExtendedController.observe("selection", after=True)
     def assign_notification_selection(self, model, prop_name, info):
         if self._selected_sm_model.selection.get_selected_state():

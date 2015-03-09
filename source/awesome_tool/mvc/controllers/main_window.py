@@ -25,7 +25,7 @@ class MainWindowController(ExtendedController):
 
         self.editor_type = editor_type
         self.shortcut_manager = None
-        
+
         # state machine manager
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
