@@ -235,7 +235,7 @@ class ContainerState(State):
         """Sets the start state of a container state
 
         :param state: The state_id of a state or a direct reference ot he state (that was already added
-        to the container) that will be the start state of this container state.
+                    to the container) that will be the start state of this container state.
 
         """
         if isinstance(state, State):

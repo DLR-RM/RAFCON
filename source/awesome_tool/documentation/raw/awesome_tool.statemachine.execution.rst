@@ -1,5 +1,5 @@
-execution package
-=================
+Execution
+=========
 
 Submodules
 ----------
@@ -12,8 +12,8 @@ execution_history module
     :undoc-members:
     :show-inheritance:
 
-execution_engine module
------------------------
+statemachine_execution_engine module
+------------------------------------
 
 .. automodule:: awesome_tool.statemachine.execution.statemachine_execution_engine
     :members:
@@ -24,14 +24,6 @@ statemachine_status module
 --------------------------
 
 .. automodule:: awesome_tool.statemachine.execution.statemachine_status
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: awesome_tool.statemachine.execution
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,5 +1,5 @@
-validity_check package
-======================
+Validity Check
+==============
 
 Submodules
 ----------
@@ -27,11 +27,3 @@ vc_strategy module
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: awesome_tool.statemachine.validity_check
-    :members:
-    :undoc-members:
-    :show-inheritance:

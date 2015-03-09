@@ -1,5 +1,5 @@
-states package
-=================
+States
+======
 
 Submodules
 ----------
@@ -7,7 +7,7 @@ Submodules
 state module
 ------------
 
-.. automodule:: awesome_tool.statemachine.states.state
+.. automodule:: statemachine.states.state
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ state module
 container_state module
 ----------------------
 
-.. automodule:: awesome_tool.statemachine.states.container_state
+.. automodule:: statemachine.states.container_state
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ container_state module
 barrier_concurrency module
 --------------------------
 
-.. automodule:: awesome_tool.statemachine.states.barrier_concurrency_state
+.. automodule:: statemachine.states.barrier_concurrency_state
     :members:
     :undoc-members:
     :show-inheritance:
@@ -31,7 +31,7 @@ barrier_concurrency module
 concurrency_state module
 ------------------------
 
-.. automodule:: awesome_tool.statemachine.states.concurrency_state
+.. automodule:: statemachine.states.concurrency_state
     :members:
     :undoc-members:
     :show-inheritance:
@@ -39,7 +39,7 @@ concurrency_state module
 execution_state module
 ----------------------
 
-.. automodule:: awesome_tool.statemachine.states.execution_state
+.. automodule:: statemachine.states.execution_state
     :members:
     :undoc-members:
     :show-inheritance:
@@ -47,7 +47,7 @@ execution_state module
 hierarchy_state module
 ----------------------
 
-.. automodule:: awesome_tool.statemachine.states.hierarchy_state
+.. automodule:: statemachine.states.hierarchy_state
     :members:
     :undoc-members:
     :show-inheritance:
@@ -55,15 +55,7 @@ hierarchy_state module
 preemptive_concurrency module
 -----------------------------
 
-.. automodule:: awesome_tool.statemachine.states.preemptive_concurrency_state
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: awesome_tool.statemachine.states
+.. automodule:: statemachine.states.preemptive_concurrency_state
     :members:
     :undoc-members:
     :show-inheritance:
