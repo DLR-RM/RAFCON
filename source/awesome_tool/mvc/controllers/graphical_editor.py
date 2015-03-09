@@ -810,9 +810,9 @@ class GraphicalEditorController(ExtendedController):
         pos_x = state_m.meta['gui']['editor']['pos_x']
         pos_y = state_m.meta['gui']['editor']['pos_y']
 
-        scoped_ports = {}
+        scoped_ports = []
         if isinstance(state_m, ContainerStateModel):
-            scoped_ports = state_m.state.scoped_variables
+            scoped_ports = state_m.scoped_variables
 
         # Was the state selected?
         selected_states = self.model.selection.get_states()
@@ -828,8 +828,8 @@ class GraphicalEditorController(ExtendedController):
                 state_m.state.name,
                 pos_x, pos_y, width, height,
                 state_m.state.outcomes,
-                state_m.state.input_data_ports,
-                state_m.state.output_data_ports,
+                state_m.input_data_ports,
+                state_m.output_data_ports,
                 scoped_ports,
                 selected, active, depth)
         state_m.meta['gui']['editor']['id'] = opengl_id
@@ -965,21 +965,34 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            from_connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
-                                   from_state.meta['gui']['editor']['scoped_pos'].items() +
-                                   from_state.meta['gui']['editor']['output_pos'].items())
-            to_connectors = dict(to_state.meta['gui']['editor']['input_pos'].items() +
-                                 to_state.meta['gui']['editor']['scoped_pos'].items() +
-                                 to_state.meta['gui']['editor']['output_pos'].items())
+            # from_connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
+            #                        from_state.meta['gui']['editor']['scoped_pos'].items() +
+            #                        from_state.meta['gui']['editor']['output_pos'].items())
+            # to_connectors = dict(to_state.meta['gui']['editor']['input_pos'].items() +
+            #                      to_state.meta['gui']['editor']['scoped_pos'].items() +
+            #                      to_state.meta['gui']['editor']['output_pos'].items())
+            #
+            # if from_key not in from_connectors or to_key not in to_connectors:
+            #     logger.warn("Data flow with non existing port(s): {0}, {1}".format(from_key, to_key))
+            #     continue
 
-            if from_key not in from_connectors or to_key not in to_connectors:
-                logger.warn("Data flow with non existing port(s): {0}, {1}".format(from_key, to_key))
+            from_port = StateMachineHelper.get_data_port_model(from_state, from_key)
+            to_port = StateMachineHelper.get_data_port_model(to_state, to_key)
+
+            if from_port is None:
+                logger.warn('Cannot find model of the from data port {0}'.format(from_key))
+                continue
+            if to_port is None:
+                logger.warn('Cannot find model of the to data port {0}'.format(to_key))
                 continue
 
-            from_x = from_connectors[from_key][0]
-            from_y = from_connectors[from_key][1]
-            to_x = to_connectors[to_key][0]
-            to_y = to_connectors[to_key][1]
+            from_x = from_port.meta['gui']['editor']['pos_x']
+            from_y = from_port.meta['gui']['editor']['pos_y']
+            to_x = to_port.meta['gui']['editor']['pos_x']
+            to_y = to_port.meta['gui']['editor']['pos_y']
+            # from_y = from_connectors[from_key][1]
+            # to_x = to_connectors[to_key][0]
+            # to_y = to_connectors[to_key][1]
 
             waypoints = []
             for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:

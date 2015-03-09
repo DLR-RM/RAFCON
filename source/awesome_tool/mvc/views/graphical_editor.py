@@ -296,7 +296,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # logger.debug("expose_finish")
 
-    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0, inputs={}, outputs={}, scoped_vars={},
+    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0,
+                   input_ports_m=[], output_ports_m=[], scoped_vars_m=[],
                    selected=False, active=False, depth=0):
         """Draw a state with the given properties
 
@@ -307,9 +308,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param width: width of the state
         :param height: height of the state
         :param outcomes: outcomes of the state (list with outcome objects)
-        :param inputs: input ports of the state
-        :param outputs: output ports of the state
-        :param scoped_vars: scoped variable ports of the state
+        :param input_ports_m: input ports of the state
+        :param output_ports_m: output ports of the state
+        :param scoped_vars_m: scoped variable ports of the state
         :param active: whether to display the state as active/selected
         :param depth: The z layer
         :return: The OpenGL id and the positions of teh outcomes (as dictionary with outcome id as key)
@@ -376,7 +377,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Draw input and output data ports
         port_radius = margin / 4.
-        num_ports = len(inputs) + len(outputs)
+        num_ports = len(input_ports_m) + len(output_ports_m)
         input_connector_pos = {}
         output_connector_pos = {}
         if num_ports > 0:
@@ -386,10 +387,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             str_height = height / 12.0
 
             # Determine the maximum width of all port labels
-            for ports in [inputs, outputs]:
-                for port in ports:
-                    port_name = ports[port].name
-                    str_width = self._string_width(port_name, str_height)
+            for ports in [input_ports_m, output_ports_m]:
+                for port_m in ports:
+                    str_width = self._string_width(port_m.data_port.name, str_height)
                     if str_width > max_name_width:
                         max_name_width = str_width
 
@@ -402,8 +402,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos_y, depth, border_width,
                             fill_color, self.border_color)
 
-            def draw_port(port, num, is_input):
-                port_name = self._shorten_string(port.name, str_height, port_width)
+            def draw_port(port_m, num, is_input):
+
+                port_name = self._shorten_string(port_m.data_port.name, str_height, port_width)
 
                 string_pos_x = port_pos_left_x + margin / 2.
                 if not is_input:
@@ -419,29 +420,34 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 return circle_pos_x, circle_pos_y
 
             output_num = 0
-            for port in inputs.itervalues():
-                con_pos_x, con_pos_y = draw_port(port, output_num, True)
-                input_connector_pos[port.data_port_id] = (con_pos_x, con_pos_y)
+            for port_m in input_ports_m:
+                con_pos_x, con_pos_y = draw_port(port_m, output_num, True)
+                port_m.meta['gui']['editor']['pos_x'] = con_pos_x
+                port_m.meta['gui']['editor']['pos_y'] = con_pos_y
+                #input_connector_pos[port.data_port_id] = (con_pos_x, con_pos_y)
                 output_num += 1
 
-            for port in outputs.itervalues():
-                con_pos_x, con_pos_y = draw_port(port, output_num, False)
-                output_connector_pos[port.data_port_id] = (con_pos_x, con_pos_y)
+            for port_m in output_ports_m:
+                con_pos_x, con_pos_y = draw_port(port_m, output_num, False)
+                port_m.meta['gui']['editor']['pos_x'] = con_pos_x
+                port_m.meta['gui']['editor']['pos_y'] = con_pos_y
+                #output_connector_pos[port.data_port_id] = (con_pos_x, con_pos_y)
                 output_num += 1
 
         # Draw input and output data ports
         scoped_connector_pos = {}
-        if len(scoped_vars) > 0:
+        if len(scoped_vars_m) > 0:
             max_scope_width = width * 0.9
             margin = min(height, width) / 50.
-            max_single_scope_width = max_scope_width / len(scoped_vars) - 2 * margin
+            max_single_scope_width = max_scope_width / len(scoped_vars_m) - 2 * margin
             str_height = height / 35.0
-            port_pos_left_x = pos_x + width / 2 - (len(scoped_vars) * max_single_scope_width) / 2
+            port_pos_left_x = pos_x + width / 2 - (len(scoped_vars_m) * max_single_scope_width) / 2
             port_pos_top_y = pos_y + height - margin
             num = 0
 
-            for key in scoped_vars:
-                port_name = self._shorten_string(scoped_vars[key].name, str_height, max_single_scope_width - margin)
+            for scoped_var_m in scoped_vars_m:
+                scoped_var = scoped_var_m.scoped_variable
+                port_name = self._shorten_string(scoped_var.name, str_height, max_single_scope_width - margin)
                 str_width = self._string_width(port_name, str_height)
 
                 move_x = num * (str_width + 2 * margin)
@@ -460,7 +466,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                                   stroke_width=border_width / 8., border_color=self.port_name_color,
                                   fill_color=self.port_connector_fill_color)
                 num += 1
-                scoped_connector_pos[key] = connect
+                scoped_var_m.meta['gui']['editor']['pos_x'] = connect[0]
+                scoped_var_m.meta['gui']['editor']['pos_y'] = connect[1]
+                #scoped_connector_pos[key] = connect
                 pass
 
         glPopName()
