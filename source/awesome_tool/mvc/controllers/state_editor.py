@@ -22,16 +22,16 @@ class StateEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         assert isinstance(model, StateModel)
 
-        self.child_controller['properties_ctrl'] = StateOverviewController(model, view['properties_view'])
+        self.add_controller('properties_ctrl', StateOverviewController(model, view['properties_view']))
 
-        self.child_controller['inputs_ctrl'] = DataPortListController(model, view['inputs_view'], "input")
-        self.child_controller['outputs_ctrl'] = DataPortListController(model, view['outputs_view'], "output")
-        self.child_controller['scoped_ctrl'] = ScopedVariableListController(model, view['scopes_view'])
-        self.child_controller['outcomes_ctrl'] = StateOutcomesEditorController(model, view['outcomes_view'])
+        self.add_controller('inputs_ctrl', DataPortListController(model, view['inputs_view'], "input"))
+        self.add_controller('outputs_ctrl', DataPortListController(model, view['outputs_view'], "output"))
+        self.add_controller('scoped_ctrl', ScopedVariableListController(model, view['scopes_view']))
+        self.add_controller('outcomes_ctrl', StateOutcomesEditorController(model, view['outcomes_view']))
 
-        self.child_controller['source_ctrl'] = SourceEditorController(model, view['source_view'])
-        self.child_controller['transitions_ctrl'] = StateTransitionsEditorController(model, view['transitions_view'])
-        self.child_controller['data_flows_ctrl'] = StateDataFlowsEditorController(model, view['data_flows_view'])
+        self.add_controller('source_ctrl', SourceEditorController(model, view['source_view']))
+        self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view['transitions_view']))
+        self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view['data_flows_view']))
 
         view['inputs_view'].show()
         view['outputs_view'].show()
@@ -154,8 +154,8 @@ class StateEditorEggController(ExtendedController):
 
         self.arrangement_dict['port_expander1']['list_store'] = self.model.input_data_port_list_store
         self.arrangement_dict['port_expander2']['list_store'] = self.model.output_data_port_list_store
-        self.arrangement_dict['port_expander4']['list_store'] = self.child_controllers[
-            'outcomes_ctrl'].oc_list_ctrl.tree_store
+        self.arrangement_dict['port_expander4']['list_store'] = self.get_controller(
+            'outcomes_ctrl').oc_list_ctrl.tree_store
 
         if hasattr(self.model, 'states'):
             self.arrangement_dict['port_expander3']['list_store'] = self.model.scoped_variables_list_store
@@ -163,10 +163,10 @@ class StateEditorEggController(ExtendedController):
         else:
             self.view['port_expander3'].destroy()
             self.port_expander = ['port_expander1', 'port_expander2', 'port_expander4']
-        self.arrangement_dict['transitions_expander']['list_store'] = self.child_controllers[
-            'transitions_ctrl'].trans_list_ctrl.tree_store
-        self.arrangement_dict['dataflows_expander']['list_store'] = self.child_controllers[
-            'data_flows_ctrl'].df_list_ctrl.tree_store
+        self.arrangement_dict['transitions_expander']['list_store'] = self.get_controller(
+            'transitions_ctrl').trans_list_ctrl.tree_store
+        self.arrangement_dict['dataflows_expander']['list_store'] = self.get_controller(
+            'data_flows_ctrl').df_list_ctrl.tree_store
 
     def register_adapters(self):
         """Adapters should be registered in this method call

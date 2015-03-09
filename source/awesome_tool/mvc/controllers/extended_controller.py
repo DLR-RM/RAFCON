@@ -56,8 +56,8 @@ class ExtendedController(Controller):
                 self.__action_registered_controllers.append(controller)
 
     def __register_actions_of_child_controllers(self):
-        assert isinstance(self.child_controllers, dict)
-        for controller in self.child_controllers.itervalues():
+        assert isinstance(self.__child_controllers, dict)
+        for controller in self.__child_controllers.itervalues():
             register_function = getattr(controller, "register_actions", None)
             if hasattr(register_function, '__call__'):
                 register_function(self.__shortcut_manager)
