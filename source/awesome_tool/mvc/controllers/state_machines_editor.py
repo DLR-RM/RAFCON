@@ -109,6 +109,8 @@ class StateMachinesEditorController(ExtendedController):
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notifcation_selected_sm_changed(self, model, prop_name, info):
+        if self.model.selected_state_machine_id is None:
+            return
         page = self.tabs[self.model.selected_state_machine_id]['page']
         idx = self.view.notebook.page_num(page)
         # print idx, self.view.notebook.get_current_page()
