@@ -6,29 +6,6 @@ from utils import log
 logger = log.get_logger(__name__)
 
 
-# class ParentObserver(Observer):
-#
-#     def __init__(self, model, key, funct_handle_list):
-#         Observer.__init__(self, model)
-#         self.func_handle_list = funct_handle_list
-#         self.method_list = ["add_transition", "remove_transition", "add_outcome", "remove_outcome",
-#                             "modify_outcome_name"]
-#         self.state_model = model
-#         # # dynamically
-#         # self.func_handle_list = func_handle_list
-#         # self.observe(self.notification, "state", after=True)
-#
-#     @Observer.observe('state', after=True)
-#     def notification(self, model, prop_name, info):
-#         # logger.debug("Outcomes parent %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-#         #              (self.state_model.parent.state.name, prop_name, info.instance, info.method_name, info))
-#
-#         # TODO test with accepting limited methods
-#         # if info.method_name in self.method_list and self.state_model.parent.state.state_id == info.instance.state_id:
-#         for func_handle in self.func_handle_list:
-#             func_handle()
-
-
 class StateOutcomesListController(ExtendedController):
 
     parent_observer = None
@@ -47,10 +24,6 @@ class StateOutcomesListController(ExtendedController):
         self.list_from_other_state = {}
 
         if model.parent is not None:
-            # OLD
-            # self.parent_observer = ParentObserver(model.parent, "state", [self.update_internal_data_base,
-            #                                                               self.update_tree_store])
-            # NEW
             self.observe_model(model.parent)
 
         self.update_internal_data_base()
@@ -101,17 +74,19 @@ class StateOutcomesListController(ExtendedController):
         path = self.view.tree_view.get_cursor()
         self.update_internal_data_base()
         self.update_tree_store()
-        self.view.tree_view.set_cursor(path[0])
+        if path[0]:  # if valid
+            self.view.tree_view.set_cursor(path[0])
 
     def on_name_modification(self, widget, path, text):
+        logger.debug("OUTCOME gets new NAME")
         self.tree_store[path][1] = text
         self.model.state.outcomes[self.tree_store[path][6].outcome_id].name = text
-        # TWICE because observer is on modify_outcome_name in state not on name in outcome
+        # TODO remove call TWICE -> ?needed because observer is on modify_outcome_name in state not on name in outcome
         self.model.state.outcomes[self.tree_store[path][6].outcome_id].name = text
         logger.debug("change name of outcome: %s %s" % (path, self.model.state.outcomes[self.tree_store[path][6].outcome_id].name))
 
     def on_to_state_modification(self, widget, path, text):
-
+        # TODO don't to it everytime with remove
         transition_id = None
         outcome_id = int(self.tree_store[path][0])
         if outcome_id in self.list_to_other_state.keys():
@@ -139,6 +114,7 @@ class StateOutcomesListController(ExtendedController):
 
     def on_to_outcome_modification(self, widget, path, text):
 
+        # TODO instate of remove to modify_transition
         transition_id = None
         outcome_id = int(self.tree_store[path][0])
         if outcome_id in self.list_to_other_state.keys():
@@ -257,22 +233,13 @@ class StateOutcomesListController(ExtendedController):
             self.tree_store.append(None, [outcome.outcome_id, outcome.name, to_state, to_outcome,
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
 
-    # NEW
-    # @ExtendedController.observe("outcomes", after=True)  # do not exist at the moment
+    @ExtendedController.observe("outcomes", after=True)
     @ExtendedController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
         # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #              (prop_name, info.instance, info.method_name, info.result))
         self.update_internal_data_base()
         self.update_tree_store()
-
-    # OLD
-    def assign_notification_parent_state(self, model, prop_name, info):
-        # logger.debug("call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-        #              (prop_name, info.instance, info.method_name, info.result))
-        if info.method_name in ["modify_outcome_name"]:
-            self.update_internal_data_base()
-            self.update_tree_store()
 
 
 class StateOutcomesEditorController(ExtendedController):

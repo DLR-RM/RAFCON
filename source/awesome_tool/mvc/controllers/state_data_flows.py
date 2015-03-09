@@ -4,39 +4,9 @@ from gtk import ListStore, TreeStore
 from gtkmvc import Observer
 from mvc.controllers.extended_controller import ExtendedController
 
+from statemachine.states.state import State
 from utils import log
 logger = log.get_logger(__name__)
-
-
-class ParentObserver(Observer):
-
-    def __init__(self, model, key, funct_handle_list):
-        Observer.__init__(self, model)
-        self.func_handle_list = funct_handle_list
-        # self.observe(self.notify, "state", after=True)
-        self.got_model = model
-        self.method_list = ["add_data_flow", "remove_data_flow",
-                            "add_input_data_port", "remove_input_data_port",
-                            "add_output_data_port", "remove_output_data_port",
-                            "add_output_data_port", "remove_output_data_port",
-                            "add_scoped_variable", "remove_scoped_variable",
-                            "add_state", "remove_state",
-                            "modify_outcome_name", "name"]
-
-    @Observer.observe("data_flows", after=True)
-    def assign_notification_parent_state(self, model, prop_name, info):
-        # print "AWEFULL PARENT", info.method_name, self.got_model.state.state_id
-        for func_handle in self.func_handle_list:
-            func_handle()
-#
-    # @Observer.observe('state', after=True)
-    # def notification(self, model, prop_name, info):
-    #     logger.debug("parent %s data_flowList call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-    #                  (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
-    # #
-    # #     if info.method_name in self.method_list and model.state.state_id == info.instance.state_id:
-    # #         for func_handle in self.func_handle_list:
-    # #             func_handle()
 
 
 class StateDataFlowsListController(ExtendedController):
@@ -62,21 +32,20 @@ class StateDataFlowsListController(ExtendedController):
         self.tree_store = TreeStore(int, str, str, str, str, bool,
                                     str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
 
+        view.get_top_widget().set_model(self.tree_store)
+
         self.tree_dict_combos = {'internal':    {},
                                  'external':    {}}
         self.data_flow_dict = {'internal':    {},
                                'external':    {}}
 
+        # register other model and fill tree_store the model of the view
         if model.parent is not None:
-            # OLD
-            self.parent_observer = ParentObserver(model.parent, "state", [self.update_internal_data_base,
-                                                                          self.update_tree_store])
-            # NEW
-            # self.observe_model(model.parent)
+            self.observe_model(model.parent)
 
         self.update_internal_data_base()
         self.update_tree_store()
-        view.get_top_widget().set_model(self.tree_store)
+
 
     def register_view(self, view):
         """Called when the View was registered
@@ -236,16 +205,16 @@ class StateDataFlowsListController(ExtendedController):
         text = text.split('.')
         df_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # external
-            self.model.state.modify_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
+            self.model.parent.state.modify_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
         else:
-            self.model.state.modify_data_flow_to_state(data_flow_id=df_id, to_key=int(text[-1]))
+            self.model.state.modify_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
 
     def update_internal_data_base(self):
-         [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
-         self.free_to_port_internal = free_to_int
-         self.free_to_port_external = free_to_ext
-         self.from_port_internal = from_int
-         self.from_port_external = from_ext
+        [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
+        self.free_to_port_internal = free_to_int
+        self.free_to_port_external = free_to_ext
+        self.from_port_internal = from_int
+        self.from_port_external = from_ext
 
     def update_tree_store(self):
         self.tree_store.clear()
@@ -285,45 +254,39 @@ class StateDataFlowsListController(ExtendedController):
                                                   True,
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
-    # NEW
     @ExtendedController.observe("input_data_ports", after=True)
     @ExtendedController.observe("output_data_ports", after=True)
     @ExtendedController.observe("scoped_variables", after=True)
     @ExtendedController.observe("data_flows", after=True)
-    def assign_notification_state(self, model, prop_name, info):
-        # print "AWEFULL STATE", info.method_name, self.model.state.state_id
-        # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER %s: \n-%s\n-%s\n-%s\n-%s\n" %
-        #              (str(info.after), model.state.state_id, prop_name, info.instance, info.method_name, info.result))
+    def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+        # self.notification_logs(model, prop_name, info)
+
         self.update_internal_data_base()
         self.update_tree_store()
 
-    # @Controller.observe("scoped_variables", after=True)
-    # def assign_notification_scoped(self, model, prop_name, info):
-    #     print "SCOPED IN DATAFLOWS"
-    #
-    # @Controller.observe("input_data_ports", after=True)
-    # def assign_notification_input(self, model, prop_name, info):
-    #     print "INPUT IN DATAFLOWS"
-    #
-    # @Controller.observe("output_data_ports", after=True)
-    # def assign_notification_output(self, model, prop_name, info):
-    #     print "OUTPUTS IN DATAFLOWS"
+    def notification_logs(self, model, prop_name, info):
 
+        if model.state.state_id == self.model.state.state_id:
+            relative_str = "SELF"
+            from_state = self.model.state.state_id
+        elif self.model.parent and model.state.state_id == self.model.parent.state.state_id:
+            relative_str = "PARENT"
+            from_state = self.model.parent.state.state_id
+        else:
+            relative_str = "OTHER"
+            from_state = model.state.state_id
 
-    # # OLD
-    # @Controller.observe("state", after=True)
-    # def assign_notification_parent_state(self, model, prop_name, info):
-    #     # logger.debug("State %s data_flows_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-    #     #              (model.state.state_id, prop_name, info.instance, info.method_name, info.result))
-    #     if info.method_name in ["add_data_flow", "remove_data_flow",
-    #                             "add_input_data_port", "remove_input_data_port",
-    #                             "add_output_data_port", "remove_output_data_port",
-    #                             "add_output_data_port", "remove_output_data_port",
-    #                             "add_scoped_variable", "remove_scoped_variable",
-    #                             "add_state", "remove_state",
-    #                             "modify_outcome_name"] and model.state.state_id == info.instance.state_id:
-    #         self.update_internal_data_base()
-    #         self.update_tree_store()
+        if prop_name == 'data_flows':
+            logger.debug("%s gets notified by data_flows from %s %s" % (self.model.state.state_id, relative_str, from_state))
+        elif prop_name == 'input_data_ports':
+            logger.debug("%s gets notified by input_data_ports from %s %s" % (self.model.state.state_id, relative_str, from_state))
+        elif prop_name == 'output_data_ports':
+            logger.debug("%s gets notified by output_data_ports from %s %s" % (self.model.state.state_id, relative_str, from_state))
+        elif prop_name == 'scoped_variables':
+            logger.debug("%s gets notified by scoped_variables from %s %s" % (self.model.state.state_id, relative_str, from_state))
+        else:
+            logger.debug("IP OP SV or DF !!! FAILURE !!! %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+                         (self.model.state.state_id, prop_name, info.instance, info.method_name, info.result))
 
 
 def get_key_combos(ports, keys_store, port_type, not_key=None):
@@ -529,14 +492,17 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
 
                 # only outports of self
                 from_keys_store = ListStore(str)
-                if model.state.state_id == data_flow.from_state:
+                if model.parent.state.state_id == data_flow.from_state:
                     # print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
+                    get_key_combos(model.parent.state.input_data_ports,
+                                   from_keys_store, 'input_port', data_flow.to_key)
+                    get_key_combos(model.parent.state.scoped_variables,
+                                   from_keys_store, 'scoped_variable', data_flow.to_key)
+                elif data_flow.from_state in [state_m.state.state_id for state_m in model.parent.states.values()]:
                     get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
                                    from_keys_store, 'output_port', data_flow.to_key)
                 else:
-                    #get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
-                    #               from_keys_store, 'output_port', data_flow.from_key)
-                    pass
+                    logger.error("---------------- FAILURE %s ------------- external from_state PARENT or STATES" % model.state.state_id)
 
                 # all states and parent-state
                 to_states_store = ListStore(str)

@@ -256,7 +256,7 @@ class State(Observable, yaml.YAMLObject, object):
         self.check_input_data_type(self.input_data)
 
     def recursively_preempt_states(self, state):
-        """ Preempt the provided state and all it subsstates.
+        """ Preempt the provided state and all it sub-states.
         :param state: The that is going to be preempted recursively.
         :return:
         """
@@ -435,6 +435,21 @@ class State(Observable, yaml.YAMLObject, object):
         self._used_outcome_ids.remove(outcome_id)
         self._outcomes.pop(outcome_id, None)
 
+
+    def is_valid_outcome_id(self, outcome_id):
+        """Checks if outcome_id valid type and points to element of state.
+
+        :param int outcome_id:
+        :return:
+        """
+        #check if types are valid
+        if not isinstance(outcome_id, int):
+            raise TypeError("outcome_id must be of type int")
+        # consistency check
+        if outcome_id not in self.outcomes:
+            raise AttributeError("outcome_id %s has to be in container_state %s outcomes-list" %
+                                 (outcome_id, self.state_id))
+
     @Observable.observed
     def modify_outcome_name(self, name, outcome):
         """Checks if the outcome name already exists. If this is the case a unique number is appended to the name
@@ -589,7 +604,6 @@ class State(Observable, yaml.YAMLObject, object):
         """
         self.script.script = new_text
         return True
-
 
     def __str__(self):
         return "State properties of state: %s \nstate_id: %s \nstate_type: %s" \

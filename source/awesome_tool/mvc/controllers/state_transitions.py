@@ -9,25 +9,6 @@ from utils import log
 logger = log.get_logger(__name__)
 
 
-class ParentObserver(Observer):
-
-    def __init__(self, model, key, funct_handle_list):
-        Observer.__init__(self, model)
-        self.func_handle_list = funct_handle_list
-        # self.observe(self.notify, "state", after=True)
-        self.method_list = ["add_transition", "remove_transition",
-                            "add_outcome", "remove_outcome",
-                            "add_state", "remove_state", "modify_outcome_name"]
-
-    @Observer.observe('state', after=True)
-    def notification(self, model, prop_name, info):
-        # logger.debug("parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-        #              (prop_name, info.instance, info.method_name, info.result))
-        if info.method_name in self.method_list:
-            for func_handle in self.func_handle_list:
-                func_handle()
-
-
 class StateTransitionsListController(ExtendedController):
     """Controller handling the view of transitions of the ContainerStateModel
 
@@ -53,12 +34,7 @@ class StateTransitionsListController(ExtendedController):
         self.combo = {}
 
         if self.model.parent is not None:
-            # OLD
-            self.parent_observer = ParentObserver(model.parent, "state", [self.update_internal_data_base,
-                                                                          self.update_tree_store])
-            # NEW
             self.observe_model(self.model.parent)
-            self.model.parent.register_observer(self)
 
         self.update_internal_data_base()
         self.update_tree_store()
@@ -71,7 +47,7 @@ class StateTransitionsListController(ExtendedController):
         def cell_text(column, cell_renderer, model, iter, container_model):
 
             t_id = model.get_value(iter, 0)
-            state = model.get_value(iter, 9)
+            # state = model.get_value(iter, 9)
             in_external = 'internal'
             if model.get_value(iter, 5):
                 in_external = 'external'
@@ -120,7 +96,8 @@ class StateTransitionsListController(ExtendedController):
         path = self.view.tree_view.get_cursor()
         self.update_internal_data_base()
         self.update_tree_store()
-        self.view.tree_view.set_cursor(path[0])
+        if path[0]:
+            self.view.tree_view.set_cursor(path[0])
 
     # TODO mach es trotzdem es ist fuer faelschliche interne aber alls externe gewollte ganz nuetzlich
     def on_external_toggled(self, widget, path):
@@ -130,17 +107,16 @@ class StateTransitionsListController(ExtendedController):
         :return:
         """
         logger.debug("Widget: {widget:s} - Path: {path:s}".format(widget=widget, path=path))
-    #
-    #     # if widget.get_active():
-    #     #     # print "change to INTERNAL ", path
-    #     #     self.tree_store[path][5] = False
-    #     # else:
-    #     #     # print "change to EXTERNAL ", path
-    #     #     self.tree_store[path][5] = True
+
+        if widget.get_active():
+            print "change to INTERNAL ", path
+            self.tree_store[path][5] = False
+        else:
+            print "change to EXTERNAL ", path
+            self.tree_store[path][5] = True
 
     def on_add(self, button, info=None):
-        # print "add transition"
-        # type(self.combo['free_from_state_models']), self.combo['free_from_state_models'], '\n', self.combo['free_from_outcomes_dict']
+
         if self.view_dict['transitions_internal'] and self.combo['free_from_outcomes_dict']:
             from_state_id = self.combo['free_from_outcomes_dict'].keys()[0]
             from_outcome = self.combo['free_from_outcomes_dict'][from_state_id][0].outcome_id
@@ -151,7 +127,7 @@ class StateTransitionsListController(ExtendedController):
             # print "NEW TRANSITION INTERNAL IS: ", self.model.state.transitions[transition_id]
 
         elif self.view_dict['transitions_external'] and self.combo['free_ext_from_outcomes_dict'] and \
-                        self.model.state.state_id in self.combo['free_ext_from_outcomes_dict']:
+                self.model.state.state_id in self.combo['free_ext_from_outcomes_dict']:
             from_state_id = self.model.state.state_id
             from_outcome = self.combo['free_ext_from_outcomes_dict'][from_state_id][0].outcome_id
             to_state_id = None  # self.model.parent.state.state_id
@@ -198,12 +174,10 @@ class StateTransitionsListController(ExtendedController):
         t_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # is external
             fo = self.combo['free_ext_from_outcomes_dict'][text[-1]][0].outcome_id
-            self.model.parent.state.transitions[t_id].from_state = text[-1]
-            self.model.parent.state.transitions[t_id].from_outcome = fo
+            self.model.parent.state.modify_transition_from_state(t_id, from_state=text[-1], from_outcome=fo)
         else:
             fo = self.combo['free_from_outcomes_dict'][text[-1]][0].outcome_id
-            self.model.state.transitions[t_id].from_state = text[-1]
-            self.model.state.transitions[t_id].from_outcome = fo
+            self.model.state.modify_transition_from_state(t_id, from_state=text[-1], from_outcome=fo)
 
     def on_combo_changed_from_outcome(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -230,13 +204,9 @@ class StateTransitionsListController(ExtendedController):
         text = text.split('.')
         t_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # is external
-            self.model.parent.state.transitions[t_id].to_state = text[-1]
-            # if self.model.parent.state.transitions[t_id].to_outcome:
-            #     self.model.parent.state.transitions[t_id].to_outcome = None
+            self.model.parent.state.modify_transition_to_state(t_id, to_state=text[-1])
         else:
-            self.model.state.transitions[t_id].to_state = text[-1]
-            # if self.model.state.transitions[t_id].to_outcome:
-            #     self.model.state.transitions[t_id].to_outcome = None
+            self.model.state.modify_transition_to_state(t_id, to_state=text[-1])
 
     def on_combo_changed_to_outcome(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -459,25 +429,36 @@ class StateTransitionsListController(ExtendedController):
                                               True,  # is_external
                                               '#f0E5C7', '#f0E5c7', t, self.model.state, True])
 
-    # NEW
     @ExtendedController.observe("states", after=True)
-    # @ExtendedController.observe("outcomes", after=True)  # do not exist at the moment
     @ExtendedController.observe("transitions", after=True)
-    def transition_changed_parent_and_self_state(self, model, prop_name, info):
-        # print "transition_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
+    @ExtendedController.observe("outcomes", after=True)
+    def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+        # self.notification_logs(model, prop_name, info)
+
         self.update_internal_data_base()
         self.update_tree_store()
 
-    # OLD
-    # @ExtendedController.observe("state", after=True)
-    # def assign_notification_parent_and_self_state(self, model, prop_name, info):
-    #     # print "transition_listViewCTRL call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-    #     #       (prop_name, info.instance, info.method_name, info.result)
-    #     if info.method_name in ["add_outcome", "remove_outcome",
-    #                             "modify_outcome_name"]:
-    #         self.update_stores()
-    #         self.update_model()
+    def notification_logs(self, model, prop_name, info):
+
+        if model.state.state_id == self.model.state.state_id:
+            relative_str = "SELF"
+            from_state = self.model.state.state_id
+        elif self.model.parent and model.state.state_id == self.model.parent.state.state_id:
+            relative_str = "PARENT"
+            from_state = self.model.parent.state.state_id
+        else:
+            relative_str = "OTHER"
+            from_state = model.state.state_id
+
+        if prop_name == 'states':
+            logger.debug("%s gets notified by states from %s %s" % (self.model.state.state_id, relative_str, from_state))
+        elif prop_name == 'transitions':
+            logger.debug("%s gets notified by transitions from %s %s" % (self.model.state.state_id, relative_str, from_state))
+        elif prop_name == 'outcomes':
+            logger.debug("%s gets notified by outcomes from %s %s" % (self.model.state.state_id, relative_str, from_state))
+        else:
+            logger.debug("IP OP SV or DF !!! FAILURE !!! %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+                         (self.model.state.state_id, prop_name, info.instance, info.method_name, info.result))
 
 
 class StateTransitionsEditorController(ExtendedController):

@@ -8,10 +8,14 @@ from statemachine.states.state import State
 from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
 from utils.vividict import Vividict
 from mvc.models.data_port import DataPortModel
+from mvc.models.outcome import OutcomeModel
 import statemachine.singleton
 from statemachine.storage.storage import Storage
 from utils import log
 from statemachine.enums import StateType
+
+from statemachine.outcome import Outcome
+from statemachine.states.state import DataPort
 
 logger = log.get_logger(__name__)
 
@@ -26,10 +30,11 @@ class StateModel(ModelMT):
 
     is_start = None
     state = None
+    outcomes = []
     input_data_ports = []
     output_data_ports = []
 
-    __observables__ = ("state", "input_data_ports", "output_data_ports", "is_start")
+    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start")
 
     _table = TableDescriptor()
     _table.add_column(ColumnDescriptor(0, 'key', str))
@@ -66,6 +71,7 @@ class StateModel(ModelMT):
         self.register_observer(self)
         self.input_data_ports = []
         self.output_data_ports = []
+        self.outcomes = []
         self.input_data_port_list_store = ListStore(str, str, str, int)
         self.output_data_port_list_store = ListStore(str, str, str, int)
         self.reload_input_data_port_list_store_and_models()
@@ -100,65 +106,56 @@ class StateModel(ModelMT):
             return error
         return True
 
+    def is_element_of_self(self, instance):
+
+        if isinstance(instance, DataPort) and instance.data_port_id in self.state.input_data_ports:
+            return True
+        if isinstance(instance, DataPort) and instance.data_port_id in self.state.output_data_ports:
+            return True
+        if isinstance(instance, Outcome) and instance.outcome_id in self.state.outcomes:
+            return True
+        return False
+
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, name, info):
 
-        # mark the state machine this state belongs to as dirty
+    	# mark the state machine this state belongs to as dirty
         own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
         statemachine.singleton.global_storage.mark_dirty(own_sm_id)
-
-        if hasattr(info, 'before') and info['before'] and isinstance(model, DataPortModel) and self is model.parent:
+    
+        # TODO delete # prints if there is no bug ... latest 15th of march
+        if hasattr(info, 'before') and info['before'] and (self is model.parent or isinstance(info.instance, DataPort)):
             #print info.method_name, "modify_input_data_port" in info.method_name, info
-            if "modify_input_data_port" in info.method_name:
-                # print "before IP"
+            if "modify_input_data_port" in info.method_name or \
+                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
+                # print "NOTIFY before INPUT_DATA_PORTS"
                 self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
-            if "modify_output_data_port" in info.method_name:
-                # print "before OP"
+            if "modify_output_data_port" in info.method_name or \
+                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
+                # print "NOTIFY before OUTPUT_DATA_PORTS"
                 self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
-            if "modify_scoped_variable" in info.method_name:  # isinstance(info.instance, ScopedVariable):
-                # print "before SP"
-                self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
-        elif hasattr(info, 'after') and info['after'] and isinstance(model, DataPortModel) and self is model.parent:
-            if "modify_input_data_port" in info.method_name:  # isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.input_data_ports:
-                # print "after IP"
-                self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
-            if "modify_output_data_port" in info.method_name:  # isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.output_data_ports:
-                # print "after OP"
-                self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
-            if "modify_scoped_variable" in info.method_name:  # isinstance(info.instance, ScopedVariable):
-                # print "after SP"
-                self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
 
-        if hasattr(info, 'before'):
-            # print "before", hasattr(info, 'before'), info['before']
-            pass
-        if isinstance(model, DataPortModel):
-            # print "PortModel", model.parent.state.state_id, self.state.state_id, info.instance, model.data_port is model.parent, self, "\n"
-            pass
+        elif hasattr(info, 'after') and info['after'] and (self is model.parent or isinstance(info.instance, DataPort)):
+            if "modify_input_data_port" in info.method_name or \
+                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
+                # print "NOTIFY after INPUT_DATA_PORTS"
+                self.input_data_ports._notify_method_after(info.instance, "input_data_port_change", None, (model,), info)
+            if "modify_output_data_port" in info.method_name or \
+                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
+                # print "NOTIFY after OUTPUT_DATA_PORTS"
+                self.output_data_ports._notify_method_after(info.instance, "output_data_port_change", None, (model,), info)
 
-        if hasattr(info, 'before') and info['before'] and isinstance(model, DataPortModel):
-            # print "before", model.parent.state.state_id, self.state.state_id, model, self
-            pass
-        #     if model.data_port.data_port_id in self.state.input_data_ports and model.parent.state.state_id in self.state.state_id:
-        #         print "before IP"
-        #         self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
-        #     if model.data_port.data_port_id in self.state.output_data_ports and \
-        #             model.parent.state.state_id in self.state.state_id:
-        #         print "before OP"
-        #         self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
-        #     if isinstance(info.instance, ScopedVariable):
-        #         print "before SP"
-        #         self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
+        if hasattr(info, 'before') and info['before'] and self is model.parent:
+            if "modify_outcome" in info.method_name or info.method_name in ['add_outcome', 'remove_outcome'] or \
+                    isinstance(info.instance, Outcome):
+                # print "NOTIFY before OUTCOMES"
+                self.outcomes._notify_method_before(info.instance, "outcome_change", (model,), info)
 
-            # if isinstance(info.instance, ScopedVariable):
-            #     print "after SP"
-            #     self.scoped_variables._notify_method_before(info.instance, "scoped_variable_change", (model,), info)
-            # if isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.input_data_ports:
-            #     print "after IP"
-            #     self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
-            # if isinstance(info.instance, DataPort) and info.instance.data_port_id in info.instance.parent.output_data_ports:
-            #     print "after OP"
-            #     self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
+        elif hasattr(info, 'after') and info['after'] and self is model.parent:
+            if "modify_outcome" in info.method_name or info.method_name in ['add_outcome', 'remove_outcome'] or \
+                    isinstance(info.instance, Outcome):
+                # print "NOTIFY after OUTCOMES"
+                self.outcomes._notify_method_after(info.instance, "outcome_change", None, (model,), info)
 
         if self.parent is not None:
             self.parent.model_changed(model, name, info)
@@ -179,6 +176,11 @@ class StateModel(ModelMT):
             data_list = self.state.output_data_ports
             model_name = "data_port"
             model_class = DataPortModel
+        elif model == "outcome":
+            model_list = self.outcomes
+            data_list = self.state.outcomes
+            model_name = "outcome"
+            model_class = OutcomeModel
         else:
             raise AttributeError("Wrong model specified!")
         return model_list, data_list, model_name, model_class, model_key
@@ -192,12 +194,14 @@ class StateModel(ModelMT):
             output-data-port models
             outcome models
         """
-        # TODO: outcomes
+
         model_list = None
         if "input_data_port" in info.method_name:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")
         elif "output_data_port" in info.method_name:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("output_data_port")
+        elif "outcome" in info.method_name:
+            (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("outcome")
 
         if model_list is not None:
             if "add" in info.method_name:
@@ -263,6 +267,13 @@ class StateModel(ModelMT):
         """
         self.reload_output_data_port_models()
         self.reload_output_data_port_list_store()
+
+    def reload_outcome_models(self):
+        """Reloads the input data port models directly from the the state
+        """
+        self.outcomes = []
+        for outcome in self.state.outcomes.itervalues():
+            self.outcomes.append(OutcomeModel(outcome, self))
 
     def add_missing_model(self, model_list, data_list, model_name, model_class, model_key):
         for data in data_list.itervalues():

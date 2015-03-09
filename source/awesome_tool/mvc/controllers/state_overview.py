@@ -35,7 +35,6 @@ class StateOverviewController(ExtendedController, Model):
     def __init__(self, model, view):
         """Constructor
         """
-        print "++++++++++ ", model, model.state.name
         ExtendedController.__init__(self, model, view)
 
     def register_view(self, view):
