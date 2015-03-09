@@ -235,7 +235,7 @@ class ContainerState(State):
         """Sets the start state of a container state
 
         :param state: The state_id of a state or a direct reference ot he state (that was already added
-                    to the container) that will be the start state of this container state.
+        to the container) that will be the start state of this container state.
 
         """
         if isinstance(state, State):
@@ -405,7 +405,6 @@ class ContainerState(State):
             raise AttributeError("state_id %s has to be child of container_state %s" %
                                  (state_id, self.state_id))
 
-    @Observable.observed
     def modify_transition_from_state(self, transition_id, from_state, from_outcome):
         """The function accepts consistent transition changes of from_state with respective from_outcome.
 
@@ -421,7 +420,6 @@ class ContainerState(State):
         self.transitions[transition_id].from_state = from_state
         self.transitions[transition_id]._from_outcome = from_outcome
 
-    @Observable.observed
     def modify_transition_from_outcome(self, transition_id, from_outcome):
         """The function accepts consistent transition changes of from_outcome.
 
@@ -434,7 +432,6 @@ class ContainerState(State):
         # set properties
         self.transitions[transition_id].to_outcome = from_outcome
 
-    @Observable.observed
     def modify_transition_to_state(self, transition_id, to_state):
         """The function accepts consistent transition changes of to_state.
 
@@ -447,7 +444,6 @@ class ContainerState(State):
         # set properties
         self.transitions[transition_id].to_state = to_state
 
-    @Observable.observed
     def modify_transition_to_outcome(self, transition_id, to_outcome):
         """The function accepts consistent transition changes of to_outcome.
 
@@ -460,7 +456,6 @@ class ContainerState(State):
         # set properties
         self.transitions[transition_id].to_outcome = to_outcome
 
-    @Observable.observed
     def remove_outcome(self, outcome_id):
         """Remove an outcome from the state
 
@@ -605,7 +600,6 @@ class ContainerState(State):
             self.remove_data_flow(data_flow_id)
             # del self.data_flows[data_flow_id]
 
-    @Observable.observed
     def modify_data_flow_from_state(self, data_flow_id, from_state, from_key):
         """The function accepts consistent data_flow changes of from_state with respective from_key.
 
@@ -633,7 +627,6 @@ class ContainerState(State):
         self.data_flows[data_flow_id].from_state = from_state
         self.data_flows[data_flow_id].from_key = from_key
 
-    @Observable.observed
     def modify_data_flow_from_key(self, data_flow_id, from_key):
         """The function accepts consistent data_flow change of from_key.
 
@@ -657,7 +650,6 @@ class ContainerState(State):
         # set property
         self.data_flows[data_flow_id].from_key = from_key
 
-    @Observable.observed
     def modify_data_flow_to_state(self, data_flow_id, to_state, to_key):
         """The function accepts consistent data_flow changes of to_state with respective to_key.
 
@@ -687,7 +679,6 @@ class ContainerState(State):
         self.data_flows[data_flow_id].to_state = to_state
         self.data_flows[data_flow_id].to_key = to_key
 
-    @Observable.observed
     def modify_data_flow_to_key(self, data_flow_id, to_key):
         """The function accepts consistent data_flow change of to_key.
 
