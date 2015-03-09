@@ -1,6 +1,7 @@
 from gtkmvc import ModelMT, Observable
 
 from statemachine.state_machine import StateMachine
+from statemachine.states.container_state import ContainerState
 from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 
 from utils.vividict import Vividict
@@ -29,7 +30,12 @@ class StateMachineModel(ModelMT):
 
         self.state_machine = state_machine
 
-        self.root_state = ContainerStateModel(self.state_machine.root_state)
+        root_state = self.state_machine.root_state
+        if isinstance(root_state, ContainerState):
+            self.root_state = ContainerStateModel(root_state)
+        else:
+            self.root_state = StateModel(root_state)
+
         self.root_state.register_observer(self)
 
         self.selection = Selection()
