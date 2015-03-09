@@ -41,12 +41,3 @@ TransitionModel (in state)
     :platform: Unix, Windows
     :synopsis: This model class manages a Transition
 .. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
-
-
-Module contents
----------------
-
-.. automodule:: awesome_tool.mvc.models
-    :members:
-    :undoc-members:
-    :show-inheritance:

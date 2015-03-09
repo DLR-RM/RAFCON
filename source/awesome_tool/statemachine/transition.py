@@ -91,6 +91,7 @@ class Transition(Observable, yaml.YAMLObject):
         return self._from_state
 
     @from_state.setter
+    @Observable.observed
     def from_state(self, from_state):
         if not isinstance(from_state, str):
             raise TypeError("from_state must be of type str")
@@ -120,6 +121,7 @@ class Transition(Observable, yaml.YAMLObject):
         return self._to_state
 
     @to_state.setter
+    @Observable.observed
     def to_state(self, to_state):
         if not to_state is None:
             if not isinstance(to_state, str):

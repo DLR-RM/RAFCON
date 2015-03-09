@@ -11,11 +11,14 @@ log module
     :members:
     :undoc-members:
     :show-inheritance:
-    
-Module contents
----------------
 
-.. automodule:: awesome_tool.utils
+.. automodule:: awesome_tool.utils.geometry
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: awesome_tool.utils.vividict
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

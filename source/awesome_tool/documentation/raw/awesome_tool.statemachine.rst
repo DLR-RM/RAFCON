@@ -70,19 +70,3 @@ library_manager module
     :members:
     :undoc-members:
     :show-inheritance:
-
-main module
------------
-
-.. automodule:: awesome_tool.statemachine.main
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: awesome_tool.statemachine
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -26,12 +26,4 @@ mvc.main module
     :show-inheritance:
 
 
-Module contents
----------------
-
-.. automodule:: mvc
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 

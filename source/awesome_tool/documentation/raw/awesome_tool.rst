@@ -1,5 +1,5 @@
-awesome_tool package
-====================
+Awesome_tool
+============
 
 Subpackages
 -----------

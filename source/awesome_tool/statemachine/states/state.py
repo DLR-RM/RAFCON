@@ -31,7 +31,7 @@ class DataPort(Observable, yaml.YAMLObject):
 
     :ivar name: the name of the data port
     :ivar data_type: the value type of the data port
-    ::ivar default_value: the default value of the data port
+    :ivar default_value: the default value of the data port
 
     """
     def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None):
