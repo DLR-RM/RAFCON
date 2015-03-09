@@ -11,7 +11,7 @@ from mvc.models.state_machine import StateMachineModel
 from mvc.statemachine_helper import StateMachineHelper
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK
 from gtk.gdk import keyval_name
-# from models.container_state import ContainerStateModel
+from statemachine.states.concurrency_state import ConcurrencyState
 
 
 class GraphicalEditorController(ExtendedController):
@@ -841,6 +841,11 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor']['scoped_pos'] = scoped_pos
         state_m.meta['gui']['editor']['resize_length'] = resize_length
 
+        if state_m.parent is not None and (
+                state_m.parent.state.start_state == state_m.state.state_id or
+                isinstance(state_m.parent.state, ConcurrencyState)):
+            self.draw_start_transition(state_m.parent, state_m, depth)
+
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
         if isinstance(state_m, ContainerStateModel):
@@ -862,15 +867,15 @@ class GraphicalEditorController(ExtendedController):
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
                                 depth + 1)
 
-            self.draw_transitions(state_m, width, height, depth)
+            self.draw_transitions(state_m, depth)
 
-            self.draw_data_flows(state_m, width, height, depth)
+            self.draw_data_flows(state_m, depth)
 
         self.handle_new_transition(state_m, depth)
 
         self.handle_new_data_flow(state_m, depth)
 
-    def draw_transitions(self, parent_state_m, parent_width, parent_height, parent_depth):
+    def draw_transitions(self, parent_state_m, parent_depth):
         """Draws the transitions belonging to a state
 
         The method takes all transitions from the given state and calculates their start and end point positions.
@@ -918,7 +923,8 @@ class GraphicalEditorController(ExtendedController):
             selected = False
             if transition_m in self.model.selection.get_transitions():
                 selected = True
-            line_width = min(parent_width, parent_height) / 25.0
+            line_width = min(parent_state_m.meta['gui']['editor']['width'],
+                             parent_state_m.meta['gui']['editor']['height']) / 25.0
             opengl_id = self.view.editor.draw_transition(from_x, from_y, to_x, to_y, line_width, waypoints,
                                                          selected, parent_depth + 0.5)
             transition_m.meta['gui']['editor']['id'] = opengl_id
@@ -927,7 +933,17 @@ class GraphicalEditorController(ExtendedController):
             transition_m.meta['gui']['editor']['to_pos_x'] = to_x
             transition_m.meta['gui']['editor']['to_pos_y'] = to_y
 
-    def draw_data_flows(self, parent_state_m, parent_width, parent_height, parent_depth):
+    def draw_start_transition(self, parent_state_m, start_state_m, parent_depth):
+        parent_info = parent_state_m.meta['gui']['editor']
+        start_info = start_state_m.meta['gui']['editor']
+        from_x = parent_info['pos_x']
+        from_y = parent_info['pos_y'] + parent_info['height'] / 2.
+        to_x = start_info['pos_x']
+        to_y = start_info['pos_y'] + start_info['height'] / 2.
+        line_width = min(parent_info['width'], parent_info['height']) / 25.0
+        self.view.editor.draw_transition(from_x, from_y, to_x, to_y, line_width, [], False, parent_depth + 0.5)
+
+    def draw_data_flows(self, parent_state_m, parent_depth):
         """Draw all data flows contained in the given container state
 
         The method takes all data flows from the given state and calculates their start and end point positions.
@@ -972,7 +988,8 @@ class GraphicalEditorController(ExtendedController):
             selected = False
             if data_flow_m in self.model.selection.get_data_flows():
                 selected = True
-            line_width = min(parent_width, parent_height) / 25.0
+            line_width = min(parent_state_m.meta['gui']['editor']['width'],
+                             parent_state_m.meta['gui']['editor']['height']) / 25.0
             opengl_id = self.view.editor.draw_data_flow(from_x, from_y, to_x, to_y, line_width, waypoints,
                                                         selected, parent_depth + 0.5)
             data_flow_m.meta['gui']['editor']['id'] = opengl_id

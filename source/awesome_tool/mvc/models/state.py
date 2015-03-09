@@ -118,14 +118,32 @@ class StateModel(ModelMT):
 
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, name, info):
+        """This method notifies the model lists and the parent state about changes
 
-    	# mark the state machine this state belongs to as dirty
+        The method is called each time, the model is changed. This happens, when the state itself changes or one of
+        its children (outcomes, ports) changes. Changes of the children cannot be observed directly,
+        therefore children notify their parent about their changes by calling this method.
+        This method then checks, what has been changed by looking at the method that caused the change. It then
+        notifies the list in which the change happened about the change.
+        E.g. one input data port changes its name. The model of the port observes itself and notifies the parent (
+        i.e. the state model) about the change by calling this method with the information about the change. This
+        method recognizes that the method "modify_input_data_port" caused the change and therefore triggers a notify
+        on the list if input data port models.
+        "_notify_method_before" is used as trigger method when the changing function is entered and
+        "_notify_method_after" is used when the changing function returns. This changing function in the example
+        would be "modify_input_data_port".
+        :param model: The model that was changed
+        :param name: The property that was changed
+        :param info: Information about the change (e.g. the name of the changing function)
+        """
+
+        # mark the state machine this state belongs to as dirty
         own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
         statemachine.singleton.global_storage.mark_dirty(own_sm_id)
     
         # TODO delete # prints if there is no bug ... latest 15th of march
         if hasattr(info, 'before') and info['before'] and (self is model.parent or isinstance(info.instance, DataPort)):
-            #print info.method_name, "modify_input_data_port" in info.method_name, info
+            # print info.method_name, "modify_input_data_port" in info.method_name, info
             if "modify_input_data_port" in info.method_name or \
                     (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
                 # print "NOTIFY before INPUT_DATA_PORTS"
@@ -157,14 +175,11 @@ class StateModel(ModelMT):
                 # print "NOTIFY after OUTCOMES"
                 self.outcomes._notify_method_after(info.instance, "outcome_change", None, (model,), info)
 
+        # Notify the parent state about the change (this causes a recursive call up to the root state)
         if self.parent is not None:
             self.parent.model_changed(model, name, info)
 
     def get_model_info(self, model):
-        model_list = None
-        data_list = None
-        model_name = ""
-        model_class = None
         model_key = None
         if model == "input_data_port":
             model_list = self.input_data_ports
