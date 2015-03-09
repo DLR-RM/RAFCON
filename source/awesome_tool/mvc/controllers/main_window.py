@@ -25,7 +25,7 @@ class MainWindowController(ExtendedController):
 
         self.editor_type = editor_type
         self.shortcut_manager = None
-
+        
         # state machine manager
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
@@ -74,15 +74,15 @@ class MainWindowController(ExtendedController):
         ######################################################
         #remove placeholder tab
 
-        # state_machine_tree_tab = view['state_machine_tree_placeholder']
-        # page_num = view["tree_notebook"].page_num(state_machine_tree_tab)
-        # view["tree_notebook"].remove_page(page_num)
-        # #append new tab
-        # #TODO: this is not always the active state machine
-        # state_machine_tree_controller = StateMachineTreeController(active_state_machine, view.state_machine_tree)
-        # self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
-        # state_machine_label = gtk.Label('Statemachine')
-        # view["tree_notebook"].insert_page(view.state_machine_tree, state_machine_label, page_num)
+        state_machine_tree_tab = view['state_machine_tree_placeholder']
+        page_num = view["tree_notebook"].page_num(state_machine_tree_tab)
+        view["tree_notebook"].remove_page(page_num)
+        #append new tab
+        #TODO: this is not always the active state machine
+        state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
+        self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
+        state_machine_label = gtk.Label('Statemachine')
+        view["tree_notebook"].insert_page(view.state_machine_tree, state_machine_label, page_num)
 
         ######################################################
         # state editor
@@ -182,7 +182,6 @@ class MainWindowController(ExtendedController):
         [state_machine, version, creation_time] = statemachine.singleton.\
             global_storage.load_statemachine_from_yaml(load_path)
         statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-
 
     def on_save_activate(self, widget, data=None):
         save_path = self.model.get_selected_state_machine_model().state_machine.base_path
