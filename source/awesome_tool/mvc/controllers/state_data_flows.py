@@ -46,7 +46,6 @@ class StateDataFlowsListController(ExtendedController):
         self.update_internal_data_base()
         self.update_tree_store()
 
-
     def register_view(self, view):
         """Called when the View was registered
         """
