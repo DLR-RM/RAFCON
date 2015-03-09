@@ -101,7 +101,7 @@ class StatesEditorController(ExtendedController):
         # sniffing the graphical viewer selection
         self.view.notebook.connect('switch-page', self.on_switch_page)
         if self._selected_state_machine_model:
-            self.add_state_editor(self._selected_state_machine_model.root_state)
+            self.add_state_editor(self._selected_state_machine_model.root_state,self.editor_type)
 
     def add_state_editor(self, state_model, editor_type=None):
         sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
