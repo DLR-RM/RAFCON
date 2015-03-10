@@ -596,7 +596,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param pos_x: x starting position
         :param pos_y: y starting position
         :param height: desired height
-        :param stroke_width: thickness of the letters
+        :param bold: flag whether to use a bold font
         :param depth: the Z layer
         """
         stroke_width = height / 8.

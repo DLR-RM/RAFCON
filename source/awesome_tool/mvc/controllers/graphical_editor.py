@@ -1093,12 +1093,16 @@ class GraphicalEditorController(ExtendedController):
 
         # extract ids
         selection = None
+
+        def get_id(hit):
+            if len(hit[2]) > 1:
+                return hit[2][1]
+            return None
         try:
-            selected_ids = map(lambda hit: hit[2][1], hits)
-            # print selected_ids
+            selected_ids = map(get_id, hits)  # Get the OpenGL ids for the hits
+            selected_ids = filter(lambda opengl_id: opengl_id is not None, selected_ids)  # Filter out Nones
             (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
                                                                         only_states)
-            # print selection, selection_depth
         except Exception as e:
             logger.error("Error while finding selection: {err:s}".format(err=e))
             pass
