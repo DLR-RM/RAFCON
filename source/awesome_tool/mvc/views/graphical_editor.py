@@ -465,13 +465,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPopName()
         return opengl_id, outcome_pos, outcome_radius, port_radius, resize_length
 
-    def draw_inner_input_data_port(self, port_name, port_m, pos_x, pos_y, width, height, depth):
-        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, depth)
+    def draw_inner_input_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
+        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, selected, depth)
 
-    def draw_inner_output_data_port(self, port_name, port_m, pos_x, pos_y, width, height, depth):
-        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.left, depth)
+    def draw_inner_output_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
+        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.left, selected, depth)
 
-    def _draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, arrow_position, depth):
+    def _draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, arrow_position, selected, depth):
         id = self.name_counter
         self.name_counter += 1
 
@@ -492,9 +492,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             left = pos_x - width
             right = pos_x
 
+        fill_color = self.port_color if not selected else self.state_selected_color
         arrow_pos, visible = self._draw_rect_arrow(left, right, pos_y, pos_y + height, arrow_position, depth,
                                                    border_color=self.port_name_color,
-                                                   fill_color=self.port_color)
+                                                   fill_color=fill_color)
         self._draw_circle(arrow_pos[0], arrow_pos[1], margin / 1.5, depth + 0.02, border_color=self.port_name_color,
                                   fill_color=self.port_connector_fill_color)
         self._write_string(port_name, left + margin, pos_y + height - margin, name_height, color=self.port_name_color,

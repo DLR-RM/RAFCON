@@ -921,8 +921,9 @@ class GraphicalEditorController(ExtendedController):
                 port_m.meta['gui']['editor']['inner_pos'] = (pos_x, pos_y)
             (pos_x, pos_y) = port_m.meta['gui']['editor']['inner_pos']
 
+            selected = port_m in self.model.selection.get_all()
             opengl_id = self.view.editor.draw_inner_input_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
-                                                                    port_height, parent_depth + 0.5)
+                                                                    port_height, selected, parent_depth + 0.5)
             port_m.meta['gui']['editor']['id'] = opengl_id
             num_input_ports += 1
 
@@ -935,8 +936,9 @@ class GraphicalEditorController(ExtendedController):
                 port_m.meta['gui']['editor']['inner_pos'] = (pos_x, pos_y)
             (pos_x, pos_y) = port_m.meta['gui']['editor']['inner_pos']
 
+            selected = port_m in self.model.selection.get_all()
             opengl_id = self.view.editor.draw_inner_output_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
-                                                                     port_height, parent_depth + 0.5)
+                                                                     port_height, selected, parent_depth + 0.5)
             port_m.meta['gui']['editor']['id'] = opengl_id
             num_output_ports += 1
 
