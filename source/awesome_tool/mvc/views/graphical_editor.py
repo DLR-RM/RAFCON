@@ -378,8 +378,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Draw input and output data ports
         port_radius = margin / 4.
         num_ports = len(input_ports_m) + len(output_ports_m)
-        input_connector_pos = {}
-        output_connector_pos = {}
         if num_ports > 0:
             max_name_width = 0
             margin = min(width, height) / 10.0
@@ -422,20 +420,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             output_num = 0
             for port_m in input_ports_m:
                 con_pos_x, con_pos_y = draw_port(port_m, output_num, True)
-                port_m.meta['gui']['editor']['pos_x'] = con_pos_x
-                port_m.meta['gui']['editor']['pos_y'] = con_pos_y
-                #input_connector_pos[port.data_port_id] = (con_pos_x, con_pos_y)
+                port_m.meta['gui']['editor']['pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
             for port_m in output_ports_m:
                 con_pos_x, con_pos_y = draw_port(port_m, output_num, False)
-                port_m.meta['gui']['editor']['pos_x'] = con_pos_x
-                port_m.meta['gui']['editor']['pos_y'] = con_pos_y
-                #output_connector_pos[port.data_port_id] = (con_pos_x, con_pos_y)
+                port_m.meta['gui']['editor']['pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
         # Draw input and output data ports
-        scoped_connector_pos = {}
         if len(scoped_vars_m) > 0:
             max_scope_width = width * 0.9
             margin = min(height, width) / 50.
@@ -466,15 +459,11 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                                   stroke_width=border_width / 8., border_color=self.port_name_color,
                                   fill_color=self.port_connector_fill_color)
                 num += 1
-                scoped_var_m.meta['gui']['editor']['pos_x'] = connect[0]
-                scoped_var_m.meta['gui']['editor']['pos_y'] = connect[1]
-                #scoped_connector_pos[key] = connect
+                scoped_var_m.meta['gui']['editor']['pos'] = connect
                 pass
 
         glPopName()
-        return opengl_id, outcome_pos, outcome_radius, \
-               input_connector_pos, output_connector_pos, scoped_connector_pos, port_radius, \
-               resize_length
+        return opengl_id, outcome_pos, outcome_radius, port_radius, resize_length
 
     def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False,
                         depth=0):

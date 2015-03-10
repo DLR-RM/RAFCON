@@ -823,27 +823,23 @@ class GraphicalEditorController(ExtendedController):
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
-        (opengl_id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos, port_radius, resize_length) = \
-            self.view.editor.draw_state(
-                state_m.state.name,
-                pos_x, pos_y, width, height,
-                state_m.state.outcomes,
-                state_m.input_data_ports,
-                state_m.output_data_ports,
-                scoped_ports,
-                selected, active, depth)
+        (opengl_id, outcome_pos, outcome_radius, port_radius, resize_length) = self.view.editor.draw_state(
+            state_m.state.name,
+            pos_x, pos_y, width, height,
+            state_m.state.outcomes,
+            state_m.input_data_ports,
+            state_m.output_data_ports,
+            scoped_ports,
+            selected, active, depth)
         state_m.meta['gui']['editor']['id'] = opengl_id
         state_m.meta['gui']['editor']['outcome_pos'] = outcome_pos
         state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
         state_m.meta['gui']['editor']['port_radius'] = port_radius
-        state_m.meta['gui']['editor']['input_pos'] = input_pos
-        state_m.meta['gui']['editor']['output_pos'] = output_pos
-        state_m.meta['gui']['editor']['scoped_pos'] = scoped_pos
         state_m.meta['gui']['editor']['resize_length'] = resize_length
 
         if state_m.parent is not None and (
-                state_m.parent.state.start_state == state_m.state.state_id or
-                isinstance(state_m.parent.state, ConcurrencyState)):
+                        state_m.parent.state.start_state == state_m.state.state_id or
+                    isinstance(state_m.parent.state, ConcurrencyState)):
             self.draw_start_transition(state_m.parent, state_m, depth)
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
@@ -966,7 +962,7 @@ class GraphicalEditorController(ExtendedController):
             to_key = data_flow_m.data_flow.to_key
 
             # from_connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
-            #                        from_state.meta['gui']['editor']['scoped_pos'].items() +
+            # from_state.meta['gui']['editor']['scoped_pos'].items() +
             #                        from_state.meta['gui']['editor']['output_pos'].items())
             # to_connectors = dict(to_state.meta['gui']['editor']['input_pos'].items() +
             #                      to_state.meta['gui']['editor']['scoped_pos'].items() +
@@ -986,13 +982,8 @@ class GraphicalEditorController(ExtendedController):
                 logger.warn('Cannot find model of the to data port {0}'.format(to_key))
                 continue
 
-            from_x = from_port.meta['gui']['editor']['pos_x']
-            from_y = from_port.meta['gui']['editor']['pos_y']
-            to_x = to_port.meta['gui']['editor']['pos_x']
-            to_y = to_port.meta['gui']['editor']['pos_y']
-            # from_y = from_connectors[from_key][1]
-            # to_x = to_connectors[to_key][0]
-            # to_y = to_connectors[to_key][1]
+            (from_x, from_y) = from_port.meta['gui']['editor']['pos']
+            (to_x, to_y) = to_port.meta['gui']['editor']['pos']
 
             waypoints = []
             for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
