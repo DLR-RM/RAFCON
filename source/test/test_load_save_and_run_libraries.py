@@ -6,7 +6,7 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.library_state import LibraryState
 import awesome_tool.statemachine.singleton
 from awesome_tool.statemachine.states.state import DataPortType
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 

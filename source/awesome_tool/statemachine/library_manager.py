@@ -14,8 +14,9 @@ import os
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-import config
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
+import awesome_tool.statemachine.singleton
+import awesome_tool.statemachine.config as config
 
 
 class LibraryManager(Observable):
@@ -30,7 +31,7 @@ class LibraryManager(Observable):
         Observable.__init__(self)
         self._libraries = {}
         logger.debug("Initializing Storage object ...")
-        self.storage = Storage("../")
+        self.storage = StateMachineStorage("../")
 
     def initialize(self):
         """
@@ -43,7 +44,8 @@ class LibraryManager(Observable):
         """
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
         self._libraries = {}
-        for lib_key, lib_path in config.LIBRARY_PATHS.iteritems():
+        #for lib_key, lib_path in awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
+        for lib_key, lib_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
             if os.path.exists(lib_path):
                 self._libraries[lib_key] = {}
                 self.add_libraries_from_path(lib_path, self._libraries[lib_key])
@@ -62,7 +64,7 @@ class LibraryManager(Observable):
         for lib in os.listdir(lib_path):
             #logger.debug(str(lib))
             if os.path.isdir(os.path.join(lib_path, lib)):
-                if os.path.exists(os.path.join(os.path.join(lib_path, lib), Storage.STATEMACHINE_FILE)):
+                if os.path.exists(os.path.join(os.path.join(lib_path, lib), StateMachineStorage.STATEMACHINE_FILE)):
                     self.add_library(lib, lib_path, target_dict)
                 else:
                     target_dict[lib] = {}

@@ -16,7 +16,6 @@ from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerMod
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.states.library_state import LibraryState
 
-
 import gobject
 gobject.threads_init()
 

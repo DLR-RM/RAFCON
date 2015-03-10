@@ -4,7 +4,7 @@ from pytest import raises
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.state_machine import StateMachine
 
 import variables_for_pytest
@@ -57,7 +57,7 @@ def test_concurrency_barrier_state_execution():
 
 
 def test_concurrency_barrier_save_load():
-    test_storage = Storage("../test_scripts/stored_statemachine")
+    test_storage = StateMachineStorage("../test_scripts/stored_statemachine")
 
     concurrency_barrier_state = create_concurrency_barrier_state()
     sm = StateMachine(concurrency_barrier_state)

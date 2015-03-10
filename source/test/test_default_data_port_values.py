@@ -2,7 +2,7 @@ import pytest
 
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 import awesome_tool.statemachine.singleton
 from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
@@ -35,7 +35,7 @@ def create_statemachine():
 
 def test_default_values_of_data_ports():
 
-    test_storage = Storage("../test_scripts/stored_statemachine")
+    test_storage = StateMachineStorage("../test_scripts/stored_statemachine")
 
     sm = create_statemachine()
 

@@ -10,7 +10,7 @@ from awesome_tool.utils.vividict import Vividict
 from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.models.outcome import OutcomeModel
 import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.utils import log
 from awesome_tool.statemachine.enums import StateType
 
@@ -276,9 +276,9 @@ class StateModel(ModelMT):
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
         #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
+        meta_path = os.path.join(self.state.script.path, StateMachineStorage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
-            tmp_meta = awesome_tool.statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
+            tmp_meta = awesome_tool.statemachine.singleton.global_storage.storage_utils.load_dict_from_yaml(meta_path)
 
             if self.state.state_type is not StateType.EXECUTION:
                 # add meta to transition and data flow
@@ -302,7 +302,7 @@ class StateModel(ModelMT):
 
     def store_meta_data_for_state(self):
         #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
+        meta_path = os.path.join(self.state.script.path, StateMachineStorage.GRAPHICS_FILE)
 
         # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file
         if self.state.state_type is not StateType.EXECUTION:
@@ -315,7 +315,7 @@ class StateModel(ModelMT):
                 self.meta["data_flow" + str(counter)] = data_flow_model.meta
                 counter += 1
 
-        awesome_tool.statemachine.singleton.global_storage.write_dict_to_yaml(self.meta, meta_path)
+        awesome_tool.statemachine.singleton.global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)
 
     @staticmethod
     def dataport_compare_method(treemodel, iter1, iter2, user_data=None):

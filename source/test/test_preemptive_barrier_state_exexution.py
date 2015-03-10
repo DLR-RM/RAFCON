@@ -4,7 +4,7 @@ from pytest import raises
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
@@ -52,7 +52,7 @@ def test_concurrency_preemption_state_execution():
 
 
 def test_concurrency_preemption_save_load():
-    s = Storage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage("../test_scripts/stored_statemachine")
 
     preemption_state_sm = create_preemption_statemachine()
 

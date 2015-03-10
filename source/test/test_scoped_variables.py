@@ -3,7 +3,7 @@ import pytest
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.state import StateType, DataPortType
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 import awesome_tool.statemachine.singleton
 from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
@@ -53,7 +53,7 @@ def create_statemachine():
 
 def test_scoped_variables():
 
-    s = Storage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage("../test_scripts/stored_statemachine")
 
     sm = create_statemachine()
 

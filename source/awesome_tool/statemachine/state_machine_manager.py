@@ -7,7 +7,6 @@
 
 
 """
-import os
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from gtkmvc import Observable

@@ -1,7 +1,7 @@
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 
 from awesome_tool.statemachine.state_machine_manager import StateMachineManager
 from awesome_tool.statemachine.state_machine import StateMachine
@@ -36,7 +36,7 @@ def test_start_stop_pause_step():
     sm = return_loop_state_machine()
     awesome_tool.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
 
-    s = Storage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage("../test_scripts/stored_statemachine")
     s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
     sm_loaded, version, creation_time = s.load_statemachine_from_yaml()
 

@@ -6,7 +6,7 @@ from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 import awesome_tool.statemachine.singleton
 from awesome_tool.statemachine.states.state import DataPortType
-from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
@@ -54,7 +54,7 @@ def test_hierarchy_state_execution():
     assert output_data["output1"] == 52.0
 
 def test_hierarchy_save_load_test():
-    s = Storage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage("../test_scripts/stored_statemachine")
 
     hierarchy_state = create_hierarchy_state()
     sm = StateMachine(hierarchy_state)
