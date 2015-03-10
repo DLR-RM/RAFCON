@@ -63,6 +63,10 @@ class StateMachineManager(Observable):
                 sm_state = sm.get_state_by_path(state_path)
                 if sm_state and sm_state is state:
                     return sm_id
+                else:
+                    logger.debug("sm_id is not secure as long the identity check of the state and reference failed")
+
+        logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
         return None
 
     @Observable.observed

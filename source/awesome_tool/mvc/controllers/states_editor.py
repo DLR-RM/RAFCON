@@ -143,16 +143,24 @@ class StatesEditorController(ExtendedController):
     def on_close_clicked(self, event, state_model, result):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         #print event, state_model, result
-        sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
-        state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
-
-        page = self.tabs[state_identifier]['page']
-        current_idx = self.view.notebook.page_num(page)
+        # TODO use sm_id - the sm_id is not found while remove_state
+        # TODO           -> work-around is to use only the path to find the page
+        # sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
+        # state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
+        self.tabs["%s|%s" % (None, state_model.state.get_path())]
+        page_to_close = None
+        for key, items in self.tabs.iteritems():
+            if key.split('|')[1] == state_model.state.get_path():  # state_identifier.split('|')[1]:
+                page_to_close = items['page']
+                break
+        #page_to_close = self.tabs[state_identifier]['page']
+        # if page_to_close:
+        current_idx = self.view.notebook.page_num(page_to_close)
 
         self.view.notebook.remove_page(current_idx)
-        del self.tabs[state_identifier]['ctrl']
-        del self.tabs[state_identifier]['view']
-        del self.tabs[state_identifier]
+        # del self.tabs[state_identifier]['ctrl']
+        # del self.tabs[state_identifier]['view']
+        # del self.tabs[state_identifier]
         self.remove_controller(state_model.state.state_id)
 
     def close_all_tabs(self):
