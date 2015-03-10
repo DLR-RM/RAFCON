@@ -1,12 +1,12 @@
 import gtk
 import gobject
 
-from mvc.controllers.extended_controller import ExtendedController
-import statemachine.singleton
-from utils import log
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+import awesome_tool.statemachine.singleton
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from statemachine.enums import StateType
-from statemachine.states.library_state import LibraryState
+from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.states.library_state import LibraryState
 
 
 class LibraryTreeController(ExtendedController):  # (Controller):
@@ -34,7 +34,7 @@ class LibraryTreeController(ExtendedController):  # (Controller):
     def update(self):
         #logger.debug("Update of library_tree controller called")
         self.library_tree_store.clear()
-        for library_key, library_item in statemachine.singleton.library_manager.libraries.iteritems():
+        for library_key, library_item in awesome_tool.statemachine.singleton.library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")
 
     def insert_rec(self, parent, library_key, library_item, library_path):

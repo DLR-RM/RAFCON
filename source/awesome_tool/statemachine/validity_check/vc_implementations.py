@@ -17,7 +17,7 @@ class DummyVC(vc_strategy.VCStrategy):
         pass
 
     #Note: Use deferred import to check cState for being instacne of ContainerState
-    #from statemachine.container_state import ContainerState
+    #from awesome_tool.statemachine.container_state import ContainerState
     def check(self, container_state):
         #TODO: implement
         return True

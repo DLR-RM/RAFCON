@@ -1,9 +1,9 @@
 from gtkmvc import ModelMT
-from mvc.models.state_machine import StateMachineModel, Selection
-from statemachine.state_machine_manager import StateMachineManager
-from utils.vividict import Vividict
+from awesome_tool.mvc.models.state_machine import StateMachineModel, Selection
+from awesome_tool.statemachine.state_machine_manager import StateMachineManager
+from awesome_tool.utils.vividict import Vividict
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

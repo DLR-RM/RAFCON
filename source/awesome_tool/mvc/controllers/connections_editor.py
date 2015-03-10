@@ -1,10 +1,10 @@
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.controllers.state_transitions import StateTransitionsListController, StateTransitionsEditorController
-from mvc.controllers.state_data_flows import StateDataFlowsListController, StateDataFlowsEditorController
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.state_transitions import StateTransitionsListController, StateTransitionsEditorController
+from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsListController, StateDataFlowsEditorController
 
 
 class StateConnectionsEditorController(ExtendedController):
@@ -16,8 +16,8 @@ class StateConnectionsEditorController(ExtendedController):
     :class:`mvc.models.state.ContainerStateModel`. Changes made in
     the GUI are written back to the model and vice versa.
 
-    :param mvc.models.StateModel model: The state model containing the data
-    :param mvc.views.StatePropertiesView view: The GTK view showing the data as a table
+    :param awesome_tool.mvc.models.StateModel model: The state model containing the data
+    :param awesome_tool.mvc.views.StatePropertiesView view: The GTK view showing the data as a table
     """
 
     def __init__(self, model, view):

@@ -8,11 +8,11 @@
 
 """
 
-from statemachine.global_variable_manager import GlobalVariableManager
-from statemachine.library_manager import LibraryManager
-from statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
-from statemachine.storage.storage import Storage
-from statemachine.state_machine_manager import StateMachineManager
+from awesome_tool.statemachine.global_variable_manager import GlobalVariableManager
+from awesome_tool.statemachine.library_manager import LibraryManager
+from awesome_tool.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
+from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.state_machine_manager import StateMachineManager
 
 #This variable holds the global variable manager singleton
 global_variable_manager = GlobalVariableManager()

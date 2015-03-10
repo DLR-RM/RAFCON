@@ -11,7 +11,7 @@ from source_editor import SourceEditorController
 from state_outcomes import StateOutcomesEditorController
 from state_outcomes import StateOutcomesListController
 from io_data_port_list import DataPortListController
-from mvc.controllers.scoped_variable_list import ScopedVariableListController
+from awesome_tool.mvc.controllers.scoped_variable_list import ScopedVariableListController
 from connections_editor import StateConnectionsEditorController
 from state_editor import StateEditorController
 

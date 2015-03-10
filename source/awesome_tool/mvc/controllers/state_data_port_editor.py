@@ -1,8 +1,8 @@
 import gtk
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.controllers.io_data_port_list import DataPortListController
-from mvc.controllers.scoped_variable_list import ScopedVariableListController
-from utils import log
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.io_data_port_list import DataPortListController
+from awesome_tool.mvc.controllers.scoped_variable_list import ScopedVariableListController
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

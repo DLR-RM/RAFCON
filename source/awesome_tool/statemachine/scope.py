@@ -13,10 +13,10 @@ import time
 import datetime
 
 from gtkmvc import Observable
-from statemachine.enums import DataPortType
+from awesome_tool.statemachine.enums import DataPortType
 import yaml
 
-from statemachine.states.state import State, DataPort
+from awesome_tool.statemachine.states.state import State, DataPort
 
 
 def generate_time_stamp():

@@ -1,4 +1,4 @@
-MVC Controllers (mvc.controllers)
+MVC Controllers (awesome_tool.mvc.controllers)
 =================================
 
 All controllers of the MVC architecture.

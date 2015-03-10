@@ -1,8 +1,8 @@
 import pytest
 from pytest import raises
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.container_state import ContainerState
-from statemachine.states.state import DataPort
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.state import DataPort
 
 def test_create_state():
     state1 = ExecutionState("MyFirstState")

@@ -12,10 +12,10 @@
 from gtkmvc import Observable
 import os
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import config
-from statemachine.storage.storage import Storage
+from awesome_tool.statemachine.storage.storage import Storage
 
 
 class LibraryManager(Observable):

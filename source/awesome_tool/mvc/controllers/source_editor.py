@@ -1,11 +1,11 @@
 import gtk
-from mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from pylint import epylint as lint
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-import statemachine.singleton
-from statemachine.enums import StateType
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.enums import StateType
 
 
 #TODO: comment
@@ -75,7 +75,7 @@ class SourceEditorController(ExtendedController):
         else:
             if self.model.state.set_script_text(current_text):
                 logger.debug("File saved")
-                statemachine.singleton.global_storage.save_script_file(self.model.state)
+                awesome_tool.statemachine.singleton.global_storage.save_script_file(self.model.state)
             self.view.set_text(self.model.state.script.script)
 
     #===============================================================
@@ -85,7 +85,7 @@ class SourceEditorController(ExtendedController):
     def on_message_dialog_response_signal(self, widget, response_id, current_text):
         if response_id == 42:
             self.model.state.script.script = current_text
-            statemachine.singleton.global_storage.save_script_file(self.model.state)
+            awesome_tool.statemachine.singleton.global_storage.save_script_file(self.model.state)
             self.view.set_text(self.model.state.script.script)
             logger.debug("File saved")
         else:

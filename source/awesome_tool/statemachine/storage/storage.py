@@ -16,10 +16,10 @@ from time import gmtime, strftime
 import yaml
 from gtkmvc import Observable
 
-import statemachine.states.state
-from statemachine.state_machine import StateMachine
-from statemachine.enums import StateType
-from utils import log
+import awesome_tool.statemachine.states.state
+from awesome_tool.statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.enums import StateType
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -222,7 +222,7 @@ class Storage(Observable):
         state.script.filename = self.SCRIPT_FILE
 
         #create yaml files for all children
-        if not state.state_type is statemachine.states.state.StateType.EXECUTION:
+        if not state.state_type is awesome_tool.statemachine.states.state.StateType.EXECUTION:
             for key, state in state.states.iteritems():
                 self.save_state_recursively(state, state_path)
 

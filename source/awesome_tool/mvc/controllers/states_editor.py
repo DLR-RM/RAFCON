@@ -2,12 +2,12 @@ import pango
 
 import gtk
 
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
-from mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
-from mvc.models.state_machine_manager import StateMachineManagerModel
-from mvc.models.state_machine import Selection
-from utils import log
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
+from awesome_tool.mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.models.state_machine import Selection
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

@@ -3,19 +3,19 @@ from gtk import ListStore
 from gtkmvc import ModelMT
 import gtk
 
-from statemachine.states.container_state import ContainerState
-from statemachine.states.state import State
-from statemachine.data_flow import DataFlow
-from statemachine.transition import Transition
-from statemachine.states.state import DataPort
-from statemachine.scope import ScopedVariable
-from mvc.models.state import StateModel
-import mvc.models
-from mvc.models.transition import TransitionModel
-from mvc.models.data_flow import DataFlowModel
-from mvc.models.data_port import DataPortModel
-from mvc.models.scoped_variable import ScopedVariableModel
-from utils import log
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.statemachine.data_flow import DataFlow
+from awesome_tool.statemachine.transition import Transition
+from awesome_tool.statemachine.states.state import DataPort
+from awesome_tool.statemachine.scope import ScopedVariable
+from awesome_tool.mvc.models.state import StateModel
+import awesome_tool.mvc.models
+from awesome_tool.mvc.models.transition import TransitionModel
+from awesome_tool.mvc.models.data_flow import DataFlowModel
+from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
+from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -89,7 +89,7 @@ class ContainerStateModel(StateModel):
                         sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, mvc.models.state.dataport_compare_method)
+        tms.set_sort_func(0, awesome_tool.mvc.models.state.dataport_compare_method)
         tms.sort_column_changed()
         tmp = tms
         self.scoped_variables_list_store.clear()

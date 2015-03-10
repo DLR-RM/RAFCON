@@ -8,7 +8,7 @@
 
 """
 
-from statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.container_state import ContainerState
 
 
 class ConcurrencyState(ContainerState):

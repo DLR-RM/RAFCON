@@ -1,9 +1,9 @@
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 import gtk
-from mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc.adapters import UserClassAdapter
 
 
@@ -15,8 +15,8 @@ class StatePropertiesController(ExtendedController):
     :class:`mvc.models.state.StateModel`. Changes made in
     the GUI are written back to the model and vice versa.
 
-    :param mvc.models.StateModel model: The state model containing the data
-    :param mvc.views.StatePropertiesView view: The GTK view showing the data as a table
+    :param awesome_tool.mvc.models.StateModel model: The state model containing the data
+    :param awesome_tool.mvc.views.StatePropertiesView view: The GTK view showing the data as a table
     """
 
     def __init__(self, model, view):
@@ -89,7 +89,7 @@ class StatePropertiesController(ExtendedController):
         The function is empty at the moment (except a debug output), but can be filled with logic executed before a
         certain attribute is changed. The method contains a comment with example code.
 
-        :param mvc.models.StateModel model: The model of the state being handled by the controller
+        :param awesome_tool.mvc.models.StateModel model: The model of the state being handled by the controller
         :param sm.State _: The state that was changed (can also be accessed via the model)
         :param info: Additional information, such as the method name that was called to change an attribute. With
             this method name, the property being changed can be determined. The parameter also contains the new desired
@@ -124,7 +124,7 @@ class StatePropertiesController(ExtendedController):
         The function is empty at the moment (except a debug output), but can be filled with logic executed before a
         certain attribute is changed. See :func:`before_state_change` for example code.
 
-        :param mvc.models.StateModel model: The model of the state being handled by the controller
+        :param awesome_tool.mvc.models.StateModel model: The model of the state being handled by the controller
         :param sm.State _: The state that was changed (can also be accessed via the model)
         :param info: Additional information, such as the method name that was called to change an attribute. With
             this method name, the property being changed can be determined. The parameter also contains the new desired

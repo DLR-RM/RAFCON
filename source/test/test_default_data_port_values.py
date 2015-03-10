@@ -1,11 +1,10 @@
 import pytest
 
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.state import StateType, DataPortType
-from statemachine.storage.storage import Storage
-import statemachine.singleton
-from statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.statemachine.storage.storage import Storage
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
@@ -31,18 +30,19 @@ def create_statemachine():
                          state2.state_id,
                          output_state2)
 
-    return state2
+    return StateMachine(state2)
 
 
 def test_default_values_of_data_ports():
 
-    s = Storage("../test_scripts/stored_statemachine")
+    test_storage = Storage("../test_scripts/stored_statemachine")
 
-    root_state = create_statemachine()
+    sm = create_statemachine()
 
-    s.save_statemachine_as_yaml(root_state, "../test_scripts/stored_statemachine")
-    [root_state, version, creation_time] = s.load_statemachine_from_yaml()
+    test_storage.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
+    [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_yaml()
 
+    root_state = sm_loaded.root_state
     input_data = {}
     output_data = {"output_data_port1": None}
     root_state.input_data = input_data
@@ -50,11 +50,11 @@ def test_default_values_of_data_ports():
 
     state_machine = StateMachine(root_state)
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["output_data_port1"]

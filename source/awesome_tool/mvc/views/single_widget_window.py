@@ -1,9 +1,9 @@
 import gtk
 from gtkmvc import View
 from gtkmvc import Controller
-from statemachine.states.execution_state import ExecutionState
-import statemachine.singleton
-from utils import log
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+import awesome_tool.statemachine.singleton
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -134,23 +134,23 @@ class TestButtonsView(View, Controller):
 
     def on_button2_pressed(self, widget, data=None):
         logger.debug("Step button pressed")
-        statemachine.singleton.state_machine_execution_engine.step()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
 
     def on_button3_pressed(self, widget, data=None):
         logger.debug("Start button pressed")
-        statemachine.singleton.state_machine_execution_engine.start()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
 
     def on_button4_pressed(self, widget, data=None):
         logger.debug("Stop button pressed")
-        statemachine.singleton.state_machine_execution_engine.stop()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
     def on_button5_pressed(self, widget, data=None):
         logger.debug("Pause button pressed")
-        statemachine.singleton.state_machine_execution_engine.pause()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.pause()
 
     def on_button6_pressed(self, widget, data=None):
         logger.debug("Step-mode button pressed")
-        statemachine.singleton.state_machine_execution_engine.step_mode()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.step_mode()
 
     def register_view(self, view):
         """Called when the View was registered

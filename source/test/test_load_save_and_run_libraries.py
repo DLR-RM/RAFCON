@@ -1,13 +1,13 @@
 import pytest
 from pytest import raises
 
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.library_state import LibraryState
-import statemachine.singleton
-from statemachine.states.state import DataPortType
-from statemachine.storage.storage import Storage
-from statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.statemachine.states.library_state import LibraryState
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.states.state import DataPortType
+from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
@@ -48,20 +48,20 @@ def save_libraries():
                          output_state3)
 
     # save hierarchy state as state machine
-    s.save_statemachine_as_yaml(state3, "../test_scripts/test_libraries/hierarchy_library", "0.1")
+    s.save_statemachine_as_yaml(StateMachine(state3), "../test_scripts/test_libraries/hierarchy_library", "0.1")
 
     # save execution state as state machine
-    s.save_statemachine_as_yaml(state1, "../test_scripts/test_libraries/execution_library", "0.1")
+    s.save_statemachine_as_yaml(StateMachine(state1), "../test_scripts/test_libraries/execution_library", "0.1")
 
     # save hierarchy state as nested state machines
     state3.name = "library_nested1"
-    s.save_statemachine_as_yaml(state3, "../test_scripts/test_libraries/library_container/library_nested1", "0.1")
+    s.save_statemachine_as_yaml(StateMachine(state3), "../test_scripts/test_libraries/library_container/library_nested1", "0.1")
     state3.name = "library_nested2"
-    s.save_statemachine_as_yaml(state3, "../test_scripts/test_libraries/library_container/library_nested2", "0.1")
+    s.save_statemachine_as_yaml(StateMachine(state3), "../test_scripts/test_libraries/library_container/library_nested2", "0.1")
 
 
 def create_hierarchy_state_library_state_machine():
-    statemachine.singleton.library_manager.initialize()
+    awesome_tool.statemachine.singleton.library_manager.initialize()
     library_container_state = HierarchyState("LibContainerState", path="../test_scripts",
                                              filename="hierarchy_state.py")
     lib_state = LibraryState("test_libraries", "hierarchy_library", "0.1", "library_state")
@@ -82,11 +82,11 @@ def create_hierarchy_state_library_state_machine():
                                                                                            DataPortType.OUTPUT),
                                           library_container_state.state_id,
                                           lib_container_output)
-    return library_container_state
+    return StateMachine(library_container_state)
 
 
 def create_execution_state_library_state_machine():
-    statemachine.singleton.library_manager.initialize()
+    awesome_tool.statemachine.singleton.library_manager.initialize()
     library_container_state = HierarchyState("LibContainerState", path="../test_scripts",
                                              filename="hierarchy_state.py")
     lib_state = LibraryState("test_libraries", "execution_library", "0.1", "library_state")
@@ -107,32 +107,30 @@ def create_execution_state_library_state_machine():
                                                                                            DataPortType.OUTPUT),
                                           library_container_state.state_id,
                                           lib_container_output)
-    return library_container_state
+    return StateMachine(library_container_state)
 
 
 def save_nested_library_state():
-    library_with_nested_library = create_hierarchy_state_library_state_machine()
+    library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
-    statemachine.singleton.global_storage.save_statemachine_as_yaml(
-        library_with_nested_library, "../test_scripts/test_libraries/library_with_nested_library", "0.1")
+    awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        library_with_nested_library_sm, "../test_scripts/test_libraries/library_with_nested_library", "0.1")
 
 
 def test_hierarchy_state_library():
-    library_container_state = create_hierarchy_state_library_state_machine()
+    library_container_state_sm = create_hierarchy_state_library_state_machine()
 
     input_data = {"data_input_port1": 22.0}
     output_data = {"data_output_port1": None}
-    library_container_state.input_data = input_data
-    library_container_state.output_data = output_data
-
-    state_machine = StateMachine(library_container_state)
+    library_container_state_sm.root_state.input_data = input_data
+    library_container_state_sm.root_state.output_data = output_data
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
-    library_container_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    library_container_state_sm.root_state.join()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
     # print output_data["data_output_port1"]
@@ -140,21 +138,19 @@ def test_hierarchy_state_library():
 
 
 def test_execution_state_library():
-    library_container_state = create_execution_state_library_state_machine()
+    library_container_state_sm = create_execution_state_library_state_machine()
 
     input_data = {"data_input_port1": 32.0}
     output_data = {"data_output_port1": None}
-    library_container_state.input_data = input_data
-    library_container_state.output_data = output_data
-
-    state_machine = StateMachine(library_container_state)
+    library_container_state_sm.root_state.input_data = input_data
+    library_container_state_sm.root_state.output_data = output_data
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
-    library_container_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    library_container_state_sm.root_state.join()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
     # print output_data["data_output_port1"]
@@ -162,7 +158,7 @@ def test_execution_state_library():
 
 
 def test_nested_library_state_machine():
-    statemachine.singleton.library_manager.initialize()
+    awesome_tool.statemachine.singleton.library_manager.initialize()
     nested_library_state = LibraryState("test_libraries", "library_with_nested_library", "0.1", "library_state_name")
     input_data = {"data_input_port1": 22.0}
     output_data = {"data_output_port1": None}
@@ -171,11 +167,11 @@ def test_nested_library_state_machine():
     state_machine = StateMachine(nested_library_state)
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     nested_library_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["data_output_port1"]

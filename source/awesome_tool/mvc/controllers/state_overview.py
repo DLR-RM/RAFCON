@@ -1,20 +1,20 @@
 import gtk
-from mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Controller, Model
 
-from statemachine.states.state import State, StateType
-from statemachine.states.container_state import ContainerState
-from statemachine.states.concurrency_state import ConcurrencyState
+from awesome_tool.statemachine.states.state import State, StateType
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from statemachine.states.library_state import LibraryState
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from awesome_tool.statemachine.states.library_state import LibraryState
 
-from mvc.models import ContainerStateModel, StateModel
+from awesome_tool.mvc.models import ContainerStateModel, StateModel
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -26,8 +26,8 @@ class StateOverviewController(ExtendedController, Model):
     :class:`mvc.models.state.StateModel`. Changes made in
     the GUI are written back to the model and vice versa.
 
-    :param mvc.models.StateModel model: The state model containing the data
-    :param mvc.views.SourceEditorView view: The GTK view showing the data as a table
+    :param awesome_tool.mvc.models.StateModel model: The state model containing the data
+    :param awesome_tool.mvc.views.SourceEditorView view: The GTK view showing the data as a table
     """
 
     # TODO Missing functions

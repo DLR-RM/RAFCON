@@ -1,7 +1,7 @@
 
 from gtkmvc import ModelMT
-from statemachine.data_flow import DataFlow
-from utils.vividict import Vividict
+from awesome_tool.statemachine.data_flow import DataFlow
+from awesome_tool.utils.vividict import Vividict
 
 
 class DataFlowModel(ModelMT):

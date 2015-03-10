@@ -4,18 +4,18 @@ from gtk import ListStore
 import gtk
 import os
 
-from statemachine.states.state import State
+from awesome_tool.statemachine.states.state import State
 from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
-from utils.vividict import Vividict
-from mvc.models.data_port import DataPortModel
-from mvc.models.outcome import OutcomeModel
-import statemachine.singleton
-from statemachine.storage.storage import Storage
-from utils import log
-from statemachine.enums import StateType
+from awesome_tool.utils.vividict import Vividict
+from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.models.outcome import OutcomeModel
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.storage.storage import Storage
+from awesome_tool.utils import log
+from awesome_tool.statemachine.enums import StateType
 
-from statemachine.outcome import Outcome
-from statemachine.states.state import DataPort
+from awesome_tool.statemachine.outcome import Outcome
+from awesome_tool.statemachine.states.state import DataPort
 
 logger = log.get_logger(__name__)
 
@@ -138,8 +138,8 @@ class StateModel(ModelMT):
         """
 
         # mark the state machine this state belongs to as dirty
-        own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
-        statemachine.singleton.global_storage.mark_dirty(own_sm_id)
+        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
+        awesome_tool.statemachine.singleton.global_storage.mark_dirty(own_sm_id)
     
         # TODO delete # prints if there is no bug ... latest 15th of march
         if hasattr(info, 'before') and info['before'] and (self is model.parent or isinstance(info.instance, DataPort)):
@@ -325,7 +325,7 @@ class StateModel(ModelMT):
         #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
-            tmp_meta = statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
+            tmp_meta = awesome_tool.statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
 
             if self.state.state_type is not StateType.EXECUTION:
                 # add meta to transition and data flow
@@ -362,7 +362,7 @@ class StateModel(ModelMT):
                 self.meta["data_flow" + str(counter)] = data_flow_model.meta
                 counter += 1
 
-        statemachine.singleton.global_storage.write_dict_to_yaml(self.meta, meta_path)
+        awesome_tool.statemachine.singleton.global_storage.write_dict_to_yaml(self.meta, meta_path)
 
 
 def dataport_compare_method(treemodel, iter1, iter2, user_data=None):

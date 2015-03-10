@@ -11,7 +11,7 @@
 from gtkmvc import Observable
 import yaml
 
-from statemachine.id_generator import *
+from awesome_tool.statemachine.id_generator import *
 
 
 class DataFlow(Observable, yaml.YAMLObject):

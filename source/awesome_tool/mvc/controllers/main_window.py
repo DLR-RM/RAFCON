@@ -2,19 +2,19 @@ import traceback
 
 import gtk
 
-from mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, LibraryTreeController
-import statemachine.singleton
-from statemachine.state_machine import StateMachine
-from statemachine.states.hierarchy_state import HierarchyState
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.controllers.states_editor import StatesEditorController
-from mvc.controllers.state_machines_editor import StateMachinesEditorController
-from mvc.models.state_machine_manager import StateMachineManagerModel, Selection
-from mvc.models.library_manager import LibraryManagerModel
-from mvc.shortcut_manager import ShortcutManager
-from mvc.views.state_machines_editor import StateMachinesEditorView
-from mvc.views.states_editor import StatesEditorView
-from utils import log
+from awesome_tool.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, LibraryTreeController
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.states_editor import StatesEditorController
+from awesome_tool.mvc.controllers.state_machines_editor import StateMachinesEditorController
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel, Selection
+from awesome_tool.mvc.models.library_manager import LibraryManagerModel
+from awesome_tool.mvc.shortcut_manager import ShortcutManager
+from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
+from awesome_tool.mvc.views.states_editor import StatesEditorView
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -36,7 +36,7 @@ class MainWindowController(ExtendedController):
             raise AttributeError("No active state machine found")
 
         # execution engine
-        self.state_machine_execution_engine = statemachine.singleton.state_machine_execution_engine
+        self.state_machine_execution_engine = awesome_tool.statemachine.singleton.state_machine_execution_engine
         self.observe_model(self.state_machine_execution_engine)
         self.state_machine_execution_engine.register_observer(self)
 
@@ -61,7 +61,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         # library tree
         ######################################################
-        library_manager_model = LibraryManagerModel(statemachine.singleton.library_manager)
+        library_manager_model = LibraryManagerModel(awesome_tool.statemachine.singleton.library_manager)
         library_controller = LibraryTreeController(library_manager_model, view.library_tree)
         self.add_controller('library_controller', library_controller)
         view['library_vbox'].remove(view['library_tree_placeholder'])
@@ -123,7 +123,7 @@ class MainWindowController(ExtendedController):
         status_bar2.push(0, "is awesome :-)")
         status_bar3 = view["statusbar3"]
         status_bar3_string = "Execution status: " + \
-                             str(statemachine.singleton.state_machine_execution_engine.status.execution_mode)
+                             str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         status_bar3.push(0, status_bar3_string)
 
         ######################################################
@@ -142,7 +142,7 @@ class MainWindowController(ExtendedController):
     def model_changed(self, model, prop_name, info):
         status_bar3 = self.view["statusbar3"]
         status_bar3_string = "Execution status: " + \
-                             str(statemachine.singleton.state_machine_execution_engine.status.execution_mode)
+                             str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         status_bar3.push(0, status_bar3_string)
 
     def on_main_window_destroy(self, widget, data=None):
@@ -159,8 +159,8 @@ class MainWindowController(ExtendedController):
         logger.debug("Creating new statemachine ...")
         root_state = HierarchyState("new_root_state")
         sm = StateMachine(root_state)
-        statemachine.singleton.state_machine_manager.add_state_machine(sm)
-        statemachine.singleton.global_storage.mark_dirty(sm.state_machine_id)
+        awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+        awesome_tool.statemachine.singleton.global_storage.mark_dirty(sm.state_machine_id)
 
     def on_open_activate(self, widget, data=None):
         dialog = gtk.FileChooserDialog("Please choose a folder",
@@ -179,9 +179,9 @@ class MainWindowController(ExtendedController):
         load_path = dialog.get_filename()
         dialog.destroy()
 
-        [state_machine, version, creation_time] = statemachine.singleton.\
+        [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
             global_storage.load_statemachine_from_yaml(load_path)
-        statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+        awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 
 
     def on_save_activate(self, widget, data=None):
@@ -190,7 +190,7 @@ class MainWindowController(ExtendedController):
         if save_path is None:
             self.on_save_as_activate(widget, data=None)
         else:
-            statemachine.singleton.global_storage.save_statemachine_as_yaml(
+            awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
                 self.model.get_selected_state_machine_model().state_machine,
                 self.model.get_selected_state_machine_model().state_machine.base_path,
                 delete_old_state_machine=False)
@@ -301,23 +301,23 @@ class MainWindowController(ExtendedController):
     ######################################################
     def on_start_activate(self, widget, data=None):
         logger.debug("Start execution engine ...")
-        statemachine.singleton.state_machine_execution_engine.start()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
 
     def on_pause_activate(self, widget, data=None):
         logger.debug("Pause execution engine ...")
-        statemachine.singleton.state_machine_execution_engine.pause()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.pause()
 
     def on_stop_activate(self, widget, data=None):
         logger.debug("Stop execution engine ...")
-        statemachine.singleton.state_machine_execution_engine.stop()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
         logger.debug("Activate execution engine step mode ...")
-        statemachine.singleton.state_machine_execution_engine.step_mode()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.step_mode()
 
     def on_step_activate(self, widget, data=None):
         logger.debug("Execution step ...")
-        statemachine.singleton.state_machine_execution_engine.step()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
 
     def on_backward_step_mode_activate(self, widget, data=None):
         logger.debug("Backward execution step not implemented yet!")
@@ -339,7 +339,7 @@ class MainWindowController(ExtendedController):
         :param data: optional data
         :return:
         """
-        statemachine.singleton.library_manager.refresh_libraries()
+        awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
 
     def on_refresh_all_activate(self, widget, data=None):
         """
@@ -348,11 +348,11 @@ class MainWindowController(ExtendedController):
         :param data: optional data
         :return:
         """
-        if len(statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
+        if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
                              "The following state machines were modified and not saved: "
-            for sm_id in statemachine.singleton.global_storage.ids_of_modified_state_machines:
+            for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
                 message_string = "%s %s " % (message_string, str(sm_id))
             message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
                              "before will be deleted!)" % message_string
@@ -376,15 +376,15 @@ class MainWindowController(ExtendedController):
         Deletes all libraries and state machines and reloads them freshly from the file system.
         :return:
         """
-        statemachine.singleton.library_manager.refresh_libraries()
+        awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
 
         # delete dirty flags for state machines
-        statemachine.singleton.global_storage.reset_dirty_flags()
+        awesome_tool.statemachine.singleton.global_storage.reset_dirty_flags()
 
         # create a dictionary from state machine id to state machine path
         state_machine_id_to_path = {}
         sm_keys = []
-        for sm_id, sm in statemachine.singleton.state_machine_manager.state_machines.iteritems():
+        for sm_id, sm in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
             if sm.base_path is not None:
                 #print sm.root_state.script.path
@@ -401,5 +401,5 @@ class MainWindowController(ExtendedController):
         self.get_controller('state_machines_editor_ctrl').close_all_tabs()
 
         # reload state machines from file system
-        statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
+        awesome_tool.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
 

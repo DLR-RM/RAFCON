@@ -1,24 +1,24 @@
-from utils import log
-from utils.geometry import point_in_triangle, dist, point_on_line
+from awesome_tool.utils import log
+from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line
 
 logger = log.get_logger(__name__)
 import sys
 import time
-from statemachine.enums import StateType
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
-from mvc.models.state_machine import StateMachineModel
-from mvc.statemachine_helper import StateMachineHelper
+from awesome_tool.statemachine.enums import StateType
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from awesome_tool.mvc.models.state_machine import StateMachineModel
+from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK
 from gtk.gdk import keyval_name
-from statemachine.states.concurrency_state import ConcurrencyState
+from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 
 
 class GraphicalEditorController(ExtendedController):
     """Controller handling the graphical editor
 
-    :param mvc.models.ContainerStateModel model: The root container state model containing the data
-    :param mvc.views.GraphicalEditorView view: The GTK view having an OpenGL rendering element
+    :param awesome_tool.mvc.models.ContainerStateModel model: The root container state model containing the data
+    :param awesome_tool.mvc.views.GraphicalEditorView view: The GTK view having an OpenGL rendering element
     """
 
     def __init__(self, model, view):
@@ -65,7 +65,7 @@ class GraphicalEditorController(ExtendedController):
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
         shortcut_manager.add_callback_for_action("add", self._add_execution_state)
@@ -537,7 +537,7 @@ class GraphicalEditorController(ExtendedController):
 
         The method moves the state and all its child states with their transitions, data flows and waypoints. The
         state is kept within its parent, thus restricting the movement.
-        :param mvc.models.StateModel state_m: The model of the state to be moved
+        :param awesome_tool.mvc.models.StateModel state_m: The model of the state to be moved
         :param new_pos_x: The desired new x coordinate
         :param new_pos_y: The desired new y coordinate
         """

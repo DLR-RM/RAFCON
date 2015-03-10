@@ -1,7 +1,7 @@
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
-from mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 import gtk
 import gobject
 

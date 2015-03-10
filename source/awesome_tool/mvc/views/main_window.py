@@ -1,10 +1,10 @@
 
 from gtkmvc import View
-from mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
+from awesome_tool.mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
      GlobalVariableEditorView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
      LoggingView, StateMachineTreeView, LibraryTreeView
-from mvc.views.states_editor import StatesEditorView
-from mvc.views.state_machines_editor import StateMachinesEditorView
+from awesome_tool.mvc.views.states_editor import StatesEditorView
+from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
 
 
 class MainWindowView(View):
