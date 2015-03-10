@@ -466,12 +466,17 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         return opengl_id, outcome_pos, outcome_radius, port_radius, resize_length
 
     def draw_inner_input_data_port(self, port_name, port_m, pos_x, pos_y, width, height, depth):
-        self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, depth)
+        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, depth)
 
     def draw_inner_output_data_port(self, port_name, port_m, pos_x, pos_y, width, height, depth):
-        self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.left, depth)
+        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.left, depth)
 
     def _draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, arrow_position, depth):
+        id = self.name_counter
+        self.name_counter += 1
+
+        glPushName(id)
+
         margin = height / 6.
         name_height = height - 2 * margin
         name_width = self._string_width(port_name, name_height)
@@ -495,8 +500,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self._write_string(port_name, left + margin, pos_y + height - margin, name_height, color=self.port_name_color,
                            depth=depth + 0.1)
         port_m.meta['gui']['editor']['inner_connector_pos'] = arrow_pos
+        actual_width = (arrow_pos[0] - left) if arrow_position == Direction.right else (right - arrow_pos[0])
+        port_m.meta['gui']['editor']['width'] = actual_width
+        port_m.meta['gui']['editor']['height'] = height
 
+        glPopName()
 
+        return id
 
     def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False,
                         depth=0):
