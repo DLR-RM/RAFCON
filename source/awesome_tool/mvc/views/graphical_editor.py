@@ -128,7 +128,7 @@ class GraphicalEditorView(View):
         print "OpenGL extension version - %d.%d\n" % gtk.gdkgl.query_version()
 
         # def get_top_widget(self):
-        #     return self.win
+        # return self.win
 
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
@@ -193,7 +193,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         logger.debug("realize")
 
-        #self.configure()
+        # self.configure()
 
     def _configure(self, *args):
         """Configure viewport
@@ -373,7 +373,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Draw "income" as a half circle of the left center
         self._draw_circle(pos_x, pos_y + height / 2, outcome_radius, depth + 0.1, fill_color=self.income_color,
-                          from_angle=1.5*pi, to_angle=0.5*pi)
+                          from_angle=1.5 * pi, to_angle=0.5 * pi)
 
         # Draw input and output data ports
         port_radius = margin / 4.
@@ -392,7 +392,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                         max_name_width = str_width
 
             fill_color = self.port_color if not selected else self.state_selected_color
-            
+
             port_width = min(max_name_width, max_allowed_name_width)
             port_pos_left_x = pos_x + (width - port_width - margin) / 2
             port_pos_right_x = port_pos_left_x + port_width + margin
@@ -420,12 +420,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             output_num = 0
             for port_m in input_ports_m:
                 con_pos_x, con_pos_y = draw_port(port_m, output_num, True)
-                port_m.meta['gui']['editor']['pos'] = (con_pos_x, con_pos_y)
+                port_m.meta['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
             for port_m in output_ports_m:
                 con_pos_x, con_pos_y = draw_port(port_m, output_num, False)
-                port_m.meta['gui']['editor']['pos'] = (con_pos_x, con_pos_y)
+                port_m.meta['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
         # Draw input and output data ports
@@ -459,13 +459,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                                   stroke_width=border_width / 8., border_color=self.port_name_color,
                                   fill_color=self.port_connector_fill_color)
                 num += 1
-                scoped_var_m.meta['gui']['editor']['pos'] = connect
+                scoped_var_m.meta['gui']['editor']['connector_pos'] = connect
                 pass
 
         glPopName()
         return opengl_id, outcome_pos, outcome_radius, port_radius, resize_length
 
-    def draw_inner_data_port(self, port_name, pos_x, pos_y, width, height, depth):
+    def draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, depth):
         margin = height / 6.
         name_height = height - 2 * margin
         name_width = self._string_width(port_name, name_height)
@@ -474,10 +474,14 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         name_width = self._string_width(port_name, name_height)
         width = name_width + 2 * margin
 
-        self._draw_rect_arrow(pos_x, pos_x + width, pos_y, pos_y + height, Direction.right, depth,
-                              border_color=self.port_name_color, fill_color=self.port_connector_fill_color)
+        arrow_pos, visible = self._draw_rect_arrow(pos_x, pos_x + width, pos_y, pos_y + height, Direction.right, depth,
+                                                   border_color=self.port_name_color,
+                                                   fill_color=self.port_connector_fill_color)
         self._write_string(port_name, pos_x + margin, pos_y + height - margin, name_height, color=self.port_name_color,
-                           depth=depth+0.1)
+                           depth=depth + 0.1)
+        port_m.meta['gui']['editor']['inner_connector_pos'] = arrow_pos
+
+
 
     def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False,
                         depth=0):
@@ -516,11 +520,11 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         angle = atan2(vec[1], vec[0])
         angle -= pi  # backwards
         # Calculate max possible arrow length
-        length = min(width, dist((from_pos_x, from_pos_y), last_p)/2)
+        length = min(width, dist((from_pos_x, from_pos_y), last_p) / 2)
         # Middle point of back end of arrow
         m_x = last_p[0] + cos(angle) * length
         m_y = last_p[1] + sin(angle) * length
-        angle += pi/2
+        angle += pi / 2
         dx = cos(angle) * length / 2
         dy = sin(angle) * length / 2
         # Corner points
@@ -696,7 +700,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # visible = False
         # for p in points:
         # if not self.point_outside_view(p):
-        #         visible = True
+        # visible = True
         #         break
 
         # if not visible:
@@ -794,10 +798,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         angle_sum = to_angle - from_angle
         if angle_sum < 0:
-            angle_sum = float(to_angle + 2*pi - from_angle)
+            angle_sum = float(to_angle + 2 * pi - from_angle)
         segments = self.pixel_to_size_ratio() * radius * 1.5
         segments = max(4, segments)
-        segments = int(round(segments * angle_sum / (2.*pi)))
+        segments = int(round(segments * angle_sum / (2. * pi)))
 
         types = []
         if fill_color is not None:
@@ -818,8 +822,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 y = pos_y + sin(angle) * radius
                 glVertex3f(x, y, depth)
                 angle += angle_sum / (segments - 1)
-                if angle > 2*pi:
-                    angle -= 2*pi
+                if angle > 2 * pi:
+                    angle -= 2 * pi
                 if i == segments - 2:
                     angle = to_angle
             glEnd()

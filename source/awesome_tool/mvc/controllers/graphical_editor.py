@@ -12,6 +12,7 @@ from mvc.statemachine_helper import StateMachineHelper
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK
 from gtk.gdk import keyval_name
 from statemachine.states.concurrency_state import ConcurrencyState
+from mvc.models.scoped_variable import ScopedVariableModel
 
 
 class GraphicalEditorController(ExtendedController):
@@ -892,7 +893,7 @@ class GraphicalEditorController(ExtendedController):
                 pos_x = parent_info['pos_x']
                 pos_y = parent_info['pos_y'] + num_inner_ports * port_height
 
-                self.view.editor.draw_inner_data_port(port.name, pos_x, pos_y, max_port_width, port_height,
+                self.view.editor.draw_inner_data_port(port.name, port_m, pos_x, pos_y, max_port_width, port_height,
                                                       parent_depth + 0.5)
 
             num_inner_ports += 1
@@ -987,17 +988,6 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            # from_connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
-            # from_state.meta['gui']['editor']['scoped_pos'].items() +
-            # from_state.meta['gui']['editor']['output_pos'].items())
-            # to_connectors = dict(to_state.meta['gui']['editor']['input_pos'].items() +
-            #                      to_state.meta['gui']['editor']['scoped_pos'].items() +
-            #                      to_state.meta['gui']['editor']['output_pos'].items())
-            #
-            # if from_key not in from_connectors or to_key not in to_connectors:
-            #     logger.warn("Data flow with non existing port(s): {0}, {1}".format(from_key, to_key))
-            #     continue
-
             from_port = StateMachineHelper.get_data_port_model(from_state, from_key)
             to_port = StateMachineHelper.get_data_port_model(to_state, to_key)
 
@@ -1008,8 +998,15 @@ class GraphicalEditorController(ExtendedController):
                 logger.warn('Cannot find model of the to data port {0}'.format(to_key))
                 continue
 
-            (from_x, from_y) = from_port.meta['gui']['editor']['pos']
-            (to_x, to_y) = to_port.meta['gui']['editor']['pos']
+            # For scoped variables, there is no inner and outer connector
+            if isinstance(from_port, ScopedVariableModel):
+                (from_x, from_y) = from_port.meta['gui']['editor']['connector_pos']
+            else:
+                (from_x, from_y) = from_port.meta['gui']['editor']['outer_connector_pos']
+            if isinstance(to_port, ScopedVariableModel):
+                (to_x, to_y) = to_port.meta['gui']['editor']['connector_pos']
+            else:
+                (to_x, to_y) = to_port.meta['gui']['editor']['outer_connector_pos']
 
             waypoints = []
             for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
