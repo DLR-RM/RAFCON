@@ -863,6 +863,8 @@ class GraphicalEditorController(ExtendedController):
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
                                 depth + 1)
 
+            self.draw_inner_data_ports(state_m, depth)
+
             self.draw_transitions(state_m, depth)
 
             self.draw_data_flows(state_m, depth)
@@ -870,6 +872,30 @@ class GraphicalEditorController(ExtendedController):
         self.handle_new_transition(state_m, depth)
 
         self.handle_new_data_flow(state_m, depth)
+
+    def draw_inner_data_ports(self, parent_state_m, parent_depth):
+        parent_state_m.scoped_variables
+
+        parent_state_m.output_data_ports
+
+        parent_info = parent_state_m.meta['gui']['editor']
+        port_height = min(parent_info['width'], parent_info['height']) / float(max(25,
+                                                                                   len(parent_state_m.input_data_ports),
+                                                                                   len(parent_state_m.output_data_ports)
+        ))
+        max_port_width = min(parent_info['width'], parent_info['height']) / 5.
+
+        num_inner_ports = 0
+        for port_m in parent_state_m.input_data_ports:
+            if not isinstance(port_m.meta['gui']['editor']['inner_pos'], tuple):
+                port = port_m.data_port
+                pos_x = parent_info['pos_x']
+                pos_y = parent_info['pos_y'] + num_inner_ports * port_height
+
+                self.view.editor.draw_inner_data_port(port.name, pos_x, pos_y, max_port_width, port_height,
+                                                      parent_depth + 0.5)
+
+            num_inner_ports += 1
 
     def draw_transitions(self, parent_state_m, parent_depth):
         """Draws the transitions belonging to a state
@@ -963,7 +989,7 @@ class GraphicalEditorController(ExtendedController):
 
             # from_connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
             # from_state.meta['gui']['editor']['scoped_pos'].items() +
-            #                        from_state.meta['gui']['editor']['output_pos'].items())
+            # from_state.meta['gui']['editor']['output_pos'].items())
             # to_connectors = dict(to_state.meta['gui']['editor']['input_pos'].items() +
             #                      to_state.meta['gui']['editor']['scoped_pos'].items() +
             #                      to_state.meta['gui']['editor']['output_pos'].items())

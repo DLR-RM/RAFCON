@@ -465,6 +465,20 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPopName()
         return opengl_id, outcome_pos, outcome_radius, port_radius, resize_length
 
+    def draw_inner_data_port(self, port_name, pos_x, pos_y, width, height, depth):
+        margin = height / 6.
+        name_height = height - 2 * margin
+        name_width = self._string_width(port_name, name_height)
+        if name_width > width - 2 * margin:
+            port_name = self._shorten_string(port_name, name_height, width - 2 * margin)
+        name_width = self._string_width(port_name, name_height)
+        width = name_width + 2 * margin
+
+        self._draw_rect_arrow(pos_x, pos_x + width, pos_y, pos_y + height, Direction.right, depth,
+                              border_color=self.port_name_color, fill_color=self.port_connector_fill_color)
+        self._write_string(port_name, pos_x + margin, pos_y + height - margin, name_height, color=self.port_name_color,
+                           depth=depth+0.1)
+
     def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False,
                         depth=0):
         """Draw a state with the given properties
@@ -736,7 +750,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             a = (left_x + width / 2 - arrow_width / 2, bottom_y)
             b = (left_x + width / 2 + arrow_width / 2, bottom_y)
             c = (left_x + width / 2, bottom_y - arrow_width)
-        elif arrow_pos == Direction.right:
+        elif arrow_pos == Direction.left:
             a = (left_x, bottom_y + height / 2 - arrow_width / 2)
             b = (left_x, bottom_y + height / 2 + arrow_width / 2)
             c = (left_x - arrow_width, bottom_y + height / 2)
