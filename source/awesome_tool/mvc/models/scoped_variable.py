@@ -1,6 +1,6 @@
 from gtkmvc import ModelMT
-from statemachine.scope import ScopedVariable
-from utils.vividict import Vividict
+from awesome_tool.statemachine.scope import ScopedVariable
+from awesome_tool.utils.vividict import Vividict
 
 
 class ScopedVariableModel(ModelMT):

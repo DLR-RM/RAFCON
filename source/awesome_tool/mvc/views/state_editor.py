@@ -10,15 +10,15 @@ import pango
 
 import gtk
 from gtkmvc import View, Controller
-from mvc.views import SourceEditorView, StateOutcomesEditorView, StateOutcomesTreeView
-from mvc.views.container_state import ContainerStateView
-from mvc.views.connections_editor import StateConnectionsEditorView
-from mvc.views.state_overview import StateOverviewView
-from mvc.views.input_port_list import InputPortsListView
-from mvc.views.output_port_list import OutputPortsListView
-from mvc.views.scoped_variables_list import ScopedVariablesListView
-from mvc.views.state_transitions import StateTransitionsEditorView
-from mvc.views.state_data_flows import StateDataFlowsEditorView
+from awesome_tool.mvc.views import SourceEditorView, StateOutcomesEditorView, StateOutcomesTreeView
+from awesome_tool.mvc.views.container_state import ContainerStateView
+from awesome_tool.mvc.views.connections_editor import StateConnectionsEditorView
+from awesome_tool.mvc.views.state_overview import StateOverviewView
+from awesome_tool.mvc.views.input_port_list import InputPortsListView
+from awesome_tool.mvc.views.output_port_list import OutputPortsListView
+from awesome_tool.mvc.views.scoped_variables_list import ScopedVariablesListView
+from awesome_tool.mvc.views.state_transitions import StateTransitionsEditorView
+from awesome_tool.mvc.views.state_data_flows import StateDataFlowsEditorView
 
 
 class StateEditorView(View):

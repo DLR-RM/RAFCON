@@ -1,5 +1,5 @@
-from utils import log
-from utils.geometry import dist
+from awesome_tool.utils import log
+from awesome_tool.utils.geometry import dist
 
 logger = log.get_logger(__name__)
 

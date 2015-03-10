@@ -1,11 +1,11 @@
 import pytest
 
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.state import StateType, DataPortType
-from statemachine.storage.storage import Storage
-import statemachine.singleton
-from statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.statemachine.states.state import StateType, DataPortType
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
@@ -41,32 +41,32 @@ def create_statemachine():
                          state2.get_io_data_port_id_from_name_and_type("data_output_port1", DataPortType.OUTPUT),
                          state3.state_id,
                          state3.get_io_data_port_id_from_name_and_type("data_output_port1", DataPortType.OUTPUT))
-    return state3
+    return StateMachine(state3)
 
 
 # remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
 # states)
 def test_scoped_data():
-    s = Storage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage("../test_scripts/stored_statemachine")
 
-    state3 = create_statemachine()
+    sm = create_statemachine()
 
-    s.save_statemachine_as_yaml(state3, "../test_scripts/stored_statemachine")
-    [root_state, version, creation_time] = s.load_statemachine_from_yaml()
+    s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
+    [sm_loaded, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"data_input_port1": 22.0}
     output_data = {"data_output_port1": None}
-    root_state.input_data = input_data
-    root_state.output_data = output_data
+    sm_loaded.root_state.input_data = input_data
+    sm_loaded.root_state.output_data = output_data
 
-    state_machine = StateMachine(root_state)
+    state_machine = StateMachine(sm_loaded.root_state)
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
-    root_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    sm_loaded.root_state.join()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["data_output_port1"]

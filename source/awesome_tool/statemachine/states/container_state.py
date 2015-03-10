@@ -12,18 +12,18 @@ import copy
 from gtkmvc import Observable
 import os
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from statemachine.enums import StateType, DataPortType
-from statemachine.states.state import State
-from statemachine.transition import Transition
-from statemachine.outcome import Outcome
-from statemachine.data_flow import DataFlow
-from statemachine.scope import ScopedData, ScopedVariable
-from statemachine.id_generator import *
-from statemachine.config import *
-from statemachine.validity_check.validity_checker import ValidityChecker
-import statemachine.singleton
+from awesome_tool.statemachine.enums import StateType, DataPortType
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.statemachine.transition import Transition
+from awesome_tool.statemachine.outcome import Outcome
+from awesome_tool.statemachine.data_flow import DataFlow
+from awesome_tool.statemachine.scope import ScopedData, ScopedVariable
+from awesome_tool.statemachine.id_generator import *
+from awesome_tool.statemachine.config import *
+from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
+import awesome_tool.statemachine.singleton
 
 
 class ContainerState(State):
@@ -140,7 +140,7 @@ class ContainerState(State):
                 return None
 
             # depending on the execution mode pause execution
-            execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+            execution_signal = awesome_tool.statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
             if execution_signal == "stop":
                 # this will be caught at the end of the run method
                 raise RuntimeError("state stopped")
@@ -196,11 +196,11 @@ class ContainerState(State):
             raise AttributeError("State_id %s does not exist" % state_id)
 
         # remove script folder
-        own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
         if own_sm_id is None:
-            raise RuntimeError("Something is going wrong during state removal. State does not belong to "
+            logger.warn("Something is going wrong during state removal. State does not belong to "
                                "a state machine!")
-        statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
+        awesome_tool.statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
                                                                               self.states[state_id].script.path)
 
         #first delete all transitions and data_flows in this state
@@ -235,7 +235,7 @@ class ContainerState(State):
         """Sets the start state of a container state
 
         :param state: The state_id of a state or a direct reference ot he state (that was already added
-        to the container) that will be the start state of this container state.
+                    to the container) that will be the start state of this container state.
 
         """
         if isinstance(state, State):

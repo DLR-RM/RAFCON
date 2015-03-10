@@ -3,19 +3,19 @@ from gtk import ListStore
 from gtkmvc import ModelMT
 import gtk
 
-from statemachine.states.container_state import ContainerState
-from statemachine.states.state import State
-from statemachine.data_flow import DataFlow
-from statemachine.transition import Transition
-from statemachine.states.state import DataPort
-from statemachine.scope import ScopedVariable
-from mvc.models.state import StateModel
-import mvc.models
-from mvc.models.transition import TransitionModel
-from mvc.models.data_flow import DataFlowModel
-from mvc.models.data_port import DataPortModel
-from mvc.models.scoped_variable import ScopedVariableModel
-from utils import log
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.statemachine.data_flow import DataFlow
+from awesome_tool.statemachine.transition import Transition
+from awesome_tool.statemachine.states.state import DataPort
+from awesome_tool.statemachine.scope import ScopedVariable
+from awesome_tool.mvc.models.state import StateModel
+import awesome_tool.mvc.models
+from awesome_tool.mvc.models.transition import TransitionModel
+from awesome_tool.mvc.models.data_flow import DataFlowModel
+from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
+from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -49,7 +49,6 @@ class ContainerStateModel(StateModel):
         self.transition_list_store = ListStore(gobject.TYPE_PYOBJECT)
         # Actually DataFlow, but this is not supported by
         self.data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)
-        self.scoped_variables_list_store = ListStore(str, str, str, int)
 
         # Create model for each child class
         states = container_state.states
@@ -78,23 +77,7 @@ class ContainerStateModel(StateModel):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
-        self.reload_scoped_variables_list_store_and_models()
-
-    def reload_scoped_variables_list_store(self):
-        """Reloads the scoped variable list store from the data port models
-        """
-        tmp = ListStore(str, str, str, int)
-        for sv_model in self.scoped_variables:
-            tmp.append([sv_model.scoped_variable.name, sv_model.scoped_variable.data_type,
-                        sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, mvc.models.state.dataport_compare_method)
-        tms.sort_column_changed()
-        tmp = tms
-        self.scoped_variables_list_store.clear()
-        for elem in tmp:
-            self.scoped_variables_list_store.append(elem)
+        self.reload_scoped_variables_models()
 
     def reload_scoped_variables_models(self):
         """Reloads the scoped variable models directly from the the state
@@ -102,12 +85,6 @@ class ContainerStateModel(StateModel):
         self.scoped_variables = []
         for scoped_variable in self.state.scoped_variables.itervalues():
             self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
-
-    def reload_scoped_variables_list_store_and_models(self):
-        """Reloads the scoped variable list store and models
-        """
-        self.reload_scoped_variables_models()
-        self.reload_scoped_variables_list_store()
 
 
     @ModelMT.observe("state", before=True, after=True)

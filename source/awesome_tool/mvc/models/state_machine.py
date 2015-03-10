@@ -1,10 +1,10 @@
 from gtkmvc import ModelMT, Observable
 
-from statemachine.state_machine import StateMachine
-from statemachine.states.container_state import ContainerState
-from mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from awesome_tool.statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 
-from utils.vividict import Vividict
+from awesome_tool.utils.vividict import Vividict
 
 
 class StateMachineModel(ModelMT):

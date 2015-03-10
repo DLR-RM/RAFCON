@@ -1,12 +1,12 @@
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.library_state import LibraryState
-import statemachine.singleton
-from statemachine.states.state import DataPortType
-from statemachine.storage.storage import Storage
-from statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.statemachine.states.library_state import LibraryState
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.states.state import DataPortType
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
+from awesome_tool.statemachine.state_machine import StateMachine
 
-storage = Storage("../test_scripts/test_libraries")
+storage = StateMachineStorage("../test_scripts/test_libraries")
 
 
 def ros_init_node_library():

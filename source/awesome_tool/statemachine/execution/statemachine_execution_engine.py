@@ -10,9 +10,9 @@
 
 from gtkmvc import Observable
 from gtkmvc import ModelMT
-from statemachine.execution.execution_history import ExecutionHistory
-from statemachine.execution.statemachine_status import StateMachineStatus, ExecutionMode
-from utils import log
+from awesome_tool.statemachine.execution.execution_history import ExecutionHistory
+from awesome_tool.statemachine.execution.statemachine_status import StateMachineStatus, ExecutionMode
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

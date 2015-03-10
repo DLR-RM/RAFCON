@@ -15,9 +15,9 @@ import yaml
 from gtkmvc import Observable
 from enum import Enum
 
-from statemachine.id_generator import *
-import statemachine.singleton
-from utils import log
+from awesome_tool.statemachine.id_generator import *
+import awesome_tool.statemachine.singleton
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -112,7 +112,7 @@ def exit(self, scoped_variables, gvm):
         :return:
         """
         return self._compiled_module.execute(state, inputs, outputs,
-                                             statemachine.singleton.global_variable_manager)
+                                             awesome_tool.statemachine.singleton.global_variable_manager)
 
     def enter(self, state, scoped_variables={}):
         """
@@ -123,7 +123,7 @@ def exit(self, scoped_variables, gvm):
         :return:
         """
         return self._compiled_module.enter(state, scoped_variables,
-                                           statemachine.singleton.global_variable_manager)
+                                           awesome_tool.statemachine.singleton.global_variable_manager)
 
     def exit(self, state, scoped_variables={}):
         """
@@ -134,7 +134,7 @@ def exit(self, scoped_variables, gvm):
         :return:
         """
         return self._compiled_module.exit(state, scoped_variables,
-                                          statemachine.singleton.global_variable_manager)
+                                          awesome_tool.statemachine.singleton.global_variable_manager)
 
     def load_and_build_module(self):
         """Loads and builds the module given by the path and the filename

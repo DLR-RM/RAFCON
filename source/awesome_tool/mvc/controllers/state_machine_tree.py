@@ -1,11 +1,11 @@
 import gtk
 import gobject
 
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.models.state_machine_manager import StateMachineManagerModel
-from mvc.models.state_machine import StateMachineModel
-from mvc.models import ContainerStateModel
-from utils import log
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.models import ContainerStateModel
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.models.state_machine import StateMachineModel
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 #TODO: comment

@@ -11,7 +11,7 @@
 from gtkmvc import Observable
 import yaml
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

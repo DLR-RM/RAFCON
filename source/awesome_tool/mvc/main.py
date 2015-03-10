@@ -3,15 +3,15 @@ import logging
 
 import gtk
 
-from utils import log
-from mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
-from mvc.controllers import MainWindowController, StateDataPortEditorController
-from mvc.views import LoggingView, MainWindowView, StateDataportEditorView
-from mvc.models.state_machine_manager import StateMachineManagerModel
-from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.execution_state import ExecutionState
-import statemachine.singleton
-from statemachine.state_machine import StateMachine
+from awesome_tool.utils import log
+from awesome_tool.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
+from awesome_tool.mvc.controllers import MainWindowController, StateDataPortEditorController
+from awesome_tool.mvc.views import LoggingView, MainWindowView, StateDataportEditorView
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.state_machine import StateMachine
 
 
 def setup_path():
@@ -113,7 +113,7 @@ def create_models(*args, **kargs):
 
 
 if __name__ == '__main__':
-    statemachine.singleton.library_manager.initialize()
+    awesome_tool.statemachine.singleton.library_manager.initialize()
     setup_path()
     check_requirements()
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
@@ -123,8 +123,8 @@ if __name__ == '__main__':
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = StateMachineManagerModel(statemachine.singleton.state_machine_manager)
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
                                                   editor_type='LogicDataGrouped')
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     # prop_ctrl = SingleWidgetWindowController(this_model, prop_view, StateOverviewController)
 
     # dp_editor_view = StateDataportEditorView()
-    # dp_editor_ctrl = StateDataPortEditorController(this_model, dp_editor_view)
+    # dp_editor_ctrl = StateDataPortEditorController(ContainerStateModel(ctr_state), dp_editor_view)
 
     # oc_editor_view = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
     # oc_editor_ctrl = SingleWidgetWindowController(ctr_model, oc_editor_view, StateOutcomesEditorController)

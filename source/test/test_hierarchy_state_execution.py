@@ -1,12 +1,13 @@
 import pytest
 from pytest import raises
+import awesome_tool
 
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.hierarchy_state import HierarchyState
-import statemachine.singleton
-from statemachine.states.state import DataPortType
-from statemachine.storage.storage import Storage
-from statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.states.state import DataPortType
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
+from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
@@ -43,35 +44,36 @@ def test_hierarchy_state_execution():
     state_machine = StateMachine(hierarchy_state)
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     hierarchy_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
     assert output_data["output1"] == 52.0
 
 def test_hierarchy_save_load_test():
-    s = Storage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage("../test_scripts/stored_statemachine")
 
     hierarchy_state = create_hierarchy_state()
+    sm = StateMachine(hierarchy_state)
 
-    s.save_statemachine_as_yaml(hierarchy_state, "../test_scripts/stored_statemachine")
-    [root_state, version, creation_time] = s.load_statemachine_from_yaml()
+    s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
+    [sm_loaded, version, creation_time] = s.load_statemachine_from_yaml()
 
     input_data = {"input1": 42.0}
     output_data = {"output1": None}
-    hierarchy_state.input_data = input_data
-    hierarchy_state.output_data = output_data
-    state_machine = StateMachine(hierarchy_state)
+    sm_loaded.root_state.input_data = input_data
+    sm_loaded.root_state.output_data = output_data
+    state_machine = StateMachine(sm_loaded.root_state)
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
-    hierarchy_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    sm_loaded.root_state.join()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
     assert output_data["output1"] == 52.0

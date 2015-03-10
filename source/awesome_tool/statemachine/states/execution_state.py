@@ -10,11 +10,11 @@
 
 import yaml
 
-from statemachine.enums import StateType
-from statemachine.states.state import State
-from utils import log
+from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from statemachine.outcome import Outcome
+from awesome_tool.statemachine.outcome import Outcome
 
 
 class ExecutionState(State, yaml.YAMLObject):

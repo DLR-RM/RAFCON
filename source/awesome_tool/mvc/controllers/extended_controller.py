@@ -1,6 +1,6 @@
 
 from gtkmvc import Controller
-from mvc.shortcut_manager import ShortcutManager
+from awesome_tool.mvc.shortcut_manager import ShortcutManager
 
 
 class ExtendedController(Controller):

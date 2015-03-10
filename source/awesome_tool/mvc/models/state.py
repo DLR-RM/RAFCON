@@ -4,18 +4,18 @@ from gtk import ListStore
 import gtk
 import os
 
-from statemachine.states.state import State
+from awesome_tool.statemachine.states.state import State
 from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
-from utils.vividict import Vividict
-from mvc.models.data_port import DataPortModel
-from mvc.models.outcome import OutcomeModel
-import statemachine.singleton
-from statemachine.storage.storage import Storage
-from utils import log
-from statemachine.enums import StateType
+from awesome_tool.utils.vividict import Vividict
+from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.models.outcome import OutcomeModel
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
+from awesome_tool.utils import log
+from awesome_tool.statemachine.enums import StateType
 
-from statemachine.outcome import Outcome
-from statemachine.states.state import DataPort
+from awesome_tool.statemachine.outcome import Outcome
+from awesome_tool.statemachine.states.state import DataPort
 
 logger = log.get_logger(__name__)
 
@@ -72,10 +72,8 @@ class StateModel(ModelMT):
         self.input_data_ports = []
         self.output_data_ports = []
         self.outcomes = []
-        self.input_data_port_list_store = ListStore(str, str, str, int)
-        self.output_data_port_list_store = ListStore(str, str, str, int)
-        self.reload_input_data_port_list_store_and_models()
-        self.reload_output_data_port_list_store_and_models()
+        self.reload_input_data_port_models()
+        self.reload_output_data_port_models()
 
     def update_attributes(self):
         """Update table model with state model
@@ -139,8 +137,8 @@ class StateModel(ModelMT):
         # logger.debug("StateModel.model_changed called of state %s with prop %s" % (self.state.state_id, prop_name))
 
         # mark the state machine this state belongs to as dirty
-        own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
-        statemachine.singleton.global_storage.mark_dirty(own_sm_id)
+        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
+        awesome_tool.statemachine.singleton.global_storage.mark_dirty(own_sm_id)
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument
@@ -221,23 +219,6 @@ class StateModel(ModelMT):
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
 
-    def reload_input_data_port_list_store(self):
-        """Reloads the input data port list store from the data port models
-        """
-        tmp = ListStore(str, str, str, int)
-        for idp_model in self.input_data_ports:
-            # print idp_model.parent.state.state_id, self.state.state_id
-            tmp.append([idp_model.data_port.name, idp_model.data_port.data_type, idp_model.data_port.default_value,
-                        idp_model.data_port.data_port_id])
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, dataport_compare_method)
-        tms.sort_column_changed()
-        tmp = tms
-        self.input_data_port_list_store.clear()
-        for elem in tmp:
-            self.input_data_port_list_store.append(elem)
-
     def reload_input_data_port_models(self):
         """Reloads the input data port models directly from the the state
         """
@@ -245,40 +226,12 @@ class StateModel(ModelMT):
         for input_data_port in self.state.input_data_ports.itervalues():
             self.input_data_ports.append(DataPortModel(input_data_port, self))
 
-    def reload_input_data_port_list_store_and_models(self):
-        """Reloads the input data port list store and models
-        """
-        self.reload_input_data_port_models()
-        self.reload_input_data_port_list_store()
-
-    def reload_output_data_port_list_store(self):
-        """Reloads the output data port list store from the data port models
-        """
-        tmp = ListStore(str, str, str, int)
-        for odp_model in self.output_data_ports:
-            tmp.append([odp_model.data_port.name, odp_model.data_port.data_type, odp_model.data_port.default_value,
-                        odp_model.data_port.data_port_id])
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, dataport_compare_method)
-        tms.sort_column_changed()
-        self.output_data_port_list_store.clear()
-        tmp = tms
-        for elem in tmp:
-            self.output_data_port_list_store.append(elem)
-
     def reload_output_data_port_models(self):
         """Reloads the output data port models directly from the the state
         """
         self.output_data_ports = []
         for output_data_port in self.state.output_data_ports.itervalues():
             self.output_data_ports.append(DataPortModel(output_data_port, self))
-
-    def reload_output_data_port_list_store_and_models(self):
-        """Reloads the output data port list store and models
-        """
-        self.reload_output_data_port_models()
-        self.reload_output_data_port_list_store()
 
     def reload_outcome_models(self):
         """Reloads the input data port models directly from the the state
@@ -320,9 +273,9 @@ class StateModel(ModelMT):
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
         #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
+        meta_path = os.path.join(self.state.script.path, StateMachineStorage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
-            tmp_meta = statemachine.singleton.global_storage.load_dict_from_yaml(meta_path)
+            tmp_meta = awesome_tool.statemachine.singleton.global_storage.storage_utils.load_dict_from_yaml(meta_path)
 
             if self.state.state_type is not StateType.EXECUTION:
                 # add meta to transition and data flow
@@ -346,7 +299,7 @@ class StateModel(ModelMT):
 
     def store_meta_data_for_state(self):
         #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.script.path, Storage.GRAPHICS_FILE)
+        meta_path = os.path.join(self.state.script.path, StateMachineStorage.GRAPHICS_FILE)
 
         # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file
         if self.state.state_type is not StateType.EXECUTION:
@@ -359,19 +312,19 @@ class StateModel(ModelMT):
                 self.meta["data_flow" + str(counter)] = data_flow_model.meta
                 counter += 1
 
-        statemachine.singleton.global_storage.write_dict_to_yaml(self.meta, meta_path)
+        awesome_tool.statemachine.singleton.global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)
 
-
-def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
-    path1 = treemodel.get_path(iter1)[0]
-    path2 = treemodel.get_path(iter2)[0]
-    name1 = treemodel[path1][0]
-    name2 = treemodel[path2][0]
-    name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
-    name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
-    if name1_as_bits == name2_as_bits:
-        return 0
-    elif name1_as_bits > name2_as_bits:
-        return 1
-    else:
-        return -1
+    @staticmethod
+    def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
+        path1 = treemodel.get_path(iter1)[0]
+        path2 = treemodel.get_path(iter2)[0]
+        name1 = treemodel[path1][0]
+        name2 = treemodel[path2][0]
+        name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
+        name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
+        if name1_as_bits == name2_as_bits:
+            return 0
+        elif name1_as_bits > name2_as_bits:
+            return 1
+        else:
+            return -1

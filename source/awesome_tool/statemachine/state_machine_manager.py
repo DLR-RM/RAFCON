@@ -7,12 +7,11 @@
 
 
 """
-import os
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from gtkmvc import Observable
-from statemachine.state_machine import StateMachine
-import statemachine.singleton
+from awesome_tool.statemachine.state_machine import StateMachine
+import awesome_tool.statemachine.singleton
 
 
 class StateMachineManager(Observable):
@@ -43,7 +42,7 @@ class StateMachineManager(Observable):
 
     def refresh_state_machines(self, sm_ids, state_machine_id_to_path):
         for sm_idx in range(len(state_machine_id_to_path)):
-            [state_machine, version, creation_time] = statemachine.singleton.\
+            [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
                 global_storage.load_statemachine_from_yaml(state_machine_id_to_path[sm_ids[sm_idx]])
             self.add_state_machine(state_machine)
 

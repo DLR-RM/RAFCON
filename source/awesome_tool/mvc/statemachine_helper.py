@@ -1,15 +1,15 @@
 import traceback
 
-from utils import log
+from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
 
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.hierarchy_state import HierarchyState
-from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from statemachine.enums import StateType
-from mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from awesome_tool.statemachine.enums import StateType
+from awesome_tool.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
 
 
 class StateMachineHelper():
@@ -72,9 +72,9 @@ class StateMachineHelper():
         """Add a state to a container state
 
         Adds a state of type state_type to the given container_state
-        :param mvc.models.container_state.ContainerState container_state: A model of a container state to add the new
+        :param awesome_tool.mvc.models.container_state.ContainerState container_state: A model of a container state to add the new
         state to
-        :param statemachine.enums.StateType state_type: The type of state that should be added
+        :param awesome_tool.statemachine.enums.StateType state_type: The type of state that should be added
         :return: True if successful, False else
         """
         if container_state is None:

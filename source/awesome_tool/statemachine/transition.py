@@ -9,11 +9,11 @@
 """
 
 from gtkmvc import Observable
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import yaml
 
-from statemachine.id_generator import *
+from awesome_tool.statemachine.id_generator import *
 
 
 class Transition(Observable, yaml.YAMLObject):

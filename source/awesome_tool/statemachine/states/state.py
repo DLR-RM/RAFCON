@@ -12,16 +12,14 @@ import threading
 import sys
 from gtkmvc import Observable
 import Queue
-from enum import Enum
 import yaml
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from statemachine.enums import StateType, DataPortType
-from statemachine.outcome import Outcome
-from statemachine.script import Script, ScriptType
-from statemachine.execution.statemachine_status import StateMachineStatus
-from statemachine.id_generator import *
+from awesome_tool.statemachine.enums import StateType, DataPortType
+from awesome_tool.statemachine.outcome import Outcome
+from awesome_tool.statemachine.script import Script, ScriptType
+from awesome_tool.statemachine.id_generator import *
 
 
 class DataPort(Observable, yaml.YAMLObject):

@@ -2,12 +2,12 @@ import pango
 
 import gtk
 
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
-from mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
-from mvc.models.state_machine_manager import StateMachineManagerModel
-from mvc.models.state_machine import Selection
-from utils import log
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
+from awesome_tool.mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.models.state_machine import Selection
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -147,21 +147,23 @@ class StatesEditorController(ExtendedController):
         # TODO           -> work-around is to use only the path to find the page
         # sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
         # state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
-        self.tabs["%s|%s" % (None, state_model.state.get_path())]
+
         page_to_close = None
+        state_identifier = None
         for key, items in self.tabs.iteritems():
             if key.split('|')[1] == state_model.state.get_path():  # state_identifier.split('|')[1]:
                 page_to_close = items['page']
+                state_identifier = key
                 break
         #page_to_close = self.tabs[state_identifier]['page']
-        # if page_to_close:
-        current_idx = self.view.notebook.page_num(page_to_close)
+        if page_to_close:
+            current_idx = self.view.notebook.page_num(page_to_close)
 
-        self.view.notebook.remove_page(current_idx)
-        # del self.tabs[state_identifier]['ctrl']
-        # del self.tabs[state_identifier]['view']
-        # del self.tabs[state_identifier]
-        self.remove_controller(state_model.state.state_id)
+            self.view.notebook.remove_page(current_idx)
+            # del self.tabs[state_identifier]['ctrl']
+            # del self.tabs[state_identifier]['view']
+            del self.tabs[state_identifier]
+            self.remove_controller(state_model.state.state_id)
 
     def close_all_tabs(self):
         """
@@ -214,13 +216,9 @@ class StatesEditorController(ExtendedController):
         if info.instance.get_num_states() == 1 and len(info.instance) == 1:
             self.change_state_editor_selection(info.instance.get_states()[0])
 
-    @ExtendedController.observe("state", after=True)
-    @ExtendedController.observe("states", after=True)
-    def notify_state(self, model, prop_name, info):
-        # TODO in combination with state type change (remove - add -state) there exist sometimes inconsistencies
-        # logger.debug("In States-Editor state %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-        #              ("X", prop_name, info.instance, info.method_name, info))
-        # print self.tabs.keys()
+    @ExtendedController.observe("state", before=True)
+    @ExtendedController.observe("states", before=True)
+    def notify_state_before(self, model, prop_name, info):
         if hasattr(info, "kwargs") and info.method_name == 'state_change':
             if info.kwargs.method_name == 'remove_state':
                 logger.debug("remove tab for state %s and search for others to remove" % info.kwargs.args[1])
@@ -230,19 +228,39 @@ class StatesEditorController(ExtendedController):
                 if identifier in self.tabs:
                     state_model = self.tabs[identifier]['state_model']
                     self.on_close_clicked(event=None, state_model=state_model, result=None)
-                # search actual not necessary
-                #self.remove_search()
-            if info.kwargs.method_name == 'name':
-                self.check_name()
         if info.method_name in ['__delitem__']:  # , 'remove_state']: taken by state_change
             # self.remove_search()  # this could remove pages of states that are from the other open state machines
             sm_id = self.model.state_machine_manager.get_sm_id_for_state(model.state)
             parent_identifier = str(sm_id) + '|' + model.state.get_path()
-            if info.method_name == '__delitem__':
+            if info.method_name == '__delitem__' and parent_identifier + '/' + info.args[0] in self.tabs:
                 state_model = self.tabs[parent_identifier + '/' + info.args[0]]['state_model']
+                self.on_close_clicked(event=None, state_model=state_model, result=None)
             else:  # state
-                state_model = self.tabs[parent_identifier + '/' + info.args[1]]['state_model']
-            self.on_close_clicked(event=None, state_model=state_model, result=None)
+                if len(info.args) > 1 and parent_identifier + '/' + info.args[1] in self.tabs:
+                    state_model = self.tabs[parent_identifier + '/' + info.args[1]]['state_model']
+                    self.on_close_clicked(event=None, state_model=state_model, result=None)
+
+
+    @ExtendedController.observe("state", after=True)
+    @ExtendedController.observe("states", after=True)
+    def notify_state(self, model, prop_name, info):
+        # TODO in combination with state type change (remove - add -state) there exist sometimes inconsistencies
+        # logger.debug("In States-Editor state %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        #              ("X", prop_name, info.instance, info.method_name, info))
+        # print self.tabs.keys()
+        if hasattr(info, "kwargs") and info.method_name == 'state_change':
+            # if info.kwargs.method_name == 'remove_state':
+            #     logger.debug("remove tab for state %s and search for others to remove" % info.kwargs.args[1])
+            #     #check if state in notebook
+            #     sm_id = self.model.state_machine_manager.get_sm_id_for_state(info.kwargs.args[0])
+            #     identifier = str(sm_id) + '|' + info.kwargs.args[0].get_path() + '/' + info.kwargs.args[1]
+            #     if identifier in self.tabs:
+            #         state_model = self.tabs[identifier]['state_model']
+            #         self.on_close_clicked(event=None, state_model=state_model, result=None)
+            #     # search actual not necessary
+            #     #self.remove_search()
+            if info.kwargs.method_name == 'name':
+                self.check_name()
         if info.method_name == 'name':
                 self.check_name()
 

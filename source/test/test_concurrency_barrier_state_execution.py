@@ -1,11 +1,11 @@
 import pytest
 from pytest import raises
 
-from statemachine.states.execution_state import ExecutionState
-from statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-import statemachine.singleton
-from statemachine.storage.storage import Storage
-from statemachine.state_machine import StateMachine
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
+from awesome_tool.statemachine.state_machine import StateMachine
 
 import variables_for_pytest
 
@@ -45,25 +45,27 @@ def test_concurrency_barrier_state_execution():
 
     state_machine = StateMachine(concurrency_barrier_state)
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     concurrency_barrier_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
-    assert statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
-    assert statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
+    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
+    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
     variables_for_pytest.test_multithrading_lock.release()
 
 
 def test_concurrency_barrier_save_load():
-    s = Storage("../test_scripts/stored_statemachine")
+    test_storage = StateMachineStorage("../test_scripts/stored_statemachine")
 
     concurrency_barrier_state = create_concurrency_barrier_state()
+    sm = StateMachine(concurrency_barrier_state)
 
-    s.save_statemachine_as_yaml(concurrency_barrier_state, "../test_scripts/stored_statemachine")
-    root_state, version, creation_time = s.load_statemachine_from_yaml()
+    test_storage.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
+    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml()
 
+    root_state = sm_loaded.root_state
     input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
     output_data = {"output_data_port1": None}
     root_state.input_data = input_data
@@ -71,14 +73,14 @@ def test_concurrency_barrier_save_load():
 
     state_machine = StateMachine(root_state)
     variables_for_pytest.test_multithrading_lock.acquire()
-    statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    statemachine.singleton.state_machine_execution_engine.start()
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
-    statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
-    assert statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
-    assert statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
+    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
+    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
 
     variables_for_pytest.test_multithrading_lock.release()
 

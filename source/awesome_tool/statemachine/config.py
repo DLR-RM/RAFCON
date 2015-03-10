@@ -3,14 +3,67 @@
    :platform: Unix, Windows
    :synopsis: Config module to specify global constants
 
-.. moduleauthor::
+.. moduleauthor:: Sebastian Brunner
 
 
 """
+import yaml
+import os
 
-STATE_ID_LENGTH = 6
+from awesome_tool.utils.storage_utils import StorageUtils
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
 
-LIBRARY_PATHS = {"test_libraries": "../test_scripts/test_libraries",
+
+DEFAULT_CONFIG = """
+
+STATE_ID_LENGTH: 6
+
+LIBRARY_PATHS: {"test_libraries": "../test_scripts/test_libraries",
                  "test_libraries2": "../../test_scripts/test_libraries",
                  "ros_libraries": "../../test_scripts/ros_libraries",
                  "turtle_libraries": "../../test_scripts/turtle_libraries"}
+
+"""
+
+CONFIG_PATH = os.getenv("HOME") + "/.awesome_tool"
+CONFIG_FILE = "config.yaml"
+
+
+class Config(object):
+    """
+    Class to hold and load the global configurations.
+    """
+
+    def __init__(self):
+        self.storage = StorageUtils("~/")
+        if not self.storage.exists_path(os.path.join(CONFIG_PATH, CONFIG_FILE)):
+            self.storage.create_path(CONFIG_PATH)
+            open(os.path.join(CONFIG_PATH, CONFIG_FILE), "a").close()
+            yaml_dict = yaml.load(DEFAULT_CONFIG)
+            self.storage.write_dict_to_yaml(yaml_dict, os.path.join(CONFIG_PATH, CONFIG_FILE))
+        self.__config_dict = self.storage.load_dict_from_yaml(os.path.join(CONFIG_PATH, CONFIG_FILE))
+        logger.info("Config initialized ... loaded configuration from %s" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
+
+    def get_config_value(self, key):
+        """
+        Get a specific configuration value
+        :param key: the key to the configuration value
+        :return:
+        """
+        return self.__config_dict[key]
+
+    def set_config_value(self, key, value):
+        """
+        Get a specific configuration value
+        :param key: the key to the configuration value
+        :return:
+        """
+        self.__config_dict[key] = value
+
+    def save_configuration(self):
+        self.storage.write_dict_to_yaml(self.__config_dict, os.path.join(CONFIG_PATH, CONFIG_FILE))
+        logger.info("Saved configuration to filesystem (path: %s)" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
+
+# This variable holds the global configuration parameters for the statemachine
+global_config = Config()

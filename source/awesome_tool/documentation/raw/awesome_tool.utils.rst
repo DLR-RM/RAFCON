@@ -22,3 +22,8 @@ log module
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: awesome_tool.utils.storage_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

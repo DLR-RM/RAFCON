@@ -1,7 +1,7 @@
 from gtkmvc import View
-from mvc.views.input_port_list import InputPortsListView
-from mvc.views.output_port_list import OutputPortsListView
-from mvc.views.scoped_variables_list import ScopedVariablesListView
+from awesome_tool.mvc.views.input_port_list import InputPortsListView
+from awesome_tool.mvc.views.output_port_list import OutputPortsListView
+from awesome_tool.mvc.views.scoped_variables_list import ScopedVariablesListView
 
 
 class StateDataportEditorView(View):

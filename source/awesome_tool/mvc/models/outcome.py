@@ -1,9 +1,9 @@
 
 from gtkmvc import ModelMT
-from statemachine.outcome import Outcome
-from utils.vividict import Vividict
+from awesome_tool.statemachine.outcome import Outcome
+from awesome_tool.utils.vividict import Vividict
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

@@ -1,8 +1,12 @@
-from utils import log
+import gtk
+from gtk import ListStore
+import copy
+
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
-from mvc.controllers.extended_controller import ExtendedController
-import copy
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.models.state import StateModel
 
 
 class DataPortListController(ExtendedController):
@@ -20,11 +24,11 @@ class DataPortListController(ExtendedController):
         if self.type == "input":
             self.state_dataport_dict = self.model.state.input_data_ports
             self.dataport_model_list = self.model.input_data_ports
-            self.dataport_list_store = self.model.input_data_port_list_store
         elif self.type == "output":
             self.state_dataport_dict = self.model.state.output_data_ports
             self.dataport_model_list = self.model.output_data_ports
-            self.dataport_list_store = self.model.output_data_port_list_store
+
+        self.dataport_list_store = ListStore(str, str, str, int)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -48,6 +52,16 @@ class DataPortListController(ExtendedController):
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
+
+    @ExtendedController.observe("input_data_ports", after=True)
+    def input_data_ports_changed(self, model, prop_name, info):
+        if self.type == "input":
+            self.reload_data_port_list_store()
+
+    @ExtendedController.observe("output_data_ports", after=True)
+    def output_data_ports_changed(self, model, prop_name, info):
+        if self.type == "output":
+            self.reload_data_port_list_store()
 
     #new buttons
     def on_new_input_port_button_clicked(self, widget, data=None):
@@ -98,3 +112,27 @@ class DataPortListController(ExtendedController):
             self.model.state.modify_input_data_port_default_value(text, data_port_id)
         elif self.type == "output":
             self.model.state.modify_output_data_port_default_value(text, data_port_id)
+
+
+    def reload_data_port_list_store(self):
+        """Reloads the input data port list store from the data port models
+        """
+        tmp = ListStore(str, str, str, int)
+        if self.type == "input":
+            for idp_model in self.model.input_data_ports:
+                # print idp_model.parent.state.state_id, self.state.state_id
+                tmp.append([idp_model.data_port.name, idp_model.data_port.data_type, idp_model.data_port.default_value,
+                            idp_model.data_port.data_port_id])
+        else:
+            for idp_model in self.model.output_data_ports:
+                # print idp_model.parent.state.state_id, self.state.state_id
+                tmp.append([idp_model.data_port.name, idp_model.data_port.data_type, idp_model.data_port.default_value,
+                            idp_model.data_port.data_port_id])
+        tms = gtk.TreeModelSort(tmp)
+        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        tms.set_sort_func(0, StateModel.dataport_compare_method)
+        tms.sort_column_changed()
+        tmp = tms
+        self.dataport_list_store.clear()
+        for elem in tmp:
+            self.dataport_list_store.append(elem)

@@ -10,10 +10,10 @@
 
 from gtkmvc import Observable
 
-# from statemachine.states.container_state import ContainerState
-# from statemachine.states.state import State
-from statemachine.id_generator import generate_state_machine_id
-from utils import log
+# from awesome_tool.statemachine.states.container_state import ContainerState
+# from awesome_tool.statemachine.states.state import State
+from awesome_tool.statemachine.id_generator import generate_state_machine_id
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

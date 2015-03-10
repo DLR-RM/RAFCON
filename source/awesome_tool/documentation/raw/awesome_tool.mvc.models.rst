@@ -1,5 +1,5 @@
-MVC Models (mvc.models)
-=======================
+MVC Models (awesome_tool.mvc.models)
+====================================
 
 Submodules
 ----------

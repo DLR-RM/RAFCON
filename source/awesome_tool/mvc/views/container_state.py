@@ -1,8 +1,8 @@
 
 from gtkmvc import View
 
-from mvc.views.state_transitions import StateTransitionsListView
-from mvc.views.state_data_flows import StateDataFlowsListView
+from awesome_tool.mvc.views.state_transitions import StateTransitionsListView
+from awesome_tool.mvc.views.state_data_flows import StateDataFlowsListView
 
 
 class ContainerStateView(View):
