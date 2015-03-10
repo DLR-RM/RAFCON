@@ -566,6 +566,12 @@ class GraphicalEditorController(ExtendedController):
                     for i, waypoint in enumerate(data_flow.meta['gui']['editor']['waypoints']):
                         new_pos = (waypoint[0] + move_x, waypoint[1] + move_y)
                         data_flow.meta['gui']['editor']['waypoints'][i] = new_pos
+                for port_m in state.input_data_ports:
+                    old_pos = port_m.meta['gui']['editor']['inner_pos']
+                    port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
+                for port_m in state.output_data_ports:
+                    old_pos = port_m.meta['gui']['editor']['inner_pos']
+                    port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
             # Move child states
             for child_state in state.states.itervalues():
                 child_state.meta['gui']['editor']['pos_x'] += move_x
@@ -888,24 +894,28 @@ class GraphicalEditorController(ExtendedController):
 
         num_input_ports = 0
         for port_m in parent_state_m.input_data_ports:
+            port = port_m.data_port
             if not isinstance(port_m.meta['gui']['editor']['inner_pos'], tuple):
-                port = port_m.data_port
                 pos_x = parent_info['pos_x']
                 pos_y = parent_info['pos_y'] + num_input_ports * port_height
+                port_m.meta['gui']['editor']['inner_pos'] = (pos_x, pos_y)
+            (pos_x, pos_y) = port_m.meta['gui']['editor']['inner_pos']
 
-                self.view.editor.draw_inner_input_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
-                                                            port_height, parent_depth + 0.5)
+            self.view.editor.draw_inner_input_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
+                                                        port_height, parent_depth + 0.5)
             num_input_ports += 1
 
         num_output_ports = 0
         for port_m in parent_state_m.output_data_ports:
+            port = port_m.data_port
             if not isinstance(port_m.meta['gui']['editor']['inner_pos'], tuple):
-                port = port_m.data_port
                 pos_x = parent_info['pos_x'] + parent_info['width']
                 pos_y = parent_info['pos_y'] + num_output_ports * port_height
+                port_m.meta['gui']['editor']['inner_pos'] = (pos_x, pos_y)
+            (pos_x, pos_y) = port_m.meta['gui']['editor']['inner_pos']
 
-                self.view.editor.draw_inner_output_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
-                                                             port_height, parent_depth + 0.5)
+            self.view.editor.draw_inner_output_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
+                                                         port_height, parent_depth + 0.5)
             num_output_ports += 1
 
     def draw_transitions(self, parent_state_m, parent_depth):
