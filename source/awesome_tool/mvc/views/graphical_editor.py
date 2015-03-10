@@ -465,7 +465,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPopName()
         return opengl_id, outcome_pos, outcome_radius, port_radius, resize_length
 
-    def draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, depth):
+    def draw_inner_input_data_port(self, port_name, port_m, pos_x, pos_y, width, height, depth):
+        self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, depth)
+
+    def draw_inner_output_data_port(self, port_name, port_m, pos_x, pos_y, width, height, depth):
+        self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.left, depth)
+
+    def _draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, arrow_position, depth):
         margin = height / 6.
         name_height = height - 2 * margin
         name_width = self._string_width(port_name, name_height)
@@ -474,10 +480,19 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         name_width = self._string_width(port_name, name_height)
         width = name_width + 2 * margin
 
-        arrow_pos, visible = self._draw_rect_arrow(pos_x, pos_x + width, pos_y, pos_y + height, Direction.right, depth,
+        if arrow_position == Direction.right:
+            left = pos_x
+            right = pos_x + width
+        else:
+            left = pos_x - width
+            right = pos_x
+
+        arrow_pos, visible = self._draw_rect_arrow(left, right, pos_y, pos_y + height, arrow_position, depth,
                                                    border_color=self.port_name_color,
-                                                   fill_color=self.port_connector_fill_color)
-        self._write_string(port_name, pos_x + margin, pos_y + height - margin, name_height, color=self.port_name_color,
+                                                   fill_color=self.port_color)
+        self._draw_circle(arrow_pos[0], arrow_pos[1], margin / 1.5, depth + 0.02, border_color=self.port_name_color,
+                                  fill_color=self.port_connector_fill_color)
+        self._write_string(port_name, left + margin, pos_y + height - margin, name_height, color=self.port_name_color,
                            depth=depth + 0.1)
         port_m.meta['gui']['editor']['inner_connector_pos'] = arrow_pos
 

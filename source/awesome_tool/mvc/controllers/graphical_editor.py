@@ -886,17 +886,27 @@ class GraphicalEditorController(ExtendedController):
         ))
         max_port_width = min(parent_info['width'], parent_info['height']) / 5.
 
-        num_inner_ports = 0
+        num_input_ports = 0
         for port_m in parent_state_m.input_data_ports:
             if not isinstance(port_m.meta['gui']['editor']['inner_pos'], tuple):
                 port = port_m.data_port
                 pos_x = parent_info['pos_x']
-                pos_y = parent_info['pos_y'] + num_inner_ports * port_height
+                pos_y = parent_info['pos_y'] + num_input_ports * port_height
 
-                self.view.editor.draw_inner_data_port(port.name, port_m, pos_x, pos_y, max_port_width, port_height,
-                                                      parent_depth + 0.5)
+                self.view.editor.draw_inner_input_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
+                                                            port_height, parent_depth + 0.5)
+            num_input_ports += 1
 
-            num_inner_ports += 1
+        num_output_ports = 0
+        for port_m in parent_state_m.output_data_ports:
+            if not isinstance(port_m.meta['gui']['editor']['inner_pos'], tuple):
+                port = port_m.data_port
+                pos_x = parent_info['pos_x'] + parent_info['width']
+                pos_y = parent_info['pos_y'] + num_output_ports * port_height
+
+                self.view.editor.draw_inner_output_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
+                                                             port_height, parent_depth + 0.5)
+            num_output_ports += 1
 
     def draw_transitions(self, parent_state_m, parent_depth):
         """Draws the transitions belonging to a state
@@ -1007,8 +1017,8 @@ class GraphicalEditorController(ExtendedController):
                 (from_x, from_y) = from_port.meta['gui']['editor']['outer_connector_pos']
             if isinstance(to_port, ScopedVariableModel):
                 (to_x, to_y) = to_port.meta['gui']['editor']['connector_pos']
-            #elif to_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents output
-            #    (to_x, to_y) = to_port.meta['gui']['editor']['inner_connector_pos']
+            elif to_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents output
+                (to_x, to_y) = to_port.meta['gui']['editor']['inner_connector_pos']
             else:
                 (to_x, to_y) = to_port.meta['gui']['editor']['outer_connector_pos']
 
