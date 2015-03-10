@@ -3,7 +3,7 @@ import gobject
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel
-from mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
