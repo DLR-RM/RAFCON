@@ -1001,10 +1001,14 @@ class GraphicalEditorController(ExtendedController):
             # For scoped variables, there is no inner and outer connector
             if isinstance(from_port, ScopedVariableModel):
                 (from_x, from_y) = from_port.meta['gui']['editor']['connector_pos']
+            elif from_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents input
+                (from_x, from_y) = from_port.meta['gui']['editor']['inner_connector_pos']
             else:
                 (from_x, from_y) = from_port.meta['gui']['editor']['outer_connector_pos']
             if isinstance(to_port, ScopedVariableModel):
                 (to_x, to_y) = to_port.meta['gui']['editor']['connector_pos']
+            #elif to_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents output
+            #    (to_x, to_y) = to_port.meta['gui']['editor']['inner_connector_pos']
             else:
                 (to_x, to_y) = to_port.meta['gui']['editor']['outer_connector_pos']
 
