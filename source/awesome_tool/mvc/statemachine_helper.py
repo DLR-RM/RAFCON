@@ -1,3 +1,5 @@
+import traceback
+
 from utils import log
 
 logger = log.get_logger(__name__)
@@ -27,24 +29,24 @@ class StateMachineHelper():
                     container_m.state.remove_state(model.state.state_id)
                     return True
                 except AttributeError as e:
-                    logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}".format(
-                        model.state.state_id, model.state.name, e.message))
+                    logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}\n{3}".format(
+                        model.state.state_id, model.state.name, e.message, traceback.format_exc()))
 
         elif isinstance(model, TransitionModel):
             try:
                 container_m.state.remove_transition(model.transition.transition_id)
                 return True
             except AttributeError as e:
-                logger.error("The transition with the ID {0} could not be deleted: {1}".format(
-                    model.transition.transition_id, e.message))
+                logger.error("The transition with the ID {0} could not be deleted: {1}\n{2}".format(
+                    model.transition.transition_id, e.message, traceback.format_exc()))
 
         elif isinstance(model, DataFlowModel):
             try:
                 container_m.state.remove_data_flow(model.data_flow.data_flow_id)
                 return True
             except AttributeError as e:
-                logger.error("The data flow with the ID {0} could not be deleted: {1}".format(
-                    model.data_flow.data_flow_id, e.message))
+                logger.error("The data flow with the ID {0} could not be deleted: {1}\n{2}".format(
+                    model.data_flow.data_flow_id, e.message, traceback.format_exc()))
 
         return False
 

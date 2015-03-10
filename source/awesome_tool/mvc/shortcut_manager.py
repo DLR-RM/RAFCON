@@ -1,3 +1,4 @@
+import traceback
 import gtk
 
 from utils import log
@@ -116,5 +117,5 @@ class ShortcutManager():
                 try:
                     callback_function(key_value, modifier_mask)
                 except Exception as e:
-                    logger.error('Exception while calling callback methods for action "{0}": {1}'.format(
-                        action, e.message))
+                    logger.error('Exception while calling callback methods for action "{0}": {1} \n{2}'.format(
+                        action, e.message, traceback.format_exc()))
