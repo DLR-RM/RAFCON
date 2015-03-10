@@ -11,7 +11,7 @@
 from gtkmvc import Observable
 import yaml
 
-from statemachine.id_generator import *
+from awesome_tool.statemachine.id_generator import *
 
 
 class DataFlow(Observable, yaml.YAMLObject):
@@ -79,15 +79,29 @@ class DataFlow(Observable, yaml.YAMLObject):
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
 
+    @Observable.observed
+    def modify_origin(self, from_state, from_key):
+        """ Set from_state and from_outcome at ones to support fully valid transition modifications.
+        :param str from_state: valid origin state
+        :param int from_key: valid origin outcome
+        :return:
+        """
+        if not isinstance(from_state, str):
+            raise TypeError("from_state must be of type str")
+        if not isinstance(from_key, int):
+            raise TypeError("from_key must be of type int")
+
+        self._from_state = from_state
+        self._from_key = from_key
+
     @property
     def from_state(self):
         """Property for the _from_state field
-
         """
         return self._from_state
 
     @from_state.setter
-    @Observable.observed
+    # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
         if not isinstance(from_state, str):
             raise TypeError("from_state must be of type str")
@@ -97,7 +111,6 @@ class DataFlow(Observable, yaml.YAMLObject):
     @property
     def from_key(self):
         """Property for the _from_key field
-
         """
         return self._from_key
 
@@ -109,15 +122,29 @@ class DataFlow(Observable, yaml.YAMLObject):
 
         self._from_key = from_key
 
+    @Observable.observed
+    def modify_target(self, to_state, to_key):
+        """ Set to_state and to_key (Data Port) at ones to support fully valid transition modifications.
+        :param str to_state: valid target state
+        :param int to_key: valid target data port
+        :return:
+        """
+        if not isinstance(to_state, str):
+            raise TypeError("from_state must be of type str")
+        if not isinstance(to_key, int):
+            raise TypeError("from_outcome must be of type int")
+
+        self._to_state = to_state
+        self._to_key = to_key
+
     @property
     def to_state(self):
         """Property for the _to_state field
-
         """
         return self._to_state
 
     @to_state.setter
-    @Observable.observed
+    # @Observable.observed  # should not be observed to stay consistent
     def to_state(self, to_state):
         if not isinstance(to_state, str):
             raise TypeError("to_state must be of type str")
@@ -127,7 +154,6 @@ class DataFlow(Observable, yaml.YAMLObject):
     @property
     def to_key(self):
         """Property for the _to_key field
-
         """
         return self._to_key
 

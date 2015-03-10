@@ -9,12 +9,12 @@
 """
 import yaml
 
-from statemachine.states.container_state import ContainerState
-from utils import log
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from statemachine.outcome import Outcome
-from statemachine.enums import StateType
-import statemachine.singleton
+from awesome_tool.statemachine.outcome import Outcome
+from awesome_tool.statemachine.enums import StateType
+import awesome_tool.statemachine.singleton
 
 
 class HierarchyState(ContainerState, yaml.YAMLObject):
@@ -70,7 +70,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     return
 
                 # depending on the execution mode pause execution
-                execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+                execution_signal = awesome_tool.statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
                 if execution_signal == "stop":
                     # this will be caught at the end of the run method
                     raise RuntimeError("state stopped")

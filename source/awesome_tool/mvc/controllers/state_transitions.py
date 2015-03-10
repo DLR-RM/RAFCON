@@ -3,9 +3,9 @@ from gtkmvc import Observer
 import gtk
 import gobject
 
-from mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -17,8 +17,8 @@ class StateTransitionsListController(ExtendedController):
     :class:`mvc.models.state.ContainerStateModel`. Changes made in
     the GUI are written back to the model and vice versa.
 
-    :param mvc.models.ContainerStateModel model: The container state model containing the data
-    :param mvc.views.TransitionListView view: The GTK view showing the transitions as a table
+    :param awesome_tool.mvc.models.ContainerStateModel model: The container state model containing the data
+    :param awesome_tool.mvc.views.TransitionListView view: The GTK view showing the transitions as a table
     """
 
     def __init__(self, model, view):

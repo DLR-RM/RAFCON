@@ -9,11 +9,11 @@
 """
 
 from gtkmvc import Observable
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import yaml
 
-from statemachine.id_generator import *
+from awesome_tool.statemachine.id_generator import *
 
 
 class Transition(Observable, yaml.YAMLObject):
@@ -83,6 +83,21 @@ class Transition(Observable, yaml.YAMLObject):
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
 
+    @Observable.observed
+    def modify_origin(self, from_state, from_outcome):
+        """ Set from_state and from_outcome at ones to support fully valid transition modifications.
+        :param str from_state: valid origin state
+        :param int from_outcome: valid origin outcome
+        :return:
+        """
+        if not isinstance(from_state, str):
+            raise TypeError("from_state must be of type str")
+        if not isinstance(from_outcome, int):
+            raise TypeError("from_outcome must be of type int")
+
+        self._from_state = from_state
+        self._from_outcome = from_outcome
+
     @property
     def from_state(self):
         """Property for the _from_state field
@@ -91,7 +106,7 @@ class Transition(Observable, yaml.YAMLObject):
         return self._from_state
 
     @from_state.setter
-    @Observable.observed
+    # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
         if not isinstance(from_state, str):
             raise TypeError("from_state must be of type str")

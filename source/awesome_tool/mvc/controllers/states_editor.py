@@ -2,12 +2,12 @@ import pango
 
 import gtk
 
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
-from mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
-from mvc.models.state_machine_manager import StateMachineManagerModel
-from mvc.models.state_machine import Selection
-from utils import log
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
+from awesome_tool.mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.models.state_machine import Selection
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -84,7 +84,7 @@ class StatesEditorController(ExtendedController):
         Change the state machine that is observed for new selected states to the selected state machine.
         :return:
         """
-        # print "register"
+        # print "states_editor register state_machine"
         # relieve old models
         if self.__my_selected_state_machine_id is not None:  # no old models available
             self.relieve_model(self._selected_state_machine_model.root_state)
@@ -100,6 +100,8 @@ class StatesEditorController(ExtendedController):
     def register_view(self, view):
         # sniffing the graphical viewer selection
         self.view.notebook.connect('switch-page', self.on_switch_page)
+        if self._selected_state_machine_model:
+            self.add_state_editor(self._selected_state_machine_model.root_state, self.editor_type)
 
     def add_state_editor(self, state_model, editor_type=None):
         sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)

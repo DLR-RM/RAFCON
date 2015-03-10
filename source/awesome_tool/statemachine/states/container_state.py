@@ -12,18 +12,18 @@ import copy
 from gtkmvc import Observable
 import os
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from statemachine.enums import StateType, DataPortType
-from statemachine.states.state import State
-from statemachine.transition import Transition
-from statemachine.outcome import Outcome
-from statemachine.data_flow import DataFlow
-from statemachine.scope import ScopedData, ScopedVariable
-from statemachine.id_generator import *
-from statemachine.config import *
-from statemachine.validity_check.validity_checker import ValidityChecker
-import statemachine.singleton
+from awesome_tool.statemachine.enums import StateType, DataPortType
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.statemachine.transition import Transition
+from awesome_tool.statemachine.outcome import Outcome
+from awesome_tool.statemachine.data_flow import DataFlow
+from awesome_tool.statemachine.scope import ScopedData, ScopedVariable
+from awesome_tool.statemachine.id_generator import *
+from awesome_tool.statemachine.config import *
+from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
+import awesome_tool.statemachine.singleton
 
 
 class ContainerState(State):
@@ -140,7 +140,7 @@ class ContainerState(State):
                 return None
 
             # depending on the execution mode pause execution
-            execution_signal = statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+            execution_signal = awesome_tool.statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
             if execution_signal == "stop":
                 # this will be caught at the end of the run method
                 raise RuntimeError("state stopped")
@@ -196,11 +196,11 @@ class ContainerState(State):
             raise AttributeError("State_id %s does not exist" % state_id)
 
         # remove script folder
-        own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
         if own_sm_id is None:
-            raise RuntimeError("Something is going wrong during state removal. State does not belong to "
+            logger.warn("Something is going wrong during state removal. State does not belong to "
                                "a state machine!")
-        statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
+        awesome_tool.statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
                                                                               self.states[state_id].script.path)
 
         #first delete all transitions and data_flows in this state
@@ -417,8 +417,7 @@ class ContainerState(State):
         self.is_valid_state_id(from_state)
         self.states[from_state].is_valid_outcome_id(from_outcome)
         # set properties
-        self.transitions[transition_id].from_state = from_state
-        self.transitions[transition_id]._from_outcome = from_outcome
+        self.transitions[transition_id].modify_origin(from_state, from_outcome)
 
     def modify_transition_from_outcome(self, transition_id, from_outcome):
         """The function accepts consistent transition changes of from_outcome.
@@ -430,7 +429,7 @@ class ContainerState(State):
         self.is_valid_transition_id(transition_id)
         self.states[self.transitions[transition_id].from_state].is_valid_outcome_id(from_outcome)
         # set properties
-        self.transitions[transition_id].to_outcome = from_outcome
+        self.transitions[transition_id].from_outcome = from_outcome
 
     def modify_transition_to_state(self, transition_id, to_state):
         """The function accepts consistent transition changes of to_state.
@@ -624,8 +623,7 @@ class ContainerState(State):
             if not from_key in self.states[from_state].output_data_ports:
                 raise AttributeError("from_key must be in list of child-state output_data_ports")
         # set properties
-        self.data_flows[data_flow_id].from_state = from_state
-        self.data_flows[data_flow_id].from_key = from_key
+        self.data_flows[data_flow_id].modify_origin(from_state, from_key)
 
     def modify_data_flow_from_key(self, data_flow_id, from_key):
         """The function accepts consistent data_flow change of from_key.
@@ -676,8 +674,7 @@ class ContainerState(State):
                 raise AttributeError("to_key must be in list of child-state input_data_ports")
 
         # set properties
-        self.data_flows[data_flow_id].to_state = to_state
-        self.data_flows[data_flow_id].to_key = to_key
+        self.data_flows[data_flow_id].modify_target(to_state, to_key)
 
     def modify_data_flow_to_key(self, data_flow_id, to_key):
         """The function accepts consistent data_flow change of to_key.

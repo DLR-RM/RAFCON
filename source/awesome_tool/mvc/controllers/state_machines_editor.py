@@ -2,12 +2,12 @@ import pango
 
 import gtk
 
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.views.graphical_editor import GraphicalEditorView
-from mvc.controllers.graphical_editor import GraphicalEditorController
-from mvc.models.state_machine_manager import StateMachineManagerModel
-from mvc.models.state_machine import StateMachineModel
-from utils import log
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.views.graphical_editor import GraphicalEditorView
+from awesome_tool.mvc.controllers.graphical_editor import GraphicalEditorController
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.models.state_machine import StateMachineModel
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -87,13 +87,14 @@ class StateMachinesEditorController(ExtendedController):
 
         graphical_editor_ctrl = GraphicalEditorController(state_machine_model, graphical_editor_view)
         self.add_controller(sm_identifier, graphical_editor_ctrl)
-        (event_box, new_label) = create_tab_header(state_machine_model.root_state.state.name,
+        (event_box, new_label) = create_tab_header("%s|%s" % (sm_identifier, state_machine_model.root_state.state.name),
                                                    self.on_close_clicked,
                                                    state_machine_model, 'refused')
         graphical_editor_view.get_top_widget().title_label = new_label
 
         idx = self._view.notebook.append_page(graphical_editor_view['main_frame'], event_box)
         page = self._view.notebook.get_nth_page(idx)
+        self.view.notebook.set_tab_reorderable(page, True)
         page.show_all()
 
         self.tabs[sm_identifier] = {'page': page,
@@ -117,6 +118,7 @@ class StateMachinesEditorController(ExtendedController):
         if not self.view.notebook.get_current_page() == idx:
             self.view.notebook.set_current_page(idx)
 
+    # TODO observe name of root_state for updating tab name
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
         logger.debug("State machine model changed!")

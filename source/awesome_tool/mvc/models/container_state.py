@@ -3,19 +3,19 @@ from gtk import ListStore
 from gtkmvc import ModelMT
 import gtk
 
-from statemachine.states.container_state import ContainerState
-from statemachine.states.state import State
-from statemachine.data_flow import DataFlow
-from statemachine.transition import Transition
-from statemachine.states.state import DataPort
-from statemachine.scope import ScopedVariable
-from mvc.models.state import StateModel
-import mvc.models
-from mvc.models.transition import TransitionModel
-from mvc.models.data_flow import DataFlowModel
-from mvc.models.data_port import DataPortModel
-from mvc.models.scoped_variable import ScopedVariableModel
-from utils import log
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.statemachine.data_flow import DataFlow
+from awesome_tool.statemachine.transition import Transition
+from awesome_tool.statemachine.states.state import DataPort
+from awesome_tool.statemachine.scope import ScopedVariable
+from awesome_tool.mvc.models.state import StateModel
+import awesome_tool.mvc.models
+from awesome_tool.mvc.models.transition import TransitionModel
+from awesome_tool.mvc.models.data_flow import DataFlowModel
+from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
+from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -89,7 +89,7 @@ class ContainerStateModel(StateModel):
                         sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, mvc.models.state.dataport_compare_method)
+        tms.set_sort_func(0, awesome_tool.mvc.models.state.dataport_compare_method)
         tms.sort_column_changed()
         tmp = tms
         self.scoped_variables_list_store.clear()
@@ -109,16 +109,6 @@ class ContainerStateModel(StateModel):
         self.reload_scoped_variables_models()
         self.reload_scoped_variables_list_store()
 
-    def is_element_of_self(self, instance):
-
-        #print info.method_name, info
-        if isinstance(instance, DataFlow) and instance.data_flow_id in self.state.data_flows:
-            return True
-        if isinstance(instance, Transition) and instance.transition_id in self.state.transitions:
-            return True
-        if isinstance(instance, ScopedVariable) and instance.data_port_id in self.state.scoped_variables:
-            return True
-        return StateModel.is_element_of_self(self, instance)
 
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, name, info):
@@ -143,28 +133,26 @@ class ContainerStateModel(StateModel):
 
         changed_list = None
         # If the change happened in a child state, notify the list of all child states
-        if isinstance(model, StateModel) and model is not self:
+        if isinstance(model, StateModel) and model is not self or model.parent is not self:
             changed_list = self.states
             cause = 'state_change'
         # If the change happened in one of the transitions, notify the list of all transitions
-        elif isinstance(model, TransitionModel):
+        elif isinstance(model, TransitionModel) and model.parent is self:
             changed_list = self.transitions
             cause = 'transition_change'
         # If the change happened in one of the data flows, notify the list of all data flows
-        elif isinstance(model, DataFlowModel):
+        elif isinstance(model, DataFlowModel) and model.parent is self:
             changed_list = self.data_flows
             cause = 'data_flow_change'
         # If the change happened in one of the scoped variables, notify the list of all scoped variables
-        elif isinstance(model, ScopedVariableModel):
+        elif isinstance(model, ScopedVariableModel) and model.parent is self:
             changed_list = self.scoped_variables
             cause = 'scoped_variable_change'
 
         if changed_list is not None:
             if hasattr(info, 'before') and info['before']:
-                print "notify before", cause
                 changed_list._notify_method_before(info.instance, cause, (model,), info)
             elif hasattr(info, 'after') and info['after']:
-                print "notify after", cause
                 changed_list._notify_method_after(info.instance, cause, None, (model,), info)
 
         # Finally call the method of the base class, to check for changes in ports and outcomes

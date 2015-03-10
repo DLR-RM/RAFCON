@@ -1,8 +1,8 @@
 import gtk, gobject
 
 from gtkmvc import Observer
-from mvc.controllers.extended_controller import ExtendedController
-from utils import log
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

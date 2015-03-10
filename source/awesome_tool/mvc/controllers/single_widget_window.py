@@ -1,6 +1,6 @@
 import gtk
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.shortcut_manager import ShortcutManager
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.shortcut_manager import ShortcutManager
 
 class SingleWidgetWindowController(ExtendedController):
     """Controller handling the view of properties/attributes of ...

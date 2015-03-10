@@ -1,13 +1,13 @@
 
 import gtk
 
-from mvc.controllers.extended_controller import ExtendedController
-from mvc.controllers import StateOverviewController, StateConnectionsEditorController, SourceEditorController, \
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers import StateOverviewController, StateConnectionsEditorController, SourceEditorController, \
     DataPortListController, ScopedVariableListController, StateOutcomesEditorController
 
-from mvc.controllers.state_transitions import StateTransitionsEditorController
-from mvc.controllers.state_data_flows import StateDataFlowsEditorController
-from mvc.models import StateModel
+from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEditorController
+from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
+from awesome_tool.mvc.models import StateModel
 
 
 class StateEditorController(ExtendedController):

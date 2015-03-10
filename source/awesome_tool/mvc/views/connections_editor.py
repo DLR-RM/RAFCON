@@ -1,8 +1,8 @@
 import gtk
 from gtkmvc import View
 
-from mvc.views.state_transitions import StateTransitionsEditorView
-from mvc.views.state_data_flows import StateDataFlowsEditorView
+from awesome_tool.mvc.views.state_transitions import StateTransitionsEditorView
+from awesome_tool.mvc.views.state_data_flows import StateDataFlowsEditorView
 
 
 class StateConnectionsEditorView(View):

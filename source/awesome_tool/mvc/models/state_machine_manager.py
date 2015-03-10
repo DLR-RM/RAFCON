@@ -1,9 +1,9 @@
 from gtkmvc import ModelMT
-from mvc.models.state_machine import StateMachineModel, Selection
-from statemachine.state_machine_manager import StateMachineManager
-from utils.vividict import Vividict
+from awesome_tool.mvc.models.state_machine import StateMachineModel, Selection
+from awesome_tool.statemachine.state_machine_manager import StateMachineManager
+from awesome_tool.utils.vividict import Vividict
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -11,7 +11,7 @@ class StateMachineManagerModel(ModelMT):
     """This model class manages a StateMachineManager
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine manager).
-    Additional to the data of the StateMachineManager its model and the models of statemachines hold by those
+    Additional to the data of the StateMachineManager its model and the models of state machines hold by those
     these model stores and made observable the selected state machine of the view which have not to be the same
     as the active running one.
 

@@ -10,11 +10,11 @@
 from gtkmvc import Observable
 import yaml
 
-from statemachine.enums import StateType
-from statemachine.states.container_state import ContainerState
-from statemachine.states.state import State
-import statemachine.singleton
-from utils import log
+from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.state import State
+import awesome_tool.statemachine.singleton
+from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -58,14 +58,14 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         self._state_copy = None
 
         path_list = library_path.split("/")
-        target_lib_dict = statemachine.singleton.library_manager.libraries
+        target_lib_dict = awesome_tool.statemachine.singleton.library_manager.libraries
         # go down the path to the correct library
         # TODO: make this more robust
         for element in path_list:
             target_lib_dict = target_lib_dict[element]
         # get a fresh copy of the library state from disk
         logger.debug("Load state to which this library state links")
-        state_machine, lib_version, creationtime = statemachine.singleton.library_manager.storage.\
+        state_machine, lib_version, creationtime = awesome_tool.statemachine.singleton.library_manager.storage.\
             load_statemachine_from_yaml(target_lib_dict[library_name])
         self.state_copy = state_machine.root_state
         if not str(lib_version) == version:

@@ -10,7 +10,7 @@
 
 from gtkmvc import Observable
 
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import vc_strategy
 import vc_implementations
@@ -51,7 +51,7 @@ class ValidityChecker(Observable):
 
         """
         #TODO: deferred import: can this be somehow solved otherwise???
-        import statemachine.states.container_state as smcs
+        import awesome_tool.statemachine.states.container_state as smcs
 
         if not isinstance(c_state, smcs.ContainerState):
             raise TypeError("Check() can only be applied onto ContainerStates")

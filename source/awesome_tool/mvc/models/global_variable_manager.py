@@ -1,6 +1,6 @@
 from gtkmvc import ModelMT
-from utils.vividict import Vividict
-import statemachine.singleton
+from awesome_tool.utils.vividict import Vividict
+import awesome_tool.statemachine.singleton
 import gobject
 from gtk import ListStore
 import gtk
@@ -9,7 +9,7 @@ import gtk
 
 class GlobalVariableManagerModel(ModelMT):
 
-    global_variable_manager = statemachine.singleton.global_variable_manager
+    global_variable_manager = awesome_tool.statemachine.singleton.global_variable_manager
 
     __observables__ = ("global_variable_manager",)
 

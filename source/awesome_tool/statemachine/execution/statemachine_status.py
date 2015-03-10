@@ -13,7 +13,7 @@ from enum import Enum
 from threading import Condition
 
 from execution_history import ExecutionHistory
-from utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

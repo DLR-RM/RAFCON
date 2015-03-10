@@ -1,7 +1,7 @@
 from gtkmvc import ModelMT
 
-from statemachine.states.state import DataPort
-from utils.vividict import Vividict
+from awesome_tool.statemachine.states.state import DataPort
+from awesome_tool.utils.vividict import Vividict
 
 
 class DataPortModel(ModelMT):

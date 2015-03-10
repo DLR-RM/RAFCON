@@ -12,13 +12,13 @@ import Queue
 
 import yaml
 
-from utils import log
+from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
-from statemachine.outcome import Outcome
+from awesome_tool.statemachine.outcome import Outcome
 from concurrency_state import ConcurrencyState
 from container_state import ContainerState
-from statemachine.enums import StateType
+from awesome_tool.statemachine.enums import StateType
 
 
 class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):

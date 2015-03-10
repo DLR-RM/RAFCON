@@ -2,10 +2,10 @@
 import gobject
 from gtk import ListStore, TreeStore
 from gtkmvc import Observer
-from mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 
-from statemachine.states.state import State
-from utils import log
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -17,8 +17,8 @@ class StateDataFlowsListController(ExtendedController):
     :class:`mvc.models.state.ContainerStateModel`. Changes made in
     the GUI are written back to the model and vice versa.
 
-    :param mvc.models.ContainerStateModel model: The container state model containing the data
-    :param mvc.views.DataFlowListView view: The GTK view showing the data flows as a table
+    :param awesome_tool.mvc.models.ContainerStateModel model: The container state model containing the data
+    :param awesome_tool.mvc.views.DataFlowListView view: The GTK view showing the data flows as a table
     """
 
     def __init__(self, model, view):
@@ -45,7 +45,6 @@ class StateDataFlowsListController(ExtendedController):
 
         self.update_internal_data_base()
         self.update_tree_store()
-
 
     def register_view(self, view):
         """Called when the View was registered
