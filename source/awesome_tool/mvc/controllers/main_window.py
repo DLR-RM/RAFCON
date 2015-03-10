@@ -16,6 +16,7 @@ from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
 from awesome_tool.mvc.views.states_editor import StatesEditorView
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+import awesome_tool.statemachine.config
 
 
 class MainWindowController(ExtendedController):
@@ -151,6 +152,7 @@ class MainWindowController(ExtendedController):
         log.debug_filter.set_logging_test_view(None)
         log.error_filter.set_logging_test_view(None)
         gtk.main_quit()
+        awesome_tool.statemachine.config.global_config.save_configuration()
 
     ######################################################
     # menu bar functionality - File

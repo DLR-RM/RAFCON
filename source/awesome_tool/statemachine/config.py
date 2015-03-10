@@ -11,6 +11,8 @@ import yaml
 import os
 
 from awesome_tool.utils.storage_utils import StorageUtils
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
 
 
 DEFAULT_CONFIG = """
@@ -41,6 +43,7 @@ class Config(object):
             yaml_dict = yaml.load(DEFAULT_CONFIG)
             self.storage.write_dict_to_yaml(yaml_dict, os.path.join(CONFIG_PATH, CONFIG_FILE))
         self.__config_dict = self.storage.load_dict_from_yaml(os.path.join(CONFIG_PATH, CONFIG_FILE))
+        logger.info("Config initialized ... loaded configuration from %s" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
 
     def get_config_value(self, key):
         """
@@ -49,6 +52,18 @@ class Config(object):
         :return:
         """
         return self.__config_dict[key]
+
+    def set_config_value(self, key, value):
+        """
+        Get a specific configuration value
+        :param key: the key to the configuration value
+        :return:
+        """
+        self.__config_dict[key] = value
+
+    def save_configuration(self):
+        self.storage.write_dict_to_yaml(self.__config_dict, os.path.join(CONFIG_PATH, CONFIG_FILE))
+        logger.info("Saved configuration to filesystem (path: %s)" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
 
 # This variable holds the global configuration parameters for the statemachine
 global_config = Config()
