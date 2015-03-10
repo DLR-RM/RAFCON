@@ -49,7 +49,6 @@ class ContainerStateModel(StateModel):
         self.transition_list_store = ListStore(gobject.TYPE_PYOBJECT)
         # Actually DataFlow, but this is not supported by
         self.data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)
-        self.scoped_variables_list_store = ListStore(str, str, str, int)
 
         # Create model for each child class
         states = container_state.states
@@ -78,23 +77,7 @@ class ContainerStateModel(StateModel):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
-        self.reload_scoped_variables_list_store_and_models()
-
-    def reload_scoped_variables_list_store(self):
-        """Reloads the scoped variable list store from the data port models
-        """
-        tmp = ListStore(str, str, str, int)
-        for sv_model in self.scoped_variables:
-            tmp.append([sv_model.scoped_variable.name, sv_model.scoped_variable.data_type,
-                        sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, awesome_tool.mvc.models.state.dataport_compare_method)
-        tms.sort_column_changed()
-        tmp = tms
-        self.scoped_variables_list_store.clear()
-        for elem in tmp:
-            self.scoped_variables_list_store.append(elem)
+        self.reload_scoped_variables_models()
 
     def reload_scoped_variables_models(self):
         """Reloads the scoped variable models directly from the the state
@@ -102,12 +85,6 @@ class ContainerStateModel(StateModel):
         self.scoped_variables = []
         for scoped_variable in self.state.scoped_variables.itervalues():
             self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
-
-    def reload_scoped_variables_list_store_and_models(self):
-        """Reloads the scoped variable list store and models
-        """
-        self.reload_scoped_variables_models()
-        self.reload_scoped_variables_list_store()
 
 
     @ModelMT.observe("state", before=True, after=True)
@@ -117,7 +94,7 @@ class ContainerStateModel(StateModel):
         The method is called each time, the model is changed. This happens, when the state itself changes or one of
         its children (states, transitions, data flows) changes. Changes of the children cannot be observed directly,
         therefore children notify their parent about their changes by calling this method.
-        This method then checks, what has been changed by looking at the model that is passed to the it. It then
+        This method then checks, what has been changed by looking at the model that is passed to it. It then
         notifies the list in which the change happened about the change.
         E.g. one child state changes its name. The model of that state observes itself and notifies the parent (
         i.e. this state model) about the change by calling this method with the information about the change. This

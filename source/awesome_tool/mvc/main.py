@@ -149,7 +149,7 @@ if __name__ == '__main__':
     # prop_ctrl = SingleWidgetWindowController(this_model, prop_view, StateOverviewController)
 
     # dp_editor_view = StateDataportEditorView()
-    # dp_editor_ctrl = StateDataPortEditorController(this_model, dp_editor_view)
+    # dp_editor_ctrl = StateDataPortEditorController(ContainerStateModel(ctr_state), dp_editor_view)
 
     # oc_editor_view = SingleWidgetWindowView(StateOutcomesEditorView, width=500, height=200, title='Outcomes Editor')
     # oc_editor_ctrl = SingleWidgetWindowController(ctr_model, oc_editor_view, StateOutcomesEditorController)

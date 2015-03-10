@@ -14,8 +14,6 @@ class StateEditorController(ExtendedController):
     """Controller handling the view of properties/attributes of the
     """
 
-    # TODO Missing functions
-
     def __init__(self, model, view):
         """Constructor
         """
@@ -40,6 +38,10 @@ class StateEditorController(ExtendedController):
         view['source_view'].show()
         view['transitions_view'].show()
         view['data_flows_view'].show()
+
+        self.get_controller('inputs_ctrl').reload_data_port_list_store()
+        self.get_controller('outputs_ctrl').reload_data_port_list_store()
+        self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
 
     def register_view(self, view):
         """Called when the View was registered
@@ -74,14 +76,6 @@ class StateEditorController(ExtendedController):
     def model_changed(self, model):
         for controller in self.get_child_controllers():
             controller.model = model
-
-    @ExtendedController.observe("input_data_ports", after=True)
-    def input_data_ports_changed(self, model, prop_name, info):
-        self.model.reload_input_data_port_list_store()
-
-    @ExtendedController.observe("output_data_ports", after=True)
-    def output_data_ports_changed(self, model, prop_name, info):
-        self.model.reload_output_data_port_list_store()
 
 
 class StateEditorEggController(ExtendedController):
@@ -266,14 +260,6 @@ class StateEditorEggController(ExtendedController):
             #self.view['vpaned1'].set_position(1000)
             # print "position: %s" % self.view['vpaned1'].get_position()
 
-    @ExtendedController.observe("input_data_ports", after=True)
-    def input_data_ports_changed(self, model, prop_name, info):
-        self.model.reload_input_data_port_list_store()
-
-    @ExtendedController.observe("output_data_ports", after=True)
-    def output_data_ports_changed(self, model, prop_name, info):
-        self.model.reload_output_data_port_list_store()
-
 
 class StateEditorLDController(ExtendedController):
     """Controller handles the organization of the Logic-Data oriented State-Editor.
@@ -334,11 +320,3 @@ class StateEditorLDController(ExtendedController):
 
     def register_actions(self, shortcut_manager):
         pass
-
-    @ExtendedController.observe("input_data_ports", after=True)
-    def input_data_ports_changed(self, model, prop_name, info):
-        self.model.reload_input_data_port_list_store()
-
-    @ExtendedController.observe("output_data_ports", after=True)
-    def output_data_ports_changed(self, model, prop_name, info):
-        self.model.reload_output_data_port_list_store()

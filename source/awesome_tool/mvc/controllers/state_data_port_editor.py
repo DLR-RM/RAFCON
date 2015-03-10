@@ -1,4 +1,5 @@
 import gtk
+
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.controllers.io_data_port_list import DataPortListController
 from awesome_tool.mvc.controllers.scoped_variable_list import ScopedVariableListController
@@ -7,7 +8,9 @@ logger = log.get_logger(__name__)
 
 
 class StateDataPortEditorController(ExtendedController):
-
+    """
+    Important Note: This class is only used for debugging purposes. For the GUI look at the StateEditor
+    """
     #model will be a container state model
     def __init__(self, model, view):
         """Constructor
@@ -30,15 +33,11 @@ class StateDataPortEditorController(ExtendedController):
             'odp_list_ctrl').on_delete_output_port_button_clicked)
         view['delete_scoped_variable_button'].connect('clicked', self.get_controller(
             'sv_list_ctrl').on_delete_scoped_variable_button_clicked)
-        print "Init of state-data-port-editor ", model
+
+        self.get_controller('idp_list_ctrl').reload_data_port_list_store()
+        self.get_controller('odp_list_ctrl').reload_data_port_list_store()
+        self.get_controller('sv_list_ctrl').reload_scoped_variables_list_store()
 
     def register_view(self, view):
         view['state_dataport_editor'].connect('destroy', gtk.main_quit)
 
-    @ExtendedController.observe("input_data_ports", after=True)
-    def input_data_ports_changed(self, model, prop_name, info):
-        self.model.reload_input_data_port_list_store()
-
-    @ExtendedController.observe("output_data_ports", after=True)
-    def output_data_ports_changed(self, model, prop_name, info):
-        self.model.reload_output_data_port_list_store()
