@@ -117,14 +117,14 @@ class StateModel(ModelMT):
         return False
 
     @ModelMT.observe("state", after=True, before=True)
-    def model_changed(self, model, name, info):
+    def model_changed(self, model, prop_name, info):
         """This method notifies the model lists and the parent state about changes
 
         The method is called each time, the model is changed. This happens, when the state itself changes or one of
         its children (outcomes, ports) changes. Changes of the children cannot be observed directly,
         therefore children notify their parent about their changes by calling this method.
-        This method then checks, what has been changed by looking at the method that caused the change. It then
-        notifies the list in which the change happened about the change.
+        This method then checks, what has been changed by looking at the method that caused the change. In the
+        following, it notifies the list in which the change happened about the change.
         E.g. one input data port changes its name. The model of the port observes itself and notifies the parent (
         i.e. the state model) about the change by calling this method with the information about the change. This
         method recognizes that the method "modify_input_data_port" caused the change and therefore triggers a notify
@@ -133,51 +133,46 @@ class StateModel(ModelMT):
         "_notify_method_after" is used when the changing function returns. This changing function in the example
         would be "modify_input_data_port".
         :param model: The model that was changed
-        :param name: The property that was changed
+        :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
+        # logger.debug("StateModel.model_changed called of state %s with prop %s" % (self.state.state_id, prop_name))
 
         # mark the state machine this state belongs to as dirty
         own_sm_id = statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
         statemachine.singleton.global_storage.mark_dirty(own_sm_id)
-    
-        # TODO delete # prints if there is no bug ... latest 15th of march
+
+        # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
+        # notify there parent with there own instance as argument
         if hasattr(info, 'before') and info['before'] and (self is model.parent or isinstance(info.instance, DataPort)):
-            # print info.method_name, "modify_input_data_port" in info.method_name, info
             if "modify_input_data_port" in info.method_name or \
                     (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
-                # print "NOTIFY before INPUT_DATA_PORTS"
                 self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
             if "modify_output_data_port" in info.method_name or \
                     (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
-                # print "NOTIFY before OUTPUT_DATA_PORTS"
                 self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
 
         elif hasattr(info, 'after') and info['after'] and (self is model.parent or isinstance(info.instance, DataPort)):
             if "modify_input_data_port" in info.method_name or \
                     (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
-                # print "NOTIFY after INPUT_DATA_PORTS"
                 self.input_data_ports._notify_method_after(info.instance, "input_data_port_change", None, (model,), info)
             if "modify_output_data_port" in info.method_name or \
                     (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
-                # print "NOTIFY after OUTPUT_DATA_PORTS"
                 self.output_data_ports._notify_method_after(info.instance, "output_data_port_change", None, (model,), info)
 
         if hasattr(info, 'before') and info['before'] and self is model.parent:
-            if "modify_outcome" in info.method_name or info.method_name in ['add_outcome', 'remove_outcome'] or \
-                    isinstance(info.instance, Outcome):
-                # print "NOTIFY before OUTCOMES"
+            if "modify_outcome" in info.method_name and self is model or \
+                    isinstance(info.instance, Outcome) and self is model.parent:
                 self.outcomes._notify_method_before(info.instance, "outcome_change", (model,), info)
 
         elif hasattr(info, 'after') and info['after'] and self is model.parent:
-            if "modify_outcome" in info.method_name or info.method_name in ['add_outcome', 'remove_outcome'] or \
-                    isinstance(info.instance, Outcome):
-                # print "NOTIFY after OUTCOMES"
+            if "modify_outcome" in info.method_name and self is model or \
+                    isinstance(info.instance, Outcome) and self is model.parent:
                 self.outcomes._notify_method_after(info.instance, "outcome_change", None, (model,), info)
 
         # Notify the parent state about the change (this causes a recursive call up to the root state)
         if self.parent is not None:
-            self.parent.model_changed(model, name, info)
+            self.parent.model_changed(model, prop_name, info)
 
     def get_model_info(self, model):
         model_key = None
@@ -209,6 +204,8 @@ class StateModel(ModelMT):
             output-data-port models
             outcome models
         """
+        # logger.debug("StateModel.update_models called of state %s with prop %s %s" % (self.state.state_id, name,
+        #                                                                               info.method_name))
 
         model_list = None
         if "input_data_port" in info.method_name:

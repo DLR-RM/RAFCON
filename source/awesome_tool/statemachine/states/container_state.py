@@ -455,6 +455,7 @@ class ContainerState(State):
         # set properties
         self.transitions[transition_id].to_outcome = to_outcome
 
+    @Observable.observed
     def remove_outcome(self, outcome_id):
         """Remove an outcome from the state
 

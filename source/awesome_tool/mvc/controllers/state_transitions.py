@@ -439,6 +439,8 @@ class StateTransitionsListController(ExtendedController):
         self.update_tree_store()
 
     def notification_logs(self, model, prop_name, info):
+        #logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+                         # (self.model.state.state_id, prop_name, info.instance, info.method_name, info))
 
         if model.state.state_id == self.model.state.state_id:
             relative_str = "SELF"

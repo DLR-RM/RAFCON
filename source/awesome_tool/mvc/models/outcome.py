@@ -38,9 +38,9 @@ class OutcomeModel(ModelMT):
         # this class is an observer of its own properties:
         self.register_observer(self)
 
-    @ModelMT.observe("Outcome", before=True, after=True)
-    def model_changed(self, model, name, info):
+    @ModelMT.observe("outcome", before=True, after=True)
+    def model_changed(self, model, prop_name, info):
 
         if self.parent is not None:
-            # logger.debug("OUTCOME_MODEL_CHANGED %s %s %s" % (str(model), str(name), str(info)))
-            self.parent.model_changed(model, name, info)
+            # logger.debug("OUTCOME_MODEL_CHANGED %s %s %s" % (str(model), str(prop_name), str(info)))
+            self.parent.model_changed(model, prop_name, info)

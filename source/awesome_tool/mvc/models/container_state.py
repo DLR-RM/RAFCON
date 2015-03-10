@@ -111,13 +111,13 @@ class ContainerStateModel(StateModel):
 
 
     @ModelMT.observe("state", before=True, after=True)
-    def model_changed(self, model, name, info):
+    def model_changed(self, model, prop_name, info):
         """This method notifies the model lists and the parent state about changes
 
         The method is called each time, the model is changed. This happens, when the state itself changes or one of
         its children (states, transitions, data flows) changes. Changes of the children cannot be observed directly,
         therefore children notify their parent about their changes by calling this method.
-        This method then checks, what has been changed by looking at the model that is passed to the it. It then
+        This method then checks, what has been changed by looking at the model that is passed to it. In the following it
         notifies the list in which the change happened about the change.
         E.g. one child state changes its name. The model of that state observes itself and notifies the parent (
         i.e. this state model) about the change by calling this method with the information about the change. This
@@ -127,11 +127,14 @@ class ContainerStateModel(StateModel):
         "_notify_method_after" is used when the changing function returns. This changing function in the example
         would be the setter of the property name.
         :param model: The model that was changed
-        :param name: The property that was changed
+        :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
+        # logger.debug("ContainerStateModel.model_changed called fo state %s with prop %s" % (self.state.state_id,
+        #                                                                                     prop_name))
 
         changed_list = None
+        cause = None
         # If the change happened in a child state, notify the list of all child states
         if isinstance(model, StateModel) and model is not self or model.parent is not self:
             changed_list = self.states
@@ -149,14 +152,14 @@ class ContainerStateModel(StateModel):
             changed_list = self.scoped_variables
             cause = 'scoped_variable_change'
 
-        if changed_list is not None:
+        if not (cause is None or changed_list is None):
             if hasattr(info, 'before') and info['before']:
                 changed_list._notify_method_before(info.instance, cause, (model,), info)
             elif hasattr(info, 'after') and info['after']:
                 changed_list._notify_method_after(info.instance, cause, None, (model,), info)
 
-        # Finally call the method of the base class, to check for changes in ports and outcomes
-        StateModel.model_changed(self, model, name, info)
+        # Finally call the method of the base class, to forward changes in ports and outcomes
+        StateModel.model_changed(self, model, prop_name, info)
 
     @ModelMT.observe("state", after=True)
     def update_child_models(self, _, name, info):
@@ -168,6 +171,9 @@ class ContainerStateModel(StateModel):
             state models
             scoped variable models
         """
+        # logger.debug("ContainerStateModel.update_child_models called fo state %s with prop %s %s" % (self.state.state_id,
+        #                                                                                              name,
+        #                                                                                              info.method_name))
 
         if info.method_name == 'start_state':
             c_state_m = None

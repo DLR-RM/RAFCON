@@ -122,6 +122,7 @@ class StateOverviewController(ExtendedController, Model):
 
     def change_type(self, widget, model=None, info=None):
         # TODO this function should be realized by a call of the ContainerState (change_type)
+        # for clean use it is a remove and add approach at the moment
         type_text = widget.get_active_text()
         if not type_text == str(self.model.state.state_type) and type_text in self.state_types_dict:
             state_name = self.model.state.name
