@@ -417,8 +417,7 @@ class ContainerState(State):
         self.is_valid_state_id(from_state)
         self.states[from_state].is_valid_outcome_id(from_outcome)
         # set properties
-        self.transitions[transition_id].from_state = from_state
-        self.transitions[transition_id]._from_outcome = from_outcome
+        self.transitions[transition_id].modify_origin(from_state, from_outcome)
 
     def modify_transition_from_outcome(self, transition_id, from_outcome):
         """The function accepts consistent transition changes of from_outcome.
@@ -430,7 +429,7 @@ class ContainerState(State):
         self.is_valid_transition_id(transition_id)
         self.states[self.transitions[transition_id].from_state].is_valid_outcome_id(from_outcome)
         # set properties
-        self.transitions[transition_id].to_outcome = from_outcome
+        self.transitions[transition_id].from_outcome = from_outcome
 
     def modify_transition_to_state(self, transition_id, to_state):
         """The function accepts consistent transition changes of to_state.
@@ -624,8 +623,7 @@ class ContainerState(State):
             if not from_key in self.states[from_state].output_data_ports:
                 raise AttributeError("from_key must be in list of child-state output_data_ports")
         # set properties
-        self.data_flows[data_flow_id].from_state = from_state
-        self.data_flows[data_flow_id].from_key = from_key
+        self.data_flows[data_flow_id].modify_origin(from_state, from_key)
 
     def modify_data_flow_from_key(self, data_flow_id, from_key):
         """The function accepts consistent data_flow change of from_key.
@@ -676,8 +674,7 @@ class ContainerState(State):
                 raise AttributeError("to_key must be in list of child-state input_data_ports")
 
         # set properties
-        self.data_flows[data_flow_id].to_state = to_state
-        self.data_flows[data_flow_id].to_key = to_key
+        self.data_flows[data_flow_id].modify_target(to_state, to_key)
 
     def modify_data_flow_to_key(self, data_flow_id, to_key):
         """The function accepts consistent data_flow change of to_key.

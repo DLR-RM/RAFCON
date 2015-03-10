@@ -3,6 +3,7 @@ import gobject
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel
+from mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -16,20 +17,48 @@ class StateMachineTreeController(ExtendedController):
         """Constructor
         :param model StateMachineModel should be exchangeable
         """
-        # TODO auf state machine manager und active state umstellen
-        assert isinstance(model, StateMachineModel)
+        assert isinstance(model, StateMachineManagerModel)
 
         ExtendedController.__init__(self, model, view)
         # self.relieve_model(model)
         # self.observe_model(model.root_state)
         # model.root_state.register_observer(self)
+        self.view_is_registered = False
         self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT)
         view.set_model(self.tree_store)
         #view.set_hover_expand(True)
         self.path_store = {}
+        self.__my_selected_sm_id = None
+        self._selected_sm_model = None
+        self.register()
+
+    @ExtendedController.observe("selected_state_machine_id", assign=True)
+    def state_machine_manager_notification(self, model, property, info):
+        self.register()
+
+    def register(self):
+        """
+        Change the state machine that is observed for new selected states to the selected state machine.
+        :return:
+        """
+        # print "state_machine_tree register state_machine"
+        # relieve old models
+        if self.__my_selected_sm_id is not None:  # no old models available
+            self.relieve_model(self._selected_sm_model.root_state)
+            self.relieve_model(self._selected_sm_model)
+        # set own selected state machine id
+        self.__my_selected_sm_id = self.model.selected_state_machine_id
+        if self.__my_selected_sm_id is not None:
+            # observe new models
+            self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
+            logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
+            self.observe_model(self._selected_sm_model.root_state)
+            self.observe_model(self._selected_sm_model)  # for selection
+            self.update()
 
     def register_view(self, view):
         self.view.connect('cursor-changed', self.on_cursor_changed)
+        self.view_is_registered = True
         self.update()
 
     def register_adapters(self):
@@ -42,6 +71,8 @@ class StateMachineTreeController(ExtendedController):
         :return:
         """
         gtk.gdk.threads_enter()
+        if not self.view_is_registered:
+            return
 
         if changed_state_model:
             if changed_state_model.parent is None:
@@ -49,24 +80,27 @@ class StateMachineTreeController(ExtendedController):
             else:
                 parent_iter = self.path_store[changed_state_model.parent.state.get_path()]
         else:
-            changed_state_model = self.model.root_state
             parent_iter = None
             self.path_store.clear()
             self.tree_store.clear()
+            if self._selected_sm_model:
+                changed_state_model = self._selected_sm_model.root_state
+            else:
+                return
 
         if not changed_state_model.state.get_path() in self.path_store:
             parent_iter = self.tree_store.insert_before(parent_iter, None,
-                                                        (self.model.root_state.state.name,
-                                                         self.model.root_state.state.state_id,
-                                                         self.model.root_state.state.state_type,
-                                                         self.model.root_state))
+                                                        (self._selected_sm_model.root_state.state.name,
+                                                         self._selected_sm_model.root_state.state.state_id,
+                                                         self._selected_sm_model.root_state.state.state_type,
+                                                         self._selected_sm_model.root_state))
             #self.tree_store.row_inserted(path=self.tree_store.get_path(parent_iter), iter=parent_iter)
-            self.path_store[self.model.root_state.state.get_path()] = parent_iter
+            self.path_store[self._selected_sm_model.root_state.state.get_path()] = parent_iter
         else:
-            parent_iter = self.path_store[self.model.root_state.state.get_path()]
+            parent_iter = self.path_store[self._selected_sm_model.root_state.state.get_path()]
 
         # check if child are all in
-        for state_id, smodel in self.model.root_state.states.items():
+        for state_id, smodel in self._selected_sm_model.root_state.states.items():
             self.insert_rec(parent_iter, smodel)
 
         # check if child should not be in
@@ -74,7 +108,7 @@ class StateMachineTreeController(ExtendedController):
             child_iter = self.tree_store.iter_nth_child(parent_iter, n)
             path = self.tree_store.get_path(child_iter)
             model = self.view.get_model()
-            if not model[path][1] in self.model.root_state.states:
+            if not model[path][1] in self._selected_sm_model.root_state.states:
                 self.tree_store.remove(child_iter)
                 #self.tree_store.row_deleted(self.tree_store.get_path(child_iter))
 
@@ -119,20 +153,21 @@ class StateMachineTreeController(ExtendedController):
         logger.debug("The view jumps to the selected state and the zoom should be adjusted as well")
         if row is not None:
             state_model = model[row][3]
-            self.model.selection.clear()
+            self._selected_sm_model.selection.clear()
 
-            self.model.selection.add(state_model)
+            self._selected_sm_model.selection.add(state_model)
 
+    # TODO should observe the states changes, too, for changed names or types
     @ExtendedController.observe("selection", after=True)
     def assign_notification_selection(self, model, prop_name, info):
-        if self.model.selection.get_selected_state():
+        if self._selected_sm_model.selection.get_selected_state():
 
             # work around to avoid already selected but not insert state rows
-            if not self.model.selection.get_selected_state().state.get_path() in self.path_store:
-                self.update(self.model.root_state)
+            if not self._selected_sm_model.selection.get_selected_state().state.get_path() in self.path_store:
+                self.update(self._selected_sm_model.root_state)
 
             (model, actual_iter) = self.view.get_selection().get_selected()
-            selected_iter = self.path_store[self.model.selection.get_selected_state().state.get_path()]
+            selected_iter = self.path_store[self._selected_sm_model.selection.get_selected_state().state.get_path()]
             # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_iter, selected_iter))
             selected_path = self.tree_store.get_path(selected_iter)
             if actual_iter is None:
@@ -147,13 +182,13 @@ class StateMachineTreeController(ExtendedController):
                 self.view.expand_to_path(selected_path)
                 self.view.get_selection().select_iter(selected_iter)
                 # work around to force selection to state-editor
-                self.model.selection.set([self.model.selection.get_selected_state()])
+                self._selected_sm_model.selection.set([self._selected_sm_model.selection.get_selected_state()])
 
         # if hasattr(info.kwargs, 'model'):
         #     self.update(info.kwargs.model)
         # else:
         # TODO make it work without the next line
-        self.update(self.model.root_state)
+        self.update(self._selected_sm_model.root_state)
 
     # # TEST ARENA
     # @Controller.observe("root_state", after=True)

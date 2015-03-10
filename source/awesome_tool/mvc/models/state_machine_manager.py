@@ -11,7 +11,7 @@ class StateMachineManagerModel(ModelMT):
     """This model class manages a StateMachineManager
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine manager).
-    Additional to the data of the StateMachineManager its model and the models of statemachines hold by those
+    Additional to the data of the StateMachineManager its model and the models of state machines hold by those
     these model stores and made observable the selected state machine of the view which have not to be the same
     as the active running one.
 

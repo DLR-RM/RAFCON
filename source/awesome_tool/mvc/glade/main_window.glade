@@ -439,6 +439,7 @@
           <object class="GtkHPaned" id="top_level_h_pane">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="position">1000</property>
             <child>
               <object class="GtkVPaned" id="left_v_pane">
                 <property name="visible">True</property>
@@ -660,6 +661,7 @@
           </object>
           <packing>
             <property name="expand">False</property>
+            <property name="fill">False</property>
             <property name="position">3</property>
           </packing>
         </child>
