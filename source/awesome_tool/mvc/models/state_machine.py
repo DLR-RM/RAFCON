@@ -99,6 +99,8 @@ class Selection(Observable):
     @Observable.observed
     def set(self, selection):
         self.__selected.clear()
+        if not isinstance(selection, list):
+            selection = [selection]
         self.__selected.update(selection)
 
     def __iter__(self):
