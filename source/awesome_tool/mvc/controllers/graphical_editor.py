@@ -14,6 +14,7 @@ from gtk.gdk import keyval_name
 from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
+import itertools
 
 
 class GraphicalEditorController(ExtendedController):
@@ -38,6 +39,7 @@ class GraphicalEditorController(ExtendedController):
 
         self.selected_outcome = None
         self.selected_port = None
+        self.selected_port_connector = None
         self.selected_waypoint = None
         self.selected_resizer = None
 
@@ -117,6 +119,8 @@ class GraphicalEditorController(ExtendedController):
         if self.selection != selection:
             self.selection = selection
             self._redraw(True)
+        if isinstance(selection, DataPortModel):
+            self.selected_port = selection
 
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
@@ -177,6 +181,7 @@ class GraphicalEditorController(ExtendedController):
         self.selected_waypoint = None  # reset
         self.selected_outcome = None  # reset
         self.selected_port = None  # reset
+        self.selected_port_connector = None  # reset
         self.selected_resizer = None  # reset
 
         # Store the coordinates of the event
@@ -197,7 +202,7 @@ class GraphicalEditorController(ExtendedController):
                     self.model.selection.clear()
                 self.selection = new_selection
                 if self.selection is not None:
-                    self.model.selection.add(self.selection)
+                    self.model.selection.set(self.selection)
             # Add this if a click shell toggle the selection
             # else:
             # self.model.selection.clear()
@@ -215,7 +220,7 @@ class GraphicalEditorController(ExtendedController):
             self._check_for_outcome_selection(self.mouse_move_start_coords)
 
             # Check, whether a port (input, output, scope) was clicked on
-            self._check_for_port_selection(self.mouse_move_start_coords)
+            self._check_for_outer_port_selection(self.mouse_move_start_coords)
 
             # Check, whether a resizer was clicked on
             self._check_for_resizer_selection(self.mouse_move_start_coords)
@@ -253,7 +258,7 @@ class GraphicalEditorController(ExtendedController):
         if self.selected_outcome is not None:
             self._create_new_transition(mouse_position)
 
-        if self.selected_port is not None:
+        if self.selected_port_connector is not None:
             self._create_new_data_flow(mouse_position)
 
     def _on_mouse_motion(self, widget, event):
@@ -291,11 +296,11 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
         # Move data port
-        if isinstance(self.selection, DataPortModel):
+        if isinstance(self.selection, DataPortModel) and self.selected_port_connector == "inner":
             self._move_data_port(self.selection, mouse_current_coord)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
-        if self.selected_outcome is not None or self.selected_port is not None:
+        if self.selected_outcome is not None or self.selected_port_connector is not None:
             self._redraw()
 
         if self.selected_resizer is not None:
@@ -365,7 +370,7 @@ class GraphicalEditorController(ExtendedController):
                 if dist(outcomes[key], coords) < outcomes_close_threshold:
                     self.selected_outcome = (outcomes, key)
 
-    def _check_for_port_selection(self, coords):
+    def _check_for_outer_port_selection(self, coords):
         """Check whether a port was clicked on
 
         Checks whether the current selection is a state and if so looks for a port at the given coordinates. If a
@@ -373,15 +378,15 @@ class GraphicalEditorController(ExtendedController):
         :param coords: Coordinates to search for ports
         """
         if self.selection is not None and isinstance(self.selection, StateModel):
-            connectors_close_threshold = self.selection.meta['gui']['editor']['port_radius']
-            # Look up all port coordinates of the selected state
-            connectors = dict(self.selection.meta['gui']['editor']['input_pos'].items() +
-                              self.selection.meta['gui']['editor']['output_pos'].items() +
-                              self.selection.meta['gui']['editor']['scoped_pos'].items())
-            # Check distance of all port coordinates to the given coordinate
-            for key in connectors:
-                if dist(connectors[key], coords) < connectors_close_threshold:
-                    self.selected_port = (self.selection, key)
+            state_m = self.selection
+            connectors_close_threshold = state_m.meta['gui']['editor']['port_radius']
+
+            for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
+                connector_pos = port_m.meta['gui']['editor']['outer_connector_pos']
+                if dist(connector_pos, coords) < connectors_close_threshold:
+                    self.model.selection.set(port_m)
+                    self.selected_port_connector = "outer"
+                    break
 
     def _check_for_resizer_selection(self, coords):
         """Check whether a resizer (handle to resize a state) was clicked on
@@ -499,44 +504,49 @@ class GraphicalEditorController(ExtendedController):
         action started, the data flow is created.
         :param mouse_position: The mouse position when dropping
         """
-        release_selection = self._find_selection(mouse_position[0], mouse_position[0], only_states=True)
-        position = self.view.editor.screen_to_opengl_coordinates(mouse_position)
+        # TODO: Support scoped variables again
+        release_selection = self._find_selection(mouse_position[0], mouse_position[1])
+        coords = self.view.editor.screen_to_opengl_coordinates(mouse_position)
+        target_port_m = None
+        target_port_connector = None
         if isinstance(release_selection, StateModel):
-            target_port = None
             # Data flows are allowed between parent/child, child/parent, between siblings and even within the
             # same state (input to scope, scope to output)
             if release_selection == self.selection.parent or \
                             release_selection.parent == self.selection or \
                             release_selection.parent == self.selection.parent or \
                             release_selection != self.selection:
-                # Check whether the mouse was released on an outcome
-                connectors_close_threshold = release_selection.meta['gui']['editor']['port_radius']
-                connectors = dict(release_selection.meta['gui']['editor']['input_pos'].items() +
-                                  release_selection.meta['gui']['editor']['output_pos'].items() +
-                                  release_selection.meta['gui']['editor']['scoped_pos'].items())
-                for key in connectors:
-                    distance = dist((connectors[key][0], connectors[key][1]), (position[0], position[1]))
-                    if distance < connectors_close_threshold:
-                        # This is a possible connection:
-                        target_port = key
+                state_m = release_selection
+                connectors_close_threshold = state_m.meta['gui']['editor']['port_radius']
+                for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
+                    connector_pos = port_m.meta['gui']['editor']['outer_connector_pos']
+                    if dist(connector_pos, coords) < connectors_close_threshold:
+                        target_port_m = port_m
+                        target_port_connector = "outer"
+                        break
+        elif isinstance(release_selection, DataPortModel):
+            target_port_m = release_selection
+            target_port_connector = "inner"
 
-            if target_port is not None:
-                from_state_id = self.selection.state.state_id
-                from_port = self.selected_port[1]
-                target_state_id = release_selection.state.state_id
+        if target_port_m is not None:
+            from_port_m = self.selected_port
+            from_state_id = from_port_m.parent.state.state_id
+            target_state_id = target_port_m.parent.state.state_id
 
-                responsible_parent = self.selection.parent
-                if release_selection.parent == self.selection or release_selection == self.selection:
-                    responsible_parent = self.selection
+            if self.selected_port_connector == "inner":
+                responsible_parent = from_port_m.parent
+            else:
+                responsible_parent = from_port_m.parent.parent
 
-                try:
-                    responsible_parent.state.add_data_flow(from_state_id, from_port,
-                                                           target_state_id, target_port)
-                except AttributeError as e:
-                    logger.debug("Data flow couldn't be added: {0}".format(e))
-                except Exception as e:
-                    logger.error("Unexpected exception while creating data flow: {0}".format(e))
-        self.selected_port = None
+            try:
+                responsible_parent.state.add_data_flow(from_state_id, from_port_m.data_port.data_port_id,
+                                                       target_state_id, target_port_m.data_port.data_port_id)
+            except AttributeError as e:
+                logger.debug("Data flow couldn't be added: {0}".format(e))
+            except Exception as e:
+                logger.error("Unexpected exception while creating data flow: {0}".format(e))
+
+        self.selected_port_connector = None
         self._redraw(True)
 
     def _move_state(self, state_m, new_pos_x, new_pos_y):
@@ -1096,15 +1106,17 @@ class GraphicalEditorController(ExtendedController):
         :param parent_state_m: Model of the container state
         :param parent_depth: Depth of the container state
         """
-        if self.selected_port is not None and self.last_button_pressed == 1:
+        if self.selected_port_connector is not None and self.last_button_pressed == 1:
             # self.selected_port[0] references the state model pd the port
-            if self.selected_port[0] == parent_state_m:
+            if self.selected_port.parent == parent_state_m:
                 # Collect positions of all ports
                 connectors = dict(parent_state_m.meta['gui']['editor']['input_pos'].items() +
                                   parent_state_m.meta['gui']['editor']['output_pos'].items() +
                                   parent_state_m.meta['gui']['editor']['scoped_pos'].items())
-                # self.selected_port[1] stores the key of the port
-                connector = connectors[self.selected_port[1]]
+                if self.selected_port_connector == "inner":
+                    connector = self.selected_port.meta['gui']['editor']['inner_connector_pos']
+                else:
+                    connector = self.selected_port.meta['gui']['editor']['outer_connector_pos']
                 cur = self.mouse_move_last_pos
                 ref_state = parent_state_m if not parent_state_m.parent else parent_state_m.parent
                 line_width = min(ref_state.meta['gui']['editor']['width'],
@@ -1181,8 +1193,9 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(search_state, ContainerStateModel):
 
             for state in search_state.states.itervalues():
-                (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
-                                                                            selection, selection_depth, only_states)
+                if len(ids) > 0:
+                    (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
+                                                                                selection, selection_depth, only_states)
 
             if len(ids) == 0 or search_state_depth < selection_depth or only_states:
                 return selection, selection_depth
