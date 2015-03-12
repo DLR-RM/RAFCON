@@ -297,7 +297,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # logger.debug("expose_finish")
 
     def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0,
-                   input_ports_m=[], output_ports_m=[], scoped_vars_m=[],
+                   input_ports_m=[], output_ports_m=[],
                    selected=False, active=False, depth=0):
         """Draw a state with the given properties
 
@@ -431,50 +431,57 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 output_num += 1
 
         # Draw input and output data ports
-        if len(scoped_vars_m) > 0:
-            max_scope_width = width * 0.9
-            margin = min(height, width) / 50.
-            max_single_scope_width = max_scope_width / len(scoped_vars_m) - 2 * margin
-            str_height = height / 35.0
-            port_pos_left_x = pos_x + width / 2 - (len(scoped_vars_m) * max_single_scope_width) / 2
-            port_pos_top_y = pos_y + height - margin
-            num = 0
-
-            for scoped_var_m in scoped_vars_m:
-                scoped_var = scoped_var_m.scoped_variable
-                port_name = self._shorten_string(scoped_var.name, str_height, max_single_scope_width - margin)
-                str_width = self._string_width(port_name, str_height)
-
-                move_x = num * (str_width + 2 * margin)
-                connect, _ = self._draw_rect_arrow(port_pos_left_x + move_x,
-                                                   port_pos_left_x + move_x + str_width + margin,
-                                                   port_pos_top_y - str_height - margin, port_pos_top_y,
-                                                   Direction.bottom, depth + 0.01, border_width / 5.,
-                                                   self.port_color, self.border_color)
-
-                string_pos_x = port_pos_left_x + margin / 2. + move_x
-                string_pos_y = port_pos_top_y - margin / 2.  # - num * (str_height + margin)
-                self._write_string(port_name, string_pos_x, string_pos_y, str_height, self.port_name_color, False,
-                                   False, depth + 0.02)
-                radius = margin / 4.
-                self._draw_circle(connect[0], connect[1], radius, depth + 0.02,
-                                  stroke_width=border_width / 8., border_color=self.port_name_color,
-                                  fill_color=self.port_connector_fill_color)
-                num += 1
-                scoped_var_m.meta['gui']['editor']['connector_radius'] = radius
-                scoped_var_m.meta['gui']['editor']['connector_pos'] = connect
-                pass
+        # if len(scoped_vars_m) > 0:
+        #     max_scope_width = width * 0.9
+        #     margin = min(height, width) / 50.
+        #     max_single_scope_width = max_scope_width / len(scoped_vars_m) - 2 * margin
+        #     str_height = height / 35.0
+        #     port_pos_left_x = pos_x + width / 2 - (len(scoped_vars_m) * max_single_scope_width) / 2
+        #     port_pos_top_y = pos_y + height - margin
+        #     num = 0
+        #
+        #     for scoped_var_m in scoped_vars_m:
+        #         scoped_var = scoped_var_m.scoped_variable
+        #         port_name = self._shorten_string(scoped_var.name, str_height, max_single_scope_width - margin)
+        #         str_width = self._string_width(port_name, str_height)
+        #
+        #         move_x = num * (str_width + 2 * margin)
+        #         connect, _ = self._draw_rect_arrow(port_pos_left_x + move_x,
+        #                                            port_pos_left_x + move_x + str_width + margin,
+        #                                            port_pos_top_y - str_height - margin, port_pos_top_y,
+        #                                            Direction.bottom, depth + 0.01, border_width / 5.,
+        #                                            self.port_color, self.border_color)
+        #
+        #         string_pos_x = port_pos_left_x + margin / 2. + move_x
+        #         string_pos_y = port_pos_top_y - margin / 2.  # - num * (str_height + margin)
+        #         self._write_string(port_name, string_pos_x, string_pos_y, str_height, self.port_name_color, False,
+        #                            False, depth + 0.02)
+        #         radius = margin / 4.
+        #         self._draw_circle(connect[0], connect[1], radius, depth + 0.02,
+        #                           stroke_width=border_width / 8., border_color=self.port_name_color,
+        #                           fill_color=self.port_connector_fill_color)
+        #         num += 1
+        #         scoped_var_m.meta['gui']['editor']['connector_radius'] = radius
+        #         scoped_var_m.meta['gui']['editor']['connector_pos'] = connect
+        #         pass
 
         glPopName()
         return opengl_id, outcome_pos, outcome_radius, resize_length
 
     def draw_inner_input_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
-        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, selected, depth)
+        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, selected,
+                                          True, depth)
 
     def draw_inner_output_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
-        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.left, selected, depth)
+        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.left, selected,
+                                          True, depth)
 
-    def _draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, arrow_position, selected, depth):
+    def draw_scoped_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
+        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.bottom, selected,
+                                          False, depth)
+
+    def _draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, arrow_position, selected,
+                              inner, depth):
         id = self.name_counter
         self.name_counter += 1
 
@@ -488,7 +495,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         name_width = self._string_width(port_name, name_height)
         width = name_width + 2 * margin
 
-        if arrow_position == Direction.right:
+        if arrow_position == Direction.right or arrow_position == Direction.bottom:
             left = pos_x
             right = pos_x + width
         else:
@@ -504,11 +511,26 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                                   fill_color=self.port_connector_fill_color)
         self._write_string(port_name, left + margin, pos_y + height - margin, name_height, color=self.port_name_color,
                            depth=depth + 0.1)
-        port_m.meta['gui']['editor']['inner_connector_pos'] = arrow_pos
-        port_m.meta['gui']['editor']['inner_connector_radius'] = radius
-        actual_width = (arrow_pos[0] - left) if arrow_position == Direction.right else (right - arrow_pos[0])
+        prefix = 'inner_' if inner else ''
+        port_m.meta['gui']['editor'][prefix + 'connector_pos'] = arrow_pos
+        port_m.meta['gui']['editor'][prefix + 'connector_radius'] = radius
+        if arrow_position == Direction.right:
+            actual_width = (arrow_pos[0] - left)
+            actual_height = height
+        elif arrow_position == Direction.left:
+            actual_width = right - arrow_pos[0]
+            actual_height = height
+        elif arrow_position == Direction.top:
+            actual_width = right - left
+            actual_height = arrow_pos[1] - pos_y
+        elif arrow_position == Direction.bottom:
+            actual_width = right - left
+            actual_height = (pos_y + height) - arrow_pos[1]
+
         port_m.meta['gui']['editor']['width'] = actual_width
-        port_m.meta['gui']['editor']['height'] = height
+        port_m.meta['gui']['editor']['height'] = actual_height
+        port_m.meta['gui']['editor']['rect_width'] = width
+        port_m.meta['gui']['editor']['rect_height'] = height
 
         glPopName()
 
