@@ -45,13 +45,16 @@ class Config(object):
         self.__config_dict = self.storage.load_dict_from_yaml(os.path.join(CONFIG_PATH, CONFIG_FILE))
         logger.info("Config initialized ... loaded configuration from %s" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
 
-    def get_config_value(self, key):
+    def get_config_value(self, key, default=None):
         """
         Get a specific configuration value
         :param key: the key to the configuration value
+        :param default: what to return if the key is not found
         :return:
         """
-        return self.__config_dict[key]
+        if key in self.__config_dict:
+            return self.__config_dict[key]
+        return default
 
     def set_config_value(self, key, value):
         """
