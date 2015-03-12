@@ -113,7 +113,6 @@ class DataPortListController(ExtendedController):
         elif self.type == "output":
             self.model.state.modify_output_data_port_default_value(text, data_port_id)
 
-
     def reload_data_port_list_store(self):
         """Reloads the input data port list store from the data port models
         """

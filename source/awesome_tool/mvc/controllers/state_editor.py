@@ -7,8 +7,9 @@ from awesome_tool.mvc.controllers import StateOverviewController, StateConnectio
 
 from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEditorController
 from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
-from awesome_tool.mvc.models import StateModel
+from awesome_tool.mvc.models import StateModel, ContainerStateModel
 
+# TODO: write base class for different controllers
 
 class StateEditorController(ExtendedController):
     """Controller handling the view of properties/attributes of the
@@ -41,7 +42,8 @@ class StateEditorController(ExtendedController):
 
         self.get_controller('inputs_ctrl').reload_data_port_list_store()
         self.get_controller('outputs_ctrl').reload_data_port_list_store()
-        self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
+        if isinstance(model, ContainerStateModel):
+            self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
 
     def register_view(self, view):
         """Called when the View was registered
@@ -107,6 +109,11 @@ class StateEditorEggController(ExtendedController):
         view['source_view'].show()
         view['transitions_view'].show()
         view['data_flows_view'].show()
+
+        self.get_controller('inputs_ctrl').reload_data_port_list_store()
+        self.get_controller('outputs_ctrl').reload_data_port_list_store()
+        if isinstance(model, ContainerStateModel):
+            self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
 
     def register_view(self, view):
         """Called when the View was registered
@@ -290,6 +297,11 @@ class StateEditorLDController(ExtendedController):
         view['source_view'].show()
         view['transitions_view'].show()
         view['data_flows_view'].show()
+
+        self.get_controller('inputs_ctrl').reload_data_port_list_store()
+        self.get_controller('outputs_ctrl').reload_data_port_list_store()
+        if isinstance(model, ContainerStateModel):
+            self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
 
     def register_view(self, view):
         """Called when the View was registered

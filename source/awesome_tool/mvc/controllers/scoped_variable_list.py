@@ -73,7 +73,7 @@ class ScopedVariableListController(ExtendedController):
     def reload_scoped_variables_list_store(self):
         """Reloads the scoped variable list store from the data port models
         """
-        if self.model.scoped_variables is not None:
+        if hasattr(self.model, 'scoped_variables'):
             tmp = ListStore(str, str, str, int)
             for sv_model in self.model.scoped_variables:
                 tmp.append([sv_model.scoped_variable.name, sv_model.scoped_variable.data_type,
