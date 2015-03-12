@@ -35,7 +35,7 @@ class ShortcutManager():
             'ungroup': '<Control>U',
             'entry': '<Control>E',
             'fit': '<Control>space',
-            'info': '<Control>q',
+            'info': '<Control>I',
             'start': 'F5',
             'step_mode': 'F6',
             'pause': 'F7',

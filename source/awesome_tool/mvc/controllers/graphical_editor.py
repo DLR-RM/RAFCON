@@ -4,6 +4,7 @@ from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line
 logger = log.get_logger(__name__)
 import sys
 import time
+from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
@@ -75,6 +76,7 @@ class GraphicalEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
         shortcut_manager.add_callback_for_action("add", self._add_execution_state)
+        shortcut_manager.add_callback_for_action("info", self._toggle_data_flow_visibility)
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
@@ -219,7 +221,8 @@ class GraphicalEditorController(ExtendedController):
             self._check_for_outcome_selection(self.mouse_move_start_coords)
 
             # Check, whether a port (input, output, scope) was clicked on
-            self._check_for_port_selection(self.selection, self.mouse_move_start_coords)
+            if global_config.get_config_value('show_data_flows', True):
+                self._check_for_port_selection(self.selection, self.mouse_move_start_coords)
 
             # Check, whether a resizer was clicked on
             self._check_for_resizer_selection(self.mouse_move_start_coords)
@@ -915,8 +918,8 @@ class GraphicalEditorController(ExtendedController):
             state_m.state.name,
             pos_x, pos_y, width, height,
             state_m.state.outcomes,
-            state_m.input_data_ports,
-            state_m.output_data_ports,
+            state_m.input_data_ports if global_config.get_config_value('show_data_flows', True) else [],
+            state_m.output_data_ports if global_config.get_config_value('show_data_flows', True) else [],
             selected, active, depth)
         state_m.meta['gui']['editor']['id'] = opengl_id
         state_m.meta['gui']['editor']['outcome_pos'] = outcome_pos
@@ -948,15 +951,18 @@ class GraphicalEditorController(ExtendedController):
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
                                 depth + 1)
 
-            self.draw_inner_data_ports(state_m, depth)
+            if global_config.get_config_value('show_data_flows', True):
+                self.draw_inner_data_ports(state_m, depth)
 
             self.draw_transitions(state_m, depth)
 
-            self.draw_data_flows(state_m, depth)
+            if global_config.get_config_value('show_data_flows', True):
+                self.draw_data_flows(state_m, depth)
 
         self._handle_new_transition(state_m, depth)
 
-        self._handle_new_data_flow(state_m, depth)
+        if global_config.get_config_value('show_data_flows', True):
+            self._handle_new_data_flow(state_m, depth)
 
     def draw_inner_data_ports(self, parent_state_m, parent_depth):
         parent_info = parent_state_m.meta['gui']['editor']
@@ -1307,3 +1313,7 @@ class GraphicalEditorController(ExtendedController):
                 StateMachineHelper.add_state(model, StateType.EXECUTION)
             if isinstance(model, TransitionModel) or isinstance(model, DataFlowModel):
                 StateMachineHelper.add_state(model.parent, StateType.EXECUTION)
+
+    def _toggle_data_flow_visibility(self, *args):
+        global_config.set_config_value('show_data_flows', not global_config.get_config_value("show_data_flows"))
+        self._redraw()
