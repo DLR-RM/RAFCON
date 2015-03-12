@@ -473,7 +473,8 @@ class GraphicalEditorController(ExtendedController):
         from which the drag action started, the transition is created.
         :param mouse_position: The mouse position when dropping
         """
-        release_selection = self._find_selection(mouse_position[0], mouse_position[1], only_states=True)
+        release_selection = self._find_selection(mouse_position[0], mouse_position[1], find_data_ports=False,
+                                                 find_transitions=False, find_data_flows=False)
         position = self.view.editor.screen_to_opengl_coordinates(mouse_position)
         if isinstance(release_selection, StateModel) and release_selection != self.selection:
             target_state_id = None
@@ -515,7 +516,8 @@ class GraphicalEditorController(ExtendedController):
         :param mouse_position: The mouse position when dropping
         """
         # TODO: Support scoped variables again
-        release_selection = self._find_selection(mouse_position[0], mouse_position[1])
+        release_selection = self._find_selection(mouse_position[0], mouse_position[1],
+                                                 find_transitions=False, find_data_flows=False)
         coords = self.view.editor.screen_to_opengl_coordinates(mouse_position)
         target_port_m = None
         target_port_connector = None
@@ -1133,7 +1135,8 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.draw_data_flow(connector[0], connector[1], cur[0], cur[1], line_width, [], True,
                                                 parent_depth + 0.6)
 
-    def _find_selection(self, pos_x, pos_y, only_states=False):
+    def _find_selection(self, pos_x, pos_y, find_states=True, find_transitions=True, find_data_flows=True,
+                        find_data_ports=True):
         """Returns the model at the given position
 
         This method is used when the model (state/transition/data flow) the user clicked on is to be found. The
@@ -1165,13 +1168,15 @@ class GraphicalEditorController(ExtendedController):
             selected_ids = map(get_id, hits)  # Get the OpenGL ids for the hits
             selected_ids = filter(lambda opengl_id: opengl_id is not None, selected_ids)  # Filter out Nones
             (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
-                                                                        only_states)
+                                                                        find_states, find_transitions,
+                                                                        find_data_flows, find_data_ports)
         except Exception as e:
             logger.error("Error while finding selection: {err:s}".format(err=e))
             pass
         return selection
 
-    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth, only_states):
+    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth,
+                                find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Searches recursively for objects with the given ids
 
         The method searches recursively and compares all stored ids with the given ones. It finally returns the
@@ -1184,10 +1189,9 @@ class GraphicalEditorController(ExtendedController):
         :return: The selected object and its depth
         """
         # Only the element which is furthest down in the hierarchy is selected
-        if search_state_depth > selection_depth:
+        if search_state_depth > selection_depth and find_states:
             # Check whether the id of the current state matches an id in the selected ids
             if search_state.meta['gui']['editor']['id'] and search_state.meta['gui']['editor']['id'] in ids:
-                # print "possible selection", search_state
                 # if so, add the state to the list of selected states
                 selection = search_state
                 selection_depth = search_state_depth
@@ -1204,9 +1208,11 @@ class GraphicalEditorController(ExtendedController):
             for state in search_state.states.itervalues():
                 if len(ids) > 0:
                     (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
-                                                                                selection, selection_depth, only_states)
+                                                                                selection, selection_depth,
+                                                                                find_states, find_transitions,
+                                                                                find_data_flows, find_data_ports)
 
-            if len(ids) == 0 or search_state_depth < selection_depth or only_states:
+            if len(ids) == 0 or search_state_depth < selection_depth:
                 return selection, selection_depth
 
             def search_selection_in_model_list(model_list, current_selection):
@@ -1216,18 +1222,19 @@ class GraphicalEditorController(ExtendedController):
                         current_selection = model
                 return current_selection
 
-            selection = search_selection_in_model_list(search_state.input_data_ports, selection)
-            selection = search_selection_in_model_list(search_state.output_data_ports, selection)
+            if find_transitions:
+                selection = search_selection_in_model_list(search_state.transitions, selection)
+                if len(ids) == 0:
+                    return selection, selection_depth
 
-            if len(ids) == 0:
-                return selection, selection_depth
+            if find_data_flows:
+                selection = search_selection_in_model_list(search_state.data_flows, selection)
+                if len(ids) == 0:
+                    return selection, selection_depth
 
-            selection = search_selection_in_model_list(search_state.transitions, selection)
-
-            if len(ids) == 0:
-                return selection, selection_depth
-
-            selection = search_selection_in_model_list(search_state.data_flows, selection)
+            if find_data_ports:
+                selection = search_selection_in_model_list(search_state.input_data_ports, selection)
+                selection = search_selection_in_model_list(search_state.output_data_ports, selection)
 
         return selection, selection_depth
 
