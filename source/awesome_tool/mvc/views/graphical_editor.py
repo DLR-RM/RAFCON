@@ -420,11 +420,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             output_num = 0
             for port_m in input_ports_m:
                 con_pos_x, con_pos_y = draw_port(port_m, output_num, True)
+                port_m.meta['gui']['editor']['outer_connector_radius'] = port_radius
                 port_m.meta['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
             for port_m in output_ports_m:
                 con_pos_x, con_pos_y = draw_port(port_m, output_num, False)
+                port_m.meta['gui']['editor']['outer_connector_radius'] = port_radius
                 port_m.meta['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
@@ -454,11 +456,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 string_pos_y = port_pos_top_y - margin / 2.  # - num * (str_height + margin)
                 self._write_string(port_name, string_pos_x, string_pos_y, str_height, self.port_name_color, False,
                                    False, depth + 0.02)
-
-                self._draw_circle(connect[0], connect[1], margin / 4., depth + 0.02,
+                radius = margin / 4.
+                self._draw_circle(connect[0], connect[1], radius, depth + 0.02,
                                   stroke_width=border_width / 8., border_color=self.port_name_color,
                                   fill_color=self.port_connector_fill_color)
                 num += 1
+                scoped_var_m.meta['gui']['editor']['connector_radius'] = radius
                 scoped_var_m.meta['gui']['editor']['connector_pos'] = connect
                 pass
 
@@ -496,11 +499,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         arrow_pos, visible = self._draw_rect_arrow(left, right, pos_y, pos_y + height, arrow_position, depth,
                                                    border_color=self.port_name_color,
                                                    fill_color=fill_color)
-        self._draw_circle(arrow_pos[0], arrow_pos[1], margin / 1.5, depth + 0.02, border_color=self.port_name_color,
+        radius = margin / 1.5
+        self._draw_circle(arrow_pos[0], arrow_pos[1], radius, depth + 0.02, border_color=self.port_name_color,
                                   fill_color=self.port_connector_fill_color)
         self._write_string(port_name, left + margin, pos_y + height - margin, name_height, color=self.port_name_color,
                            depth=depth + 0.1)
         port_m.meta['gui']['editor']['inner_connector_pos'] = arrow_pos
+        port_m.meta['gui']['editor']['inner_connector_radius'] = radius
         actual_width = (arrow_pos[0] - left) if arrow_position == Direction.right else (right - arrow_pos[0])
         port_m.meta['gui']['editor']['width'] = actual_width
         port_m.meta['gui']['editor']['height'] = height

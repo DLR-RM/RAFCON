@@ -38,8 +38,8 @@ class GraphicalEditorController(ExtendedController):
         self.drag_origin_offset = None
 
         self.selected_outcome = None
-        self.selected_port = None
-        self.selected_port_connector = None
+        self.selected_port_type = None
+        self.selected_port_connector = False
         self.selected_waypoint = None
         self.selected_resizer = None
 
@@ -119,8 +119,6 @@ class GraphicalEditorController(ExtendedController):
         if self.selection != selection:
             self.selection = selection
             self._redraw(True)
-        if isinstance(selection, DataPortModel):
-            self.selected_port = selection
 
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
@@ -180,8 +178,8 @@ class GraphicalEditorController(ExtendedController):
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
         self.selected_outcome = None  # reset
-        self.selected_port = None  # reset
-        self.selected_port_connector = None  # reset
+        self.selected_port_type = None  # reset
+        self.selected_port_connector = False  # reset
         self.selected_resizer = None  # reset
 
         # Store the coordinates of the event
@@ -220,7 +218,7 @@ class GraphicalEditorController(ExtendedController):
             self._check_for_outcome_selection(self.mouse_move_start_coords)
 
             # Check, whether a port (input, output, scope) was clicked on
-            self._check_for_outer_port_selection(self.mouse_move_start_coords)
+            self._check_for_port_selection(self.selection, self.mouse_move_start_coords)
 
             # Check, whether a resizer was clicked on
             self._check_for_resizer_selection(self.mouse_move_start_coords)
@@ -258,7 +256,7 @@ class GraphicalEditorController(ExtendedController):
         if self.selected_outcome is not None:
             self._create_new_transition(mouse_position)
 
-        if self.selected_port_connector is not None:
+        if self.selected_port_connector:
             self._create_new_data_flow(mouse_position)
 
     def _on_mouse_motion(self, widget, event):
@@ -284,7 +282,7 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(self.selection, StateModel) and \
                         self.selection != self.root_state_m and \
                         self.last_button_pressed == 1 and \
-                        self.selected_outcome is None and self.selected_port is None and \
+                        self.selected_outcome is None and \
                         self.selected_resizer is None:
             self._move_state(self.selection, new_pos_x, new_pos_y)
 
@@ -296,11 +294,11 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
         # Move data port
-        if isinstance(self.selection, DataPortModel) and self.selected_port_connector == "inner":
+        if isinstance(self.selection, DataPortModel) and not self.selected_port_connector:
             self._move_data_port(self.selection, mouse_current_coord)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
-        if self.selected_outcome is not None or self.selected_port_connector is not None:
+        if self.selected_outcome is not None or self.selected_port_connector:
             self._redraw()
 
         if self.selected_resizer is not None:
@@ -370,23 +368,35 @@ class GraphicalEditorController(ExtendedController):
                 if dist(outcomes[key], coords) < outcomes_close_threshold:
                     self.selected_outcome = (outcomes, key)
 
-    def _check_for_outer_port_selection(self, coords):
+    def _check_for_port_selection(self, model, coords):
         """Check whether a port was clicked on
 
-        Checks whether the current selection is a state and if so looks for a port at the given coordinates. If a
-        port is found, it is stored.
+        The methods checks whether the user clicked on a connector of a port. If the passed model is a state,
+        we have to check the positions of all port connectors of that state. If it is a data port, we only have to
+        look at the connector position of that port.
+        :param model: The model that was clicked on
         :param coords: Coordinates to search for ports
         """
-        if self.selection is not None and isinstance(self.selection, StateModel):
-            state_m = self.selection
+        if isinstance(model, DataPortModel):
+            connector_pos = model.meta['gui']['editor']['inner_connector_pos']
+            connector_radius = model.meta['gui']['editor']['inner_connector_radius']
+            if dist(connector_pos, coords) < connector_radius:
+                self.model.selection.set(model)
+                self.selected_port_type = "inner"
+                self.selected_port_connector = True
+        elif self.selection is not None and isinstance(model, StateModel):
+            state_m = model
             connectors_close_threshold = state_m.meta['gui']['editor']['port_radius']
 
             for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
                 connector_pos = port_m.meta['gui']['editor']['outer_connector_pos']
-                if dist(connector_pos, coords) < connectors_close_threshold:
+                connector_radius = port_m.meta['gui']['editor']['outer_connector_radius']
+                if dist(connector_pos, coords) < connector_radius:
                     self.model.selection.set(port_m)
-                    self.selected_port_connector = "outer"
+                    self.selected_port_type = "outer"
+                    self.selected_port_connector = True
                     break
+
 
     def _check_for_resizer_selection(self, coords):
         """Check whether a resizer (handle to resize a state) was clicked on
@@ -529,11 +539,11 @@ class GraphicalEditorController(ExtendedController):
             target_port_connector = "inner"
 
         if target_port_m is not None:
-            from_port_m = self.selected_port
+            from_port_m = self.selection
             from_state_id = from_port_m.parent.state.state_id
             target_state_id = target_port_m.parent.state.state_id
 
-            if self.selected_port_connector == "inner":
+            if self.selected_port_type == "inner":
                 responsible_parent = from_port_m.parent
             else:
                 responsible_parent = from_port_m.parent.parent
@@ -546,7 +556,7 @@ class GraphicalEditorController(ExtendedController):
             except Exception as e:
                 logger.error("Unexpected exception while creating data flow: {0}".format(e))
 
-        self.selected_port_connector = None
+        self.selected_port_connector = False
         self._redraw(True)
 
     def _move_state(self, state_m, new_pos_x, new_pos_y):
@@ -1106,17 +1116,16 @@ class GraphicalEditorController(ExtendedController):
         :param parent_state_m: Model of the container state
         :param parent_depth: Depth of the container state
         """
-        if self.selected_port_connector is not None and self.last_button_pressed == 1:
-            # self.selected_port[0] references the state model pd the port
-            if self.selected_port.parent == parent_state_m:
+        if self.selected_port_connector and self.last_button_pressed == 1:
+            if self.selection.parent == parent_state_m:
                 # Collect positions of all ports
                 connectors = dict(parent_state_m.meta['gui']['editor']['input_pos'].items() +
                                   parent_state_m.meta['gui']['editor']['output_pos'].items() +
                                   parent_state_m.meta['gui']['editor']['scoped_pos'].items())
-                if self.selected_port_connector == "inner":
-                    connector = self.selected_port.meta['gui']['editor']['inner_connector_pos']
+                if self.selected_port_type == "inner":
+                    connector = self.selection.meta['gui']['editor']['inner_connector_pos']
                 else:
-                    connector = self.selected_port.meta['gui']['editor']['outer_connector_pos']
+                    connector = self.selection.meta['gui']['editor']['outer_connector_pos']
                 cur = self.mouse_move_last_pos
                 ref_state = parent_state_m if not parent_state_m.parent else parent_state_m.parent
                 line_width = min(ref_state.meta['gui']['editor']['width'],
