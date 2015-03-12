@@ -178,6 +178,9 @@ class GraphicalEditorController(ExtendedController):
         :param event: Information about the event, e. g. x and y coordinate
         """
 
+        # Set the focus on the graphical editor, as this is not done automatically
+        self.view.editor.grab_focus()
+
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
         self.selected_outcome = None  # reset
@@ -1302,17 +1305,21 @@ class GraphicalEditorController(ExtendedController):
         return selection, selection_depth
 
     def _delete_selection(self, *args):
-        StateMachineHelper.delete_models(self.model.selection.get_all())
+        if self.view.editor.has_focus():
+            selection = self.model.selection.get_all()
+            if len(selection) > 0:
+                StateMachineHelper.delete_models(self.model.selection.get_all())
 
     def _add_execution_state(self, *args):
-        selection = self.model.selection.get_all()
-        if len(selection) > 0:
-            model = selection[0]
+        if self.view.editor.has_focus():
+            selection = self.model.selection.get_all()
+            if len(selection) > 0:
+                model = selection[0]
 
-            if isinstance(model, StateModel):
-                StateMachineHelper.add_state(model, StateType.EXECUTION)
-            if isinstance(model, TransitionModel) or isinstance(model, DataFlowModel):
-                StateMachineHelper.add_state(model.parent, StateType.EXECUTION)
+                if isinstance(model, StateModel):
+                    StateMachineHelper.add_state(model, StateType.EXECUTION)
+                if isinstance(model, TransitionModel) or isinstance(model, DataFlowModel):
+                    StateMachineHelper.add_state(model.parent, StateType.EXECUTION)
 
     def _toggle_data_flow_visibility(self, *args):
         global_config.set_config_value('show_data_flows', not global_config.get_config_value("show_data_flows"))
