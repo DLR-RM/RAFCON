@@ -927,13 +927,11 @@ class GraphicalEditorController(ExtendedController):
 
             self.draw_data_flows(state_m, depth)
 
-        self.handle_new_transition(state_m, depth)
+        self._handle_new_transition(state_m, depth)
 
-        self.handle_new_data_flow(state_m, depth)
+        self._handle_new_data_flow(state_m, depth)
 
     def draw_inner_data_ports(self, parent_state_m, parent_depth):
-        # TODO: move parent_state_m.scoped_variables here?
-
         parent_info = parent_state_m.meta['gui']['editor']
         port_height = min(parent_info['width'], parent_info['height']) / float(max(25,
                                                                                    len(parent_state_m.input_data_ports),
@@ -1119,7 +1117,7 @@ class GraphicalEditorController(ExtendedController):
             data_flow_m.meta['gui']['editor']['to_pos_x'] = to_x
             data_flow_m.meta['gui']['editor']['to_pos_y'] = to_y
 
-    def handle_new_transition(self, parent_state_m, parent_depth):
+    def _handle_new_transition(self, parent_state_m, parent_depth):
         """Responsible for drawing new transition the user creates
 
         With drag and drop on outcomes, the user can draw new transitions. Here the transition is temporary drawn in
@@ -1138,7 +1136,7 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.draw_transition(outcome[0], outcome[1], cur[0], cur[1], line_width, [], True,
                                                  parent_depth + 0.6)
 
-    def handle_new_data_flow(self, parent_state_m, parent_depth):
+    def _handle_new_data_flow(self, parent_state_m, parent_depth):
         """Responsible for drawing new data flows the user creates
 
         With drag and drop on ports, the user can draw new data flows. Here the data flow is temporary drawn in the
@@ -1157,7 +1155,7 @@ class GraphicalEditorController(ExtendedController):
                 else:  # scoped variable
                     connector = port_m.meta['gui']['editor']['connector_pos']
                 cur = self.mouse_move_last_pos
-                ref_state = parent_state_m if not parent_state_m.parent else parent_state_m.parent
+                ref_state = parent_state_m
                 line_width = min(ref_state.meta['gui']['editor']['width'],
                                  ref_state.meta['gui']['editor']['height']) / 25.0
                 self.view.editor.draw_data_flow(connector[0], connector[1], cur[0], cur[1], line_width, [], True,
