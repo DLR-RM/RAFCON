@@ -32,10 +32,12 @@ class MainWindowController(ExtendedController):
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
         active_state_machine_id = state_machine_manager.active_state_machine_id
-        active_state_machine = state_machine_manager_model.state_machines[active_state_machine_id]
+        active_state_machine = None
+        if len(state_machine_manager_model.state_machines) > 0:
+            active_state_machine = state_machine_manager_model.state_machines[active_state_machine_id]
 
         if active_state_machine is None:
-            raise AttributeError("No active state machine found")
+            logger.warn("No active state machine found")
 
         # execution engine
         self.state_machine_execution_engine = awesome_tool.statemachine.singleton.state_machine_execution_engine

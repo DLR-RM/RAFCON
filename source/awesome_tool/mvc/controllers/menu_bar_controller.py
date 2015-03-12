@@ -82,6 +82,10 @@ class MenuBarController(ExtendedController):
                     target_state_model.meta["gui"]["editor"]["height"] * 97 / 100 - \
                     state_copy_model.meta["gui"]["editor"]["height"]
 
+        print new_y_pos
+        print new_x_pos
+        print state_copy_model
+
         self.state_machines_editor_ctrl.tabs[self.model.selected_state_machine_id]["ctrl"]._move_state(
             state_copy_model, new_x_pos, new_y_pos )
         self.state_machines_editor_ctrl.tabs[self.model.selected_state_machine_id]["ctrl"]._redraw(True)

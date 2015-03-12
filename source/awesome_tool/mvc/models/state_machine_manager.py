@@ -37,7 +37,9 @@ class StateMachineManagerModel(ModelMT):
         for sm_id, sm in state_machine_manager.state_machines.iteritems():
             self.state_machines[sm_id] = StateMachineModel(sm)
 
-        self.selected_state_machine_id = self.state_machines.keys()[0]
+        self.selected_state_machine_id = None
+        if len(self.state_machines.keys()) > 0:
+            self.selected_state_machine_id = self.state_machines.keys()[0]
 
         if isinstance(meta, Vividict):
             self.meta = meta
