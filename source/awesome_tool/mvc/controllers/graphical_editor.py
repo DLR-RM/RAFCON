@@ -12,6 +12,9 @@ from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK
 from gtk.gdk import keyval_name
 from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
+from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
+from awesome_tool.mvc.models.data_port import DataPortModel
+import itertools
 
 
 class GraphicalEditorController(ExtendedController):
@@ -33,9 +36,11 @@ class GraphicalEditorController(ExtendedController):
         self.selection_start_pos = (0, 0)
         self.mouse_move_start_coords = (0, 0)
         self.last_button_pressed = -1
+        self.drag_origin_offset = None
 
         self.selected_outcome = None
-        self.selected_port = None
+        self.selected_port_type = None
+        self.selected_port_connector = False
         self.selected_waypoint = None
         self.selected_resizer = None
 
@@ -174,7 +179,8 @@ class GraphicalEditorController(ExtendedController):
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
         self.selected_outcome = None  # reset
-        self.selected_port = None  # reset
+        self.selected_port_type = None  # reset
+        self.selected_port_connector = False  # reset
         self.selected_resizer = None  # reset
 
         # Store the coordinates of the event
@@ -195,7 +201,7 @@ class GraphicalEditorController(ExtendedController):
                     self.model.selection.clear()
                 self.selection = new_selection
                 if self.selection is not None:
-                    self.model.selection.add(self.selection)
+                    self.model.selection.set(self.selection)
             # Add this if a click shell toggle the selection
             # else:
             # self.model.selection.clear()
@@ -213,7 +219,7 @@ class GraphicalEditorController(ExtendedController):
             self._check_for_outcome_selection(self.mouse_move_start_coords)
 
             # Check, whether a port (input, output, scope) was clicked on
-            self._check_for_port_selection(self.mouse_move_start_coords)
+            self._check_for_port_selection(self.selection, self.mouse_move_start_coords)
 
             # Check, whether a resizer was clicked on
             self._check_for_resizer_selection(self.mouse_move_start_coords)
@@ -244,14 +250,14 @@ class GraphicalEditorController(ExtendedController):
         :param event: Information about the event, e. g. x and y coordinate
         Not used so far
         """
-        # print 'release', event
         self.last_button_pressed = None
+        self.drag_origin_offset = None
         mouse_position = (event.x, event.y)
 
         if self.selected_outcome is not None:
             self._create_new_transition(mouse_position)
 
-        if self.selected_port is not None:
+        if self.selected_port_connector:
             self._create_new_data_flow(mouse_position)
 
     def _on_mouse_motion(self, widget, event):
@@ -274,10 +280,10 @@ class GraphicalEditorController(ExtendedController):
         new_pos_y = self.selection_start_pos[1] + rel_y_motion
 
         # Move the selected state (if there is an appropriate one)
-        if self.selection is not None and isinstance(self.selection, StateModel) and \
+        if isinstance(self.selection, StateModel) and \
                         self.selection != self.root_state_m and \
                         self.last_button_pressed == 1 and \
-                        self.selected_outcome is None and self.selected_port is None and \
+                        self.selected_outcome is None and \
                         self.selected_resizer is None:
             self._move_state(self.selection, new_pos_x, new_pos_y)
 
@@ -288,8 +294,12 @@ class GraphicalEditorController(ExtendedController):
             self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
             self._redraw()
 
+        # Move data port
+        if isinstance(self.selection, (DataPortModel, ScopedVariableModel)) and not self.selected_port_connector:
+            self._move_data_port(self.selection, mouse_current_coord)
+
         # Redraw to show the new transition/data flow the user is creating with drag and drop
-        if self.selected_outcome is not None or self.selected_port is not None:
+        if self.selected_outcome is not None or self.selected_port_connector:
             self._redraw()
 
         if self.selected_resizer is not None:
@@ -359,23 +369,35 @@ class GraphicalEditorController(ExtendedController):
                 if dist(outcomes[key], coords) < outcomes_close_threshold:
                     self.selected_outcome = (outcomes, key)
 
-    def _check_for_port_selection(self, coords):
+    def _check_for_port_selection(self, model, coords):
         """Check whether a port was clicked on
 
-        Checks whether the current selection is a state and if so looks for a port at the given coordinates. If a
-        port is found, it is stored.
+        The methods checks whether the user clicked on a connector of a port. If the passed model is a state,
+        we have to check the positions of all port connectors of that state. If it is a data port, we only have to
+        look at the connector position of that port.
+        :param model: The model that was clicked on
         :param coords: Coordinates to search for ports
         """
-        if self.selection is not None and isinstance(self.selection, StateModel):
-            connectors_close_threshold = self.selection.meta['gui']['editor']['port_radius']
-            # Look up all port coordinates of the selected state
-            connectors = dict(self.selection.meta['gui']['editor']['input_pos'].items() +
-                              self.selection.meta['gui']['editor']['output_pos'].items() +
-                              self.selection.meta['gui']['editor']['scoped_pos'].items())
-            # Check distance of all port coordinates to the given coordinate
-            for key in connectors:
-                if dist(connectors[key], coords) < connectors_close_threshold:
-                    self.selected_port = (self.selection, key)
+        if isinstance(model, (DataPortModel, ScopedVariableModel)):
+            prefix = '' if isinstance(model, ScopedVariableModel) else 'inner_'
+            connector_pos = model.meta['gui']['editor'][prefix + 'connector_pos']
+            connector_radius = model.meta['gui']['editor'][prefix + 'connector_radius']
+            if dist(connector_pos, coords) < connector_radius:
+                self.model.selection.set(model)
+                self.selected_port_type = "inner" if isinstance(model, DataPortModel) else "scope"
+                self.selected_port_connector = True
+        elif self.selection is not None and isinstance(model, StateModel):
+            state_m = model
+
+            for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
+                connector_pos = port_m.meta['gui']['editor']['outer_connector_pos']
+                connector_radius = port_m.meta['gui']['editor']['outer_connector_radius']
+                if dist(connector_pos, coords) < connector_radius:
+                    self.model.selection.set(port_m)
+                    self.selected_port_type = "outer"
+                    self.selected_port_connector = True
+                    break
+
 
     def _check_for_resizer_selection(self, coords):
         """Check whether a resizer (handle to resize a state) was clicked on
@@ -452,7 +474,8 @@ class GraphicalEditorController(ExtendedController):
         from which the drag action started, the transition is created.
         :param mouse_position: The mouse position when dropping
         """
-        release_selection = self._find_selection(mouse_position[0], mouse_position[1], only_states=True)
+        release_selection = self._find_selection(mouse_position[0], mouse_position[1], find_data_ports=False,
+                                                 find_transitions=False, find_data_flows=False)
         position = self.view.editor.screen_to_opengl_coordinates(mouse_position)
         if isinstance(release_selection, StateModel) and release_selection != self.selection:
             target_state_id = None
@@ -493,44 +516,54 @@ class GraphicalEditorController(ExtendedController):
         action started, the data flow is created.
         :param mouse_position: The mouse position when dropping
         """
-        release_selection = self._find_selection(mouse_position[0], mouse_position[0], only_states=True)
-        position = self.view.editor.screen_to_opengl_coordinates(mouse_position)
+        # TODO: Support scoped variables again
+        release_selection = self._find_selection(mouse_position[0], mouse_position[1],
+                                                 find_transitions=False, find_data_flows=False)
+        coords = self.view.editor.screen_to_opengl_coordinates(mouse_position)
+        target_port_m = None
+        target_port_connector = None
         if isinstance(release_selection, StateModel):
-            target_port = None
             # Data flows are allowed between parent/child, child/parent, between siblings and even within the
             # same state (input to scope, scope to output)
             if release_selection == self.selection.parent or \
                             release_selection.parent == self.selection or \
                             release_selection.parent == self.selection.parent or \
                             release_selection != self.selection:
-                # Check whether the mouse was released on an outcome
-                connectors_close_threshold = release_selection.meta['gui']['editor']['port_radius']
-                connectors = dict(release_selection.meta['gui']['editor']['input_pos'].items() +
-                                  release_selection.meta['gui']['editor']['output_pos'].items() +
-                                  release_selection.meta['gui']['editor']['scoped_pos'].items())
-                for key in connectors:
-                    distance = dist((connectors[key][0], connectors[key][1]), (position[0], position[1]))
-                    if distance < connectors_close_threshold:
-                        # This is a possible connection:
-                        target_port = key
+                state_m = release_selection
+                for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
+                    connector_pos = port_m.meta['gui']['editor']['outer_connector_pos']
+                    connectors_radius = port_m.meta['gui']['editor']['outer_connector_radius']
+                    if dist(connector_pos, coords) < connectors_radius:
+                        target_port_m = port_m
+                        break
+        elif isinstance(release_selection, DataPortModel):
+            target_port_m = release_selection
+        elif isinstance(release_selection, ScopedVariableModel):
+            target_port_m = release_selection
 
-            if target_port is not None:
-                from_state_id = self.selection.state.state_id
-                from_port = self.selected_port[1]
-                target_state_id = release_selection.state.state_id
+        if target_port_m is not None:
+            from_port_m = self.selection
+            from_state_id = from_port_m.parent.state.state_id
+            from_port_id = from_port_m.data_port.data_port_id if isinstance(from_port_m, DataPortModel) else \
+                from_port_m.scoped_variable.data_port_id
+            target_state_id = target_port_m.parent.state.state_id
+            target_port_id = target_port_m.data_port.data_port_id if isinstance(target_port_m, DataPortModel) else \
+                target_port_m.scoped_variable.data_port_id
 
-                responsible_parent = self.selection.parent
-                if release_selection.parent == self.selection or release_selection == self.selection:
-                    responsible_parent = self.selection
+            if self.selected_port_type in ("inner", "scope"):
+                responsible_parent = from_port_m.parent
+            else:
+                responsible_parent = from_port_m.parent.parent
 
-                try:
-                    responsible_parent.state.add_data_flow(from_state_id, from_port,
-                                                           target_state_id, target_port)
-                except AttributeError as e:
-                    logger.debug("Data flow couldn't be added: {0}".format(e))
-                except Exception as e:
-                    logger.error("Unexpected exception while creating data flow: {0}".format(e))
-        self.selected_port = None
+            try:
+                responsible_parent.state.add_data_flow(from_state_id, from_port_id,
+                                                       target_state_id, target_port_id)
+            except AttributeError as e:
+                logger.debug("Data flow couldn't be added: {0}".format(e))
+            except Exception as e:
+                logger.error("Unexpected exception while creating data flow: {0}".format(e))
+
+        self.selected_port_connector = False
         self._redraw(True)
 
     def _move_state(self, state_m, new_pos_x, new_pos_y):
@@ -566,6 +599,15 @@ class GraphicalEditorController(ExtendedController):
                     for i, waypoint in enumerate(data_flow.meta['gui']['editor']['waypoints']):
                         new_pos = (waypoint[0] + move_x, waypoint[1] + move_y)
                         data_flow.meta['gui']['editor']['waypoints'][i] = new_pos
+                for port_m in state.input_data_ports:
+                    old_pos = port_m.meta['gui']['editor']['inner_pos']
+                    port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
+                for port_m in state.output_data_ports:
+                    old_pos = port_m.meta['gui']['editor']['inner_pos']
+                    port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
+                for port_m in state.scoped_variables:
+                    old_pos = port_m.meta['gui']['editor']['pos']
+                    port_m.meta['gui']['editor']['pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
             # Move child states
             for child_state in state.states.itervalues():
                 child_state.meta['gui']['editor']['pos_x'] += move_x
@@ -580,6 +622,27 @@ class GraphicalEditorController(ExtendedController):
             diff_y = new_pos_y - old_pos_y
             move_child_states(state_m, diff_x, diff_y)
 
+        self._redraw()
+
+    def _move_data_port(self, port_m, coords):
+        port_info = port_m.meta['gui']['editor']
+        if self.drag_origin_offset is None:
+            self.drag_origin_offset = (coords[0] - port_info['inner_pos'][0], coords[1] - port_info['inner_pos'][1])
+
+        new_pos = (coords[0] - self.drag_origin_offset[0], coords[1] - self.drag_origin_offset[1])
+        if port_m in port_m.parent.output_data_ports:
+            new_pos = self._limit_position_to_state(port_m.parent, new_pos[0] - port_info['width'], new_pos[1],
+                                                    port_info['width'], port_info['height'])
+            new_pos = (new_pos[0] + port_info['width'], new_pos[1])
+        elif port_m in port_m.parent.input_data_ports:
+            new_pos = self._limit_position_to_state(port_m.parent, new_pos[0], new_pos[1],
+                                                    port_info['width'], port_info['height'])
+        else:  # Scope variable
+            arrow_height = port_info['height'] - port_info['rect_height']
+            new_pos = self._limit_position_to_state(port_m.parent, new_pos[0], new_pos[1] - arrow_height,
+                                                    port_info['width'], port_info['height'])
+            new_pos = (new_pos[0], new_pos[1] + arrow_height)
+        port_info['inner_pos'] = new_pos
         self._redraw()
 
     def _resize_state(self, state_m, mouse_resize_coords, d_width, d_height, modifier_keys):
@@ -618,10 +681,30 @@ class GraphicalEditorController(ExtendedController):
                 child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
                                    child_state_m.meta['gui']['editor']['width']
                 child_bottom_edge = child_state_m.meta['gui']['editor']['pos_y']
-                if min_right_edge < child_right_edge:
-                    min_right_edge = child_right_edge
-                if max_bottom_edge > child_bottom_edge:
-                    max_bottom_edge = child_bottom_edge
+                min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
+                max_bottom_edge = child_bottom_edge if max_bottom_edge > child_bottom_edge else max_bottom_edge
+            # Check position of all waypoints of all transitions
+            for transition_m in state_m.transitions:
+                for waypoint in transition_m.meta['gui']['editor']['waypoints']:
+                    min_right_edge = waypoint[0] if min_right_edge < waypoint[0] else min_right_edge
+                    max_bottom_edge = waypoint[1] if max_bottom_edge > waypoint[1] else max_bottom_edge
+            # Check position of all waypoints of all data flows
+            for data_flow_m in state_m.data_flows:
+                for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
+                    min_right_edge = waypoint[0] if min_right_edge < waypoint[0] else min_right_edge
+                    max_bottom_edge = waypoint[1] if max_bottom_edge > waypoint[1] else max_bottom_edge
+            # Check lower right corner of all ports
+            for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
+                                          state_m.scoped_variables):
+                port_info = port_m.meta['gui']['editor']
+                port_bottom_edge = port_info['inner_pos'][1]
+                port_right_edge = port_info['inner_pos'][0] + port_info['width']
+                if port_m in state_m.output_data_ports:
+                    port_right_edge = port_info['inner_pos'][0]
+                elif port_m in state_m.scoped_variables:
+                    port_bottom_edge = port_info['inner_pos'][1] - port_info['height'] + port_info['rect_height']
+                min_right_edge = port_right_edge if min_right_edge < port_right_edge else min_right_edge
+                max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
 
         # Check for parent size limitation
         max_right_edge = sys.maxint
@@ -705,6 +788,14 @@ class GraphicalEditorController(ExtendedController):
                             new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
                                                      waypoint[1], height_factor)
                             data_flow_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
+
+                    for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
+                                                  state_m.scoped_variables):
+                        new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                                                     port_m.meta['gui']['editor']['inner_pos'][0], width_factor)
+                        new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                                                 port_m.meta['gui']['editor']['inner_pos'][1], height_factor)
+                        port_m.meta['gui']['editor']['inner_pos'] = (new_pos_x, new_pos_y)
 
                     # Resize all child states
                     for child_state_m in state_m.states.itervalues():
@@ -811,9 +902,9 @@ class GraphicalEditorController(ExtendedController):
         pos_x = state_m.meta['gui']['editor']['pos_x']
         pos_y = state_m.meta['gui']['editor']['pos_y']
 
-        scoped_ports = {}
+        scoped_ports = []
         if isinstance(state_m, ContainerStateModel):
-            scoped_ports = state_m.state.scoped_variables
+            scoped_ports = state_m.scoped_variables
 
         # Was the state selected?
         selected_states = self.model.selection.get_states()
@@ -824,27 +915,21 @@ class GraphicalEditorController(ExtendedController):
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
-        (opengl_id, outcome_pos, outcome_radius, input_pos, output_pos, scoped_pos, port_radius, resize_length) = \
-            self.view.editor.draw_state(
-                state_m.state.name,
-                pos_x, pos_y, width, height,
-                state_m.state.outcomes,
-                state_m.state.input_data_ports,
-                state_m.state.output_data_ports,
-                scoped_ports,
-                selected, active, depth)
+        (opengl_id, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
+            state_m.state.name,
+            pos_x, pos_y, width, height,
+            state_m.state.outcomes,
+            state_m.input_data_ports,
+            state_m.output_data_ports,
+            selected, active, depth)
         state_m.meta['gui']['editor']['id'] = opengl_id
         state_m.meta['gui']['editor']['outcome_pos'] = outcome_pos
         state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
-        state_m.meta['gui']['editor']['port_radius'] = port_radius
-        state_m.meta['gui']['editor']['input_pos'] = input_pos
-        state_m.meta['gui']['editor']['output_pos'] = output_pos
-        state_m.meta['gui']['editor']['scoped_pos'] = scoped_pos
         state_m.meta['gui']['editor']['resize_length'] = resize_length
 
         if state_m.parent is not None and (
-                state_m.parent.state.start_state == state_m.state.state_id or
-                isinstance(state_m.parent.state, ConcurrencyState)):
+                        state_m.parent.state.start_state == state_m.state.state_id or
+                    isinstance(state_m.parent.state, ConcurrencyState)):
             self.draw_start_transition(state_m.parent, state_m, depth)
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
@@ -868,13 +953,74 @@ class GraphicalEditorController(ExtendedController):
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
                                 depth + 1)
 
+            self.draw_inner_data_ports(state_m, depth)
+
             self.draw_transitions(state_m, depth)
 
             self.draw_data_flows(state_m, depth)
 
-        self.handle_new_transition(state_m, depth)
+        self._handle_new_transition(state_m, depth)
 
-        self.handle_new_data_flow(state_m, depth)
+        self._handle_new_data_flow(state_m, depth)
+
+    def draw_inner_data_ports(self, parent_state_m, parent_depth):
+        parent_info = parent_state_m.meta['gui']['editor']
+        port_height = min(parent_info['width'], parent_info['height']) / float(max(25,
+                                                                                   len(parent_state_m.input_data_ports),
+                                                                                   len(parent_state_m.output_data_ports)
+        ))
+        max_port_width = min(parent_info['width'], parent_info['height']) / 5.
+
+        # Input data ports
+        num_input_ports = 0
+        for port_m in parent_state_m.input_data_ports:
+            port = port_m.data_port
+            if not isinstance(port_m.meta['gui']['editor']['inner_pos'], tuple):
+                pos_x = parent_info['pos_x']
+                pos_y = parent_info['pos_y'] + num_input_ports * port_height
+                port_m.meta['gui']['editor']['inner_pos'] = (pos_x, pos_y)
+            (pos_x, pos_y) = port_m.meta['gui']['editor']['inner_pos']
+
+            selected = port_m in self.model.selection.get_all()
+            opengl_id = self.view.editor.draw_inner_input_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
+                                                                    port_height, selected, parent_depth + 0.5)
+            port_m.meta['gui']['editor']['id'] = opengl_id
+            num_input_ports += 1
+
+        # Output data ports
+        num_output_ports = 0
+        for port_m in parent_state_m.output_data_ports:
+            port = port_m.data_port
+            if not isinstance(port_m.meta['gui']['editor']['inner_pos'], tuple):
+                pos_x = parent_info['pos_x'] + parent_info['width']
+                pos_y = parent_info['pos_y'] + num_output_ports * port_height
+                port_m.meta['gui']['editor']['inner_pos'] = (pos_x, pos_y)
+            (pos_x, pos_y) = port_m.meta['gui']['editor']['inner_pos']
+
+            selected = port_m in self.model.selection.get_all()
+            opengl_id = self.view.editor.draw_inner_output_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
+                                                                     port_height, selected, parent_depth + 0.5)
+            port_m.meta['gui']['editor']['id'] = opengl_id
+            num_output_ports += 1
+
+        # Scoped variables
+        if isinstance(parent_state_m, ContainerStateModel):
+            num_scoped_variables = 0
+            for port_m in parent_state_m.scoped_variables:
+                port = port_m.scoped_variable
+                if not isinstance(port_m.meta['gui']['editor']['inner_pos'], tuple):
+                    max_cols = parent_info['width'] // max_port_width
+                    (row, col) = divmod(num_scoped_variables, max_cols)
+                    pos_x = parent_info['pos_x'] + col * max_port_width
+                    pos_y = parent_info['pos_y'] + parent_info['height'] - port_height * (2 * row + 1)
+                    port_m.meta['gui']['editor']['inner_pos'] = (pos_x, pos_y)
+                (pos_x, pos_y) = port_m.meta['gui']['editor']['inner_pos']
+
+                selected = port_m in self.model.selection.get_all()
+                opengl_id = self.view.editor.draw_scoped_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
+                                                                   port_height, selected, parent_depth + 0.5)
+                port_m.meta['gui']['editor']['id'] = opengl_id
+                num_scoped_variables += 1
 
     def draw_transitions(self, parent_state_m, parent_depth):
         """Draws the transitions belonging to a state
@@ -882,8 +1028,6 @@ class GraphicalEditorController(ExtendedController):
         The method takes all transitions from the given state and calculates their start and end point positions.
         Those are passed together with the waypoints to the view of the graphical editor.
         :param parent_state_m: The model of the container state
-        :param parent_width: The width of the container state
-        :param parent_height: The height of the container state
         :param parent_depth: The depth of the container state
         """
         for transition_m in parent_state_m.transitions:
@@ -950,8 +1094,6 @@ class GraphicalEditorController(ExtendedController):
         The method takes all data flows from the given state and calculates their start and end point positions.
         Those are passed together with the waypoints to the view of the graphical editor.
         :param parent_state_m: The model of the container state
-        :param parent_width: The width of the container state
-        :param parent_height: The height of the container state
         :param parent_depth: The depth pf the container state
         """
         for data_flow_m in parent_state_m.data_flows:
@@ -966,21 +1108,29 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            from_connectors = dict(from_state.meta['gui']['editor']['input_pos'].items() +
-                                   from_state.meta['gui']['editor']['scoped_pos'].items() +
-                                   from_state.meta['gui']['editor']['output_pos'].items())
-            to_connectors = dict(to_state.meta['gui']['editor']['input_pos'].items() +
-                                 to_state.meta['gui']['editor']['scoped_pos'].items() +
-                                 to_state.meta['gui']['editor']['output_pos'].items())
+            from_port = StateMachineHelper.get_data_port_model(from_state, from_key)
+            to_port = StateMachineHelper.get_data_port_model(to_state, to_key)
 
-            if from_key not in from_connectors or to_key not in to_connectors:
-                logger.warn("Data flow with non existing port(s): {0}, {1}".format(from_key, to_key))
+            if from_port is None:
+                logger.warn('Cannot find model of the from data port {0}'.format(from_key))
+                continue
+            if to_port is None:
+                logger.warn('Cannot find model of the to data port {0}'.format(to_key))
                 continue
 
-            from_x = from_connectors[from_key][0]
-            from_y = from_connectors[from_key][1]
-            to_x = to_connectors[to_key][0]
-            to_y = to_connectors[to_key][1]
+            # For scoped variables, there is no inner and outer connector
+            if isinstance(from_port, ScopedVariableModel):
+                (from_x, from_y) = from_port.meta['gui']['editor']['connector_pos']
+            elif from_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents input
+                (from_x, from_y) = from_port.meta['gui']['editor']['inner_connector_pos']
+            else:
+                (from_x, from_y) = from_port.meta['gui']['editor']['outer_connector_pos']
+            if isinstance(to_port, ScopedVariableModel):
+                (to_x, to_y) = to_port.meta['gui']['editor']['connector_pos']
+            elif to_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents output
+                (to_x, to_y) = to_port.meta['gui']['editor']['inner_connector_pos']
+            else:
+                (to_x, to_y) = to_port.meta['gui']['editor']['outer_connector_pos']
 
             waypoints = []
             for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
@@ -999,7 +1149,7 @@ class GraphicalEditorController(ExtendedController):
             data_flow_m.meta['gui']['editor']['to_pos_x'] = to_x
             data_flow_m.meta['gui']['editor']['to_pos_y'] = to_y
 
-    def handle_new_transition(self, parent_state_m, parent_depth):
+    def _handle_new_transition(self, parent_state_m, parent_depth):
         """Responsible for drawing new transition the user creates
 
         With drag and drop on outcomes, the user can draw new transitions. Here the transition is temporary drawn in
@@ -1018,7 +1168,7 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.draw_transition(outcome[0], outcome[1], cur[0], cur[1], line_width, [], True,
                                                  parent_depth + 0.6)
 
-    def handle_new_data_flow(self, parent_state_m, parent_depth):
+    def _handle_new_data_flow(self, parent_state_m, parent_depth):
         """Responsible for drawing new data flows the user creates
 
         With drag and drop on ports, the user can draw new data flows. Here the data flow is temporary drawn in the
@@ -1026,23 +1176,25 @@ class GraphicalEditorController(ExtendedController):
         :param parent_state_m: Model of the container state
         :param parent_depth: Depth of the container state
         """
-        if self.selected_port is not None and self.last_button_pressed == 1:
-            # self.selected_port[0] references the state model pd the port
-            if self.selected_port[0] == parent_state_m:
-                # Collect positions of all ports
-                connectors = dict(parent_state_m.meta['gui']['editor']['input_pos'].items() +
-                                  parent_state_m.meta['gui']['editor']['output_pos'].items() +
-                                  parent_state_m.meta['gui']['editor']['scoped_pos'].items())
-                # self.selected_port[1] stores the key of the port
-                connector = connectors[self.selected_port[1]]
+        if self.selected_port_connector and self.last_button_pressed == 1:
+            port_m = self.selection
+            if (port_m.parent == parent_state_m and self.selected_port_type in ("inner", "scope")) or \
+                    (port_m.parent.parent == parent_state_m and self.selected_port_type == "outer"):
+                if self.selected_port_type == "inner":
+                    connector = port_m.meta['gui']['editor']['inner_connector_pos']
+                elif self.selected_port_type == "outer":
+                    connector = port_m.meta['gui']['editor']['outer_connector_pos']
+                else:  # scoped variable
+                    connector = port_m.meta['gui']['editor']['connector_pos']
                 cur = self.mouse_move_last_pos
-                ref_state = parent_state_m if not parent_state_m.parent else parent_state_m.parent
+                ref_state = parent_state_m
                 line_width = min(ref_state.meta['gui']['editor']['width'],
                                  ref_state.meta['gui']['editor']['height']) / 25.0
                 self.view.editor.draw_data_flow(connector[0], connector[1], cur[0], cur[1], line_width, [], True,
                                                 parent_depth + 0.6)
 
-    def _find_selection(self, pos_x, pos_y, only_states=False):
+    def _find_selection(self, pos_x, pos_y, find_states=True, find_transitions=True, find_data_flows=True,
+                        find_data_ports=True):
         """Returns the model at the given position
 
         This method is used when the model (state/transition/data flow) the user clicked on is to be found. The
@@ -1050,7 +1202,10 @@ class GraphicalEditorController(ExtendedController):
         the uppermost one is returned.
         :param pos_x: The x coordinate of the position
         :param pos_y: The y coordinate of the position
-        :param only_states: Flag to only search for state models
+        :param find_states: Flag whether to find states
+        :param find_transitions: Flag whether to find transitions
+        :param find_data_flows: Flag whether to find data flows
+        :param find_data_ports: Flag whether to find data ports
         :return: The uppermost model beneath the given position, None if nothing was found
         """
         # e.g. sets render mode to GL_SELECT
@@ -1064,18 +1219,25 @@ class GraphicalEditorController(ExtendedController):
 
         # extract ids
         selection = None
+
+        def get_id(hit):
+            if len(hit[2]) > 1:
+                return hit[2][1]
+            return None
+
         try:
-            selected_ids = map(lambda hit: hit[2][1], hits)
-            # print selected_ids
+            selected_ids = map(get_id, hits)  # Get the OpenGL ids for the hits
+            selected_ids = filter(lambda opengl_id: opengl_id is not None, selected_ids)  # Filter out Nones
             (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
-                                                                        only_states)
-            # print selection, selection_depth
+                                                                        find_states, find_transitions,
+                                                                        find_data_flows, find_data_ports)
         except Exception as e:
             logger.error("Error while finding selection: {err:s}".format(err=e))
             pass
         return selection
 
-    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth, only_states):
+    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth,
+                                find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Searches recursively for objects with the given ids
 
         The method searches recursively and compares all stored ids with the given ones. It finally returns the
@@ -1088,10 +1250,9 @@ class GraphicalEditorController(ExtendedController):
         :return: The selected object and its depth
         """
         # Only the element which is furthest down in the hierarchy is selected
-        if search_state_depth > selection_depth:
+        if search_state_depth > selection_depth and find_states:
             # Check whether the id of the current state matches an id in the selected ids
             if search_state.meta['gui']['editor']['id'] and search_state.meta['gui']['editor']['id'] in ids:
-                # print "possible selection", search_state
                 # if so, add the state to the list of selected states
                 selection = search_state
                 selection_depth = search_state_depth
@@ -1106,24 +1267,36 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(search_state, ContainerStateModel):
 
             for state in search_state.states.itervalues():
-                (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
-                                                                            selection, selection_depth, only_states)
+                if len(ids) > 0:
+                    (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
+                                                                                selection, selection_depth,
+                                                                                find_states, find_transitions,
+                                                                                find_data_flows, find_data_ports)
 
-            if len(ids) == 0 or search_state_depth < selection_depth or only_states:
+            if len(ids) == 0 or search_state_depth < selection_depth:
                 return selection, selection_depth
 
-            for transition in search_state.transitions:
-                if transition.meta['gui']['editor']['id'] and transition.meta['gui']['editor']['id'] in ids:
-                    selection = transition
-                    ids.remove(transition.meta['gui']['editor']['id'])
+            def search_selection_in_model_list(model_list, current_selection):
+                for model in model_list:
+                    if model.meta['gui']['editor']['id'] and model.meta['gui']['editor']['id'] in ids:
+                        ids.remove(model.meta['gui']['editor']['id'])
+                        current_selection = model
+                return current_selection
 
-            if len(ids) == 0:
-                return selection, selection_depth
+            if find_transitions:
+                selection = search_selection_in_model_list(search_state.transitions, selection)
+                if len(ids) == 0:
+                    return selection, selection_depth
 
-            for data_flow in search_state.data_flows:
-                if data_flow.meta['gui']['editor']['id'] and data_flow.meta['gui']['editor']['id'] in ids:
-                    selection = data_flow
-                    ids.remove(data_flow.meta['gui']['editor']['id'])
+            if find_data_flows:
+                selection = search_selection_in_model_list(search_state.data_flows, selection)
+                if len(ids) == 0:
+                    return selection, selection_depth
+
+            if find_data_ports:
+                selection = search_selection_in_model_list(search_state.input_data_ports, selection)
+                selection = search_selection_in_model_list(search_state.output_data_ports, selection)
+                selection = search_selection_in_model_list(search_state.scoped_variables, selection)
 
         return selection, selection_depth
 

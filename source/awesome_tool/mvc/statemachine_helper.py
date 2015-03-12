@@ -101,3 +101,37 @@ class StateMachineHelper():
 
         container_state.state.add_state(new_state)
         return True
+
+    @staticmethod
+    def get_data_port_model(state_m, data_port_id):
+        """Searches and returns the model of a data port of a given state
+
+        The method searches a port with the given id in the data ports of the given state model. If the state model
+        is a container state, not only the input and output data ports are looked at, but also the scoped variables.
+        :param state_m: The state model to search the data port in
+        :param data_port_id: The data port id to be searched
+        :return: The model of the data port or None if it is not found
+        """
+        def find_port_in_list(data_port_list):
+            """Helper method to search for a port within a given list
+
+            :param data_port_list: The list to search the data port in
+            :return: The model of teh data port or None if it is not found
+            """
+            for port_m in data_port_list:
+                if port_m.data_port.data_port_id == data_port_id:
+                    return port_m
+            return None
+
+        if isinstance(state_m, ContainerStateModel):
+            for scoped_var_m in state_m.scoped_variables:
+                if scoped_var_m.scoped_variable.data_port_id == data_port_id:
+                    return scoped_var_m
+        if isinstance(state_m, StateModel):
+            port_m = find_port_in_list(state_m.input_data_ports)
+            if port_m is not None:
+                return port_m
+            port_m = find_port_in_list(state_m.output_data_ports)
+            if port_m is not None:
+                return port_m
+        return None
