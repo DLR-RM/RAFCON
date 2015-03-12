@@ -39,6 +39,17 @@ class Color:
         self.b = b
         self.a = a
 
+    @staticmethod
+    def from_hex(rgb, a=0xFF):
+        r = rgb >> 16
+        g = rgb - (r << 16) >> 8
+        b = rgb - (r << 16) - (g << 8)
+        return Color.from_dec(r, g, b, a)
+
+    @staticmethod
+    def from_dec(r, g, b, a=255):
+        return Color(r / 255., g / 255., b / 255., a / 266.)
+
     @property
     def r(self):
         return self._r
@@ -138,7 +149,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     state_selected_color = Color(0.7, 0, 0, 0.8)
     state_name_color = Color(0.2, 0.2, 0.2, 1)
     port_color = Color(0.7, 0.7, 0.7, 0.8)
-    port_name_color = Color(0.2, 0.2, 0.2, 1)
+    port_name_color = Color(0.1, 0.1, 0.1, 1)
     port_connector_fill_color = Color(0.2, 0.2, 0.2, 0.5)
     transition_color = Color(0.4, 0.4, 0.4, 0.8)
     transition_selected_color = Color(0.7, 0, 0, 0.8)
@@ -189,7 +200,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glEnable(GL_BLEND)  # Make use of alpha channel for colors
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)  # Configure alpha blending
         glEnable(GL_LINE_SMOOTH)  # Smooth lines
-        glClearColor(33. / 255, 49. / 255, 92. / 255, 1)  # Background color
+        glClearColor(17. / 255, 61. / 255, 108. / 255, 1)  # Background color
 
         logger.debug("realize")
 
@@ -325,13 +336,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         fill_color = self.state_color if not selected else self.state_selected_color
 
         border_width = min(width, height) / 10.
+        if active:
+            border_width *= 2
 
         border_color = self.border_color if not active else self.border_active_color
         self._draw_rect(pos_x, pos_x + width, pos_y, pos_y + height, depth, border_width,
                         fill_color, border_color)
 
         # Put the name of the state in the upper left corner of the state
-        margin = min(width, height) / 8.
+        margin = min(width, height) / 12.
         font_size = min(width, height) / 8.
         name = self._shorten_string(name, font_size, width - 2 * margin)
         self._write_string(name, pos_x + margin, pos_y + height - margin, font_size, self.state_name_color, True,
@@ -452,7 +465,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         glPushName(id)
 
-        margin = height / 6.
+        margin = height / 5.
         name_height = height - 2 * margin
         name_width = self._string_width(port_name, name_height)
         if name_width > width - 2 * margin:
@@ -469,12 +482,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         fill_color = self.port_color if not selected else self.state_selected_color
         arrow_pos, visible = self._draw_rect_arrow(left, right, pos_y, pos_y + height, arrow_position, depth,
-                                                   border_color=self.port_name_color,
-                                                   fill_color=fill_color)
+                                                   border_width=margin*2,
+                                                   border_color=self.port_name_color, fill_color=fill_color)
         radius = margin / 1.5
-        self._draw_circle(arrow_pos[0], arrow_pos[1], radius, depth + 0.02, border_color=self.port_name_color,
-                                  fill_color=self.port_connector_fill_color)
-        self._write_string(port_name, left + margin, pos_y + height - margin, name_height, color=self.port_name_color,
+        self._draw_circle(arrow_pos[0], arrow_pos[1], radius, depth + 0.02, stroke_width=margin,
+                          border_color=self.port_name_color, fill_color=self.port_connector_fill_color)
+        self._write_string(port_name, left + margin, pos_y + height - margin / 2, name_height,
+                           color=self.port_name_color,
                            depth=depth + 0.1)
         prefix = 'inner_' if inner else ''
         port_m.meta['gui']['editor'][prefix + 'connector_pos'] = arrow_pos
