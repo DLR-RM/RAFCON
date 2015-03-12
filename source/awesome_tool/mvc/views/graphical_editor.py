@@ -466,7 +466,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 pass
 
         glPopName()
-        return opengl_id, outcome_pos, outcome_radius, port_radius, resize_length
+        return opengl_id, outcome_pos, outcome_radius, resize_length
 
     def draw_inner_input_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
         return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, selected, depth)

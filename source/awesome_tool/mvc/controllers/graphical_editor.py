@@ -386,7 +386,6 @@ class GraphicalEditorController(ExtendedController):
                 self.selected_port_connector = True
         elif self.selection is not None and isinstance(model, StateModel):
             state_m = model
-            connectors_close_threshold = state_m.meta['gui']['editor']['port_radius']
 
             for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
                 connector_pos = port_m.meta['gui']['editor']['outer_connector_pos']
@@ -874,7 +873,7 @@ class GraphicalEditorController(ExtendedController):
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
-        (opengl_id, outcome_pos, outcome_radius, port_radius, resize_length) = self.view.editor.draw_state(
+        (opengl_id, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
             state_m.state.name,
             pos_x, pos_y, width, height,
             state_m.state.outcomes,
@@ -885,7 +884,6 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor']['id'] = opengl_id
         state_m.meta['gui']['editor']['outcome_pos'] = outcome_pos
         state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
-        state_m.meta['gui']['editor']['port_radius'] = port_radius
         state_m.meta['gui']['editor']['resize_length'] = resize_length
 
         if state_m.parent is not None and (
@@ -1144,7 +1142,10 @@ class GraphicalEditorController(ExtendedController):
         the uppermost one is returned.
         :param pos_x: The x coordinate of the position
         :param pos_y: The y coordinate of the position
-        :param only_states: Flag to only search for state models
+        :param find_states: Flag whether to find states
+        :param find_transitions: Flag whether to find transitions
+        :param find_data_flows: Flag whether to find data flows
+        :param find_data_ports: Flag whether to find data ports
         :return: The uppermost model beneath the given position, None if nothing was found
         """
         # e.g. sets render mode to GL_SELECT
