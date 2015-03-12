@@ -680,10 +680,30 @@ class GraphicalEditorController(ExtendedController):
                 child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
                                    child_state_m.meta['gui']['editor']['width']
                 child_bottom_edge = child_state_m.meta['gui']['editor']['pos_y']
-                if min_right_edge < child_right_edge:
-                    min_right_edge = child_right_edge
-                if max_bottom_edge > child_bottom_edge:
-                    max_bottom_edge = child_bottom_edge
+                min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
+                max_bottom_edge = child_bottom_edge if max_bottom_edge > child_bottom_edge else max_bottom_edge
+            # Check position of all waypoints of all transitions
+            for transition_m in state_m.transitions:
+                for waypoint in transition_m.meta['gui']['editor']['waypoints']:
+                    min_right_edge = waypoint[0] if min_right_edge < waypoint[0] else min_right_edge
+                    max_bottom_edge = waypoint[1] if max_bottom_edge > waypoint[1] else max_bottom_edge
+            # Check position of all waypoints of all data flows
+            for data_flow_m in state_m.data_flows:
+                for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
+                    min_right_edge = waypoint[0] if min_right_edge < waypoint[0] else min_right_edge
+                    max_bottom_edge = waypoint[1] if max_bottom_edge > waypoint[1] else max_bottom_edge
+            # Check lower right corner of all ports
+            for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
+                                          state_m.scoped_variables):
+                port_info = port_m.meta['gui']['editor']
+                port_bottom_edge = port_info['inner_pos'][1]
+                port_right_edge = port_info['inner_pos'][0] + port_info['width']
+                if port_m in state_m.output_data_ports:
+                    port_right_edge = port_info['inner_pos'][0]
+                elif port_m in state_m.scoped_variables:
+                    port_bottom_edge = port_info['inner_pos'][1] - port_info['height'] + port_info['rect_height']
+                min_right_edge = port_right_edge if min_right_edge < port_right_edge else min_right_edge
+                max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
 
         # Check for parent size limitation
         max_right_edge = sys.maxint
@@ -767,6 +787,14 @@ class GraphicalEditorController(ExtendedController):
                             new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
                                                      waypoint[1], height_factor)
                             data_flow_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
+
+                    for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
+                                                  state_m.scoped_variables):
+                        new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                                                     port_m.meta['gui']['editor']['inner_pos'][0], width_factor)
+                        new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                                                 port_m.meta['gui']['editor']['inner_pos'][1], height_factor)
+                        port_m.meta['gui']['editor']['inner_pos'] = (new_pos_x, new_pos_y)
 
                     # Resize all child states
                     for child_state_m in state_m.states.itervalues():
