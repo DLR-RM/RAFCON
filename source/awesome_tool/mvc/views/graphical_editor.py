@@ -430,41 +430,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 port_m.meta['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
-        # Draw input and output data ports
-        # if len(scoped_vars_m) > 0:
-        #     max_scope_width = width * 0.9
-        #     margin = min(height, width) / 50.
-        #     max_single_scope_width = max_scope_width / len(scoped_vars_m) - 2 * margin
-        #     str_height = height / 35.0
-        #     port_pos_left_x = pos_x + width / 2 - (len(scoped_vars_m) * max_single_scope_width) / 2
-        #     port_pos_top_y = pos_y + height - margin
-        #     num = 0
-        #
-        #     for scoped_var_m in scoped_vars_m:
-        #         scoped_var = scoped_var_m.scoped_variable
-        #         port_name = self._shorten_string(scoped_var.name, str_height, max_single_scope_width - margin)
-        #         str_width = self._string_width(port_name, str_height)
-        #
-        #         move_x = num * (str_width + 2 * margin)
-        #         connect, _ = self._draw_rect_arrow(port_pos_left_x + move_x,
-        #                                            port_pos_left_x + move_x + str_width + margin,
-        #                                            port_pos_top_y - str_height - margin, port_pos_top_y,
-        #                                            Direction.bottom, depth + 0.01, border_width / 5.,
-        #                                            self.port_color, self.border_color)
-        #
-        #         string_pos_x = port_pos_left_x + margin / 2. + move_x
-        #         string_pos_y = port_pos_top_y - margin / 2.  # - num * (str_height + margin)
-        #         self._write_string(port_name, string_pos_x, string_pos_y, str_height, self.port_name_color, False,
-        #                            False, depth + 0.02)
-        #         radius = margin / 4.
-        #         self._draw_circle(connect[0], connect[1], radius, depth + 0.02,
-        #                           stroke_width=border_width / 8., border_color=self.port_name_color,
-        #                           fill_color=self.port_connector_fill_color)
-        #         num += 1
-        #         scoped_var_m.meta['gui']['editor']['connector_radius'] = radius
-        #         scoped_var_m.meta['gui']['editor']['connector_pos'] = connect
-        #         pass
-
         glPopName()
         return opengl_id, outcome_pos, outcome_radius, resize_length
 
