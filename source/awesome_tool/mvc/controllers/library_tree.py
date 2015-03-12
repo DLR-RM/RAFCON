@@ -61,7 +61,7 @@ class LibraryTreeController(ExtendedController):  # (Controller):
         library = model[row][1]
         library_path = model[row][2]
 
-        current_selection = smm.state_machines[smm.selected_state_machine].selection
+        current_selection = smm.state_machines[smm.selected_state_machine_id].selection
         if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
             logger.error("Wrong number of selected states %s" % str(len(current_selection.get_states())))
             return

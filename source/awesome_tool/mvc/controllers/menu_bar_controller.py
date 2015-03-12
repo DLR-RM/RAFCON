@@ -41,7 +41,7 @@ class MenuBarController(ExtendedController):
     def _copy_selection(self, *args):
         logger.debug("copy selection")
         self.clipboard.state_machine_id = copy.copy(self.model.selected_state_machine_id)
-        self.clipboard.selection.set(self.model.get_selected_state_machine_model().selection)
+        self.clipboard.selection.set(self.model.get_selected_state_machine_model().selection.get_all())
         self.clipboard.clipboard_type = ClipboardType.COPY
 
     def _paste_clipboard(self, *args):
@@ -102,5 +102,5 @@ class MenuBarController(ExtendedController):
     def _cut_selection(self, *args):
         logger.debug("cut selection")
         self.clipboard.state_machine_id = copy.copy(self.model.selected_state_machine_id)
-        self.clipboard.selection.set(self.model.get_selected_state_machine_model().selection)
+        self.clipboard.selection.set(self.model.get_selected_state_machine_model().selection.get_all())
         self.clipboard.clipboard_type = ClipboardType.CUT

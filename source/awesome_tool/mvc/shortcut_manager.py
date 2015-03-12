@@ -114,8 +114,8 @@ class ShortcutManager():
         """
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
-                # try:
-                callback_function(key_value, modifier_mask)
-                # except Exception as e:
-                #     logger.error('Exception while calling callback methods for action "{0}": {1}'.format(
-                #         action, e.message, traceback.format_exc()))
+                try:
+                    callback_function(key_value, modifier_mask)
+                except Exception as e:
+                    logger.error('Exception while calling callback methods for action "{0}": {1} {2}'.format(
+                        action, e.message, traceback.format_exc()))
