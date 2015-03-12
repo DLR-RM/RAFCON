@@ -17,6 +17,7 @@ from awesome_tool.mvc.views.states_editor import StatesEditorView
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.config
+from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 
 
 class MainWindowController(ExtendedController):
@@ -128,6 +129,12 @@ class MainWindowController(ExtendedController):
         status_bar3.push(0, status_bar3_string)
 
         ######################################################
+        # status bar
+        ######################################################
+        self.add_controller("menu_bar_controller",
+                            MenuBarController(state_machine_manager_model, view, state_machines_editor_ctrl))
+
+        ######################################################
         # setup correct sizes
         ######################################################
         view['top_h_pane'].set_position(200)
@@ -151,8 +158,8 @@ class MainWindowController(ExtendedController):
         logger.debug("Main window destroyed")
         log.debug_filter.set_logging_test_view(None)
         log.error_filter.set_logging_test_view(None)
-        gtk.main_quit()
         awesome_tool.statemachine.config.global_config.save_configuration()
+        gtk.main_quit()
 
     ######################################################
     # menu bar functionality - File

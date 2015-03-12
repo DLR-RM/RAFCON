@@ -167,7 +167,7 @@ class ContainerState(State):
         :return state_id: the state_id of the created state
         """
         if state_id is None:
-            state_id = state_id_generator(STATE_ID_LENGTH)
+            state_id = state_id_generator()
         state = State(state_id, name)
         self._states[state_id] = state
         return state_id

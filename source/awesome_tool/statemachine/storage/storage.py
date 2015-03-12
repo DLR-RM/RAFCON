@@ -199,6 +199,27 @@ class StateMachineStorage(Observable):
         sm.base_path = self.base_path
         return [sm, version, creation_time]
 
+    def load_state_from_yaml(self, state_path):
+        """
+        Loads a state from a given path
+        from the base path.
+        :param state_path: The path of the state on the file system.
+        :return: the loaded state
+        """
+        root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
+        # set path after loading the state, as the yaml parser did not know the path during state creation
+        root_state.script.path = state_path
+        # load_and_build the module to load the correct content into root_state.script.script
+        root_state.script.load_and_build_module()
+        self.load_script_file(root_state)
+        for p in os.listdir(state_path):
+            if os.path.isdir(os.path.join(state_path, p)):
+                elem = os.path.join(state_path, p)
+                logger.debug("Going down the statemachine hierarchy recursively to state %s" % str(elem))
+                self.load_state_recursively(root_state, elem)
+                logger.debug("Going up back to state %s" % str(state_path))
+        return root_state
+
     def load_state_recursively(self, root_state, state_path=None):
         """
         Recursively loads the state. It calls this method on each substate of a container state.

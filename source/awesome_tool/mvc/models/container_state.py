@@ -242,3 +242,8 @@ class ContainerStateModel(StateModel):
         StateModel.store_meta_data_for_state(self)
         for state_key, state in self.states.iteritems():
             state.store_meta_data_for_state()
+
+    def copy_meta_data_from_state_model(self, source_state):
+        StateModel.copy_meta_data_from_state_model(self, source_state)
+        for state_key, state in self.states.iteritems():
+            state.copy_meta_data_from_state_model(source_state.states[state_key])

@@ -293,3 +293,9 @@ class LibraryState(ContainerState, yaml.YAMLObject):
             raise TypeError("state_copy must be of type State")
 
         self._state_copy = state_copy
+
+    @staticmethod
+    def copy_state(source_state):
+        state_copy = LibraryState()
+        # TODO: copy fields from source_state into the state_copy
+        return state_copy

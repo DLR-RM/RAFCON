@@ -19,6 +19,7 @@ from awesome_tool.statemachine.states.library_state import LibraryState
 import gobject
 gobject.threads_init()
 
+
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
     log.error_filter.set_logging_test_view(logging_view)

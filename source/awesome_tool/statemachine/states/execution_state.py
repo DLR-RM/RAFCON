@@ -117,3 +117,9 @@ class ExecutionState(State, yaml.YAMLObject):
         filename = dict_representation['filename']
         return ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                               check_path=False)
+
+    @staticmethod
+    def copy_state(source_state):
+        state_copy = ExecutionState()
+        # TODO: copy fields from source_state into the state_copy
+        return state_copy

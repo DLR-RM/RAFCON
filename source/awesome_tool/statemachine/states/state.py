@@ -218,6 +218,11 @@ class State(Observable, yaml.YAMLObject, object):
 
         logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))
 
+    @staticmethod
+    def copy_state_fields(source_state, target_state):
+
+        pass
+
     # give the state the appearance of a thread that can be started several times
     def start(self):
         """ Starts the execution of the state in a new thread.

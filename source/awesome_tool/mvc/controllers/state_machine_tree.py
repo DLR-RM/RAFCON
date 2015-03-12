@@ -56,6 +56,10 @@ class StateMachineTreeController(ExtendedController):
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
 
+    @ExtendedController.observe("states", after=True)
+    def states_update(self, model, property, info):
+        self.update()
+
     def register_view(self, view):
         self.view.connect('cursor-changed', self.on_cursor_changed)
         self.view_is_registered = True
@@ -70,7 +74,6 @@ class StateMachineTreeController(ExtendedController):
         :param changed_state_model:
         :return:
         """
-        gtk.gdk.threads_enter()
         if not self.view_is_registered:
             return
 
@@ -111,8 +114,6 @@ class StateMachineTreeController(ExtendedController):
             if not model[path][1] in self._selected_sm_model.root_state.states:
                 self.tree_store.remove(child_iter)
                 #self.tree_store.row_deleted(self.tree_store.get_path(child_iter))
-
-        gtk.gdk.threads_leave()
 
     def insert_rec(self, parent_iter, state_model):
         # check if in

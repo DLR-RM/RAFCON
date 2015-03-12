@@ -65,6 +65,8 @@ def exit(self, scoped_variables, gvm):
 
 """
 
+    DEFAULT_SCRIPT_PATH = "/tmp/DFC/"
+
     yaml_tag = u'!Script'
 
     def __init__(self, path=None, filename=None, script_type=None, check_path=True, state=None):
@@ -84,7 +86,7 @@ def exit(self, scoped_variables, gvm):
         else:
             self.script = Script.DEFAULT_SCRIPT_CONTAINER
         if path is None:
-            self.path = "/tmp/DFC/" + state.get_path()
+            self.path = Script.DEFAULT_SCRIPT_PATH + state.get_path()
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
             self.filename = "Script_%s.file" % str(self._script_id)
@@ -102,6 +104,14 @@ def exit(self, scoped_variables, gvm):
             # load and build the module per default else the default scripts will be loaded in self.script
             self.load_and_build_module()
 
+    def reset_script(self, state_path):
+        self.path = Script.DEFAULT_SCRIPT_PATH + state_path
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+        self.filename = "Script_%s.file" % str(self._script_id)
+        script_file = open(os.path.join(self.path, self.filename), "w")
+        script_file.write(self.script)
+        script_file.close()
 
     def execute(self, state, inputs={}, outputs={}):
         """

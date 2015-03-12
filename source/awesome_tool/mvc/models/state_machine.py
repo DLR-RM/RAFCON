@@ -1,4 +1,5 @@
 from gtkmvc import ModelMT, Observable
+from enum import Enum
 
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.states.container_state import ContainerState
@@ -82,6 +83,12 @@ class Selection(Observable):
 
         self.__selected = set()
 
+    def __str__(self):
+        return_string = "Selected: "
+        for item in self.__selected:
+            return_string = "%s, %s" % (return_string, str(item))
+        return return_string
+
     @Observable.observed
     def add(self, item):
         #print item
@@ -105,6 +112,9 @@ class Selection(Observable):
         return self.__selected.__iter__()
 
     def __len__(self):
+        return len(self.__selected)
+
+    def get_number_of_selected_items(self):
         return len(self.__selected)
 
     def get_all(self):
@@ -138,3 +148,70 @@ class Selection(Observable):
             return None
         else:
             return selected_states[0]
+
+
+ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
+
+
+class Clipboard(Observable):
+    """
+    A class to hold a selection for later usage e.g. triggered by copy, or cut. Later usage is e.g. paste.
+    """
+    def __init__(self):
+        Observable.__init__(self)
+        self._selection = None
+        self.selection = Selection()
+
+        self._state_machine_id = None
+        self._clipboard_type = None
+
+    def __str__(self):
+        return "Clipboard:\nselection: %s\nstate_machine_id: %s\nclipboard_type: %s" % (str(self.selection),
+                                                                                     str(self.state_machine_id),
+                                                                                     str(self.clipboard_type))
+
+    def set_selection(self, selection):
+        self.selection.set(selection)
+
+    @property
+    def selection(self):
+        """Property for the _selection field
+
+        """
+        return self._selection
+
+    @selection.setter
+    @Observable.observed
+    def selection(self, selection):
+        if not isinstance(selection, Selection):
+            raise TypeError("selection must be of type Selection")
+        self._selection = selection
+
+    @property
+    def state_machine_id(self):
+        """Property for the _state_machine_id field
+
+        """
+        return self._state_machine_id
+
+    @state_machine_id.setter
+    @Observable.observed
+    def state_machine_id(self, state_machine_id):
+        if not isinstance(state_machine_id, int):
+            raise TypeError("state_machine_id must be of type int")
+        self._state_machine_id = state_machine_id
+
+    @property
+    def clipboard_type(self):
+        """Property for the _clipboard_type field
+
+        """
+        return self._clipboard_type
+
+    @clipboard_type.setter
+    @Observable.observed
+    def clipboard_type(self, clipboard_type):
+        if not isinstance(clipboard_type, ClipboardType):
+            raise TypeError("clipboard_type must be of type ClipBoardType")
+        self._clipboard_type = clipboard_type
+

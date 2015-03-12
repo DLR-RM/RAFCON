@@ -1,8 +1,8 @@
 from gtkmvc import ModelMT
 
 from gtk import ListStore
-import gtk
 import os
+import copy
 
 from awesome_tool.statemachine.states.state import State
 from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
@@ -296,6 +296,9 @@ class StateModel(ModelMT):
             self.meta = tmp_meta
         else:
             logger.warn("path to load meta data for state model of state %s does not exist" % self.state.name)
+
+    def copy_meta_data_from_state_model(self, source_state):
+        self.meta = copy.deepcopy(source_state.meta)
 
     def store_meta_data_for_state(self):
         #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
