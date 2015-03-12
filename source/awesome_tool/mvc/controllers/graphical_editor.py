@@ -792,7 +792,7 @@ class GraphicalEditorController(ExtendedController):
                     for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                                   state_m.scoped_variables):
                         new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                                                     port_m.meta['gui']['editor']['inner_pos'][0], width_factor)
+                                                 port_m.meta['gui']['editor']['inner_pos'][0], width_factor)
                         new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
                                                  port_m.meta['gui']['editor']['inner_pos'][1], height_factor)
                         port_m.meta['gui']['editor']['inner_pos'] = (new_pos_x, new_pos_y)
@@ -902,10 +902,6 @@ class GraphicalEditorController(ExtendedController):
         pos_x = state_m.meta['gui']['editor']['pos_x']
         pos_y = state_m.meta['gui']['editor']['pos_y']
 
-        scoped_ports = []
-        if isinstance(state_m, ContainerStateModel):
-            scoped_ports = state_m.scoped_variables
-
         # Was the state selected?
         selected_states = self.model.selection.get_states()
         selected = False if state_m not in selected_states else True
@@ -927,14 +923,13 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
         state_m.meta['gui']['editor']['resize_length'] = resize_length
 
-        if state_m.parent is not None and (
-                        state_m.parent.state.start_state == state_m.state.state_id or
-                    isinstance(state_m.parent.state, ConcurrencyState)):
+        if state_m.parent is not None and (state_m.parent.state.start_state == state_m.state.state_id or
+                                               isinstance(state_m.parent.state, ConcurrencyState)):
             self.draw_start_transition(state_m.parent, state_m, depth)
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
-        if isinstance(state_m, ContainerStateModel):
+        if isinstance(state_m, ContainerStateModel) and state_m.state.state_type != StateType.LIBRARY:
 
             state_ctr = 0
             margin = width / float(25)
