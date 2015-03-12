@@ -844,8 +844,8 @@ class GraphicalEditorController(ExtendedController):
         :param pos:
         :param direction:
         """
-        zoom_in = direction == SCROLL_UP
-        zoom_out = direction == SCROLL_DOWN
+        zoom_in = direction == SCROLL_DOWN
+        zoom_out = direction == SCROLL_UP
 
         if zoom_in or zoom_out:
             old_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
