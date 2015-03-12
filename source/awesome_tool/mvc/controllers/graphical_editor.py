@@ -529,19 +529,16 @@ class GraphicalEditorController(ExtendedController):
                             release_selection.parent == self.selection.parent or \
                             release_selection != self.selection:
                 state_m = release_selection
-                connectors_close_threshold = state_m.meta['gui']['editor']['port_radius']
                 for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
                     connector_pos = port_m.meta['gui']['editor']['outer_connector_pos']
-                    if dist(connector_pos, coords) < connectors_close_threshold:
+                    connectors_radius = port_m.meta['gui']['editor']['outer_connector_radius']
+                    if dist(connector_pos, coords) < connectors_radius:
                         target_port_m = port_m
-                        target_port_connector = "outer"
                         break
         elif isinstance(release_selection, DataPortModel):
             target_port_m = release_selection
-            target_port_connector = "inner"
         elif isinstance(release_selection, ScopedVariableModel):
             target_port_m = release_selection
-            target_port_connector = "scope"
 
         if target_port_m is not None:
             from_port_m = self.selection
@@ -551,7 +548,6 @@ class GraphicalEditorController(ExtendedController):
             target_state_id = target_port_m.parent.state.state_id
             target_port_id = target_port_m.data_port.data_port_id if isinstance(target_port_m, DataPortModel) else \
                 target_port_m.scoped_variable.data_port_id
-
 
             if self.selected_port_type in ("inner", "scope"):
                 responsible_parent = from_port_m.parent
@@ -1151,13 +1147,15 @@ class GraphicalEditorController(ExtendedController):
         :param parent_depth: Depth of the container state
         """
         if self.selected_port_connector and self.last_button_pressed == 1:
-            if self.selection.parent == parent_state_m:
+            port_m = self.selection
+            if (port_m.parent == parent_state_m and self.selected_port_type in ("inner", "scope")) or \
+                    (port_m.parent.parent == parent_state_m and self.selected_port_type == "outer"):
                 if self.selected_port_type == "inner":
-                    connector = self.selection.meta['gui']['editor']['inner_connector_pos']
+                    connector = port_m.meta['gui']['editor']['inner_connector_pos']
                 elif self.selected_port_type == "outer":
-                    connector = self.selection.meta['gui']['editor']['outer_connector_pos']
+                    connector = port_m.meta['gui']['editor']['outer_connector_pos']
                 else:  # scoped variable
-                    connector = self.selection.meta['gui']['editor']['connector_pos']
+                    connector = port_m.meta['gui']['editor']['connector_pos']
                 cur = self.mouse_move_last_pos
                 ref_state = parent_state_m if not parent_state_m.parent else parent_state_m.parent
                 line_width = min(ref_state.meta['gui']['editor']['width'],
