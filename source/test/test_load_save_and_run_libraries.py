@@ -12,7 +12,7 @@ import variables_for_pytest
 
 
 def save_libraries():
-    s = Storage("../test_scripts/test_libraries")
+    s = StateMachineStorage("../test_scripts/test_libraries")
 
     state1 = ExecutionState("library_execution_state1", path="../test_scripts", filename="library_execution_state1.py")
     state1.add_outcome("success", 0)

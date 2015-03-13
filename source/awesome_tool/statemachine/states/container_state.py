@@ -66,8 +66,9 @@ class ContainerState(State):
         self._transitions_cv = Condition()
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
-    def __str__(self):
-        return "%s\nnumber of substates: %s" % (State.__str__(self), len(self.states))
+    # ---------------------------------------------------------------------------------------------
+    # ----------------------------------- execution functions -------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
@@ -915,6 +916,45 @@ class ContainerState(State):
     # ------------------------ functions to modify the scoped data end ----------------------------
     # ---------------------------------------------------------------------------------------------
 
+    def change_state_id(self, state_id=None):
+        """
+        Changes the id of the state to a new id. This functions replaces the old state_id with the new state_id in all
+        data flows and transitions.
+        :param state_id: The new state if of the state
+        :return:
+        """
+        old_state_id = self.state_id
+        State.change_state_id(self, state_id)
+        while self.state_id == old_state_id:
+            old_state_id = self.state_id
+            State.change_state_id()
+
+        # change id in all transitions
+        for trans_id, transition in self.transitions.iteritems():
+            if transition.from_state == old_state_id:
+                transition.from_state = self.state_id
+            if transition.to_state == old_state_id:
+                transition.to_state = self.state_id
+
+        # change id in all data_flows
+        for df_id, data_flow in self.data_flows.iteritems():
+            if data_flow.from_state == old_state_id:
+                data_flow.from_state = self.state_id
+            if data_flow.to_state == old_state_id:
+                data_flow.to_state = self.state_id
+
+    def state_id_exists(self, new_state_id):
+        """
+        Checks if a specific key already exists among the child states.
+        :param new_state_id: the state id to check
+        :return: True if the key already exists, False else.
+        """
+        for state_id in self.states.keys():
+            if state_id == new_state_id:
+                return True
+        return False
+
+
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
 
@@ -984,6 +1024,9 @@ class ContainerState(State):
             'scoped_variables': data.scoped_variables
         }
         return dict_representation
+
+    def __str__(self):
+        return "%s\nnumber of substates: %s" % (State.__str__(self), len(self.states))
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

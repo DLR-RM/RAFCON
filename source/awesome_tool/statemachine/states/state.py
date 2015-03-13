@@ -218,10 +218,9 @@ class State(Observable, yaml.YAMLObject, object):
 
         logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))
 
-    @staticmethod
-    def copy_state_fields(source_state, target_state):
-
-        pass
+    # ---------------------------------------------------------------------------------------------
+    # ----------------------------------- execution functions -------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     # give the state the appearance of a thread that can be started several times
     def start(self):
@@ -258,6 +257,13 @@ class State(Observable, yaml.YAMLObject, object):
             raise TypeError("states must be of type dict")
         self.check_input_data_type(self.input_data)
 
+    def run(self, *args, **kwargs):
+        """Implementation of the abstract run() method of the :class:`threading.Thread`
+
+        TODO: Should be filled with code, that should be executed for each state derivative
+        """
+        raise NotImplementedError("The State.run() function has to be implemented!")
+
     def recursively_preempt_states(self, state):
         """ Preempt the provided state and all it sub-states.
         :param state: The that is going to be preempted recursively.
@@ -268,6 +274,10 @@ class State(Observable, yaml.YAMLObject, object):
         if state.state_type is not StateType.EXECUTION:
             for key, state in state.states.iteritems():
                 state.recursively_preempt_states(state)
+
+    # ---------------------------------------------------------------------------------------------
+    # ----------------------------------- data port functions -------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     @Observable.observed
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
@@ -342,23 +352,6 @@ class State(Observable, yaml.YAMLObject, object):
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
 
-    def get_path(self, appendix=None):
-        """ Recursively create the path of the state. In bottom up method i.e. from the nested child states to the root
-        state.
-        :param appendix: the part of the path that was already calculated by previous function calls
-        :return: the full path to the root state
-        """
-        if self.parent:
-            if appendix is None:
-                return self.parent.get_path(self.state_id)
-            else:
-                return self.parent.get_path(self.state_id + PATH_SEPARATOR + appendix)
-        else:
-            if appendix is None:
-                return self.state_id
-            else:
-                return self.state_id + PATH_SEPARATOR + appendix
-
     def get_io_data_port_id_from_name_and_type(self, name, data_port_type):
         """Returns the data_port_id of a data_port with a certain name and data port type
 
@@ -388,89 +381,6 @@ class State(Observable, yaml.YAMLObject, object):
             return self.output_data_ports[id]
         else:
             raise AttributeError("Data_Port_id %s is not in input_data_ports or output_data_ports", id)
-
-    @Observable.observed
-    def add_outcome(self, name, outcome_id=None):
-        """Add a new outcome to the state
-
-        :param name: the name of the outcome to add
-        :param outcome_id: the optional outcome_id of the new outcome
-
-        :return: outcome_id: the outcome if of the generated state
-
-        """
-        if outcome_id is None:
-            outcome_id = generate_outcome_id(self._used_outcome_ids)
-        if name in self._outcomes:
-            logger.error("Two outcomes cannot have the same names")
-            return
-        if outcome_id in self._used_outcome_ids:
-            logger.error("Two outcomes cannot have the same outcome_ids")
-            return
-        outcome = Outcome(outcome_id, name, self.modify_outcome_name)
-        self._outcomes[outcome_id] = outcome
-        self._used_outcome_ids.append(outcome_id)
-        return outcome_id
-
-    @Observable.observed
-    def remove_outcome(self, outcome_id):
-        """Remove an outcome from the state
-
-        :param outcome_id: the id of the outcome to remove
-
-        """
-        if not outcome_id in self._used_outcome_ids:
-            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
-
-        if outcome_id == -1 or outcome_id == -2:
-            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
-                                 "return aborted or preempted")
-
-        # delete possible transition connected to this outcome
-        if not self.parent is None:
-            for transition_id, transition in self.parent.transitions.iteritems():
-                if transition.from_outcome == outcome_id:
-                    self.parent.remove_transition(transition_id)
-                    # del self.parent.transitions[transition_id]
-                    break  # found the one outgoing transition
-
-        # delete outcome it self
-        self._used_outcome_ids.remove(outcome_id)
-        self._outcomes.pop(outcome_id, None)
-
-    def is_valid_outcome_id(self, outcome_id):
-        """Checks if outcome_id valid type and points to element of state.
-
-        :param int outcome_id:
-        :return:
-        """
-        #check if types are valid
-        if not isinstance(outcome_id, int):
-            raise TypeError("outcome_id must be of type int")
-        # consistency check
-        if outcome_id not in self.outcomes:
-            raise AttributeError("outcome_id %s has to be in container_state %s outcomes-list" %
-                                 (outcome_id, self.state_id))
-
-    def modify_outcome_name(self, name, outcome):
-        """Checks if the outcome name already exists. If this is the case a unique number is appended to the name
-
-        :param name: the desired name of a possibly new outcome
-        :return: name: a unique outcome name for the state
-        """
-        def define_unique_name(name, dict_of_names, count=0):
-            count += 1
-            if name + str(count) in dict_of_names.values():
-                count = define_unique_name(name, dict_of_names, count)
-            return count
-
-        dict_of_names = {}
-        for o_id, o in self._outcomes.items():
-            dict_of_names[o_id] = o.name
-
-        if name in dict_of_names.values() and not outcome.name == name:
-            name += str(define_unique_name(name, dict_of_names))
-        return name
 
     @Observable.observed
     def modify_input_data_port_name(self, name, data_port_id):
@@ -556,12 +466,120 @@ class State(Observable, yaml.YAMLObject, object):
         if not val is None:
             self.output_data_ports[data_port_id].default_value = val
 
-    def run(self, *args, **kwargs):
-        """Implementation of the abstract run() method of the :class:`threading.Thread`
+    # ---------------------------------------------------------------------------------------------
+    # ------------------------------------ outcome functions --------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
-        TODO: Should be filled with code, that should be executed for each state derivative
+    def get_path(self, appendix=None):
+        """ Recursively create the path of the state. In bottom up method i.e. from the nested child states to the root
+        state.
+        :param appendix: the part of the path that was already calculated by previous function calls
+        :return: the full path to the root state
         """
-        raise NotImplementedError("The State.run() function has to be implemented!")
+        if self.parent:
+            if appendix is None:
+                return self.parent.get_path(self.state_id)
+            else:
+                return self.parent.get_path(self.state_id + PATH_SEPARATOR + appendix)
+        else:
+            if appendix is None:
+                return self.state_id
+            else:
+                return self.state_id + PATH_SEPARATOR + appendix
+
+    @Observable.observed
+    def add_outcome(self, name, outcome_id=None):
+        """Add a new outcome to the state
+
+        :param name: the name of the outcome to add
+        :param outcome_id: the optional outcome_id of the new outcome
+
+        :return: outcome_id: the outcome if of the generated state
+
+        """
+        if outcome_id is None:
+            outcome_id = generate_outcome_id(self._used_outcome_ids)
+        if name in self._outcomes:
+            logger.error("Two outcomes cannot have the same names")
+            return
+        if outcome_id in self._used_outcome_ids:
+            logger.error("Two outcomes cannot have the same outcome_ids")
+            return
+        outcome = Outcome(outcome_id, name, self.modify_outcome_name)
+        self._outcomes[outcome_id] = outcome
+        self._used_outcome_ids.append(outcome_id)
+        return outcome_id
+
+    @Observable.observed
+    def remove_outcome(self, outcome_id):
+        """Remove an outcome from the state
+
+        :param outcome_id: the id of the outcome to remove
+
+        """
+        if not outcome_id in self._used_outcome_ids:
+            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
+
+        if outcome_id == -1 or outcome_id == -2:
+            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
+                                 "return aborted or preempted")
+
+        # delete possible transition connected to this outcome
+        if not self.parent is None:
+            for transition_id, transition in self.parent.transitions.iteritems():
+                if transition.from_outcome == outcome_id:
+                    self.parent.remove_transition(transition_id)
+                    # del self.parent.transitions[transition_id]
+                    break  # found the one outgoing transition
+
+        # delete outcome it self
+        self._used_outcome_ids.remove(outcome_id)
+        self._outcomes.pop(outcome_id, None)
+
+    def is_valid_outcome_id(self, outcome_id):
+        """Checks if outcome_id valid type and points to element of state.
+
+        :param int outcome_id:
+        :return:
+        """
+        #check if types are valid
+        if not isinstance(outcome_id, int):
+            raise TypeError("outcome_id must be of type int")
+        # consistency check
+        if outcome_id not in self.outcomes:
+            raise AttributeError("outcome_id %s has to be in container_state %s outcomes-list" %
+                                 (outcome_id, self.state_id))
+
+    def modify_outcome_name(self, name, outcome):
+        """Checks if the outcome name already exists. If this is the case a unique number is appended to the name
+
+        :param name: the desired name of a possibly new outcome
+        :return: name: a unique outcome name for the state
+        """
+        def define_unique_name(name, dict_of_names, count=0):
+            count += 1
+            if name + str(count) in dict_of_names.values():
+                count = define_unique_name(name, dict_of_names, count)
+            return count
+
+        dict_of_names = {}
+        for o_id, o in self._outcomes.items():
+            dict_of_names[o_id] = o.name
+
+        if name in dict_of_names.values() and not outcome.name == name:
+            name += str(define_unique_name(name, dict_of_names))
+        return name
+
+    def connect_all_outcome_function_handles(self):
+        """In case of the outcomes were created by loading from a yaml file, the function handlers are not set.
+            This method allows to set the handlers for all outcomes.
+        """
+        for outcome_id, outcome in self.outcomes.iteritems():
+            outcome.check_name = self.modify_outcome_name
+
+    # ---------------------------------------------------------------------------------------------
+    # -------------------------------------- misc functions ---------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     def check_input_data_type(self, input_data):
         """Check the input data types of the state
@@ -589,13 +607,6 @@ class State(Observable, yaml.YAMLObject, object):
                     if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
                         raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
 
-    def connect_all_outcome_function_handles(self):
-        """In case of the outcomes were created by loading from a yaml file, the function handlers are not set.
-            This method allows to set the handlers for all outcomes.
-        """
-        for outcome_id, outcome in self.outcomes.iteritems():
-            outcome.check_name = self.modify_outcome_name
-
     def set_script_text(self, new_text):
         """
         Sets the text of the script. This function can be overridden to prevent setting the script under certain
@@ -605,6 +616,23 @@ class State(Observable, yaml.YAMLObject, object):
         """
         self.script.script = new_text
         return True
+
+    def change_state_id(self, state_id=None):
+        """
+        Changes the id of the state to a new id. If now state_id is passed as parameter, a new state id is generated.
+        :param state_id: The new state if of the state
+        :return:
+        """
+        new_state_id = None
+        if state_id is None:
+            new_state_id = state_id_generator()
+        else:
+            new_state_id = state_id
+        if self.parent is not None:
+            while self.parent.state_id_exists(new_state_id):
+                new_state_id = state_id_generator()
+
+        self._state_id = new_state_id
 
     def __str__(self):
         return "State properties of state: %s \nstate_id: %s \nstate_type: %s" \
@@ -620,21 +648,6 @@ class State(Observable, yaml.YAMLObject, object):
 
         """
         return self._state_id
-
-    @state_id.setter
-    @Observable.observed
-    def state_id(self, state_id):
-        """Setter function for the _id property
-
-        :param state_id: The new id of the state. The type of the id has to be a string
-        :type state_id: str
-        """
-        if not isinstance(state_id, str):
-            raise TypeError("ID must be of type str")
-        if len(state_id) < 1:
-            raise ValueError("ID must have at least one character")
-
-        self._state_id = state_id
 
     @property
     def name(self):
