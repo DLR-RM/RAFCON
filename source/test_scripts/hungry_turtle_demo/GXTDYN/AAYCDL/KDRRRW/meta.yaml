@@ -14,7 +14,7 @@ outcomes:
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports: {}
-path: ../../test_scripts/hungry_turtle_demo/GXTDYN/LCMNPY/KDRRRW
+path: ../../test_scripts/hungry_turtle_demo/GXTDYN/AAYCDL/KDRRRW
 scoped_variables: {}
 start_state: null
 state_id: KDRRRW

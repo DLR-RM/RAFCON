@@ -6,17 +6,15 @@ data_flows:
     9: !DataFlow {from_key: 5, from_state: MVMQMI, to_key: 5, to_state: KDRRRW}
 filename: script.py
 input_data_ports: {}
-name: create food
+name: create food 2
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}
     -1: !Outcome {name: aborted, outcome_id: -1}
-    0: !Outcome {name: success1, outcome_id: 0}
 output_data_ports: {}
-path: ../../test_scripts/hungry_turtle_demo/GXTDYN/LCMNPY
+path: ../../test_scripts/hungry_turtle_demo/GXTDYN/AAYCDL
 scoped_variables: {}
 start_state: MVMQMI
-state_id: LCMNPY
+state_id: AAYCDL
 state_type: STATE_TYPE.HIERARCHY
 transitions:
-    3: !Transition {from_outcome: 0, from_state: MVMQMI, to_outcome: null, to_state: KDRRRW}
-    5: !Transition {from_outcome: 0, from_state: KDRRRW, to_outcome: 0, to_state: null}
+    4: !Transition {from_outcome: 0, from_state: MVMQMI, to_outcome: null, to_state: KDRRRW}
