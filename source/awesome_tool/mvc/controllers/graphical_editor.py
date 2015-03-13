@@ -970,10 +970,8 @@ class GraphicalEditorController(ExtendedController):
 
     def draw_inner_data_ports(self, parent_state_m, parent_depth):
         parent_info = parent_state_m.meta['gui']['editor']
-        port_height = min(parent_info['width'], parent_info['height']) / float(max(25,
-                                                                                   len(parent_state_m.input_data_ports),
-                                                                                   len(parent_state_m.output_data_ports)
-        ))
+        max_rows = max(20, len(parent_state_m.input_data_ports), len(parent_state_m.output_data_ports))
+        port_height = min(parent_info['width'], parent_info['height']) / float(max_rows)
         max_port_width = min(parent_info['width'], parent_info['height']) / 5.
 
         # Input data ports
