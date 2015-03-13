@@ -78,6 +78,7 @@ class DataFlow(Observable, yaml.YAMLObject):
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
+    # TODO check for self connections
 
     @Observable.observed
     def modify_origin(self, from_state, from_key):

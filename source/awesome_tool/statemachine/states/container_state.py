@@ -505,6 +505,10 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data-flow functions -------------------------------------
     # ---------------------------------------------------------------------------------------------
+    # TODO input, output oder scope nicht auf sich selbst
+    # TODO scope nicht auf andere scope
+    # TODO output-in, input-in nur ein data flow
+    # TODO data flows mit gleichen Attributen nur einmal
 
     @Observable.observed
     #Primary key is data_flow_id.
