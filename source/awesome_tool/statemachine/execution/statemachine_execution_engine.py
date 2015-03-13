@@ -52,7 +52,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._status.execution_mode = ExecutionMode.PAUSED
 
     @Observable.observed
-    def start(self, state_machine_id):
+    def start(self, state_machine_id=None):
         """Set the execution mode to started
         """
         if self._execution_started:
@@ -64,8 +64,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         else:
             logger.debug("Restart the state machine")
             self._status.execution_mode = ExecutionMode.RUNNING
-            self.state_machine_manager.active_state_machine_id = state_machine_id
-            self.state_machine_manager.state_machines[state_machine_id].root_state.start()
+            if state_machine_id is not None:
+                self.state_machine_manager.active_state_machine_id = state_machine_id
+            self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].root_state.start()
             self._execution_started = True
 
     #TODO: stop all external modules
