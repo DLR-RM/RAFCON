@@ -612,7 +612,7 @@ class GraphicalEditorController(ExtendedController):
                     old_pos = port_m.meta['gui']['editor']['inner_pos']
                     port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
                 for port_m in state_m.scoped_variables:
-                    old_pos = port_m.meta['gui']['editor']['pos']
+                    old_pos = port_m.meta['gui']['editor']['inner_pos']
                     port_m.meta['gui']['editor']['pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
             # Move child states
             for child_state in state_m.states.itervalues():
