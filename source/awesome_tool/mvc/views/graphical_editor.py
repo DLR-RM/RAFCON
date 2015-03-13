@@ -398,6 +398,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                     outcome_x -= 3 * step
                     color = self.outcome_preempted_color
             else:
+                outcome_font_size = font_size * 0.8
+                max_outcome_name_width = width / 4.
+                outcome_name = self._shorten_string(outcome_name, outcome_font_size, max_outcome_name_width)
+                outcome_name_pos_x = outcome_x - margin
+                outcome_name_pos_y = outcome_y + outcome_font_size * 0.65
+                self._write_string(outcome_name, outcome_name_pos_x, outcome_name_pos_y, outcome_font_size,
+                                   self.state_name_color, align_right=True, depth=depth+0.1)
                 i += 1
 
             color.set()
