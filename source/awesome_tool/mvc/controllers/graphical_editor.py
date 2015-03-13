@@ -594,22 +594,22 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor']['pos_x'] = new_pos_x
         state_m.meta['gui']['editor']['pos_y'] = new_pos_y
 
-        def move_child_states(state, move_x, move_y):
+        def move_child_states(state_m, move_x, move_y):
             # Move waypoints
-            if isinstance(state, ContainerStateModel):
-                for transition in state.transitions:
+            if isinstance(state_m, ContainerStateModel) and state_m.state.state_type != StateType.LIBRARY:
+                for transition in state_m.transitions:
                     for i, waypoint in enumerate(transition.meta['gui']['editor']['waypoints']):
                         new_pos = (waypoint[0] + move_x, waypoint[1] + move_y)
                         transition.meta['gui']['editor']['waypoints'][i] = new_pos
-                for data_flow in state.data_flows:
+                for data_flow in state_m.data_flows:
                     for i, waypoint in enumerate(data_flow.meta['gui']['editor']['waypoints']):
                         new_pos = (waypoint[0] + move_x, waypoint[1] + move_y)
                         data_flow.meta['gui']['editor']['waypoints'][i] = new_pos
-                for port_m in itertools.chain(state.input_data_ports, state.output_data_ports, state.scoped_variables):
+                for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports, state_m.scoped_variables):
                     old_pos = port_m.meta['gui']['editor']['inner_pos']
                     port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
             # Move child states
-            for child_state in state.states.itervalues():
+            for child_state in state_m.states.itervalues():
                 child_state.meta['gui']['editor']['pos_x'] += move_x
                 child_state.meta['gui']['editor']['pos_y'] += move_y
 
