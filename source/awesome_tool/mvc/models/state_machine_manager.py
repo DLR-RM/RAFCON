@@ -1,4 +1,5 @@
 from gtkmvc import ModelMT
+from gtkmvc import Observable
 from awesome_tool.mvc.models.state_machine import StateMachineModel, Selection
 from awesome_tool.statemachine.state_machine_manager import StateMachineManager
 from awesome_tool.utils.vividict import Vividict
@@ -7,7 +8,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateMachineManagerModel(ModelMT):
+class StateMachineManagerModel(ModelMT, Observable):
     """This model class manages a StateMachineManager
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine manager).
@@ -28,6 +29,7 @@ class StateMachineManagerModel(ModelMT):
         """Constructor
         """
         ModelMT.__init__(self)  # pass columns as separate parameters
+        Observable.__init__(self)
         self.register_observer(self)
 
         assert isinstance(state_machine_manager, StateMachineManager)
@@ -37,7 +39,7 @@ class StateMachineManagerModel(ModelMT):
         for sm_id, sm in state_machine_manager.state_machines.iteritems():
             self.state_machines[sm_id] = StateMachineModel(sm)
 
-        self.selected_state_machine_id = None
+        self._selected_state_machine_id = None
         if len(self.state_machines.keys()) > 0:
             self.selected_state_machine_id = self.state_machines.keys()[0]
 
@@ -77,4 +79,18 @@ class StateMachineManagerModel(ModelMT):
 
     def get_selected_state_machine_model(self):
         return self.state_machines[self.selected_state_machine_id]
+
+    @property
+    def selected_state_machine_id(self):
+        """Property for the _selected_state_machine_id field
+
+        """
+        return self._selected_state_machine_id
+
+    @selected_state_machine_id.setter
+    @Observable.observed
+    def selected_state_machine_id(self, selected_state_machine_id):
+        if not isinstance(selected_state_machine_id, int):
+            raise TypeError("selected_state_machine_id must be of type int")
+        self._selected_state_machine_id = selected_state_machine_id
 

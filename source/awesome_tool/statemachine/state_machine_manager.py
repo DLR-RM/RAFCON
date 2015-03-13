@@ -90,7 +90,10 @@ class StateMachineManager(Observable):
         :return:
         """
         if state_machine_id is self.active_state_machine_id:
-            self.active_state_machine_id = None
+            if len(self._state_machines) > 0:
+                self.active_state_machine_id = self._state_machines[0].state_machine_id
+            else:
+                self.active_state_machine_id = None
         if state_machine_id in self._state_machines:
             del self._state_machines[state_machine_id]
         else:

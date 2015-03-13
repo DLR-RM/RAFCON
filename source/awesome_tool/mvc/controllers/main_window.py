@@ -311,7 +311,7 @@ class MainWindowController(ExtendedController):
     ######################################################
     def on_start_activate(self, widget, data=None):
         logger.debug("Start execution engine ...")
-        awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_pause_activate(self, widget, data=None):
         logger.debug("Pause execution engine ...")
