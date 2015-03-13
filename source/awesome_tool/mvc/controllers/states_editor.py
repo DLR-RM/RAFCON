@@ -192,7 +192,7 @@ class StatesEditorController(ExtendedController):
     def change_state_editor_selection(self, selected_model):
         state_identifier = "%s|%s" % (self.model.state_machine_manager.get_sm_id_for_state(selected_model.state),
                                        selected_model.state.get_path())
-        if self.act_model is None or not self.act_model.state.state_id == selected_model.state.state_id:
+        if self.act_model is None or not self.act_model.state.get_path() == selected_model.state.get_path():
             logger.debug("State %s is SELECTED" % selected_model.state.name)
 
             # print "state_identifier: %s" % state_identifier
@@ -213,7 +213,7 @@ class StatesEditorController(ExtendedController):
         selection = info.instance
         assert isinstance(selection, Selection)
         # logger.debug("The viewer should jump as selected to tab in states_editor %s %s %s" % (info.instance, model, property))
-        if info.instance.get_num_states() == 1 and len(info.instance) == 1:
+        if selection.get_num_states() == 1 and len(selection) == 1:
             self.change_state_editor_selection(info.instance.get_states()[0])
 
     @ExtendedController.observe("state", before=True)
@@ -247,18 +247,7 @@ class StatesEditorController(ExtendedController):
         # TODO in combination with state type change (remove - add -state) there exist sometimes inconsistencies
         # logger.debug("In States-Editor state %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
         #              ("X", prop_name, info.instance, info.method_name, info))
-        # print self.tabs.keys()
         if hasattr(info, "kwargs") and info.method_name == 'state_change':
-            # if info.kwargs.method_name == 'remove_state':
-            #     logger.debug("remove tab for state %s and search for others to remove" % info.kwargs.args[1])
-            #     #check if state in notebook
-            #     sm_id = self.model.state_machine_manager.get_sm_id_for_state(info.kwargs.args[0])
-            #     identifier = str(sm_id) + '|' + info.kwargs.args[0].get_path() + '/' + info.kwargs.args[1]
-            #     if identifier in self.tabs:
-            #         state_model = self.tabs[identifier]['state_model']
-            #         self.on_close_clicked(event=None, state_model=state_model, result=None)
-            #     # search actual not necessary
-            #     #self.remove_search()
             if info.kwargs.method_name == 'name':
                 self.check_name()
         if info.method_name == 'name':
