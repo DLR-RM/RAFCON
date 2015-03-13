@@ -179,6 +179,16 @@ class ContainerState(State):
         :param state: the state that is going to be added
 
         """
+
+        # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
+        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+        if own_sm_id is None:
+            logger.warn("Something is going wrong during adding a state. State does not belong to "
+                               "a state machine!")
+        else:
+            awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
+                own_sm_id, state.script.path)
+
         if state.state_id in self._states:
             raise AttributeError("State id %s already exists in the container state", state.state_id)
         else:
@@ -200,8 +210,9 @@ class ContainerState(State):
         if own_sm_id is None:
             logger.warn("Something is going wrong during state removal. State does not belong to "
                                "a state machine!")
-        awesome_tool.statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
-                                                                              self.states[state_id].script.path)
+        else:
+            awesome_tool.statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
+                                                                                  self.states[state_id].script.path)
 
         #first delete all transitions and data_flows in this state
         keys_to_delete = []

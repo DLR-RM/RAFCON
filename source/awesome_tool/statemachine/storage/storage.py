@@ -81,6 +81,17 @@ class StateMachineStorage(Observable):
                          (str(path), str(state_machine_id)))
         self._paths_to_remove_before_sm_save[state_machine_id].append(path)
 
+    def unmark_path_for_removal_for_sm_id(self, state_machine_id, path):
+        """
+        Unmarks a path for removal.
+        :param state_machine_id: the state machine id the path belongs to
+        :param path: the path to a state that should not be removed
+        :return:
+        """
+        if state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
+            if path in self._paths_to_remove_before_sm_save[state_machine_id]:
+                self._paths_to_remove_before_sm_save[state_machine_id].remove(path)
+
     def save_statemachine_as_yaml(self, statemachine, base_path, version=None, delete_old_state_machine=False):
         """
         Saves a root state to a yaml file.
@@ -95,7 +106,8 @@ class StateMachineStorage(Observable):
         # remove all paths that were marked to be removed
         if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
             for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
-                self.storage_utils.remove_path(path)
+                if self.storage_utils.exists_path(path):
+                    self.storage_utils.remove_path(path)
 
         root_state = statemachine.root_state
         # clean old path first

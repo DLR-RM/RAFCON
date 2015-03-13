@@ -322,14 +322,10 @@ class StateModel(ModelMT):
 
         counter = 0
         for input_data_port_model in self.input_data_ports:
-            print input_data_port_model.data_port.data_port_id
-            print source_state.input_data_ports[counter].meta
             input_data_port_model.meta = copy.deepcopy(source_state.input_data_ports[counter].meta)
             counter += 1
         counter = 0
         for output_data_port_model in self.output_data_ports:
-            print output_data_port_model.data_port.data_port_id
-            print source_state.output_data_ports[counter].meta
             output_data_port_model.meta = copy.deepcopy(source_state.output_data_ports[counter].meta)
             counter += 1
 
