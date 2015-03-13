@@ -53,10 +53,7 @@ def create_models(*args, **kargs):
     input_state1 = state1.add_input_data_port("input", "int", 0)
     state1.add_outcome('success', 0)
     state2 = ExecutionState('State2')
-    input_my_input_state2 = state2.add_input_data_port("my_input", "int", 0)
-    input_long_state2 = state2.add_input_data_port("longlonginputname", "int", 0)
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
-    output_my_output_state2 = state2.add_output_data_port("my_output", "int")
     output_res_state2 = state2.add_output_data_port("res", "int")
     state4 = ExecutionState('Nested')
     output_state4 = state4.add_output_data_port("out", "int")
@@ -68,6 +65,8 @@ def create_models(*args, **kargs):
     output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
     state3.add_state(state5)
+    state3.set_start_state(state4)
+    state3.add_scoped_variable("share", "int", 3)
     state3.add_transition(state4.state_id, 0, state5.state_id, None)
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
     state3.add_outcome('Branch1')
@@ -79,6 +78,7 @@ def create_models(*args, **kargs):
     ctr_state.add_state(state3)
     input_ctr_state = ctr_state.add_input_data_port("ctr_in", "int", 0)
     output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
+    ctr_state.set_start_state(state1)
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
     ctr_state.add_transition(state2.state_id, -2, state3.state_id, None)
     ctr_state.add_transition(state3.state_id, -2, None, -2)
@@ -88,17 +88,16 @@ def create_models(*args, **kargs):
     ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
     ctr_state.name = "Container"
 
-    ctr_state.add_input_data_port("input_data1", "str", "default_value1")
-    ctr_state.add_input_data_port("input_data2", "str", "default_value2")
-    ctr_state.add_input_data_port("input_data3", "str", "default_value3")
+    ctr_state.add_input_data_port("input", "str", "default_value1")
+    ctr_state.add_input_data_port("pos_x", "str", "default_value2")
+    ctr_state.add_input_data_port("pos_y", "str", "default_value3")
 
-    ctr_state.add_output_data_port("output_data1", "str", "default_value1")
-    ctr_state.add_output_data_port("output_data2", "str", "default_value2")
-    ctr_state.add_output_data_port("output_data3", "str", "default_value3")
+    ctr_state.add_output_data_port("output", "str", "default_value1")
+    ctr_state.add_output_data_port("result", "str", "default_value2")
 
-    scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped_variable1", "str", "default_value1")
-    scoped_variable2_ctr_state = ctr_state.add_scoped_variable("scoped_variable2", "str", "default_value1")
-    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("scoped_variable3", "str", "default_value1")
+    scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
+    scoped_variable2_ctr_state = ctr_state.add_scoped_variable("my_var", "str", "default_value1")
+    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "str", "default_value1")
 
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     # this is not allowed as the output port is already connected
