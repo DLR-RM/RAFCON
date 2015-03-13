@@ -41,14 +41,16 @@ class Color:
 
     @staticmethod
     def from_hex(rgb, a=0xFF):
-        r = rgb >> 16
-        g = rgb - (r << 16) >> 8
-        b = rgb - (r << 16) - (g << 8)
+        r = (rgb >> 16) & 0xFF
+        g = (rgb >> 8) & 0xFF
+        b = rgb & 0xFF
         return Color.from_dec(r, g, b, a)
 
     @staticmethod
     def from_dec(r, g, b, a=255):
-        return Color(r / 255., g / 255., b / 255., a / 266.)
+        if a < 1.:
+            a *= 255
+        return Color(r / 255., g / 255., b / 255., a / 255.)
 
     @property
     def r(self):
@@ -68,6 +70,7 @@ class Color:
 
     @r.setter
     def r(self, r):
+        print "set r"
         self._r = self._check_range(r)
 
     @g.setter
@@ -143,22 +146,25 @@ class GraphicalEditorView(View):
 
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
-    border_color = Color(0.2, 0.2, 0.2, 1)
-    border_active_color = Color(0, 0.8, 0.8, 1)
-    state_color = Color(0.9, 0.9, 0.9, 0.8)
-    state_selected_color = Color(0.7, 0, 0, 0.8)
-    state_name_color = Color(0.2, 0.2, 0.2, 1)
-    port_color = Color(0.7, 0.7, 0.7, 0.8)
-    port_name_color = Color(0.1, 0.1, 0.1, 1)
-    port_connector_fill_color = Color(0.2, 0.2, 0.2, 0.5)
-    transition_color = Color(0.4, 0.4, 0.4, 0.8)
-    transition_selected_color = Color(0.7, 0, 0, 0.8)
-    data_flow_color = Color(0.6, 0.6, 0.6, 0.8)
-    data_flow_selected_color = Color(0.7, 0, 0, 0.8)
-    outcome_plain_color = Color(0.4, 0.4, 0.4, 0.8)
-    outcome_aborted_color = Color(0.6, 0, 0, 0.8)
-    outcome_preempted_color = Color(0.1, 0.1, 0.7, 0.8)
-    income_color = Color(0.4, 0.4, 0.4, 0.8)
+    background_color = Color.from_hex(0x17242f)
+    state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)
+    state_selected_color = Color.from_hex(0xd7e0ec)  # Color(0.7, 0, 0, 0.8)
+    state_active_color = Color.from_hex(0xb7d9b0)  # Color(0.7, 0, 0, 0.8)
+    state_name_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
+    border_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
+    border_selected_color = Color.from_hex(0x3aaf59)  # Color(0, 0.8, 0.8, 1)
+    border_active_color = Color.from_hex(0x0b0b17)  # Color(0, 0.8, 0.8, 1)
+    port_color = Color.from_hex(0xD1DDF4, 0.8)  # Color(0.7, 0.7, 0.7, 0.8)
+    port_name_color = state_name_color  # Color(0.1, 0.1, 0.1, 1)
+    port_connector_fill_color = state_selected_color  # Color(0.2, 0.2, 0.2, 0.5)
+    transition_color = Color.from_hex(0xabce6d)  # Color(0.4, 0.4, 0.4, 0.8)
+    transition_selected_color = border_selected_color  # Color.from_hex(0xabce6d)  # Color(0.7, 0, 0, 0.8)
+    data_flow_color = Color.from_hex(0x7fd1c6)  # Color(0.6, 0.6, 0.6, 0.8)
+    data_flow_selected_color = border_selected_color  # Color.from_hex(0x3aaf59)  # Color(0.7, 0, 0, 0.8)
+    outcome_plain_color = Color.from_hex(0x97d88a)  # Color(0.4, 0.4, 0.4, 0.8)
+    outcome_aborted_color = Color.from_hex(0x792b40)  # Color(0.6, 0, 0, 0.8)
+    outcome_preempted_color = Color.from_hex(0x4769bd)  # Color(0.1, 0.1, 0.7, 0.8)
+    income_color = outcome_plain_color  # Color(0.4, 0.4, 0.4, 0.8)
 
     def __init__(self, glconfig):
         """The graphical editor manages the OpenGL functions.
@@ -189,8 +195,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.connect('configure_event', self._configure)
         # self.connect('expose_event',    self.expose)
 
-    @staticmethod
-    def _realize(*args):
+    def _realize(self, *args):
         # Obtain a reference to the OpenGL drawable
         # and rendering context.
         # gldrawable = self.get_gl_drawable()
@@ -200,7 +205,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glEnable(GL_BLEND)  # Make use of alpha channel for colors
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)  # Configure alpha blending
         glEnable(GL_LINE_SMOOTH)  # Smooth lines
-        glClearColor(17. / 255, 61. / 255, 108. / 255, 1)  # Background color
+        glClearColor(self.background_color.r, self.background_color.g, self.background_color.b, 1)  # Background color
+        #glClearColor(17. / 255, 61. / 255, 108. / 255, 1)
 
         logger.debug("realize")
 
@@ -333,13 +339,19 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self._set_closest_stroke_width(1.5)
 
         # First draw the face of the rectangular, then the outline
-        fill_color = self.state_color if not selected else self.state_selected_color
+        fill_color = self.state_color
+        border_color = self.border_color
 
         border_width = min(width, height) / 10.
         if active:
-            border_width *= 2
+            fill_color = self.state_active_color
+            #border_color = self.border_active_color
 
-        border_color = self.border_color if not active else self.border_active_color
+        if selected:
+            border_width *= 2
+            #fill_color = self.state_selected_color
+            border_color = self.border_selected_color
+
         self._draw_rect(pos_x, pos_x + width, pos_y, pos_y + height, depth, border_width,
                         fill_color, border_color)
 
@@ -361,28 +373,39 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         num_outcomes = max(0, len(outcomes))
         if num_outcomes < 2:
             logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
+        else:
+            num_outcomes -= 2
         i = 0
         outcome_pos = {}
-        outcome_radius = min(5, height / 15., height / (2. * num_outcomes + 3))
+        outcome_radius = min(3, height / 20., height / (2. * num_outcomes + 3))
         for key in outcomes:
             # Color of outcome is defined by its type, "aborted", "preempted" or else
             outcome_name = outcomes[key].name
             color = self.outcome_plain_color
-            if outcome_name == "aborted":
-                color = self.outcome_aborted_color
-            elif outcome_name == "preempted":
-                color = self.outcome_preempted_color
-
-            color.set()
-
-            # TODO: Show name of the outcome
 
             # Distribute outcomes (as circles) on the right edge of the state
             outcome_x = pos_x + width
             outcome_y = pos_y + height / (num_outcomes + 1) * (i + 1)
+
+            if outcome_name in ["aborted", "preempted"]:
+                size = min(width, height)
+                step = size / 10.
+                outcome_y = pos_y + height
+                if outcome_name == "aborted":
+                    outcome_x -= step
+                    color = self.outcome_aborted_color
+                else:
+                    outcome_x -= 3 * step
+                    color = self.outcome_preempted_color
+            else:
+                i += 1
+
+            color.set()
             outcome_pos[key] = (outcome_x, outcome_y)
+
+            # TODO: Show name of the outcome
+
             self._draw_circle(outcome_x, outcome_y, outcome_radius, depth + 0.1, fill_color=color)
-            i += 1
 
         # Draw "income" as a half circle of the left center
         self._draw_circle(pos_x, pos_y + height / 2, outcome_radius, depth + 0.1, fill_color=self.income_color,
@@ -404,14 +427,14 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                     if str_width > max_name_width:
                         max_name_width = str_width
 
-            fill_color = self.port_color if not selected else self.state_selected_color
+            #fill_color = self.port_color if not selected else self.state_selected_color
 
             port_width = min(max_name_width, max_allowed_name_width)
             port_pos_left_x = pos_x + (width - port_width - margin) / 2
             port_pos_right_x = port_pos_left_x + port_width + margin
             port_pos_bottom_y = pos_y - num_ports * (str_height + margin)
             self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos_y, depth, border_width,
-                            fill_color, self.border_color)
+                            fill_color, border_color)
 
             def draw_port(port_m, num, is_input):
 
@@ -480,10 +503,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             left = pos_x - width
             right = pos_x
 
-        fill_color = self.port_color if not selected else self.state_selected_color
+        fill_color = self.port_color  # if not selected else self.state_selected_color
+        border_color = self.border_color if not selected else self.border_selected_color
+        border_width = margin * 2 if not selected else margin * 4
         arrow_pos, visible = self._draw_rect_arrow(left, right, pos_y, pos_y + height, arrow_position, depth,
-                                                   border_width=margin*2,
-                                                   border_color=self.port_name_color, fill_color=fill_color)
+                                                   border_width=border_width,
+                                                   border_color=border_color, fill_color=fill_color)
         radius = margin / 1.5
         self._draw_circle(arrow_pos[0], arrow_pos[1], radius, depth + 0.02, stroke_width=margin,
                           border_color=self.port_name_color, fill_color=self.port_connector_fill_color)
@@ -600,7 +625,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self.name_counter += 1
 
         glPushName(id)
-        width /= 2
+        width /= 1.3
         self._set_closest_stroke_width(width)
 
         color = self.data_flow_color if not selected else self.data_flow_selected_color
