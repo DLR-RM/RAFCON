@@ -46,6 +46,7 @@ class GraphicalEditorController(ExtendedController):
         self.selected_resizer = None
 
         self.mouse_move_redraw = False
+        self.temporary_waypoints = []
 
         self.shift_modifier = False
         self.alt_modifier = False
@@ -54,7 +55,6 @@ class GraphicalEditorController(ExtendedController):
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
-        # Only called when the mouse is clicked while moving
         view.editor.connect('motion-notify-event', self._on_mouse_motion)
         view.editor.connect('scroll-event', self._on_scroll)
         view.editor.connect('key-press-event', self._on_key_press)
@@ -92,8 +92,23 @@ class GraphicalEditorController(ExtendedController):
         :param info: Information about the change
         """
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
-            logger.debug("Change in SM, redraw...")
-            self._redraw(True)
+            if 'method_name' in info['kwargs']['info']:
+                cause = info['kwargs']['info']['method_name']
+                root_cause_is_state = False
+            else:
+                cause = info['kwargs']['method_name']
+                root_cause_is_state = True
+
+            logger.debug("Change in SM, cause: " + cause + " (root cause was state: " + str(root_cause_is_state) + ")")
+
+            if root_cause_is_state and cause == "add_transition":
+                container_state_m = info['kwargs']['model']
+                transition_id = info['kwargs']['result']
+                transition_m = StateMachineHelper.get_transition_model(container_state_m, transition_id)
+                if transition_m is not None:
+                    transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
+
+            self._redraw()
 
     @ExtendedController.observe("root_state", after=True)
     def root_state_change(self, model, prop_name, info):
@@ -235,12 +250,16 @@ class GraphicalEditorController(ExtendedController):
                 # If there is already a selected outcome, then we create a transition between the previously selected
                 # and the new one. This is the end of a drag and drop operation to create a transition.
                 else:
+                    print "create transition to", outcome_state, outcome_key
                     self._create_new_transition(outcome_state, outcome_key)
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
             elif self.selected_outcome is not None and isinstance(self.selection, StateModel) and \
                     self.selection.parent is self.selected_outcome[0].parent:
                 self._create_new_transition(self.selection)
+            # Allow the user to create waypoint while creating a new transition
+            elif self.selected_outcome is not None:
+                self._handle_new_waypoint()
 
 
             # Check, whether a port (input, output, scope) was clicked on
@@ -568,6 +587,7 @@ class GraphicalEditorController(ExtendedController):
         if to_outcome_id is None:
             responsible_parent_state = to_state_m.parent.state
         else:
+            to_state_id = None
             responsible_parent_state = to_state_m.state
 
         try:
@@ -576,9 +596,8 @@ class GraphicalEditorController(ExtendedController):
             logger.debug("Transition couldn't be added: {0}".format(e))
         except Exception as e:
             logger.error("Unexpected exception while creating transition: {0}".format(e))
-        self.selected_outcome = None
-        self.mouse_move_redraw = False
-        self._redraw(True)
+
+        self._abort()
 
     def _create_new_data_flow(self, mouse_position):
         """Tries to create a new data flow
@@ -1229,8 +1248,21 @@ class GraphicalEditorController(ExtendedController):
                 line_width = min(parent_state_m.parent.meta['gui']['editor']['width'],
                                  parent_state_m.parent.meta['gui']['editor'][
                                      'height']) / 25.0
-                self.view.editor.draw_transition(outcome[0], outcome[1], target[0], target[1], line_width, [], True,
-                                                 parent_depth + 0.6)
+                self.view.editor.draw_transition(outcome[0], outcome[1], target[0], target[1], line_width,
+                                                 self.temporary_waypoints, True, parent_depth + 0.6)
+
+    def _handle_new_waypoint(self):
+        if self.selected_outcome is not None:
+            parent_state_m = self.selected_outcome[0].parent
+        # TODO: add data flow handling
+        else:
+            return
+        restricted_click = self._limit_position_to_state(parent_state_m,
+                                                         self.mouse_move_last_pos[0], self.mouse_move_last_pos[1])
+        # If the user clicked with the parent state of the selected outcome state
+        if restricted_click[0] == self.mouse_move_last_pos[0] and restricted_click[1] == self.mouse_move_last_pos[1]:
+            self.temporary_waypoints.append(restricted_click)
+
 
     def _handle_new_data_flow(self, parent_state_m, parent_depth):
         """Responsible for drawing new data flows the user creates
@@ -1391,4 +1423,5 @@ class GraphicalEditorController(ExtendedController):
             if self.selected_outcome is not None:
                 self.selected_outcome = None
                 self.mouse_move_redraw = False
+                self.temporary_waypoints = []
                 self._redraw(True)
