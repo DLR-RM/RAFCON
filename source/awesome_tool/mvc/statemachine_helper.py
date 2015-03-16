@@ -135,3 +135,16 @@ class StateMachineHelper():
             if port_m is not None:
                 return port_m
         return None
+
+    @staticmethod
+    def get_transition_model(state_m, transition_id):
+        """Searches and return the transition model with the given in the given container state model
+        :param state_m: The state model to search the transition in
+        :param transition_id: The transition id to be searched
+        :return: The model of the transition or None if it is not found
+        """
+        if isinstance(state_m, ContainerStateModel):
+            for transition_m in state_m.transitions:
+                if transition_m.transition.transition_id == transition_id:
+                    return transition_m
+        return None
