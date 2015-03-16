@@ -53,8 +53,11 @@ class StateMachineModel(ModelMT):
     @ModelMT.observe("input_data_ports", before=True)
     @ModelMT.observe("scoped_variables", before=True)
     def root_state_model_before_change(self, model, prop_name, info):
-        self.state_machine.root_state_before_change(info['model'], info['prop_name'], info['instance'],
-                                                    info['method_name'], info['args'], info['kwargs'])
+        if not self._list_modified(prop_name, info):
+            self.state_machine.root_state_before_change(model=info['model'], prop_name=info['prop_name'],
+                                                        instance=info['instance'],
+                                                        method_name=info['method_name'], args=info['args'],
+                                                        kwargs=info['kwargs'])
 
 
     @ModelMT.observe("state", after=True)
@@ -65,8 +68,20 @@ class StateMachineModel(ModelMT):
     @ModelMT.observe("output_data_ports", after=True)
     @ModelMT.observe("scoped_variables", after=True)
     def root_state_model_after_change(self, model, prop_name, info):
-        self.state_machine.root_state_after_change(info['model'], info['prop_name'], info['instance'],
-                                                   info['method_name'], info['result'], info['args'], info['kwargs'])
+        if not self._list_modified(prop_name, info):
+            self.state_machine.root_state_after_change(model=info['model'], prop_name=info['prop_name'],
+                                                       instance=info['instance'],
+                                                       method_name=info['method_name'], result=info['result'],
+                                                       args=info['args'], info=info['kwargs'])
+
+    def _list_modified(self,  prop_name, info):
+        if prop_name in ["states", "transitions", "data_flows", "input_data_ports", "output_data_ports",
+                         "scoped_variables"]:
+            if info['method_name'] in ["append", "extend", "insert", "pop", "remove", "reverse", "sort",
+                                       "__delitem__", "__setitem__"]:
+                return True
+        return False
+
 
 
 class Selection(Observable):
