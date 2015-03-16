@@ -259,6 +259,10 @@ class GraphicalEditorController(ExtendedController):
             click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
             clicked_model = self._find_selection(event.x, event.y)
 
+            # When a new transition is created, the creation can be aborted with a right click
+            if self.selected_outcome is not None:
+                self._abort()
+
             # If a connection (transition or data flow) was clicked
             if isinstance(clicked_model, TransitionModel) or isinstance(clicked_model, DataFlowModel):
 
@@ -555,6 +559,12 @@ class GraphicalEditorController(ExtendedController):
         from_state_id = self.selected_outcome[0].state.state_id
         from_outcome_id = self.selected_outcome[1]
         to_state_id = to_state_m.state.state_id
+
+        # Prevent accidental creation of transitions with double click on one outcome
+        if from_state_id == to_state_id and to_outcome_id is not None:
+            self._abort()
+            return
+
         if to_outcome_id is None:
             responsible_parent_state = to_state_m.parent.state
         else:
