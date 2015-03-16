@@ -148,11 +148,13 @@ def create_turtle_statemachine():
 
     move_turtle_hierarchy_state.add_transition(kill_turtle.state_id, 0, None, 0)
 
-
     return basic_turtle_demo_state
 
 
 def run_turtle_demo():
+    # setup logging view first
+    logging_view = LoggingView()
+    setup_logger(logging_view)
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
 
@@ -166,8 +168,6 @@ def run_turtle_demo():
         global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
-    logging_view = LoggingView()
-    setup_logger(logging_view)
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
