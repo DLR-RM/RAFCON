@@ -148,3 +148,16 @@ class StateMachineHelper():
                 if transition_m.transition.transition_id == transition_id:
                     return transition_m
         return None
+
+    @staticmethod
+    def get_data_flow_model(state_m, data_flow_id):
+        """Searches and return the data flow model with the given in the given container state model
+        :param state_m: The state model to search the transition in
+        :param data_flow_id: The data flow id to be searched
+        :return: The model of the data flow or None if it is not found
+        """
+        if isinstance(state_m, ContainerStateModel):
+            for data_flow_m in state_m.data_flows:
+                if data_flow_m.data_flow.data_flow_id == data_flow_id:
+                    return data_flow_m
+        return None
