@@ -1332,14 +1332,15 @@ class GraphicalEditorController(ExtendedController):
 
     def _copy_selection(self, *args):
         #print self.view["graphical_editor_frame"].get_focus_child()
-        if self.view.editor.has_focus() or args[2]["force"]:
+
+        if self.view.editor.has_focus() or args[2]:
             logger.debug("copy selection")
             self.clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
             self.clipboard.selection.set(self.model.selection.get_all())
             self.clipboard.clipboard_type = ClipboardType.COPY
 
     def _paste_clipboard(self, *args):
-        if self.view.editor.has_focus() or args[2]["force"]:
+        if self.view.editor.has_focus() or args[2]:
             logger.debug("paste selection")
             currently_selected_sm_id = self.model.state_machine.state_machine_id
             current_selection = self.model.selection
@@ -1393,7 +1394,7 @@ class GraphicalEditorController(ExtendedController):
                 parent_of_source_state.remove_state(source_state.state_id)
 
     def _cut_selection(self, *args):
-        if self.view.editor.has_focus() or args[2]["force"]:
+        if self.view.editor.has_focus() or args[2]:
             logger.debug("cut selection")
             self.clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
             self.clipboard.selection.set(self.model.selection.get_all())

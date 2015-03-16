@@ -105,7 +105,7 @@ class ShortcutManager():
             return self.__action_to_shortcuts[action]
         return None
 
-    def trigger_action(self, action, key_value, modifier_mask, user_data=None):
+    def trigger_action(self, action, key_value, modifier_mask, force=False):
         """Calls the appropriate callback function(s) for the given action
 
         :param action: The name of the action that was triggered
@@ -115,7 +115,7 @@ class ShortcutManager():
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    callback_function(key_value, modifier_mask, user_data)
+                    callback_function(key_value, modifier_mask, force)
                 except Exception as e:
                     logger.error('Exception while calling callback methods for action "{0}": {1} {2}'.format(
                         action, e.message, traceback.format_exc()))

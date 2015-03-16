@@ -29,6 +29,25 @@ class SourceEditorController(ExtendedController):
     def register_adapters(self):
         pass
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action("copy", self._copy)
+        shortcut_manager.add_callback_for_action("paste", self._paste)
+        shortcut_manager.add_callback_for_action("cut", self._cut)
+
+    def _copy(self, *args):
+        print "copy text"
+        pass
+
+    def _paste(self, *args):
+        pass
+
+    def _cut(self, *args):
+        pass
+
     #===============================================================
     def code_changed(self, source):
         #print "The text in the text_buffer changed"

@@ -118,13 +118,13 @@ class MenuBarController(ExtendedController):
 
     def on_copy_selection_activate(self, widget, data=None):
 
-        self.shortcut_manager.trigger_action("copy", None, None, {"force": True})
+        self.shortcut_manager.trigger_action("copy", None, None, force=True)
 
     def on_paste_clipboard_activate(self, widget, data=None):
-        self.shortcut_manager.trigger_action("paste", None, None, {"force": True})
+        self.shortcut_manager.trigger_action("paste", None, None, force=True)
 
     def on_cut_selection_activate(self, widget, data=None):
-        self.shortcut_manager.trigger_action("cut", None, None, {"force": True})
+        self.shortcut_manager.trigger_action("cut", None, None, force=True)
 
     def on_delete_state_activate(self, widget, data=None):
         logger.debug("Delete selected state now ...")
