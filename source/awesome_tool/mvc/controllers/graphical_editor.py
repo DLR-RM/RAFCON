@@ -229,8 +229,9 @@ class GraphicalEditorController(ExtendedController):
                 # Store the selected outcome is no outcome was selected before, this is the start of a drag and drop
                 # operation to create a new transition
                 if self.selected_outcome is None:
-                    self.selected_outcome = outcome_state, outcome_key
-                    self.mouse_move_redraw = True
+                    if outcome_state is not self.root_state_m:
+                        self.selected_outcome = outcome_state, outcome_key
+                        self.mouse_move_redraw = True
                 # If there is already a selected outcome, then we create a transition between the previously selected
                 # and the new one. This is the end of a drag and drop operation to create a transition.
                 else:
@@ -1214,10 +1215,11 @@ class GraphicalEditorController(ExtendedController):
                 # self.selected_outcome[1] stores the id of the outcome
                 outcome = parent_state_m.meta['gui']['editor']['outcome_pos'][self.selected_outcome[1]]
                 cur = self.mouse_move_last_pos
+                target = self._limit_position_to_state(parent_state_m.parent, cur[0], cur[1])
                 line_width = min(parent_state_m.parent.meta['gui']['editor']['width'],
                                  parent_state_m.parent.meta['gui']['editor'][
                                      'height']) / 25.0
-                self.view.editor.draw_transition(outcome[0], outcome[1], cur[0], cur[1], line_width, [], True,
+                self.view.editor.draw_transition(outcome[0], outcome[1], target[0], target[1], line_width, [], True,
                                                  parent_depth + 0.6)
 
     def _handle_new_data_flow(self, parent_state_m, parent_depth):
@@ -1379,3 +1381,4 @@ class GraphicalEditorController(ExtendedController):
             if self.selected_outcome is not None:
                 self.selected_outcome = None
                 self.mouse_move_redraw = False
+                self._redraw(True)
