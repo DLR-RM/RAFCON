@@ -379,7 +379,8 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
         # Move data port
-        if isinstance(self.selection, (DataPortModel, ScopedVariableModel)) and not self.selected_port_connector:
+        if isinstance(self.selection, (DataPortModel, ScopedVariableModel)) and not self.selected_port_connector and \
+                self.last_button_pressed == 1:
             self._move_data_port(self.selection, mouse_current_coord)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
