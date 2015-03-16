@@ -5,7 +5,8 @@ import gtk
 
 from awesome_tool.utils import log
 from awesome_tool.mvc.controllers import MainWindowController
-from awesome_tool.mvc.views import LoggingView, MainWindowView
+from awesome_tool.mvc.views.logging_view import LoggingView
+from awesome_tool.mvc.views.main_window import MainWindowView
 from awesome_tool.mvc.models import ContainerStateModel, GlobalVariableManagerModel
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState

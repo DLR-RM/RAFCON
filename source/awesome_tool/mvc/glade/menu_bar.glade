@@ -1,0 +1,323 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkMenuBar" id="menubar">
+    <property name="visible">True</property>
+    <child>
+      <object class="GtkMenuItem" id="menu_file">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">File</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu" id="menuitem_file">
+            <child>
+              <object class="GtkImageMenuItem" id="new">
+                <property name="label">gtk-new</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="open">
+                <property name="label">gtk-open</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="save">
+                <property name="label">gtk-save</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="save_as">
+                <property name="label">gtk-save-as</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="menu_properties">
+                <property name="label">gtk-properties</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem" id="menu_file_sep1">
+                <property name="visible">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="refresh_all">
+                <property name="label">Refresh All</property>
+                <property name="visible">True</property>
+                <property name="image">image2</property>
+                <property name="use_stock">False</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="refresh_libraries">
+                <property name="label">Refresh Libraries</property>
+                <property name="visible">True</property>
+                <property name="image">image1</property>
+                <property name="use_stock">False</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem" id="menu_file_sep2">
+                <property name="visible">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="quit">
+                <property name="label">gtk-quit</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menu_edit">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Edit</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu" id="menuitem_edit">
+            <child>
+              <object class="GtkImageMenuItem" id="cut_selection">
+                <property name="label">gtk-cut</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_cut_selection_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="copy_selection">
+                <property name="label">gtk-copy</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_copy_selection_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="paste_clipboard">
+                <property name="label">gtk-paste</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_paste_clipboard_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="delete">
+                <property name="label">gtk-delete</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem" id="menu_edit_sep1">
+                <property name="visible">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="add_state">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">add state</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="delete_state">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">delete state</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="group_states">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">group states</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="ungroup_states">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">ungroup states</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="undo">
+                <property name="label">gtk-undo</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="redo">
+                <property name="label">gtk-redo</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem" id="menuitem3">
+                <property name="visible">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckMenuItem" id="grid">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">grid</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menu_view">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">View</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu" id="menuitem_view">
+            <child>
+              <object class="GtkMenuItem" id="expert_view">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">expert view</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menu_execution">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Execution</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu" id="menuitem_execution">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkMenuItem" id="start">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">start</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="on_start_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="pause">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">pause</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="on_pause_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="stop">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">stop</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="on_stop_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem" id="menu_exec_sep1">
+                <property name="visible">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="step_mode">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">step mode</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="on_step_mode_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="step">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">step</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="on_step_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="backward_step_mode">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">backward step</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="on_backward_step_mode_activate"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menu_help">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Help</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu" id="menuitem_help">
+            <child>
+              <object class="GtkMenuItem" id="about">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">_About</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="stock">gtk-refresh</property>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-refresh</property>
+  </object>
+  <object class="GtkAccelGroup" id="accelgroup1"/>
+</interface>

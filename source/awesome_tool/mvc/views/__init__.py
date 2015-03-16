@@ -21,4 +21,5 @@ from state_machine_tree import StateMachineTreeView
 from library_tree import LibraryTreeView
 #from state_editors_notebook import StateEditorsNotebookView
 #from state_machines_notebook import StateMachinesNotebookView
-from main_window import MainWindowView
+#from main_window import MainWindowView
+from menu_bar_view import MenuBarView
