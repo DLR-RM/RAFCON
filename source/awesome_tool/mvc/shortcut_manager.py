@@ -26,7 +26,7 @@ class ShortcutManager():
 
     def __init_shortcuts(self):
         self.__action_to_shortcuts = {
-            'abort': '<Escape>',
+            'abort': 'Escape',
             'copy': '<Control>C',
             'paste': '<Control>V',
             'cut': '<Control>X',
