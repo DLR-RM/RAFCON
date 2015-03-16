@@ -74,6 +74,7 @@ class StateModel(ModelMT):
         self.outcomes = []
         self.reload_input_data_port_models()
         self.reload_output_data_port_models()
+        self.reload_outcome_models()
 
     def update_attributes(self):
         """Update table model with state model
