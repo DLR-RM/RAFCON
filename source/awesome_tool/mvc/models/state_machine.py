@@ -74,15 +74,22 @@ class StateMachineModel(ModelMT):
                                                        method_name=info['method_name'], result=info['result'],
                                                        args=info['args'], info=info['kwargs'])
 
-    def _list_modified(self,  prop_name, info):
+    @staticmethod
+    def _list_modified(prop_name, info):
+        """Check whether the given operation is a list operation
+
+        The function checks whether the property that has been changed is a list. If so, the operation is investigated
+        further. If the operation is a basic list operation, the function return True.
+        :param prop_name: The property that was changed
+        :param info: Dictionary with information about the operation
+        :return: True if the operation was a list operation, False else
+        """
         if prop_name in ["states", "transitions", "data_flows", "input_data_ports", "output_data_ports",
                          "scoped_variables"]:
             if info['method_name'] in ["append", "extend", "insert", "pop", "remove", "reverse", "sort",
                                        "__delitem__", "__setitem__"]:
                 return True
         return False
-
-
 
 class Selection(Observable):
     """
