@@ -14,23 +14,35 @@ vivid_dict_content:
                     input_pos: {}
                     outcome_pos:
                         -2: !!python/tuple
-                        - 244.19311526507244
                         - !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
                                 args: [f8, 0, 1]
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                iFq1WmuuLUA=
+                                KYt4g+xaa0A=
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                EOtMFfqLTEA=
                         -1: !!python/tuple
-                        - 244.19311526507244
                         - !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
                                 args: [f8, 0, 1]
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                2SD9dcr7QUA=
+                                Z4CI1sJ3bUA=
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                EOtMFfqLTEA=
                         0: !!python/tuple
                         - 244.19311526507244
                         - !!python/object/apply:numpy.core.multiarray.scalar
@@ -39,8 +51,8 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                qJwTRaYkGcA=
-                    outcome_radius: 5
+                                iFq1WmuuLUA=
+                    outcome_radius: 3
                     output_pos: {}
                     port_radius: !!python/object/apply:numpy.core.multiarray.scalar
                     - !!python/object/apply:numpy.dtype
@@ -76,8 +88,8 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                TtDF4noAGMA=
-                            id: 28
+                                ZGyod4NDFkA=
+                            id: 32
                             to_pos_x: 244.19311526507244
                             to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
@@ -85,6 +97,6 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                qJwTRaYkGcA=
+                                iFq1WmuuLUA=
                             waypoints: !Vividict
                                 vivid_dict_content: {}

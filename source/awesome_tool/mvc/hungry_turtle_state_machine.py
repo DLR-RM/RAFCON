@@ -5,7 +5,8 @@ import gtk
 
 from awesome_tool.utils import log
 from awesome_tool.mvc.controllers import MainWindowController
-from awesome_tool.mvc.views import LoggingView, MainWindowView
+from awesome_tool.mvc.views.main_window import MainWindowView
+from awesome_tool.mvc.views import LoggingView
 from awesome_tool.mvc.models import GlobalVariableManagerModel
 import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
@@ -37,8 +38,35 @@ def create_models():
     return logger, global_var_manager_model
 
 
-def run_turtle_demo():
+# def clean_transition_ids(container_state):
+#     import copy
+#     if hasattr(container_state, 'states'):
+#         transitions_copy = copy.copy(container_state.transitions)
+#         container_state.transitions.clear()
+#         for id, transition in transitions_copy.iteritems():
+#             container_state.transitions[transition.transition_id] = transition
+#         for state_id, state in container_state.states.iteritems():
+#
+#             if hasattr(state, 'states'):
+#                 clean_transition_ids(state)
+#
+#
+# def clean_data_flows_ids(container_state):
+#     import copy
+#     if hasattr(container_state, 'states'):
+#         data_flows_copy = copy.copy(container_state.data_flows)
+#         container_state.data_flows.clear()
+#         for id, data_flows in data_flows_copy.iteritems():
+#             container_state.data_flows[data_flows.data_flow_id] = data_flows
+#         for state_id, state in container_state.states.iteritems():
+#
+#             if hasattr(state, 'states'):
+#                 clean_data_flows_ids(state)
 
+
+def run_turtle_demo():
+    logging_view = LoggingView()
+    setup_logger(logging_view)
     awesome_tool.statemachine.singleton.library_manager.initialize()
     # set base path of global storage
     awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/hungry_turtle_demo"
@@ -47,9 +75,10 @@ def run_turtle_demo():
     [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/hungry_turtle_demo")
 
+    # clean_transition_ids(state_machine.root_state)
+    # clean_data_flows_ids(state_machine.root_state)
+
     awesome_tool.statemachine.singleton.library_manager.initialize()
-    logging_view = LoggingView()
-    setup_logger(logging_view)
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)

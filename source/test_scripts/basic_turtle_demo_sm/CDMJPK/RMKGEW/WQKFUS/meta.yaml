@@ -13,4 +13,5 @@ start_state: UVLRTI
 state_id: WQKFUS
 state_type: STATE_TYPE.HIERARCHY
 transitions:
-    3: !Transition {from_outcome: 0, from_state: UVLRTI, to_outcome: null, to_state: UVLRTI}
+    15: !Transition {from_outcome: 0, from_state: UVLRTI, to_outcome: null, to_state: UVLRTI,
+        transition_id: 15}

@@ -1,6 +1,6 @@
 !HierarchyState
 data_flows:
-    5: !DataFlow {from_key: 1, from_state: GXTDYN, to_key: 1, to_state: UQFDVJ}
+    1: !DataFlow {data_flow_id: 1, from_key: 1, from_state: GXTDYN, to_key: 1, to_state: UQFDVJ}
 filename: script.py
 input_data_ports: {}
 name: hungry_turtle_demo
@@ -17,5 +17,7 @@ start_state: UQFDVJ
 state_id: GXTDYN
 state_type: STATE_TYPE.HIERARCHY
 transitions:
-    2: !Transition {from_outcome: 0, from_state: UQFDVJ, to_outcome: null, to_state: LCMNPY}
-    3: !Transition {from_outcome: 0, from_state: LCMNPY, to_outcome: null, to_state: AAYCDL}
+    1: !Transition {from_outcome: 0, from_state: UQFDVJ, to_outcome: null, to_state: LCMNPY,
+        transition_id: 1}
+    2: !Transition {from_outcome: 0, from_state: LCMNPY, to_outcome: null, to_state: AAYCDL,
+        transition_id: 2}

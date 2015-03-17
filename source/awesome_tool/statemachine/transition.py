@@ -62,6 +62,7 @@ class Transition(Observable, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = {
+            'transition_id': data.transition_id,
             'from_state': data.from_state,
             'from_outcome': data.from_outcome,
             'to_state': data.to_state,
@@ -73,11 +74,12 @@ class Transition(Observable, yaml.YAMLObject):
     @classmethod
     def from_yaml(cls, loader, node):
         dict_representation = loader.construct_mapping(node)
+        transition_id = dict_representation['transition_id']
         from_state = dict_representation['from_state']
         from_outcome = dict_representation['from_outcome']
         to_state = dict_representation['to_state']
         to_outcome = dict_representation['to_outcome']
-        return Transition(from_state, from_outcome, to_state, to_outcome)
+        return Transition(from_state, from_outcome, to_state, to_outcome, transition_id)
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc

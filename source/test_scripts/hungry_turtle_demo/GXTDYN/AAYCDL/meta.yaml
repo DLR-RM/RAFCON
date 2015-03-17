@@ -1,9 +1,9 @@
 !HierarchyState
 data_flows:
-    6: !DataFlow {from_key: 2, from_state: MVMQMI, to_key: 2, to_state: KDRRRW}
-    7: !DataFlow {from_key: 3, from_state: MVMQMI, to_key: 3, to_state: KDRRRW}
-    8: !DataFlow {from_key: 4, from_state: MVMQMI, to_key: 4, to_state: KDRRRW}
-    9: !DataFlow {from_key: 5, from_state: MVMQMI, to_key: 5, to_state: KDRRRW}
+    6: !DataFlow {data_flow_id: 6, from_key: 2, from_state: MVMQMI, to_key: 2, to_state: KDRRRW}
+    7: !DataFlow {data_flow_id: 7, from_key: 3, from_state: MVMQMI, to_key: 3, to_state: KDRRRW}
+    8: !DataFlow {data_flow_id: 8, from_key: 4, from_state: MVMQMI, to_key: 4, to_state: KDRRRW}
+    9: !DataFlow {data_flow_id: 9, from_key: 5, from_state: MVMQMI, to_key: 5, to_state: KDRRRW}
 filename: script.py
 input_data_ports: {}
 name: create food 2
@@ -17,4 +17,5 @@ start_state: MVMQMI
 state_id: AAYCDL
 state_type: STATE_TYPE.HIERARCHY
 transitions:
-    4: !Transition {from_outcome: 0, from_state: MVMQMI, to_outcome: null, to_state: KDRRRW}
+    5: !Transition {from_outcome: 0, from_state: MVMQMI, to_outcome: null, to_state: KDRRRW,
+        transition_id: 5}

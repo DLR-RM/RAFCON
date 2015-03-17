@@ -183,10 +183,7 @@ class ContainerState(State):
 
         # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
         own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
-        if own_sm_id is None:
-            logger.warn("Something is going wrong during adding a state. State does not belong to "
-                               "a state machine!")
-        else:
+        if own_sm_id is not None:
             awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
                 own_sm_id, state.script.path)
 
@@ -369,9 +366,13 @@ class ContainerState(State):
         :param transition_id: the id of the transition to remove
 
         """
+
+        print self.transitions
+        print self._transitions
+        print transition_id
         if transition_id == -1 or transition_id == -2:
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
-        if transition_id not in self.transitions:
+        if transition_id not in self._transitions:
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
         self._transitions.pop(transition_id, None)
 
