@@ -14,4 +14,5 @@ start_state: null
 state_id: RMKGEW
 state_type: STATE_TYPE.PREEMPTION_CONCURRENCY
 transitions:
-    4: !Transition {from_outcome: 0, from_state: KYENSZ, to_outcome: 0, to_state: null}
+    3: !Transition {from_outcome: 0, from_state: KYENSZ, to_outcome: 0, to_state: null,
+        transition_id: 3}

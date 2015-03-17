@@ -61,6 +61,7 @@ class SourceEditorView(View):
 
         self.textview.get_buffer().create_tag("dead_color", foreground="gray")
         self.textview.get_buffer().create_tag("default", font="Monospace 10")
+        self.textview.get_buffer().connect('changed', self.code_changed)
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -75,21 +76,20 @@ class SourceEditorView(View):
         self['apply_button'] = apply_button
         self['cancel_button'] = cancel_button
 
-    #===============================================================
     def apply_tag(self, name):
         self.textview.get_buffer().apply_tag_by_name(name,
                                                      self.textview.get_buffer().get_start_iter(),
                                                      self.textview.get_buffer().get_end_iter())
 
-    #===============================================================
+    def code_changed(self, source):
+        self.apply_tag('default')
+
     def get_buffer(self):
         return self.textview.get_buffer()
 
-    #===============================================================
     def set_text(self, text):
         self.textview.get_buffer().set_text(text)
 
-    #===============================================================
     def set_enabled(self, on):
         if on:
             self.apply_tag('default')

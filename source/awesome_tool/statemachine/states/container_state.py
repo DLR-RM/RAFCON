@@ -183,10 +183,7 @@ class ContainerState(State):
 
         # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
         own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
-        if own_sm_id is None:
-            logger.warn("Something is going wrong during adding a state. State does not belong to "
-                               "a state machine!")
-        else:
+        if own_sm_id is not None:
             awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
                 own_sm_id, state.script.path)
 
@@ -369,9 +366,13 @@ class ContainerState(State):
         :param transition_id: the id of the transition to remove
 
         """
+
+        print self.transitions
+        print self._transitions
+        print transition_id
         if transition_id == -1 or transition_id == -2:
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
-        if transition_id not in self.transitions:
+        if transition_id not in self._transitions:
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
         self._transitions.pop(transition_id, None)
 
@@ -533,45 +534,58 @@ class ContainerState(State):
 
         from_state = None
         from_key_type = None
+        from_data_port = None
         if from_state_id == self.state_id:  # data_flow originates in container state
             from_state = self
             if from_data_port_id in from_state.scoped_variables:
                 from_key_type = DataPortType.SCOPED
+                from_data_port = from_state.scoped_variables[from_data_port_id]
             elif from_data_port_id in from_state.input_data_ports:
                 from_key_type = DataPortType.INPUT
+                from_data_port = from_state.input_data_ports[from_data_port_id]
             else:
                 raise AttributeError("from_data_port_id not in scoped_variables or input_data_ports")
         else:  # data flow originates in child state
             from_state = self.states[from_state_id]
             if from_data_port_id in from_state.output_data_ports:
                 from_key_type = DataPortType.OUTPUT
+                from_data_port = from_state.output_data_ports[from_data_port_id]
             else:
                 raise AttributeError("from_data_port_id not in output_data_ports")
 
         to_state = None
         to_key_type = None
+        to_data_port = None
         if to_state_id == self.state_id:  # data_flow ends in container state
             to_state = self
-            if to_data_port_id in self.scoped_variables:
+            if to_data_port_id in to_state.scoped_variables:
                 to_key_type = DataPortType.SCOPED
-            elif to_data_port_id in self.output_data_ports:
+                to_data_port = to_state.scoped_variables[to_data_port_id]
+            elif to_data_port_id in to_state.output_data_ports:
                 to_key_type = DataPortType.OUTPUT
+                to_data_port = to_state.output_data_ports[to_data_port_id]
             else:
                 raise AttributeError("to_data_port_id not in scoped_variables or output_data_ports")
         else:  # data_flow ends in child state
             to_state = self.states[to_state_id]
             if to_data_port_id in to_state.input_data_ports:
                 to_key_type = DataPortType.INPUT
+                to_data_port = to_state.input_data_ports[to_data_port_id]
             else:
                 raise AttributeError("to_data_port_id not in input_data_ports")
 
-        #check if to_dataport_id of to_state has already a data_flow
+        # check if to_dataport_id of to_state has already a data_flow
         for flow_id, data_flow in self.data_flows.iteritems():
             # scoped variables are allowed to have several data_flows connecte to them
             if data_flow.to_state == to_state_id and not data_flow.to_state == self.state_id:
                 if data_flow.to_key == to_data_port_id:
                     raise AttributeError("port %s of state %s already has a connection" %
                                          (str(to_data_port_id), str(to_state_id)))
+
+        # check if the data types of the tow ports are the same
+        if not from_data_port.data_type == to_data_port.data_type:
+            raise AttributeError("The from data port and the to data port do not have the same data type (%s and %s)" %
+                                 (str(from_data_port.data_type), str(to_data_port.data_type)))
 
         self.data_flows[data_flow_id] = DataFlow(from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id)
         return data_flow_id

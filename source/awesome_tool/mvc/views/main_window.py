@@ -1,8 +1,8 @@
 
 from gtkmvc import View
 from awesome_tool.mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-     GlobalVariableEditorView,  SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-     LoggingView, StateMachineTreeView, LibraryTreeView
+     GlobalVariableEditorView, SourceEditorView, SingleWidgetWindowView, StateEditorView, \
+     LoggingView, StateMachineTreeView, LibraryTreeView, MenuBarView
 from awesome_tool.mvc.views.states_editor import StatesEditorView
 from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
 
@@ -56,6 +56,15 @@ class MainWindowView(View):
         self.states_editor = StatesEditorView()
         self["state_editor"].add(self.states_editor.get_top_widget())
         self.states_editor.show()
+
+        ##################################################
+        # menu bar view
+        ##################################################
+        self.menu_bar = MenuBarView()
+        self.menu_bar.show()
+        self["top_level_vbox"].remove(self["menu_bar_placeholder"])
+        self["top_level_vbox"].pack_start(self.menu_bar.get_top_widget(), expand=False, fill=True, padding=0)
+        self["top_level_vbox"].reorder_child(self.menu_bar.get_top_widget(), 0)
 
         # insert global-variable-manager
         #self['global_variable_manager_vbox'].add(self.global_variable_manager.get_top_widget())

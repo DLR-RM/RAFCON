@@ -58,6 +58,7 @@ class DataFlow(Observable, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = {
+            'data_flow_id': data.data_flow_id,
             'from_state': data.from_state,
             'from_key': data.from_key,
             'to_state': data.to_state,
@@ -73,7 +74,8 @@ class DataFlow(Observable, yaml.YAMLObject):
         from_key = dict_representation['from_key']
         to_state = dict_representation['to_state']
         to_key = dict_representation['to_key']
-        return DataFlow(from_state, from_key, to_state, to_key)
+        data_flow_id = dict_representation['data_flow_id']
+        return DataFlow(from_state, from_key, to_state, to_key, data_flow_id)
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc

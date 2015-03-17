@@ -36,11 +36,11 @@ class LoggingView(View):
     # LOOK OUT: This will be called from several threads => make it thread safe
     def print_debug(self, text):
         pass
-        glib.idle_add(self.print_add, text,  "set_warning_color")
+        glib.idle_add(self.print_add, text, "set_warning_color")
         #self.print_add(text, "set_warning_color")
 
     def print_error(self, text):
-        glib.idle_add(self.print_add, text,  "set_error_color")
+        glib.idle_add(self.print_add, text, "set_error_color")
         #self.print_add(text, "set_error_color")
 
     # def get_buffer(self):
@@ -56,7 +56,11 @@ class LoggingView(View):
     def print_push(self, text_to_push, use_tag=None):
         text_buf = self.textview.get_buffer()
         if use_tag:
-            text = text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push, use_tag)
+            if self.textview.get_buffer().get_tag_table().lookup(use_tag) is not None:
+                text = text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push, use_tag)
+            else:
+                print "asdlhfjashfjasdfj"
+                text = text_buf.insert(text_buf.get_end_iter(), text_to_push)
         else:
             text = text_buf.insert(text_buf.get_end_iter(), text_to_push)
 

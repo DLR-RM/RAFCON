@@ -14,14 +14,25 @@ start_state: PAYECU
 state_id: KYENSZ
 state_type: STATE_TYPE.HIERARCHY
 transitions:
-    5: !Transition {from_outcome: 0, from_state: PAYECU, to_outcome: null, to_state: UEPNNW}
-    6: !Transition {from_outcome: 0, from_state: UEPNNW, to_outcome: null, to_state: KQDJYS}
-    7: !Transition {from_outcome: 0, from_state: KQDJYS, to_outcome: null, to_state: FGIXTU}
-    8: !Transition {from_outcome: 0, from_state: FGIXTU, to_outcome: null, to_state: VCWTIY}
-    9: !Transition {from_outcome: 0, from_state: VCWTIY, to_outcome: null, to_state: WYYCKU}
-    10: !Transition {from_outcome: 0, from_state: WYYCKU, to_outcome: null, to_state: XBYUWY}
-    11: !Transition {from_outcome: 0, from_state: XBYUWY, to_outcome: null, to_state: RQXPAI}
-    12: !Transition {from_outcome: 0, from_state: RQXPAI, to_outcome: null, to_state: MCOLIQ}
-    13: !Transition {from_outcome: 1, from_state: MCOLIQ, to_outcome: null, to_state: MCOLIQ}
-    14: !Transition {from_outcome: 0, from_state: MCOLIQ, to_outcome: null, to_state: HRARIS}
-    15: !Transition {from_outcome: 0, from_state: HRARIS, to_outcome: 0, to_state: null}
+    4: !Transition {from_outcome: 0, from_state: PAYECU, to_outcome: null, to_state: UEPNNW,
+        transition_id: 4}
+    5: !Transition {from_outcome: 0, from_state: UEPNNW, to_outcome: null, to_state: KQDJYS,
+        transition_id: 5}
+    6: !Transition {from_outcome: 0, from_state: KQDJYS, to_outcome: null, to_state: FGIXTU,
+        transition_id: 6}
+    7: !Transition {from_outcome: 0, from_state: FGIXTU, to_outcome: null, to_state: VCWTIY,
+        transition_id: 7}
+    8: !Transition {from_outcome: 0, from_state: VCWTIY, to_outcome: null, to_state: WYYCKU,
+        transition_id: 8}
+    9: !Transition {from_outcome: 0, from_state: WYYCKU, to_outcome: null, to_state: XBYUWY,
+        transition_id: 9}
+    10: !Transition {from_outcome: 0, from_state: XBYUWY, to_outcome: null, to_state: RQXPAI,
+        transition_id: 10}
+    11: !Transition {from_outcome: 0, from_state: RQXPAI, to_outcome: null, to_state: MCOLIQ,
+        transition_id: 11}
+    12: !Transition {from_outcome: 1, from_state: MCOLIQ, to_outcome: null, to_state: MCOLIQ,
+        transition_id: 12}
+    13: !Transition {from_outcome: 0, from_state: MCOLIQ, to_outcome: null, to_state: HRARIS,
+        transition_id: 13}
+    14: !Transition {from_outcome: 0, from_state: HRARIS, to_outcome: 0, to_state: null,
+        transition_id: 14}

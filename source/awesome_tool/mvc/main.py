@@ -5,8 +5,10 @@ import gtk
 
 from awesome_tool.utils import log
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
-from awesome_tool.mvc.controllers import MainWindowController, StateDataPortEditorController
-from awesome_tool.mvc.views import LoggingView, MainWindowView, StateDataportEditorView
+from awesome_tool.mvc.controllers import MainWindowController, StateDataPortEditorController,\
+    SingleWidgetWindowController, SourceEditorController
+from awesome_tool.mvc.views.main_window import MainWindowView
+from awesome_tool.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
@@ -50,7 +52,7 @@ def create_models(*args, **kargs):
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
-    input_state1 = state1.add_input_data_port("input", "int", 0)
+    input_state1 = state1.add_input_data_port("input", "str", "zero")
     state1.add_outcome('success', 0)
     state2 = ExecutionState('State2')
     state2.add_outcome('success', 0)
@@ -81,7 +83,7 @@ def create_models(*args, **kargs):
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
-    input_ctr_state = ctr_state.add_input_data_port("ctr_in", "int", 0)
+    input_ctr_state = ctr_state.add_input_data_port("ctr_in", "str", "zero")
     output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
     ctr_state.set_start_state(state1)
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
@@ -102,7 +104,7 @@ def create_models(*args, **kargs):
 
     scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
     scoped_variable2_ctr_state = ctr_state.add_scoped_variable("my_var", "str", "default_value1")
-    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "str", "default_value1")
+    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "int", 42)
 
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     # this is not allowed as the output port is already connected
@@ -146,8 +148,8 @@ if __name__ == '__main__':
     #library_tree = SingleWidgetWindowView(LibraryTreeView, width=300, height=200, title='Library Tree')
     #library_controller = SingleWidgetWindowController(None, library_tree, LibraryTreeController)
 
-    #src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
-    #src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
+    # src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
+    # src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
 
     # prop_view = SingleWidgetWindowView(StateOverviewView, width=400, height=100, title='Properties Editor')
     # prop_ctrl = SingleWidgetWindowController(this_model, prop_view, StateOverviewController)
@@ -159,14 +161,14 @@ if __name__ == '__main__':
     # oc_editor_ctrl = SingleWidgetWindowController(ctr_model, oc_editor_view, StateOutcomesEditorController)
     # #oc_editor_ctrl = SingleWidgetWindowController(this_model, oc_editor_view, StateOutcomesEditorController)
 
-    #state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='Source Editor')
+    #state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='State Editor View')
     #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
     # #state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
 
-    # state_editor_view = SingleWidgetWindowView(StateEditorEggView, width=550, height=500, title='Source Editor')
+    # state_editor_view = SingleWidgetWindowView(StateEditorEggView, width=550, height=500, title='State Editor Egg View')
     # state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorEggController)
 
-    # state_editor_view = SingleWidgetWindowView(StateEditorLDView, width=550, height=500, title='Source Editor')
+    # state_editor_view = SingleWidgetWindowView(StateEditorLDView, width=550, height=500, title='State Editor LD View')
     # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorLDController)
 
     # trans_editor_view = SingleWidgetWindowView(StateTransitionsEditorView, width=550, height=400, title='Transitions Editor')

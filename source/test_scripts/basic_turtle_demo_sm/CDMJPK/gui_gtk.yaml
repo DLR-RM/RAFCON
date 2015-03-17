@@ -14,22 +14,35 @@ vivid_dict_content:
                     input_pos: {}
                     outcome_pos:
                         -2: !!python/tuple
-                        - 267.2177178642908
                         - !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
                                 args: [f8, 0, 1]
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                fgGYHo1AP0A=
-                        -1: !!python/tuple
-                        - 267.2177178642908
+                                BvbyIAI/bEA=
                         - !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
                                 args: [f8, 0, 1]
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
-                            - !!python/str "&\0\u04E3\x11hP@"
+                            - !!binary |
+                                7P//////WEA=
+                        -1: !!python/tuple
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                iY+eEvuub0A=
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                7P//////WEA=
                         0: !!python/tuple
                         - 267.2177178642908
                         - !!python/object/apply:numpy.core.multiarray.scalar
@@ -38,8 +51,8 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                4OzfkGL5CMA=
-                    outcome_radius: 5
+                                fgGYHo1AP0A=
+                    outcome_radius: 3
                     output_pos: {}
                     port_radius: !!python/object/apply:numpy.core.multiarray.scalar
                     - !!python/object/apply:numpy.dtype
@@ -75,8 +88,8 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                4E0XGyvcL0A=
-                            id: 30
+                                8KaLjRXuNEA=
+                            id: 35
                             to_pos_x: 50.276483050847474
                             to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
@@ -100,8 +113,8 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                qJwTRaYkGcA=
-                            id: 31
+                                iFq1WmuuLUA=
+                            id: 36
                             to_pos_x: 267.2177178642908
                             to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
@@ -109,6 +122,6 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                4OzfkGL5CMA=
+                                fgGYHo1AP0A=
                             waypoints: !Vividict
                                 vivid_dict_content: {}

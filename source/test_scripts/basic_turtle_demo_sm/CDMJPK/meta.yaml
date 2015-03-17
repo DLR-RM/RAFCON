@@ -14,5 +14,7 @@ start_state: CKIWDE
 state_id: CDMJPK
 state_type: STATE_TYPE.HIERARCHY
 transitions:
-    1: !Transition {from_outcome: 0, from_state: CKIWDE, to_outcome: null, to_state: RMKGEW}
-    2: !Transition {from_outcome: 0, from_state: RMKGEW, to_outcome: 0, to_state: null}
+    1: !Transition {from_outcome: 0, from_state: CKIWDE, to_outcome: null, to_state: RMKGEW,
+        transition_id: 1}
+    2: !Transition {from_outcome: 0, from_state: RMKGEW, to_outcome: 0, to_state: null,
+        transition_id: 2}
