@@ -168,7 +168,7 @@ def test_port_and_outcome_removal():
     container = ContainerState("Container")
     input_container_state = container.add_input_data_port("input", "float")
     output_container_state = container.add_output_data_port("output", "float")
-    scoped_variable_container_state = container.add_scoped_variable("scope")
+    scoped_variable_container_state = container.add_scoped_variable("scope", "float")
 
     assert len(container.transitions) == 0
     assert len(container.data_flows) == 0

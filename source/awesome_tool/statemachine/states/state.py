@@ -431,6 +431,7 @@ class State(Observable, yaml.YAMLObject, object):
         :param data_type: the target data type
         :return: the converted value
         """
+        import ast
         converted_value = None
         if data_type == "str":
             converted_value = str(string_value)
@@ -438,6 +439,14 @@ class State(Observable, yaml.YAMLObject, object):
             converted_value = int(string_value)
         elif data_type == "float":
             converted_value = float(string_value)
+        elif data_type == "bool":
+            converted_value = bool(string_value)
+        elif data_type == "list":
+            converted_value = ast.literal_eval(string_value)
+        elif data_type == "dict":
+            converted_value = ast.literal_eval(string_value)
+        elif data_type == "tuple":
+            converted_value = ast.literal_eval(string_value)
         else:
             logger.debug("Wrong default value specified!")
         return converted_value
@@ -463,7 +472,7 @@ class State(Observable, yaml.YAMLObject, object):
         :return:
         """
         val = self.convert_string_to_type(default_value, self.output_data_ports[data_port_id].data_type)
-        if not val is None:
+        if val is not None:
             self.output_data_ports[data_port_id].default_value = val
 
     # ---------------------------------------------------------------------------------------------
