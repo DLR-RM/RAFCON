@@ -76,7 +76,7 @@ class MainWindowController(ExtendedController):
         #TODO: this is not always the active state machine
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
-        state_machine_label = gtk.Label('Statemachine')
+        state_machine_label = gtk.Label('State Tree')
         view["tree_notebook"].insert_page(view.state_machine_tree, state_machine_label, page_num)
 
         ######################################################
