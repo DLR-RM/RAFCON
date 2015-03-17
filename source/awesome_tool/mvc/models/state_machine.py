@@ -47,6 +47,8 @@ class StateMachineModel(ModelMT):
             self.meta = Vividict()
 
     @ModelMT.observe("state", before=True)
+    @ModelMT.observe("outcomes", before=True)
+    @ModelMT.observe("is_start", before=True)
     @ModelMT.observe("states", before=True)
     @ModelMT.observe("transitions", before=True)
     @ModelMT.observe("data_flows", before=True)
@@ -61,6 +63,8 @@ class StateMachineModel(ModelMT):
 
 
     @ModelMT.observe("state", after=True)
+    @ModelMT.observe("outcomes", after=True)
+    @ModelMT.observe("is_start", after=True)
     @ModelMT.observe("states", after=True)
     @ModelMT.observe("transitions", after=True)
     @ModelMT.observe("data_flows", after=True)
