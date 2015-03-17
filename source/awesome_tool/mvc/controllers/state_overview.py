@@ -37,17 +37,18 @@ class StateOverviewController(ExtendedController, Model):
         """
         ExtendedController.__init__(self, model, view)
 
+        self.state_types_dict = {}
+
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         # StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY')
-        self.state_types_dict = {}
-        self.state_types_dict[str(StateType.EXECUTION)] = {'Enum': StateType.EXECUTION, 'class': ExecutionState}
-        self.state_types_dict[str(StateType.HIERARCHY)] = {'Enum': StateType.HIERARCHY, 'class': HierarchyState}
-        self.state_types_dict[str(StateType.BARRIER_CONCURRENCY)] = {'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
-        self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY)] = {'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
+        self.state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {'Enum': StateType.EXECUTION, 'class': ExecutionState}
+        self.state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {'Enum': StateType.HIERARCHY, 'class': HierarchyState}
+        self.state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
+        self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
         # self.state_types_dict[LibraryState] = {'Enum': StateType.LIBRARY}
 
         view['entry_name'].connect('focus-out-event', self.change_name)
@@ -68,9 +69,9 @@ class StateOverviewController(ExtendedController, Model):
         combo.show_all()
         view['type_viewport'].add(combo)
         view['type_viewport'].show()
-        l_store.append([str(self.model.state.state_type)])
+        l_store.append([str(self.model.state.state_type).split('.')[1]])
         for key in self.state_types_dict.keys():
-            if not key == str(self.model.state.state_type):
+            if not key == str(self.model.state.state_type).split('.')[1]:
                 l_store.append([key])
         combo.set_active(0)
         view['type_combobox'] = combo
@@ -124,7 +125,7 @@ class StateOverviewController(ExtendedController, Model):
         # TODO this function should be realized by a call of the ContainerState (change_type)
         # for clean use it is a remove and add approach at the moment
         type_text = widget.get_active_text()
-        if not type_text == str(self.model.state.state_type) and type_text in self.state_types_dict:
+        if not type_text == str(self.model.state.state_type).split('.')[1] and type_text in self.state_types_dict:
             state_name = self.model.state.name
             state_id = self.model.state.state_id
             logger.debug("change type of State %s from %s to %s" % (state_name, self.model.state.state_type, type_text))
