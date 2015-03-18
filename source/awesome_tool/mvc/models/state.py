@@ -135,7 +135,11 @@ class StateModel(ModelMT):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
-        # logger.debug("StateModel.model_changed called of state %s with prop %s" % (self.state.state_id, prop_name))
+
+        # If this model has been changed (and not one of its child states), then we have to update all child models
+        # This must be done before notifying anybody else, because other may relay on the updated models
+        if hasattr(info, 'after') and info['after'] and self.state == info['instance']:
+            self.update_models(model, prop_name, info)
 
         # mark the state machine this state belongs to as dirty
         own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
@@ -194,7 +198,6 @@ class StateModel(ModelMT):
             raise AttributeError("Wrong model specified!")
         return model_list, data_list, model_name, model_class, model_key
 
-    @ModelMT.observe("state", after=True)
     def update_models(self, model, name, info):
         """ This method is always triggered when the core state changes
 
@@ -203,9 +206,6 @@ class StateModel(ModelMT):
             output-data-port models
             outcome models
         """
-        # logger.debug("StateModel.update_models called of state %s with prop %s %s" % (self.state.state_id, name,
-        #                                                                               info.method_name))
-
         model_list = None
         if "input_data_port" in info.method_name:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")
