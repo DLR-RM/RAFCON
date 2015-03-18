@@ -643,7 +643,7 @@ class GraphicalEditorController(ExtendedController):
 
         def move_child_states(state_m, move_x, move_y):
             # Move waypoints
-            if isinstance(state_m, ContainerStateModel) and state_m.state.state_type != StateType.LIBRARY:
+            if self.has_content(state_m):
                 for transition in state_m.transitions:
                     for i, waypoint in enumerate(transition.meta['gui']['editor']['waypoints']):
                         new_pos = (waypoint[0] + move_x, waypoint[1] + move_y)
@@ -661,11 +661,11 @@ class GraphicalEditorController(ExtendedController):
                 child_state.meta['gui']['editor']['pos_x'] += move_x
                 child_state.meta['gui']['editor']['pos_y'] += move_y
 
-                if isinstance(child_state, ContainerStateModel):
+                if self.has_content(child_state):
                     move_child_states(child_state, move_x, move_y)
 
         # Move all child states in accordance with the state, to keep their relative position
-        if isinstance(state_m, ContainerStateModel):
+        if self.has_content(state_m):
             diff_x = new_pos_x - old_pos_x
             diff_y = new_pos_y - old_pos_y
             move_child_states(state_m, diff_x, diff_y)
@@ -730,7 +730,7 @@ class GraphicalEditorController(ExtendedController):
         max_bottom_edge = state_editor_data['pos_y'] + state_editor_data['height']
 
         # Resize content?
-        if int(modifier_keys & CONTROL_MASK) == 0 and isinstance(self.selection, ContainerStateModel):
+        if int(modifier_keys & CONTROL_MASK) == 0 and self.has_content(self.selection):
             # Check lower right corner of all child states
             for child_state_m in state_m.states.itervalues():
                 child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
@@ -824,7 +824,7 @@ class GraphicalEditorController(ExtendedController):
                     return new_parent_pos + diff_pos
 
                 # Only container states have content
-                if isinstance(state_m, ContainerStateModel):
+                if self.has_content(state_m):
                     # Resize all transitions
                     for transition_m in state_m.transitions:
                         # By repositioning all waypoints
@@ -867,7 +867,7 @@ class GraphicalEditorController(ExtendedController):
                                                  child_state_m.meta['gui']['editor']['pos_y'], height_factor)
                         child_state_m.meta['gui']['editor']['pos_y'] = new_pos_y
 
-                        if isinstance(child_state_m, ContainerStateModel):
+                        if self.has_content(child_state_m):
                             resize_children(child_state_m, width_factor, height_factor,
                                             child_old_pos_x, child_old_pos_y)
 
@@ -984,8 +984,7 @@ class GraphicalEditorController(ExtendedController):
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
-        if isinstance(state_m, ContainerStateModel) and state_m.state.state_type != StateType.LIBRARY:
-
+        if self.has_content(state_m):
             state_ctr = 0
             margin = width / float(25)
 
@@ -1062,7 +1061,7 @@ class GraphicalEditorController(ExtendedController):
             num_output_ports += 1
 
         # Scoped variables
-        if isinstance(parent_state_m, ContainerStateModel):
+        if self.has_content(parent_state_m):
             num_scoped_variables = 0
             for port_m in parent_state_m.scoped_variables:
                 port = port_m.scoped_variable
@@ -1346,7 +1345,7 @@ class GraphicalEditorController(ExtendedController):
             return selection, selection_depth
 
         # If it is a container state, check its transitions, data flows and child states
-        if isinstance(search_state, ContainerStateModel):
+        if self.has_content(search_state):
 
             for state in search_state.states.itervalues():
                 if len(ids) > 0:
@@ -1381,6 +1380,12 @@ class GraphicalEditorController(ExtendedController):
                 selection = search_selection_in_model_list(search_state.scoped_variables, selection)
 
         return selection, selection_depth
+
+    @staticmethod
+    def has_content(state_m):
+        if isinstance(state_m, ContainerStateModel) and state_m.state.state_type != StateType.LIBRARY:
+            return True
+        return False
 
     def _delete_selection(self, *args):
         if self.view.editor.has_focus():
