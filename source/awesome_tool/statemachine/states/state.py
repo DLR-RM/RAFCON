@@ -392,7 +392,7 @@ class State(Observable, yaml.YAMLObject, object):
         """
         self.input_data_ports[data_port_id].name = name
 
-    @Observable.observed
+    #@Observable.observed
     def modify_output_data_port_name(self, name, data_port_id):
         """ Changes the name of the output data port specified by data_port_id
 
@@ -402,7 +402,7 @@ class State(Observable, yaml.YAMLObject, object):
         """
         self.output_data_ports[data_port_id].name = name
 
-    @Observable.observed
+    #@Observable.observed
     def modify_input_data_port_data_type(self, data_type, data_port_id):
         """ Changes the data type of the input data port specified by data_port_id
 
@@ -413,7 +413,7 @@ class State(Observable, yaml.YAMLObject, object):
         self.input_data_ports[data_port_id].default_value = None
         self.input_data_ports[data_port_id].data_type = data_type
 
-    @Observable.observed
+    #@Observable.observed
     def modify_output_data_port_data_type(self, data_type, data_port_id):
         """ Changes the data type of the output data port specified by data_port_id
 
@@ -451,7 +451,7 @@ class State(Observable, yaml.YAMLObject, object):
             logger.debug("Wrong default value specified!")
         return converted_value
 
-    @Observable.observed
+    #@Observable.observed
     def modify_input_data_port_default_value(self, default_value, data_port_id):
         """ Changes the default value of the input data port specified by data_port_id
 
@@ -463,7 +463,7 @@ class State(Observable, yaml.YAMLObject, object):
         if not val is None:
             self.input_data_ports[data_port_id].default_value = val
 
-    @Observable.observed
+    #@Observable.observed
     def modify_output_data_port_default_value(self, default_value, data_port_id):
         """ Changes the default value of the output data port specified by data_port_id
 

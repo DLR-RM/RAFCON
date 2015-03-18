@@ -151,15 +151,13 @@ class StateModel(ModelMT):
         changed_list = None
         cause = None
 
-        if "modify_input_data_port" in info.method_name or \
-                (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
-            changed_list = self.input_data_ports
-            cause = "input_data_port_change"
-
-        elif "modify_output_data_port" in info.method_name or \
-                (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
-            changed_list = self.output_data_ports
-            cause = "output_data_port_change"
+        if isinstance(model, DataPortModel) and model.parent is self:
+            if model in self.input_data_ports:
+                changed_list = self.input_data_ports
+                cause = "input_data_port_change"
+            elif model in self.output_data_ports:
+                changed_list = self.output_data_ports
+                cause = "output_data_port_change"
 
         elif "modify_outcome" in info.method_name and self is model or \
                 isinstance(info.instance, Outcome) and self is model.parent:
