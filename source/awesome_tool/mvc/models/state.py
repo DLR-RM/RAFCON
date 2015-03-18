@@ -135,7 +135,11 @@ class StateModel(ModelMT):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
-        # logger.debug("StateModel.model_changed called of state %s with prop %s" % (self.state.state_id, prop_name))
+
+        # If this model has been changed (and not one of its child states), then we have to update all child models
+        # This must be done before notifying anybody else, because other may relay on the updated models
+        if hasattr(info, 'after') and info['after'] and self.state == info['instance']:
+            self.update_models(model, prop_name, info)
 
         # mark the state machine this state belongs to as dirty
         own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
@@ -143,31 +147,30 @@ class StateModel(ModelMT):
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument
-        if hasattr(info, 'before') and info['before'] and (self is model.parent or isinstance(info.instance, DataPort)):
-            if "modify_input_data_port" in info.method_name or \
-                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
-                self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
-            if "modify_output_data_port" in info.method_name or \
-                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
-                self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
 
-        elif hasattr(info, 'after') and info['after'] and (self is model.parent or isinstance(info.instance, DataPort)):
-            if "modify_input_data_port" in info.method_name or \
-                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
-                self.input_data_ports._notify_method_after(info.instance, "input_data_port_change", None, (model,), info)
-            if "modify_output_data_port" in info.method_name or \
-                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
-                self.output_data_ports._notify_method_after(info.instance, "output_data_port_change", None, (model,), info)
+        changed_list = None
+        cause = None
 
-        if hasattr(info, 'before') and info['before'] and self is model.parent:
-            if "modify_outcome" in info.method_name and self is model or \
-                    isinstance(info.instance, Outcome) and self is model.parent:
-                self.outcomes._notify_method_before(info.instance, "outcome_change", (model,), info)
+        if isinstance(model, DataPortModel) and model.parent is self:
+            if model in self.input_data_ports:
+                changed_list = self.input_data_ports
+                cause = "input_data_port_change"
+            elif model in self.output_data_ports:
+                changed_list = self.output_data_ports
+                cause = "output_data_port_change"
 
-        elif hasattr(info, 'after') and info['after'] and self is model.parent:
-            if "modify_outcome" in info.method_name and self is model or \
-                    isinstance(info.instance, Outcome) and self is model.parent:
-                self.outcomes._notify_method_after(info.instance, "outcome_change", None, (model,), info)
+        # Outcomes are not modelled as class, therefore the model passed when adding/removing an outcome is the
+        # parent StateModel. Thus we have to look at the method that caused a property change.
+        elif "modify_outcome" in info.method_name and self is model or \
+                isinstance(info.instance, Outcome) and self is model.parent:
+            changed_list = self.outcomes
+            cause = "outcome_change"
+
+        if not (cause is None or changed_list is None):
+            if hasattr(info, 'before') and info['before']:
+                changed_list._notify_method_before(info.instance, cause, (model,), info)
+            elif hasattr(info, 'after') and info['after']:
+                changed_list._notify_method_after(info.instance, cause, None, (model,), info)
 
         # Notify the parent state about the change (this causes a recursive call up to the root state)
         if self.parent is not None:
@@ -194,7 +197,6 @@ class StateModel(ModelMT):
             raise AttributeError("Wrong model specified!")
         return model_list, data_list, model_name, model_class, model_key
 
-    @ModelMT.observe("state", after=True)
     def update_models(self, model, name, info):
         """ This method is always triggered when the core state changes
 
@@ -203,9 +205,6 @@ class StateModel(ModelMT):
             output-data-port models
             outcome models
         """
-        # logger.debug("StateModel.update_models called of state %s with prop %s %s" % (self.state.state_id, name,
-        #                                                                               info.method_name))
-
         model_list = None
         if "input_data_port" in info.method_name:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")

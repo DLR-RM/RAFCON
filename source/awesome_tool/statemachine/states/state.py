@@ -76,9 +76,9 @@ class DataPort(Observable, yaml.YAMLObject):
         default_value = dict_representation['default_value']
         return DataPort(name, data_type, default_value, data_port_id)
 
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    #########################################################################
+    # Properties for all class fields that must be observed by gtkmvc
+    #########################################################################
 
     @property
     def data_port_id(self):
@@ -111,13 +111,11 @@ class DataPort(Observable, yaml.YAMLObject):
     @data_type.setter
     @Observable.observed
     def data_type(self, data_type):
-        if not data_type is None:
-            if not isinstance(data_type, str):
-                raise TypeError("data_type must be of type str")
-            if not data_type in ("int", "float", "bool", "str", "dict", "tuple", "list"):
-                if not getattr(sys.modules[__name__], data_type):
-                    raise TypeError("" + data_type + " is not a valid python data type")
-        self._data_type = data_type
+        try:
+            self.check_data_type(data_type)
+            self._data_type = data_type
+        except (TypeError, AttributeError) as e:
+            logger.error("Could not change data type: {0}".format(e))
 
     @property
     def default_value(self):
@@ -129,13 +127,107 @@ class DataPort(Observable, yaml.YAMLObject):
     @default_value.setter
     @Observable.observed
     def default_value(self, default_value):
-        if not default_value is None:
-            #check for primitive data types
-            if not str(type(default_value).__name__) == self.data_type:
-                #check for classes
-                if not isinstance(default_value, getattr(sys.modules[__name__], self.data_type)):
-                    raise TypeError("Input of execute function must be of type %s" % str(self.data_type))
-        self._default_value = default_value
+        try:
+            default_value = self.check_default_value(default_value)
+            self._default_value = default_value
+        except (TypeError, AttributeError) as e:
+            logger.error("Could not change default value: {0}".format(e))
+
+    @Observable.observed
+    def change_data_type(self, data_type, default_value=None):
+        """Changes the data type and the default value
+
+        This method changes both the data type and default value. If one of the parameters does not fit,
+        an exception is thrown and no property is changed. Using this method ensures a consistent data type
+        and default value and only notifies once.
+        :param data_type: The new data type
+        :param default_value: The new default value
+        :return:
+        """
+        try:
+            self.check_data_type(data_type)
+            default_value = self.check_default_value(default_value)
+
+            self._data_type = data_type
+            self._default_value = default_value
+        except (TypeError, AttributeError) as e:
+            logger.error("Could not change data type: {0}".format(e))
+
+    @staticmethod
+    def check_data_type(data_type):
+        """Checks the data type
+
+        Checks whether the passed data type is valid and throws an exception if not.
+        :param data_type: The data type to check
+        """
+        if data_type is not None:
+            if not isinstance(data_type, str):
+                raise TypeError("data_type must be of type str")
+            if data_type not in ("int", "float", "bool", "str", "dict", "tuple", "list"):
+                try:
+                    getattr(sys.modules[__name__], data_type)
+                except AttributeError:
+                    raise TypeError("" + data_type + " is not a valid python data type")
+
+    def check_default_value(self, default_value, data_type=None):
+        """Checks the default value
+
+        Check whether the passed default value suits to to passed data type. If no data type is passed, the data type of
+        the data port is used. If thh default value does not fit, an exception is thrown. If the default value is of
+        type string, it is tried to convert that value to the data type.
+        :param default_value: The default value to check
+        :param data_type: The data type to use
+        :return: The converted default value
+        """
+        if data_type is None:
+            data_type = self.data_type
+
+        if default_value is not None:
+            # If the default value is passes as string, we have to convert it to the data type
+            if isinstance(default_value, basestring):
+                default_value = self.convert_string_to_type(default_value, data_type)
+                if default_value is None:
+                    raise AttributeError("Could not convert default value '{0}' to data type '{1}'".format(
+                        default_value, data_type))
+
+            # check for primitive data types
+            if not str(type(default_value).__name__) == data_type:
+                # check for classes
+                if not isinstance(default_value, getattr(sys.modules[__name__], data_type)):
+                    raise TypeError("Input of execute function must be of type %s" % str(data_type))
+        return default_value
+
+    @staticmethod
+    def convert_string_to_type(string_value, data_type):
+        """ Helper function to convert a given string to a given data type
+
+        :param string_value: the string to convert
+        :param data_type: the target data type
+        :return: the converted value
+        """
+        import ast
+        converted_value = None
+
+        try:
+            if data_type == "str":
+                converted_value = str(string_value)
+            elif data_type == "int":
+                converted_value = int(string_value)
+            elif data_type == "float":
+                converted_value = float(string_value)
+            elif data_type == "bool":
+                converted_value = bool(string_value)
+            elif data_type == "list":
+                converted_value = ast.literal_eval(string_value)
+            elif data_type == "dict":
+                converted_value = ast.literal_eval(string_value)
+            elif data_type == "tuple":
+                converted_value = ast.literal_eval(string_value)
+            else:
+                logger.debug("No conversion from string to data type '{0}' defined".format(data_type))
+        except ValueError:
+            raise AttributeError("Can't convert '{0}' to type '{1}'".format(string_value, data_type))
+        return converted_value
 
 
 PATH_SEPARATOR = '/'
@@ -381,99 +473,6 @@ class State(Observable, yaml.YAMLObject, object):
             return self.output_data_ports[id]
         else:
             raise AttributeError("Data_Port_id %s is not in input_data_ports or output_data_ports", id)
-
-    @Observable.observed
-    def modify_input_data_port_name(self, name, data_port_id):
-        """ Changes the name of the input data port specified by data_port_id
-
-        :param name: the new name of the data port
-        :param data_port_id: the unique id of the data port
-        :return:
-        """
-        self.input_data_ports[data_port_id].name = name
-
-    @Observable.observed
-    def modify_output_data_port_name(self, name, data_port_id):
-        """ Changes the name of the output data port specified by data_port_id
-
-        :param name: the new name of the data port
-        :param data_port_id: the unique id of the data port
-        :return:
-        """
-        self.output_data_ports[data_port_id].name = name
-
-    @Observable.observed
-    def modify_input_data_port_data_type(self, data_type, data_port_id):
-        """ Changes the data type of the input data port specified by data_port_id
-
-        :param data_type: the new data type of the data port
-        :param data_port_id: the unique id of the data port
-        :return:
-        """
-        self.input_data_ports[data_port_id].default_value = None
-        self.input_data_ports[data_port_id].data_type = data_type
-
-    @Observable.observed
-    def modify_output_data_port_data_type(self, data_type, data_port_id):
-        """ Changes the data type of the output data port specified by data_port_id
-
-        :param data_type: the new data type of the data port
-        :param data_port_id: the unique id of the data port
-        :return:
-        """
-        self.output_data_ports[data_port_id].default_value = None
-        self.output_data_ports[data_port_id].data_type = data_type
-
-    def convert_string_to_type(self, string_value, data_type):
-        """ Helper function to convert a given string to a given data type
-
-        :param string_value: the string to convert
-        :param data_type: the target data type
-        :return: the converted value
-        """
-        import ast
-        converted_value = None
-        if data_type == "str":
-            converted_value = str(string_value)
-        elif data_type == "int":
-            converted_value = int(string_value)
-        elif data_type == "float":
-            converted_value = float(string_value)
-        elif data_type == "bool":
-            converted_value = bool(string_value)
-        elif data_type == "list":
-            converted_value = ast.literal_eval(string_value)
-        elif data_type == "dict":
-            converted_value = ast.literal_eval(string_value)
-        elif data_type == "tuple":
-            converted_value = ast.literal_eval(string_value)
-        else:
-            logger.debug("Wrong default value specified!")
-        return converted_value
-
-    @Observable.observed
-    def modify_input_data_port_default_value(self, default_value, data_port_id):
-        """ Changes the default value of the input data port specified by data_port_id
-
-        :param default_value: the new default value of the data port
-        :param data_port_id: the unique id of the data port
-        :return:
-        """
-        val = self.convert_string_to_type(default_value, self.input_data_ports[data_port_id].data_type)
-        if not val is None:
-            self.input_data_ports[data_port_id].default_value = val
-
-    @Observable.observed
-    def modify_output_data_port_default_value(self, default_value, data_port_id):
-        """ Changes the default value of the output data port specified by data_port_id
-
-        :param default_value: the new default value of the data port
-        :param data_port_id: the unique id of the data port
-        :return:
-        """
-        val = self.convert_string_to_type(default_value, self.output_data_ports[data_port_id].data_type)
-        if val is not None:
-            self.output_data_ports[data_port_id].default_value = val
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------------ outcome functions --------------------------------------

@@ -107,8 +107,10 @@ class ContainerStateModel(StateModel):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
-        # logger.debug("ContainerStateModel.model_changed called fo state %s with prop %s" % (self.state.state_id,
-        #                                                                                     prop_name))
+
+        # If this model has been changed (and not one of its child states), then we have to update all child models
+        # This must be done before notifying anybody else, because other may relay on the updated models
+        self.update_child_models(model, prop_name, info)
 
         changed_list = None
         cause = None
@@ -138,7 +140,6 @@ class ContainerStateModel(StateModel):
         # Finally call the method of the base class, to forward changes in ports and outcomes
         StateModel.model_changed(self, model, prop_name, info)
 
-    @ModelMT.observe("state", after=True)
     def update_child_models(self, _, name, info):
         """ This method is always triggered when the state model changes
 
@@ -148,9 +149,6 @@ class ContainerStateModel(StateModel):
             state models
             scoped variable models
         """
-        # logger.debug("ContainerStateModel.update_child_models called fo state %s with prop %s %s" % (self.state.state_id,
-        #                                                                                              name,
-        #                                                                                              info.method_name))
 
         if info.method_name == 'start_state':
             c_state_m = None
@@ -169,13 +167,6 @@ class ContainerStateModel(StateModel):
 
         model_list = None
         
-        # TODO to lower computation load only called if reasonable
-        # if not info.method_name in ['add_data_flow', 'remove_data_flow',
-        #                             'add_transition', 'remove_transition',
-        #                             'add_scoped_variable', 'remove_scoped_variable']:  # container_state-functions
-        #     StateModel.update_models(self, _, name, info)
-        StateModel.update_models(self, _, name, info)
-
         def get_model_info(model):
             model_list = None
             data_list = None

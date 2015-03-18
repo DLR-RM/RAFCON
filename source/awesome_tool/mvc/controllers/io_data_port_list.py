@@ -33,7 +33,6 @@ class DataPortListController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered
         """
-
         #top widget is a tree view => set the model of the tree view to be a list store
         view.get_top_widget().set_model(self.dataport_list_store)
         view.get_top_widget().set_cursor(0)
@@ -63,14 +62,13 @@ class DataPortListController(ExtendedController):
         if self.type == "output":
             self.reload_data_port_list_store()
 
-    #new buttons
     def on_new_input_port_button_clicked(self, widget, data=None):
-        new_input_port_name = "a_new_input_port%s" % str(self.new_port_counter)
+        new_input_port_name = "input_%s" % str(self.new_port_counter)
         self.new_port_counter += 1
         self.model.state.add_input_data_port(new_input_port_name, "str", "val")
 
     def on_new_output_port_button_clicked(self, widget, data=None):
-        new_output_port_name = "a_new_output_port%s" % str(self.new_port_counter)
+        new_output_port_name = "output_%s" % str(self.new_port_counter)
         self.new_port_counter += 1
         self.model.state.add_output_data_port(new_output_port_name, "str", "val")
 
@@ -91,27 +89,28 @@ class DataPortListController(ExtendedController):
             self.model.state.remove_output_data_port(data_port_id)
 
     def on_name_changed(self, widget, path, text):
-        #logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         data_port_id = self.dataport_list_store[int(path)][3]
 
         if self.type == "input":
-            self.model.state.modify_input_data_port_name(text, data_port_id)
+            self.model.state.input_data_ports[data_port_id].name = text
         elif self.type == "output":
-            self.model.state.modify_output_data_port_name(text, data_port_id)
+            self.model.state.output_data_ports[data_port_id].name = text
 
     def on_data_type_changed(self, widget, path, text):
         data_port_id = self.dataport_list_store[int(path)][3]
+
         if self.type == "input":
-            self.model.state.modify_input_data_port_data_type(text, data_port_id)
+            self.model.state.input_data_ports[data_port_id].change_data_type(text, None)
         elif self.type == "output":
-            self.model.state.modify_output_data_port_data_type(text, data_port_id)
+            self.model.state.output_data_ports[data_port_id].change_data_type(text, None)
 
     def on_default_value_changed(self, widget, path, text):
         data_port_id = self.dataport_list_store[int(path)][3]
+
         if self.type == "input":
-            self.model.state.modify_input_data_port_default_value(text, data_port_id)
+            self.model.state.input_data_ports[data_port_id].default_value = text
         elif self.type == "output":
-            self.model.state.modify_output_data_port_default_value(text, data_port_id)
+            self.model.state.output_data_ports[data_port_id].default_value = text
 
     def reload_data_port_list_store(self):
         """Reloads the input data port list store from the data port models
@@ -119,12 +118,10 @@ class DataPortListController(ExtendedController):
         tmp = ListStore(str, str, str, int)
         if self.type == "input":
             for idp_model in self.model.input_data_ports:
-                # print idp_model.parent.state.state_id, self.state.state_id
                 tmp.append([idp_model.data_port.name, idp_model.data_port.data_type, idp_model.data_port.default_value,
                             idp_model.data_port.data_port_id])
         else:
             for idp_model in self.model.output_data_ports:
-                # print idp_model.parent.state.state_id, self.state.state_id
                 tmp.append([idp_model.data_port.name, idp_model.data_port.data_type, idp_model.data_port.default_value,
                             idp_model.data_port.data_port_id])
         tms = gtk.TreeModelSort(tmp)
