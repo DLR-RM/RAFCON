@@ -101,16 +101,18 @@ class DataPortListController(ExtendedController):
     def on_data_type_changed(self, widget, path, text):
         data_port_id = self.dataport_list_store[int(path)][3]
         if self.type == "input":
-            self.model.state.modify_input_data_port_data_type(text, data_port_id)
+            self.model.state.input_data_ports[data_port_id].change_data_type(text, None)
         elif self.type == "output":
-            self.model.state.modify_output_data_port_data_type(text, data_port_id)
+            self.model.state.output_data_ports[data_port_id].change_data_type(text, None)
 
     def on_default_value_changed(self, widget, path, text):
         data_port_id = self.dataport_list_store[int(path)][3]
         if self.type == "input":
-            self.model.state.modify_input_data_port_default_value(text, data_port_id)
+            self.model.state.input_data_ports[data_port_id].default_value = text
+            #self.model.state.modify_input_data_port_default_value(text, data_port_id)
         elif self.type == "output":
-            self.model.state.modify_output_data_port_default_value(text, data_port_id)
+            self.model.state.output_data_ports[data_port_id].default_value = text
+            #self.model.state.modify_output_data_port_default_value(text, data_port_id)
 
     def reload_data_port_list_store(self):
         """Reloads the input data port list store from the data port models
