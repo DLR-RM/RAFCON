@@ -135,6 +135,15 @@ class DataPort(Observable, yaml.YAMLObject):
 
     @Observable.observed
     def change_data_type(self, data_type, default_value=None):
+        """Changes the data type and the default value
+
+        This method changes both the data type and default value. If one of the parameters does not fit,
+        an exception is thrown and no property is changed. Using this method ensures a consistent data type
+        and default value and only notifies once.
+        :param data_type: The new data type
+        :param default_value: The new default value
+        :return:
+        """
         try:
             self.check_data_type(data_type)
             default_value = self.check_default_value(default_value)
@@ -146,6 +155,11 @@ class DataPort(Observable, yaml.YAMLObject):
 
     @staticmethod
     def check_data_type(data_type):
+        """Checks the data type
+
+        Checks whether the passed data type is valid and throws an exception if not.
+        :param data_type: The data type to check
+        """
         if data_type is not None:
             if not isinstance(data_type, str):
                 raise TypeError("data_type must be of type str")
@@ -156,6 +170,15 @@ class DataPort(Observable, yaml.YAMLObject):
                     raise TypeError("" + data_type + " is not a valid python data type")
 
     def check_default_value(self, default_value, data_type=None):
+        """Checks the default value
+
+        Check whether the passed default value suits to to passed data type. If no data type is passed, the data type of
+        the data port is used. If thh default value does not fit, an exception is thrown. If the default value is of
+        type string, it is tried to convert that value to the data type.
+        :param default_value: The default value to check
+        :param data_type: The data type to use
+        :return: The converted default value
+        """
         if data_type is None:
             data_type = self.data_type
 
