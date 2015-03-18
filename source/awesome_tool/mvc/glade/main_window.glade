@@ -28,81 +28,9 @@
           </packing>
         </child>
         <child>
-          <object class="GtkToolbar" id="toolbar">
+          <object class="GtkLabel" id="tool_bar_placeholder">
             <property name="visible">True</property>
-            <property name="toolbar_style">both-horiz</property>
-            <property name="icon_size_set">True</property>
-            <child>
-              <object class="GtkToolButton" id="button_new">
-                <property name="visible">True</property>
-                <property name="tooltip_text" translatable="yes">Create a new state machine.</property>
-                <property name="is_important">True</property>
-                <property name="label" translatable="yes">New Statemachine</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-new</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="button_refresh">
-                <property name="visible">True</property>
-                <property name="tooltip_text" translatable="yes">Refreshes all libraries and statemachines</property>
-                <property name="is_important">True</property>
-                <property name="label" translatable="yes">Refresh</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-refresh</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="button_open">
-                <property name="visible">True</property>
-                <property name="has_tooltip">True</property>
-                <property name="tooltip_text" translatable="yes">Load an existing state machine.</property>
-                <property name="is_important">True</property>
-                <property name="label" translatable="yes">Open Statemachine</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-open</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="button_save">
-                <property name="visible">True</property>
-                <property name="tooltip_text" translatable="yes">Save the state machine.</property>
-                <property name="is_important">True</property>
-                <property name="label" translatable="yes">Save Statemachine</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-save-as</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="button_refresh_libs">
-                <property name="visible">True</property>
-                <property name="tooltip_text" translatable="yes">Refresh libraries only. Beware, libraries inside your state machines won't be affected</property>
-                <property name="is_important">True</property>
-                <property name="label" translatable="yes">Refresh Libraries</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-refresh</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
+            <property name="label" translatable="yes">Placeholder for the tool bar</property>
           </object>
           <packing>
             <property name="expand">False</property>

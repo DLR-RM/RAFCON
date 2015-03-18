@@ -16,6 +16,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.config
 from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
+from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
 
 
 class MainWindowController(ExtendedController):
@@ -122,19 +123,21 @@ class MainWindowController(ExtendedController):
         status_bar3.push(0, status_bar3_string)
 
         ######################################################
-        # status bar
+        # menu bar
         ######################################################
         self.menu_bar_controller = MenuBarController(state_machine_manager_model,
                                                      view.menu_bar,
-                                                     state_machines_editor_ctrl)
+                                                     state_machines_editor_ctrl,
+                                                     states_editor_ctrl)
         self.add_controller("menu_bar_controller", self.menu_bar_controller)
 
-        # connect toolbar buttons
-        view['button_save'].connect("clicked", self.menu_bar_controller.on_save_activate)
-        view['button_new'].connect("clicked", self.menu_bar_controller.on_new_activate)
-        view['button_open'].connect("clicked", self.menu_bar_controller.on_open_activate)
-        view['button_refresh'].connect("clicked", self.on_refresh_all_activate)
-        view['button_refresh_libs'].connect("clicked", self.on_refresh_libraries_activate)
+        ######################################################
+        # tool bar
+        ######################################################
+        self.tool_bar_controller = ToolBarController(state_machine_manager_model,
+                                                     view.tool_bar,
+                                                     self.menu_bar_controller)
+        self.add_controller("tool_bar_controller", self.tool_bar_controller)
 
         ######################################################
         # setup correct sizes
@@ -162,78 +165,3 @@ class MainWindowController(ExtendedController):
         log.error_filter.set_logging_test_view(None)
         awesome_tool.statemachine.config.global_config.save_configuration()
         gtk.main_quit()
-
-    ######################################################
-    # toolbar functionality
-    ######################################################
-    def on_refresh_libraries_activate(self, widget, data=None):
-        """
-        Deletes and reloads all libraries from the filesystem.
-        :param widget: the main widget
-        :param data: optional data
-        :return:
-        """
-        awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
-
-    def on_refresh_all_activate(self, widget, data=None):
-        """
-        Reloads all libraries and thus all state machines as well.
-        :param widget: the main widget
-        :param data: optional data
-        :return:
-        """
-        if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
-            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-            message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
-                             "The following state machines were modified and not saved: "
-            for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
-                message_string = "%s %s " % (message_string, str(sm_id))
-            message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
-                             "before will be deleted!)" % message_string
-            message.set_markup(message_string)
-            message.add_button("Yes", 42)
-            message.add_button("No", 43)
-            message.connect('response', self.on_refresh_message_dialog_response_signal)
-            message.show()
-        else:
-            self.refresh_libs_and_statemachines()
-
-    def on_refresh_message_dialog_response_signal(self, widget, response_id):
-        if response_id == 42:
-            self.refresh_libs_and_statemachines()
-        else:
-            logger.debug("Refresh canceled")
-        widget.destroy()
-
-    def refresh_libs_and_statemachines(self):
-        """
-        Deletes all libraries and state machines and reloads them freshly from the file system.
-        :return:
-        """
-        awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
-
-        # delete dirty flags for state machines
-        awesome_tool.statemachine.singleton.global_storage.reset_dirty_flags()
-
-        # create a dictionary from state machine id to state machine path
-        state_machine_id_to_path = {}
-        sm_keys = []
-        for sm_id, sm in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.iteritems():
-            # the sm.base_path is only None if the state machine has never been loaded or saved before
-            if sm.base_path is not None:
-                #print sm.root_state.script.path
-                # cut the last directory from the path
-                path_items = sm.root_state.script.path.split("/")
-                new_path = path_items[0]
-                for i in range(len(path_items) - 2):
-                    new_path = "%s/%s" % (new_path, path_items[i+1])
-                #print new_path
-                state_machine_id_to_path[sm_id] = new_path
-                sm_keys.append(sm_id)
-
-        self.get_controller('states_editor_ctrl').close_all_tabs()
-        self.get_controller('state_machines_editor_ctrl').close_all_tabs()
-
-        # reload state machines from file system
-        awesome_tool.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
-

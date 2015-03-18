@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkToolbar" id="toolbar">
+    <property name="visible">True</property>
+    <property name="toolbar_style">both-horiz</property>
+    <property name="icon_size_set">True</property>
+    <child>
+      <object class="GtkToolButton" id="button_new">
+        <property name="visible">True</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">New Statemachine</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-new</property>
+        <signal name="clicked" handler="on_button_new_clicked"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="button_refresh">
+        <property name="visible">True</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Refresh</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-refresh</property>
+        <signal name="clicked" handler="on_button_refresh_clicked"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="button_open">
+        <property name="visible">True</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Open Statemachine</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-open</property>
+        <signal name="clicked" handler="on_button_open_clicked"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="button_save">
+        <property name="visible">True</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Save Statemachine</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-save-as</property>
+        <signal name="clicked" handler="on_button_save_clicked"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="button_refresh_libs">
+        <property name="visible">True</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Refresh Libraries</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-refresh</property>
+        <signal name="clicked" handler="on_button_refresh_libs_clicked"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+  </object>
+</interface>

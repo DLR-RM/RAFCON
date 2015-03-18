@@ -14,7 +14,7 @@ from state_outcomes import StateOutcomesTreeView
 from state_outcomes import StateOutcomesEditorView
 from source_editor import SourceEditorView
 from connections_editor import StateConnectionsEditorView
-from logging_view import LoggingView
+from logging import LoggingView
 from state_editor import StateEditorView
 
 from state_machine_tree import StateMachineTreeView
@@ -22,4 +22,5 @@ from library_tree import LibraryTreeView
 #from state_editors_notebook import StateEditorsNotebookView
 #from state_machines_notebook import StateMachinesNotebookView
 #from main_window import MainWindowView
-from menu_bar_view import MenuBarView
+from menu_bar import MenuBarView
+from tool_bar import ToolBarView

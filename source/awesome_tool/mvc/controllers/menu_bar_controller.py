@@ -1,26 +1,20 @@
 import gtk
-import copy
 
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
-from awesome_tool.mvc.models.state_machine import Clipboard, ClipboardType
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from awesome_tool.mvc.models.container_state import ContainerStateModel
-from awesome_tool.statemachine.states.state_helper import StateHelper
-
 
 class MenuBarController(ExtendedController):
     """
     The class to trigger all the action, available in the menu bar.
     """
-    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl):
+    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl):
         ExtendedController.__init__(self, state_machine_manager_model, view)
-        self.clipboard = Clipboard()
         self.state_machines_editor_ctrl = state_machines_editor_ctrl
+        self.states_editor_ctrl = states_editor_ctrl
         self.shortcut_manager = None
 
     def register_view(self, view):
@@ -38,9 +32,6 @@ class MenuBarController(ExtendedController):
 
         :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        self.shortcut_manager = shortcut_manager
-        shortcut_manager.add_callback_for_action("paste", self._paste_clipboard)
-
 
     ######################################################
     # menu bar functionality - File
@@ -111,6 +102,77 @@ class MenuBarController(ExtendedController):
 
     def on_quit_activate(self, widget, data=None):
         self.on_main_window_destroy(None, None)
+
+    def on_refresh_libraries_activate(self, widget, data=None):
+        """
+        Deletes and reloads all libraries from the filesystem.
+        :param widget: the main widget
+        :param data: optional data
+        :return:
+        """
+        awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
+
+    def on_refresh_all_activate(self, widget, data=None):
+        """
+        Reloads all libraries and thus all state machines as well.
+        :param widget: the main widget
+        :param data: optional data
+        :return:
+        """
+        if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
+            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+            message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
+                             "The following state machines were modified and not saved: "
+            for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
+                message_string = "%s %s " % (message_string, str(sm_id))
+            message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
+                             "before will be deleted!)" % message_string
+            message.set_markup(message_string)
+            message.add_button("Yes", 42)
+            message.add_button("No", 43)
+            message.connect('response', self.on_refresh_message_dialog_response_signal)
+            message.show()
+        else:
+            self.refresh_libs_and_statemachines()
+
+    def on_refresh_message_dialog_response_signal(self, widget, response_id):
+        if response_id == 42:
+            self.refresh_libs_and_statemachines()
+        else:
+            logger.debug("Refresh canceled")
+        widget.destroy()
+
+    def refresh_libs_and_statemachines(self):
+        """
+        Deletes all libraries and state machines and reloads them freshly from the file system.
+        :return:
+        """
+        awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
+
+        # delete dirty flags for state machines
+        awesome_tool.statemachine.singleton.global_storage.reset_dirty_flags()
+
+        # create a dictionary from state machine id to state machine path
+        state_machine_id_to_path = {}
+        sm_keys = []
+        for sm_id, sm in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.iteritems():
+            # the sm.base_path is only None if the state machine has never been loaded or saved before
+            if sm.base_path is not None:
+                #print sm.root_state.script.path
+                # cut the last directory from the path
+                path_items = sm.root_state.script.path.split("/")
+                new_path = path_items[0]
+                for i in range(len(path_items) - 2):
+                    new_path = "%s/%s" % (new_path, path_items[i+1])
+                #print new_path
+                state_machine_id_to_path[sm_id] = new_path
+                sm_keys.append(sm_id)
+
+        self.states_editor_ctrl.close_all_tabs()
+        self.state_machines_editor_ctrl.close_all_tabs()
+
+        # reload state machines from file system
+        awesome_tool.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
 
     ######################################################
     # menu bar functionality - Edit
