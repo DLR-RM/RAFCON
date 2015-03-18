@@ -147,31 +147,30 @@ class StateModel(ModelMT):
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument
-        if hasattr(info, 'before') and info['before'] and (self is model.parent or isinstance(info.instance, DataPort)):
-            if "modify_input_data_port" in info.method_name or \
-                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
-                self.input_data_ports._notify_method_before(info.instance, "input_data_port_change", (model,), info)
-            if "modify_output_data_port" in info.method_name or \
-                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
-                self.output_data_ports._notify_method_before(info.instance, "output_data_port_change", (model,), info)
 
-        elif hasattr(info, 'after') and info['after'] and (self is model.parent or isinstance(info.instance, DataPort)):
-            if "modify_input_data_port" in info.method_name or \
-                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
-                self.input_data_ports._notify_method_after(info.instance, "input_data_port_change", None, (model,), info)
-            if "modify_output_data_port" in info.method_name or \
-                    (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
-                self.output_data_ports._notify_method_after(info.instance, "output_data_port_change", None, (model,), info)
+        changed_list = None
+        cause = None
 
-        if hasattr(info, 'before') and info['before'] and self is model.parent:
-            if "modify_outcome" in info.method_name and self is model or \
-                    isinstance(info.instance, Outcome) and self is model.parent:
-                self.outcomes._notify_method_before(info.instance, "outcome_change", (model,), info)
+        if "modify_input_data_port" in info.method_name or \
+                (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.input_data_ports):
+            changed_list = self.input_data_ports
+            cause = "input_data_port_change"
 
-        elif hasattr(info, 'after') and info['after'] and self is model.parent:
-            if "modify_outcome" in info.method_name and self is model or \
-                    isinstance(info.instance, Outcome) and self is model.parent:
-                self.outcomes._notify_method_after(info.instance, "outcome_change", None, (model,), info)
+        elif "modify_output_data_port" in info.method_name or \
+                (isinstance(info.instance, DataPort) and info.instance.data_port_id in self.state.output_data_ports):
+            changed_list = self.output_data_ports
+            cause = "output_data_port_change"
+
+        elif "modify_outcome" in info.method_name and self is model or \
+                isinstance(info.instance, Outcome) and self is model.parent:
+            changed_list = self.outcomes
+            cause = "outcome_change"
+
+        if not (cause is None or changed_list is None):
+            if hasattr(info, 'before') and info['before']:
+                changed_list._notify_method_before(info.instance, cause, (model,), info)
+            elif hasattr(info, 'after') and info['after']:
+                changed_list._notify_method_after(info.instance, cause, None, (model,), info)
 
         # Notify the parent state about the change (this causes a recursive call up to the root state)
         if self.parent is not None:

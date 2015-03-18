@@ -167,12 +167,6 @@ class ContainerStateModel(StateModel):
 
         model_list = None
         
-        # TODO to lower computation load only called if reasonable
-        # if not info.method_name in ['add_data_flow', 'remove_data_flow',
-        #                             'add_transition', 'remove_transition',
-        #                             'add_scoped_variable', 'remove_scoped_variable']:  # container_state-functions
-        #     StateModel.update_models(self, _, name, info)
-
         def get_model_info(model):
             model_list = None
             data_list = None
