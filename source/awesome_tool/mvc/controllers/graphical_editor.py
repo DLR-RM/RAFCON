@@ -4,11 +4,12 @@ from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line
 logger = log.get_logger(__name__)
 import sys
 import time
+import copy
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
-from awesome_tool.mvc.models.state_machine import StateMachineModel
+from awesome_tool.mvc.models.state_machine import StateMachineModel, ClipboardType, Clipboard
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
@@ -16,6 +17,10 @@ from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 import itertools
+from awesome_tool.statemachine.states.state_helper import StateHelper
+
+# To enable copy, cut and paste between state machines a global clipboard is used for all graphical editors
+global_clipboard = Clipboard()
 
 
 class GraphicalEditorController(ExtendedController):
@@ -80,6 +85,10 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", self._add_execution_state)
         shortcut_manager.add_callback_for_action("info", self._toggle_data_flow_visibility)
         shortcut_manager.add_callback_for_action("abort", self._abort)
+
+        shortcut_manager.add_callback_for_action("copy", self._copy_selection)
+        shortcut_manager.add_callback_for_action("paste", self._paste_clipboard)
+        shortcut_manager.add_callback_for_action("cut", self._cut_selection)
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
@@ -1419,3 +1428,73 @@ class GraphicalEditorController(ExtendedController):
                 self.mouse_move_redraw = False
                 self.temporary_waypoints = []
                 self._redraw(True)
+
+    def _copy_selection(self, *args):
+        #print self.view["graphical_editor_frame"].get_focus_child()
+
+        if self.view.editor.has_focus() or args[2]:
+            logger.debug("copy selection")
+            global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
+            global_clipboard.selection.set(self.model.selection.get_all())
+            global_clipboard.clipboard_type = ClipboardType.COPY
+
+    def _paste_clipboard(self, *args):
+        if self.view.editor.has_focus() or args[2]:
+            logger.debug("paste selection")
+            currently_selected_sm_id = self.model.state_machine.state_machine_id
+            current_selection = self.model.selection
+            # check if the current selection is valid
+            if current_selection.get_number_of_selected_items() > 1 or len(current_selection.get_states()) < 1:
+                logger.error("Cannot paste clipboard into selection as the selection does not consist of a single"
+                             "container state!")
+                return
+            if len(current_selection.get_states()) == 1 and\
+                    not isinstance(current_selection.get_states()[0], ContainerStateModel):
+                    logger.error("Cannot paste clipboard into selection as the selected state model is not "
+                                 "a container state model")
+                    return
+
+            # check if the clipboard is valid
+            if global_clipboard.selection.get_number_of_selected_items() > 1:
+                logger.error("Only one single item is allowed to be copied yet!")
+                return
+            if not len(global_clipboard.selection.get_states()) == 1:
+                logger.error("Only states are allowed to be copied yet!")
+                return
+
+            source_state_model = global_clipboard.selection.get_states()[0]
+            source_state = source_state_model.state
+            target_state_model = current_selection.get_states()[0]
+            target_state = target_state_model.state
+            state_copy = StateHelper.get_state_copy(source_state)
+            target_state.add_state(state_copy)
+            state_copy_model = target_state_model.states[state_copy.state_id]
+
+            state_copy_model.copy_meta_data_from_state_model(source_state_model)
+            new_x_pos = target_state_model.meta["gui"]["editor"]["pos_x"] + \
+                        target_state_model.meta["gui"]["editor"]["width"] * 3 / 100
+            new_y_pos = target_state_model.meta["gui"]["editor"]["pos_y"] + \
+                        target_state_model.meta["gui"]["editor"]["height"] * 97 / 100 - \
+                        state_copy_model.meta["gui"]["editor"]["height"]
+
+            self._move_state(state_copy_model, new_x_pos, new_y_pos)
+            self._redraw(True)
+
+            if global_clipboard.clipboard_type is ClipboardType.COPY:
+                # logger.debug("Copy the following clipboard into the selected state %s: \n%s"
+                #              % (str(current_selection.get_states()[0]),
+                #                 str(self.clipboard)))
+                pass
+            elif global_clipboard.clipboard_type is ClipboardType.CUT:
+                # logger.debug("Cut the following clipboard into the selected state %s: \n%s"
+                #              % (str(current_selection.get_states()[0]),
+                #                 str(self.clipboard)))
+                parent_of_source_state = source_state.parent
+                parent_of_source_state.remove_state(source_state.state_id)
+
+    def _cut_selection(self, *args):
+        if self.view.editor.has_focus() or args[2]:
+            logger.debug("cut selection")
+            global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
+            global_clipboard.selection.set(self.model.selection.get_all())
+            global_clipboard.clipboard_type = ClipboardType.CUT
