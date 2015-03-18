@@ -2,7 +2,7 @@ from gtkmvc import View
 
 
 class InputPortsListView(View):
-    builder = './glade/InputPortsListWidget.glade'
+    builder = './glade/input_ports_list_widget.glade'
     top = 'input_ports_tree_view'
 
     def __init__(self):

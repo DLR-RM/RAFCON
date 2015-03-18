@@ -7,7 +7,7 @@ from awesome_tool.mvc.views.state_data_flows import StateDataFlowsListView
 
 class ContainerStateView(View):
 
-    builder = './glade/ContainerStateWidget_frame.glade'
+    builder = './glade/container_state_widget_frame.glade'
     top = 'container_state_widget'
 
     def __init__(self):

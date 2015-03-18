@@ -5,7 +5,7 @@ from awesome_tool.mvc.views.scoped_variables_list import ScopedVariablesListView
 
 
 class StateDataportEditorView(View):
-    builder = './glade/StateDataportEditor.glade'
+    builder = './glade/state_dataport_editor.glade'
     top = 'state_dataport_editor'
 
     def __init__(self):
