@@ -382,26 +382,6 @@ class State(Observable, yaml.YAMLObject, object):
         else:
             raise AttributeError("Data_Port_id %s is not in input_data_ports or output_data_ports", id)
 
-    @Observable.observed
-    def modify_input_data_port_name(self, name, data_port_id):
-        """ Changes the name of the input data port specified by data_port_id
-
-        :param name: the new name of the data port
-        :param data_port_id: the unique id of the data port
-        :return:
-        """
-        self.input_data_ports[data_port_id].name = name
-
-    #@Observable.observed
-    def modify_output_data_port_name(self, name, data_port_id):
-        """ Changes the name of the output data port specified by data_port_id
-
-        :param name: the new name of the data port
-        :param data_port_id: the unique id of the data port
-        :return:
-        """
-        self.output_data_ports[data_port_id].name = name
-
     #@Observable.observed
     def modify_input_data_port_data_type(self, data_type, data_port_id):
         """ Changes the data type of the input data port specified by data_port_id

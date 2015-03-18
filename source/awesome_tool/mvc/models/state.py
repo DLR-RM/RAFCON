@@ -159,6 +159,8 @@ class StateModel(ModelMT):
                 changed_list = self.output_data_ports
                 cause = "output_data_port_change"
 
+        # Outcomes are not modelled as class, therefore the model passed when adding/removing an outcome is the
+        # parent StateModel. Thus we have to look at the method that caused a property change.
         elif "modify_outcome" in info.method_name and self is model or \
                 isinstance(info.instance, Outcome) and self is model.parent:
             changed_list = self.outcomes

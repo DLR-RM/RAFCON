@@ -91,13 +91,12 @@ class DataPortListController(ExtendedController):
             self.model.state.remove_output_data_port(data_port_id)
 
     def on_name_changed(self, widget, path, text):
-        #logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         data_port_id = self.dataport_list_store[int(path)][3]
 
         if self.type == "input":
-            self.model.state.modify_input_data_port_name(text, data_port_id)
+            self.model.state.input_data_ports[data_port_id].name = text
         elif self.type == "output":
-            self.model.state.modify_output_data_port_name(text, data_port_id)
+            self.model.state.output_data_ports[data_port_id].name = text
 
     def on_data_type_changed(self, widget, path, text):
         data_port_id = self.dataport_list_store[int(path)][3]
