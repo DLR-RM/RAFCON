@@ -82,7 +82,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 state.input_data = state_input
                 state.output_data = state_output
                 #execute the state
-                state.run()
+                # TODO: test as it was before: state.run()
+                state.start()
+                state.join()
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
                 # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome

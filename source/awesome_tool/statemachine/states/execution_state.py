@@ -31,6 +31,7 @@ class ExecutionState(State, yaml.YAMLObject):
 
         State.__init__(self, name, state_id, input_keys, output_keys, outcomes, path, filename,
                        state_type=StateType.EXECUTION, check_path=check_path)
+        self.logger = log.get_logger(self.name)
 
     def print_state_information(self):
         """Prints information about the state
@@ -45,6 +46,7 @@ class ExecutionState(State, yaml.YAMLObject):
 
         """
         self.script.load_and_build_module()
+
         outcome_id = self.script.execute(self, execute_inputs, execute_outputs)
         if outcome_id in self.outcomes.keys():
             return self.outcomes[outcome_id]
