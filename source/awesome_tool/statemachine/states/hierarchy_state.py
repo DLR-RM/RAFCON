@@ -88,6 +88,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 # TODO: test as it was before: state.run()
                 state.start()
                 state.join()
+                state.active = False
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
                 # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
@@ -127,7 +128,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             logger.debug("Return from hierarchy state %s", self.name)
             return
 
-        except RuntimeError, e:
+        except Exception, e:
             if str(e) == "state stopped":
                 logger.debug("State %s was stopped!" % self.name)
             else:

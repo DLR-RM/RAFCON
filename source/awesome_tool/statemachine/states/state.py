@@ -744,6 +744,7 @@ class State(Observable, yaml.YAMLObject, object):
     def outcomes(self, outcomes):
         if outcomes is None:
             self._outcomes = {}
+            self.add_outcome("success", 0)
             self.add_outcome("aborted", -1)
             self.add_outcome("preempted", -2)
             if self.state_type is StateType.BARRIER_CONCURRENCY:
@@ -757,13 +758,13 @@ class State(Observable, yaml.YAMLObject, object):
                 if not isinstance(value, Outcome):
                     raise TypeError("element of outcomes must be of type Outcome")
             self._outcomes = outcomes
-            if self.state_type is StateType.BARRIER_CONCURRENCY:
-                if not "success" in outcomes:
-                    self.add_outcome("success", 0)
+            #if self.state_type is StateType.BARRIER_CONCURRENCY:
+            if 0 not in outcomes:
+                self.add_outcome("success", 0)
             #aborted and preempted must always exist
-            if not -1 in outcomes:
+            if -1 not in outcomes:
                 self.add_outcome("aborted", -1)
-            if not -2 in outcomes:
+            if -2 not in outcomes:
                 self.add_outcome("preempted", -2)
             for id, o in outcomes.iteritems():
                 self._used_outcome_ids.append(id)

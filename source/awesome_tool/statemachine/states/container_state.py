@@ -348,7 +348,7 @@ class ContainerState(State):
         :return: the transition specified by the the state and the outcome
         """
         if not isinstance(state, State):
-            raise TypeError("ID must be of type State")
+            raise TypeError("state must be of type State")
         if not isinstance(outcome, Outcome):
             raise TypeError("outcome must be of type Outcome")
         logger.debug("Return transition for state %s and outcome %s" % (state.name, outcome))

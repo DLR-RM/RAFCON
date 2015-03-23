@@ -106,7 +106,8 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.active = False
             return
 
-        except RuntimeError:
+        except Exception, e:
+            logger.error("Runtime error %s" % e)
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
             self.child_execution = False

@@ -82,7 +82,8 @@ class ExecutionState(State, yaml.YAMLObject):
             self.active = False
             return
 
-        except RuntimeError:
+        except Exception, e:
+            logger.error("State %s had an internal error: %s" % (self.name, str(e)))
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
             return
