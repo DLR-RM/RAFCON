@@ -55,7 +55,7 @@ class LibraryTreeController(ExtendedController):  # (Controller):
         library = model[row][1]
         #logger.debug("The library state should be inserted into the statemachine")
 
-    def add_library_button_clicked(self, widget, smm):
+    def add_link_button_clicked(self, widget, smm):
         (model, row) = self.view.get_selection().get_selected()
         library_key = model[row][0]
         library = model[row][1]
@@ -72,12 +72,46 @@ class LibraryTreeController(ExtendedController):  # (Controller):
             logger.error("State of wrong type selected %s" % str(state_type))
             return
 
-        logger.debug("Insert library state %s (with file path %s, and library path %s) into the state machine" %
+        logger.debug("Link library state %s (with file path %s, and library path %s) into the state machine" %
                      (str(library_key), str(library), str(library_path)))
 
         library_state = LibraryState(library_path, library_key, "0.1", "new_library_state")
 
         current_state.add_state(library_state)
+
+    def add_template_button_clicked(self, widget, smm):
+        (model, row) = self.view.get_selection().get_selected()
+        library_key = model[row][0]
+        library = model[row][1]
+        library_path = model[row][2]
+
+        current_selection = smm.state_machines[smm.selected_state_machine_id].selection
+        if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
+            logger.error("Wrong number of selected states %s" % str(len(current_selection.get_states())))
+            return
+
+        current_state = current_selection.get_states()[0].state
+        state_type = current_state.state_type
+        if state_type is not (StateType.HIERARCHY or StateType.BARRIER_CONCURRENCY or StateType.PREEMPTION_CONCURRENCY):
+            logger.error("State of wrong type selected %s" % str(state_type))
+            return
+
+        logger.debug("Insert library template state %s (with file path %s, and library path %s) into the state machine" %
+                     (str(library_key), str(library), str(library_path)))
+
+        library_name = library_key
+
+        path_list = library_path.split("/")
+        target_lib_dict = awesome_tool.statemachine.singleton.library_manager.libraries
+        for element in path_list:
+            target_lib_dict = target_lib_dict[element]
+        logger.debug("Load state to which this library state links")
+        state_machine, lib_version, creationtime = awesome_tool.statemachine.singleton.library_manager.storage.\
+            load_statemachine_from_yaml(target_lib_dict[library_name])
+
+        state_machine.root_state.change_state_id()
+
+        current_state.add_state(state_machine.root_state)
 
 
 

@@ -14,7 +14,7 @@ from gtkmvc import View
 
 
 class StateDataFlowsListView(View):
-    #builder = './glade/DataFlowListWidget.glade'
+    #builder = './glade/data_flow_list_widget.glade'
     #top = 'data_flow_list_view'
     top = 'tree_view'
 

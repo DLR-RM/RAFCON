@@ -5,7 +5,7 @@ import gtk
 
 from awesome_tool.utils import log
 from awesome_tool.mvc.controllers import MainWindowController
-from awesome_tool.mvc.views.logging_view import LoggingView
+from awesome_tool.mvc.views.logging import LoggingView
 from awesome_tool.mvc.views.main_window import MainWindowView
 from awesome_tool.mvc.models import ContainerStateModel, GlobalVariableManagerModel
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
@@ -163,7 +163,7 @@ def run_turtle_demo():
     # set base path of global storage
     awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/basic_turtle_demo_sm"
 
-    #load the state machine
+    # load the state machine
     [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
 

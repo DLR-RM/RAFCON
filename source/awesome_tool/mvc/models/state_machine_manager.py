@@ -90,7 +90,8 @@ class StateMachineManagerModel(ModelMT, Observable):
     @selected_state_machine_id.setter
     @Observable.observed
     def selected_state_machine_id(self, selected_state_machine_id):
-        if not isinstance(selected_state_machine_id, int):
-            raise TypeError("selected_state_machine_id must be of type int")
+        if selected_state_machine_id is not None:
+            if not isinstance(selected_state_machine_id, int):
+                raise TypeError("selected_state_machine_id must be of type int")
         self._selected_state_machine_id = selected_state_machine_id
 

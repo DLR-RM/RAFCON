@@ -12,7 +12,7 @@ from gtkmvc import View
 
 
 class StateTransitionsListView(View):
-    #builder = './glade/TransitionListWidget.glade'
+    #builder = './glade/transition_list_widget.glade'
     #top = 'transition_list_view'
     top = 'tree_view'
 

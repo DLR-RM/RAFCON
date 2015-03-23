@@ -57,6 +57,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.enter(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
+            self.child_execution = True
             #infinite Queue size
             concurrency_queue = Queue.Queue(maxsize=0)
 
@@ -64,7 +65,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             for key, state in self.states.iteritems():
                 state.concurrency_queue = concurrency_queue
                 state.concurrency_queue_id = queue_ids
-                queue_ids +=1
+                queue_ids += 1
 
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)
@@ -86,6 +87,8 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             for key, state in self.states.iteritems():
                 state.join()
                 state.concurrency_queue = None
+
+            self.child_execution = False
 
             #handle data for the exit script
             scoped_variables_as_dict = {}
@@ -129,10 +132,11 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.active = False
             return
 
-        except RuntimeError, e:
+        except Exception, e:
             logger.error("Runtime error %s" % e)
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
+            self.child_execution = False
             return
 
 

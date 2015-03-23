@@ -2,7 +2,7 @@ from gtkmvc import View
 
 
 class GlobalVariableEditorView(View):
-    builder = './glade/GlobalVariableEditorWidget.glade'
+    builder = './glade/global_variable_editor_widget.glade'
     top = 'global_variable_vbox'
 
     def __init__(self):

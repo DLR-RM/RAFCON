@@ -7,11 +7,11 @@ from awesome_tool.statemachine.states.state import DataPort
 def test_create_state():
     state1 = ExecutionState("MyFirstState")
 
-    assert len(state1.outcomes) == 2
+    assert len(state1.outcomes) == 3
 
     out = state1.add_outcome("MyFirstOutcome", 3)
 
-    assert len(state1.outcomes) == 3
+    assert len(state1.outcomes) == 4
 
     state1.remove_outcome(out)
 
@@ -25,7 +25,7 @@ def test_create_state():
         # AttributeError should be raised if outcome aborted is to be removed
         state1.remove_outcome(-2)
 
-    assert len(state1.outcomes) == 2
+    assert len(state1.outcomes) == 3
 
     assert len(state1.input_data_ports) == 0
     assert len(state1.output_data_ports) == 0
@@ -172,7 +172,7 @@ def test_port_and_outcome_removal():
 
     assert len(container.transitions) == 0
     assert len(container.data_flows) == 0
-    assert len(container.outcomes) == 2
+    assert len(container.outcomes) == 3
     assert len(container.input_data_ports) == 1
     assert len(container.output_data_ports) == 1
     assert len(container.scoped_variables) == 1
@@ -180,7 +180,6 @@ def test_port_and_outcome_removal():
     state1 = ExecutionState("test_execution_state")
     input_state1 = state1.add_input_data_port("input", "float")
     output_state1 = state1.add_output_data_port("output", "float")
-    state1.add_outcome("success", 0)
 
     container.add_state(state1)
     container.add_transition(state1.state_id, 0, None, -2)

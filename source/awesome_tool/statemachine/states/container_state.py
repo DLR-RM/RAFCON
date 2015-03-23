@@ -64,6 +64,7 @@ class ContainerState(State):
         self._current_state = None
         #condition variable to wait for not connected states
         self._transitions_cv = Condition()
+        self._child_execution = False
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
@@ -347,7 +348,7 @@ class ContainerState(State):
         :return: the transition specified by the the state and the outcome
         """
         if not isinstance(state, State):
-            raise TypeError("ID must be of type State")
+            raise TypeError("state must be of type State")
         if not isinstance(outcome, Outcome):
             raise TypeError("outcome must be of type Outcome")
         logger.debug("Return transition for state %s and outcome %s" % (state.name, outcome))
@@ -366,10 +367,6 @@ class ContainerState(State):
         :param transition_id: the id of the transition to remove
 
         """
-
-        print self.transitions
-        print self._transitions
-        print transition_id
         if transition_id == -1 or transition_id == -2:
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
         if transition_id not in self._transitions:
@@ -781,39 +778,6 @@ class ContainerState(State):
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
 
-    @Observable.observed
-    def modify_scoped_variable_name(self, name, data_port_id):
-        """ Changes the name of the scoped variable specified by data_port_id
-
-        :param name: the new name of the scoped variable
-        :param data_port_id: the unique id of the scoped variable
-        :return:
-        """
-        self.scoped_variables[data_port_id].name = name
-
-    @Observable.observed
-    def modify_scoped_variable_data_type(self, data_type, data_port_id):
-        """ Changes the name of the scoped variable specified by data_port_id
-
-        :param data_type: the new data type of the scoped variable
-        :param data_port_id: the unique id of the scoped variable
-        :return:
-        """
-        self.scoped_variables[data_port_id].default_value = None
-        self.scoped_variables[data_port_id].data_type = data_type
-
-    @Observable.observed
-    def modify_scoped_variable_default_value(self, default_value, data_port_id):
-        """ Changes the name of the scoped variable specified by data_port_id
-
-        :param default_value: the new default variable of the scoped variable
-        :param data_port_id: the unique id of the scoped variable
-        :return:
-        """
-        val = self.convert_string_to_type(default_value, self.scoped_variables[data_port_id].data_type)
-        if not val is None:
-            self.scoped_variables[data_port_id].default_value = val
-
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -1185,3 +1149,18 @@ class ContainerState(State):
         if not isinstance(v_checker, ValidityChecker):
             raise TypeError("validity_check must be of type ValidityChecker")
         self._v_checker = v_checker
+
+    @property
+    def child_execution(self):
+        """Property for the _child_execution field
+
+        """
+        return self._child_execution
+
+    @child_execution.setter
+    @Observable.observed
+    def child_execution(self, child_execution):
+        if child_execution is not None:
+            if not isinstance(child_execution, bool):
+                raise TypeError("child_execution must be of type str")
+        self._child_execution = child_execution

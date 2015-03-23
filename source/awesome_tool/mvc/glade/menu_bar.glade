@@ -18,6 +18,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_new_activate"/>
               </object>
             </child>
             <child>
@@ -27,6 +28,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_open_activate"/>
               </object>
             </child>
             <child>
@@ -36,6 +38,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_save_activate"/>
               </object>
             </child>
             <child>
@@ -45,6 +48,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_save_as_activate"/>
               </object>
             </child>
             <child>
@@ -54,6 +58,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_menu_properties_activate"/>
               </object>
             </child>
             <child>
@@ -68,6 +73,7 @@
                 <property name="image">image2</property>
                 <property name="use_stock">False</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_refresh_all_activate"/>
               </object>
             </child>
             <child>
@@ -77,6 +83,7 @@
                 <property name="image">image1</property>
                 <property name="use_stock">False</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_refresh_libraries_activate"/>
               </object>
             </child>
             <child>
@@ -91,6 +98,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_quit_activate"/>
               </object>
             </child>
           </object>
@@ -141,6 +149,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_delete_activate"/>
               </object>
             </child>
             <child>
@@ -152,6 +161,7 @@
               <object class="GtkMenuItem" id="add_state">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">add state</property>
+                <signal name="activate" handler="on_add_state_activate"/>
               </object>
             </child>
             <child>
@@ -159,6 +169,7 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">delete state</property>
                 <property name="use_underline">True</property>
+                <signal name="activate" handler="on_delete_state_activate"/>
               </object>
             </child>
             <child>
@@ -166,6 +177,7 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">group states</property>
                 <property name="use_underline">True</property>
+                <signal name="activate" handler="on_group_states_activate"/>
               </object>
             </child>
             <child>
@@ -173,6 +185,7 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">ungroup states</property>
                 <property name="use_underline">True</property>
+                <signal name="activate" handler="on_ungroup_states_activate"/>
               </object>
             </child>
             <child>
@@ -182,6 +195,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_undo_activate"/>
               </object>
             </child>
             <child>
@@ -191,6 +205,7 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+                <signal name="activate" handler="on_redo_activate"/>
               </object>
             </child>
             <child>
@@ -203,6 +218,7 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">grid</property>
                 <property name="use_underline">True</property>
+                <signal name="toggled" handler="on_grid_toggled"/>
               </object>
             </child>
           </object>
@@ -221,6 +237,7 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">expert view</property>
                 <property name="use_underline">True</property>
+                <signal name="activate" handler="on_expert_view_activate"/>
               </object>
             </child>
           </object>
@@ -304,6 +321,7 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_About</property>
                 <property name="use_underline">True</property>
+                <signal name="activate" handler="on_about_activate"/>
               </object>
             </child>
           </object>
