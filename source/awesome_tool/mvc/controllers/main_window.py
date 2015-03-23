@@ -59,9 +59,10 @@ class MainWindowController(ExtendedController):
         self.add_controller('library_controller', library_controller)
         view['library_vbox'].remove(view['library_tree_placeholder'])
         view['library_vbox'].pack_start(view.library_tree, True, True, 0)
-        view['add_library_button'].connect("clicked", library_controller.add_library_button_clicked,
-                                           state_machine_manager_model)
-
+        view['add_link_button'].connect("clicked", library_controller.add_link_button_clicked,
+                                        state_machine_manager_model)
+        view['add_template_button'].connect("clicked", library_controller.add_template_button_clicked,
+                                            state_machine_manager_model)
         ######################################################
         # statemachine tree
         ######################################################
