@@ -26,8 +26,10 @@ global_clipboard = Clipboard()
 class GraphicalEditorController(ExtendedController):
     """Controller handling the graphical editor
 
-    :param awesome_tool.mvc.models.ContainerStateModel model: The root container state model containing the data
-    :param awesome_tool.mvc.views.GraphicalEditorView view: The GTK view having an OpenGL rendering element
+    :param awesome_tool.mvc.models.state_machine.StateMachineModel model: The state machine model, holding the root
+        state and the current selection
+    :param awesome_tool.mvc.views.graphical_editor.GraphicalEditorView view: The GTK view having an OpenGL rendering
+        element
     """
     __observables__ = ('state_machine', 'root_state')
 
@@ -96,6 +98,7 @@ class GraphicalEditorController(ExtendedController):
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
         then typically requires a redraw of the graphical editor, to display these changes immediately.
+
         :param model: The state machine model
         :param prop_name: The property that was changed
         :param info: Information about the change
@@ -136,7 +139,8 @@ class GraphicalEditorController(ExtendedController):
     def root_state_change(self, model, prop_name, info):
         """Called when the root state was exchanged
 
-        Exchanges the local reference to the root state and redraws
+        Exchanges the local reference to the root state and redraws.
+
         :param model: The state machine model
         :param prop_name: The root state
         :param info: Information about the change
@@ -151,7 +155,8 @@ class GraphicalEditorController(ExtendedController):
     def selection_change(self, model, prop_name, info):
         """Called when the selection was changed externally
 
-        Updates the local selection and redraws
+        Updates the local selection and redraws.
+
         :param model: The state machine model
         :param prop_name: The selection
         :param info: Information about the change
@@ -168,6 +173,7 @@ class GraphicalEditorController(ExtendedController):
 
         This method is called typically when the editor window is resized or something triggers are redraw. This
         controller class handles the logic for redrawing, while the corresponding view handles the design.
+
         :param args: console arguments, not used
         """
 
@@ -183,6 +189,8 @@ class GraphicalEditorController(ExtendedController):
 
         First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
         event to redraw.
+
+        :param bool important: Force a redraw, even if teh last redraw was less then 2ms ago.
         """
         # Check if initialized
         if hasattr(self.view, "editor") and (time.time() - self.last_time > 1 / 50. or important):
@@ -213,7 +221,8 @@ class GraphicalEditorController(ExtendedController):
     def _on_mouse_press(self, widget, event):
         """Triggered when the mouse is pressed
 
-        Different actions can result from a mouse click, e. g. selecting or drag and drop
+        Different actions can result from a mouse click, e. g. selecting or drag and drop.
+
         :param widget: The widget beneath the mouse when the click was done
         :param event: Information about the event, e. g. x and y coordinate
         """
@@ -345,7 +354,8 @@ class GraphicalEditorController(ExtendedController):
     def _on_mouse_motion(self, widget, event):
         """Triggered when the mouse is moved
 
-        When a state is selected, this causes a drag and drop movement
+        When a state is selected, this causes a drag and drop movement.
+
         :param widget: The widget beneath the mouse when the click was done
         :param event: Information about the event, e. g. x and y coordinate
         """
@@ -404,6 +414,7 @@ class GraphicalEditorController(ExtendedController):
         """Triggered when the mouse wheel is turned
 
         Calls the zooming method.
+
         :param widget: The widget beneath the mouse when the event was triggered
         :param event: Information about the event, e. g. x and y coordinate and mouse wheel turning direction
         """
@@ -428,6 +439,7 @@ class GraphicalEditorController(ExtendedController):
 
         Checks whether the current selection is a transition or data flow and if so looks for a waypoint at the given
         coordinates. If a waypoint is found, it is stored together with its current position.
+
         :param coords: Coordinates to search for waypoints
         """
         if selection is not None and \
@@ -451,6 +463,7 @@ class GraphicalEditorController(ExtendedController):
 
         Checks whether the current selection is a state and if so looks for an outcome at the given coordinates. If an
         outcome is found, it is stored.
+
         :param coords: Coordinates to search for outcomes
         """
         if isinstance(selection, StateModel):  # and self.selection is not self.root_state_m:
@@ -470,6 +483,7 @@ class GraphicalEditorController(ExtendedController):
         The methods checks whether the user clicked on a connector of a port. If the passed model is a state,
         we have to check the positions of all port connectors of that state. If it is a data port, we only have to
         look at the connector position of that port.
+
         :param model: The model that was clicked on
         :param coords: Coordinates to search for ports
         """
@@ -502,6 +516,7 @@ class GraphicalEditorController(ExtendedController):
 
         Checks whether the current selection is a state and if so looks the given coordinates are within the resizer
         of that state. If so, the resizer (or its state model) is stored.
+
         :param coords: Coordinates to check for the resizer
         """
         if self.selection is not None and isinstance(self.selection, StateModel) and self.selection:
@@ -519,7 +534,8 @@ class GraphicalEditorController(ExtendedController):
         """Checks and removes a waypoint if necessary
 
         Checks whether the coordinates given are close to a waypoint of the given connection model (transition or
-        data flow). If so, the waypoint is removed
+        data flow). If so, the waypoint is removed.
+
         :param coords: Coordinates to check for a waypoint
         :param connection_model: Model of a transition or data flow
         :return: True, if a waypoint was removed, False else
@@ -541,6 +557,7 @@ class GraphicalEditorController(ExtendedController):
 
         The methods adds a waypoint at the given coordinates to the given connection (transition or data flow). If
         the connection also has waypoints, it puts the new one between the correct existing ones.
+
         :param connection_model: The model of the connection to add a waypoint to
         :param coords: The coordinates of the new waypoint
         """
@@ -570,6 +587,7 @@ class GraphicalEditorController(ExtendedController):
         The user can create new transition using drag and drop in the graphical editor. The method uses the stored
         selected outcome as starting point and the passed state model and outcome id as target point for the new
         transition.
+
         :param to_state_m: The to state model of the new transition
         :param to_outcome_id: The id of the to outcome or None if the transition does not go to the parent state
         """
@@ -602,6 +620,7 @@ class GraphicalEditorController(ExtendedController):
 
         The user can create new data flow using drag and drop in the graphical editor. The method uses the stored
         selected port as starting point and the passed target port model as target point for the new data flow.
+
         :param target_port_m: The target port of the data flow
         """
         if target_port_m is not None:
@@ -633,6 +652,7 @@ class GraphicalEditorController(ExtendedController):
 
         The method moves the state and all its child states with their transitions, data flows and waypoints. The
         state is kept within its parent, thus restricting the movement.
+
         :param awesome_tool.mvc.models.StateModel state_m: The model of the state to be moved
         :param new_pos_x: The desired new x coordinate
         :param new_pos_y: The desired new y coordinate
@@ -685,7 +705,8 @@ class GraphicalEditorController(ExtendedController):
         """Move the port to the given position
 
         This method moves the given port to the given coordinates, with respect to the mouse offset to the origin od
-        the port and with respect to the size of the container state,
+        the port and with respect to the size of the container state.
+
         :param port_m: The port model to be moved
         :param coords: The target position
         """
@@ -716,6 +737,7 @@ class GraphicalEditorController(ExtendedController):
         size. Two modifier keys can be used to alter the resize options:
          - Ctrl also causes the child states to be resized
          - Shift caused the resized states to keep their width to height ratio
+
         :param mouse_resize_coords: The coordinates of the mouse
         :param d_width: The desired change in width
         :param d_height: The desired change in height
@@ -888,6 +910,7 @@ class GraphicalEditorController(ExtendedController):
         """Move the view according to the relative coordinates
 
         The whole view/scene is moved, causing the state machine to move within the viewport.
+
         :param rel_x_motion: Distance to move in x direction
         :param rel_y_motion: Distance to move in y direction
         """
@@ -902,6 +925,7 @@ class GraphicalEditorController(ExtendedController):
 
         The method zooms increases or decreases the viewport, resulting in a zoom effect. The zoom keeps the current
         position of the cursor within the state machine, allowing to zoom in/out in specific directions.
+
         :param pos:
         :param direction:
         """
@@ -938,6 +962,7 @@ class GraphicalEditorController(ExtendedController):
 
         Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
         done in the view, which is called from this method with the appropriate arguments.
+
         :param state_m: The state to be drawn
         :param pos_x: The default x position if there is no position stored
         :param pos_y: The default y position if there is no position stored
@@ -1029,6 +1054,7 @@ class GraphicalEditorController(ExtendedController):
 
         This method draws the ports that are displayed within a container state. The inner ports are the input data
         ports, output data ports and scoped variables.
+
         :param parent_state_m: The parent state model of the ports
         :param parent_depth: The depth of the parent state
         """
@@ -1093,6 +1119,7 @@ class GraphicalEditorController(ExtendedController):
 
         The method takes all transitions from the given state and calculates their start and end point positions.
         Those are passed together with the waypoints to the view of the graphical editor.
+
         :param parent_state_m: The model of the container state
         :param parent_depth: The depth of the container state
         """
@@ -1159,6 +1186,7 @@ class GraphicalEditorController(ExtendedController):
 
         The method takes all data flows from the given state and calculates their start and end point positions.
         Those are passed together with the waypoints to the view of the graphical editor.
+
         :param parent_state_m: The model of the container state
         :param parent_depth: The depth pf the container state
         """
@@ -1240,6 +1268,7 @@ class GraphicalEditorController(ExtendedController):
 
         With drag and drop on outcomes, the user can draw new transitions. Here the transition is temporary drawn in
         the graphical editor.
+
         :param parent_state_m: Model of the container state
         :param parent_depth: Depth of the container state
         """
@@ -1256,12 +1285,12 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.draw_transition(outcome[0], outcome[1], target[0], target[1], line_width,
                                                  self.temporary_waypoints, True, parent_depth + 0.6)
 
-
     def _handle_new_data_flow(self, parent_state_m, parent_depth):
         """Responsible for drawing new data flows the user creates
 
         With drag and drop on ports, the user can draw new data flows. Here the data flow is temporary drawn in the
         graphical editor.
+
         :param parent_state_m: Model of the container state
         :param parent_depth: Depth of the container state
         """
@@ -1290,6 +1319,7 @@ class GraphicalEditorController(ExtendedController):
         This method is used when the model (state/transition/data flow) the user clicked on is to be found. The
         position is told to OpenGl and the whole scene is redrawn. From the stack ob objects beneath the position,
         the uppermost one is returned.
+
         :param pos_x: The x coordinate of the position
         :param pos_y: The y coordinate of the position
         :param find_states: Flag whether to find states
@@ -1331,7 +1361,8 @@ class GraphicalEditorController(ExtendedController):
         """Searches recursively for objects with the given ids
 
         The method searches recursively and compares all stored ids with the given ones. It finally returns the
-        object with the biggest depth (furthest nested)
+        object with the biggest depth (furthest nested).
+
         :param ids: The ids to search for
         :param search_state: The state to search in
         :param search_state_depth: The depth the search state is in
