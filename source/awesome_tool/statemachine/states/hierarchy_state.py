@@ -8,6 +8,7 @@
 
 """
 import yaml
+from gtkmvc import Observable
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.utils import log
@@ -59,12 +60,14 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             state = self.get_start_state()
 
-            while not state is self:
+            self.child_execution = True
+            while state is not self:
                 if self.preempted:
                     if self.concurrency_queue:
                         self.concurrency_queue.put(self.state_id)
                     self.final_outcome = Outcome(-2, "preempted")
                     self.active = False
+                    self.child_execution = False
                     logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
                                  "was preempted!" % self.name)
                     return
@@ -94,10 +97,12 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     transition = self.handle_no_transition(state)
                 # it the transition is still None, then the state was preempted or aborted, in this case return
                 if transition is None:
+                    self.child_execution = False
                     return
 
                 state = self.get_state_for_transition(transition)
 
+            self.child_execution = False
             #handle data for the exit script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
@@ -132,6 +137,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 self.concurrency_queue.put(self.state_id)
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
+            self.child_execution = False
             return
 
     @classmethod

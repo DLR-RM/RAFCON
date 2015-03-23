@@ -51,6 +51,8 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.enter(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
+            self.child_execution = True
+
             #start all threads
             for key, state in self.states.iteritems():
                 state_input = self.get_inputs_for_state(state)
@@ -64,6 +66,8 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 state.join()
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
+
+            self.child_execution = False
 
             #handle data for the exit script
             scoped_variables_as_dict = {}
@@ -105,6 +109,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         except RuntimeError:
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
+            self.child_execution = False
             return
 
     @classmethod
