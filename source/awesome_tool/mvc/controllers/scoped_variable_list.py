@@ -60,15 +60,15 @@ class ScopedVariableListController(ExtendedController):
 
     def on_name_changed(self, widget, path, text):
         scoped_variable_id = self.scoped_variables_list_store[int(path)][3]
-        self.model.state.modify_scoped_variable_name(text, scoped_variable_id)
+        self.model.state.scoped_variables[scoped_variable_id].name = text
 
     def on_data_type_changed(self, widget, path, text):
         data_port_id = self.scoped_variables_list_store[int(path)][3]
-        self.model.state.modify_scoped_variable_data_type(text, data_port_id)
+        self.model.state.scoped_variables[data_port_id].change_data_type(text, None)
 
     def on_default_value_changed(self, widget, path, text):
         data_port_id = self.scoped_variables_list_store[int(path)][3]
-        self.model.state.modify_scoped_variable_default_value(text, data_port_id)
+        self.model.state.scoped_variables[data_port_id].default_value = text
 
     def reload_scoped_variables_list_store(self):
         """Reloads the scoped variable list store from the data port models

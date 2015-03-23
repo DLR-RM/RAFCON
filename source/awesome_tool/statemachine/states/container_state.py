@@ -781,39 +781,6 @@ class ContainerState(State):
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
 
-    @Observable.observed
-    def modify_scoped_variable_name(self, name, data_port_id):
-        """ Changes the name of the scoped variable specified by data_port_id
-
-        :param name: the new name of the scoped variable
-        :param data_port_id: the unique id of the scoped variable
-        :return:
-        """
-        self.scoped_variables[data_port_id].name = name
-
-    @Observable.observed
-    def modify_scoped_variable_data_type(self, data_type, data_port_id):
-        """ Changes the name of the scoped variable specified by data_port_id
-
-        :param data_type: the new data type of the scoped variable
-        :param data_port_id: the unique id of the scoped variable
-        :return:
-        """
-        self.scoped_variables[data_port_id].default_value = None
-        self.scoped_variables[data_port_id].data_type = data_type
-
-    @Observable.observed
-    def modify_scoped_variable_default_value(self, default_value, data_port_id):
-        """ Changes the name of the scoped variable specified by data_port_id
-
-        :param default_value: the new default variable of the scoped variable
-        :param data_port_id: the unique id of the scoped variable
-        :return:
-        """
-        val = self.convert_string_to_type(default_value, self.scoped_variables[data_port_id].data_type)
-        if not val is None:
-            self.scoped_variables[data_port_id].default_value = val
-
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------
     # ---------------------------------------------------------------------------------------------

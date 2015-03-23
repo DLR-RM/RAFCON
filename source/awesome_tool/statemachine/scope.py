@@ -156,7 +156,8 @@ class ScopedData(Observable):
     @Observable.observed
     def value(self, value):
         #check for primitive data types
-        if not str(type(value).__name__) == self._value_type:
+        if value is not None and str(type(value).__name__) != self._value_type:
+            print "types", value, str(type(value).__name__), self._value_type
             #check for classes
             if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
                 raise TypeError("result must be of type %s" % str(self._value_type))
