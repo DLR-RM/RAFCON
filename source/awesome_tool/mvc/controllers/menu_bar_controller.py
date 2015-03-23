@@ -11,11 +11,12 @@ class MenuBarController(ExtendedController):
     """
     The class to trigger all the action, available in the menu bar.
     """
-    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl):
+    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view):
         ExtendedController.__init__(self, state_machine_manager_model, view)
         self.state_machines_editor_ctrl = state_machines_editor_ctrl
         self.states_editor_ctrl = states_editor_ctrl
         self.shortcut_manager = None
+        self.logging_view = logging_view
 
     def register_view(self, view):
         """Called when the View was registered
@@ -43,22 +44,25 @@ class MenuBarController(ExtendedController):
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
         awesome_tool.statemachine.singleton.global_storage.mark_dirty(sm.state_machine_id)
 
-    def on_open_activate(self, widget, data=None):
-        dialog = gtk.FileChooserDialog("Please choose a folder",
-                               None,
-                               gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+    def on_open_activate(self, widget, data=None, path=None):
+        if path is None:
+            dialog = gtk.FileChooserDialog("Please choose a folder",
+                                   None,
+                                   gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
 
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            logger.debug("Folder selected: " + dialog.get_filename())
-        elif response == gtk.RESPONSE_CANCEL:
-            logger.debug("No folder selected")
+            response = dialog.run()
+            if response == gtk.RESPONSE_OK:
+                logger.debug("Folder selected: " + dialog.get_filename())
+            elif response == gtk.RESPONSE_CANCEL:
+                logger.debug("No folder selected")
+                dialog.destroy()
+                return
+            load_path = dialog.get_filename()
             dialog.destroy()
-            return
-        load_path = dialog.get_filename()
-        dialog.destroy()
+        else:
+            load_path = path
 
         [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
             global_storage.load_statemachine_from_yaml(load_path)
@@ -78,30 +82,29 @@ class MenuBarController(ExtendedController):
         self.model.get_selected_state_machine_model().root_state.store_meta_data_for_state()
         logger.debug("Successfully saved graphics meta data.")
 
-    def on_save_as_activate(self, widget, data=None):
-
-        dialog = gtk.FileChooserDialog("Please choose a file",
-                                       None,
-                                       gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
-                                       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            logger.debug("File selected: " + dialog.get_filename())
-        elif response == gtk.RESPONSE_CANCEL:
-            logger.debug("No file selected")
+    def on_save_as_activate(self, widget, data=None, path=None):
+        if path is None:
+            dialog = gtk.FileChooserDialog("Please choose a file",
+                                           None,
+                                           gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
+                                           (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                            gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+            response = dialog.run()
+            if response == gtk.RESPONSE_OK:
+                logger.debug("File selected: " + dialog.get_filename())
+            elif response == gtk.RESPONSE_CANCEL:
+                logger.debug("No file selected")
+                dialog.destroy()
+                return
+            self.model.get_selected_state_machine_model().state_machine.base_path = dialog.get_filename()
             dialog.destroy()
-            return
-        self.model.get_selected_state_machine_model().state_machine.base_path = dialog.get_filename()
-        dialog.destroy()
+        else:
+            self.model.get_selected_state_machine_model().state_machine.base_path = path
         self.on_save_activate(widget, data)
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement
         pass
-
-    def on_quit_activate(self, widget, data=None):
-        self.on_main_window_destroy(None, None)
 
     def on_refresh_libraries_activate(self, widget, data=None):
         """
@@ -112,28 +115,31 @@ class MenuBarController(ExtendedController):
         """
         awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
 
-    def on_refresh_all_activate(self, widget, data=None):
+    def on_refresh_all_activate(self, widget, data=None, skip_reload=False):
         """
         Reloads all libraries and thus all state machines as well.
         :param widget: the main widget
         :param data: optional data
         :return:
         """
-        if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
-            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-            message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
-                             "The following state machines were modified and not saved: "
-            for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
-                message_string = "%s %s " % (message_string, str(sm_id))
-            message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
-                             "before will be deleted!)" % message_string
-            message.set_markup(message_string)
-            message.add_button("Yes", 42)
-            message.add_button("No", 43)
-            message.connect('response', self.on_refresh_message_dialog_response_signal)
-            message.show()
-        else:
+        if skip_reload:
             self.refresh_libs_and_statemachines()
+        else:
+            if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
+                message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+                message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
+                                 "The following state machines were modified and not saved: "
+                for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
+                    message_string = "%s %s " % (message_string, str(sm_id))
+                message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
+                                 "before will be deleted!)" % message_string
+                message.set_markup(message_string)
+                message.add_button("Yes", 42)
+                message.add_button("No", 43)
+                message.connect('response', self.on_refresh_message_dialog_response_signal)
+                message.show()
+            else:
+                self.refresh_libs_and_statemachines()
 
     def on_refresh_message_dialog_response_signal(self, widget, response_id):
         if response_id == 42:
@@ -173,6 +179,14 @@ class MenuBarController(ExtendedController):
 
         # reload state machines from file system
         awesome_tool.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
+
+    def on_quit_activate(self, widget, data=None):
+        self.logging_view.quit_flag = True
+        logger.debug("Main window destroyed")
+        log.debug_filter.set_logging_test_view(None)
+        log.error_filter.set_logging_test_view(None)
+        awesome_tool.statemachine.config.global_config.save_configuration()
+        gtk.main_quit()
 
     ######################################################
     # menu bar functionality - Edit

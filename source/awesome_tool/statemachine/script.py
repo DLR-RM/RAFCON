@@ -157,17 +157,16 @@ def exit(self, scoped_variables, gvm):
             logger.error("Script file could not be opened at the following path: %s" % str(script_path))
             raise IOError("File could not be opened!")
 
+        # reset script
+        self.script = None
         self.script = script_file.read()
         script_file.close()
 
         module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
 
-        # here is the pretty way for loading a module
+        # load module
         tmp_module = imp.new_module(module_name)
-
         sys.modules[module_name] = tmp_module
-
-        # maybe substitute some variables in the script
 
         code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
 

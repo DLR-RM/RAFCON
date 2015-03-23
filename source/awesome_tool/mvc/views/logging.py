@@ -59,7 +59,6 @@ class LoggingView(View):
             if self.textview.get_buffer().get_tag_table().lookup(use_tag) is not None:
                 text = text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push, use_tag)
             else:
-                print "asdlhfjashfjasdfj"
                 text = text_buf.insert(text_buf.get_end_iter(), text_to_push)
         else:
             text = text_buf.insert(text_buf.get_end_iter(), text_to_push)

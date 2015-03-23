@@ -366,10 +366,6 @@ class ContainerState(State):
         :param transition_id: the id of the transition to remove
 
         """
-
-        print self.transitions
-        print self._transitions
-        print transition_id
         if transition_id == -1 or transition_id == -2:
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
         if transition_id not in self._transitions:

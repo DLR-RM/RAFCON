@@ -68,7 +68,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         state_machine, lib_version, creationtime = awesome_tool.statemachine.singleton.library_manager.storage.\
             load_statemachine_from_yaml(target_lib_dict[library_name])
         self.state_copy = state_machine.root_state
-        if not str(lib_version) == version:
+        if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
 
         #copy all ports and outcomes of self.state_copy to let the library state appear like the container state

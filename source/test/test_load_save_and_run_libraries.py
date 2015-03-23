@@ -11,7 +11,7 @@ from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
-def save_libraries():
+def test_save_libraries():
     s = StateMachineStorage("../test_scripts/test_libraries")
 
     state1 = ExecutionState("library_execution_state1", path="../test_scripts", filename="library_execution_state1.py")
@@ -110,7 +110,7 @@ def create_execution_state_library_state_machine():
     return StateMachine(library_container_state)
 
 
-def save_nested_library_state():
+def test_save_nested_library_state():
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
     awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
@@ -179,9 +179,9 @@ def test_nested_library_state_machine():
 
 if __name__ == '__main__':
     #pytest.main()
-    save_libraries()
+    test_save_libraries()
     # print "\n################### next function #########################\n"
-    save_nested_library_state()
+    test_save_nested_library_state()
     # print "\n################### next function #########################\n"
     test_hierarchy_state_library()
     # print "\n################### next function #########################\n"

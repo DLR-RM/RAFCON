@@ -43,9 +43,6 @@ class MainWindowController(ExtendedController):
         self.observe_model(self.state_machine_execution_engine)
         self.state_machine_execution_engine.register_observer(self)
 
-        # connect destroy main window
-        view.get_top_widget().connect("destroy", self.on_main_window_destroy)
-
         ######################################################
         # logging view
         ######################################################
@@ -125,19 +122,20 @@ class MainWindowController(ExtendedController):
         ######################################################
         # menu bar
         ######################################################
-        self.menu_bar_controller = MenuBarController(state_machine_manager_model,
+        menu_bar_controller = MenuBarController(state_machine_manager_model,
                                                      view.menu_bar,
                                                      state_machines_editor_ctrl,
-                                                     states_editor_ctrl)
-        self.add_controller("menu_bar_controller", self.menu_bar_controller)
+                                                     states_editor_ctrl,
+                                                     view.logging_view)
+        self.add_controller("menu_bar_controller", menu_bar_controller)
 
         ######################################################
         # tool bar
         ######################################################
-        self.tool_bar_controller = ToolBarController(state_machine_manager_model,
+        tool_bar_controller = ToolBarController(state_machine_manager_model,
                                                      view.tool_bar,
-                                                     self.menu_bar_controller)
-        self.add_controller("tool_bar_controller", self.tool_bar_controller)
+                                                     menu_bar_controller)
+        self.add_controller("tool_bar_controller", tool_bar_controller)
 
         ######################################################
         # setup correct sizes
@@ -157,11 +155,3 @@ class MainWindowController(ExtendedController):
         status_bar3_string = "Execution status: " + \
                              str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         status_bar3.push(0, status_bar3_string)
-
-    def on_main_window_destroy(self, widget, data=None):
-        self.view.logging_view.quit_flag = True
-        logger.debug("Main window destroyed")
-        log.debug_filter.set_logging_test_view(None)
-        log.error_filter.set_logging_test_view(None)
-        awesome_tool.statemachine.config.global_config.save_configuration()
-        gtk.main_quit()
