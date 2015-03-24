@@ -9,6 +9,7 @@ from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerMod
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+import awesome_tool.statemachine.singleton
 
 
 def create_tab_close_button(callback, *additional_parameters):
@@ -131,6 +132,32 @@ class StateMachinesEditorController(ExtendedController):
         # print event, state_model, result
 
         sm_identifier = state_machine_model.state_machine.state_machine_id
+
+        if sm_identifier in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
+            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+            message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
+                             "The following state machines were modified and not saved: "
+            for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
+                message_string = "%s %s " % (message_string, str(sm_id))
+            message_string = "%s \n(Note: all state machines that are freshly created and have never been " \
+                             "saved before will be deleted!)" % message_string
+            message.set_markup(message_string)
+            message.add_button("Yes", 42)
+            message.add_button("No", 43)
+            message.connect('response', self.on_refresh_message_dialog_response_signal, state_machine_model)
+            message.show()
+        else:
+            self.remove_state_machine(state_machine_model)
+
+    def on_refresh_message_dialog_response_signal(self, widget, response_id, state_machine_model):
+        if response_id == 42:
+            self.remove_state_machine(state_machine_model)
+        else:
+            logger.debug("Refresh canceled")
+        widget.destroy()
+
+    def remove_state_machine(self, state_machine_model):
+        sm_identifier = state_machine_model.state_machine.state_machine_id
         self.remove_controller(self.registered_state_machines[sm_identifier])
 
         del self.registered_state_machines[sm_identifier]
@@ -151,6 +178,8 @@ class StateMachinesEditorController(ExtendedController):
             logger.warn("No state machine left to be the selected state machine. "
                         "The selected state machine id will be None!")
             self.model.selected_state_machine_id = None
+        if sm_identifier in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
+            awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines.remove(sm_identifier)
 
     def close_all_tabs(self):
         """
