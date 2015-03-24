@@ -1,5 +1,5 @@
 """
-.. module:: scope_variable
+.. module:: scoped_variable
    :platform: Unix, Windows
    :synopsis: A module for organizing the scoped variables in a container state
 

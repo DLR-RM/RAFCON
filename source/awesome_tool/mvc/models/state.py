@@ -301,7 +301,7 @@ class StateModel(ModelMT):
                     data_flow_model.meta = tmp_meta["data_flow" + str(d_id)]
                     del tmp_meta["data_flow" + str(d_id)]
                 for scoped_variable_model in self.scoped_variables:
-                    s_id = scoped_variable_model.scope_variable.data_port_id
+                    s_id = scoped_variable_model.scoped_variable.data_port_id
                     scoped_variable_model.meta = tmp_meta["scoped_variable" + str(s_id)]
                     del tmp_meta["scoped_variable" + str(s_id)]
             # assign the meta data to the state
@@ -329,7 +329,8 @@ class StateModel(ModelMT):
                     copy.deepcopy(source_state.data_flows[data_flow_model.data_flow.data_flow_id].meta)
             for scoped_variable_model in self.scoped_variables:
                 scoped_variable_model.meta = \
-                    copy.deepcopy(source_state.scoped_variables[scoped_variable_model.scope_variable.data_port_id].meta)
+                    copy.deepcopy(source_state.scoped_variables[
+                                      scoped_variable_model.scoped_variable.data_port_id].meta)
 
     def store_meta_data_for_state(self):
         #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
@@ -350,7 +351,7 @@ class StateModel(ModelMT):
             for data_flow_model in self.data_flows:
                 self.meta["data_flow" + str(data_flow_model.data_flow.data_flow_id)] = data_flow_model.meta
             for scoped_variable_model in self.scoped_variables:
-                self.meta["scoped_variable" + str(scoped_variable_model.scope_variable.data_port_id)] =\
+                self.meta["scoped_variable" + str(scoped_variable_model.scoped_variable.data_port_id)] =\
                     scoped_variable_model.meta
 
         awesome_tool.statemachine.singleton.global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)
