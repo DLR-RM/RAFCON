@@ -15,6 +15,15 @@ Subpackages
 Submodules
 ----------
 
+state_machine module
+--------------------
+
+.. automodule:: awesome_tool.statemachine.state_machine
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 data_flow module
 ----------------
 

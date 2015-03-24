@@ -9,7 +9,7 @@ from awesome_tool.utils.vividict import Vividict
 
 
 class StateMachineModel(ModelMT):
-    """This model class manages a StateMachine
+    """This model class manages a :class:`awesome_tool.statemachine.state_machine.StateMachine`
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine).
 
