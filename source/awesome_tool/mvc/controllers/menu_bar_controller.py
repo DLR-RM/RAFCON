@@ -88,7 +88,7 @@ class MenuBarController(ExtendedController):
                                            None,
                                            gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
                                            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                            gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+                                            gtk.STOCK_SAVE, gtk.RESPONSE_OK))
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
                 logger.debug("File selected: " + dialog.get_filename())
