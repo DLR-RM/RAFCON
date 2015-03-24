@@ -43,6 +43,7 @@ def test_concurrency_barrier_state_execution():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine)
     variables_for_pytest.test_multithrading_lock.release()
 
     assert output_data["output_data_port1"] == 42

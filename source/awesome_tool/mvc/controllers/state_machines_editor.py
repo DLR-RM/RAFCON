@@ -127,13 +127,15 @@ class StateMachinesEditorController(ExtendedController):
             if sm_id not in self.registered_state_machines:
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
 
-    def on_close_clicked(self, event, state_machine_model, result):
+    def on_close_clicked(self, event, state_machine_model, result, force=False):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         # print event, state_model, result
 
         sm_identifier = state_machine_model.state_machine.state_machine_id
 
-        if sm_identifier in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
+        if force:
+            self.remove_state_machine(state_machine_model)
+        elif sm_identifier in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
                              "The following state machines were modified and not saved: "
@@ -178,6 +180,7 @@ class StateMachinesEditorController(ExtendedController):
             logger.warn("No state machine left to be the selected state machine. "
                         "The selected state machine id will be None!")
             self.model.selected_state_machine_id = None
+
         if sm_identifier in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
             awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines.remove(sm_identifier)
 
@@ -190,4 +193,4 @@ class StateMachinesEditorController(ExtendedController):
         for s_id, tab in self.tabs.iteritems():
             state_machine_model_list.append(tab['state_machine_model'])
         for state_model in state_machine_model_list:
-            self.on_close_clicked(None, state_model, None)
+            self.on_close_clicked(None, state_model, None, force=True)

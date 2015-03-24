@@ -286,7 +286,11 @@ class StateModel(ModelMT):
                 output_data_port_model.meta = tmp_meta["output_data_port" + str(o_id)]
                 del tmp_meta["output_data_port" + str(o_id)]
 
-            if self.state.state_type is not StateType.EXECUTION:
+            # check the type implicitly by checking if the state has the states attribute
+            if hasattr(self.state, 'states'):
+                # import inspect
+                # print self.state.__class__
+                # print inspect.getmro(self.state.__class__)
                 # add meta to transition and data flow
                 for transition_model in self.transitions:
                     t_id = transition_model.transition.transition_id
@@ -316,7 +320,7 @@ class StateModel(ModelMT):
             output_data_port_model.meta = \
                 copy.deepcopy(source_state.output_data_ports[output_data_port_model.data_port.data_port_id].meta)
 
-        if self.state.state_type is not StateType.EXECUTION:
+        if hasattr(self.state, 'states'):
             for transition_model in self.transitions:
                 transition_model.meta = \
                     copy.deepcopy(source_state.transitions[transition_model.transition.transition_id].meta)
@@ -340,7 +344,7 @@ class StateModel(ModelMT):
                 output_data_port_model.meta
 
         # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file
-        if self.state.state_type is not StateType.EXECUTION:
+        if hasattr(self.state, 'states'):
             for transition_model in self.transitions:
                 self.meta["transition" + str(transition_model.transition.transition_id)] = transition_model.meta
             for data_flow_model in self.data_flows:

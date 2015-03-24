@@ -61,6 +61,7 @@ def test_start_stop_pause_step():
     sm_loaded.root_state.join()
 
     assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded)
     variables_for_pytest.test_multithrading_lock.release()
     # gtk.main()
 

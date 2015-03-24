@@ -171,7 +171,7 @@ class StateMachineStorage(Observable):
         state.script.filename = self.SCRIPT_FILE
 
         #create yaml files for all children
-        if not state.state_type is awesome_tool.statemachine.states.state.StateType.EXECUTION:
+        if hasattr(state, 'states'):
             for key, state in state.states.iteritems():
                 self.save_state_recursively(state, state_path)
 

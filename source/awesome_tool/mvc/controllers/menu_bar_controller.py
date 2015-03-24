@@ -115,14 +115,14 @@ class MenuBarController(ExtendedController):
         """
         awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
 
-    def on_refresh_all_activate(self, widget, data=None, skip_reload=False):
+    def on_refresh_all_activate(self, widget, data=None, force=False):
         """
         Reloads all libraries and thus all state machines as well.
         :param widget: the main widget
         :param data: optional data
         :return:
         """
-        if skip_reload:
+        if force:
             self.refresh_libs_and_statemachines()
         else:
             if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:

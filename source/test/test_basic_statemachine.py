@@ -57,7 +57,7 @@ def test_create_state():
 
     with raises(AttributeError):
         # The name of the port differs in key and class member
-        ExecutionState("test_execution_state", input_keys={'diff_input': port})
+        ExecutionState("test_execution_state", input_data_ports={'diff_input': port})
 
 
     # UTF8 strings should be allowed at least for descriptions

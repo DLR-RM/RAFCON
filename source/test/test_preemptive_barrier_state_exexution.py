@@ -48,10 +48,12 @@ def test_concurrency_preemption_state_execution():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
     assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm)
     variables_for_pytest.test_multithrading_lock.release()
 
 
 def test_concurrency_preemption_save_load():
+    variables_for_pytest.test_multithrading_lock.acquire()
     s = StateMachineStorage("../test_scripts/stored_statemachine")
 
     preemption_state_sm = create_preemption_statemachine()
@@ -64,7 +66,6 @@ def test_concurrency_preemption_save_load():
     preemption_state_sm.root_state.input_data = input_data
     preemption_state_sm.root_state.output_data = output_data
 
-    variables_for_pytest.test_multithrading_lock.acquire()
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
     awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
@@ -72,6 +73,7 @@ def test_concurrency_preemption_save_load():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
     assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm)
     variables_for_pytest.test_multithrading_lock.release()
 
 if __name__ == '__main__':

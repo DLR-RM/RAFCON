@@ -73,6 +73,7 @@ def test_scoped_variables():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     sm_loaded.root_state.join()
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine)
     variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["output_data_port1"]

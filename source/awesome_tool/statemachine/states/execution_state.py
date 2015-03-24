@@ -26,10 +26,10 @@ class ExecutionState(State, yaml.YAMLObject):
 
     yaml_tag = u'!ExecutionState'
 
-    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None, path=None,
-                 filename=None, check_path=True):
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+                 path=None, filename=None, check_path=True):
 
-        State.__init__(self, name, state_id, input_keys, output_keys, outcomes, path, filename,
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                        state_type=StateType.EXECUTION, check_path=check_path)
         self.logger = log.get_logger(self.name)
 
@@ -112,7 +112,7 @@ class ExecutionState(State, yaml.YAMLObject):
         dict_representation = loader.construct_mapping(node, deep=True)
         name = dict_representation['name']
         state_id = dict_representation['state_id']
-        state_type = dict_representation['state_type']
+        # state_type = dict_representation['state_type']
         input_data_ports = dict_representation['input_data_ports']
         output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']
