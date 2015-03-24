@@ -145,6 +145,9 @@ def test_create_container_state():
     with raises(AttributeError):
         # Transition pointing to the state itself
         container.add_transition(state1.state_id, -2, state1.state_id, None)
+    with raises(AttributeError):
+        # to_state_id and to_outcome not None
+        container.add_transition(state1.state_id, -2, state1.state_id, -1)
 
     with raises(AttributeError):
         # The removal of an undefined transition should throw an AttributeError

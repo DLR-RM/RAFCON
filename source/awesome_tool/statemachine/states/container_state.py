@@ -286,9 +286,12 @@ class ContainerState(State):
         if not (from_state_id in self.states or from_state_id == self.state_id):
             raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
 
-        if not to_state_id is None:
+        if to_state_id is not None:
             if not (to_state_id in self.states or to_state_id == self.state_id):
                 raise AttributeError("To_state %s does not exist in the container state" % to_state_id.state_id)
+
+        if to_state_id is None and to_outcome is None:
+            raise AttributeError("Either the to_state_id or the to_outcome must be None" % to_state_id.state_id)
 
         # get correct states
         from_state = None
