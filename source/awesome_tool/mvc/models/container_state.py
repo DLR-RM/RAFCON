@@ -58,7 +58,7 @@ class ContainerStateModel(StateModel):
             if model_class is not None:
                 self.states[state.state_id] = model_class(state, parent=self)
             # if isinstance(state, ContainerState):
-            #     self.states[state.state_id] = ContainerStateModel(state, parent=self)
+            # self.states[state.state_id] = ContainerStateModel(state, parent=self)
             # # elif isinstance(state, HierarchyState):
             # #     self.states.append(ContainerState(state))
             # elif isinstance(state, State):
@@ -115,7 +115,10 @@ class ContainerStateModel(StateModel):
         changed_list = None
         cause = None
         # If the change happened in a child state, notify the list of all child states
-        if isinstance(model, StateModel) and model is not self or model.parent is not self:
+        if (isinstance(model, StateModel) and model is not self) or (  # The state was changed directly
+                not isinstance(model, StateModel) and model.parent is not self):  # One of the member models was changed
+            print "states", model, prop_name
+            print info
             changed_list = self.states
             cause = 'state_change'
         # If the change happened in one of the transitions, notify the list of all transitions
@@ -157,7 +160,8 @@ class ContainerStateModel(StateModel):
                 c_state_m.is_start = True if c_state_m.parent is None or \
                                              c_state_m.state.state_id == c_state_m.parent.state.start_state else False
             # remove other state_models is_start flag
-            state_list = filter(lambda state_model: state_model.is_start and state_model is not c_state_m, self.states.values())
+            state_list = filter(lambda state_model: state_model.is_start and state_model is not c_state_m,
+                                self.states.values())
             if len(state_list) > 1:
                 logger.warning("There are more then one start state.")
             for state_model in state_list:
@@ -166,7 +170,7 @@ class ContainerStateModel(StateModel):
                 state_model.is_start = False
 
         model_list = None
-        
+
         def get_model_info(model):
             model_list = None
             data_list = None
@@ -223,13 +227,13 @@ class ContainerStateModel(StateModel):
 
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
-        #logger.debug("load recursively graphics file from yaml for state model of state %s" % self.state.name)
+        # logger.debug("load recursively graphics file from yaml for state model of state %s" % self.state.name)
         StateModel.load_meta_data_for_state(self)
         for state_key, state in self.states.iteritems():
             state.load_meta_data_for_state()
 
     def store_meta_data_for_state(self):
-        #logger.debug("store recursively graphics file to yaml for state model of state %s" % self.state.name)
+        # logger.debug("store recursively graphics file to yaml for state model of state %s" % self.state.name)
         StateModel.store_meta_data_for_state(self)
         for state_key, state in self.states.iteritems():
             state.store_meta_data_for_state()
