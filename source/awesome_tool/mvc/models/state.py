@@ -277,40 +277,29 @@ class StateModel(ModelMT):
         if os.path.exists(meta_path):
             tmp_meta = awesome_tool.statemachine.singleton.global_storage.storage_utils.load_dict_from_yaml(meta_path)
 
-            counter = 0
             for input_data_port_model in self.input_data_ports:
-                input_data_port_model.meta = tmp_meta["input_data_port" + str(counter)]
-                counter += 1
-            counter = 0
+                i_id = input_data_port_model.data_port.data_port_id
+                input_data_port_model.meta = tmp_meta["input_data_port" + str(i_id)]
+                del tmp_meta["input_data_port" + str(i_id)]
             for output_data_port_model in self.output_data_ports:
-                output_data_port_model.meta = tmp_meta["output_data_port" + str(counter)]
-                counter += 1
-            for i in range(len(self.input_data_ports)):
-                del tmp_meta["input_data_port" + str(i)]
-            for i in range(len(self.output_data_ports)):
-                del tmp_meta["output_data_port" + str(i)]
+                o_id = output_data_port_model.data_port.data_port_id
+                output_data_port_model.meta = tmp_meta["output_data_port" + str(o_id)]
+                del tmp_meta["output_data_port" + str(o_id)]
 
             if self.state.state_type is not StateType.EXECUTION:
                 # add meta to transition and data flow
-                counter = 0
                 for transition_model in self.transitions:
-                    transition_model.meta = tmp_meta["transition" + str(counter)]
-                    counter += 1
-                counter = 0
+                    t_id = transition_model.transition.transition_id
+                    transition_model.meta = tmp_meta["transition" + str(t_id)]
+                    del tmp_meta["transition" + str(t_id)]
                 for data_flow_model in self.data_flows:
-                    data_flow_model.meta = tmp_meta["data_flow" + str(counter)]
-                    counter += 1
-                counter = 0
+                    d_id = data_flow_model.data_flow.data_flow_id
+                    data_flow_model.meta = tmp_meta["data_flow" + str(d_id)]
+                    del tmp_meta["data_flow" + str(d_id)]
                 for scoped_variable_model in self.scoped_variables:
-                    scoped_variable_model.meta = tmp_meta["scoped_variable" + str(counter)]
-                    counter += 1
-                # delete transition and data flow from tmp data
-                for i in range(len(self.transitions)):
-                    del tmp_meta["transition" + str(i)]
-                for i in range(len(self.data_flows)):
-                    del tmp_meta["data_flow" + str(i)]
-                for i in range(len(self.scoped_variables)):
-                    del tmp_meta["scoped_variable" + str(i)]
+                    s_id = scoped_variable_model.scope_variable.data_port_id
+                    scoped_variable_model.meta = tmp_meta["scoped_variable" + str(s_id)]
+                    del tmp_meta["scoped_variable" + str(s_id)]
             # assign the meta data to the state
             self.meta = tmp_meta
         else:
@@ -320,56 +309,45 @@ class StateModel(ModelMT):
 
         self.meta = copy.deepcopy(source_state.meta)
 
-        counter = 0
         for input_data_port_model in self.input_data_ports:
-            input_data_port_model.meta = copy.deepcopy(source_state.input_data_ports[counter].meta)
-            counter += 1
-        counter = 0
+            input_data_port_model.meta = \
+                copy.deepcopy(source_state.input_data_ports[input_data_port_model.data_port.data_port_id].meta)
         for output_data_port_model in self.output_data_ports:
-            output_data_port_model.meta = copy.deepcopy(source_state.output_data_ports[counter].meta)
-            counter += 1
+            output_data_port_model.meta = \
+                copy.deepcopy(source_state.output_data_ports[output_data_port_model.data_port.data_port_id].meta)
 
         if self.state.state_type is not StateType.EXECUTION:
-            counter = 0
             for transition_model in self.transitions:
-                transition_model.meta = copy.deepcopy(source_state.transitions[counter].meta)
-                counter += 1
-            counter = 0
+                transition_model.meta = \
+                    copy.deepcopy(source_state.transitions[transition_model.transition.transition_id].meta)
             for data_flow_model in self.data_flows:
-                data_flow_model.meta = copy.deepcopy(source_state.data_flows[counter].meta)
-                counter += 1
-            counter = 0
+                data_flow_model.meta = \
+                    copy.deepcopy(source_state.data_flows[data_flow_model.data_flow.data_flow_id].meta)
             for scoped_variable_model in self.scoped_variables:
-                scoped_variable_model.meta = copy.deepcopy(source_state.scoped_variables[counter].meta)
-                counter += 1
+                scoped_variable_model.meta = \
+                    copy.deepcopy(source_state.scoped_variables[scoped_variable_model.scope_variable.data_port_id].meta)
 
     def store_meta_data_for_state(self):
         #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.script.path, StateMachineStorage.GRAPHICS_FILE)
 
-        counter = 0
         for input_data_port_model in self.input_data_ports:
-            self.meta["input_data_port" + str(counter)] = input_data_port_model.meta
-            counter += 1
-        counter = 0
+            self.meta["input_data_port" + str(input_data_port_model.data_port.data_port_id)] = \
+                input_data_port_model.meta
+
         for output_data_port_model in self.output_data_ports:
-            self.meta["output_data_port" + str(counter)] = output_data_port_model.meta
-            counter += 1
+            self.meta["output_data_port" + str(output_data_port_model.data_port.data_port_id)] = \
+                output_data_port_model.meta
 
         # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file
         if self.state.state_type is not StateType.EXECUTION:
-            counter = 0
             for transition_model in self.transitions:
-                self.meta["transition" + str(counter)] = transition_model.meta
-                counter += 1
-            counter = 0
+                self.meta["transition" + str(transition_model.transition.transition_id)] = transition_model.meta
             for data_flow_model in self.data_flows:
-                self.meta["data_flow" + str(counter)] = data_flow_model.meta
-                counter += 1
-            counter = 0
+                self.meta["data_flow" + str(data_flow_model.data_flow.data_flow_id)] = data_flow_model.meta
             for scoped_variable_model in self.scoped_variables:
-                self.meta["scoped_variable" + str(counter)] = scoped_variable_model.meta
-                counter += 1
+                self.meta["scoped_variable" + str(scoped_variable_model.scope_variable.data_port_id)] =\
+                    scoped_variable_model.meta
 
         awesome_tool.statemachine.singleton.global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)
 
