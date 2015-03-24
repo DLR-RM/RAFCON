@@ -758,9 +758,6 @@ class State(Observable, yaml.YAMLObject, object):
                 if not isinstance(value, Outcome):
                     raise TypeError("element of outcomes must be of type Outcome")
             self._outcomes = outcomes
-            #if self.state_type is StateType.BARRIER_CONCURRENCY:
-            if 0 not in outcomes:
-                self.add_outcome("success", 0)
             #aborted and preempted must always exist
             if -1 not in outcomes:
                 self.add_outcome("aborted", -1)
