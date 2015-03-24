@@ -1012,7 +1012,12 @@ class GraphicalEditorController(ExtendedController):
         selected = False if state_m not in selected_states else True
 
         # Is the state active (executing)?
-        active = state_m.state.active
+        active = 0
+        if state_m.state.active:
+            if self.has_content(state_m) and state_m.state.child_execution:
+                active = 0.5
+            else:
+                active = 1
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports

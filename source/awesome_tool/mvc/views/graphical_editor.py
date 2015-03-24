@@ -139,6 +139,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)
     state_selected_color = Color.from_hex(0xd7e0ec)  # Color(0.7, 0, 0, 0.8)
     state_active_color = Color.from_hex(0xb7d9b0)  # Color(0.7, 0, 0, 0.8)
+    state_child_active_color = Color.from_hex(0xCFDEDD)  # Color(0.7, 0, 0, 0.8)
     state_name_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
     border_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
     border_selected_color = Color.from_hex(0x3aaf59)  # Color(0, 0.8, 0.8, 1)
@@ -333,8 +334,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         border_color = self.border_color
 
         border_width = min(width, height) / 10.
-        if active:
+        if active == 1:
             fill_color = self.state_active_color
+        elif active == 0.5:
+            fill_color = self.state_child_active_color
             #border_color = self.border_active_color
 
         if selected:
