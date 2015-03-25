@@ -5,6 +5,7 @@ logger = log.get_logger(__name__)
 import sys
 import time
 import copy
+from math import sin, cos, atan2, pi
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
@@ -353,6 +354,69 @@ class GraphicalEditorController(ExtendedController):
         self.last_button_pressed = None
         self.drag_origin_offset = None
 
+    def _move_waypoint(self, new_pos_x, new_pos_y, modifier_keys):
+        new_pos_x, new_pos_y = self._limit_position_to_state(self.selection.parent, new_pos_x, new_pos_y)
+        selected_model = self.selected_waypoint[0]
+        waypoints = selected_model.meta['gui']['editor']['waypoints']
+        waypoint_id = self.selected_waypoint[1]
+
+        # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
+        if modifier_keys & SHIFT_MASK != 0:
+            snap_angle = global_config.get_config_value('waypoint_snap_angle', 45.)
+            snap_angle = snap_angle / 180 * pi
+            snap_diff = global_config.get_config_value('waypoint_snap_max_diff_angle', 10.)
+            snap_diff = snap_diff / 180 * pi
+            max_snap_dist = global_config.get_config_value('waypoint_snap_max_diff_pixel', 50.)
+            max_snap_dist /= self.view.editor.pixel_to_size_ratio()
+
+            def calculate_snap_point(p1, p2, p3):
+                def find_closest_snap_angle(angle):
+                    multiple = angle // snap_angle
+                    if abs(snap_angle * multiple - angle) < \
+                            abs(snap_angle * (multiple + 1) - angle):
+                        return snap_angle * multiple
+                    return snap_angle * (multiple + 1)
+
+                alpha = atan2(-(p2[1] - p1[1]), p2[0] - p1[0])
+                beta = atan2(-(p2[1] - p3[1]), p2[0] - p3[0])
+                closest_angle = find_closest_snap_angle(alpha)
+                if abs(alpha - closest_angle) < snap_diff:
+                    alpha = closest_angle
+                closest_angle = find_closest_snap_angle(beta)
+                if abs(beta - closest_angle) < snap_diff:
+                    beta = closest_angle
+
+                dx = p3[0] - p1[0]
+                dy = -(p3[1] - p1[1])
+                denominator = cos(alpha)*sin(beta) - sin(alpha)*cos(beta)
+                if denominator == 0:
+                    return p2
+                s = (dx*sin(beta) - dy*cos(beta)) / denominator
+                # t = (dx*sin(alpha) - dy*cos(alpha)) / denominator
+                snap_x = p1[0] + cos(alpha) * s
+                snap_y = p1[1] - sin(alpha) * s
+
+                if dist(p2, (snap_x, snap_y)) < max_snap_dist:
+                    return snap_x, snap_y
+                return p2
+
+            if waypoint_id > 0:
+                prev_point = waypoints[waypoint_id - 1]
+            else:
+                prev_point = (selected_model.meta['gui']['editor']['from_pos_x'],
+                              selected_model.meta['gui']['editor']['from_pos_y'])
+            if waypoint_id < len(waypoints) - 1:
+                next_point = waypoints[waypoint_id + 1]
+            else:
+                next_point = (selected_model.meta['gui']['editor']['to_pos_x'],
+                              selected_model.meta['gui']['editor']['to_pos_y'])
+
+            point = (new_pos_x, new_pos_y)
+            (new_pos_x, new_pos_y) = calculate_snap_point(prev_point, point, next_point)
+
+        waypoints[waypoint_id] = (new_pos_x, new_pos_y)
+        self._redraw()
+
     def _on_mouse_motion(self, widget, event):
         """Triggered when the mouse is moved
 
@@ -397,9 +461,7 @@ class GraphicalEditorController(ExtendedController):
         # Move the selected waypoint (if there is one)
         if self.selected_waypoint is not None:
             # Move selected waypoint within its container state
-            new_pos_x, new_pos_y = self._limit_position_to_state(self.selection.parent, new_pos_x, new_pos_y)
-            self.selected_waypoint[0][self.selected_waypoint[1]] = (new_pos_x, new_pos_y)
-            self._redraw()
+            self._move_waypoint(new_pos_x, new_pos_y, event.state)
 
         # Move data port
         if isinstance(self.selection, (DataPortModel, ScopedVariableModel)) and not self.selected_port_connector and \
@@ -460,7 +522,7 @@ class GraphicalEditorController(ExtendedController):
                 if waypoint[0] is not None and waypoint[1] is not None:
                     if dist(waypoint, coords) < close_threshold:
                         # As tuples cannot be changed, we have to store the whole list plus the index
-                        self.selected_waypoint = (selection.meta['gui']['editor']['waypoints'], i)
+                        self.selected_waypoint = (selection, i)
                         self.selection_start_pos = (waypoint[0], waypoint[1])
                         break
 
