@@ -199,7 +199,7 @@ class GraphicalEditorController(ExtendedController):
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
 
-    def _redraw(self):
+    def _redraw(self, timer_triggered=False):
         """Force the graphical editor to be redrawn
 
         First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
@@ -209,19 +209,20 @@ class GraphicalEditorController(ExtendedController):
         # Check if initialized
         # and whether the last redraw was more than redraw_after ago
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after):
-            # Remove any existing timer
-            if self.timer_id is not None:
-                gobject.source_remove(self.timer_id)
-                self.timer_id = None
+            # Remove any existing timer id
+            self.timer_id = None
             self.view.editor.emit("configure_event", None)
             self.view.editor.emit("expose_event", None)
             self.last_time = time.time()
+            return False  # Causes the periodic timer to stop
         # If the last redraw was less than redraw_after ago or the view is not initialized, yet, set a timer to try
         # again later
         else:
             # Only set the timer, if no timer is existing
-            if self.timer_id is not None:
-                self.timer_id = gobject.timeout_add(int(redraw_after), self._redraw)
+            if self.timer_id is None:
+                self.timer_id = gobject.timeout_add(int(redraw_after * 1000), self._redraw, True)
+            else:
+                return True  # Causes the periodic timer to continue
 
     def _on_key_press(self, widget, event):
         key_name = keyval_name(event.keyval)
@@ -1567,7 +1568,7 @@ class GraphicalEditorController(ExtendedController):
                     self.selected_port_connector = False
                 self.mouse_move_redraw = False
                 self.temporary_waypoints = []
-        self._redraw()
+                self._redraw()
 
     def _copy_selection(self, *args):
         # print singleton.global_focus
