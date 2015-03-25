@@ -196,21 +196,24 @@ class GraphicalEditorController(ExtendedController):
 
         First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
         event to redraw.
-
-        :param bool important: Force a redraw, even if teh last redraw was less then 2ms ago.
         """
-        # Check if initialized
         redraw_after = 1 / 50.  # sec
+        # Check if initialized
+        # and whether the last redraw was more than redraw_after ago
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after):
+            # Remove any existing timer
             if self.timer_id is not None:
                 gobject.source_remove(self.timer_id)
                 self.timer_id = None
             self.view.editor.emit("configure_event", None)
             self.view.editor.emit("expose_event", None)
             self.last_time = time.time()
+        # If the last redraw was less than redraw_after ago or the view is not initialized, yet, set a timer to try
+        # again later
         else:
+            # Only set the timer, if no timer is existing
             if self.timer_id is not None:
-                self.timer_id = gobject.timeout_add(int(redraw_after), self._redraw, True, True)
+                self.timer_id = gobject.timeout_add(int(redraw_after), self._redraw)
 
     def _on_key_press(self, widget, event):
         key_name = keyval_name(event.keyval)
@@ -1556,7 +1559,7 @@ class GraphicalEditorController(ExtendedController):
                     self.selected_port_connector = False
                 self.mouse_move_redraw = False
                 self.temporary_waypoints = []
-                self._redraw()
+        self._redraw()
 
     def _copy_selection(self, *args):
         # print singleton.global_focus
