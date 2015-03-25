@@ -137,12 +137,7 @@ class StateMachinesEditorController(ExtendedController):
             self.remove_state_machine(state_machine_model)
         elif sm_identifier in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-            message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
-                             "The following state machines were modified and not saved: "
-            for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
-                message_string = "%s %s " % (message_string, str(sm_id))
-            message_string = "%s \n(Note: all state machines that are freshly created and have never been " \
-                             "saved before will be deleted!)" % message_string
+            message_string = "Are you sure you want to close the state machine with id %s ?" % str(sm_identifier)
             message.set_markup(message_string)
             message.add_button("Yes", 42)
             message.add_button("No", 43)
@@ -170,7 +165,6 @@ class StateMachinesEditorController(ExtendedController):
         self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
         del self.tabs[sm_identifier]
 
-        # TODO: Should the state machine be removed here?
         self.model.state_machine_manager.remove_state_machine(sm_identifier)
         sm_keys = self.model.state_machine_manager.state_machines.keys()
         if len(sm_keys) > 0:
