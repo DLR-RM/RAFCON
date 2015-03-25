@@ -23,6 +23,13 @@ state_machine module
     :undoc-members:
     :show-inheritance:
 
+data_port module
+----------------
+
+.. automodule:: awesome_tool.statemachine.data_port
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 data_flow module
 ----------------

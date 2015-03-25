@@ -1,6 +1,6 @@
 from gtkmvc import ModelMT
 
-from awesome_tool.statemachine.states.state import DataPort
+from awesome_tool.statemachine.data_port import DataPort
 from awesome_tool.utils.vividict import Vividict
 
 

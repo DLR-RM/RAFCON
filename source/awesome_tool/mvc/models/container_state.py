@@ -7,7 +7,7 @@ from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.data_flow import DataFlow
 from awesome_tool.statemachine.transition import Transition
-from awesome_tool.statemachine.states.state import DataPort
+from awesome_tool.statemachine.data_port import DataPort
 from awesome_tool.statemachine.scope import ScopedVariable
 from awesome_tool.mvc.models.state import StateModel
 import awesome_tool.mvc.models

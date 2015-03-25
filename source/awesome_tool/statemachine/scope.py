@@ -16,7 +16,8 @@ from gtkmvc import Observable
 from awesome_tool.statemachine.enums import DataPortType
 import yaml
 
-from awesome_tool.statemachine.states.state import State, DataPort
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.statemachine.data_port import DataPort
 
 
 def generate_time_stamp():

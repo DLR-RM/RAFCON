@@ -15,7 +15,6 @@ from time import gmtime, strftime
 import yaml
 from gtkmvc import Observable
 
-import awesome_tool.statemachine.states.state
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.utils import log
@@ -180,8 +179,7 @@ class StateMachineStorage(Observable):
         Loads a state machine from a given path. If no path is specified the state machine is tried to be loaded
         from the base path.
         :param base_path: An optional base path for the state machine.
-        :return: a tuple of: the loaded container state, the version of the state and the creation time of when the
-                state was saved
+        :return: a tuple of the loaded container state, the version of the state and the creation time
         """
         if base_path is not None:
             self.base_path = base_path

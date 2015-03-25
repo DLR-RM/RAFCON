@@ -15,7 +15,7 @@ from awesome_tool.utils import log
 from awesome_tool.statemachine.enums import StateType
 
 from awesome_tool.statemachine.outcome import Outcome
-from awesome_tool.statemachine.states.state import DataPort
+from awesome_tool.statemachine.data_port import DataPort
 
 logger = log.get_logger(__name__)
 
