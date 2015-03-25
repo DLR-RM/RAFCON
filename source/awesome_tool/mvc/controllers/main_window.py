@@ -164,8 +164,6 @@ class MainWindowController(ExtendedController):
         This function always sets the global focus if the focus changes into or outside the awesome tool main window.
         """
         singleton.global_focus = self.view["main_window"].get_focus()
-        print self.view["main_window"].get_focus()
-        print "focus changed"
 
     # def key_press_event(self, widget, event, data=None):
     #     singleton.global_focus = self.view["main_window"].get_focus()

@@ -117,8 +117,6 @@ class ContainerStateModel(StateModel):
         # If the change happened in a child state, notify the list of all child states
         if (isinstance(model, StateModel) and model is not self) or (  # The state was changed directly
                 not isinstance(model, StateModel) and model.parent is not self):  # One of the member models was changed
-            print "states", model, prop_name
-            print info
             changed_list = self.states
             cause = 'state_change'
         # If the change happened in one of the transitions, notify the list of all transitions
