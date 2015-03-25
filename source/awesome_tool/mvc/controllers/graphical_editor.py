@@ -5,6 +5,11 @@ logger = log.get_logger(__name__)
 import sys
 import time
 import copy
+
+from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
+from gtk.gdk import keyval_name
+import gobject
+
 from math import sin, cos, atan2, pi
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.enums import StateType
@@ -12,15 +17,12 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel, ClipboardType, Clipboard
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
-from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
-from gtk.gdk import keyval_name
 from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 import itertools
 from awesome_tool.statemachine.states.state_helper import StateHelper
 import awesome_tool.mvc.singleton as singleton
-
 # To enable copy, cut and paste between state machines a global clipboard is used for all graphical editors
 global_clipboard = Clipboard()
 
@@ -41,6 +43,8 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(model, StateMachineModel)
         ExtendedController.__init__(self, model, view)
         self.root_state_m = model.root_state
+
+        self.timer_id = None
 
         self.selection = None
         self.selection_start_pos = (0, 0)
@@ -68,6 +72,7 @@ class GraphicalEditorController(ExtendedController):
         view.editor.connect('scroll-event', self._on_scroll)
         view.editor.connect('key-press-event', self._on_key_press)
         view.editor.connect('key-release-event', self._on_key_release)
+
         self.last_time = time.time()
 
     def register_view(self, view):
@@ -135,7 +140,7 @@ class GraphicalEditorController(ExtendedController):
                 if data_flow_m is not None:
                     data_flow_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
 
-            self._redraw(True)
+            self._redraw()
 
     @ExtendedController.observe("root_state", after=True)
     def root_state_change(self, model, prop_name, info):
@@ -150,7 +155,7 @@ class GraphicalEditorController(ExtendedController):
         if self.root_state_m is not model.root_state:
             logger.debug("The root state was exchanged")
             self.root_state_m = model.root_state
-            self._redraw(True)
+            self._redraw()
 
 
     @ExtendedController.observe("selection", after=True)
@@ -168,7 +173,7 @@ class GraphicalEditorController(ExtendedController):
             pass
         if self.selection != selection:
             self.selection = selection
-            self._redraw(True)
+            self._redraw()
 
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
@@ -186,7 +191,7 @@ class GraphicalEditorController(ExtendedController):
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
 
-    def _redraw(self, important=False):
+    def _redraw(self):
         """Force the graphical editor to be redrawn
 
         First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
@@ -195,10 +200,17 @@ class GraphicalEditorController(ExtendedController):
         :param bool important: Force a redraw, even if teh last redraw was less then 2ms ago.
         """
         # Check if initialized
-        if hasattr(self.view, "editor") and (time.time() - self.last_time > 1 / 50. or important):
+        redraw_after = 1 / 50.  # sec
+        if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after):
+            if self.timer_id is not None:
+                gobject.source_remove(self.timer_id)
+                self.timer_id = None
             self.view.editor.emit("configure_event", None)
             self.view.editor.emit("expose_event", None)
             self.last_time = time.time()
+        else:
+            if self.timer_id is not None:
+                self.timer_id = gobject.timeout_add(int(redraw_after), self._redraw, True, True)
 
     def _on_key_press(self, widget, event):
         key_name = keyval_name(event.keyval)
@@ -321,7 +333,7 @@ class GraphicalEditorController(ExtendedController):
             # Check, whether a resizer was clicked on
             self._check_for_resizer_selection(self.mouse_move_start_coords)
 
-            self._redraw(True)
+            self._redraw()
 
         # Right mouse button was clicked on
         if event.button == 3:
@@ -353,6 +365,7 @@ class GraphicalEditorController(ExtendedController):
         """
         self.last_button_pressed = None
         self.drag_origin_offset = None
+        self._redraw()
 
     def _move_waypoint(self, new_pos_x, new_pos_y, modifier_keys):
         new_pos_x, new_pos_y = self._limit_position_to_state(self.selection.parent, new_pos_x, new_pos_y)
@@ -617,7 +630,7 @@ class GraphicalEditorController(ExtendedController):
                 if dist(waypoint, coords) < close_threshold:
                     connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
                     logger.debug('Connection waypoint removed')
-                    self._redraw(True)
+                    self._redraw()
                     return True
         return False
 
@@ -648,7 +661,7 @@ class GraphicalEditorController(ExtendedController):
             if point_on_line(coords, points[i], points[i + 1]):
                 connection_model.meta['gui']['editor']['waypoints'].insert(i, (coords[0], coords[1]))
         logger.debug('Connection waypoint added at {0:.1f} - {1:.1f}'.format(coords[0], coords[1]))
-        self._redraw(True)
+        self._redraw()
 
     def _create_new_transition(self, to_state_m, to_outcome_id=None):
         """Tries to create a new transition
@@ -1543,7 +1556,7 @@ class GraphicalEditorController(ExtendedController):
                     self.selected_port_connector = False
                 self.mouse_move_redraw = False
                 self.temporary_waypoints = []
-                self._redraw(True)
+                self._redraw()
 
     def _copy_selection(self, *args):
         # print singleton.global_focus
@@ -1594,7 +1607,7 @@ class GraphicalEditorController(ExtendedController):
                         state_copy_model.meta["gui"]["editor"]["height"]
 
             self._move_state(state_copy_model, new_x_pos, new_y_pos)
-            self._redraw(True)
+            self._redraw()
 
             if global_clipboard.clipboard_type is ClipboardType.COPY:
                 # logger.debug("Copy the following clipboard into the selected state %s: \n%s"
