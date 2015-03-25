@@ -11,11 +11,12 @@ class MenuBarController(ExtendedController):
     """
     The class to trigger all the action, available in the menu bar.
     """
-    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view):
+    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view,
+                 shortcut_manager):
         ExtendedController.__init__(self, state_machine_manager_model, view)
         self.state_machines_editor_ctrl = state_machines_editor_ctrl
         self.states_editor_ctrl = states_editor_ctrl
-        self.shortcut_manager = None
+        self.shortcut_manager = shortcut_manager
         self.logging_view = logging_view
 
     def register_view(self, view):
@@ -193,64 +194,30 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_copy_selection_activate(self, widget, data=None):
-
-        self.shortcut_manager.trigger_action("copy", None, None, force=True)
+        self.shortcut_manager.trigger_action("copy", None, None)
 
     def on_paste_clipboard_activate(self, widget, data=None):
-        self.shortcut_manager.trigger_action("paste", None, None, force=True)
+        self.shortcut_manager.trigger_action("paste", None, None)
 
     def on_cut_selection_activate(self, widget, data=None):
-        self.shortcut_manager.trigger_action("cut", None, None, force=True)
-
-    def on_delete_state_activate(self, widget, data=None):
-        logger.debug("Delete selected state now ...")
-        selection = self.child_controllers['state_machines_editor_ctrl'].model.state_machines.values()[0].selection
-        selected_state_model = selection.get_selected_state()
-
-        if selected_state_model and selected_state_model.parent is not None:
-            selected_state_model.parent.state.remove_state(selected_state_model.state.state_id)
-            selection.remove(selected_state_model)
-
-    def on_add_state_activate(self, widget, method=None, *arg):
-        # TODO: use method from helper class
-        pass
+        self.shortcut_manager.trigger_action("cut", None, None)
 
     def on_delete_activate(self, widget, data=None):
-        logger.debug("Delete something that is selected now ...")
-        #logger.debug("focus is here: %s" % self.view['main_window'].get_focus())
+        self.shortcut_manager.trigger_action("delete", None, None)
 
-        selection = self.child_controllers['state_machines_editor_ctrl'].model.state_machines.values()[0].selection
-        if selection.get_selected_state() and selection.get_selected_state().parent is not None:
-            selected_state_model = selection.get_selected_state()
-            selected_state_model.parent.state.remove_state(selected_state_model.state.state_id)
-            selection.remove(selected_state_model)
-            logger.debug("Delete State: %s, %s" % (selected_state_model.state.state_id,
-                                                   selected_state_model.state.name))
-        elif len(selection) == 1 and selection.get_num_data_flows() == 1:
-            data_flow = selection.get_data_flows()[0].data_flow
-            selection.get_data_flows()[0].parent.state.remove_data_flow(data_flow.data_flow_id)
-            selection.remove(selection.get_data_flows()[0])
-            logger.debug("Delete DataFlow: from %s to %s" % (data_flow.from_state,
-                                                             data_flow.to_state))
-        elif len(selection) == 1 and selection.get_num_transitions() == 1:
-            transition = selection.get_transitions()[0].transition
-            selection.get_transitions()[0].parent.state.remove_transition(transition.transition_id)
-            selection.remove(selection.get_transitions()[0])
-            logger.debug("Delete Transition: from %s, %s to %s, %s" % (transition.from_state, transition.from_outcome,
-                                                                       transition.to_state, transition.to_outcome))
-        else:
-            logger.debug("in selection is nothing deletable: %s" % selection)
-
-    def on_redo_activate(self, widget, data=None):
-        pass
-
-    def on_undo_activate(self, widget, data=None):
-        pass
+    def on_add_state_activate(self, widget, method=None, *arg):
+        self.shortcut_manager.trigger_action("add", None, None)
 
     def on_ungroup_states_activate(self, widget, data=None):
         pass
 
     def on_group_states_activate(self, widget, data=None):
+        pass
+
+    def on_undo_activate(self, widget, data=None):
+        pass
+
+    def on_redo_activate(self, widget, data=None):
         pass
 
     def on_grid_toggled(self, widget, data=None):

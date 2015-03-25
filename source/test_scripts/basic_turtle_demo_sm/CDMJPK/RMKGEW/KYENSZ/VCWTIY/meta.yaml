@@ -1,5 +1,4 @@
 !LibraryState
-data_flows: {}
 filename: script.py
 input_data_ports: {}
 library_name: clear_field
@@ -11,9 +10,6 @@ outcomes:
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports: {}
 path: ../../test_scripts/basic_turtle_demo_sm/CDMJPK/RMKGEW/KYENSZ/VCWTIY
-scoped_variables: {}
-start_state: null
 state_id: VCWTIY
 state_type: STATE_TYPE.LIBRARY
-transitions: {}
 version: '0.1'

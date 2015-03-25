@@ -312,24 +312,33 @@ class StateModel(ModelMT):
     def copy_meta_data_from_state_model(self, source_state):
 
         self.meta = copy.deepcopy(source_state.meta)
-
+        counter = 0
         for input_data_port_model in self.input_data_ports:
             input_data_port_model.meta = \
-                copy.deepcopy(source_state.input_data_ports[input_data_port_model.data_port.data_port_id].meta)
+                copy.deepcopy(source_state.input_data_ports[counter].meta)
+            counter += 1
+        counter = 0
         for output_data_port_model in self.output_data_ports:
             output_data_port_model.meta = \
-                copy.deepcopy(source_state.output_data_ports[output_data_port_model.data_port.data_port_id].meta)
+                copy.deepcopy(source_state.output_data_ports[counter].meta)
+            counter += 1
 
         if hasattr(self.state, 'states'):
+            counter = 0
             for transition_model in self.transitions:
                 transition_model.meta = \
-                    copy.deepcopy(source_state.transitions[transition_model.transition.transition_id].meta)
+                    copy.deepcopy(source_state.transitions[counter].meta)
+                counter += 1
+            counter = 0
             for data_flow_model in self.data_flows:
                 data_flow_model.meta = \
-                    copy.deepcopy(source_state.data_flows[data_flow_model.data_flow.data_flow_id].meta)
+                    copy.deepcopy(source_state.data_flows[counter].meta)
+                counter += 1
+            counter = 0
             for scoped_variable_model in self.scoped_variables:
                 scoped_variable_model.meta = \
-                    copy.deepcopy(source_state.scoped_variables[scoped_variable_model.scope_variable.data_port_id].meta)
+                    copy.deepcopy(source_state.scoped_variables[counter].meta)
+                counter += 1
 
     def store_meta_data_for_state(self):
         #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)

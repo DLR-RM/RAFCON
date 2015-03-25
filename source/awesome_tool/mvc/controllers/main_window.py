@@ -17,6 +17,7 @@ logger = log.get_logger(__name__)
 import awesome_tool.statemachine.config
 from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
+import awesome_tool.mvc.singleton as singleton
 
 
 class MainWindowController(ExtendedController):
@@ -44,6 +45,11 @@ class MainWindowController(ExtendedController):
         self.state_machine_execution_engine.register_observer(self)
 
         ######################################################
+        # shortcut manager
+        ######################################################
+        self.shortcut_manager = ShortcutManager(view['main_window'])
+
+        ######################################################
         # logging view
         ######################################################
         self.console_scroller = view['left_v_pane'].get_child2()
@@ -63,6 +69,15 @@ class MainWindowController(ExtendedController):
                                         state_machine_manager_model)
         view['add_template_button'].connect("clicked", library_controller.add_template_button_clicked,
                                             state_machine_manager_model)
+
+        view['main_window'].add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
+                               gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
+
+        view['main_window'].connect("focus_in_event", self.focus_change_event)
+        view['main_window'].connect("focus_out_event", self.focus_change_event)
+        view['main_window'].connect("button-press-event", self.clicked_event)
+        view['main_window'].connect("button-release-event", self.released_event)
+        # view['main_window'].connect("key_press_event", self.key_press_event)
         ######################################################
         # statemachine tree
         ######################################################
@@ -85,7 +100,6 @@ class MainWindowController(ExtendedController):
                                                          view.states_editor,
                                                          editor_type)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
-
         ######################################################
         # state machines editor
         ######################################################
@@ -127,7 +141,8 @@ class MainWindowController(ExtendedController):
                                                      view.menu_bar,
                                                      state_machines_editor_ctrl,
                                                      states_editor_ctrl,
-                                                     view.logging_view)
+                                                     view.logging_view,
+                                                     self.shortcut_manager)
         self.add_controller("menu_bar_controller", menu_bar_controller)
 
         ######################################################
@@ -144,10 +159,41 @@ class MainWindowController(ExtendedController):
         view['top_h_pane'].set_position(200)
         view['left_v_pane'].set_position(700)
 
-    def register_view(self, view):
-        self.shortcut_manager = ShortcutManager(self.view['main_window'])
-        self.register_actions(self.shortcut_manager)
+    def focus_change_event(self, widget, event, data=None):
+        """
+        This function always sets the global focus if the focus changes into or outside the awesome tool main window.
+        """
+        singleton.global_focus = self.view["main_window"].get_focus()
+        print self.view["main_window"].get_focus()
+        print "focus changed"
 
+    # def key_press_event(self, widget, event, data=None):
+    #     singleton.global_focus = self.view["main_window"].get_focus()
+    #     # print self.view["main_window"].get_focus()
+    #     # print "key pressed"
+
+    def clicked_event(self, widget, event, data=None):
+        """
+        This function always sets the global focus if the the user clicks with the mouse into a widget in the main window
+        Note: This function is important as many widgets catches the release mouse event, so only the clicked event will
+        work
+        """
+        singleton.global_focus = self.view["main_window"].get_focus()
+        # print self.view["main_window"].get_focus()
+        # print "mouse click event"
+
+    def released_event(self, widget, event, data=None):
+        """
+        This function always sets the global focus if the the user releases the mouse into a widget in the main window.
+        Note: This function is important as many widgets catches the clicked mouse event, so only the release event will
+        work
+        """
+        singleton.global_focus = self.view["main_window"].get_focus()
+        # print self.view["main_window"].get_focus()
+        # print "mouse release event"
+
+    def register_view(self, view):
+        self.register_actions(self.shortcut_manager)
         view['main_window'].connect('destroy', gtk.main_quit)
 
     @ExtendedController.observe("execution_engine", after=True)

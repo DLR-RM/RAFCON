@@ -14,10 +14,10 @@ start_state: PAYECU
 state_id: KYENSZ
 state_type: STATE_TYPE.HIERARCHY
 transitions:
+    1: !Transition {from_outcome: 0, from_state: UEPNNW, to_outcome: null, to_state: KQDJYS,
+        transition_id: 1}
     4: !Transition {from_outcome: 0, from_state: PAYECU, to_outcome: null, to_state: UEPNNW,
         transition_id: 4}
-    5: !Transition {from_outcome: 0, from_state: UEPNNW, to_outcome: null, to_state: KQDJYS,
-        transition_id: 5}
     6: !Transition {from_outcome: 0, from_state: KQDJYS, to_outcome: null, to_state: FGIXTU,
         transition_id: 6}
     7: !Transition {from_outcome: 0, from_state: FGIXTU, to_outcome: null, to_state: VCWTIY,

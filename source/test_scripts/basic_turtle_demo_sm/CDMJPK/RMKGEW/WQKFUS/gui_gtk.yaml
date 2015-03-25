@@ -43,15 +43,6 @@ vivid_dict_content:
                                     -1, 0]
                             - !!binary |
                                 HUPJMQ4EKkA=
-                        0: !!python/tuple
-                        - 82.51748323279124
-                        - !!python/object/apply:numpy.core.multiarray.scalar
-                            - !!python/object/apply:numpy.dtype
-                                args: [f8, 0, 1]
-                                state: !!python/tuple [3, <, null, null, null, -1,
-                                    -1, 0]
-                            - !!binary |
-                                /Q9iumWyF0A=
                     outcome_radius: !!python/object/apply:numpy.core.multiarray.scalar
                     - !!python/object/apply:numpy.dtype
                         args: [f8, 0, 1]
@@ -81,6 +72,31 @@ vivid_dict_content:
                     scoped_pos: {}
                     width: 14.56941240503049
     transition0: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 71.4447298049681
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                N4QZGokMJkA=
+                            id: 7
+                            to_pos_x: 68.530847323962
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                N4QZGokMJkA=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}
+    transition15: !Vividict
         vivid_dict_content:
             gui: !Vividict
                 vivid_dict_content:

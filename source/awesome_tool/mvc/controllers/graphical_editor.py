@@ -18,6 +18,7 @@ from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 import itertools
 from awesome_tool.statemachine.states.state_helper import StateHelper
+import awesome_tool.mvc.singleton as singleton
 
 # To enable copy, cut and paste between state machines a global clipboard is used for all graphical editors
 global_clipboard = Clipboard()
@@ -1434,7 +1435,7 @@ class GraphicalEditorController(ExtendedController):
                 StateMachineHelper.delete_models(self.model.selection.get_all())
 
     def _add_execution_state(self, *args):
-        if self.view.editor.has_focus():
+        if self.view.editor.has_focus() or singleton.global_focus is self:
             selection = self.model.selection.get_all()
             if len(selection) > 0:
                 model = selection[0]
@@ -1461,22 +1462,22 @@ class GraphicalEditorController(ExtendedController):
                 self._redraw(True)
 
     def _copy_selection(self, *args):
-        #print self.view["graphical_editor_frame"].get_focus_child()
-
-        if self.view.editor.has_focus() or args[2]:
+        # print singleton.global_focus
+        # print self
+        if self.view.editor.has_focus() or singleton.global_focus is self:
             logger.debug("copy selection")
             global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
             global_clipboard.selection.set(self.model.selection.get_all())
             global_clipboard.clipboard_type = ClipboardType.COPY
 
     def _paste_clipboard(self, *args):
-        if self.view.editor.has_focus() or args[2]:
+        if self.view.editor.has_focus() or singleton.global_focus is self:
             logger.debug("paste selection")
             currently_selected_sm_id = self.model.state_machine.state_machine_id
             current_selection = self.model.selection
             # check if the current selection is valid
             if current_selection.get_number_of_selected_items() > 1 or len(current_selection.get_states()) < 1:
-                logger.error("Cannot paste clipboard into selection as the selection does not consist of a single"
+                logger.error("Cannot paste clipboard into selection as the selection does not consist of a single "
                              "container state!")
                 return
             if len(current_selection.get_states()) == 1 and\
@@ -1524,7 +1525,7 @@ class GraphicalEditorController(ExtendedController):
                 parent_of_source_state.remove_state(source_state.state_id)
 
     def _cut_selection(self, *args):
-        if self.view.editor.has_focus() or args[2]:
+        if self.view.editor.has_focus() or singleton.global_focus is self:
             logger.debug("cut selection")
             global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
             global_clipboard.selection.set(self.model.selection.get_all())

@@ -43,7 +43,10 @@ class SourceEditorView(View):
                 b = self.textview.get_buffer()
                 b.set_language(lm.get_language('python'))
                 b.set_highlight_syntax(True)
-                b.set_style_scheme(sm.get_scheme('classic'))
+                if sm.get_scheme('darkmacs'):
+                    b.set_style_scheme(sm.get_scheme('darkmacs'))
+                else:
+                    b.set_style_scheme(sm.get_scheme('classic'))
                 self.textview.set_tab_width(4)
                 self.textview.set_insert_spaces_instead_of_tabs(True)
                 self.textview.set_show_line_numbers(True)
