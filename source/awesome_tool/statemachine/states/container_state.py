@@ -1102,7 +1102,7 @@ class ContainerState(State):
             self._scoped_variables = {}
         else:
             if not isinstance(scoped_variables, dict):
-                raise TypeError("scope_variables must be of type dict")
+                raise TypeError("scoped_variables must be of type dict")
             for key, svar in scoped_variables.iteritems():
                 if not isinstance(svar, ScopedVariable):
                     raise TypeError("element of scope must be of type ScopedVariable")

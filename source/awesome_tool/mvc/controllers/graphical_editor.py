@@ -240,7 +240,8 @@ class GraphicalEditorController(ExtendedController):
 
         # Store the coordinates of the event
         self.mouse_move_start_coords = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
-        self.mouse_move_last_pos = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+        self.mouse_move_last_coords = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+        self.mouse_move_last_pos = (event.x, event.y)
 
         # Left mouse button was clicked
         if event.button == 1:
@@ -361,21 +362,25 @@ class GraphicalEditorController(ExtendedController):
         :param event: Information about the event, e. g. x and y coordinate
         """
 
-        mouse_current_coord = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
-
         # If no mouse button is pressed while the mouse is moving, we only have to change whether another component
         # wants to redraw the editor on mouse move
         if event.state & (BUTTON1_MASK | BUTTON2_MASK | BUTTON3_MASK) == 0:
             if self.mouse_move_redraw:
-                self.mouse_move_last_pos = mouse_current_coord
+                mouse_current_coord = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+                self.mouse_move_last_coords = mouse_current_coord
                 self._redraw()
             return
-        rel_x_motion = mouse_current_coord[0] - self.mouse_move_start_coords[0]
-        rel_y_motion = mouse_current_coord[1] - self.mouse_move_start_coords[1]
 
         # Move while middle button is clicked moves the view
         if self.last_button_pressed == 2:
-            self._move_view(rel_x_motion, rel_y_motion)
+            dx = event.x - self.mouse_move_last_pos[0]
+            dy = event.y - self.mouse_move_last_pos[1]
+            self._move_view(dx, dy)
+
+        mouse_current_coord = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+
+        rel_x_motion = mouse_current_coord[0] - self.mouse_move_start_coords[0]
+        rel_y_motion = mouse_current_coord[1] - self.mouse_move_start_coords[1]
 
         # Translate the mouse movement to OpenGL coordinates
         new_pos_x = self.selection_start_pos[0] + rel_x_motion
@@ -409,7 +414,8 @@ class GraphicalEditorController(ExtendedController):
             modifier = event.state
             self._resize_state(self.selection, mouse_current_coord, rel_x_motion, rel_y_motion, modifier)
 
-        self.mouse_move_last_pos = mouse_current_coord
+        self.mouse_move_last_pos = (event.x, event.y)
+        self.mouse_move_last_coords = mouse_current_coord
 
     def _on_scroll(self, widget, event):
         """Triggered when the mouse wheel is turned
@@ -907,14 +913,24 @@ class GraphicalEditorController(ExtendedController):
             resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y)
         self._redraw()
 
-    def _move_view(self, rel_x_motion, rel_y_motion):
+    def _move_view(self, rel_x_motion, rel_y_motion, opengl_coords=False):
         """Move the view according to the relative coordinates
 
         The whole view/scene is moved, causing the state machine to move within the viewport.
 
         :param rel_x_motion: Distance to move in x direction
         :param rel_y_motion: Distance to move in y direction
+        :param opengl_coords: Whether to specified relative coordinates are in OpenGl coordinate system
         """
+        if not opengl_coords:
+            conversion = self.view.editor.pixel_to_size_ratio()
+            rel_x_motion /= conversion
+            rel_y_motion /= -conversion
+            aspect = self.view.editor.allocation.width / float(self.view.editor.allocation.height)
+            if aspect > 1:
+                rel_x_motion /= aspect
+            else:
+                rel_y_motion *= aspect
         self.view.editor.left -= rel_x_motion
         self.view.editor.right -= rel_x_motion
         self.view.editor.bottom -= rel_y_motion
@@ -956,7 +972,7 @@ class GraphicalEditorController(ExtendedController):
                 diff_x /= aspect
 
             # Move view to keep the previous mouse position in the view
-            self._move_view(diff_x, diff_y)
+            self._move_view(diff_x, diff_y, opengl_coords=True)
 
     def draw_state(self, state_m, pos_x=0.0, pos_y=0.0, width=100.0, height=100.0, depth=1):
         """Draws a (container) state with all its content
@@ -997,7 +1013,12 @@ class GraphicalEditorController(ExtendedController):
         selected = False if state_m not in selected_states else True
 
         # Is the state active (executing)?
-        active = state_m.state.active
+        active = 0
+        if state_m.state.active:
+            if self.has_content(state_m) and state_m.state.child_execution:
+                active = 0.5
+            else:
+                active = 1
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
@@ -1259,9 +1280,10 @@ class GraphicalEditorController(ExtendedController):
         else:
             return
         restricted_click = self._limit_position_to_state(parent_state_m,
-                                                         self.mouse_move_last_pos[0], self.mouse_move_last_pos[1])
+                                                         self.mouse_move_last_coords[0], self.mouse_move_last_coords[1])
         # If the user clicked with the parent state of the selected outcome state
-        if restricted_click[0] == self.mouse_move_last_pos[0] and restricted_click[1] == self.mouse_move_last_pos[1]:
+        if restricted_click[0] == self.mouse_move_last_coords[0] and \
+                restricted_click[1] == self.mouse_move_last_coords[1]:
             self.temporary_waypoints.append(restricted_click)
 
     def _handle_new_transition(self, parent_state_m, parent_depth):
@@ -1278,7 +1300,7 @@ class GraphicalEditorController(ExtendedController):
             if self.selected_outcome[0] == parent_state_m:
                 # self.selected_outcome[1] stores the id of the outcome
                 outcome = parent_state_m.meta['gui']['editor']['outcome_pos'][self.selected_outcome[1]]
-                cur = self.mouse_move_last_pos
+                cur = self.mouse_move_last_coords
                 target = self._limit_position_to_state(parent_state_m.parent, cur[0], cur[1])
                 line_width = min(parent_state_m.parent.meta['gui']['editor']['width'],
                                  parent_state_m.parent.meta['gui']['editor'][
@@ -1305,7 +1327,7 @@ class GraphicalEditorController(ExtendedController):
                     connector = port_m.meta['gui']['editor']['outer_connector_pos']
                 else:  # scoped variable
                     connector = port_m.meta['gui']['editor']['connector_pos']
-                cur = self.mouse_move_last_pos
+                cur = self.mouse_move_last_coords
                 target = self._limit_position_to_state(parent_state_m, cur[0], cur[1])
                 ref_state = parent_state_m
                 line_width = min(ref_state.meta['gui']['editor']['width'],
