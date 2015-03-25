@@ -55,6 +55,8 @@ class StateMachineTreeController(ExtendedController):
             self.observe_model(self._selected_sm_model.root_state)
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
+        else:
+            self.tree_store.clear()
 
     @ExtendedController.observe("states", after=True)
     def states_update(self, model, property, info):

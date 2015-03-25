@@ -36,7 +36,8 @@ class StateMachineManager(Observable):
                 self.add_state_machine(state_machine)
 
     def delete_all_state_machines(self):
-        sm_keys = self.state_machines.keys()
+        import copy
+        sm_keys = copy.deepcopy(self.state_machines.keys())
         for key in sm_keys:
             self.remove_state_machine(key)
 

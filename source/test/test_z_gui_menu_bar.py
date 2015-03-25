@@ -129,15 +129,10 @@ def wait_for_values_identical_number_statemachines(sm_manager_model, val2):
 
 def trigger_gui_signals(*args):
     print "Wait for the gui to initialize"
-    time.sleep(2.00)
+    time.sleep(2.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-
-    menubar_ctrl.states_editor_ctrl.close_all_tabs()
-    menubar_ctrl.state_machines_editor_ctrl.close_all_tabs()
-    #sm_manager_model.state_machine_manager.delete_all_state_machines()
-    wait_for_values_identical_number_statemachines(sm_manager_model, 0)
 
     # ctr_state = HierarchyState(name="Container")
     # sm = StateMachine(ctr_state)
@@ -166,6 +161,8 @@ def trigger_gui_signals(*args):
 
 def test_gui():
     variables_for_pytest.test_multithrading_lock.acquire()
+    # delete all old state machines
+    awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir("../awesome_tool/mvc/")
     awesome_tool.statemachine.singleton.library_manager.initialize()
     setup_path()
