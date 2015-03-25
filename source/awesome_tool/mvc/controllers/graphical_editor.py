@@ -123,9 +123,13 @@ class GraphicalEditorController(ExtendedController):
             # If a transition has been added in the graphical editor, its waypoint are not created when creating the
             # transitions, as these are stored only in the model. Therefore we have to add the waypoints to the
             # metadata of the transition model after its creation. Here we wait for the transition creation event
-            if not root_cause_is_state and cause == "add_transition":
-                container_state_m = info['kwargs']['info']['model']
-                transition_id = info['kwargs']['info']['result']
+            if cause == "add_transition":
+                if root_cause_is_state:
+                    container_state_m = info['kwargs']['model']
+                    transition_id = info['kwargs']['result']
+                else:
+                    container_state_m = info['kwargs']['info']['model']
+                    transition_id = info['kwargs']['info']['result']
                 transition_m = StateMachineHelper.get_transition_model(container_state_m, transition_id)
                 if transition_m is not None:
                     transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
@@ -134,8 +138,12 @@ class GraphicalEditorController(ExtendedController):
             # data flow, as these are stored only in the model. Therefore we have to add the waypoints to the
             # metadata of the data flow model after its creation. Here we wait for the data flow creation event
             elif not root_cause_is_state and cause == "add_data_flow":
-                container_state_m = info['kwargs']['info']['model']
-                data_flow_id = info['kwargs']['info']['result']
+                if root_cause_is_state:
+                    container_state_m = info['kwargs']['model']
+                    data_flow_id = info['kwargs']['result']
+                else:
+                    container_state_m = info['kwargs']['info']['model']
+                    data_flow_id = info['kwargs']['info']['result']
                 data_flow_m = StateMachineHelper.get_data_flow_model(container_state_m, data_flow_id)
                 if data_flow_m is not None:
                     data_flow_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
