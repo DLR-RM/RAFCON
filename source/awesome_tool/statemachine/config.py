@@ -23,6 +23,9 @@ LIBRARY_PATHS: {"test_libraries": "../../test_scripts/test_libraries",
                  "ros_libraries": "../../test_scripts/ros_libraries",
                  "turtle_libraries": "../../test_scripts/turtle_libraries"}
 
+waypoint_snap_angle: 90
+waypoint_snap_max_diff_angle: 10
+waypoint_snap_max_diff_pixel: 50
 """
 
 CONFIG_PATH = os.getenv("HOME") + "/.awesome_tool"
