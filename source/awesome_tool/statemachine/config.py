@@ -23,9 +23,9 @@ LIBRARY_PATHS: {"test_libraries": "../../test_scripts/test_libraries",
 
 SOURCE_EDITOR_STYLE: blue_dream
 
-waypoint_snap_angle: 90
-waypoint_snap_max_diff_angle: 10
-waypoint_snap_max_diff_pixel: 50
+WAYPOINT_SNAP_ANGLE: 45
+WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
+WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
 """
 
 CONFIG_PATH = os.getenv("HOME") + "/.awesome_tool"

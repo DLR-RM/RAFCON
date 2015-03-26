@@ -1,29 +1,27 @@
 from awesome_tool.utils import log
-from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line
+from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 
 logger = log.get_logger(__name__)
 import sys
 import time
-import copy
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
 import gobject
+import itertools
 
-from math import sin, cos, atan2, pi
+from math import sin, cos, atan2
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.states.state_helper import StateHelper
+from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
+from awesome_tool.mvc.clipboard import ClipboardType, global_clipboard
+from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
-from awesome_tool.mvc.models.state_machine import StateMachineModel, ClipboardType, Clipboard
-from awesome_tool.mvc.statemachine_helper import StateMachineHelper
-from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
+from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
-import itertools
-from awesome_tool.statemachine.states.state_helper import StateHelper
-# To enable copy, cut and paste between state machines a global clipboard is used for all graphical editors
-global_clipboard = Clipboard()
 
 
 class GraphicalEditorController(ExtendedController):
@@ -50,6 +48,7 @@ class GraphicalEditorController(ExtendedController):
         self.mouse_move_start_coords = (0, 0)
         self.last_button_pressed = -1
         self.drag_origin_offset = None
+        self.multi_selection_started = False
 
         self.selected_outcome = None
         self.selected_port_type = None
@@ -225,7 +224,6 @@ class GraphicalEditorController(ExtendedController):
 
     def _on_key_press(self, widget, event):
         key_name = keyval_name(event.keyval)
-        # print "key press", key_name
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = True
         elif key_name == "Alt_L":
@@ -235,7 +233,6 @@ class GraphicalEditorController(ExtendedController):
 
     def _on_key_release(self, widget, event):
         key_name = keyval_name(event.keyval)
-        # print "key release", key_name
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = False
         elif key_name == "Alt_L":
@@ -261,6 +258,7 @@ class GraphicalEditorController(ExtendedController):
         # self.selected_port_type = None  # reset
         # self.selected_port_connector = False  # reset
         self.selected_resizer = None  # reset
+        self.multi_selection_started = False  # reset
 
         # Store the coordinates of the event
         self.mouse_move_start_coords = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -275,13 +273,29 @@ class GraphicalEditorController(ExtendedController):
 
             # We do not want to change the current selection while creating a new transition or data flow
             if not self.mouse_move_redraw:
+                # Multi selection with shift+click
+                if event.state & SHIFT_MASK != 0:
+                    self.multi_selection_started = True
 
-                # Check whether a state, a transition or data flow was clicked on
-                # If so, set the meta data of the object to "object selected" and redraw to highlight the object
-                # If the object was previously selected, remove the selection
-                if new_selection != self.selection:
+                # In the case of multi selection, the user can add/remove elements to/from the selection
+                # The selection can consist of more than one model
+                if self.multi_selection_started:
+                    if new_selection is not None:
+                        # Remove from selection, if new_selection is already selected
+                        if self.model.selection.is_selected(new_selection):
+                            self.model.selection.remove(new_selection)
+                        # Add new_selection to selection
+                        else:
+                            self.model.selection.add(new_selection)
+                        # Store the last selection locally
+                        if self.selection is None:
+                            self.selection = new_selection
+                # Only do something, if the user didn't click the second time on a specific model
+                elif new_selection != self.selection:
+                    # No multi selection, thus we first have to clear the current selection
                     if self.selection is not None:
                         self.model.selection.clear()
+                    # Then we both store the selection locally and in the selection class
                     self.selection = new_selection
                     if self.selection is not None:
                         self.model.selection.set(self.selection)
@@ -386,20 +400,18 @@ class GraphicalEditorController(ExtendedController):
 
         # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
         if modifier_keys & SHIFT_MASK != 0:
-            snap_angle = global_config.get_config_value('waypoint_snap_angle', 45.)
-            snap_angle = snap_angle / 180. * pi
-            snap_diff = global_config.get_config_value('waypoint_snap_max_diff_angle', 10.)
-            snap_diff = snap_diff / 180. * pi
-            max_snap_dist = global_config.get_config_value('waypoint_snap_max_diff_pixel', 50.)
+            snap_angle = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_ANGLE', 45.))
+            snap_diff = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_ANGLE', 10.))
+            max_snap_dist = global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_PIXEL', 50.)
             max_snap_dist /= self.view.editor.pixel_to_size_ratio()
 
             def calculate_snap_point(p1, p2, p3):
                 def find_closest_snap_angle(angle):
                     multiple = angle // snap_angle
-                    if abs(snap_angle * multiple - angle) < \
-                            abs(snap_angle * (multiple + 1) - angle):
-                        return snap_angle * multiple
-                    return snap_angle * (multiple + 1)
+                    multiple = [multiple-1, multiple, multiple+1]
+                    diff = map(lambda mul: abs(abs(snap_angle * mul) - abs(angle)), multiple)
+                    min_index = diff.index(min(diff))
+                    return snap_angle * multiple[min_index]
 
                 alpha = atan2(-(p2[1] - p1[1]), p2[0] - p1[0])
                 beta = atan2(-(p2[1] - p3[1]), p2[0] - p3[0])
@@ -1543,7 +1555,7 @@ class GraphicalEditorController(ExtendedController):
                 StateMachineHelper.delete_models(self.model.selection.get_all())
 
     def _add_execution_state(self, *args):
-        if self.view.editor.has_focus() or singleton.global_focus is self:
+        if self.view.editor.has_focus():  # or singleton.global_focus is self:
             selection = self.model.selection.get_all()
             if len(selection) > 0:
                 model = selection[0]
@@ -1570,13 +1582,14 @@ class GraphicalEditorController(ExtendedController):
                 self._redraw()
 
     def _copy_selection(self, *args):
-        # print singleton.global_focus
-        # print self
         if self.view.editor.has_focus():
             logger.debug("copy selection")
-            global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
-            global_clipboard.selection.set(self.model.selection.get_all())
-            global_clipboard.clipboard_type = ClipboardType.COPY
+            global_clipboard.copy(self.model.state_machine.state_machine_id, self.model.selection.get_all())
+
+    def _cut_selection(self, *args):
+        if self.view.editor.has_focus():
+            logger.debug("cut selection")
+            global_clipboard.cut(self.model.state_machine.state_machine_id, self.model.selection.get_all())
 
     def _paste_clipboard(self, *args):
         if self.view.editor.has_focus():
@@ -1621,20 +1634,7 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
             if global_clipboard.clipboard_type is ClipboardType.COPY:
-                # logger.debug("Copy the following clipboard into the selected state %s: \n%s"
-                #              % (str(current_selection.get_states()[0]),
-                #                 str(self.clipboard)))
                 pass
             elif global_clipboard.clipboard_type is ClipboardType.CUT:
-                # logger.debug("Cut the following clipboard into the selected state %s: \n%s"
-                #              % (str(current_selection.get_states()[0]),
-                #                 str(self.clipboard)))
                 parent_of_source_state = source_state.parent
                 parent_of_source_state.remove_state(source_state.state_id)
-
-    def _cut_selection(self, *args):
-        if self.view.editor.has_focus():
-            logger.debug("cut selection")
-            global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
-            global_clipboard.selection.set(self.model.selection.get_all())
-            global_clipboard.clipboard_type = ClipboardType.CUT
