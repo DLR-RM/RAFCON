@@ -48,6 +48,7 @@ class GraphicalEditorController(ExtendedController):
         self.mouse_move_start_coords = (0, 0)
         self.last_button_pressed = -1
         self.drag_origin_offset = None
+        self.multi_selection_started = False
 
         self.selected_outcome = None
         self.selected_port_type = None
@@ -257,6 +258,7 @@ class GraphicalEditorController(ExtendedController):
         # self.selected_port_type = None  # reset
         # self.selected_port_connector = False  # reset
         self.selected_resizer = None  # reset
+        self.multi_selection_started = False  # reset
 
         # Store the coordinates of the event
         self.mouse_move_start_coords = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -271,27 +273,36 @@ class GraphicalEditorController(ExtendedController):
 
             # We do not want to change the current selection while creating a new transition or data flow
             if not self.mouse_move_redraw:
+                # Multi selection with shift+click
+                if event.state & SHIFT_MASK != 0:
+                    self.multi_selection_started = True
 
-                # Check whether a state, a transition or data flow was clicked on
-                # If so, set the meta data of the object to "object selected" and redraw to highlight the object
-                # If the object was previously selected, remove the selection
-                if new_selection != self.selection:
-                    # Multiselection with shift+click
-                    if event.state & SHIFT_MASK != 0:
-                        if new_selection is not None:
+                # In the case of multi selection, the user can add/remove elements to/from the selection
+                # The selection can consist of more than one model
+                if self.multi_selection_started:
+                    if new_selection is not None:
+                        # Remove from selection, if new_selection is already selected
+                        if self.model.selection.is_selected(new_selection):
+                            self.model.selection.remove(new_selection)
+                        # Add new_selection to selection
+                        else:
                             self.model.selection.add(new_selection)
-                            if self.selection is None:
-                                self.selection = new_selection
-                    else:
-                        if self.selection is not None:
-                            self.model.selection.clear()
-                        self.selection = new_selection
-                        if self.selection is not None:
-                            self.model.selection.set(self.selection)
-                            # Add this if a click shell toggle the selection
-                            # else:
-                            # self.model.selection.clear()
-                            # self.selection = None
+                        # Store the last selection locally
+                        if self.selection is None:
+                            self.selection = new_selection
+                # Only do something, if the user didn't click the second time on a specific model
+                elif new_selection != self.selection:
+                    # No multi selection, thus we first have to clear the current selection
+                    if self.selection is not None:
+                        self.model.selection.clear()
+                    # Then we both store the selection locally and in the selection class
+                    self.selection = new_selection
+                    if self.selection is not None:
+                        self.model.selection.set(self.selection)
+                        # Add this if a click shell toggle the selection
+                        # else:
+                        # self.model.selection.clear()
+                        # self.selection = None
 
             # If a state was clicked on, store the original position of the selected state for a drag and drop movement
             if self.selection is not None and isinstance(self.selection, StateModel):
