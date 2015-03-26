@@ -15,7 +15,8 @@ from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
-from awesome_tool.mvc.models.state_machine import StateMachineModel, ClipboardType, Clipboard
+from awesome_tool.mvc.models.state_machine import StateMachineModel
+from awesome_tool.mvc.clipboard import ClipboardType, Clipboard
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
