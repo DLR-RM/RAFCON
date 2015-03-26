@@ -1,5 +1,5 @@
 from awesome_tool.utils import log
-from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line
+from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad, rad2deg
 
 logger = log.get_logger(__name__)
 import sys
@@ -386,20 +386,18 @@ class GraphicalEditorController(ExtendedController):
 
         # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
         if modifier_keys & SHIFT_MASK != 0:
-            snap_angle = global_config.get_config_value('waypoint_snap_angle', 45.)
-            snap_angle = snap_angle / 180. * pi
-            snap_diff = global_config.get_config_value('waypoint_snap_max_diff_angle', 10.)
-            snap_diff = snap_diff / 180. * pi
-            max_snap_dist = global_config.get_config_value('waypoint_snap_max_diff_pixel', 50.)
+            snap_angle = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_ANGLE', 45.))
+            snap_diff = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_ANGLE', 10.))
+            max_snap_dist = global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_PIXEL', 50.)
             max_snap_dist /= self.view.editor.pixel_to_size_ratio()
 
             def calculate_snap_point(p1, p2, p3):
                 def find_closest_snap_angle(angle):
                     multiple = angle // snap_angle
-                    if abs(snap_angle * multiple - angle) < \
-                            abs(snap_angle * (multiple + 1) - angle):
-                        return snap_angle * multiple
-                    return snap_angle * (multiple + 1)
+                    multiple = [multiple-1, multiple, multiple+1]
+                    diff = map(lambda mul: abs(abs(snap_angle * mul) - abs(angle)), multiple)
+                    min_index = diff.index(min(diff))
+                    return snap_angle * multiple[min_index]
 
                 alpha = atan2(-(p2[1] - p1[1]), p2[0] - p1[0])
                 beta = atan2(-(p2[1] - p3[1]), p2[0] - p3[0])

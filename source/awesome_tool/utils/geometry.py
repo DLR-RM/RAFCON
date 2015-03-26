@@ -1,4 +1,4 @@
-from math import sqrt
+from math import sqrt, pi
 
 
 def dist(p1, p2):
@@ -54,3 +54,11 @@ def point_in_triangle(p, v1, v2, v3):
     b3 = _test(p, v3, v1) < 0.0
 
     return (b1 == b2) and (b2 == b3)
+
+
+def deg2rad(degree):
+    return degree / 180. * pi
+
+
+def rad2deg(radians):
+    return radians / pi * 180.
