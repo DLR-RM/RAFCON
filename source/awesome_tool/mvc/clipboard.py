@@ -67,3 +67,15 @@ class Clipboard(Observable):
             raise TypeError("clipboard_type must be of type ClipBoardType")
         self._clipboard_type = clipboard_type
 
+    def copy(self, state_machine_id, models):
+        self.state_machine_id = state_machine_id
+        self.selection.set(models)
+        self.clipboard_type = ClipboardType.COPY
+
+    def cut(self, state_machine_id, models):
+        self.state_machine_id = state_machine_id
+        self.selection.set(models)
+        self.clipboard_type = ClipboardType.CUT
+
+# To enable copy, cut and paste between state machines a global clipboard is used
+global_clipboard = Clipboard()

@@ -1,30 +1,27 @@
 from awesome_tool.utils import log
-from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad, rad2deg
+from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 
 logger = log.get_logger(__name__)
 import sys
 import time
-import copy
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
 import gobject
+import itertools
 
-from math import sin, cos, atan2, pi
+from math import sin, cos, atan2
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.states.state_helper import StateHelper
+from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
+from awesome_tool.mvc.clipboard import ClipboardType, global_clipboard
+from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel
-from awesome_tool.mvc.clipboard import ClipboardType, Clipboard
-from awesome_tool.mvc.statemachine_helper import StateMachineHelper
-from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
-import itertools
-from awesome_tool.statemachine.states.state_helper import StateHelper
-# To enable copy, cut and paste between state machines a global clipboard is used for all graphical editors
-global_clipboard = Clipboard()
 
 
 class GraphicalEditorController(ExtendedController):
@@ -226,7 +223,6 @@ class GraphicalEditorController(ExtendedController):
 
     def _on_key_press(self, widget, event):
         key_name = keyval_name(event.keyval)
-        # print "key press", key_name
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = True
         elif key_name == "Alt_L":
@@ -236,7 +232,6 @@ class GraphicalEditorController(ExtendedController):
 
     def _on_key_release(self, widget, event):
         key_name = keyval_name(event.keyval)
-        # print "key release", key_name
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = False
         elif key_name == "Alt_L":
@@ -1549,7 +1544,7 @@ class GraphicalEditorController(ExtendedController):
                 StateMachineHelper.delete_models(self.model.selection.get_all())
 
     def _add_execution_state(self, *args):
-        if self.view.editor.has_focus() or singleton.global_focus is self:
+        if self.view.editor.has_focus():  # or singleton.global_focus is self:
             selection = self.model.selection.get_all()
             if len(selection) > 0:
                 model = selection[0]
@@ -1578,9 +1573,12 @@ class GraphicalEditorController(ExtendedController):
     def _copy_selection(self, *args):
         if self.view.editor.has_focus():
             logger.debug("copy selection")
-            global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
-            global_clipboard.selection.set(self.model.selection.get_all())
-            global_clipboard.clipboard_type = ClipboardType.COPY
+            global_clipboard.copy(self.model.state_machine.state_machine_id, self.model.selection.get_all())
+
+    def _cut_selection(self, *args):
+        if self.view.editor.has_focus():
+            logger.debug("cut selection")
+            global_clipboard.cut(self.model.state_machine.state_machine_id, self.model.selection.get_all())
 
     def _paste_clipboard(self, *args):
         if self.view.editor.has_focus():
@@ -1629,10 +1627,3 @@ class GraphicalEditorController(ExtendedController):
             elif global_clipboard.clipboard_type is ClipboardType.CUT:
                 parent_of_source_state = source_state.parent
                 parent_of_source_state.remove_state(source_state.state_id)
-
-    def _cut_selection(self, *args):
-        if self.view.editor.has_focus():
-            logger.debug("cut selection")
-            global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
-            global_clipboard.selection.set(self.model.selection.get_all())
-            global_clipboard.clipboard_type = ClipboardType.CUT
