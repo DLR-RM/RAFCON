@@ -280,15 +280,22 @@ class GraphicalEditorController(ExtendedController):
                 # If so, set the meta data of the object to "object selected" and redraw to highlight the object
                 # If the object was previously selected, remove the selection
                 if new_selection != self.selection:
-                    if self.selection is not None:
-                        self.model.selection.clear()
-                    self.selection = new_selection
-                    if self.selection is not None:
-                        self.model.selection.set(self.selection)
-                        # Add this if a click shell toggle the selection
-                        # else:
-                        # self.model.selection.clear()
-                        # self.selection = None
+                    # Multiselection with shift+click
+                    if event.state & SHIFT_MASK != 0:
+                        if new_selection is not None:
+                            self.model.selection.add(new_selection)
+                            if self.selection is None:
+                                self.selection = new_selection
+                    else:
+                        if self.selection is not None:
+                            self.model.selection.clear()
+                        self.selection = new_selection
+                        if self.selection is not None:
+                            self.model.selection.set(self.selection)
+                            # Add this if a click shell toggle the selection
+                            # else:
+                            # self.model.selection.clear()
+                            # self.selection = None
 
             # If a state was clicked on, store the original position of the selected state for a drag and drop movement
             if self.selection is not None and isinstance(self.selection, StateModel):
@@ -1568,8 +1575,6 @@ class GraphicalEditorController(ExtendedController):
                 self._redraw()
 
     def _copy_selection(self, *args):
-        # print singleton.global_focus
-        # print self
         if self.view.editor.has_focus():
             logger.debug("copy selection")
             global_clipboard.state_machine_id = copy.copy(self.model.state_machine.state_machine_id)
@@ -1619,14 +1624,8 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
             if global_clipboard.clipboard_type is ClipboardType.COPY:
-                # logger.debug("Copy the following clipboard into the selected state %s: \n%s"
-                #              % (str(current_selection.get_states()[0]),
-                #                 str(self.clipboard)))
                 pass
             elif global_clipboard.clipboard_type is ClipboardType.CUT:
-                # logger.debug("Cut the following clipboard into the selected state %s: \n%s"
-                #              % (str(current_selection.get_states()[0]),
-                #                 str(self.clipboard)))
                 parent_of_source_state = source_state.parent
                 parent_of_source_state.remove_state(source_state.state_id)
 
