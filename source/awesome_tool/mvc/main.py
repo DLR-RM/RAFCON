@@ -1,6 +1,6 @@
 import sys
 import logging
-
+import signal
 import gtk
 
 from awesome_tool.utils import log
@@ -113,6 +113,7 @@ def create_models(*args, **kargs):
 
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
     awesome_tool.statemachine.singleton.library_manager.initialize()
     setup_path()
     check_requirements()
