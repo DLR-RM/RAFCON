@@ -7,6 +7,8 @@ from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionM
 
 from awesome_tool.utils.vividict import Vividict
 
+from awesome_tool.mvc.history import History
+
 
 class StateMachineModel(ModelMT):
     """This model class manages a :class:`awesome_tool.statemachine.state_machine.StateMachine`
@@ -40,6 +42,8 @@ class StateMachineModel(ModelMT):
         self.root_state.register_observer(self)
 
         self.selection = Selection()
+        
+        self.history = History(self)
 
         if isinstance(meta, Vividict):
             self.meta = meta
