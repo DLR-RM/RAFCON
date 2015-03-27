@@ -7,7 +7,8 @@ import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.controllers.states_editor import StatesEditorController
 from awesome_tool.mvc.controllers.state_machines_editor import StateMachinesEditorController
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel, Selection
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.selection import Selection
 from awesome_tool.mvc.models.library_manager import LibraryManagerModel
 from awesome_tool.mvc.shortcut_manager import ShortcutManager
 from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView

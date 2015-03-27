@@ -1,6 +1,6 @@
 from gtkmvc import ModelMT
 from gtkmvc import Observable
-from awesome_tool.mvc.models.state_machine import StateMachineModel, Selection
+from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.statemachine.state_machine_manager import StateMachineManager
 from awesome_tool.utils.vividict import Vividict
 

@@ -4,6 +4,7 @@ from enum import Enum
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from awesome_tool.mvc.selection import Selection
 
 from awesome_tool.utils.vividict import Vividict
 
