@@ -70,7 +70,6 @@ class Color:
 
     @r.setter
     def r(self, r):
-        print "set r"
         self._r = self._check_range(r)
 
     @g.setter
@@ -131,7 +130,8 @@ class GraphicalEditorView(View):
         self['main_frame'] = self.v_box
 
         # Query the OpenGL extension version.
-        print "OpenGL extension version - %d.%d\n" % gtk.gdkgl.query_version()
+        major, minor = gtk.gdkgl.query_version()
+        logger.debug("OpenGL version: {0}.{1}".format(major, minor))
 
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
@@ -155,6 +155,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     outcome_aborted_color = Color.from_hex(0x792b40)  # Color(0.6, 0, 0, 0.8)
     outcome_preempted_color = Color.from_hex(0x4769bd)  # Color(0.1, 0.1, 0.7, 0.8)
     income_color = outcome_plain_color  # Color(0.4, 0.4, 0.4, 0.8)
+    frame_fill_color = Color.from_hex(0xd7e0ec, 0.5)
+    frame_border_color = Color.from_hex(0x0b0b17, 0.3)
 
     def __init__(self, glconfig):
         """The graphical editor manages the OpenGL functions.
@@ -302,6 +304,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         gldrawable.gl_end()
 
         # logger.debug("expose_finish")
+
+    def draw_frame(self, corner1, corner2, depth):
+        # corner2 = (corner1[0], corner3[1])
+        # corner4 = (corner1[1], corner3[0])
+        self._draw_rect(corner1[0], corner2[0], corner1[1], corner2[1], depth, fill_color=self.frame_fill_color,
+                        border_color=self.frame_border_color)
+
 
     def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0,
                    input_ports_m=[], output_ports_m=[],
@@ -693,7 +702,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         scale_factor = height / font_height
         return width * scale_factor
 
-    def prepare_selection(self, pos_x, pos_y):
+    def prepare_selection(self, pos_x, pos_y, width=5., height=5.):
         """Prepares the selection rendering
 
         In order to find out the object being clicked on, the scene has to be rendered again around the clicked position
@@ -701,7 +710,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param pos_x: x coordinate
         :param pos_y: y coordinate
         """
-        glSelectBuffer(128)
+        glSelectBuffer(self.name_counter * 6)
         viewport = glGetInteger(GL_VIEWPORT)
 
         glMatrixMode(GL_PROJECTION)
@@ -710,9 +719,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glRenderMode(GL_SELECT)
 
         glLoadIdentity()
+
+        if width < 1:
+            width = 1
+        if height < 1:
+            height = 1
+        pos_x += width / 2.
+        pos_y += height / 2.
         # The system y axis is inverse to the OpenGL y axis
-        range = 5  # self.pixel_to_size_ratio() / 3.
-        gluPickMatrix(pos_x, viewport[3] - pos_y + viewport[1], range, range, viewport)
+        gluPickMatrix(pos_x, viewport[3] - pos_y + viewport[1], width, height, viewport)
 
         self._apply_orthogonal_view()
 

@@ -194,6 +194,7 @@ class GraphicalEditorController(ExtendedController):
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
         self.draw_state(self.root_state_m)
+        self.draw_state_machine()
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
 
@@ -261,9 +262,10 @@ class GraphicalEditorController(ExtendedController):
         self.multi_selection_started = False  # reset
 
         # Store the coordinates of the event
+        self.mouse_move_start_pos = (event.x, event.y)
+        self.mouse_move_last_pos = (event.x, event.y)
         self.mouse_move_start_coords = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
         self.mouse_move_last_coords = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
-        self.mouse_move_last_pos = (event.x, event.y)
 
         # Left mouse button was clicked
         if event.button == 1:
@@ -390,6 +392,23 @@ class GraphicalEditorController(ExtendedController):
         """
         self.last_button_pressed = None
         self.drag_origin_offset = None
+
+        if self.multi_selection_started:
+            start = self.mouse_move_start_pos
+            end = self.mouse_move_last_pos
+            # Only check for selection, if the mouse was moved more than 10px
+            if dist(start, end) > 10:
+                pos_x = min(start[0], end[0])
+                pos_y = min(start[1], end[1])
+                width = abs(start[0] - end[0])
+                height = abs(start[1] - end[1])
+                selected_models = self._find_selection(pos_x, pos_y, width, height, all=True)
+                if selected_models is not None:
+                    self.model.selection.append(selected_models)
+            # If so, select models beneath frame
+            self.multi_selection_started = False
+            self.model.meta['gui']['editor']['selection_frame'] = None
+
         self._redraw()
 
     def _move_waypoint(self, new_pos_x, new_pos_y, modifier_keys):
@@ -478,6 +497,12 @@ class GraphicalEditorController(ExtendedController):
             self._move_view(dx, dy)
 
         mouse_current_coord = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
+
+        if self.multi_selection_started:
+            self._draw_multi_selection_frame()
+            self.mouse_move_last_pos = (event.x, event.y)
+            self.mouse_move_last_coords = mouse_current_coord
+            return
 
         rel_x_motion = mouse_current_coord[0] - self.mouse_move_start_coords[0]
         rel_y_motion = mouse_current_coord[1] - self.mouse_move_start_coords[1]
@@ -656,6 +681,13 @@ class GraphicalEditorController(ExtendedController):
                     self._redraw()
                     return True
         return False
+
+    def _draw_multi_selection_frame(self):
+        corner1 = self.mouse_move_start_coords
+        corner2 = self.mouse_move_last_coords
+        self.model.meta['gui']['editor']['selection_frame'] = [corner1, corner2]
+        self._redraw()
+
 
     def _add_waypoint(self, connection_model, coords):
         """Adds a waypoint to the given connection
@@ -1072,6 +1104,18 @@ class GraphicalEditorController(ExtendedController):
             # Move view to keep the previous mouse position in the view
             self._move_view(diff_x, diff_y, opengl_coords=True)
 
+    def draw_state_machine(self):
+        """Draws remaining components of the state machine
+
+        This method draws all other components, not directly belonging to a certain state. For a starter, this is the
+        selection frame the user draws for a multi selection.
+        """
+
+        # Draw the multi selection frame
+        frame = self.model.meta['gui']['editor']['selection_frame']
+        if isinstance(frame, list):
+            self.view.editor.draw_frame(frame[0], frame[1], 10)
+
     def draw_state(self, state_m, pos_x=0.0, pos_y=0.0, width=100.0, height=100.0, depth=1):
         """Draws a (container) state with all its content
 
@@ -1433,8 +1477,8 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.draw_data_flow(connector[0], connector[1], target[0], target[1], line_width,
                                                 self.temporary_waypoints, True, parent_depth + 0.6)
 
-    def _find_selection(self, pos_x, pos_y, find_states=True, find_transitions=True, find_data_flows=True,
-                        find_data_ports=True):
+    def _find_selection(self, pos_x, pos_y, width=5, height=5, all=False,
+                        find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Returns the model at the given position
 
         This method is used when the model (state/transition/data flow) the user clicked on is to be found. The
@@ -1450,7 +1494,7 @@ class GraphicalEditorController(ExtendedController):
         :return: The uppermost model beneath the given position, None if nothing was found
         """
         # e.g. sets render mode to GL_SELECT
-        self.view.editor.prepare_selection(pos_x, pos_y)
+        self.view.editor.prepare_selection(pos_x, pos_y, width, height)
         # draw again
         self.view.editor.expose_init()
         self.draw_state(self.root_state_m)
@@ -1470,6 +1514,7 @@ class GraphicalEditorController(ExtendedController):
             selected_ids = map(get_id, hits)  # Get the OpenGL ids for the hits
             selected_ids = filter(lambda opengl_id: opengl_id is not None, selected_ids)  # Filter out Nones
             (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
+                                                                        all,
                                                                         find_states, find_transitions,
                                                                         find_data_flows, find_data_ports)
         except Exception as e:
@@ -1477,7 +1522,7 @@ class GraphicalEditorController(ExtendedController):
             pass
         return selection
 
-    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth,
+    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth, all=False,
                                 find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Searches recursively for objects with the given ids
 
@@ -1491,12 +1536,23 @@ class GraphicalEditorController(ExtendedController):
         :param selection_depth: The depth of the currently found object
         :return: The selected object and its depth
         """
+        def update_selection(selection, model):
+            if all:
+                if selection is None:
+                    return [model]
+                elif not isinstance(selection, list):
+                    return [selection, model]
+                else:
+                    selection.append(model)
+                    return selection
+            else:
+                return model
         # Only the element which is furthest down in the hierarchy is selected
-        if search_state_depth > selection_depth and find_states:
+        if (search_state_depth > selection_depth or all) and find_states:
             # Check whether the id of the current state matches an id in the selected ids
             if search_state.meta['gui']['editor']['id'] and search_state.meta['gui']['editor']['id'] in ids:
                 # if so, add the state to the list of selected states
-                selection = search_state
+                selection = update_selection(selection, search_state)
                 selection_depth = search_state_depth
                 # remove the id from the list to fasten up further searches
                 ids.remove(search_state.meta['gui']['editor']['id'])
@@ -1511,18 +1567,18 @@ class GraphicalEditorController(ExtendedController):
             for state in search_state.states.itervalues():
                 if len(ids) > 0:
                     (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
-                                                                                selection, selection_depth,
+                                                                                selection, selection_depth, all,
                                                                                 find_states, find_transitions,
                                                                                 find_data_flows, find_data_ports)
 
-            if len(ids) == 0 or search_state_depth < selection_depth:
+            if len(ids) == 0 or (search_state_depth < selection_depth and not all):
                 return selection, selection_depth
 
             def search_selection_in_model_list(model_list, current_selection):
                 for model in model_list:
                     if model.meta['gui']['editor']['id'] and model.meta['gui']['editor']['id'] in ids:
                         ids.remove(model.meta['gui']['editor']['id'])
-                        current_selection = model
+                        current_selection = update_selection(current_selection, model)
                 return current_selection
 
             if find_transitions:
@@ -1539,7 +1595,6 @@ class GraphicalEditorController(ExtendedController):
                 selection = search_selection_in_model_list(search_state.input_data_ports, selection)
                 selection = search_selection_in_model_list(search_state.output_data_ports, selection)
                 selection = search_selection_in_model_list(search_state.scoped_variables, selection)
-
         return selection, selection_depth
 
     @staticmethod
