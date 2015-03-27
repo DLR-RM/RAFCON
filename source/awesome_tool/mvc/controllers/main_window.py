@@ -132,11 +132,11 @@ class MainWindowController(ExtendedController):
         # menu bar
         ######################################################
         menu_bar_controller = MenuBarController(state_machine_manager_model,
-                                                     view.menu_bar,
-                                                     state_machines_editor_ctrl,
-                                                     states_editor_ctrl,
-                                                     view.logging_view,
-                                                     self.shortcut_manager)
+                                                view,
+                                                state_machines_editor_ctrl,
+                                                states_editor_ctrl,
+                                                view.logging_view,
+                                                self.shortcut_manager)
         self.add_controller("menu_bar_controller", menu_bar_controller)
 
         ######################################################
@@ -155,7 +155,8 @@ class MainWindowController(ExtendedController):
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
-        view['main_window'].connect('destroy', gtk.main_quit)
+        view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
+        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").destroy)
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):

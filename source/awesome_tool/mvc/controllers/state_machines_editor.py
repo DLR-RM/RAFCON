@@ -141,16 +141,16 @@ class StateMachinesEditorController(ExtendedController):
             message.set_markup(message_string)
             message.add_button("Yes", 42)
             message.add_button("No", 43)
-            message.connect('response', self.on_refresh_message_dialog_response_signal, state_machine_model)
+            message.connect('response', self.on_close_message_dialog_response_signal, state_machine_model)
             message.show()
         else:
             self.remove_state_machine(state_machine_model)
 
-    def on_refresh_message_dialog_response_signal(self, widget, response_id, state_machine_model):
+    def on_close_message_dialog_response_signal(self, widget, response_id, state_machine_model):
         if response_id == 42:
             self.remove_state_machine(state_machine_model)
         else:
-            logger.debug("Refresh canceled")
+            logger.debug("Close state machine model canceled")
         widget.destroy()
 
     def remove_state_machine(self, state_machine_model):

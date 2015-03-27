@@ -108,7 +108,7 @@ class StateMachineManager(Observable):
         if self._active_state_machine_id in self._state_machines:
             return self._state_machines[self._active_state_machine_id]
         else:
-            logger.error("No active state machine specified!")
+            logger.warn("No active state machine specified!")
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

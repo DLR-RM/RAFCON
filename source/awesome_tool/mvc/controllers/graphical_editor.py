@@ -1593,48 +1593,53 @@ class GraphicalEditorController(ExtendedController):
 
     def _paste_clipboard(self, *args):
         if self.view.editor.has_focus():
-            logger.debug("paste selection")
-            currently_selected_sm_id = self.model.state_machine.state_machine_id
-            current_selection = self.model.selection
-            # check if the current selection is valid
-            if current_selection.get_number_of_selected_items() > 1 or len(current_selection.get_states()) < 1:
-                logger.error("Cannot paste clipboard into selection as the selection does not consist of a single "
-                             "container state!")
-                return
-            if len(current_selection.get_states()) == 1 and\
-                    not isinstance(current_selection.get_states()[0], ContainerStateModel):
-                    logger.error("Cannot paste clipboard into selection as the selected state model is not "
-                                 "a container state model")
+            if global_clipboard.ready_to_paste:
+                logger.debug("paste selection")
+                currently_selected_sm_id = self.model.state_machine.state_machine_id
+                current_selection = self.model.selection
+                # check if the current selection is valid
+                if current_selection.get_number_of_selected_items() > 1 or len(current_selection.get_states()) < 1:
+                    logger.error("Cannot paste clipboard into selection as the selection does not consist of a single "
+                                 "container state!")
+                    return
+                if len(current_selection.get_states()) == 1 and\
+                        not isinstance(current_selection.get_states()[0], ContainerStateModel):
+                        logger.error("Cannot paste clipboard into selection as the selected state model is not "
+                                     "a container state model")
+                        return
+
+                # check if the clipboard is valid
+                if global_clipboard.selection.get_number_of_selected_items() > 1:
+                    logger.error("Only one single item is allowed to be copied yet!")
+                    return
+                if not len(global_clipboard.selection.get_states()) == 1:
+                    logger.error("Only states are allowed to be copied yet!")
                     return
 
-            # check if the clipboard is valid
-            if global_clipboard.selection.get_number_of_selected_items() > 1:
-                logger.error("Only one single item is allowed to be copied yet!")
-                return
-            if not len(global_clipboard.selection.get_states()) == 1:
-                logger.error("Only states are allowed to be copied yet!")
-                return
+                source_state_model = global_clipboard.selection.get_states()[0]
+                source_state = source_state_model.state
+                target_state_model = current_selection.get_states()[0]
+                target_state = target_state_model.state
+                state_copy = StateHelper.get_state_copy(source_state)
+                target_state.add_state(state_copy)
+                state_copy_model = target_state_model.states[state_copy.state_id]
 
-            source_state_model = global_clipboard.selection.get_states()[0]
-            source_state = source_state_model.state
-            target_state_model = current_selection.get_states()[0]
-            target_state = target_state_model.state
-            state_copy = StateHelper.get_state_copy(source_state)
-            target_state.add_state(state_copy)
-            state_copy_model = target_state_model.states[state_copy.state_id]
+                state_copy_model.copy_meta_data_from_state_model(source_state_model)
+                new_x_pos = target_state_model.meta["gui"]["editor"]["pos_x"] + \
+                            target_state_model.meta["gui"]["editor"]["width"] * 3 / 100
+                new_y_pos = target_state_model.meta["gui"]["editor"]["pos_y"] + \
+                            target_state_model.meta["gui"]["editor"]["height"] * 97 / 100 - \
+                            state_copy_model.meta["gui"]["editor"]["height"]
 
-            state_copy_model.copy_meta_data_from_state_model(source_state_model)
-            new_x_pos = target_state_model.meta["gui"]["editor"]["pos_x"] + \
-                        target_state_model.meta["gui"]["editor"]["width"] * 3 / 100
-            new_y_pos = target_state_model.meta["gui"]["editor"]["pos_y"] + \
-                        target_state_model.meta["gui"]["editor"]["height"] * 97 / 100 - \
-                        state_copy_model.meta["gui"]["editor"]["height"]
+                self._move_state(state_copy_model, new_x_pos, new_y_pos)
+                self._redraw()
 
-            self._move_state(state_copy_model, new_x_pos, new_y_pos)
-            self._redraw()
-
-            if global_clipboard.clipboard_type is ClipboardType.COPY:
-                pass
-            elif global_clipboard.clipboard_type is ClipboardType.CUT:
-                parent_of_source_state = source_state.parent
-                parent_of_source_state.remove_state(source_state.state_id)
+                if global_clipboard.clipboard_type is ClipboardType.COPY:
+                    pass
+                elif global_clipboard.clipboard_type is ClipboardType.CUT:
+                    parent_of_source_state = source_state.parent
+                    parent_of_source_state.remove_state(source_state.state_id)
+                    global_clipboard.ready_to_paste = False
+            else:
+                logger.warn("Cannot paste, as either no item is in the clipboard "
+                             "or a cut object was pasted the last time.")

@@ -142,8 +142,13 @@ class StateModel(ModelMT):
             self.update_models(model, prop_name, info)
 
         # mark the state machine this state belongs to as dirty
-        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
-        awesome_tool.statemachine.singleton.global_storage.mark_dirty(own_sm_id)
+        active_flag_responsible = info["method_name"] == "active" or info["method_name"] == "child_execution"
+        if isinstance(model, StateModel) and prop_name == "state" and active_flag_responsible:
+            # do not track the active flag when marking the sm dirty
+            pass
+        else:
+            own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
+            awesome_tool.statemachine.singleton.global_storage.mark_dirty(own_sm_id)
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument

@@ -6,6 +6,8 @@ import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
+
 
 class MenuBarController(ExtendedController):
     """
@@ -13,11 +15,12 @@ class MenuBarController(ExtendedController):
     """
     def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view,
                  shortcut_manager):
-        ExtendedController.__init__(self, state_machine_manager_model, view)
+        ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
         self.state_machines_editor_ctrl = state_machines_editor_ctrl
         self.states_editor_ctrl = states_editor_ctrl
         self.shortcut_manager = shortcut_manager
         self.logging_view = logging_view
+        self.main_window_view = view
 
     def register_view(self, view):
         """Called when the View was registered
@@ -182,12 +185,84 @@ class MenuBarController(ExtendedController):
         awesome_tool.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
 
     def on_quit_activate(self, widget, data=None):
+        avoid_shutdown = self.on_delete_event(self, widget, None)
+        if not avoid_shutdown:
+            self.destroy(None)
+
+    def on_delete_event(self, widget, event, data=None):
         self.logging_view.quit_flag = True
-        logger.debug("Main window destroyed")
-        log.debug_filter.set_logging_test_view(None)
-        log.error_filter.set_logging_test_view(None)
-        awesome_tool.statemachine.config.global_config.save_configuration()
-        gtk.main_quit()
+        logger.debug("Delete event received")
+        return_value = self.check_sm_modified()
+        if return_value:
+            return True
+        return_value = self.check_sm_running()
+        if return_value:
+            return True
+        return False
+
+    def check_sm_modified(self):
+        if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
+            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+            message_string = "Are you sure you want to close the main window? " \
+                             "The following state machines were modified and not saved: "
+            for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
+                message_string = "%s %s " % (message_string, str(sm_id))
+            message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
+                             "before will be deleted!)" % message_string
+            message.set_markup(message_string)
+            message.add_button("Yes", 42)
+            message.add_button("No", 43)
+            message.connect('response', self.on_quit_message_dialog_response_signal_open_changes)
+            message.show()
+            return True
+        return False
+
+    def check_sm_running(self):
+        if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode \
+                is not ExecutionMode.STOPPED:
+            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+            message_string = "The state machine is still running. Do you want to stop the state machine before closing?"
+            message.set_markup(message_string)
+            message.add_button("Yes", 42)
+            message.add_button("No", 43)
+            message.connect('response', self.on_quit_message_dialog_response_signal_sm_running)
+            message.show()
+            return True
+        return False
+
+    def on_quit_message_dialog_response_signal_open_changes(self, widget, response_id):
+        if response_id == 42:
+            widget.destroy()
+            if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode \
+                    is not ExecutionMode.STOPPED:
+                self.check_sm_running()
+            else:
+                self.destroy(None)
+        elif response_id == 43:
+            logger.debug("Close main window canceled")
+            widget.destroy()
+
+    def on_quit_message_dialog_response_signal_sm_running(self, widget, response_id):
+        if response_id == 42:
+            awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+            logger.debug("State machine is shut down now!")
+            widget.destroy()
+            self.destroy(None)
+        elif response_id == 43:
+            logger.debug("State machine will stay running!")
+            widget.destroy()
+            self.main_window_view.hide()
+            # state machine cannot be shutdown in a controlled manner as after self.destroy()
+            # the signal handler does not trigger any more
+            # self.destroy(None)
+
+    def destroy(self, widget, data=None):
+        logger.debug("Closing main window!")
+        import glib
+        glib.idle_add(awesome_tool.statemachine.config.global_config.save_configuration)
+        glib.idle_add(log.debug_filter.set_logging_test_view, None)
+        glib.idle_add(log.error_filter.set_logging_test_view, None)
+        glib.idle_add(gtk.main_quit)
 
     ######################################################
     # menu bar functionality - Edit

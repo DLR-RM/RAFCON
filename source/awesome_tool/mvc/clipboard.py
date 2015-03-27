@@ -13,6 +13,7 @@ class Clipboard(Observable):
         Observable.__init__(self)
         self._selection = None
         self.selection = Selection()
+        self.ready_to_paste = False
 
         self._state_machine_id = None
         self._clipboard_type = None
@@ -71,11 +72,13 @@ class Clipboard(Observable):
         self.state_machine_id = state_machine_id
         self.selection.set(models)
         self.clipboard_type = ClipboardType.COPY
+        self.ready_to_paste = True
 
     def cut(self, state_machine_id, models):
         self.state_machine_id = state_machine_id
         self.selection.set(models)
         self.clipboard_type = ClipboardType.CUT
+        self.ready_to_paste = True
 
 # To enable copy, cut and paste between state machines a global clipboard is used
 global_clipboard = Clipboard()

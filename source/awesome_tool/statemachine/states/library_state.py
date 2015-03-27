@@ -141,31 +141,6 @@ class LibraryState(State, yaml.YAMLObject):
         else:
             return State.add_state(self, state)
 
-    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
-        """Overwrites the add_transition method of the ContainerState class. Prevents user from adding a
-        transition to the library state.
-
-        For further documentation, look at the ContainerState class.
-
-        """
-        if self.initialized:
-            logger.error("It is not allowed to add a transition to a library state")
-        else:
-            return State.add_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
-
-    def add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id=None):
-        """Overwrites the add_data_flow method of the ContainerState class. Prevents user from adding a
-        data_flow to the library state.
-
-        For further documentation, look at the ContainerState class.
-
-        """
-        if self.initialized:
-            logger.error("It is not allowed to add a data flow to a library state")
-        else:
-            return State.add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id,
-                                                data_flow_id)
-
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
         """Overwrites the add_scoped_variable method of the ContainerState class. Prevents user from adding a
         scoped_variable to the library state.
