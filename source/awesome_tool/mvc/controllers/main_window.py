@@ -164,6 +164,7 @@ class MainWindowController(ExtendedController):
                                                 view,
                                                 state_machines_editor_ctrl,
                                                 states_editor_ctrl,
+                                                view.logging_view,
                                                 view.get_top_widget(),
                                                 self.shortcut_manager)
         self.add_controller("menu_bar_controller", menu_bar_controller)
