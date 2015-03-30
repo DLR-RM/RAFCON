@@ -2,7 +2,7 @@
 from gtkmvc import View
 from awesome_tool.mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
      GlobalVariableEditorView, SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-     LoggingView, StateMachineTreeView, LibraryTreeView, MenuBarView, ToolBarView
+     LoggingView, StateMachineTreeView, LibraryTreeView, MenuBarView, ToolBarView, TopToolBarView
 from awesome_tool.mvc.views.states_editor import StatesEditorView
 from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
 
@@ -13,6 +13,8 @@ class MainWindowView(View):
 
     def __init__(self, logging_view):
         View.__init__(self)
+
+        # self['main_window'].set_decorated(False)
 
         self.logging_view = logging_view
 
@@ -60,17 +62,25 @@ class MainWindowView(View):
         ##################################################
         # menu bar view
         ##################################################
+        self.top_tool_bar = TopToolBarView()
+        self.top_tool_bar.show()
+        self["top_menu_hbox"].remove(self["top_tool_bar_placeholder"])
+        self["top_menu_hbox"].pack_end(self.top_tool_bar.get_top_widget(), expand=True, fill=True, padding=0)
+        self["top_menu_hbox"].reorder_child(self.top_tool_bar.get_top_widget(), 1)
+
         self.menu_bar = MenuBarView()
         self.menu_bar.show()
-        self["top_level_vbox"].remove(self["menu_bar_placeholder"])
-        self["top_level_vbox"].pack_start(self.menu_bar.get_top_widget(), expand=False, fill=True, padding=0)
-        self["top_level_vbox"].reorder_child(self.menu_bar.get_top_widget(), 0)
+        self["top_menu_hbox"].remove(self["menu_bar_placeholder"])
+        self["top_menu_hbox"].pack_start(self.menu_bar.get_top_widget(), expand=False, fill=True, padding=0)
+        self["top_menu_hbox"].reorder_child(self.menu_bar.get_top_widget(), 0)
 
         self.tool_bar = ToolBarView()
         self.tool_bar.show()
         self["top_level_vbox"].remove(self["tool_bar_placeholder"])
         self["top_level_vbox"].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
         self["top_level_vbox"].reorder_child(self.tool_bar.get_top_widget(), 1)
+
+        self["top_level_vbox"].reorder_child(self["top_bar_separator"], 2)
 
         # insert global-variable-manager
         #self['global_variable_manager_vbox'].add(self.global_variable_manager.get_top_widget())
@@ -84,3 +94,4 @@ class MainWindowView(View):
         # insert status-bar
         #self['vbox1'].reparent(self['lower_statusbar'])
 
+        self.get_top_widget().set_decorated(False)

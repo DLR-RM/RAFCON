@@ -2,9 +2,9 @@ from gtkmvc import View
 import gtk
 
 
-class MenuBarView(View):
-    builder = './glade/menu_bar.glade'
-    top = 'menubar'
+class TopToolBarView(View):
+    builder = './glade/top_tool_bar.glade'
+    top = 'top_toolbar'
 
     def __init__(self):
         View.__init__(self)

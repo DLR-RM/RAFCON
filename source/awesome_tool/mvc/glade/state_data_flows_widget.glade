@@ -8,6 +8,7 @@
     <child>
       <object class="GtkHBox" id="hbox1">
         <property name="visible">True</property>
+        <property name="spacing">5</property>
         <child>
           <object class="GtkCheckButton" id="internal_d_checkbutton">
             <property name="label" translatable="yes">Internal</property>

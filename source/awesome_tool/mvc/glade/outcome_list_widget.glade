@@ -5,34 +5,32 @@
   <object class="GtkTreeView" id="tree_view">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
-    <property name="border_width">331</property>
     <property name="headers_clickable">False</property>
     <child>
-      <object class="GtkTreeViewColumn" id="from_state_col">
-        <property name="title">From-State</property>
+      <object class="GtkTreeViewColumn" id="id_col">
+        <property name="title">ID</property>
         <property name="expand">True</property>
         <child>
-          <object class="GtkCellRendererCombo" id="from_state_combo">
+          <object class="GtkCellRendererText" id="id_cell">
             <property name="editable">True</property>
-            <property name="text_column">0</property>
+            <property name="width_chars">5</property>
           </object>
           <attributes>
-            <attribute name="text">1</attribute>
+            <attribute name="text">0</attribute>
           </attributes>
         </child>
       </object>
     </child>
     <child>
-      <object class="GtkTreeViewColumn" id="from_key_col">
-        <property name="title">From-Key</property>
+      <object class="GtkTreeViewColumn" id="name_col">
+        <property name="title">Name</property>
         <property name="expand">True</property>
         <child>
-          <object class="GtkCellRendererCombo" id="from_key_combo">
+          <object class="GtkCellRendererText" id="name_cell">
             <property name="editable">True</property>
-            <property name="text_column">0</property>
           </object>
           <attributes>
-            <attribute name="text">2</attribute>
+            <attribute name="text">1</attribute>
           </attributes>
         </child>
       </object>
@@ -43,38 +41,24 @@
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_state_combo">
-            <property name="editable">True</property>
+            <property name="text_column">0</property>
+          </object>
+          <attributes>
+            <attribute name="text">2</attribute>
+          </attributes>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkTreeViewColumn" id="to_outcome_col">
+        <property name="title">To-Outcome</property>
+        <property name="expand">True</property>
+        <child>
+          <object class="GtkCellRendererCombo" id="to_outcome_combo">
             <property name="text_column">0</property>
           </object>
           <attributes>
             <attribute name="text">3</attribute>
-          </attributes>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkTreeViewColumn" id="to_key_col">
-        <property name="title">To-Key</property>
-        <property name="expand">True</property>
-        <child>
-          <object class="GtkCellRendererCombo" id="to_key_combo">
-            <property name="editable">True</property>
-            <property name="text_column">0</property>
-          </object>
-          <attributes>
-            <attribute name="text">4</attribute>
-          </attributes>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkTreeViewColumn" id="external_col">
-        <property name="title">External</property>
-        <property name="expand">True</property>
-        <child>
-          <object class="GtkCellRendererToggle" id="external_toggle"/>
-          <attributes>
-            <attribute name="active">5</attribute>
           </attributes>
         </child>
       </object>

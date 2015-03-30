@@ -1,81 +1,81 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkTreeView" id="transition_list_view">
+  <object class="GtkTreeView" id="tree_view">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
     <property name="border_width">331</property>
     <property name="headers_clickable">False</property>
     <child>
       <object class="GtkTreeViewColumn" id="from_state_col">
-        <property name="resizable">True</property>
-        <property name="sizing">autosize</property>
-        <property name="title">From State</property>
-        <property name="reorderable">True</property>
-        <property name="sort_indicator">True</property>
+        <property name="title">From-State</property>
+        <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="from_state_combo">
             <property name="editable">True</property>
-            <property name="has_entry">False</property>
+            <property name="text_column">0</property>
           </object>
+          <attributes>
+            <attribute name="text">1</attribute>
+          </attributes>
         </child>
       </object>
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="from_outcome_col">
-        <property name="resizable">True</property>
-        <property name="sizing">autosize</property>
-        <property name="title">From Outcome</property>
-        <property name="reorderable">True</property>
-        <property name="sort_indicator">True</property>
+        <property name="title">From-Outcome</property>
+        <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="from_outcome_combo">
             <property name="editable">True</property>
-            <property name="has_entry">False</property>
+            <property name="text_column">0</property>
           </object>
+          <attributes>
+            <attribute name="text">2</attribute>
+          </attributes>
         </child>
       </object>
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="to_state_col">
-        <property name="resizable">True</property>
-        <property name="sizing">autosize</property>
-        <property name="title">To State</property>
-        <property name="reorderable">True</property>
-        <property name="sort_indicator">True</property>
+        <property name="title">To-State</property>
+        <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_state_combo">
             <property name="editable">True</property>
-            <property name="has_entry">False</property>
+            <property name="text_column">0</property>
           </object>
+          <attributes>
+            <attribute name="text">3</attribute>
+          </attributes>
         </child>
       </object>
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="to_outcome_col">
-        <property name="resizable">True</property>
-        <property name="sizing">autosize</property>
-        <property name="title">To Outcome</property>
-        <property name="reorderable">True</property>
-        <property name="sort_indicator">True</property>
+        <property name="title">To-Outcome</property>
+        <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_outcome_combo">
             <property name="editable">True</property>
-            <property name="has_entry">False</property>
+            <property name="text_column">0</property>
           </object>
+          <attributes>
+            <attribute name="text">4</attribute>
+          </attributes>
         </child>
       </object>
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="external_col">
-        <property name="resizable">True</property>
-        <property name="sizing">autosize</property>
-        <property name="title" translatable="yes">External</property>
-        <property name="reorderable">True</property>
-        <property name="sort_indicator">True</property>
+        <property name="title">External</property>
+        <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererToggle" id="external_toggle"/>
+          <attributes>
+            <attribute name="active">5</attribute>
+          </attributes>
         </child>
       </object>
     </child>

@@ -23,15 +23,18 @@ class SourceEditorView(View):
         #window.add(vbox)
         hbox = gtk.HBox()
         apply_button = gtk.Button("Apply")
+        apply_button.set_size_request(90, 25)
         cancel_button = gtk.Button("Cancel")
-        hbox.pack_start(apply_button)
-        hbox.pack_end(cancel_button)
+        cancel_button.set_size_request(90, 25)
+        hbox.pack_end(cancel_button, False, True, 5)
+        hbox.pack_end(apply_button, False, True, 5)
+        hbox.set_border_width(5)
 
         editor_frame = gtk.Frame()
         vbox.pack_start(editor_frame, expand=True, fill=True)
-        vbox.pack_end(hbox, expand=False, fill=False)
-        l = gtk.Label()
-        vbox.pack_start(l, expand=False, fill=False)
+        vbox.pack_start(hbox, expand=False, fill=True)
+        #l = gtk.Label()
+        #vbox.pack_start(l, expand=False, fill=False)
 
         # create textview
         self.textview = None

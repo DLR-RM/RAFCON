@@ -63,6 +63,7 @@
             <child>
               <object class="GtkViewport" id="source_viewport">
                 <property name="visible">True</property>
+                <property name="border_width">5</property>
                 <property name="resize_mode">queue</property>
                 <child>
                   <placeholder/>
@@ -108,6 +109,21 @@
                                 <property name="visible">True</property>
                                 <property name="orientation">vertical</property>
                                 <child>
+                                  <object class="GtkScrolledWindow" id="input_ports_scroller">
+                                    <property name="height_request">130</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
                                   <object class="GtkHBox" id="hbox1">
                                     <property name="visible">True</property>
                                     <property name="homogeneous">True</property>
@@ -138,21 +154,6 @@
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkScrolledWindow" id="input_ports_scroller">
-                                    <property name="height_request">130</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
-                                    <child>
-                                      <placeholder/>
-                                    </child>
-                                  </object>
-                                  <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
@@ -181,6 +182,21 @@
                               <object class="GtkVBox" id="output_port_vbox">
                                 <property name="visible">True</property>
                                 <property name="orientation">vertical</property>
+                                <child>
+                                  <object class="GtkScrolledWindow" id="output_ports_scroller">
+                                    <property name="height_request">150</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
                                 <child>
                                   <object class="GtkHBox" id="hbox2">
                                     <property name="visible">True</property>
@@ -212,21 +228,6 @@
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkScrolledWindow" id="output_ports_scroller">
-                                    <property name="height_request">150</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
-                                    <child>
-                                      <placeholder/>
-                                    </child>
-                                  </object>
-                                  <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
@@ -254,6 +255,21 @@
                               <object class="GtkVBox" id="scoped_variable_vbox">
                                 <property name="visible">True</property>
                                 <property name="orientation">vertical</property>
+                                <child>
+                                  <object class="GtkScrolledWindow" id="scoped_variables_scroller">
+                                    <property name="height_request">150</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
                                 <child>
                                   <object class="GtkHBox" id="hbox3">
                                     <property name="visible">True</property>
@@ -285,21 +301,6 @@
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkScrolledWindow" id="scoped_variables_scroller">
-                                    <property name="height_request">150</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
-                                    <child>
-                                      <placeholder/>
-                                    </child>
-                                  </object>
-                                  <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>

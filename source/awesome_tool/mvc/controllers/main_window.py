@@ -17,6 +17,7 @@ logger = log.get_logger(__name__)
 import awesome_tool.statemachine.config
 from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
+from awesome_tool.mvc.controllers.top_tool_bar_controller import TopToolBarController
 
 
 class MainWindowController(ExtendedController):
@@ -46,10 +47,10 @@ class MainWindowController(ExtendedController):
         ######################################################
         # logging view
         ######################################################
-        self.console_scroller = view['left_v_pane'].get_child2()
-        view['left_v_pane'].remove(self.console_scroller)
+        self.console_scroller = view['console_scroller']
+        view['debug_console_vbox'].remove(self.console_scroller)
         view.logging_view.get_top_widget().show()
-        view['left_v_pane'].add2(view.logging_view.get_top_widget())
+        view['debug_console_vbox'].pack_start(view.logging_view.get_top_widget(), True, True, 0)
 
         ######################################################
         # library tree
@@ -59,9 +60,13 @@ class MainWindowController(ExtendedController):
         self.add_controller('library_controller', library_controller)
         view['library_vbox'].remove(view['library_tree_placeholder'])
         view['library_vbox'].pack_start(view.library_tree, True, True, 0)
-        view['add_link_button'].connect("clicked", library_controller.add_link_button_clicked,
+        # view['add_link_button'].connect("clicked", library_controller.add_link_button_clicked,
+        #                                 state_machine_manager_model)
+        # view['add_template_button'].connect("clicked", library_controller.add_template_button_clicked,
+        #                                     state_machine_manager_model)
+        view['add_link_menu_entry'].connect("activate", library_controller.add_link_button_clicked,
                                         state_machine_manager_model)
-        view['add_template_button'].connect("clicked", library_controller.add_template_button_clicked,
+        view['add_template_menu_entry'].connect("activate", library_controller.add_template_button_clicked,
                                             state_machine_manager_model)
         ######################################################
         # statemachine tree
@@ -75,8 +80,15 @@ class MainWindowController(ExtendedController):
         #TODO: this is not always the active state machine
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
-        state_machine_label = gtk.Label('State Tree')
-        view["tree_notebook"].insert_page(view.state_machine_tree, state_machine_label, page_num)
+        state_machine_label = gtk.Label('STATE TREE')
+        state_machine_event_box = gtk.EventBox()
+        state_machine_event_box.add(state_machine_label)
+        state_machine_tab_label = gtk.Label('State Tree')
+        state_machine_vbox = gtk.VBox()
+        state_machine_vbox.pack_start(state_machine_event_box, False, True, 0)
+        state_machine_vbox.pack_start(view.state_machine_tree, True, True, 0)
+        state_machine_vbox.show_all()
+        view["tree_notebook"].insert_page(state_machine_vbox, state_machine_tab_label, page_num)
 
         ######################################################
         # state editor
@@ -104,8 +116,24 @@ class MainWindowController(ExtendedController):
         #append new tab
         global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
-        global_variables_label = gtk.Label('Global Variables')
-        view["tree_notebook"].insert_page(view.global_var_manager_view.get_top_widget(), global_variables_label, page_num)
+        global_variables_label = gtk.Label('GLOBAL VARIABLES')
+        global_variables_event_box = gtk.EventBox()
+        global_variables_event_box.add(global_variables_label)
+        global_variables_tab_label = gtk.Label('Global Variables')
+        global_variables_vbox = gtk.VBox()
+        global_variables_vbox.pack_start(global_variables_event_box, False, True, 0)
+        global_variables_vbox.pack_start(view.global_var_manager_view.get_top_widget(), True, True, 0)
+        global_variables_vbox.show_all()
+        view["tree_notebook"].insert_page(global_variables_vbox, global_variables_tab_label, page_num)
+
+        ######################################################
+        # rotate all tab labels by 90 degrees
+        ######################################################
+
+        for i in range(view["tree_notebook"].get_n_pages()):
+            child = view["tree_notebook"].get_nth_page(i)
+            tab_label = view["tree_notebook"].get_tab_label(child)
+            tab_label.set_angle(90)
 
         ######################################################
         # status bar
@@ -127,7 +155,8 @@ class MainWindowController(ExtendedController):
                                                      view.menu_bar,
                                                      state_machines_editor_ctrl,
                                                      states_editor_ctrl,
-                                                     view.logging_view)
+                                                     view.logging_view,
+                                                     view.get_top_widget())
         self.add_controller("menu_bar_controller", menu_bar_controller)
 
         ######################################################
@@ -139,16 +168,25 @@ class MainWindowController(ExtendedController):
         self.add_controller("tool_bar_controller", tool_bar_controller)
 
         ######################################################
+        # top tool bar
+        ######################################################
+        top_tool_bar_controller = TopToolBarController(state_machine_manager_model,
+                                                     view.top_tool_bar,
+                                                     view.get_top_widget())
+        self.add_controller("top_tool_bar_controller", top_tool_bar_controller)
+
+        ######################################################
         # setup correct sizes
         ######################################################
-        view['top_h_pane'].set_position(200)
-        view['left_v_pane'].set_position(700)
+        view['top_level_h_pane'].set_position(1200)
+        view['left_h_pane'].set_position(300)
+        view['left_v_pane'].set_position(600)
 
     def register_view(self, view):
         self.shortcut_manager = ShortcutManager(self.view['main_window'])
         self.register_actions(self.shortcut_manager)
 
-        view['main_window'].connect('destroy', gtk.main_quit)
+        # view['main_window'].connect('destroy', gtk.main_quit)
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):

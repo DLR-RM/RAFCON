@@ -24,3 +24,4 @@ from library_tree import LibraryTreeView
 #from main_window import MainWindowView
 from menu_bar import MenuBarView
 from tool_bar import ToolBarView
+from top_tool_bar import TopToolBarView

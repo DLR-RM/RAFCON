@@ -5,18 +5,24 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.utils import log
+from awesome_tool.mvc.views.about_dialog import MyAboutDialog
 logger = log.get_logger(__name__)
+
 
 class MenuBarController(ExtendedController):
     """
     The class to trigger all the action, available in the menu bar.
     """
-    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view):
+    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view,
+                 top_level_window):
         ExtendedController.__init__(self, state_machine_manager_model, view)
         self.state_machines_editor_ctrl = state_machines_editor_ctrl
         self.states_editor_ctrl = states_editor_ctrl
         self.shortcut_manager = None
         self.logging_view = logging_view
+
+        view.get_top_widget().connect_object("motion_notify_event", self.motion_detected, top_level_window)
+        view.get_top_widget().connect("button_press_event", self.button_pressed_event)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -293,4 +299,24 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - Help
     ######################################################
     def on_about_activate(self, widget, data=None):
-        pass
+        about = MyAboutDialog()
+        response = about.run()
+        if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
+            about.destroy()
+
+    ######################################################
+    # Menu bar handle button press and move window
+    ######################################################
+
+    def motion_detected(self, widget, event=None):
+        if event.is_hint:
+            x, y, state = event.window.get_pointer()
+        else:
+            state = event.state
+
+        if state & gtk.gdk.BUTTON1_MASK:
+            widget.begin_move_drag(gtk.gdk.BUTTON1_MASK, int(event.x_root), int(event.y_root), 0)
+
+    def button_pressed_event(self, widget, event=None):
+        if event.type == gtk.gdk._2BUTTON_PRESS:
+            self.on_maximize_button_clicked(None)

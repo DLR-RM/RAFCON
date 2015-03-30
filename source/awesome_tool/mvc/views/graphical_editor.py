@@ -146,7 +146,8 @@ class GraphicalEditorView(View):
 
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
-    background_color = Color.from_hex(0x17242f)
+    # background_color = Color.from_hex(0x17242f)
+    background_color = Color.from_hex(0x30353a)
     state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)
     state_selected_color = Color.from_hex(0xd7e0ec)  # Color(0.7, 0, 0, 0.8)
     state_active_color = Color.from_hex(0xb7d9b0)  # Color(0.7, 0, 0, 0.8)

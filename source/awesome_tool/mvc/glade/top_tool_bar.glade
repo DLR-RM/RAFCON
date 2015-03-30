@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkToolbar" id="top_toolbar">
+    <property name="visible">True</property>
+    <property name="toolbar_style">icons</property>
+    <property name="show_arrow">False</property>
+    <property name="tooltips">False</property>
+    <property name="icon_size">1</property>
+    <child>
+      <object class="GtkSeparatorToolItem" id="spacing_separator">
+        <property name="visible">True</property>
+        <property name="draw">False</property>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="minimize_button">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Minimize</property>
+        <property name="stock_id">gtk-remove</property>
+        <signal name="clicked" handler="on_minimize_button_clicked"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="maximize_button">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Maximize</property>
+        <property name="stock_id">gtk-fullscreen</property>
+        <signal name="clicked" handler="on_maximize_button_clicked"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="close_button">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Close</property>
+        <property name="stock_id">gtk-close</property>
+        <signal name="clicked" handler="on_close_button_clicked"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+  </object>
+</interface>

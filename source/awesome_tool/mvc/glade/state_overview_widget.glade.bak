@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkVBox" id="properties_widget">
+    <property name="visible">True</property>
+    <property name="orientation">vertical</property>
+    <property name="spacing">3</property>
+    <child>
+      <object class="GtkHBox" id="hbox2">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkLabel" id="label_state_name">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">        State Name      </property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="entry_name">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">&#x25CF;</property>
+            <property name="primary_icon_sensitive">True</property>
+            <property name="secondary_icon_sensitive">True</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkHBox" id="hbox3">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkLabel" id="id_label">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">              ID              </property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label_id_value">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">xyz</property>
+            <property name="selectable">True</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkHBox" id="hbox4">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkLabel" id="type_label">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">            Type            </property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkViewport" id="type_viewport">
+            <property name="visible">True</property>
+            <property name="resize_mode">queue</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="is_start_state_checkbutton">
+            <property name="label" translatable="yes">is StartState</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="draw_indicator">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="position">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkHBox" id="hbox5">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkLabel" id="description_label">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">        Description       </property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkTextView" id="description_textview">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="pixels_above_lines">4</property>
+            <property name="pixels_below_lines">4</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="position">3</property>
+      </packing>
+    </child>
+  </object>
+</interface>
