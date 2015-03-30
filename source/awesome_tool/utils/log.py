@@ -90,7 +90,9 @@ def format_log_record_for_view(record):
     :param record: the record to get formatted
     :return:
     """
-    formatter = logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s")
+    # shortens the "name" attribute of the record by "awesome_tool." to save space
+    record.__setattr__("name", record.name.replace("awesome_tool.", ""))
+    formatter = logging.Formatter("%(asctime)s: %(levelname)s - %(name)s:  %(message)s", "%H:%M:%S")
     return formatter.format(record)
 
 
@@ -105,7 +107,7 @@ def get_logger(name):
     :param name: the name of the new logger
     :return:
     """
-    full = logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s")
+    full = logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s", "%H:%M:%S")
 
     stdout = logging.StreamHandler(sys.stdout)
     stdout.setFormatter(full)

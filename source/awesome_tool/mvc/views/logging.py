@@ -15,10 +15,14 @@ class LoggingView(View):
         self.textview.set_property('editable', False)
         #self.textview.get_buffer().create_tag("dead_color", foreground="gray")
         self.textview.get_buffer().create_tag("default", font="Monospace 10")
-        self.textview.get_buffer().create_tag("set_warning_color", foreground="blue")
+        self.textview.get_buffer().create_tag("set_warning_color", foreground="#288cff")
         self.textview.get_buffer().create_tag("set_error_color", foreground="red")
         self.textview.get_buffer().create_tag("set_debug_color", foreground="green")
         self.textview.get_buffer().create_tag("set_info_color", foreground="orange")
+        self.textview.get_buffer().create_tag("set_gray_text", foreground="#c2c3c4")
+        self.textview.get_buffer().create_tag("set_white_text", foreground="#ffffff")
+
+        self.textview.set_border_width(10)
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -55,17 +59,41 @@ class LoggingView(View):
 
     def print_push(self, text_to_push, use_tag=None):
         text_buf = self.textview.get_buffer()
+        text_to_push = self.split_text(text_to_push)
+        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push[0], "set_gray_text")
+        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push[1], "set_white_text")
         if use_tag:
             if self.textview.get_buffer().get_tag_table().lookup(use_tag) is not None:
-                text = text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push, use_tag)
+                text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push[2], use_tag)
             else:
-                text = text_buf.insert(text_buf.get_end_iter(), text_to_push)
+                text_buf.insert(text_buf.get_end_iter(), text_to_push[2])
         else:
-            text = text_buf.insert(text_buf.get_end_iter(), text_to_push)
+            text_buf.insert(text_buf.get_end_iter(), text_to_push[2])
 
         if not self.quit_flag:
             # print self.quit_flag
             self.textview.scroll_to_iter(text_buf.get_end_iter(), 0.0, use_align=True, yalign=0.0)
+
+    def split_text(self, text_to_split):
+        """
+        Splits the debug text into its different parts: 'Time + LogLevel', 'Module Name', 'Debug message'
+        :param text_to_split: Text to split
+        :return: Array containing the content of text_to_split split up
+        """
+
+        assert isinstance(text_to_split, str)
+        first_separation = text_to_split.find(": ") + 1
+        splitt = [text_to_split[:first_separation]]
+        second_separation = text_to_split.find(":", first_separation) + 1
+        splitt.append(text_to_split[first_separation:second_separation])
+        splitt.append(text_to_split[second_separation:])
+        return splitt
+
+        #split = text_to_split.split("-")
+        #split2 = split[1].split("  ")
+        #if len(split) == 2:
+        #    return [split[0], split2[0], split2[1]]
+        #return [split[0], split2[0], split2[1] + "-" + split[2]]
 
     # def print_clean(self, keep_lines=0):
     #     text_buf = self.textview.get_buffer()
