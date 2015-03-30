@@ -6,6 +6,21 @@
     <property name="visible">True</property>
     <property name="orientation">vertical</property>
     <child>
+      <object class="GtkScrolledWindow" id="transitions_scroller">
+        <property name="height_request">130</property>
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="hscrollbar_policy">automatic</property>
+        <property name="vscrollbar_policy">automatic</property>
+        <child>
+          <placeholder/>
+        </child>
+      </object>
+      <packing>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkHBox" id="hbox4">
         <property name="visible">True</property>
         <child>
@@ -41,43 +56,38 @@
         <child>
           <object class="GtkButton" id="add_t_button">
             <property name="label" translatable="yes">Add</property>
+            <property name="width_request">90</property>
+            <property name="height_request">40</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="border_width">5</property>
           </object>
           <packing>
-            <property name="position">2</property>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
           <object class="GtkButton" id="remove_t_button">
             <property name="label" translatable="yes">Remove</property>
+            <property name="width_request">90</property>
+            <property name="height_request">40</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="border_width">5</property>
           </object>
           <packing>
-            <property name="position">3</property>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkScrolledWindow" id="transitions_scroller">
-        <property name="height_request">130</property>
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="hscrollbar_policy">automatic</property>
-        <property name="vscrollbar_policy">automatic</property>
-        <child>
-          <placeholder/>
-        </child>
-      </object>
-      <packing>
         <property name="position">1</property>
       </packing>
     </child>

@@ -65,21 +65,27 @@ class StateOutcomesEditorView(View):
         self.treeView = StateOutcomesTreeView()
         self.tree = self.treeView['tree_view']
 
-        self['add_button'] = gtk.Button('Add')
+        add_button = gtk.Button('Add')
+        add_button.set_border_width(5)
+        add_button.set_size_request(90, 40)
 
-        self['remove_button'] = gtk.Button('Remove')
+        remove_button = gtk.Button('Remove')
+        remove_button.set_border_width(5)
+        remove_button.set_size_request(90, 40)
 
-        self.Hbox = gtk.HButtonBox()
-        self.Hbox.pack_start(self['add_button'], expand=False, fill=True)
+        self['add_button'] = add_button
+        self['remove_button'] = remove_button
+
+        self.Hbox = gtk.HBox()
         self.Hbox.pack_end(self['remove_button'], expand=False, fill=True)
-
-        self.vbox.pack_start(self.Hbox, expand=False, fill=True)
+        self.Hbox.pack_end(self['add_button'], expand=False, fill=True)
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.add(self.treeView['tree_view'])
 
-        self.vbox.add(scrollable)
+        self.vbox.pack_start(scrollable, True, True, 0)
+        self.vbox.pack_start(self.Hbox, expand=False, fill=True)
         self.vbox.show_all()
         #w.resize(width=550, height=400)
         #w.add(vbox)
