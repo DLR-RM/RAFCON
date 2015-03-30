@@ -13,10 +13,12 @@ import itertools
 from math import sin, cos, atan2
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.singleton import global_storage
 from awesome_tool.statemachine.states.state_helper import StateHelper
 from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.mvc.clipboard import ClipboardType, global_clipboard
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
+from awesome_tool.mvc.history import History
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel
@@ -470,6 +472,7 @@ class GraphicalEditorController(ExtendedController):
             (new_pos_x, new_pos_y) = calculate_snap_point(prev_point, point, next_point)
 
         waypoints[waypoint_id] = (new_pos_x, new_pos_y)
+        self._publish_changes(selected_model, "Move waypoint", affects_children=False)
         self._redraw()
 
     def _on_mouse_motion(self, widget, event):
@@ -836,6 +839,7 @@ class GraphicalEditorController(ExtendedController):
             diff_y = new_pos_y - old_pos_y
             move_child_states(state_m, diff_x, diff_y)
 
+        self._publish_changes(state_m, "Move state", affects_children=True)
         self._redraw()
 
     def _move_data_port(self, port_m, coords):
@@ -865,6 +869,7 @@ class GraphicalEditorController(ExtendedController):
                                                     port_info['width'], port_info['height'])
             new_pos = (new_pos[0], new_pos[1] + arrow_height)
         port_info['inner_pos'] = new_pos
+        self._publish_changes(port_m.parent, "Move data port", affects_children=True)
         self._redraw()
 
     def _resize_state(self, state_m, mouse_resize_coords, d_width, d_height, modifier_keys):
@@ -890,6 +895,8 @@ class GraphicalEditorController(ExtendedController):
             else:
                 mouse_resize_coords = (self.mouse_move_start_coords[0] - d_height * state_size_ratio,
                                        mouse_resize_coords[1])
+        # User wants to resize content by holding the ctrl keys pressed
+        resize_content = int(modifier_keys & CONTROL_MASK) == 0
 
         width = mouse_resize_coords[0] - state_editor_data['pos_x']
         height_diff = state_editor_data['pos_y'] - mouse_resize_coords[1]
@@ -897,8 +904,9 @@ class GraphicalEditorController(ExtendedController):
         min_right_edge = state_editor_data['pos_x']
         max_bottom_edge = state_editor_data['pos_y'] + state_editor_data['height']
 
-        # Resize content?
-        if int(modifier_keys & CONTROL_MASK) == 0 and self.has_content(self.selection):
+        # If the content is not supposed to be resized, with have to calculate the inner edges, which define the
+        # minimum size of our state
+        if not resize_content and self.has_content(self.selection):
             # Check lower right corner of all child states
             for child_state_m in state_m.states.itervalues():
                 child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
@@ -971,7 +979,7 @@ class GraphicalEditorController(ExtendedController):
         height_factor = state_editor_data['height'] / old_height
 
         # Resize content if the state was resized and the modifier key is pressed
-        if (width_factor != 1 or height_factor != 1) and int(modifier_keys & CONTROL_MASK) > 0:
+        if (width_factor != 1 or height_factor != 1) and resize_content:
 
             # Recursive call
             def resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y):
@@ -1041,6 +1049,8 @@ class GraphicalEditorController(ExtendedController):
 
             # Start recursive call of the content resize
             resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y)
+
+        self._publish_changes(state_m, "Resize state", affects_children=True)
         self._redraw()
 
     def _move_view(self, rel_x_motion, rel_y_motion, opengl_coords=False):
@@ -1602,6 +1612,11 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(state_m, ContainerStateModel) and state_m.state.state_type != StateType.LIBRARY:
             return True
         return False
+
+    def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
+        global_storage.mark_dirty(self.model.state_machine.state_machine_id)
+        #History.meta_changed_notify_after(self, model, name, affects_children)
+        pass
 
     def _delete_selection(self, *args):
         if self.view.editor.has_focus():
