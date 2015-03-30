@@ -142,6 +142,13 @@ class StateEditorLDView(View):
             expand, fill, padding, pack_type = self.top_box.query_child_packing(expander)
             if expander is widget:
                 self.top_box.set_child_packing(expander, True, fill, padding, pack_type)
+                self.get_paned_child(widget).set_position(200)
             else:
                 self.top_box.set_child_packing(expander, False, fill, padding, pack_type)
 
+    def get_paned_child(self, widget):
+        for child in widget.get_children():
+            if isinstance(child, gtk.VPaned):
+                return child
+            elif isinstance(child, gtk.Container):
+                return self.get_paned_child(child)
