@@ -148,6 +148,7 @@ def create_turtle_statemachine():
 
 
 def run_turtle_demo():
+    gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
     # setup logging view first
     logging_view = LoggingView()

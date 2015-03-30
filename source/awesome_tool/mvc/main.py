@@ -16,15 +16,6 @@ import awesome_tool.statemachine.singleton
 from awesome_tool.statemachine.state_machine import StateMachine
 
 
-def setup_path():
-    """Sets up the python include paths to include needed directories"""
-
-    #sys.path.insert(1, '.')
-    #sys.path.insert(0, reduce(os.path.join, (TOPDIR, "resources", "external")))
-    #sys.path.insert(0, os.path.join(TOPDIR, "src"))
-    return
-
-
 def check_requirements():
     """Checks versions and other requirements"""
     import gtkmvc
@@ -116,7 +107,6 @@ if __name__ == '__main__':
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
     awesome_tool.statemachine.singleton.library_manager.initialize()
-    setup_path()
     check_requirements()
 
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')

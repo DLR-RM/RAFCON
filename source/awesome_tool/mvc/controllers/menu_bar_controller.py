@@ -23,8 +23,8 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager = shortcut_manager
         self.logging_view = logging_view
         self.main_window_view = view
+        self.fullscreen = False
 
-        view.get_top_widget().connect_object("motion_notify_event", self.motion_detected, top_level_window)
         view.get_top_widget().connect("button_press_event", self.button_pressed_event)
 
     def register_view(self, view):
@@ -349,15 +349,15 @@ class MenuBarController(ExtendedController):
     # Menu bar handle button press and move window
     ######################################################
 
-    def motion_detected(self, widget, event=None):
-        if event.is_hint:
-            x, y, state = event.window.get_pointer()
-        else:
-            state = event.state
-
-        if state & gtk.gdk.BUTTON1_MASK:
-            widget.begin_move_drag(gtk.gdk.BUTTON1_MASK, int(event.x_root), int(event.y_root), 0)
-
     def button_pressed_event(self, widget, event=None):
         if event.type == gtk.gdk._2BUTTON_PRESS:
             self.on_maximize_button_clicked(None)
+
+    def on_maximize_button_clicked(self, widget, data=None):
+        if self.fullscreen:
+            self.main_window_view["main_window"].unmaximize()
+            self.main_window_view["main_window"].unfullscreen()
+            self.fullscreen = False
+        else:
+            self.main_window_view["main_window"].maximize()
+            self.fullscreen = True

@@ -182,7 +182,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         top_tool_bar_controller = TopToolBarController(state_machine_manager_model,
                                                      view.top_tool_bar,
-                                                     view.get_top_widget())
+                                                     view["main_window"])
         self.add_controller("top_tool_bar_controller", top_tool_bar_controller)
 
         ######################################################

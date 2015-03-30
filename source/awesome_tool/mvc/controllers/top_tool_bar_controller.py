@@ -15,7 +15,7 @@ class TopToolBarController(ExtendedController):
         self.top_level_window = top_level_window
         self.fullscreen = False
 
-        view.get_top_widget().connect_object("motion_notify_event", self.motion_detected, top_level_window)
+        view.get_top_widget().connect("motion_notify_event", self.motion_detected)
         view.get_top_widget().connect("button_press_event", self.button_pressed_event)
 
 
@@ -41,6 +41,7 @@ class TopToolBarController(ExtendedController):
     def on_maximize_button_clicked(self, widget, data=None):
         if self.fullscreen:
             self.top_level_window.unmaximize()
+            self.top_level_window.unfullscreen()
             self.fullscreen = False
         else:
             self.top_level_window.maximize()
@@ -56,7 +57,7 @@ class TopToolBarController(ExtendedController):
             state = event.state
 
         if state & gtk.gdk.BUTTON1_MASK:
-            widget.begin_move_drag(gtk.gdk.BUTTON1_MASK, int(event.x_root), int(event.y_root), 0)
+            self.top_level_window.begin_move_drag(gtk.gdk.BUTTON1_MASK, int(event.x_root), int(event.y_root), 0)
 
     def button_pressed_event(self, widget, event=None):
         if event.type == gtk.gdk._2BUTTON_PRESS:
