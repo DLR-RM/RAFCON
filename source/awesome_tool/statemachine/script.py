@@ -154,8 +154,8 @@ def exit(self, scoped_variables, gvm):
         try:
             script_file = open(script_path, 'r')
         except:
-            logger.error("Script file could not be opened at the following path: %s" % str(script_path))
-            raise IOError("File could not be opened!")
+            logger.error("The script file could not be opened (path: %s)" % str(script_path))
+            raise IOError("Script file could not be opened!")
 
         # reset script
         self.script = None
@@ -173,7 +173,7 @@ def exit(self, scoped_variables, gvm):
         try:
             exec code in tmp_module.__dict__
         except RuntimeError, e:
-            raise IOError("Something went wrong during compilation of the module - error message: %s" % str(e))
+            raise IOError("The compilation of the script module failed - error message: %s" % str(e))
 
         # return the module
         self._compiled_module = tmp_module
