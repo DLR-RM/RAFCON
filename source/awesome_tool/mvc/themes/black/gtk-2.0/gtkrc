@@ -1,0 +1,316 @@
+# Created July 2006
+# Modified Dec. 2006
+# Modified Jan. 2007
+# Modified Jul. 2008 for xfce 4.6
+# Modified Feb. 2009 for xfce 4.6
+# Olivier Fourdan <fourdan@xfce.org>
+# Released under the GPL license
+
+# original: xfce default style from /home/buet_ma/PycharmProjects/Glade3/gtk-xfce-engine-2.10.0/themes/xfce/gtk-2.0/gtkrc
+# to remove boarders and make everything look flat change xthickness = ythickness = 0 where needed
+
+style "my_default"
+{
+    GtkWidget::focus-line-width                  = 0
+    GtkWidget::focus_padding                     = 0
+    GtkWidget::interior_focus                    = 0
+    GtkWidget::internal_padding                  = 0
+
+    GtkButton::child_displacement_x              = 0
+    GtkButton::child_displacement_y              = 1
+    GtkButton::default_border                    = {0, 0, 0, 0}
+    GtkButton::default_outside_border            = {0, 0, 0, 0}
+    GtkButton::focus-line-pattern                = "\0"
+
+    GtkButtonBox::child_internal_pad_x           = 0
+    GtkButtonBox::child_internal_pad_y           = 0
+    GtkButtonBox::child_min_heigth               = 0
+    GtkButtonBox::child_min_width                = 0
+
+    GtkCheckButton::indicator_size               = 12
+    GtkCheckButton::focus-line-pattern           = "\1\1"
+
+    GtkEntry::focus-line-pattern                 = "\0"
+
+    GtkRadioButton::indicator_size               = 12
+    GtkRadioButton::focus-line-pattern           = "\1\1"
+
+    GtkExpander::expander-size                   = 11
+    GtkExpander::expander_spacing                = 0
+
+    GtkMenuBar::internal-padding                 = 0
+
+    GtkMenu::horizontal-padding                  = 0
+    GtkMenu::vertical-padding                    = 0
+
+    GtkMenuItem::internal_padding                = 2
+    GtkMenuItem::selected_shadow_type            = etched-in
+
+    GtkOptionMenu::indicator_size                = {0, 0}
+    GtkOptionMenu::indicator_spacing             = {0, 0, 0, 0}
+
+    GtkPaned::handle_full_size                   = 1
+    GtkPaned::handle_size                        = 3
+
+    GtkRange::slider_width                       = 15
+    GtkRange::stepper_size                       = 15
+    GtkRange::stepper_spacing                    = 0
+    GtkRange::stepper_spacing                    = 0
+    GtkRange::trough_border                      = 0
+    GtkRange::trough-border                      = 0
+
+    GtkScale::trough-side-details                = 1
+    GtkScale::value_spacing                      = 0
+
+    GtkScrollbar::has_forward_stepper            = 0
+    GtkScrollbar::has_backward_stepper           = 0
+    GtkScrollbar::min_slider_length              = 20
+
+    GtkScrolledWindow::scrollbar_spacing         = 0
+
+    GtkTextView::focus-line-pattern              = "\0"
+
+    GtkToolbar::internal-padding                 = 0
+    GtkToolbar::space-size                       = 10
+    GtkTreeView::expander-size                   = 11
+
+    GtkTreeView::horizontal-separator            = 0
+    GtkTreeView::vertical-separator              = 0
+
+    ExoIconBar::focus_padding                    = 1
+
+    xthickness = 1
+    ythickness = 1
+
+    #-------------------------COLOR DEFINITIONS-------------------------
+    color["black"]			= "#000000"
+    color["very_dark_gray"]		= "#343d46"
+    color["dark_gray"]			= "#4f5b66"
+    color["medium_gray"]		= "#65737e"
+    color["light_gray"]			= "#a7adba"
+    color["very_light_gray"]		= "#c0c5ce"
+    color["white"]			= "#ffffff"
+
+    color["background_black"]		= "#1e2328"
+    color["widget_background"]		= "#282d32"
+    color["widget_active_background"]	= "#30353a"
+    color["text_background"]		= "#383d42"
+    color["text_color"]			= "#c2c3c4"
+    color["text_color_dark"]		= "#787b7e"
+
+    color["button_active"]		= "#288cff"
+    #-------------------------------------------------------------------
+
+    font_name = "DIN Next LT Pro 12"
+
+    base[NORMAL]      = @widget_active_background
+
+    bg[ACTIVE]        = @background_black
+    bg[INSENSITIVE]   = @background_black
+    bg[NORMAL]        = @background_black
+    bg[PRELIGHT]      = @background_black
+    bg[SELECTED]      = @background_black
+
+    text[ACTIVE]      = @text_color
+    text[INSENSITIVE] = @text_color
+    text[NORMAL]      = @text_color
+    text[PRELIGHT]    = @text_color
+    text[SELECTED]    = @text_color
+
+    engine "xfce"
+    {
+        smooth_edge = true
+    }
+}
+
+style "label" = "my_default"
+{
+    fg[ACTIVE]      = @text_color
+    fg[INSENSITIVE] = @text_color
+    fg[NORMAL]      = @text_color
+    fg[PRELIGHT]    = @text_color
+    fg[SELECTED]    = @text_color
+}
+
+style "indicator_label" = "my_default"
+{
+    font_name 		= "DIN Next LT Pro 15"
+    fg[ACTIVE]      	= @text_color_dark
+    fg[INSENSITIVE] 	= @text_color_dark
+    fg[NORMAL]      	= @text_color_dark
+    fg[PRELIGHT]    	= @text_color_dark
+    fg[SELECTED]    	= @text_color_dark
+}
+
+style "event_box" = "my_default"
+{
+    bg[NORMAL]		= @widget_background
+}
+
+style "button" = "my_default"
+{
+    bg[ACTIVE]        = @button_active
+    bg[NORMAL]        = @text_background
+    bg[PRELIGHT]      = @medium_gray
+    bg[SELECTED]      = @button_active
+
+    fg[ACTIVE]        = @white
+    fg[NORMAL]        = @text_color
+    fg[PRELIGHT]      = @text_color
+    fg[SELECTED]      = @white
+
+	engine "xfce"
+	{
+		smooth_edge = true
+        	grip_style = slide
+        	boxfill
+        	{
+            		fill_style = plain
+        	}
+	}
+}
+
+style "check_button" = "button"
+{
+    fg[ACTIVE]		= @text_color
+    bg[NORMAL]		= @text_color
+}
+
+style "combobox" = "button"
+{
+    text[ACTIVE]	= @white
+    text[NORMAL]	= @text_color
+    text[PRELIGHT]	= @text_color
+}
+
+style "about_dialog_button" = "button"
+{
+    bg[NORMAL]		= @background_black
+}
+
+style "notebook" = "my_default"
+{
+
+    bg[ACTIVE]	        = @widget_active_background
+    bg[NORMAL]		= @widget_background
+    fg[ACTIVE]		= @text_color
+    fg[NORMAL]		= @text_color
+
+    fg[INSENSITIVE]	= @very_dark_gray
+
+}
+
+style "textview" = "my_default"
+{
+    fg[NORMAL]		= @text_color
+    fg[ACTIVE]		= @text_color
+}
+
+style "notebook_textview" = "textview"
+{
+    base[NORMAL]	= @widget_background
+}
+
+style "scrollbar" = "my_default"
+{
+    bg[ACTIVE]		= @widget_background
+    bg[NORMAL]		= @text_background
+    bg[PRELIGHT]	= @medium_gray
+    fg[NORMAL]		= @light_gray
+
+	engine "xfce"
+	{
+	grip_style = none
+	}
+
+}
+
+style "expander" = "my_default"
+{
+    bg[ACTIVE]		= @widget_background
+    bg[NORMAL]		= @widget_active_background
+    bg[PRELIGHT]	= @medium_gray
+    fg[ACTIVE]		= @text_color
+    fg[NORMAL]		= @text_color
+    fg[PRELIGHT]	= @text_color
+}
+
+style "treeview" = "my_default"
+{
+    bg[ACTIVE]				= @text_background
+    bg[NORMAL]				= @text_background
+    bg[SELECTED]			= @widget_background
+    fg[ACTIVE]				= @text_color
+    fg[NORMAL]				= @text_color
+    fg[SELECTED]			= @widget_background
+    base[ACTIVE]			= @medium_gray
+    base[SELECTED]			= @button_active
+    base[NORMAL]			= @widget_background
+}
+
+style "window" = "my_default"
+{
+    bg[NORMAL]		= @very_dark_gray
+}
+
+style "menu_separator" = "my_default"
+{
+    bg[NORMAL]		= @text_color
+}
+
+style "menu_bar" = "my_default"
+{
+    bg[PRELIGHT]			= @button_active
+    fg[NORMAL]				= @text_color
+    fg[PRELIGHT]			= @white
+}
+
+style "library_menu_bar" = "my_default"
+{
+    bg[PRELIGHT]			= @button_active
+    bg[NORMAL]				= @widget_background
+    fg[NORMAL]				= @text_color
+    fg[PRELIGHT]			= @white
+}
+
+style "scrolled_window" = "my_default"
+{
+    bg[NORMAL]			= @widget_active_background
+}
+
+widget_class "*"                   	style "my_default"
+
+widget_class "*Label*"			style "label"
+
+widget_class "*Notebook*"		style "notebook"
+widget_class "*Notebook*TextView*"	style "notebook_textview"
+
+widget_class "*ComboBox*"		style "combobox"
+
+widget_class "*Expander*"		style "expander"
+
+widget_class "*Tree*"			style "treeview"
+
+widget_class "*Paned.GtkFrame.GtkLabel"	style "indicator_label"
+widget_class "*VBox.GtkLabel"		style "indicator_label"
+widget_class "*EventBox.GtkLabel"		style "indicator_label"
+
+widget_class "*VPaned.GtkEventBox"	style "event_box"
+widget_class "*VBox.GtkEventBox"		style "event_box"
+
+widget_class "*GtkEventBox.GtkVBox.GtkScrolledWindow*"	style "scrolled_window"
+
+widget_class "*Scrollbar*"		style "scrollbar"
+
+widget_class "*Dialog*Button*"		style "about_dialog_button"
+
+widget_class "*Window"			style "window"
+
+widget_class "*Menu*"			style "menu_bar"
+
+widget_class "*Notebook*Menu*"		style "library_menu_bar"
+
+widget_class "*SeparatorMenu*"		style "menu_separator"
+
+widget_class "*Button*"			style "button"
+widget_class "*CheckButton*"		style "check_button"

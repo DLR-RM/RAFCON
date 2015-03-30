@@ -119,9 +119,11 @@ def create_models(*args, **kargs):
 
 
 if __name__ == '__main__':
+    gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     awesome_tool.statemachine.singleton.library_manager.initialize()
     setup_path()
     check_requirements()
+
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
     #setup_logger(logging_view['main_frame'])
     logging_view = LoggingView()
