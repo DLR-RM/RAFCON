@@ -869,7 +869,7 @@ class GraphicalEditorController(ExtendedController):
                                                     port_info['width'], port_info['height'])
             new_pos = (new_pos[0], new_pos[1] + arrow_height)
         port_info['inner_pos'] = new_pos
-        self._publish_changes(port_m.parent, "Move data port", affects_children=True)
+        self._publish_changes(port_m.parent, "Move data port", affects_children=False)
         self._redraw()
 
     def _resize_state(self, state_m, mouse_resize_coords, d_width, d_height, modifier_keys):
@@ -1050,7 +1050,8 @@ class GraphicalEditorController(ExtendedController):
             # Start recursive call of the content resize
             resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y)
 
-        self._publish_changes(state_m, "Resize state", affects_children=True)
+        affects_children = self.has_content(self.selection) and resize_content
+        self._publish_changes(state_m, "Resize state", affects_children)
         self._redraw()
 
     def _move_view(self, rel_x_motion, rel_y_motion, opengl_coords=False):
