@@ -160,22 +160,14 @@
             <child>
               <object class="GtkMenuItem" id="add_state">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">add state</property>
+                <property name="label" translatable="yes">Add State</property>
                 <signal name="activate" handler="on_add_state_activate"/>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="delete_state">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">delete state</property>
-                <property name="use_underline">True</property>
-                <signal name="activate" handler="on_delete_state_activate"/>
               </object>
             </child>
             <child>
               <object class="GtkMenuItem" id="group_states">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">group states</property>
+                <property name="label" translatable="yes">Group States</property>
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_group_states_activate"/>
               </object>
@@ -183,9 +175,14 @@
             <child>
               <object class="GtkMenuItem" id="ungroup_states">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">ungroup states</property>
+                <property name="label" translatable="yes">Ungroup States</property>
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_ungroup_states_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem" id="menu_edit_sep2">
+                <property name="visible">True</property>
               </object>
             </child>
             <child>
@@ -216,7 +213,7 @@
             <child>
               <object class="GtkCheckMenuItem" id="grid">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">grid</property>
+                <property name="label" translatable="yes">Grid</property>
                 <property name="use_underline">True</property>
                 <signal name="toggled" handler="on_grid_toggled"/>
               </object>

@@ -11,7 +11,6 @@ from gtkmvc import Observable
 import yaml
 
 from awesome_tool.statemachine.enums import StateType
-from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.states.state import State
 import awesome_tool.statemachine.singleton
 from awesome_tool.utils import log
@@ -19,7 +18,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
-class LibraryState(ContainerState, yaml.YAMLObject):
+class LibraryState(State, yaml.YAMLObject):
 
     """A class to represent a hierarchy state for the state machine
 
@@ -36,17 +35,13 @@ class LibraryState(ContainerState, yaml.YAMLObject):
     def __init__(self, library_path=None, library_name=None, version=None,  # library state specific attributes
                  # the following are the container state specific attributes
                  name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 states=None, transitions=None, data_flows=None, start_state=None, scoped_variables=None,
-                 v_checker=None, path=None, filename=None, check_path=True):
+                 path=None, filename=None, check_path=True):
 
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
         self.initialized = False
-        ContainerState.__init__(self, name=name, state_id=state_id, input_data_ports=input_data_ports,
-                                output_data_ports=output_data_ports, outcomes=outcomes, states=states,
-                                transitions=transitions, data_flows=data_flows, start_state=start_state,
-                                scoped_variables=scoped_variables, v_checker=v_checker, path=path, filename=filename,
-                                state_type=StateType.LIBRARY, check_path=check_path)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
+                       state_type=StateType.LIBRARY, check_path=check_path)
 
         self._library_path = None
         self.library_path = library_path
@@ -109,7 +104,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         if self.initialized:
             logger.error("It is not allowed to add a outcome to a library state")
         else:
-            return ContainerState.add_outcome(self, name, outcome_id)
+            return State.add_outcome(self, name, outcome_id)
 
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Overwrites the add_output_data_port method of the State class. Prevents user from adding a
@@ -121,7 +116,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         if self.initialized:
             logger.error("It is not allowed to add a output data port to a library state")
         else:
-            return ContainerState.add_output_data_port(self, name, data_type, default_value, data_port_id)
+            return State.add_output_data_port(self, name, data_type, default_value, data_port_id)
 
     def add_input_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Overwrites the add_input_data_port method of the State class. Prevents user from adding a
@@ -133,7 +128,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         if self.initialized:
             logger.error("It is not allowed to add a input data port to a library state")
         else:
-            return ContainerState.add_input_data_port(self, name, data_type, default_value, data_port_id)
+            return State.add_input_data_port(self, name, data_type, default_value, data_port_id)
 
     def add_state(self, state):
         """Overwrites the add_state method of the ContainerState class. Prevents user from adding a state to the library state.
@@ -144,32 +139,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         if self.initialized:
             logger.error("It is not allowed to add a state to a library state")
         else:
-            return ContainerState.add_state(self, state)
-
-    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
-        """Overwrites the add_transition method of the ContainerState class. Prevents user from adding a
-        transition to the library state.
-
-        For further documentation, look at the ContainerState class.
-
-        """
-        if self.initialized:
-            logger.error("It is not allowed to add a transition to a library state")
-        else:
-            return ContainerState.add_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
-
-    def add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id=None):
-        """Overwrites the add_data_flow method of the ContainerState class. Prevents user from adding a
-        data_flow to the library state.
-
-        For further documentation, look at the ContainerState class.
-
-        """
-        if self.initialized:
-            logger.error("It is not allowed to add a data flow to a library state")
-        else:
-            return ContainerState.add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id,
-                                                data_flow_id)
+            return State.add_state(self, state)
 
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
         """Overwrites the add_scoped_variable method of the ContainerState class. Prevents user from adding a
@@ -181,7 +151,7 @@ class LibraryState(ContainerState, yaml.YAMLObject):
         if self.initialized:
             logger.error("It is not allowed to add a scoped_variable to a library state")
         else:
-            return ContainerState.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
+            return State.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
 
     def set_script_text(self, new_text):
         """
@@ -194,40 +164,42 @@ class LibraryState(ContainerState, yaml.YAMLObject):
             logger.error("It is not allowed to set the script text of a library state")
             return False
         else:
-            return ContainerState.set_script_text(self, new_text)
+            return State.set_script_text(self, new_text)
 
     @classmethod
     def to_yaml(cls, dumper, data):
-        container_dict_representation = ContainerState.get_container_state_yaml_dict(data)
         dict_representation = {
             'library_path': data.library_path,
             'library_name': data.library_name,
             'version': data.version,
+            'name': data.name,
+            'state_id': data.state_id,
+            'state_type': str(data.state_type),
+            'input_data_ports': data.input_data_ports,
+            'output_data_ports': data.output_data_ports,
+            'outcomes': data.outcomes,
+            'path': data.script.path,
+            'filename': data.script.filename
         }
-        dict_representation.update(container_dict_representation)
         node = dumper.represent_mapping(u'!LibraryState', dict_representation)
         return node
 
     @classmethod
     def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node)
-        return LibraryState(library_path=dict_representation['library_path'],
-                            library_name=dict_representation['library_name'],
-                            version=dict_representation['version'],
-                            name=dict_representation['name'],
-                            state_id=dict_representation['state_id'],
-                            input_data_ports=dict_representation['input_data_ports'],
-                            output_data_ports=dict_representation['output_data_ports'],
-                            outcomes=dict_representation['outcomes'],
-                            states=None,
-                            transitions=dict_representation['transitions'],
-                            data_flows=dict_representation['data_flows'],
-                            start_state=dict_representation['start_state'],
-                            scoped_variables=dict_representation['scoped_variables'],
-                            v_checker=None,
-                            path=dict_representation['path'],
-                            filename=dict_representation['filename'],
-                            check_path=False)
+        dict_representation = loader.construct_mapping(node, deep=True)
+        library_path = dict_representation['library_path']
+        library_name = dict_representation['library_name']
+        version = dict_representation['version']
+        name = dict_representation['name']
+        state_id = dict_representation['state_id']
+        # state_type = dict_representation['state_type']
+        input_data_ports = dict_representation['input_data_ports']
+        output_data_ports = dict_representation['output_data_ports']
+        outcomes = dict_representation['outcomes']
+        path = dict_representation['path']
+        filename = dict_representation['filename']
+        return LibraryState(library_path, library_name, version, name, state_id, input_data_ports,
+                            output_data_ports, outcomes, path, filename, check_path=False)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

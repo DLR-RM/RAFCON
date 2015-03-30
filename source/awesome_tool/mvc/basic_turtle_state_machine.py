@@ -2,23 +2,19 @@ import logging
 import sys
 import os
 import gtk
+import signal
 
 from awesome_tool.utils import log
 from awesome_tool.mvc.controllers import MainWindowController
 from awesome_tool.mvc.views.logging import LoggingView
 from awesome_tool.mvc.views.main_window import MainWindowView
-from awesome_tool.mvc.models import ContainerStateModel, GlobalVariableManagerModel
+from awesome_tool.mvc.models import GlobalVariableManagerModel
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
-from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.states.library_state import LibraryState
-
-import gobject
-gobject.threads_init()
 
 
 def setup_logger(logging_view):
@@ -152,6 +148,7 @@ def create_turtle_statemachine():
 
 
 def run_turtle_demo():
+    signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
     # setup logging view first
     logging_view = LoggingView()
     setup_logger(logging_view)
@@ -166,6 +163,9 @@ def run_turtle_demo():
     # load the state machine
     [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
+
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/99 bottles of beer")
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()

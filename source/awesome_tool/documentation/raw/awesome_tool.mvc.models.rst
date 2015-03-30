@@ -19,6 +19,17 @@ StateModel (in state)
 .. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
 
 
+state_machine
+------------------------------------
+
+.. automodule:: awesome_tool.mvc.models.state_machine
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :platform: Unix, Windows
+.. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
+
+
 ContainerStateModel (in state)
 ------------------------------
 

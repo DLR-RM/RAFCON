@@ -18,12 +18,15 @@ logger = log.get_logger(__name__)
 
 DEFAULT_CONFIG = """
 
-STATE_ID_LENGTH: 6
-
 LIBRARY_PATHS: {"test_libraries": "../../test_scripts/test_libraries",
                  "ros_libraries": "../../test_scripts/ros_libraries",
                  "turtle_libraries": "../../test_scripts/turtle_libraries"}
 
+SOURCE_EDITOR_STYLE: blue_dream
+
+WAYPOINT_SNAP_ANGLE: 45
+WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
+WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
 """
 
 CONFIG_PATH = os.getenv("HOME") + "/.awesome_tool"

@@ -3,11 +3,11 @@ from awesome_tool.utils.geometry import dist
 
 logger = log.get_logger(__name__)
 
-from math import sin, cos, pi, atan2, sqrt
-from itertools import chain
+from math import sin, cos, pi, atan2
+
 from enum import Enum
 
-import OpenGL
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 # Activate the following line in the production code th increase speed
@@ -70,7 +70,6 @@ class Color:
 
     @r.setter
     def r(self, r):
-        print "set r"
         self._r = self._check_range(r)
 
     @g.setter
@@ -118,12 +117,7 @@ class GraphicalEditorView(View):
         except gtk.gdkgl.NoMatches:
             raise SystemExit
 
-        # Only temporary, later the editor won't be in an own window
-        # self.win = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        # self.win.set_title("Graphical Editor")
-        # self.win.set_position(1)
         self.v_box = gtk.VBox()
-        # self.test_label = gtk.Label("Hallo")
         self.editor = GraphicalEditor(glconfig)
         self.editor.add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
                                gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
@@ -133,16 +127,11 @@ class GraphicalEditorView(View):
         # self.v_box.pack_start(self.test_label)
         self.v_box.pack_end(self.editor)
 
-        # self.win.add(self.v_box)
-        # self.win.show_all()
-        # self.win.connect("destroy", lambda w: gtk.main_quit())
         self['main_frame'] = self.v_box
 
         # Query the OpenGL extension version.
-        print "OpenGL extension version - %d.%d\n" % gtk.gdkgl.query_version()
-
-        # def get_top_widget(self):
-        # return self.win
+        major, minor = gtk.gdkgl.query_version()
+        logger.debug("OpenGL version: {0}.{1}".format(major, minor))
 
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
@@ -151,6 +140,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)
     state_selected_color = Color.from_hex(0xd7e0ec)  # Color(0.7, 0, 0, 0.8)
     state_active_color = Color.from_hex(0xb7d9b0)  # Color(0.7, 0, 0, 0.8)
+    state_child_active_color = Color.from_hex(0xCFDEDD)  # Color(0.7, 0, 0, 0.8)
     state_name_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
     border_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
     border_selected_color = Color.from_hex(0x3aaf59)  # Color(0, 0.8, 0.8, 1)
@@ -166,6 +156,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     outcome_aborted_color = Color.from_hex(0x792b40)  # Color(0.6, 0, 0, 0.8)
     outcome_preempted_color = Color.from_hex(0x4769bd)  # Color(0.1, 0.1, 0.7, 0.8)
     income_color = outcome_plain_color  # Color(0.4, 0.4, 0.4, 0.8)
+    frame_fill_color = Color.from_hex(0xd7e0ec, 0.5)
+    frame_border_color = Color.from_hex(0x0b0b17, 0.3)
 
     def __init__(self, glconfig):
         """The graphical editor manages the OpenGL functions.
@@ -263,11 +255,11 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         OpenGL keeps its own coordinate system. This method can be used to transform between pixel and OpenGL
         coordinates.
+
         :return: pixel/size ratio
         """
-        width = self.right - self.left
-        if self.allocation.width > self.allocation.height:
-            width *= self.allocation.width / float(self.allocation.height)
+        left, right, _, _ = self._get_view_coordinates()
+        width = right - left
         display_width = self.allocation.width
         return display_width / float(width)
 
@@ -314,12 +306,20 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # logger.debug("expose_finish")
 
+    def draw_frame(self, corner1, corner2, depth):
+        # corner2 = (corner1[0], corner3[1])
+        # corner4 = (corner1[1], corner3[0])
+        self._draw_rect(corner1[0], corner2[0], corner1[1], corner2[1], depth, fill_color=self.frame_fill_color,
+                        border_color=self.frame_border_color)
+
+
     def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0,
                    input_ports_m=[], output_ports_m=[],
                    selected=False, active=False, depth=0):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified (container) state.
+
         :param name: Name of the state
         :param pos_x: x position of the state
         :param pos_y: y position of the state
@@ -344,8 +344,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         border_color = self.border_color
 
         border_width = min(width, height) / 10.
-        if active:
+        if active == 1:
             fill_color = self.state_active_color
+        elif active == 0.5:
+            fill_color = self.state_child_active_color
             #border_color = self.border_active_color
 
         if selected:
@@ -399,8 +401,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                     outcome_x -= 3 * step
                     color = self.outcome_preempted_color
             else:
-                outcome_font_size = font_size * 0.8
-                max_outcome_name_width = width / 4.
+                outcome_font_size = font_size * 0.5
+                max_outcome_name_width = width / 2.
                 outcome_name = self._shorten_string(outcome_name, outcome_font_size, max_outcome_name_width)
                 outcome_name_pos_x = outcome_x - margin
                 outcome_name_pos_y = outcome_y + outcome_font_size * 0.65
@@ -553,7 +555,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified transition.
-        :param name: Name of the transition
+
         :param from_pos_x: Starting x position
         :param from_pos_y: Starting y position
         :param to_pos_x: Ending x position
@@ -660,7 +662,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     def _write_string(self, string, pos_x, pos_y, height, color, bold=False, align_right=False, depth=0):
         """Write a string
 
-        Writes a string with a simple OpenGL method in the given size at the given position
+        Writes a string with a simple OpenGL method in the given size at the given position.
+
         :param string: The string to draw
         :param pos_x: x starting position
         :param pos_y: y starting position
@@ -700,14 +703,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         scale_factor = height / font_height
         return width * scale_factor
 
-    def prepare_selection(self, pos_x, pos_y):
+    def prepare_selection(self, pos_x, pos_y, width=5., height=5.):
         """Prepares the selection rendering
 
         In order to find out the object being clicked on, the scene has to be rendered again around the clicked position
+
         :param pos_x: x coordinate
         :param pos_y: y coordinate
         """
-        glSelectBuffer(128)
+        glSelectBuffer(self.name_counter * 6)
         viewport = glGetInteger(GL_VIEWPORT)
 
         glMatrixMode(GL_PROJECTION)
@@ -716,9 +720,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glRenderMode(GL_SELECT)
 
         glLoadIdentity()
+
+        if width < 1:
+            width = 1
+        if height < 1:
+            height = 1
+        pos_x += width / 2.
+        pos_y += height / 2.
         # The system y axis is inverse to the OpenGL y axis
-        range = 5  # self.pixel_to_size_ratio() / 3.
-        gluPickMatrix(pos_x, viewport[3] - pos_y + viewport[1], range, range, viewport)
+        gluPickMatrix(pos_x, viewport[3] - pos_y + viewport[1], width, height, viewport)
 
         self._apply_orthogonal_view()
 
@@ -728,7 +738,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         After the scene has been rendered again in selection mode, this method gathers and returns the ids of the
         selected object and restores the matrices.
-        :return:
+
+        :return: The selection stack
         """
         hits = glRenderMode(GL_RENDER)
 
@@ -738,12 +749,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return hits
 
-    # @staticmethod
     def _set_closest_stroke_width(self, width):
         """Sets the line width to the closest supported one
 
         Not all line widths are supported. This function queries both minimum and maximum as well as the step size of
         the line width and calculates the width, which is closest to the given one. This width is then set.
+
         :param width: The desired line width
         """
 
@@ -838,11 +849,11 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         """Draws a circle
 
         Draws a circle with a line segment a desired position with desired size.
+
         :param pos_x: Center x position
         :param pos_y: Center y position
         :param depth: The Z layer
         :param radius: Radius of the circle
-        :param segments: Number of segments to draw (the more the more exact)
         """
 
         visible = False

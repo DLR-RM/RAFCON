@@ -1,6 +1,6 @@
 from gtkmvc import ModelMT
 from gtkmvc import Observable
-from awesome_tool.mvc.models.state_machine import StateMachineModel, Selection
+from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.statemachine.state_machine_manager import StateMachineManager
 from awesome_tool.utils.vividict import Vividict
 
@@ -74,8 +74,9 @@ class StateMachineManagerModel(ModelMT, Observable):
                         self.selected_state_machine_id = None
                     break
 
-            logger.debug("Delete state machine model for state machine with id %s", sm_id_to_delete)
-            del self.state_machines[sm_id_to_delete]
+            if sm_id_to_delete is not None:
+                logger.debug("Delete state machine model for state machine with id %s", sm_id_to_delete)
+                del self.state_machines[sm_id_to_delete]
 
     def get_selected_state_machine_model(self):
         return self.state_machines[self.selected_state_machine_id]

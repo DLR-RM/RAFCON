@@ -13,6 +13,7 @@ import random
 
 import awesome_tool.statemachine.config
 
+STATE_ID_LENGTH = 6
 
 state_machine_id_counter = 0
 transition_id_counter = 0
@@ -69,8 +70,7 @@ def generate_script_id():
     return script_id_counter
 
 
-def state_id_generator(size=awesome_tool.statemachine.config.global_config.get_config_value('STATE_ID_LENGTH'),
-                       chars=string.ascii_uppercase):
+def state_id_generator(size=STATE_ID_LENGTH, chars=string.ascii_uppercase):
     """
     Generates an id for a state. It randomly samples from random ascii uppercase letters size times
     and concatenates them. If the id already exists it draws a new one.

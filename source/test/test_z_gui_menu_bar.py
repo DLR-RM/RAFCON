@@ -58,19 +58,14 @@ def create_models(*args, **kargs):
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
     input_state1 = state1.add_input_data_port("input", "str", "zero")
-    state1.add_outcome('success', 0)
     state2 = ExecutionState('State2')
-    state2.add_outcome('success', 0)
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_res_state2 = state2.add_output_data_port("res", "int")
     state4 = ExecutionState('Nested')
     output_state4 = state4.add_output_data_port("out", "int")
-    state4.add_outcome("success", 0)
     state5 = ExecutionState('Nested2')
-    state5.add_outcome("success", 0)
     input_state5 = state5.add_input_data_port("in", "int", 0)
     state3 = HierarchyState(name='State3')
-    state3.add_outcome("success", 0)
     input_state3 = state3.add_input_data_port("input", "int", 0)
     output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
@@ -84,7 +79,6 @@ def create_models(*args, **kargs):
     state3.add_outcome('Branch2')
 
     ctr_state = HierarchyState(name="Container")
-    ctr_state.add_outcome('success', 0)
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
@@ -135,7 +129,7 @@ def wait_for_values_identical_number_statemachines(sm_manager_model, val2):
 
 def trigger_gui_signals(*args):
     print "Wait for the gui to initialize"
-    time.sleep(2.00)
+    time.sleep(2.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -143,9 +137,9 @@ def trigger_gui_signals(*args):
     # ctr_state = HierarchyState(name="Container")
     # sm = StateMachine(ctr_state)
     # glib.idle_add(sm_manager_model.state_machine_manager.add_state_machine, sm)
+    current_sm_length = len(sm_manager_model.state_machines)
     glib.idle_add(menubar_ctrl.on_new_activate, None)
 
-    current_sm_length = len(sm_manager_model.state_machines)
     wait_for_values_identical_number_statemachines(sm_manager_model, current_sm_length+1)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
 
@@ -161,12 +155,14 @@ def trigger_gui_signals(*args):
 
     glib.idle_add(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
 
-    glib.idle_add(menubar_ctrl.on_quit_activate, None)
     #glib.idle_add(main_window_controller.view["main_window"].emit, "destroy")
+    glib.idle_add(menubar_ctrl.on_quit_activate, None)
 
 
 def test_gui():
     variables_for_pytest.test_multithrading_lock.acquire()
+    # delete all old state machines
+    awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir("../awesome_tool/mvc/")
     awesome_tool.statemachine.singleton.library_manager.initialize()
     setup_path()

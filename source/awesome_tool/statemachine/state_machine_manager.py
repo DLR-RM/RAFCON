@@ -36,7 +36,8 @@ class StateMachineManager(Observable):
                 self.add_state_machine(state_machine)
 
     def delete_all_state_machines(self):
-        sm_keys = self.state_machines.keys()
+        import copy
+        sm_keys = copy.deepcopy(self.state_machines.keys())
         for key in sm_keys:
             self.remove_state_machine(key)
 
@@ -107,7 +108,7 @@ class StateMachineManager(Observable):
         if self._active_state_machine_id in self._state_machines:
             return self._state_machines[self._active_state_machine_id]
         else:
-            logger.error("No active state machine specified!")
+            logger.warn("No active state machine specified!")
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

@@ -106,6 +106,31 @@ vivid_dict_content:
                 vivid_dict_content:
                     editor: !Vividict
                         vivid_dict_content:
+                            from_pos_x: 33.06011219183358
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                8KaLjRXuNEA=
+                            id: 35
+                            to_pos_x: 50.276483050847474
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                iFq1WmuuLUA=
+                            waypoints: !Vividict
+                                vivid_dict_content: {}
+    transition2: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
                             from_pos_x: 244.19311526507244
                             from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype

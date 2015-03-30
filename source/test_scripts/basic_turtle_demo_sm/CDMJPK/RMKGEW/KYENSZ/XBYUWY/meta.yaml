@@ -1,5 +1,4 @@
 !LibraryState
-data_flows: {}
 filename: script.py
 input_data_ports:
     10: !DataPort {data_port_id: 10, data_type: str, default_value: new_turtle, name: turtle_name}
@@ -14,9 +13,6 @@ outcomes:
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports: {}
 path: ../../test_scripts/basic_turtle_demo_sm/CDMJPK/RMKGEW/KYENSZ/XBYUWY
-scoped_variables: {}
-start_state: null
 state_id: XBYUWY
 state_type: STATE_TYPE.LIBRARY
-transitions: {}
 version: '0.1'

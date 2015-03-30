@@ -20,14 +20,14 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                jjzA6w+/XkA=
+                                lVeo11PnXkA=
                         - !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
                                 args: [f8, 0, 1]
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                MBqIYYVoKkA=
+                                JOS3if0XKkA=
                         -1: !!python/tuple
                         - !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
@@ -35,23 +35,23 @@ vivid_dict_content:
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                dUKMpVUYX0A=
+                                fF10kZlAX0A=
                         - !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
                                 args: [f8, 0, 1]
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                MBqIYYVoKkA=
+                                JOS3if0XKkA=
                         0: !!python/tuple
-                        - 125.07766781958856
+                        - 125.70681341958856
                         - !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
                                 args: [f8, 0, 1]
                                 state: !!python/tuple [3, <, null, null, null, -1,
                                     -1, 0]
                             - !!binary |
-                                JaSX3RJvI0A=
+                                GW7HBYseI0A=
                     outcome_radius: !!python/object/apply:numpy.core.multiarray.scalar
                     - !!python/object/apply:numpy.dtype
                         args: [f8, 0, 1]
@@ -65,13 +65,13 @@ vivid_dict_content:
                         state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
                     - !!binary |
                         LdjBD8rlyz8=
-                    pos_x: 116.93309004257235
+                    pos_x: 117.56223564257235
                     pos_y: !!python/object/apply:numpy.core.multiarray.scalar
                     - !!python/object/apply:numpy.dtype
                         args: [f8, 0, 1]
                         state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
                     - !!binary |
-                        NFxOs0DrGEA=
+                        HPCtAzFKGEA=
                     resize_length: !!python/object/apply:numpy.core.multiarray.scalar
                     - !!python/object/apply:numpy.dtype
                         args: [f8, 0, 1]

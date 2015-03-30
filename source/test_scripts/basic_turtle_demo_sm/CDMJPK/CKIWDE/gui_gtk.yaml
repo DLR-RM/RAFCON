@@ -73,3 +73,19 @@ vivid_dict_content:
                                 - !!binary |
                                     4E0XGyvcIUA=
                             outer_connector_radius: 0.4166666666666667
+    input_data_port1: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            outer_connector_pos: !!python/tuple
+                            - 17.060112191833582
+                            - !!python/object/apply:numpy.core.multiarray.scalar
+                                - !!python/object/apply:numpy.dtype
+                                    args: [f8, 0, 1]
+                                    state: !!python/tuple [3, <, null, null, null,
+                                        -1, -1, 0]
+                                - !!binary |
+                                    4E0XGyvcIUA=
+                            outer_connector_radius: 0.4166666666666667

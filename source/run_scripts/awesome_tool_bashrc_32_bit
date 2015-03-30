@@ -1,15 +1,23 @@
+#!/bin/bash
 
 # Path
-export PATH=/home/f_soft/bin/sled11-x86-gcc4.x:/home/brun_sb/bin:/usr/local/bin:/usr/bin:/bin:/usr/bin/X11:/usr/X11R6/bin:/usr/games:/opt/kde3/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/usr/lib/qt3/bin:/opt/pdsw/bin:/opt/eclipse:/usr/lib/ICAClient:/opt/spacemouse:/opt/TGSInventor/bin:/opt/quest/bin
+export PATH=/home/f_soft/bin/sled11-x86-gcc4.x:/usr/local/bin:/usr/bin:/bin:/usr/bin/X11:/usr/X11R6/bin
 
 # Shared Obejects
 export LD_LIBRARY_PATH=/usr/lib/gcc/i586-suse-linux/4.7
-export LD_LIBRARY_PATH=/volume/USERSTORE/brun_sb/libraries/awesome_tool_sys_libraries/32_bit/lib64:/volume/USERSTORE/brun_sb/libraries/awesome_tool_sys_libraries/32_bit/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/volume/USERSTORE/brun_sb/libraries/python_libraries/32_bit/lib:/volume/USERSTORE/brun_sb/libraries/sys_libraries/32_bit/lib:$LD_LIBRARY_PATH
 
 # Python
+# Note: The PYTHONPATH is overwritten in this script
 source /volume/USERSTORE/lehn_pt/ros/indigo/setup.bash
 
 # packages for dfc
-export PYTHONPATH=/volume/USERSTORE/brun_sb/libraries/awesome_tool_python_libraries/32_bit:/volume/USERSTORE/brun_sb/libraries/awesome_tool_python_libraries/32_bit/lib/python2.7/site-packages:/volume/USERSTORE/brun_sb/libraries/awesome_tool_python_libraries/32_bit/lib/python2.7/site-packages/gtk-2.0:$PYTHONPATH
+export PYTHONPATH=/volume/USERSTORE/brun_sb/libraries/python_libraries/32_bit:/volume/USERSTORE/brun_sb/libraries/python_libraries/32_bit/lib/python2.7/site-packages:/volume/USERSTORE/brun_sb/libraries/python_libraries/32_bit/lib/python2.7/site-packages/gtk-2.0:$PYTHONPATH
 # dfc packages
-export PYTHONPATH=/volume/USERSTORE/brun_sb/public/DFC/source/awesome_tool:/volume/USERSTORE/brun_sb/public/DFC/source/test_scripts:$PYTHONPATH
+export PYTHONPATH=/volume/USERSTORE/brun_sb/public/DFC/source:/volume/USERSTORE/brun_sb/public/DFC/source/test_scripts:$PYTHONPATH
+
+# dfc bin paths
+PATH=/volume/USERSTORE/brun_sb/libraries/python_libraries/32_bit/bin:$PATH
+
+#export LN_BASE=/volume/software/common/packages/links_and_nodes/latest
+#source $LN_BASE/scripts/bash.rc

@@ -7,7 +7,8 @@ import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.controllers.states_editor import StatesEditorController
 from awesome_tool.mvc.controllers.state_machines_editor import StateMachinesEditorController
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel, Selection
+from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.selection import Selection
 from awesome_tool.mvc.models.library_manager import LibraryManagerModel
 from awesome_tool.mvc.shortcut_manager import ShortcutManager
 from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
@@ -45,6 +46,11 @@ class MainWindowController(ExtendedController):
         self.state_machine_execution_engine.register_observer(self)
 
         ######################################################
+        # shortcut manager
+        ######################################################
+        self.shortcut_manager = ShortcutManager(view['main_window'])
+
+        ######################################################
         # logging view
         ######################################################
         self.console_scroller = view['console_scroller']
@@ -68,6 +74,10 @@ class MainWindowController(ExtendedController):
                                         state_machine_manager_model)
         view['add_template_menu_entry'].connect("activate", library_controller.add_template_button_clicked,
                                             state_machine_manager_model)
+
+        view['main_window'].add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
+                               gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
+
         ######################################################
         # statemachine tree
         ######################################################
@@ -97,7 +107,6 @@ class MainWindowController(ExtendedController):
                                                          view.states_editor,
                                                          editor_type)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
-
         ######################################################
         # state machines editor
         ######################################################
@@ -152,11 +161,11 @@ class MainWindowController(ExtendedController):
         # menu bar
         ######################################################
         menu_bar_controller = MenuBarController(state_machine_manager_model,
-                                                     view.menu_bar,
-                                                     state_machines_editor_ctrl,
-                                                     states_editor_ctrl,
-                                                     view.logging_view,
-                                                     view.get_top_widget())
+                                                view,
+                                                state_machines_editor_ctrl,
+                                                states_editor_ctrl,
+                                                view.get_top_widget(),
+                                                self.shortcut_manager)
         self.add_controller("menu_bar_controller", menu_bar_controller)
 
         ######################################################
@@ -183,10 +192,9 @@ class MainWindowController(ExtendedController):
         view['left_v_pane'].set_position(600)
 
     def register_view(self, view):
-        self.shortcut_manager = ShortcutManager(self.view['main_window'])
         self.register_actions(self.shortcut_manager)
-
-        # view['main_window'].connect('destroy', gtk.main_quit)
+        view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
+        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").destroy)
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):

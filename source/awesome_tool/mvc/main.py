@@ -1,6 +1,6 @@
 import sys
 import logging
-
+import signal
 import gtk
 
 from awesome_tool.utils import log
@@ -53,19 +53,14 @@ def create_models(*args, **kargs):
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
     input_state1 = state1.add_input_data_port("input", "str", "zero")
-    state1.add_outcome('success', 0)
     state2 = ExecutionState('State2')
-    state2.add_outcome('success', 0)
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_res_state2 = state2.add_output_data_port("res", "int")
     state4 = ExecutionState('Nested')
     output_state4 = state4.add_output_data_port("out", "int")
-    state4.add_outcome("success", 0)
     state5 = ExecutionState('Nested2')
-    state5.add_outcome("success", 0)
     input_state5 = state5.add_input_data_port("in", "int", 0)
     state3 = HierarchyState(name='State3')
-    state3.add_outcome("success", 0)
     input_state3 = state3.add_input_data_port("input", "int", 0)
     output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
@@ -79,7 +74,6 @@ def create_models(*args, **kargs):
     state3.add_outcome('Branch2')
 
     ctr_state = HierarchyState(name="Container")
-    ctr_state.add_outcome('success', 0)
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
@@ -120,6 +114,7 @@ def create_models(*args, **kargs):
 
 if __name__ == '__main__':
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
+    signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
     awesome_tool.statemachine.singleton.library_manager.initialize()
     setup_path()
     check_requirements()

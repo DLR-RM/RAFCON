@@ -64,6 +64,7 @@ class ContainerState(State):
         self._current_state = None
         #condition variable to wait for not connected states
         self._transitions_cv = Condition()
+        self._child_execution = False
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
@@ -285,9 +286,12 @@ class ContainerState(State):
         if not (from_state_id in self.states or from_state_id == self.state_id):
             raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
 
-        if not to_state_id is None:
+        if to_state_id is not None:
             if not (to_state_id in self.states or to_state_id == self.state_id):
                 raise AttributeError("To_state %s does not exist in the container state" % to_state_id.state_id)
+
+        if to_state_id is None and to_outcome is None:
+            raise AttributeError("Either the to_state_id or the to_outcome must be None" % to_state_id.state_id)
 
         # get correct states
         from_state = None
@@ -347,7 +351,7 @@ class ContainerState(State):
         :return: the transition specified by the the state and the outcome
         """
         if not isinstance(state, State):
-            raise TypeError("ID must be of type State")
+            raise TypeError("state must be of type State")
         if not isinstance(outcome, Outcome):
             raise TypeError("outcome must be of type Outcome")
         logger.debug("Return transition for state %s and outcome %s" % (state.name, outcome))
@@ -1098,7 +1102,7 @@ class ContainerState(State):
             self._scoped_variables = {}
         else:
             if not isinstance(scoped_variables, dict):
-                raise TypeError("scope_variables must be of type dict")
+                raise TypeError("scoped_variables must be of type dict")
             for key, svar in scoped_variables.iteritems():
                 if not isinstance(svar, ScopedVariable):
                     raise TypeError("element of scope must be of type ScopedVariable")
@@ -1148,3 +1152,18 @@ class ContainerState(State):
         if not isinstance(v_checker, ValidityChecker):
             raise TypeError("validity_check must be of type ValidityChecker")
         self._v_checker = v_checker
+
+    @property
+    def child_execution(self):
+        """Property for the _child_execution field
+
+        """
+        return self._child_execution
+
+    @child_execution.setter
+    @Observable.observed
+    def child_execution(self, child_execution):
+        if child_execution is not None:
+            if not isinstance(child_execution, bool):
+                raise TypeError("child_execution must be of type str")
+        self._child_execution = child_execution
