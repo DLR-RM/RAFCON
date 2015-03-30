@@ -19,6 +19,7 @@ import sys
 
 
 def signal_handler(signal, frame):
+    # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
     print('SIGINT received! Execution engine will be stopped and program will be shutdown!')
     if state_machine_execution_engine.status.execution_mode is not ExecutionMode.STOPPED:
         state_machine_execution_engine.stop()

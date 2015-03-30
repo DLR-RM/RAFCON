@@ -52,8 +52,8 @@ class StateModel(ModelMT):
 
         self.state = state
 
-        # True if no parent (for root_state) or state is parent start_state else False
-        self.is_start = True if state.parent is None or state.state_id == state.parent.start_state else False
+        # True if no parent (for root_state) or state is parent start_state_id else False
+        self.is_start = True if state.parent is None or state.state_id == state.parent.start_state_id else False
 
         if isinstance(meta, Vividict):
             self.meta = meta

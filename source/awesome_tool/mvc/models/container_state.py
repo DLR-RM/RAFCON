@@ -151,12 +151,12 @@ class ContainerStateModel(StateModel):
             scoped variable models
         """
 
-        if info.method_name == 'start_state':
+        if info.method_name == 'start_state_id':
             c_state_m = None
-            if self.state.start_state:
-                c_state_m = self.states[self.state.start_state]
+            if self.state.start_state_id:
+                c_state_m = self.states[self.state.start_state_id]
                 c_state_m.is_start = True if c_state_m.parent is None or \
-                                             c_state_m.state.state_id == c_state_m.parent.state.start_state else False
+                                             c_state_m.state.state_id == c_state_m.parent.state.start_state_id else False
             # remove other state_models is_start flag
             state_list = filter(lambda state_model: state_model.is_start and state_model is not c_state_m,
                                 self.states.values())

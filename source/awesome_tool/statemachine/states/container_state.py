@@ -35,14 +35,14 @@ class ContainerState(State):
     :ivar states: the child states of the container state of the state:
     :ivar transitions: transitions between all child states:
     :ivar data_flows: data flows between all child states:
-    :ivar start_state: the state to start with when the hierarchy state is executed
+    :ivar start_state_id: the state to start with when the hierarchy state is executed
     :ivar scoped_variables: the scoped variables of the container:
     :ivar _v_checker: reference to an object that checks the validity of this container state:
 
     """
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 states=None, transitions=None, data_flows=None, start_state=None,
+                 states=None, transitions=None, data_flows=None, start_state_id=None,
                  scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None, check_path=True):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
@@ -55,14 +55,14 @@ class ContainerState(State):
         self._data_flows = None
         self.data_flows = data_flows
         self._start_state_id = None
-        self.start_state = start_state
+        self.start_state_id = start_state_id
         self._scoped_variables = None
         self.scoped_variables = scoped_variables
         self.__scoped_variables_names = []
         self._scoped_data = {}
         self._v_checker = v_checker
         self._current_state = None
-        #condition variable to wait for not connected states
+        # condition variable to wait for not connected states
         self._transitions_cv = Condition()
         self._child_execution = False
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
@@ -188,7 +188,7 @@ class ContainerState(State):
             awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
                 own_sm_id, state.script.path)
 
-        if state.state_id in self._states:
+        if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
         else:
             state.parent = self
@@ -249,15 +249,15 @@ class ContainerState(State):
 
         """
         if isinstance(state, State):
-            self._start_state_id = state.state_id
+            self.start_state_id = state.state_id
         else:
-            self._start_state_id = state
+            self.start_state_id = state
 
     def get_start_state(self):
         """Get the start state of the container state
 
         """
-        return self.states[self.start_state]
+        return self.states[self.start_state_id]
 
         # If there is a value in the dependency tree for this state start with the this one
         #TODO: start execution with the state provided by the dependency tree
@@ -279,7 +279,12 @@ class ContainerState(State):
         :param to_outcome: The target outcome of a container state
         :param transition_id: An optional transition id for the new transition
         """
-        if transition_id is None:
+        if transition_id is not None:
+            if transition_id in self._transitions.iterkeys():
+                raise AttributeError("The transition id %s already exists. Cannot add transition!", transition_id)
+
+        transition_id = generate_transition_id()
+        while transition_id in self._transitions.iterkeys():
             transition_id = generate_transition_id()
 
         # check if states are existing
@@ -524,7 +529,12 @@ class ContainerState(State):
         :param data_flow_id: an optional id for the data flow
 
         """
-        if data_flow_id is None:
+        if data_flow_id is not None:
+            if data_flow_id in self._data_flows.iterkeys():
+                raise AttributeError("The data flow id %s already exists. Cannot add data flow!", data_flow_id)
+
+        data_flow_id = generate_data_flow_id()
+        while data_flow_id in self._data_flows.iterkeys():
             data_flow_id = generate_data_flow_id()
 
         if not (from_state_id in self.states or from_state_id == self.state_id):
@@ -1001,7 +1011,7 @@ class ContainerState(State):
             'filename': data.script.filename,
             'transitions': data.transitions,
             'data_flows': data.data_flows,
-            'start_state': data.start_state,
+            'start_state': data.start_state_id,
             'scoped_variables': data.scoped_variables
         }
         return dict_representation
@@ -1074,19 +1084,19 @@ class ContainerState(State):
             self._data_flows = data_flows
 
     @property
-    def start_state(self):
+    def start_state_id(self):
         """Property for the _start_state field
 
         """
         return self._start_state_id
 
-    @start_state.setter
+    @start_state_id.setter
     @Observable.observed
-    def start_state(self, start_state):
-        if not start_state is None:
-            if not isinstance(start_state, str):
-                raise TypeError("start_state must be of type str")
-        self._start_state_id = start_state
+    def start_state_id(self, start_state_id):
+        if start_state_id is not None:
+            if not isinstance(start_state_id, str):
+                raise TypeError("start_state_id must be of type str")
+        self._start_state_id = start_state_id
 
     @property
     def scoped_variables(self):
