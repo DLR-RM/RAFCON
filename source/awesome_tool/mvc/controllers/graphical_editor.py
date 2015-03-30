@@ -399,20 +399,7 @@ class GraphicalEditorController(ExtendedController):
         self.drag_origin_offset = None
 
         if self.multi_selection_started:
-            start = self.mouse_move_start_pos
-            end = self.mouse_move_last_pos
-            # Only check for selection, if the mouse was moved more than 10px
-            if dist(start, end) > 10:
-                pos_x = min(start[0], end[0])
-                pos_y = min(start[1], end[1])
-                width = abs(start[0] - end[0])
-                height = abs(start[1] - end[1])
-                selected_models = self._find_selection(pos_x, pos_y, width, height, all=True)
-                if selected_models is not None:
-                    self.model.selection.append(selected_models)
-            # If so, select models beneath frame
-            self.multi_selection_started = False
-            self.model.meta['gui']['editor']['selection_frame'] = None
+            self._check_for_multi_selection()
 
         self._redraw()
 
@@ -432,7 +419,7 @@ class GraphicalEditorController(ExtendedController):
             def calculate_snap_point(p1, p2, p3):
                 def find_closest_snap_angle(angle):
                     multiple = angle // snap_angle
-                    multiple = [multiple-1, multiple, multiple+1]
+                    multiple = [multiple - 1, multiple, multiple + 1]
                     diff = map(lambda mul: abs(abs(snap_angle * mul) - abs(angle)), multiple)
                     min_index = diff.index(min(diff))
                     return snap_angle * multiple[min_index]
@@ -448,10 +435,10 @@ class GraphicalEditorController(ExtendedController):
 
                 dx = p3[0] - p1[0]
                 dy = -(p3[1] - p1[1])
-                denominator = cos(alpha)*sin(beta) - sin(alpha)*cos(beta)
+                denominator = cos(alpha) * sin(beta) - sin(alpha) * cos(beta)
                 if denominator == 0:
                     return p2
-                s = (dx*sin(beta) - dy*cos(beta)) / denominator
+                s = (dx * sin(beta) - dy * cos(beta)) / denominator
                 # t = (dx*sin(alpha) - dy*cos(alpha)) / denominator
                 snap_x = p1[0] + cos(alpha) * s
                 snap_y = p1[1] - sin(alpha) * s
@@ -665,6 +652,57 @@ class GraphicalEditorController(ExtendedController):
             # The resizer is triangle. Check whether the given coordinates are within that triangle
             if point_in_triangle(coords, p1, p2, p3):
                 self.selected_resizer = self.selection
+
+    def _check_for_multi_selection(self):
+        start = self.mouse_move_start_pos
+        end = self.mouse_move_last_pos
+        # Only check for selection, if the mouse was moved more than 10px
+        if dist(start, end) > 10:
+            # Determine the size of the selection frame
+            pos_x = min(start[0], end[0])
+            pos_y = min(start[1], end[1])
+            width = abs(start[0] - end[0])
+            height = abs(start[1] - end[1])
+
+            # Determine all models within the selection frame
+            selected_models = self._find_selection(pos_x, pos_y, width, height, all=True)
+
+            upper_left = (pos_x, pos_y + height)
+            lower_right = (pos_x + width, pos_y)
+            upper_left = self.view.editor.screen_to_opengl_coordinates(upper_left)
+            lower_right = self.view.editor.screen_to_opengl_coordinates(lower_right)
+
+            def is_within_frame(model):
+                def point_in_rectangle(point):
+                    return upper_left[0] < point[0] < lower_right[0] and upper_left[1] < point[1] < lower_right[1]
+
+                meta = model.meta['gui']['editor']
+                if isinstance(model, StateModel):
+                    return point_in_rectangle((meta['pos_x'], meta['pos_y'])) and \
+                           point_in_rectangle((meta['pos_x'] + meta['width'], meta['pos_y'] + meta['height']))
+                if isinstance(model, (TransitionModel, DataFlowModel)):
+                    return point_in_rectangle((meta['from_pos_x'], meta['from_pos_y'])) and \
+                           point_in_rectangle((meta['to_pos_x'], meta['to_pos_y']))
+
+                return True
+
+            # Remove models, which are not fully in the selection frame
+            models_to_remove = set()
+            for model in selected_models:
+                if not is_within_frame(model):
+                    models_to_remove.add(model)
+
+            print "before remove", len(selected_models)
+            selected_models = set(selected_models)
+            selected_models.difference_update(models_to_remove)
+            print "after remove", len(selected_models)
+
+            if selected_models is not None:
+                self.model.selection.clear()
+                self.model.selection.append(selected_models)
+        # If so, select models beneath frame
+        self.multi_selection_started = False
+        self.model.meta['gui']['editor']['selection_frame'] = None
 
     def _check_for_waypoint_removal(self, coords, connection_model):
         """Checks and removes a waypoint if necessary
@@ -1439,7 +1477,7 @@ class GraphicalEditorController(ExtendedController):
                                                          self.mouse_move_last_coords[0], self.mouse_move_last_coords[1])
         # If the user clicked with the parent state of the selected outcome state
         if restricted_click[0] == self.mouse_move_last_coords[0] and \
-                restricted_click[1] == self.mouse_move_last_coords[1]:
+                        restricted_click[1] == self.mouse_move_last_coords[1]:
             self.temporary_waypoints.append(restricted_click)
 
     def _handle_new_transition(self, parent_state_m, parent_depth):
@@ -1550,6 +1588,7 @@ class GraphicalEditorController(ExtendedController):
         :param selection_depth: The depth of the currently found object
         :return: The selected object and its depth
         """
+
         def update_selection(selection, model):
             if all:
                 if selection is None:
@@ -1561,6 +1600,7 @@ class GraphicalEditorController(ExtendedController):
                     return selection
             else:
                 return model
+
         # Only the element which is furthest down in the hierarchy is selected
         if (search_state_depth > selection_depth or all) and find_states:
             # Check whether the id of the current state matches an id in the selected ids
@@ -1617,9 +1657,41 @@ class GraphicalEditorController(ExtendedController):
             return True
         return False
 
+    @staticmethod
+    def get_boundaries(model, include_waypoints=False):
+        """Returns the boundaries (in OpenGL) coordinates of the given model
+
+        :param model: Model for which to get the boundaries
+        :return: left, right, top, bottom
+        """
+        meta = model.meta['gui']['editor']
+        if isinstance(model, StateModel):
+            return meta['pos_x'], meta['pos_x'] + meta['width'], meta['pos_y'], meta['pos_y'] + meta['height']
+        if isinstance(model, (TransitionModel, DataFlowModel)):
+            x_coordinates = [meta['from_pos_x'], meta['to_pos_x']]
+            y_coordinates = [meta['from_pos_y'], meta['to_pos_y']]
+            if include_waypoints:
+                for waypoint in meta['waypoints']:
+                    x_coordinates.append(waypoint[0])
+                    y_coordinates.append(waypoint[1])
+            return min(x_coordinates), max(x_coordinates), min(y_coordinates), max(y_coordinates)
+
+        if isinstance(model, DataPortModel):
+            return None
+            # Input data port has arrow on the right side
+            # top = meta['inner_pos'][1] + meta['height']
+            # bottom = meta['inner_pos'][1]
+            # left = meta['inner_pos'][0]
+            # right = meta['inner_pos'][0] + meta['width']
+            # if model in model.parent.output_data_ports:
+            #     left = meta['inner_pos'][0] - meta['width']
+            #     right = meta['inner_pos'][0]
+            # elif model in model.parent.scoped_variables:
+            #     bottom = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
+
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
         global_storage.mark_dirty(self.model.state_machine.state_machine_id)
-        #History.meta_changed_notify_after(self, model, name, affects_children)
+        # History.meta_changed_notify_after(self, model, name, affects_children)
         pass
 
     def _delete_selection(self, *args):
@@ -1686,11 +1758,11 @@ class GraphicalEditorController(ExtendedController):
                 logger.error("Cannot paste clipboard into selection as the selection does not consist of a single "
                              "container state!")
                 return
-            if len(current_selection.get_states()) == 1 and\
+            if len(current_selection.get_states()) == 1 and \
                     not isinstance(current_selection.get_states()[0], ContainerStateModel):
-                    logger.error("Cannot paste clipboard into selection as the selected state model is not "
-                                 "a container state model")
-                    return
+                logger.error("Cannot paste clipboard into selection as the selected state model is not "
+                             "a container state model")
+                return
 
             # check if the clipboard is valid
             if global_clipboard.get_number_selected_items() > 1:
