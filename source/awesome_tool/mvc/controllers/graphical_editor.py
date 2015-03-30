@@ -275,11 +275,17 @@ class GraphicalEditorController(ExtendedController):
             # Check if something was selected
             new_selection = self._find_selection(event.x, event.y)
 
+            # Check, whether a resizer was clicked on
+            self._check_for_resizer_selection(self.mouse_move_start_coords)
+
             # We do not want to change the current selection while creating a new transition or data flow
             if not self.mouse_move_redraw:
                 # Multi selection with shift+click
                 if event.state & SHIFT_MASK != 0:
-                    self.multi_selection_started = True
+                    # With shift+click, also states are resized. Thus we only want to draw a selection frame,
+                    # when the user didn't clicked on a resizer
+                    if self.selected_resizer is None:
+                        self.multi_selection_started = True
 
                 # In the case of multi selection, the user can add/remove elements to/from the selection
                 # The selection can consist of more than one model
@@ -358,9 +364,6 @@ class GraphicalEditorController(ExtendedController):
                 # Allow the user to create waypoints while creating a new data flow
                 elif isinstance(self.selection, (DataPortModel, ScopedVariableModel)):
                     self._handle_new_waypoint()
-
-            # Check, whether a resizer was clicked on
-            self._check_for_resizer_selection(self.mouse_move_start_coords)
 
             self._redraw()
 
@@ -652,7 +655,7 @@ class GraphicalEditorController(ExtendedController):
 
         :param coords: Coordinates to check for the resizer
         """
-        if self.selection is not None and isinstance(self.selection, StateModel) and self.selection:
+        if isinstance(self.selection, StateModel):
             state_editor_data = self.selection.meta['gui']['editor']
             # Calculate corner points of resizer
             p1 = (state_editor_data['pos_x'] + state_editor_data['width'], state_editor_data['pos_y'])
@@ -1195,7 +1198,7 @@ class GraphicalEditorController(ExtendedController):
         # recursively its child states
         if self.has_content(state_m):
             state_ctr = 0
-            margin = width / float(25)
+            margin = width / 25.
 
             for child_state in state_m.states.itervalues():
                 # Calculate default positions for the child states
