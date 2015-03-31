@@ -75,6 +75,7 @@
               <object class="GtkExpander" id="data_expander">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="border_width">5</property>
                 <property name="resize_mode">queue</property>
                 <child>
                   <object class="GtkAlignment" id="alignment2">
@@ -354,6 +355,7 @@
               <object class="GtkExpander" id="logic_expander">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="border_width">5</property>
                 <property name="resize_mode">queue</property>
                 <child>
                   <object class="GtkVBox" id="vbox3">

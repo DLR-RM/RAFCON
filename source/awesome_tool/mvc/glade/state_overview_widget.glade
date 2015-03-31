@@ -12,7 +12,7 @@
     <child>
       <object class="GtkLabel" id="label_state_name">
         <property name="visible">True</property>
-        <property name="xalign">0.4699999988079071</property>
+        <property name="xalign">0</property>
         <property name="label" translatable="yes">State Name</property>
       </object>
     </child>
@@ -30,6 +30,7 @@
     <child>
       <object class="GtkLabel" id="type_label">
         <property name="visible">True</property>
+        <property name="xalign">0</property>
         <property name="ypad">6</property>
         <property name="label" translatable="yes">Type</property>
       </object>
@@ -97,6 +98,7 @@
     <child>
       <object class="GtkLabel" id="description_label">
         <property name="visible">True</property>
+        <property name="xalign">0</property>
         <property name="label" translatable="yes">Description</property>
       </object>
       <packing>
