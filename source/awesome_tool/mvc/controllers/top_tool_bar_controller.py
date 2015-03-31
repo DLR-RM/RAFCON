@@ -48,6 +48,7 @@ class TopToolBarController(ExtendedController):
             self.fullscreen = True
 
     def on_close_button_clicked(self, widget, data=None):
+        self.top_level_window.destroy()
         gtk.main_quit()
 
     def motion_detected(self, widget, event=None):
