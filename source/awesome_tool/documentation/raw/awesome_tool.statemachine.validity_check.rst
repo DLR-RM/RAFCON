@@ -1,26 +1,23 @@
 Validity Check
 ==============
 
-Submodules
-----------
-
-validity_checker module
------------------------
+validity_checker
+----------------
 .. automodule:: awesome_tool.statemachine.validity_check.validity_checker
     :members:
     :undoc-members:
     :show-inheritance:
 
-vc_implementations module
--------------------------
+vc_implementations
+------------------
 
 .. automodule:: awesome_tool.statemachine.validity_check.vc_implementations
     :members:
     :undoc-members:
     :show-inheritance:
 
-vc_strategy module
-------------------
+vc_strategy
+-----------
 
 .. automodule:: awesome_tool.statemachine.validity_check.vc_strategy
     :members:

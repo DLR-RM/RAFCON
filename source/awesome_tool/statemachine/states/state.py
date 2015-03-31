@@ -42,14 +42,7 @@ class State(Observable, yaml.YAMLObject, object):
     :ivar output_data_ports: holds the output data ports of the state
     :ivar outcomes: holds the state outcomes, which are the connection points for transitions
     :ivar script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
-    :ivar _input_data: the input data of the state during execution
-    :ivar _output_data: the output data of the state during execution
-    :ivar _preempted: a flag to show if the state was preempted from outside
-    :ivar _concurrency_queue: a queue to signal a preemptive concurrency state, that the execution of the state
-                                finished
-    :ivar _final_outcome: the final outcome of a state, when it finished execution
     :ivar description: a human readable description of the state
-    :ivar _active: a flag that shows if the state is currently running
 
     """
 
@@ -94,13 +87,18 @@ class State(Observable, yaml.YAMLObject, object):
         else:
             self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
+        # the input data of the state during execution
         self._input_data = {}
+        # the output data of the state during execution
         self._output_data = {}
+        # a flag to show if the state was preempted from outside
         self._preempted = False
+        # a queue to signal a preemptive concurrency state, that the execution of the state finished
         self._concurrency_queue = None
+        # the final outcome of a state, when it finished execution
         self._final_outcome = None
         self._description = None
-
+        # a flag that shows if the state is currently running
         self._active = None
 
         logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))

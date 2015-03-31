@@ -15,7 +15,6 @@ import os
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
-import awesome_tool.statemachine.singleton
 import awesome_tool.statemachine.config as config
 
 

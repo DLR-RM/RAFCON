@@ -20,7 +20,7 @@ StateModel (in state)
 
 
 state_machine
-------------------------------------
+-------------
 
 .. automodule:: awesome_tool.mvc.models.state_machine
     :members:
