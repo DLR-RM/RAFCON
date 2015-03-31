@@ -7,7 +7,7 @@
     <property name="visible">True</property>
     <property name="border_width">3</property>
     <property name="title" translatable="yes">Awesome Tool</property>
-    <property name="window_position">center-always</property>
+    <property name="window_position">center</property>
     <property name="default_width">1800</property>
     <property name="default_height">900</property>
     <accel-groups>

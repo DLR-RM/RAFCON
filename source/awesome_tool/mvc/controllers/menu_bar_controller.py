@@ -23,7 +23,6 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager = shortcut_manager
         self.logging_view = logging_view
         self.main_window_view = view
-        self.fullscreen = False
 
     def register_view(self, view):
         """Called when the View was registered
@@ -342,16 +341,3 @@ class MenuBarController(ExtendedController):
         response = about.run()
         if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
             about.destroy()
-
-    ######################################################
-    # Menu bar handle button press and move window
-    ######################################################
-
-    def on_maximize_button_clicked(self, widget, data=None):
-        if self.fullscreen:
-            self.main_window_view["main_window"].unmaximize()
-            self.main_window_view["main_window"].unfullscreen()
-            self.fullscreen = False
-        else:
-            self.main_window_view["main_window"].maximize()
-            self.fullscreen = True
