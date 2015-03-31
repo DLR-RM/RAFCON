@@ -692,10 +692,8 @@ class GraphicalEditorController(ExtendedController):
                 if not is_within_frame(model):
                     models_to_remove.add(model)
 
-            print "before remove", len(selected_models)
             selected_models = set(selected_models)
             selected_models.difference_update(models_to_remove)
-            print "after remove", len(selected_models)
 
             if selected_models is not None:
                 self.model.selection.clear()
@@ -1699,6 +1697,7 @@ class GraphicalEditorController(ExtendedController):
             selection = self.model.selection.get_all()
             if len(selection) > 0:
                 StateMachineHelper.delete_models(self.model.selection.get_all())
+                self.model.selection.clear()
 
     def _add_execution_state(self, *args):
         if self.view.editor.has_focus():  # or singleton.global_focus is self:
