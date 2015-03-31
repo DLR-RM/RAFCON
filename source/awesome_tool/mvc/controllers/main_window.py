@@ -81,7 +81,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         # statemachine tree
         ######################################################
-        #remove placeholder tab
+        # remove placeholder tab
 
         state_machine_tree_tab = view['state_machine_tree_placeholder']
         page_num = view["tree_notebook"].page_num(state_machine_tree_tab)
@@ -182,7 +182,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         top_tool_bar_controller = TopToolBarController(state_machine_manager_model,
                                                      view.top_tool_bar,
-                                                     view["main_window"])
+                                                     view["main_window"],
+                                                     menu_bar_controller)
         self.add_controller("top_tool_bar_controller", top_tool_bar_controller)
 
         ######################################################

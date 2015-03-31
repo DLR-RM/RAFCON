@@ -8,12 +8,13 @@ class TopToolBarController(ExtendedController):
     """
     The class to trigger all the action, available in the tool bar.
     """
-    def __init__(self, state_machine_manager_model, view, top_level_window):
+    def __init__(self, state_machine_manager_model, view, top_level_window, menu_bar_controller):
         ExtendedController.__init__(self, state_machine_manager_model, view)
         self.shortcut_manager = None
 
         self.top_level_window = top_level_window
         self.fullscreen = False
+        self.menu_bar_controller = menu_bar_controller
 
         view.get_top_widget().connect("motion_notify_event", self.motion_detected)
         view.get_top_widget().connect("button_press_event", self.button_pressed_event)
@@ -48,8 +49,7 @@ class TopToolBarController(ExtendedController):
             self.fullscreen = True
 
     def on_close_button_clicked(self, widget, data=None):
-        self.top_level_window.destroy()
-        gtk.main_quit()
+        self.menu_bar_controller.on_quit_activate(None)
 
     def motion_detected(self, widget, event=None):
         if event.is_hint:
