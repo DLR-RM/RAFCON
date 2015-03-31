@@ -674,13 +674,16 @@ class GraphicalEditorController(ExtendedController):
 
             frame_left = upper_left[0]
             frame_right = lower_right[0]
-            frame_top = upper_left[1]
-            frame_bottom = lower_right[1]
+            frame_bottom = upper_left[1]
+            frame_top = lower_right[1]
+
+            print "frame", frame_left, frame_right, frame_bottom, frame_top
             
             def is_within_frame(model):
-                left, right, top, bottom = self.get_boundaries(model)
+                left, right, bottom, top = self.get_boundaries(model)
+                print "lrbt", left, right, bottom, top, model
                 if left is not None:
-                    if frame_left < left < right < frame_right and frame_top < top < bottom < frame_bottom:
+                    if frame_left < left < right < frame_right and frame_bottom < bottom < top < frame_top:
                         return True
                 return False
 
@@ -933,8 +936,7 @@ class GraphicalEditorController(ExtendedController):
                 mouse_resize_coords = (self.mouse_move_start_coords[0] - d_height * state_size_ratio,
                                        mouse_resize_coords[1])
         # User wants to resize content by holding the ctrl keys pressed
-        resize_content = int(modifier_keys & CONTROL_MASK) == 0
-
+        resize_content = int(modifier_keys & CONTROL_MASK) > 0
         width = mouse_resize_coords[0] - state_editor_data['pos_x']
         height_diff = state_editor_data['pos_y'] - mouse_resize_coords[1]
         height = state_editor_data['height'] + height_diff
@@ -946,9 +948,7 @@ class GraphicalEditorController(ExtendedController):
         if not resize_content and self.has_content(self.selection):
             # Check lower right corner of all child states
             for child_state_m in state_m.states.itervalues():
-                child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
-                                   child_state_m.meta['gui']['editor']['width']
-                child_bottom_edge = child_state_m.meta['gui']['editor']['pos_y']
+                _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
                 min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
                 max_bottom_edge = child_bottom_edge if max_bottom_edge > child_bottom_edge else max_bottom_edge
             # Check position of all waypoints of all transitions
@@ -964,13 +964,7 @@ class GraphicalEditorController(ExtendedController):
             # Check lower right corner of all ports
             for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                           state_m.scoped_variables):
-                port_info = port_m.meta['gui']['editor']
-                port_bottom_edge = port_info['inner_pos'][1]
-                port_right_edge = port_info['inner_pos'][0] + port_info['width']
-                if port_m in state_m.output_data_ports:
-                    port_right_edge = port_info['inner_pos'][0]
-                elif port_m in state_m.scoped_variables:
-                    port_bottom_edge = port_info['inner_pos'][1] - port_info['height'] + port_info['rect_height']
+                _, port_right_edge, port_bottom_edge, _ = self.get_boundaries(port_m)
                 min_right_edge = port_right_edge if min_right_edge < port_right_edge else min_right_edge
                 max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
 
@@ -1675,17 +1669,17 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(model, (DataPortModel, ScopedVariableModel)):
             left = meta['inner_pos'][0]
             right = meta['inner_pos'][0] + meta['width']
-            top = meta['inner_pos'][1]
-            bottom = meta['inner_pos'][1] + meta['height']
+            bottom = meta['inner_pos'][1]
+            top = meta['inner_pos'][1] + meta['height']
 
             if model in model.parent.output_data_ports:
                 left = meta['inner_pos'][0] - meta['width']
                 right = meta['inner_pos'][0]
             if model in model.parent.scoped_variables:
-                top = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
-                bottom = top + meta['height']
+                bottom = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
+                top = bottom + meta['height']
 
-            return left, right, top, bottom
+            return left, right, bottom, top
         return None, None, None, None
 
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
