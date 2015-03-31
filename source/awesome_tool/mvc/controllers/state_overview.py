@@ -92,11 +92,11 @@ class StateOverviewController(ExtendedController, Model):
 
         if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
             if self.view['is_start_state_checkbutton'].get_active():
-                logger.debug("set start_state %s" % self.model.state.state_id)
-                self.model.parent.state.start_state = self.model.state.state_id
+                logger.debug("set start_state_id %s" % self.model.state.state_id)
+                self.model.parent.state.start_state_id = self.model.state.state_id
             else:
-                logger.debug("set start_state %s" % str(None))
-                self.model.parent.state.start_state = None
+                logger.debug("set start_state_id %s" % str(None))
+                self.model.parent.state.start_state_id = None
 
     @Model.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):

@@ -161,7 +161,7 @@ def run_turtle_demo():
     # set base path of global storage
     awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/basic_turtle_demo_sm"
 
-    # load the state machine
+    # # load the state machine
     [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
 

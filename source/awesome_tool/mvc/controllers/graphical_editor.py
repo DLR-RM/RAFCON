@@ -1228,7 +1228,7 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
         state_m.meta['gui']['editor']['resize_length'] = resize_length
 
-        if state_m.parent is not None and (state_m.parent.state.start_state == state_m.state.state_id or
+        if state_m.parent is not None and (state_m.parent.state.start_state_id == state_m.state.state_id or
                                                isinstance(state_m.parent.state, ConcurrencyState)):
             self.draw_start_transition(state_m.parent, state_m, depth)
 

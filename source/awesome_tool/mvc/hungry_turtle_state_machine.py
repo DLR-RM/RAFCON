@@ -38,30 +38,30 @@ def create_models():
     return logger, global_var_manager_model
 
 
-# def clean_transition_ids(container_state):
-#     import copy
-#     if hasattr(container_state, 'states'):
-#         transitions_copy = copy.copy(container_state.transitions)
-#         container_state.transitions.clear()
-#         for id, transition in transitions_copy.iteritems():
-#             container_state.transitions[transition.transition_id] = transition
-#         for state_id, state in container_state.states.iteritems():
-#
-#             if hasattr(state, 'states'):
-#                 clean_transition_ids(state)
-#
-#
-# def clean_data_flows_ids(container_state):
-#     import copy
-#     if hasattr(container_state, 'states'):
-#         data_flows_copy = copy.copy(container_state.data_flows)
-#         container_state.data_flows.clear()
-#         for id, data_flows in data_flows_copy.iteritems():
-#             container_state.data_flows[data_flows.data_flow_id] = data_flows
-#         for state_id, state in container_state.states.iteritems():
-#
-#             if hasattr(state, 'states'):
-#                 clean_data_flows_ids(state)
+def clean_transition_ids(container_state):
+    import copy
+    if hasattr(container_state, 'states'):
+        transitions_copy = copy.copy(container_state.transitions)
+        container_state.transitions.clear()
+        for id, transition in transitions_copy.iteritems():
+            container_state.transitions[transition.transition_id] = transition
+        for state_id, state in container_state.states.iteritems():
+
+            if hasattr(state, 'states'):
+                clean_transition_ids(state)
+
+
+def clean_data_flows_ids(container_state):
+    import copy
+    if hasattr(container_state, 'states'):
+        data_flows_copy = copy.copy(container_state.data_flows)
+        container_state.data_flows.clear()
+        for id, data_flows in data_flows_copy.iteritems():
+            container_state.data_flows[data_flows.data_flow_id] = data_flows
+        for state_id, state in container_state.states.iteritems():
+
+            if hasattr(state, 'states'):
+                clean_data_flows_ids(state)
 
 
 def run_turtle_demo():

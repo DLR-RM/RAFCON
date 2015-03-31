@@ -158,9 +158,15 @@ class State(Observable, yaml.YAMLObject, object):
         """
         state.preempted = True
         # only go deeper if the State has a states dictionary = the state is not a Execution State
-        if state.state_type is not StateType.EXECUTION:
+        if state.state_type is not StateType.EXECUTION and state.state_type is not StateType.LIBRARY:
             for key, state in state.states.iteritems():
                 state.recursively_preempt_states(state)
+
+        if state.state_type is StateType.LIBRARY:
+            if state.state_copy.state_type is not StateType.EXECUTION and \
+                            state.state_copy.state_type is not StateType.LIBRARY:
+                state.state_copy.recursively_preempt_states(state.state_copy)
+
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data port functions -------------------------------------

@@ -116,6 +116,7 @@ def turtle_position_subscriber_library():
                                                 filename="turtle_position_subscriber.py")
     turtle_position_subscriber.add_outcome("success", 0)
     name_input = turtle_position_subscriber.add_input_data_port("turtle_name", "str", "new_turtle")
+    frequency_input = turtle_position_subscriber.add_input_data_port("frequency", "float", "1.0")
     global_storage_id_input = turtle_position_subscriber.add_input_data_port("global_storage_id_of_turtle_pos", "str", "new_turtle")
 
     x_pos_output = turtle_position_subscriber.add_output_data_port("x_pos", "float")

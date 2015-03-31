@@ -117,9 +117,9 @@ style "my_default"
     text[PRELIGHT]    = @text_color
     text[SELECTED]    = @text_color
 
-    engine "xfce"
+    engine "clearlooks"
     {
-        smooth_edge = true
+
     }
 }
 
@@ -159,15 +159,15 @@ style "button" = "my_default"
     fg[PRELIGHT]      = @text_color
     fg[SELECTED]      = @white
 
-	engine "xfce"
-	{
-		smooth_edge = true
-        	grip_style = slide
-        	boxfill
-        	{
-            		fill_style = plain
-        	}
-	}
+	#engine "xfce"
+	#{
+	#	smooth_edge = true
+        #	grip_style = slide
+        #	boxfill
+        #	{
+        #    		fill_style = plain
+        #	}
+	#}
 }
 
 style "check_button" = "button"
@@ -191,7 +191,7 @@ style "about_dialog_button" = "button"
 style "notebook" = "my_default"
 {
 
-    bg[ACTIVE]	        = @widget_active_background
+    bg[ACTIVE]	        = @text_background
     bg[NORMAL]		= @widget_background
     fg[ACTIVE]		= @text_color
     fg[NORMAL]		= @text_color
@@ -218,9 +218,9 @@ style "scrollbar" = "my_default"
     bg[PRELIGHT]	= @medium_gray
     fg[NORMAL]		= @light_gray
 
-	engine "xfce"
+	engine "clearlooks"
 	{
-	grip_style = none
+		colorize_scrollbar = FALSE
 	}
 
 }
