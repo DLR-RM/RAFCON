@@ -240,6 +240,7 @@ style "expander" = "my_default"
 
 style "treeview" = "my_default"
 {
+    font_name 				= "DIN Next LT Pro 11"
     bg[ACTIVE]				= @text_background
     bg[NORMAL]				= @text_background
     bg[SELECTED]			= @widget_background
@@ -248,7 +249,7 @@ style "treeview" = "my_default"
     fg[SELECTED]			= @widget_background
     base[ACTIVE]			= @medium_gray
     base[SELECTED]			= @button_active
-    base[NORMAL]			= @widget_background
+    base[NORMAL]			= @widget_active_background
 }
 
 style "window" = "my_default"
@@ -263,7 +264,7 @@ style "menu_separator" = "my_default"
 
 style "menu_bar" = "my_default"
 {
-    bg[PRELIGHT]			= @button_active
+    bg[SELECTED]			= @button_active
     fg[NORMAL]				= @text_color
     fg[PRELIGHT]			= @white
 }
@@ -318,18 +319,19 @@ widget_class "*"                   			style "my_default"
 
 widget_class "*Label*"					style "label"
 
-widget_class "*Notebook*"				style "notebook"
-widget_class "*Notebook*TextView*"			style "notebook_textview"
-
 widget_class "*ComboBox*"				style "combobox"
 
 widget_class "*Expander*"				style "expander"
+
+widget_class "*Notebook*"				style "notebook"
+widget_class "*Notebook*TextView*"			style "notebook_textview"
 
 widget_class "*Tree*"					style "treeview"
 
 widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
 widget_class "*VBox.GtkLabel"				style "indicator_label"
 widget_class "*EventBox.GtkLabel"				style "indicator_label"
+widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
 
 widget_class "*VPaned.GtkEventBox"			style "event_box"
 widget_class "*VBox.GtkEventBox"				style "event_box"
