@@ -25,8 +25,6 @@ class MenuBarController(ExtendedController):
         self.main_window_view = view
         self.fullscreen = False
 
-        view.get_top_widget().connect("button_press_event", self.button_pressed_event)
-
     def register_view(self, view):
         """Called when the View was registered
         """
@@ -348,10 +346,6 @@ class MenuBarController(ExtendedController):
     ######################################################
     # Menu bar handle button press and move window
     ######################################################
-
-    def button_pressed_event(self, widget, event=None):
-        if event.type == gtk.gdk._2BUTTON_PRESS:
-            self.on_maximize_button_clicked(None)
 
     def on_maximize_button_clicked(self, widget, data=None):
         if self.fullscreen:
