@@ -100,6 +100,9 @@ debug_filter = DebugTextViewFilter()
 error_filter = ErrorTextViewFilter()
 
 
+# a dictionary to hold all loggers created so far
+existing_loggers = {}
+
 def get_logger(name):
     """
     Returns a logger for a specific name i.e. a class name. There are several logging modes available:
@@ -107,6 +110,10 @@ def get_logger(name):
     :param name: the name of the new logger
     :return:
     """
+
+    if name in existing_loggers.iterkeys():
+        return existing_loggers[name]
+
     full = logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s", "%H:%M:%S")
 
     stdout = logging.StreamHandler(sys.stdout)
@@ -126,5 +133,7 @@ def get_logger(name):
     logger.addHandler(stderr)
 
     logger.setLevel(logging.DEBUG)
+
+    existing_loggers[name] = logger
 
     return logger
