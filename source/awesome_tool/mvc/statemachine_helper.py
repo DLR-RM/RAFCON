@@ -10,6 +10,8 @@ from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierCo
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
+from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
 
 class StateMachineHelper():
@@ -23,6 +25,7 @@ class StateMachineHelper():
         :return: True if successful, False else
         """
         container_m = model.parent
+        assert isinstance(container_m, StateModel)
         if isinstance(model, StateModel):
             if container_m is not None:
                 try:
@@ -47,6 +50,28 @@ class StateMachineHelper():
             except AttributeError as e:
                 logger.error("The data flow with the ID {0} could not be deleted: {1}\n{2}".format(
                     model.data_flow.data_flow_id, e.message, traceback.format_exc()))
+
+        elif isinstance(model, ScopedVariableModel):
+            scoped_variable_id = model.scoped_variable.data_port_id
+            try:
+                container_m.state.remove_scoped_variable(scoped_variable_id)
+                return True
+            except AttributeError as e:
+                logger.error("The scoped variable with the ID {0} could not be deleted: {1}\n{2}".format(
+                    scoped_variable_id, e.message, traceback.format_exc()))
+
+        elif isinstance(model, DataPortModel):
+            port_id = model.data_port.data_port_id
+            try:
+                if model in container_m.input_data_ports:
+                    container_m.state.remove_input_data_port(port_id)
+                    return True
+                elif model in container_m.output_data_ports:
+                    container_m.state.remove_output_data_port(port_id)
+                    return True
+            except AttributeError as e:
+                logger.error("The data port with the ID {0} could not be deleted: {1}\n{2}".format(
+                    port_id, e.message, traceback.format_exc()))
 
         return False
 
