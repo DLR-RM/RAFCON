@@ -703,7 +703,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         scale_factor = height / font_height
         return width * scale_factor
 
-    def prepare_selection(self, pos_x, pos_y, width=5., height=5.):
+    def prepare_selection(self, pos_x, pos_y, width, height):
         """Prepares the selection rendering
 
         In order to find out the object being clicked on, the scene has to be rendered again around the clicked position

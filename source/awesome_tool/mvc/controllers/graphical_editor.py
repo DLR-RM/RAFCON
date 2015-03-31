@@ -278,13 +278,16 @@ class GraphicalEditorController(ExtendedController):
             # Check, whether a resizer was clicked on
             self._check_for_resizer_selection(self.mouse_move_start_coords)
 
+            # Check, whether a waypoint was clicked on
+            self._check_for_waypoint_selection(new_selection, self.mouse_move_start_coords)
+
             # We do not want to change the current selection while creating a new transition or data flow
             if not self.mouse_move_redraw:
                 # Multi selection with shift+click
                 if event.state & SHIFT_MASK != 0:
-                    # With shift+click, also states are resized. Thus we only want to draw a selection frame,
-                    # when the user didn't clicked on a resizer
-                    if self.selected_resizer is None:
+                    # With shift+click, also states are resized and waypoints snapped. Thus we only want to draw a
+                    # selection frame, when the user didn't clicked on a resizer or waypoint
+                    if self.selected_resizer is None and self.selected_waypoint is None:
                         self.multi_selection_started = True
 
                 # In the case of multi selection, the user can add/remove elements to/from the selection
@@ -318,9 +321,6 @@ class GraphicalEditorController(ExtendedController):
             if self.selection is not None and isinstance(self.selection, StateModel):
                 self.selection_start_pos = (self.selection.meta['gui']['editor']['pos_x'],
                                             self.selection.meta['gui']['editor']['pos_y'])
-
-            # Check, whether a waypoint was clicked on
-            self._check_for_waypoint_selection(new_selection, self.mouse_move_start_coords)
 
             # Check, whether an outcome was clicked on
             outcome_state, outcome_key = self._check_for_outcome_selection(new_selection, self.mouse_move_start_coords)
@@ -1529,7 +1529,7 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.draw_data_flow(connector[0], connector[1], target[0], target[1], line_width,
                                                 self.temporary_waypoints, True, parent_depth + 0.6)
 
-    def _find_selection(self, pos_x, pos_y, width=5, height=5, all=False,
+    def _find_selection(self, pos_x, pos_y, width=6, height=6, all=False,
                         find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Returns the model at the given position
 
