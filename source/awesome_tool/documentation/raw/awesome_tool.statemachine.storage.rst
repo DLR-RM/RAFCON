@@ -1,11 +1,8 @@
 Storage
 =======
 
-Submodules
-----------
-
-storage module
---------------
+storage
+-------
 
 .. automodule:: awesome_tool.statemachine.storage.storage
     :members:

@@ -32,12 +32,11 @@ class ContainerState(State):
 
     Only the variables are listed that are not already contained in the state base class
 
-    :ivar states: the child states of the container state of the state:
-    :ivar transitions: transitions between all child states:
-    :ivar data_flows: data flows between all child states:
+    :ivar states: the child states of the container state of the state
+    :ivar transitions: transitions between all child states
+    :ivar data_flows: data flows between all child states
     :ivar start_state_id: the state to start with when the hierarchy state is executed
-    :ivar scoped_variables: the scoped variables of the container:
-    :ivar _v_checker: reference to an object that checks the validity of this container state:
+    :ivar scoped_variables: the scoped variables of the container
 
     """
 
@@ -60,6 +59,7 @@ class ContainerState(State):
         self.scoped_variables = scoped_variables
         self.__scoped_variables_names = []
         self._scoped_data = {}
+        # reference to an object that checks the validity of this container state
         self._v_checker = v_checker
         self._current_state = None
         # condition variable to wait for not connected states

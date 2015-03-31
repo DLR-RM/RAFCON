@@ -1,7 +1,6 @@
 Statemachine
 ============
 
-
 Subpackages
 -----------
 
@@ -12,77 +11,100 @@ Subpackages
     awesome_tool.statemachine.states
     awesome_tool.statemachine.storage
 
-Submodules
-----------
-
-state_machine module
---------------------
-
-.. automodule:: awesome_tool.statemachine.state_machine
+config
+------
+.. automodule:: awesome_tool.statemachine.config
     :members:
     :undoc-members:
     :show-inheritance:
 
-data_port module
-----------------
-
-.. automodule:: awesome_tool.statemachine.data_port
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-data_flow module
-----------------
-
+data_flow
+---------
 .. automodule:: awesome_tool.statemachine.data_flow
     :members:
     :undoc-members:
     :show-inheritance:
 
-outcome module
---------------
+data_port
+---------
+.. automodule:: awesome_tool.statemachine.data_port
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
+enums
+-----
+.. automodule:: awesome_tool.statemachine.enums
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+global_variable_manager
+-----------------------
+.. automodule:: awesome_tool.statemachine.global_variable_manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+id_generator
+------------
+.. automodule:: awesome_tool.statemachine.id_generator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+library_manager
+---------------
+.. automodule:: awesome_tool.statemachine.library_manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+outcome
+-------
 .. automodule:: awesome_tool.statemachine.outcome
     :members:
     :undoc-members:
     :show-inheritance:
 
-scope module
-------------
-
+scope
+-----
 .. automodule:: awesome_tool.statemachine.scope
     :members:
     :undoc-members:
     :show-inheritance:
 
-script module
--------------
-
+script
+------
 .. automodule:: awesome_tool.statemachine.script
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+singleton
+---------
+.. automodule:: awesome_tool.statemachine.singleton
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+state_machine
+-------------
+.. automodule:: awesome_tool.statemachine.state_machine
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+state_machine_manager
+---------------------
+.. automodule:: awesome_tool.statemachine.state_machine_manager
     :members:
     :undoc-members:
     :show-inheritance:
 
 transition module
 -----------------
-
 .. automodule:: awesome_tool.statemachine.transition
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-id_generator module
--------------------
-
-.. automodule:: awesome_tool.statemachine.id_generator
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-library_manager module
-----------------------
-
-.. automodule:: awesome_tool.statemachine.library_manager
     :members:
     :undoc-members:
     :show-inheritance:

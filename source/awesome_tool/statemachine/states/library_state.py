@@ -268,6 +268,11 @@ class LibraryState(State, yaml.YAMLObject):
 
     @staticmethod
     def copy_state(source_state):
+        """
+        Copies a state.
+        :param source_state: the state to copy
+        :return: the copy of the source state
+        """
         state_copy = LibraryState()
         # TODO: copy fields from source_state into the state_copy
         return state_copy
