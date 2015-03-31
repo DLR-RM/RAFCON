@@ -124,6 +124,7 @@
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                             <property name="border_width">5</property>
+                                            <property name="focus_on_click">False</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -140,6 +141,7 @@
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                             <property name="border_width">5</property>
+                                            <property name="focus_on_click">False</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -194,6 +196,7 @@
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                             <property name="border_width">5</property>
+                                            <property name="focus_on_click">False</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -210,6 +213,7 @@
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                             <property name="border_width">5</property>
+                                            <property name="focus_on_click">False</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -268,6 +272,7 @@
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                             <property name="border_width">5</property>
+                                            <property name="focus_on_click">False</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -284,6 +289,7 @@
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                             <property name="border_width">5</property>
+                                            <property name="focus_on_click">False</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>

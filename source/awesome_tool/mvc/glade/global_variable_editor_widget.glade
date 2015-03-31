@@ -14,9 +14,10 @@
             <property name="label" translatable="yes">New</property>
             <property name="width_request">90</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
+            <property name="can_focus">False</property>
+            <property name="receives_default">False</property>
             <property name="border_width">5</property>
+            <property name="focus_on_click">False</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -29,9 +30,10 @@
             <property name="label" translatable="yes">Delete</property>
             <property name="width_request">90</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
+            <property name="can_focus">False</property>
+            <property name="receives_default">False</property>
             <property name="border_width">5</property>
+            <property name="focus_on_click">False</property>
           </object>
           <packing>
             <property name="expand">False</property>

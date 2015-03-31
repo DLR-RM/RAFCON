@@ -62,6 +62,7 @@ class StateOverviewController(ExtendedController, Model):
 
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
+        combo.set_focus_on_click(False)
         combo.set_model(l_store)
         cell = gtk.CellRendererText()
         combo.pack_start(cell, True)

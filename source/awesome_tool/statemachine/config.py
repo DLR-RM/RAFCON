@@ -48,6 +48,7 @@ class Config(object):
         self.__config_dict = self.storage.load_dict_from_yaml(os.path.join(CONFIG_PATH, CONFIG_FILE))
         logger.info("Config initialized ... loaded configuration from %s" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
         self.configure_font("DIN Next LT Pro")
+        self.configure_source_view_style()
 
     def get_config_value(self, key, default=None):
         """
@@ -82,7 +83,29 @@ class Config(object):
                 logger.info("Font %s found" % font_name)
                 return
         logger.info("Copy font %s to ~/.fonts" % font_name)
+        if not os.path.isdir(os.getenv("HOME") + "/.fonts"):
+            os.system("mkdir ~/.fonts")
         os.system("cp -r ./themes/black/fonts/DIN\\ Next\\ LT\\ Pro ~/.fonts")
+
+    def configure_source_view_style(self):
+        path = os.getenv("HOME") + "/.local/share/gtksourceview-2.0"
+
+        if not os.path.isdir(path):
+            os.system("mkdir ~/.local/share/gtksourceview-2.0")
+
+        path += "/styles"
+        if not os.path.isdir(path):
+            os.system("mkdir ~/.local/share/gtksourceview-2.0/styles")
+            
+        if not os.path.isfile(os.path.join(path, "awesome_style.xml")):
+            logger.info("Copy style awesome_style.xml to " + path)
+            os.system("cp ./themes/black/gtksw-styles/awesome_style.xml " + path)
+        else:
+            logger.info("Found awesome_style.xml")
+
+            logger.warning("REMOVE THE FOLLOWING TWO LINES AFTER COMPLETION OF AWESOME_STYLE.XML")
+            os.system("rm " + path + "/awesome_style.xml")
+            os.system("cp ./themes/black/gtksw-styles/awesome_style.xml " + path)
 
 
 # This variable holds the global configuration parameters for the statemachine

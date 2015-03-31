@@ -20,7 +20,8 @@ style "my_default"
     GtkButton::child_displacement_y              = 1
     GtkButton::default_border                    = {0, 0, 0, 0}
     GtkButton::default_outside_border            = {0, 0, 0, 0}
-    GtkButton::focus-line-pattern                = "\0"
+    GtkButton::focus_line_pattern                = "\0"
+    GtkButton::focus_on_click			= 0
 
     GtkButtonBox::child_internal_pad_x           = 0
     GtkButtonBox::child_internal_pad_y           = 0
@@ -119,7 +120,7 @@ style "my_default"
 
     engine "clearlooks"
     {
-
+	
     }
 }
 
@@ -158,16 +159,6 @@ style "button" = "my_default"
     fg[NORMAL]        = @text_color
     fg[PRELIGHT]      = @text_color
     fg[SELECTED]      = @white
-
-	#engine "xfce"
-	#{
-	#	smooth_edge = true
-        #	grip_style = slide
-        #	boxfill
-        #	{
-        #    		fill_style = plain
-        #	}
-	#}
 }
 
 style "check_button" = "button"
@@ -325,6 +316,8 @@ widget_class "*Expander*"				style "expander"
 
 widget_class "*Notebook*"				style "notebook"
 widget_class "*Notebook*TextView*"			style "notebook_textview"
+
+widget_class "*Notebook*Expander"				style "expander"
 
 widget_class "*Tree*"					style "treeview"
 

@@ -86,6 +86,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
         <property name="border_width">5</property>
+        <property name="focus_on_click">False</property>
         <property name="draw_indicator">True</property>
       </object>
       <packing>
