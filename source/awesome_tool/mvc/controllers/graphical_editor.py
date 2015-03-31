@@ -672,19 +672,17 @@ class GraphicalEditorController(ExtendedController):
             upper_left = self.view.editor.screen_to_opengl_coordinates(upper_left)
             lower_right = self.view.editor.screen_to_opengl_coordinates(lower_right)
 
+            frame_left = upper_left[0]
+            frame_right = lower_right[0]
+            frame_top = upper_left[1]
+            frame_bottom = lower_right[1]
+            
             def is_within_frame(model):
-                def point_in_rectangle(point):
-                    return upper_left[0] < point[0] < lower_right[0] and upper_left[1] < point[1] < lower_right[1]
-
-                meta = model.meta['gui']['editor']
-                if isinstance(model, StateModel):
-                    return point_in_rectangle((meta['pos_x'], meta['pos_y'])) and \
-                           point_in_rectangle((meta['pos_x'] + meta['width'], meta['pos_y'] + meta['height']))
-                if isinstance(model, (TransitionModel, DataFlowModel)):
-                    return point_in_rectangle((meta['from_pos_x'], meta['from_pos_y'])) and \
-                           point_in_rectangle((meta['to_pos_x'], meta['to_pos_y']))
-
-                return True
+                left, right, top, bottom = self.get_boundaries(model)
+                if left is not None:
+                    if frame_left < left < right < frame_right and frame_top < top < bottom < frame_bottom:
+                        return True
+                return False
 
             # Remove models, which are not fully in the selection frame
             models_to_remove = set()
@@ -1674,18 +1672,21 @@ class GraphicalEditorController(ExtendedController):
                     y_coordinates.append(waypoint[1])
             return min(x_coordinates), max(x_coordinates), min(y_coordinates), max(y_coordinates)
 
-        if isinstance(model, DataPortModel):
-            return None
-            # Input data port has arrow on the right side
-            # top = meta['inner_pos'][1] + meta['height']
-            # bottom = meta['inner_pos'][1]
-            # left = meta['inner_pos'][0]
-            # right = meta['inner_pos'][0] + meta['width']
-            # if model in model.parent.output_data_ports:
-            #     left = meta['inner_pos'][0] - meta['width']
-            #     right = meta['inner_pos'][0]
-            # elif model in model.parent.scoped_variables:
-            #     bottom = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
+        if isinstance(model, (DataPortModel, ScopedVariableModel)):
+            left = meta['inner_pos'][0]
+            right = meta['inner_pos'][0] + meta['width']
+            top = meta['inner_pos'][1]
+            bottom = meta['inner_pos'][1] + meta['height']
+
+            if model in model.parent.output_data_ports:
+                left = meta['inner_pos'][0] - meta['width']
+                right = meta['inner_pos'][0]
+            if model in model.parent.scoped_variables:
+                top = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
+                bottom = top + meta['height']
+
+            return left, right, top, bottom
+        return None, None, None, None
 
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
         global_storage.mark_dirty(self.model.state_machine.state_machine_id)
