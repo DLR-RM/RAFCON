@@ -41,6 +41,7 @@ def create_models():
 
 def run_empty_statemachine():
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
+    gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
 
     # setup logging view first
     logging_view = LoggingView()

@@ -204,6 +204,9 @@ class ContainerState(State):
         if state_id not in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
 
+        if state_id == self.start_state_id:
+            self.set_start_state(None)
+
         # remove script folder
         own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
         if own_sm_id is None:

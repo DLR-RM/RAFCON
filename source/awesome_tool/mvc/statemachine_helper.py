@@ -1,5 +1,3 @@
-import traceback
-
 from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
@@ -10,6 +8,8 @@ from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierCo
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
+from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
 
 class StateMachineHelper():
@@ -23,30 +23,61 @@ class StateMachineHelper():
         :return: True if successful, False else
         """
         container_m = model.parent
+        if container_m is None:
+            return False
+        assert isinstance(container_m, StateModel)
         if isinstance(model, StateModel):
-            if container_m is not None:
-                try:
-                    container_m.state.remove_state(model.state.state_id)
+            state_id = model.state.state_id
+            try:
+                if state_id in container_m.state.states:
+                    container_m.state.remove_state(state_id)
                     return True
-                except AttributeError as e:
-                    logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}\n{3}".format(
-                        model.state.state_id, model.state.name, e.message, traceback.format_exc()))
+            except AttributeError as e:
+                logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}".format(
+                    state_id, model.state.name, e.message))
 
         elif isinstance(model, TransitionModel):
+            transition_id = model.transition.transition_id
             try:
-                container_m.state.remove_transition(model.transition.transition_id)
-                return True
+                if transition_id in container_m.state.transitions:
+                    container_m.state.remove_transition(transition_id)
+                    return True
             except AttributeError as e:
-                logger.error("The transition with the ID {0} could not be deleted: {1}\n{2}".format(
-                    model.transition.transition_id, e.message, traceback.format_exc()))
+                logger.error("The transition with the ID {0} could not be deleted: {1}".format(
+                    transition_id, e.message))
 
         elif isinstance(model, DataFlowModel):
+            data_flow_id = model.data_flow.data_flow_id
             try:
-                container_m.state.remove_data_flow(model.data_flow.data_flow_id)
-                return True
+                if data_flow_id in container_m.state.data_flows:
+                    container_m.state.remove_data_flow(data_flow_id)
+                    return True
             except AttributeError as e:
-                logger.error("The data flow with the ID {0} could not be deleted: {1}\n{2}".format(
-                    model.data_flow.data_flow_id, e.message, traceback.format_exc()))
+                logger.error("The data flow with the ID {0} could not be deleted: {1}".format(
+                    data_flow_id, e.message))
+
+        elif isinstance(model, ScopedVariableModel):
+            scoped_variable_id = model.scoped_variable.data_port_id
+            try:
+                if scoped_variable_id in container_m.state.scoped_variables:
+                    container_m.state.remove_scoped_variable(scoped_variable_id)
+                    return True
+            except AttributeError as e:
+                logger.error("The scoped variable with the ID {0} could not be deleted: {1}".format(
+                    scoped_variable_id, e.message))
+
+        elif isinstance(model, DataPortModel):
+            port_id = model.data_port.data_port_id
+            try:
+                if port_id in container_m.state.input_data_ports:
+                    container_m.state.remove_input_data_port(port_id)
+                    return True
+                elif port_id in container_m.state.output_data_ports:
+                    container_m.state.remove_output_data_port(port_id)
+                    return True
+            except AttributeError as e:
+                logger.error("The data port with the ID {0} could not be deleted: {1}".format(
+                    port_id, e.message))
 
         return False
 
