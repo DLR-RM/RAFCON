@@ -20,7 +20,7 @@
   <style name="def:floating-point" foreground="#be84ff"/>
   <style name="def:function" foreground="#a6e22e"/>
   <style name="def:identifier" foreground="#ffffff"/>
-  <style name="def:keyword" foreground="#c2c3c4"/>
+  <style name="def:keyword" foreground="#c2c3c4"/> <!-- def, pass, return -->
   <style name="def:note" foreground="#75715e"/>
   <style name="def:number" foreground="#be84ff"/>
   <style name="def:operator" foreground="#f92672"/>
@@ -41,7 +41,7 @@
   <style name="python:builtin-constant" foreground="#f92672"/>
   <style name="python:builtin-function" foreground="#a6e22e"/>
   <style name="python:module-handler" foreground="#f92672"/>
-  <style name="python:special-variable" foreground="#288cff"/>
+  <style name="python:special-variable" foreground="#288cff"/> <!-- self -->
   <style name="search-match"  background="#333333" bold="true" underline="true"/>
   <style name="selection"  background="#444444"/>
   <style name="text" foreground="#ffffff" background="#222222"/>

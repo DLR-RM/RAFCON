@@ -21,7 +21,6 @@ style "my_default"
     GtkButton::default_border                    = {0, 0, 0, 0}
     GtkButton::default_outside_border            = {0, 0, 0, 0}
     GtkButton::focus_line_pattern                = "\0"
-    GtkButton::focus_on_click			= 0
 
     GtkButtonBox::child_internal_pad_x           = 0
     GtkButtonBox::child_internal_pad_y           = 0
@@ -232,6 +231,8 @@ style "expander" = "my_default"
 style "treeview" = "my_default"
 {
     font_name 				= "DIN Next LT Pro 11"
+    GtkTreeView::even_row_color	= @text_background
+    GtkTreeView::odd_row_color		= @text_background
     bg[ACTIVE]				= @text_background
     bg[NORMAL]				= @text_background
     bg[SELECTED]			= @widget_background
@@ -285,8 +286,8 @@ style "file_chooser_dialog" = "my_default"
     base[ACTIVE]	= @medium_gray
     base[SELECTED]	= @button_active
 
-    text[NORMAL]	= @widget_background
-    text[INSENSITIVE]	= @light_gray
+    text[NORMAL]	= @text_color
+    text[INSENSITIVE]	= @very_dark_gray
     text[SELECTED]	= @white
 }
 
@@ -346,6 +347,6 @@ widget_class "*CheckButton*"				style "check_button"
 
 widget_class "*FileChooserDialog*"			style "file_chooser_dialog"
 widget_class "*FileChooserDialog*Button"			style "file_chooser_dialog_button"
-widget_class "*FileChooserDialog*Entry"			style "file_chooser_dialog_entry"
+# widget_class "*FileChooserDialog*Entry"			style "file_chooser_dialog_entry"
 
 widget_class "*Scrollbar*"				style "scrollbar"
