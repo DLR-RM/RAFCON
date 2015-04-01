@@ -114,6 +114,7 @@
         <property name="border_width">1</property>
         <property name="pixels_above_lines">4</property>
         <property name="pixels_below_lines">4</property>
+        <property name="left_margin">4</property>
       </object>
       <packing>
         <property name="left_attach">1</property>

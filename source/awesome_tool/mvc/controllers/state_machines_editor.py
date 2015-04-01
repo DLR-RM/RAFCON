@@ -37,9 +37,6 @@ def create_tab_header(title, close_callback, *additional_parameters):
     label = gtk.Label(title)
     hbox.add(label)
 
-    fontdesc = pango.FontDescription("Serif Bold 12")
-    label.modify_font(fontdesc)
-
     # add close button
     close_button = create_tab_close_button(close_callback, *additional_parameters)
     hbox.add(close_button)

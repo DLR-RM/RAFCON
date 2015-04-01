@@ -40,8 +40,6 @@ def limit_tab_label_text(text):
 
 def generate_tab_label(title):
     label = gtk.Label(title)
-    fontdesc = pango.FontDescription("Serif Bold 12")
-    label.modify_font(fontdesc)
 
     return label
 

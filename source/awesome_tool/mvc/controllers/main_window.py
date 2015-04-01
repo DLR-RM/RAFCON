@@ -62,7 +62,7 @@ class MainWindowController(ExtendedController):
         # library tree
         ######################################################
         library_manager_model = LibraryManagerModel(awesome_tool.statemachine.singleton.library_manager)
-        library_controller = LibraryTreeController(library_manager_model, view.library_tree)
+        library_controller = LibraryTreeController(library_manager_model, view.library_tree, state_machine_manager_model)
         self.add_controller('library_controller', library_controller)
         view['library_vbox'].remove(view['library_tree_placeholder'])
         view['library_vbox'].pack_start(view.library_tree, True, True, 0)

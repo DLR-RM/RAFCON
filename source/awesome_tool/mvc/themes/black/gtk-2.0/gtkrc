@@ -201,7 +201,7 @@ style "textview" = "my_default"
 
 style "notebook_textview" = "textview"
 {
-    base[NORMAL]	= @widget_background
+    base[NORMAL]	= @widget_active_background
 }
 
 style "scrollbar" = "my_default"
@@ -287,7 +287,7 @@ style "file_chooser_dialog" = "my_default"
     base[SELECTED]	= @button_active
 
     text[NORMAL]	= @text_color
-    text[INSENSITIVE]	= @very_dark_gray
+    text[INSENSITIVE]	= @dark_gray
     text[SELECTED]	= @white
 }
 
@@ -300,11 +300,6 @@ style "file_chooser_dialog_button" = "my_default"
     bg[PRELIGHT]	= @medium_gray
     fg[PRELIGHT]	= @text_color
     fg[ACTIVE]		= @white
-}
-
-style "file_chooser_dialog_entry" = "my_default"
-{
-    fg[NORMAL]		= @text_color
 }
 
 widget_class "*"                   			style "my_default"
@@ -347,6 +342,5 @@ widget_class "*CheckButton*"				style "check_button"
 
 widget_class "*FileChooserDialog*"			style "file_chooser_dialog"
 widget_class "*FileChooserDialog*Button"			style "file_chooser_dialog_button"
-# widget_class "*FileChooserDialog*Entry"			style "file_chooser_dialog_entry"
 
 widget_class "*Scrollbar*"				style "scrollbar"
