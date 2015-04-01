@@ -680,9 +680,9 @@ class State(Observable, yaml.YAMLObject, object):
     def description(self, description):
         if not isinstance(description, str):
             if not isinstance(description, unicode):
-                raise TypeError("ID must be of type str or unicode")
+                raise TypeError("Description must be of type str or unicode")
         if len(description) < 1:
-            raise ValueError("ID must have at least one character")
+            raise ValueError("Description must have at least one character")
 
         self._description = description
 
