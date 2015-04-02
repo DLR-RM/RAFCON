@@ -266,9 +266,7 @@ class StateMachineHelper():
         parent.add_state(new_state)
 
         new_state_m = parent_m.states[state_id]
-        print new_state_m.states
-        print new_state_m.transitions
-        print new_state_m.data_flows
+        new_state_m.parent = parent_m
 
         for prop_name, value in model_properties.iteritems():
             new_state_m.__setattr__(prop_name, value)
