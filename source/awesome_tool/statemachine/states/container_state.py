@@ -53,7 +53,6 @@ class ContainerState(State):
         self.transitions = transitions
         self._data_flows = None
         self.data_flows = data_flows
-        self._start_state_id = None
         self.start_state_id = start_state_id
         self._scoped_variables = None
         self.scoped_variables = scoped_variables
@@ -292,21 +291,22 @@ class ContainerState(State):
                 transition_id = generate_transition_id()
 
         # check if states are existing
-        if not (from_state_id in self.states or from_state_id == self.state_id):
-            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
+        if from_state_id is not None and not (from_state_id in self.states or from_state_id == self.state_id):
+            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id)
 
         if to_state_id is not None:
             if not (to_state_id in self.states or to_state_id == self.state_id):
-                raise AttributeError("To_state %s does not exist in the container state" % to_state_id.state_id)
+                raise AttributeError("To_state %s does not exist in the container state" % to_state_id)
 
         if to_state_id is None and to_outcome is None:
-            raise AttributeError("Either the to_state_id or the to_outcome must be None" % to_state_id.state_id)
+            raise AttributeError("Either the to_state_id or the to_outcome must be None")
 
         # get correct states
-        if from_state_id == self.state_id:
-            from_state = self
-        else:
-            from_state = self.states[from_state_id]
+        if from_state_id is not None:
+            if from_state_id == self.state_id:
+                from_state = self
+            else:
+                from_state = self.states[from_state_id]
 
         if to_state_id is None and to_outcome is None:
             raise AttributeError("Either to_state_id or to_outcome must not be None")
@@ -324,18 +324,22 @@ class ContainerState(State):
                 raise AttributeError("In concurrency states the to_state must be the container state itself")
 
         # finally add transition
-        if from_outcome in from_state.outcomes:
-            if to_outcome is not None:
-                if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self
+        if from_outcome is not None:
+            if from_outcome in from_state.outcomes:
+                if to_outcome is not None:
+                    if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self
+                        self.transitions[transition_id] =\
+                            Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+                    else:
+                        raise AttributeError("to_state does not have outcome %s", to_outcome)
+                else:  # to outcome is None but to_state is not None, so the transition is valid
                     self.transitions[transition_id] =\
                         Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
-                else:
-                    raise AttributeError("to_state does not have outcome %s", to_outcome)
-            else:  # to outcome is None but to_state is not None, so the transition is valid
-                self.transitions[transition_id] =\
-                    Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+            else:
+                raise AttributeError("from_state does not have outcome %s", from_state)
         else:
-            raise AttributeError("from_state does not have outcome %s", from_state)
+            self.transitions[transition_id] =\
+                        Transition(None, None, to_state_id, None, transition_id)
 
         # notify all states waiting for transition to be connected
         self._transitions_cv.acquire()
@@ -1069,18 +1073,39 @@ class ContainerState(State):
 
     @property
     def start_state_id(self):
-        """Property for the _start_state field
+        """Returns the id of the state first executed within the container
 
+        :return: The if of the start state
         """
-        return self._start_state_id
+        for transition_id in self.transitions:
+            if self.transitions[transition_id].from_state is None:
+                return self.transitions[transition_id].to_state
+        return None
 
     @start_state_id.setter
     @Observable.observed
     def start_state_id(self, start_state_id):
+        """Set the start state of the container state
+
+        The start state is the state to which the first transition goes to. Therefore the method creates a unique
+        first transition to the state with the given id. Existing first transitions are removed. If the given state
+        id is None, the first transition is removed.
+
+        :param start_state_id: The state id of the state which should be executed first in the Container state
+        """
+        if start_state_id is not None and start_state_id not in self.states:
+            raise AttributeError("start_state_id is not existing")
+
+        # First we remove the transition to the start state
+        for transition_id in self.transitions:
+            if self.transitions[transition_id].from_state is None:
+                # If the current start state is the same as the old one, we don't have to do anything
+                if self.transitions[transition_id].to_state == start_state_id:
+                    return
+                self.remove_transition(transition_id)
+                break
         if start_state_id is not None:
-            if not isinstance(start_state_id, str):
-                raise TypeError("start_state_id must be of type str")
-        self._start_state_id = start_state_id
+            self.add_transition(None, None, start_state_id, None)
 
     @property
     def scoped_variables(self):
