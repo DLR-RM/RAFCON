@@ -86,6 +86,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">False</property>
         <property name="border_width">5</property>
+        <property name="focus_on_click">False</property>
         <property name="draw_indicator">True</property>
       </object>
       <packing>
@@ -113,6 +114,7 @@
         <property name="border_width">1</property>
         <property name="pixels_above_lines">4</property>
         <property name="pixels_below_lines">4</property>
+        <property name="left_margin">4</property>
       </object>
       <packing>
         <property name="left_attach">1</property>

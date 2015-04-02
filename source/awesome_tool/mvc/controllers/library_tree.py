@@ -14,10 +14,12 @@ class LibraryTreeController(ExtendedController):  # (Controller):
     """
 
     """
-    def __init__(self, model=None, view=None):
+    def __init__(self, model=None, view=None, state_machine_manager_model=None):
         ExtendedController.__init__(self, model, view)
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         view.set_model(self.library_tree_store)
+
+        self.state_machine_manager_model = state_machine_manager_model
 
         self.update()
 
@@ -26,6 +28,33 @@ class LibraryTreeController(ExtendedController):  # (Controller):
 
     def register_view(self, view):
         self.view.connect('cursor-changed', self.on_cursor_changed)
+
+        self.view.connect('button_press_event', self.right_click)
+
+    def right_click(self, widget, event=None):
+        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+            menu = gtk.Menu()
+            add_link_menu_item = gtk.MenuItem("Add Link")
+            add_link_menu_item.connect("activate", self.add_link_button_clicked, self.state_machine_manager_model)
+
+            add_template_menu_item = gtk.MenuItem("Add Template")
+            add_template_menu_item.connect("activate", self.add_template_button_clicked, self.state_machine_manager_model)
+
+            menu.append(add_link_menu_item)
+            menu.append(add_template_menu_item)
+
+            menu.show_all()
+
+            x = int(event.x)
+            y = int(event.y)
+            time = event.time
+            pthinfo = self.view.get_path_at_pos(x, y)
+            if pthinfo is not None:
+                path, col, cellx, celly = pthinfo
+                self.view.grab_focus()
+                self.view.set_cursor(path, col, 0)
+                menu.popup(None, None, None, event.button, time)
+            return True
 
     @ExtendedController.observe("library_manager", after=True)
     def model_changed(self, model, prop_name, info):

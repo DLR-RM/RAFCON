@@ -94,6 +94,10 @@
                               <object class="GtkNotebook" id="notebook1">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
+                                <property name="show_border">False</property>
+                                <property name="tab_border">5</property>
+                                <property name="tab_hborder">5</property>
+                                <property name="tab_vborder">5</property>
                                 <child>
                                   <object class="GtkVBox" id="input_port_vbox">
                                     <property name="visible">True</property>
@@ -113,39 +117,46 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkHBox" id="hbox1">
+                                      <object class="GtkEventBox" id="eventbox1">
                                         <property name="visible">True</property>
                                         <child>
-                                          <object class="GtkButton" id="new_input_port_button">
-                                            <property name="label" translatable="yes">New</property>
-                                            <property name="width_request">90</property>
-                                            <property name="height_request">40</property>
+                                          <object class="GtkHBox" id="hbox1">
                                             <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="receives_default">True</property>
-                                            <property name="border_width">5</property>
+                                            <child>
+                                              <object class="GtkButton" id="new_input_port_button">
+                                                <property name="label" translatable="yes">New</property>
+                                                <property name="width_request">90</property>
+                                                <property name="height_request">40</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="border_width">5</property>
+                                                <property name="focus_on_click">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="pack_type">end</property>
+                                                <property name="position">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkButton" id="delete_input_port_button">
+                                                <property name="label" translatable="yes">Delete</property>
+                                                <property name="width_request">90</property>
+                                                <property name="height_request">40</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="border_width">5</property>
+                                                <property name="focus_on_click">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="pack_type">end</property>
+                                                <property name="position">0</property>
+                                              </packing>
+                                            </child>
                                           </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="pack_type">end</property>
-                                            <property name="position">1</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkButton" id="delete_input_port_button">
-                                            <property name="label" translatable="yes">Delete</property>
-                                            <property name="width_request">90</property>
-                                            <property name="height_request">40</property>
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="receives_default">True</property>
-                                            <property name="border_width">5</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="pack_type">end</property>
-                                            <property name="position">0</property>
-                                          </packing>
                                         </child>
                                       </object>
                                       <packing>
@@ -183,39 +194,46 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkHBox" id="hbox2">
+                                      <object class="GtkEventBox" id="eventbox2">
                                         <property name="visible">True</property>
                                         <child>
-                                          <object class="GtkButton" id="new_output_port_button">
-                                            <property name="label" translatable="yes">New</property>
-                                            <property name="width_request">90</property>
-                                            <property name="height_request">40</property>
+                                          <object class="GtkHBox" id="hbox2">
                                             <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="receives_default">True</property>
-                                            <property name="border_width">5</property>
+                                            <child>
+                                              <object class="GtkButton" id="new_output_port_button">
+                                                <property name="label" translatable="yes">New</property>
+                                                <property name="width_request">90</property>
+                                                <property name="height_request">40</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="border_width">5</property>
+                                                <property name="focus_on_click">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="pack_type">end</property>
+                                                <property name="position">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkButton" id="delete_output_port_button">
+                                                <property name="label" translatable="yes">Delete</property>
+                                                <property name="width_request">90</property>
+                                                <property name="height_request">40</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="border_width">5</property>
+                                                <property name="focus_on_click">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="pack_type">end</property>
+                                                <property name="position">0</property>
+                                              </packing>
+                                            </child>
                                           </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="pack_type">end</property>
-                                            <property name="position">1</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkButton" id="delete_output_port_button">
-                                            <property name="label" translatable="yes">Delete</property>
-                                            <property name="width_request">90</property>
-                                            <property name="height_request">40</property>
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="receives_default">True</property>
-                                            <property name="border_width">5</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="pack_type">end</property>
-                                            <property name="position">0</property>
-                                          </packing>
                                         </child>
                                       </object>
                                       <packing>
@@ -257,39 +275,46 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkHBox" id="hbox3">
+                                      <object class="GtkEventBox" id="eventbox3">
                                         <property name="visible">True</property>
                                         <child>
-                                          <object class="GtkButton" id="new_scoped_variable_button">
-                                            <property name="label" translatable="yes">New</property>
-                                            <property name="width_request">90</property>
-                                            <property name="height_request">40</property>
+                                          <object class="GtkHBox" id="hbox3">
                                             <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="receives_default">True</property>
-                                            <property name="border_width">5</property>
+                                            <child>
+                                              <object class="GtkButton" id="new_scoped_variable_button">
+                                                <property name="label" translatable="yes">New</property>
+                                                <property name="width_request">90</property>
+                                                <property name="height_request">40</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="border_width">5</property>
+                                                <property name="focus_on_click">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="pack_type">end</property>
+                                                <property name="position">1</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkButton" id="delete_scoped_variable_button">
+                                                <property name="label" translatable="yes">Delete</property>
+                                                <property name="width_request">90</property>
+                                                <property name="height_request">40</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">True</property>
+                                                <property name="border_width">5</property>
+                                                <property name="focus_on_click">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="pack_type">end</property>
+                                                <property name="position">0</property>
+                                              </packing>
+                                            </child>
                                           </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="pack_type">end</property>
-                                            <property name="position">1</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkButton" id="delete_scoped_variable_button">
-                                            <property name="label" translatable="yes">Delete</property>
-                                            <property name="width_request">90</property>
-                                            <property name="height_request">40</property>
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="receives_default">True</property>
-                                            <property name="border_width">5</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="pack_type">end</property>
-                                            <property name="position">0</property>
-                                          </packing>
                                         </child>
                                       </object>
                                       <packing>

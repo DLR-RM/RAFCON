@@ -195,7 +195,7 @@ class ContainerState(State):
             self._states[state.state_id] = state
 
     @Observable.observed
-    def remove_state(self, state_id):
+    def remove_state(self, state_id, recursive_deletion=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
@@ -216,7 +216,7 @@ class ContainerState(State):
             awesome_tool.statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
                                                                                   self.states[state_id].script.path)
 
-        #first delete all transitions and data_flows in this state
+        #first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state_id or transition.to_state == state_id:
@@ -231,14 +231,15 @@ class ContainerState(State):
         for key in keys_to_delete:
             self.remove_data_flow(key)
 
-        # second delete all states in this state
-        if isinstance(self.states[state_id], ContainerState):
-            for child_state_id in self.states[state_id].states.keys():
-                self.states[state_id].remove_state(child_state_id)
-            for transition_id in self.states[state_id].transitions.keys():
-                self.states[state_id].remove_transition(transition_id)
-            for data_flow_id in self.states[state_id].data_flows.keys():
-                self.states[state_id].remove_data_flow(data_flow_id)
+        if recursive_deletion:
+            # Recursively delete all transitions, data flows and states within the state to be deleted
+            if isinstance(self.states[state_id], ContainerState):
+                for child_state_id in self.states[state_id].states.keys():
+                    self.states[state_id].remove_state(child_state_id)
+                for transition_id in self.states[state_id].transitions.keys():
+                    self.states[state_id].remove_transition(transition_id)
+                for data_flow_id in self.states[state_id].data_flows.keys():
+                    self.states[state_id].remove_data_flow(data_flow_id)
 
         # final delete the state it self
         del self.states[state_id]
@@ -285,10 +286,10 @@ class ContainerState(State):
         if transition_id is not None:
             if transition_id in self._transitions.iterkeys():
                 raise AttributeError("The transition id %s already exists. Cannot add transition!", transition_id)
-
-        transition_id = generate_transition_id()
-        while transition_id in self._transitions.iterkeys():
+        else:
             transition_id = generate_transition_id()
+            while transition_id in self._transitions.iterkeys():
+                transition_id = generate_transition_id()
 
         # check if states are existing
         if not (from_state_id in self.states or from_state_id == self.state_id):
@@ -302,18 +303,10 @@ class ContainerState(State):
             raise AttributeError("Either the to_state_id or the to_outcome must be None" % to_state_id.state_id)
 
         # get correct states
-        from_state = None
         if from_state_id == self.state_id:
             from_state = self
         else:
             from_state = self.states[from_state_id]
-
-        to_state = None
-        if not to_state_id is None:
-            if to_state_id == self.state_id:
-                to_state = self
-            else:
-                to_state = self.states[to_state_id]
 
         if to_state_id is None and to_outcome is None:
             raise AttributeError("Either to_state_id or to_outcome must not be None")
@@ -327,12 +320,12 @@ class ContainerState(State):
 
         # check if state is a concurrency state, in concurrency states only transitions to the parents are allowd
         if self.state_type is StateType.BARRIER_CONCURRENCY or self.state_type is StateType.PREEMPTION_CONCURRENCY:
-            if not to_state_id is None:  # None means that the target state is the containing state
+            if to_state_id is not None:  # None means that the target state is the containing state
                 raise AttributeError("In concurrency states the to_state must be the container state itself")
 
         # finally add transition
         if from_outcome in from_state.outcomes:
-            if not to_outcome is None:
+            if to_outcome is not None:
                 if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self
                     self.transitions[transition_id] =\
                         Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
@@ -535,54 +528,42 @@ class ContainerState(State):
         if data_flow_id is not None:
             if data_flow_id in self._data_flows.iterkeys():
                 raise AttributeError("The data flow id %s already exists. Cannot add data flow!", data_flow_id)
-
-        data_flow_id = generate_data_flow_id()
-        while data_flow_id in self._data_flows.iterkeys():
+        else:
             data_flow_id = generate_data_flow_id()
+            while data_flow_id in self._data_flows.iterkeys():
+                data_flow_id = generate_data_flow_id()
 
         if not (from_state_id in self.states or from_state_id == self.state_id):
             raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
         if not (to_state_id in self.states or to_state_id == self.state_id):
             raise AttributeError("To_state %s does not exit in the container state" % to_state_id.state_id)
 
-        from_state = None
-        from_key_type = None
-        from_data_port = None
         if from_state_id == self.state_id:  # data_flow originates in container state
             from_state = self
             if from_data_port_id in from_state.scoped_variables:
-                from_key_type = DataPortType.SCOPED
                 from_data_port = from_state.scoped_variables[from_data_port_id]
             elif from_data_port_id in from_state.input_data_ports:
-                from_key_type = DataPortType.INPUT
                 from_data_port = from_state.input_data_ports[from_data_port_id]
             else:
                 raise AttributeError("from_data_port_id not in scoped_variables or input_data_ports")
         else:  # data flow originates in child state
             from_state = self.states[from_state_id]
             if from_data_port_id in from_state.output_data_ports:
-                from_key_type = DataPortType.OUTPUT
                 from_data_port = from_state.output_data_ports[from_data_port_id]
             else:
                 raise AttributeError("from_data_port_id not in output_data_ports")
 
-        to_state = None
-        to_key_type = None
-        to_data_port = None
         if to_state_id == self.state_id:  # data_flow ends in container state
             to_state = self
             if to_data_port_id in to_state.scoped_variables:
-                to_key_type = DataPortType.SCOPED
                 to_data_port = to_state.scoped_variables[to_data_port_id]
             elif to_data_port_id in to_state.output_data_ports:
-                to_key_type = DataPortType.OUTPUT
                 to_data_port = to_state.output_data_ports[to_data_port_id]
             else:
                 raise AttributeError("to_data_port_id not in scoped_variables or output_data_ports")
         else:  # data_flow ends in child state
             to_state = self.states[to_state_id]
             if to_data_port_id in to_state.input_data_ports:
-                to_key_type = DataPortType.INPUT
                 to_data_port = to_state.input_data_ports[to_data_port_id]
             else:
                 raise AttributeError("to_data_port_id not in input_data_ports")

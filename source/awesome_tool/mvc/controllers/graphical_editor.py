@@ -64,6 +64,7 @@ class GraphicalEditorController(ExtendedController):
         self.shift_modifier = False
         self.alt_modifier = False
         self.ctrl_modifier = False
+        self.space_bar = False
 
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
@@ -233,6 +234,8 @@ class GraphicalEditorController(ExtendedController):
             self.alt_modifier = True
         elif key_name == "Shift_L" or key_name == "Shift_R":
             self.shift_modifier = True
+        elif key_name == "space":
+            self.space_bar = True
 
     def _on_key_release(self, widget, event):
         key_name = keyval_name(event.keyval)
@@ -242,6 +245,8 @@ class GraphicalEditorController(ExtendedController):
             self.alt_modifier = False
         elif key_name == "Shift_L" or key_name == "Shift_R":
             self.shift_modifier = False
+        elif key_name == "space":
+            self.space_bar = False
 
     def _on_mouse_press(self, widget, event):
         """Triggered when the mouse is pressed
@@ -251,7 +256,6 @@ class GraphicalEditorController(ExtendedController):
         :param widget: The widget beneath the mouse when the click was done
         :param event: Information about the event, e. g. x and y coordinate
         """
-
         # Set the focus on the graphical editor, as this is not done automatically
         self.view.editor.grab_focus()
 
@@ -403,68 +407,6 @@ class GraphicalEditorController(ExtendedController):
 
         self._redraw()
 
-    def _move_waypoint(self, new_pos_x, new_pos_y, modifier_keys):
-        new_pos_x, new_pos_y = self._limit_position_to_state(self.selection.parent, new_pos_x, new_pos_y)
-        selected_model = self.selected_waypoint[0]
-        waypoints = selected_model.meta['gui']['editor']['waypoints']
-        waypoint_id = self.selected_waypoint[1]
-
-        # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
-        if modifier_keys & SHIFT_MASK != 0:
-            snap_angle = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_ANGLE', 45.))
-            snap_diff = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_ANGLE', 10.))
-            max_snap_dist = global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_PIXEL', 50.)
-            max_snap_dist /= self.view.editor.pixel_to_size_ratio()
-
-            def calculate_snap_point(p1, p2, p3):
-                def find_closest_snap_angle(angle):
-                    multiple = angle // snap_angle
-                    multiple = [multiple - 1, multiple, multiple + 1]
-                    diff = map(lambda mul: abs(abs(snap_angle * mul) - abs(angle)), multiple)
-                    min_index = diff.index(min(diff))
-                    return snap_angle * multiple[min_index]
-
-                alpha = atan2(-(p2[1] - p1[1]), p2[0] - p1[0])
-                beta = atan2(-(p2[1] - p3[1]), p2[0] - p3[0])
-                closest_angle = find_closest_snap_angle(alpha)
-                if abs(alpha - closest_angle) < snap_diff:
-                    alpha = closest_angle
-                closest_angle = find_closest_snap_angle(beta)
-                if abs(beta - closest_angle) < snap_diff:
-                    beta = closest_angle
-
-                dx = p3[0] - p1[0]
-                dy = -(p3[1] - p1[1])
-                denominator = cos(alpha) * sin(beta) - sin(alpha) * cos(beta)
-                if denominator == 0:
-                    return p2
-                s = (dx * sin(beta) - dy * cos(beta)) / denominator
-                # t = (dx*sin(alpha) - dy*cos(alpha)) / denominator
-                snap_x = p1[0] + cos(alpha) * s
-                snap_y = p1[1] - sin(alpha) * s
-
-                if dist(p2, (snap_x, snap_y)) < max_snap_dist:
-                    return snap_x, snap_y
-                return p2
-
-            if waypoint_id > 0:
-                prev_point = waypoints[waypoint_id - 1]
-            else:
-                prev_point = (selected_model.meta['gui']['editor']['from_pos_x'],
-                              selected_model.meta['gui']['editor']['from_pos_y'])
-            if waypoint_id < len(waypoints) - 1:
-                next_point = waypoints[waypoint_id + 1]
-            else:
-                next_point = (selected_model.meta['gui']['editor']['to_pos_x'],
-                              selected_model.meta['gui']['editor']['to_pos_y'])
-
-            point = (new_pos_x, new_pos_y)
-            (new_pos_x, new_pos_y) = calculate_snap_point(prev_point, point, next_point)
-
-        waypoints[waypoint_id] = (new_pos_x, new_pos_y)
-        self._publish_changes(selected_model, "Move waypoint", affects_children=False)
-        self._redraw()
-
     def _on_mouse_motion(self, widget, event):
         """Triggered when the mouse is moved
 
@@ -484,7 +426,7 @@ class GraphicalEditorController(ExtendedController):
             return
 
         # Move while middle button is clicked moves the view
-        if self.last_button_pressed == 2:
+        if self.last_button_pressed == 2 or (self.space_bar and event.state & BUTTON1_MASK > 0):
             dx = event.x - self.mouse_move_last_pos[0]
             dy = event.y - self.mouse_move_last_pos[1]
             self._move_view(dx, dy)
@@ -672,19 +614,20 @@ class GraphicalEditorController(ExtendedController):
             upper_left = self.view.editor.screen_to_opengl_coordinates(upper_left)
             lower_right = self.view.editor.screen_to_opengl_coordinates(lower_right)
 
+            frame_left = upper_left[0]
+            frame_right = lower_right[0]
+            frame_bottom = upper_left[1]
+            frame_top = lower_right[1]
+
+            print "frame", frame_left, frame_right, frame_bottom, frame_top
+            
             def is_within_frame(model):
-                def point_in_rectangle(point):
-                    return upper_left[0] < point[0] < lower_right[0] and upper_left[1] < point[1] < lower_right[1]
-
-                meta = model.meta['gui']['editor']
-                if isinstance(model, StateModel):
-                    return point_in_rectangle((meta['pos_x'], meta['pos_y'])) and \
-                           point_in_rectangle((meta['pos_x'] + meta['width'], meta['pos_y'] + meta['height']))
-                if isinstance(model, (TransitionModel, DataFlowModel)):
-                    return point_in_rectangle((meta['from_pos_x'], meta['from_pos_y'])) and \
-                           point_in_rectangle((meta['to_pos_x'], meta['to_pos_y']))
-
-                return True
+                left, right, bottom, top = self.get_boundaries(model)
+                print "lrbt", left, right, bottom, top, model
+                if left is not None:
+                    if frame_left < left < right < frame_right and frame_bottom < bottom < top < frame_top:
+                        return True
+                return False
 
             # Remove models, which are not fully in the selection frame
             models_to_remove = set()
@@ -911,6 +854,68 @@ class GraphicalEditorController(ExtendedController):
         self._publish_changes(port_m.parent, "Move data port", affects_children=False)
         self._redraw()
 
+    def _move_waypoint(self, new_pos_x, new_pos_y, modifier_keys):
+        new_pos_x, new_pos_y = self._limit_position_to_state(self.selection.parent, new_pos_x, new_pos_y)
+        selected_model = self.selected_waypoint[0]
+        waypoints = selected_model.meta['gui']['editor']['waypoints']
+        waypoint_id = self.selected_waypoint[1]
+
+        # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
+        if modifier_keys & SHIFT_MASK != 0:
+            snap_angle = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_ANGLE', 45.))
+            snap_diff = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_ANGLE', 10.))
+            max_snap_dist = global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_PIXEL', 50.)
+            max_snap_dist /= self.view.editor.pixel_to_size_ratio()
+
+            def calculate_snap_point(p1, p2, p3):
+                def find_closest_snap_angle(angle):
+                    multiple = angle // snap_angle
+                    multiple = [multiple - 1, multiple, multiple + 1]
+                    diff = map(lambda mul: abs(abs(snap_angle * mul) - abs(angle)), multiple)
+                    min_index = diff.index(min(diff))
+                    return snap_angle * multiple[min_index]
+
+                alpha = atan2(-(p2[1] - p1[1]), p2[0] - p1[0])
+                beta = atan2(-(p2[1] - p3[1]), p2[0] - p3[0])
+                closest_angle = find_closest_snap_angle(alpha)
+                if abs(alpha - closest_angle) < snap_diff:
+                    alpha = closest_angle
+                closest_angle = find_closest_snap_angle(beta)
+                if abs(beta - closest_angle) < snap_diff:
+                    beta = closest_angle
+
+                dx = p3[0] - p1[0]
+                dy = -(p3[1] - p1[1])
+                denominator = cos(alpha) * sin(beta) - sin(alpha) * cos(beta)
+                if denominator == 0:
+                    return p2
+                s = (dx * sin(beta) - dy * cos(beta)) / denominator
+                # t = (dx*sin(alpha) - dy*cos(alpha)) / denominator
+                snap_x = p1[0] + cos(alpha) * s
+                snap_y = p1[1] - sin(alpha) * s
+
+                if dist(p2, (snap_x, snap_y)) < max_snap_dist:
+                    return snap_x, snap_y
+                return p2
+
+            if waypoint_id > 0:
+                prev_point = waypoints[waypoint_id - 1]
+            else:
+                prev_point = (selected_model.meta['gui']['editor']['from_pos_x'],
+                              selected_model.meta['gui']['editor']['from_pos_y'])
+            if waypoint_id < len(waypoints) - 1:
+                next_point = waypoints[waypoint_id + 1]
+            else:
+                next_point = (selected_model.meta['gui']['editor']['to_pos_x'],
+                              selected_model.meta['gui']['editor']['to_pos_y'])
+
+            point = (new_pos_x, new_pos_y)
+            (new_pos_x, new_pos_y) = calculate_snap_point(prev_point, point, next_point)
+
+        waypoints[waypoint_id] = (new_pos_x, new_pos_y)
+        self._publish_changes(selected_model, "Move waypoint", affects_children=False)
+        self._redraw()
+
     def _resize_state(self, state_m, mouse_resize_coords, d_width, d_height, modifier_keys):
         """Resize the state by the given delta width and height
 
@@ -935,8 +940,7 @@ class GraphicalEditorController(ExtendedController):
                 mouse_resize_coords = (self.mouse_move_start_coords[0] - d_height * state_size_ratio,
                                        mouse_resize_coords[1])
         # User wants to resize content by holding the ctrl keys pressed
-        resize_content = int(modifier_keys & CONTROL_MASK) == 0
-
+        resize_content = int(modifier_keys & CONTROL_MASK) > 0
         width = mouse_resize_coords[0] - state_editor_data['pos_x']
         height_diff = state_editor_data['pos_y'] - mouse_resize_coords[1]
         height = state_editor_data['height'] + height_diff
@@ -948,9 +952,7 @@ class GraphicalEditorController(ExtendedController):
         if not resize_content and self.has_content(self.selection):
             # Check lower right corner of all child states
             for child_state_m in state_m.states.itervalues():
-                child_right_edge = child_state_m.meta['gui']['editor']['pos_x'] + \
-                                   child_state_m.meta['gui']['editor']['width']
-                child_bottom_edge = child_state_m.meta['gui']['editor']['pos_y']
+                _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
                 min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
                 max_bottom_edge = child_bottom_edge if max_bottom_edge > child_bottom_edge else max_bottom_edge
             # Check position of all waypoints of all transitions
@@ -966,13 +968,7 @@ class GraphicalEditorController(ExtendedController):
             # Check lower right corner of all ports
             for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                           state_m.scoped_variables):
-                port_info = port_m.meta['gui']['editor']
-                port_bottom_edge = port_info['inner_pos'][1]
-                port_right_edge = port_info['inner_pos'][0] + port_info['width']
-                if port_m in state_m.output_data_ports:
-                    port_right_edge = port_info['inner_pos'][0]
-                elif port_m in state_m.scoped_variables:
-                    port_bottom_edge = port_info['inner_pos'][1] - port_info['height'] + port_info['rect_height']
+                _, port_right_edge, port_bottom_edge, _ = self.get_boundaries(port_m)
                 min_right_edge = port_right_edge if min_right_edge < port_right_edge else min_right_edge
                 max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
 
@@ -1674,18 +1670,21 @@ class GraphicalEditorController(ExtendedController):
                     y_coordinates.append(waypoint[1])
             return min(x_coordinates), max(x_coordinates), min(y_coordinates), max(y_coordinates)
 
-        if isinstance(model, DataPortModel):
-            return None
-            # Input data port has arrow on the right side
-            # top = meta['inner_pos'][1] + meta['height']
-            # bottom = meta['inner_pos'][1]
-            # left = meta['inner_pos'][0]
-            # right = meta['inner_pos'][0] + meta['width']
-            # if model in model.parent.output_data_ports:
-            #     left = meta['inner_pos'][0] - meta['width']
-            #     right = meta['inner_pos'][0]
-            # elif model in model.parent.scoped_variables:
-            #     bottom = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
+        if isinstance(model, (DataPortModel, ScopedVariableModel)):
+            left = meta['inner_pos'][0]
+            right = meta['inner_pos'][0] + meta['width']
+            bottom = meta['inner_pos'][1]
+            top = meta['inner_pos'][1] + meta['height']
+
+            if model in model.parent.output_data_ports:
+                left = meta['inner_pos'][0] - meta['width']
+                right = meta['inner_pos'][0]
+            if model in model.parent.scoped_variables:
+                bottom = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
+                top = bottom + meta['height']
+
+            return left, right, bottom, top
+        return None, None, None, None
 
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
         global_storage.mark_dirty(self.model.state_machine.state_machine_id)

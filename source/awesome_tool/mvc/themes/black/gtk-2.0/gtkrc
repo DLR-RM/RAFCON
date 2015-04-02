@@ -20,7 +20,7 @@ style "my_default"
     GtkButton::child_displacement_y              = 1
     GtkButton::default_border                    = {0, 0, 0, 0}
     GtkButton::default_outside_border            = {0, 0, 0, 0}
-    GtkButton::focus-line-pattern                = "\0"
+    GtkButton::focus_line_pattern                = "\0"
 
     GtkButtonBox::child_internal_pad_x           = 0
     GtkButtonBox::child_internal_pad_y           = 0
@@ -103,13 +103,23 @@ style "my_default"
 
     font_name = "DIN Next LT Pro 12"
 
+    base[ACTIVE]      = @widget_active_background
+    base[INSENSITIVE] = @widget_active_background
     base[NORMAL]      = @widget_active_background
+    base[PRELIGHT]    = @widget_active_background
+    base[SELECTED]    = @widget_active_background
 
     bg[ACTIVE]        = @background_black
     bg[INSENSITIVE]   = @background_black
     bg[NORMAL]        = @background_black
     bg[PRELIGHT]      = @background_black
     bg[SELECTED]      = @background_black
+
+    fg[ACTIVE]        = @text_color
+    fg[INSENSITIVE]   = @text_color
+    fg[NORMAL]        = @text_color
+    fg[PRELIGHT]      = @text_color
+    fg[SELECTED]      = @text_color
 
     text[ACTIVE]      = @text_color
     text[INSENSITIVE] = @text_color
@@ -119,18 +129,12 @@ style "my_default"
 
     engine "clearlooks"
     {
-
+	
     }
 }
+widget_class "*"                   			style "my_default"
 
-style "label" = "my_default"
-{
-    fg[ACTIVE]      = @text_color
-    fg[INSENSITIVE] = @text_color
-    fg[NORMAL]      = @text_color
-    fg[PRELIGHT]    = @text_color
-    fg[SELECTED]    = @text_color
-}
+
 
 style "indicator_label" = "my_default"
 {
@@ -141,102 +145,161 @@ style "indicator_label" = "my_default"
     fg[PRELIGHT]    	= @text_color_dark
     fg[SELECTED]    	= @text_color_dark
 }
+widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
+widget_class "*VBox.GtkLabel"				style "indicator_label"
+widget_class "*EventBox.GtkLabel"				style "indicator_label"
+widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
+
+
 
 style "event_box" = "my_default"
 {
     bg[NORMAL]		= @widget_background
 }
+widget_class "*VPaned.GtkEventBox"			style "event_box"
+widget_class "*VBox.GtkEventBox"				style "event_box"
 
+
+
+#----------BUTTONS-----------
 style "button" = "my_default"
 {
     bg[ACTIVE]        = @button_active
     bg[NORMAL]        = @text_background
     bg[PRELIGHT]      = @medium_gray
     bg[SELECTED]      = @button_active
+    bg[INSENSITIVE]   = @widget_background
 
     fg[ACTIVE]        = @white
-    fg[NORMAL]        = @text_color
-    fg[PRELIGHT]      = @text_color
     fg[SELECTED]      = @white
-
-	#engine "xfce"
-	#{
-	#	smooth_edge = true
-        #	grip_style = slide
-        #	boxfill
-        #	{
-        #    		fill_style = plain
-        #	}
-	#}
+    fg[INSENSITIVE]   = @dark_gray
 }
+widget_class "*Button*"					style "button"
+widget_class "*ComboBox*"				style "button"
 
-style "check_button" = "button"
+
+
+style "check_button" = "my_default"
 {
-    fg[ACTIVE]		= @text_color
-    bg[NORMAL]		= @text_color
-}
+    bg[ACTIVE]        = @button_active
+    bg[NORMAL]        = @text_background
+    bg[PRELIGHT]      = @medium_gray
+    bg[SELECTED]      = @button_active
+    bg[INSENSITIVE]   = @widget_background
 
-style "combobox" = "button"
-{
-    text[ACTIVE]	= @white
-    text[NORMAL]	= @text_color
-    text[PRELIGHT]	= @text_color
+    fg[INSENSITIVE]   = @dark_gray
 }
+widget_class "*CheckButton*"				style "check_button"
+#----------------------------
 
-style "about_dialog_button" = "button"
-{
-    bg[NORMAL]		= @background_black
-}
+
 
 style "notebook" = "my_default"
 {
-
     xthickness = 5
     ythickness = 5
 
     bg[ACTIVE]	        = @text_background
     bg[NORMAL]		= @widget_background
-    fg[ACTIVE]		= @text_color
-    fg[NORMAL]		= @text_color
 
     fg[INSENSITIVE]	= @very_dark_gray
 
 }
+widget_class "*Notebook"					style "notebook"
 
-style "textview" = "my_default"
-{
-    fg[NORMAL]		= @text_color
-    fg[ACTIVE]		= @text_color
-}
 
-style "notebook_textview" = "textview"
+
+style "notebook_viewport" = "notebook"
 {
-    base[NORMAL]	= @widget_background
+    xthickness = 0
+    ythickness = 0
 }
+widget_class "*Notebook*Notebook"				style "notebook_viewport"
+widget_class "*Notebook*Viewport"				style "notebook_viewport"
+
+
 
 style "scrollbar" = "my_default"
 {
     bg[ACTIVE]		= @widget_background
     bg[NORMAL]		= @text_background
     bg[PRELIGHT]	= @medium_gray
+
     fg[NORMAL]		= @light_gray
 
-	engine "clearlooks"
-	{
-		colorize_scrollbar = FALSE
-	}
+    engine "clearlooks"
+    {
+    	colorize_scrollbar = FALSE
+    }
 
 }
+widget_class "*Scrollbar"				style "scrollbar"
+
+
 
 style "expander" = "my_default"
 {
     bg[ACTIVE]		= @widget_background
     bg[NORMAL]		= @widget_active_background
     bg[PRELIGHT]	= @medium_gray
-    fg[ACTIVE]		= @text_color
-    fg[NORMAL]		= @text_color
-    fg[PRELIGHT]	= @text_color
 }
+widget_class "*Expander"					style "expander"
+
+
+
+style "window" = "my_default"
+{
+    bg[NORMAL]		= @very_dark_gray
+}
+widget_class "*Window"					style "window"
+
+
+
+style "file_chooser_dialog" = "my_default"
+{
+    bg[PRELIGHT]	= @widget_active_background
+
+    fg[INSENSITIVE]	= @medium_gray
+}
+widget_class "*FileChooserDialog"				style "file_chooser_dialog"
+
+
+
+style "paned" = "my_default"
+{
+    bg[NORMAL]		= @medium_gray
+    bg[PRELIGHT]	= @text_background
+}
+widget_class "*Paned"					style "paned"
+
+
+
+#---------MENU BAR-----------
+style "menu_bar" = "my_default"
+{
+    bg[SELECTED]	= @button_active
+
+    fg[PRELIGHT]	= @white
+}
+widget_class "*Menu*"					style "menu_bar"
+
+
+
+style "menu_separator" = "my_default"
+{
+    bg[NORMAL]        = @text_color
+}
+widget_class "*SeparatorMenuItem"				style "menu_separator"
+#----------------------------
+
+
+
+style "scrolled_window" = "my_default"
+{
+    bg[NORMAL]		= @widget_active_background
+}
+
+
 
 style "treeview" = "my_default"
 {
@@ -244,115 +307,26 @@ style "treeview" = "my_default"
     bg[ACTIVE]				= @text_background
     bg[NORMAL]				= @text_background
     bg[SELECTED]			= @widget_background
-    fg[ACTIVE]				= @text_color
-    fg[NORMAL]				= @text_color
+
     fg[SELECTED]			= @widget_background
+
     base[ACTIVE]			= @medium_gray
     base[SELECTED]			= @button_active
     base[NORMAL]			= @widget_active_background
+
+    text[SELECTED]			= @white
 }
 
-style "window" = "my_default"
+
+
+style "chooser_treeview" = "treeview"
 {
-    bg[NORMAL]		= @very_dark_gray
+    GtkTreeView::even_row_color	= @text_background
+    GtkTreeView::odd_row_color		= @text_background
+    text[SELECTED]			= @white
+    text[INSENSITIVE]			= @very_dark_gray
 }
-
-style "menu_separator" = "my_default"
-{
-    bg[NORMAL]		= @text_color
-}
-
-style "menu_bar" = "my_default"
-{
-    bg[SELECTED]			= @button_active
-    fg[NORMAL]				= @text_color
-    fg[PRELIGHT]			= @white
-}
-
-style "library_menu_bar" = "my_default"
-{
-    bg[PRELIGHT]			= @button_active
-    bg[NORMAL]				= @widget_background
-    fg[NORMAL]				= @text_color
-    fg[PRELIGHT]			= @white
-}
-
-style "scrolled_window" = "my_default"
-{
-    bg[NORMAL]			= @widget_active_background
-}
-
-style "file_chooser_dialog" = "my_default"
-{
-    bg[NORMAL]		= @background_black
-    bg[PRELIGHT]	= @widget_active_background
-
-    fg[NORMAL]		= @text_color
-    fg[INSENSITIVE]	= @medium_gray
-
-    base[NORMAL]	= @widget_active_background
-    base[ACTIVE]	= @medium_gray
-    base[SELECTED]	= @button_active
-
-    text[NORMAL]	= @widget_background
-    text[INSENSITIVE]	= @light_gray
-    text[SELECTED]	= @white
-}
-
-style "file_chooser_dialog_button" = "my_default"
-{
-    xthickness = 3
-    ythickness = 3
-    bg[NORMAL]		= @widget_active_background
-    bg[ACTIVE]		= @button_active
-    bg[PRELIGHT]	= @medium_gray
-    fg[PRELIGHT]	= @text_color
-    fg[ACTIVE]		= @white
-}
-
-style "file_chooser_dialog_entry" = "my_default"
-{
-    fg[NORMAL]		= @text_color
-}
-
-widget_class "*"                   			style "my_default"
-
-widget_class "*Label*"					style "label"
-
-widget_class "*ComboBox*"				style "combobox"
-
-widget_class "*Expander*"				style "expander"
-
-widget_class "*Notebook*"				style "notebook"
-widget_class "*Notebook*TextView*"			style "notebook_textview"
-
-widget_class "*Tree*"					style "treeview"
-
-widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
-widget_class "*VBox.GtkLabel"				style "indicator_label"
-widget_class "*EventBox.GtkLabel"				style "indicator_label"
-widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
-
-widget_class "*VPaned.GtkEventBox"			style "event_box"
-widget_class "*VBox.GtkEventBox"				style "event_box"
 
 widget_class "*GtkEventBox.GtkVBox.GtkScrolledWindow*"	style "scrolled_window"
-
-widget_class "*Dialog*Button*"				style "about_dialog_button"
-
-widget_class "*Window"					style "window"
-
-widget_class "*Menu*"					style "menu_bar"
-
-widget_class "*Notebook*Menu*"				style "library_menu_bar"
-
-widget_class "*SeparatorMenu*"				style "menu_separator"
-
-widget_class "*Button*"					style "button"
-widget_class "*CheckButton*"				style "check_button"
-
-widget_class "*FileChooserDialog*"			style "file_chooser_dialog"
-widget_class "*FileChooserDialog*Button"			style "file_chooser_dialog_button"
-widget_class "*FileChooserDialog*Entry"			style "file_chooser_dialog_entry"
-
-widget_class "*Scrollbar*"				style "scrollbar"
+widget_class "*Tree*"					style "treeview"
+widget_class "*FileChooserDialog*Tree*"			style "chooser_treeview"

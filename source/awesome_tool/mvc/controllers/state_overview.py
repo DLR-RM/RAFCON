@@ -1,18 +1,15 @@
 import gtk
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
-from gtkmvc import Controller, Model
+from gtkmvc import Model
 
-from awesome_tool.statemachine.states.state import State, StateType
-from awesome_tool.statemachine.states.container_state import ContainerState
-from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
+from awesome_tool.statemachine.states.state import StateType
 
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from awesome_tool.statemachine.states.library_state import LibraryState
+from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
-from awesome_tool.mvc.models import ContainerStateModel, StateModel
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -44,24 +41,22 @@ class StateOverviewController(ExtendedController, Model):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        # StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY')
         self.state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {'Enum': StateType.EXECUTION, 'class': ExecutionState}
         self.state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {'Enum': StateType.HIERARCHY, 'class': HierarchyState}
         self.state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
         self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
-        # self.state_types_dict[LibraryState] = {'Enum': StateType.LIBRARY}
 
         view['entry_name'].connect('focus-out-event', self.change_name)
         view['description_textview'].connect('focus-out-event', self.change_description)
         if self.model.state.name:
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
-        #view['label_type_value'].set_text(str(self.model.state.state_type))
         view['description_textview'].set_buffer(self.model.state.description)
         view['description_textview'].set_accepts_tab(False)
 
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
+        combo.set_focus_on_click(False)
         combo.set_model(l_store)
         cell = gtk.CellRendererText()
         combo.pack_start(cell, True)
@@ -127,18 +122,18 @@ class StateOverviewController(ExtendedController, Model):
         type_text = widget.get_active_text()
         if not type_text == str(self.model.state.state_type).split('.')[1] and type_text in self.state_types_dict:
             state_name = self.model.state.name
-            state_id = self.model.state.state_id
             logger.debug("change type of State %s from %s to %s" % (state_name, self.model.state.state_type, type_text))
 
             if not self.model.parent:
                 logger.warning("ROOT_STATE types could not be changed!!!")
                 return
 
-            new_state = self.state_types_dict[type_text]['class'](state_name, state_id)
-            parent_state_model = self.model.parent
+            new_state_class = self.state_types_dict[type_text]['class']
+            state_model = StateMachineHelper.change_state_type(self.model, new_state_class)
+
+            # TODO: the tab should automatically be closed when the old state is deleted. In this case we do not have
+            #  to exchange the model
+
             self.relieve_model(self.model)
-            parent_state_model.state.remove_state(state_id)
-            parent_state_model.state.add_state(new_state)
-            state_model = parent_state_model.states[state_id]
             self.observe_model(state_model)
             self.model = state_model

@@ -105,7 +105,6 @@
                                     </child>
                                     <child>
                                       <object class="GtkMenuBar" id="library_add_menu">
-                                        <property name="visible">True</property>
                                         <child>
                                           <object class="GtkMenuItem" id="add_item">
                                             <property name="visible">True</property>
