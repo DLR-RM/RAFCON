@@ -280,7 +280,7 @@ class GraphicalEditorController(ExtendedController):
             new_selection = self._find_selection(event.x, event.y)
 
             # Check, whether a resizer was clicked on
-            self._check_for_resizer_selection(self.mouse_move_start_coords)
+            self._check_for_resizer_selection(new_selection, self.mouse_move_start_coords)
 
             # Check, whether a waypoint was clicked on
             self._check_for_waypoint_selection(new_selection, self.mouse_move_start_coords)
@@ -576,7 +576,7 @@ class GraphicalEditorController(ExtendedController):
                     # break
         return None, None, False
 
-    def _check_for_resizer_selection(self, coords):
+    def _check_for_resizer_selection(self, selection, coords):
         """Check whether a resizer (handle to resize a state) was clicked on
 
         Checks whether the current selection is a state and if so looks the given coordinates are within the resizer
@@ -584,8 +584,8 @@ class GraphicalEditorController(ExtendedController):
 
         :param coords: Coordinates to check for the resizer
         """
-        if isinstance(self.selection, StateModel):
-            state_editor_data = self.selection.meta['gui']['editor']
+        if isinstance(selection, StateModel):
+            state_editor_data = selection.meta['gui']['editor']
             # Calculate corner points of resizer
             p1 = (state_editor_data['pos_x'] + state_editor_data['width'], state_editor_data['pos_y'])
             p2 = (p1[0] - state_editor_data['resize_length'], p1[1])
@@ -593,7 +593,7 @@ class GraphicalEditorController(ExtendedController):
 
             # The resizer is triangle. Check whether the given coordinates are within that triangle
             if point_in_triangle(coords, p1, p2, p3):
-                self.selected_resizer = self.selection
+                self.selected_resizer = selection
 
     def _check_for_multi_selection(self):
         start = self.mouse_move_start_pos
