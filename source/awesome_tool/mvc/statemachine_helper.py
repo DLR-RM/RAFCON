@@ -270,6 +270,13 @@ class StateMachineHelper():
 
         for prop_name, value in model_properties.iteritems():
             new_state_m.__setattr__(prop_name, value)
+            # Set the parent of all child models to the new state model
+            if prop_name == "states":
+                for state_m in new_state_m.states.itervalues():
+                    state_m.parent = new_state_m
+            if prop_name in ['input_data_ports', 'output_data_ports', 'transitions', 'data_flows', 'scoped_variables']:
+                for model in new_state_m.__getattribute__(prop_name):
+                    model.parent = new_state_m
 
         for transition_data in connected_transitions:
             t = transition_data["transition"]
