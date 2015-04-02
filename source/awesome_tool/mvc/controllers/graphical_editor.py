@@ -1313,6 +1313,9 @@ class GraphicalEditorController(ExtendedController):
         for transition_m in parent_state_m.transitions:
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
+            if from_state_id is None:
+                # TODO: draw first transition
+                continue
             to_state_id = transition_m.transition.to_state
             from_state = parent_state_m.states[from_state_id]
             to_state = None if to_state_id is None else parent_state_m.states[to_state_id]

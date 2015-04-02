@@ -237,7 +237,9 @@ class StateTransitionsListController(ExtendedController):
         trans_dict = model.state.transitions
 
         # for from-outcome-combo filter all outcome already used
-        from_state = model.states[trans.from_state].state
+        from_state = None
+        if trans.from_state is not None:
+            from_state = model.states[trans.from_state].state
         free_from_outcomes_dict = {}
         for state_model in model.states.values():
             from_o_combo = state_model.state.outcomes.values()
@@ -253,7 +255,7 @@ class StateTransitionsListController(ExtendedController):
             if len(from_o_combo) > 0:
                 free_from_outcomes_dict[state_model.state.state_id] = from_o_combo
 
-        if from_state.state_id in free_from_outcomes_dict:
+        if from_state is not None and from_state.state_id in free_from_outcomes_dict:
             for outcome in free_from_outcomes_dict[from_state.state_id]:
                 state = model.states[from_state.state_id].state
                 if from_state.state_id == self_model.state.state_id:
@@ -264,7 +266,7 @@ class StateTransitionsListController(ExtendedController):
         # for from-state-combo us all states with free outcomes and from_state
         # print "model.states: ", model.states, free_from_outcomes_dict
         free_from_state_models = filter(lambda smodel: smodel.state.state_id in free_from_outcomes_dict.keys(), model.states.values())
-        if not from_state.state_id in free_from_outcomes_dict.keys():
+        if from_state is not None and from_state.state_id not in free_from_outcomes_dict.keys():
             if from_state.state_id == self_model.state.state_id:
                 from_state_combo.append(['self.' + from_state.state_id])
             else:
@@ -282,8 +284,8 @@ class StateTransitionsListController(ExtendedController):
                 to_state_combo.append(["self." + state_model.state.state_id])
             else:
                 to_state_combo.append([state_model.state.name + '.' + state_model.state.state_id])
-        from_state = model.states[trans.from_state].state
-        to_state_combo.append([from_state.name + '.' + from_state.state_id])
+        if from_state is not None:
+            to_state_combo.append([from_state.name + '.' + from_state.state_id])
 
         # for to-outcome-combo use parent combos
         to_outcome = model.state.outcomes.values()
@@ -368,17 +370,24 @@ class StateTransitionsListController(ExtendedController):
             for transition_id in self.combo['internal'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.state.transitions
                 t = self.model.state.transitions[transition_id]
-                from_state = self.model.states[t.from_state].state
+
+                if t.from_state is not None:
+                    from_state = self.model.states[t.from_state].state
+                    from_state_label = from_state.name
+                    from_outcome_label = from_state.outcomes[t.from_outcome].name
+                else:
+                    from_state_label = "self (" + self.model.state.name + ")"
+                    from_outcome_label = ""
 
                 if t.to_state is None:
-                    to_state_label = None
-                    to_outcome_label = 'self.' + self.model.state.outcomes[t.to_outcome].name + "." + str(t.to_outcome)
+                    to_state_label = "self (" + self.model.state.name + ")"
+                    to_outcome_label = self.model.state.outcomes[t.to_outcome].name
                 else:
                     # print t.to_state, self.model.states
                     if t.to_state == self.model.state.state_id:
-                        to_state_label = "self." + self.model.state.name + "." + t.to_state
+                        to_state_label = "self (" + self.model.state.name + ")"
                     else:
-                        to_state_label = self.model.states[t.to_state].state.name + "." + t.to_state
+                        to_state_label = self.model.states[t.to_state].state.name
                     to_outcome_label = None
 
                 # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
@@ -386,8 +395,8 @@ class StateTransitionsListController(ExtendedController):
                 # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
     #                   name-color, to-state-color, transition-object, state-object, is_editable
                 self.tree_store.append(None, [transition_id,  # id
-                                              from_state.name + "." + from_state.state_id,  # from-state
-                                              from_state.outcomes[t.from_outcome].name + "." + str(t.from_outcome),  # from-outcome
+                                              from_state_label,  # from-state
+                                              from_outcome_label,  # from-outcome
                                               to_state_label,  # to-state
                                               to_outcome_label,  # to-outcome
                                               False,  # is_external
@@ -398,23 +407,28 @@ class StateTransitionsListController(ExtendedController):
             for transition_id in self.combo['external'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
                 t = self.model.parent.state.transitions[transition_id]
-                from_state = self.model.parent.states[t.from_state].state
+                from_state = None
+                if t.from_state is not None:
+                    from_state = self.model.parent.states[t.from_state].state
 
-                if from_state.state_id == self.model.state.state_id:
-                    from_state_label = "self." + from_state.name + "." + from_state.state_id
-                    from_outcome_label = "self." + from_state.outcomes[t.from_outcome].name + "." + str(t.from_outcome)
+                if from_state is None:
+                    from_state_label = "self (" + self.model.state.name + ")"
+                    from_outcome_label = ""
+                elif from_state.state_id == self.model.state.state_id:
+                    from_state_label = "self (" + from_state.name + ")"
+                    from_outcome_label = from_state.outcomes[t.from_outcome].name
                 else:
-                    from_state_label = from_state.name + "." + from_state.state_id
-                    from_outcome_label = from_state.outcomes[t.from_outcome].name + "." + str(t.from_outcome)
+                    from_state_label = from_state.name
+                    from_outcome_label = from_state.outcomes[t.from_outcome].name
 
                 if t.to_state is None:
-                    to_state_label = 'parent'
-                    to_outcome_label = self.model.parent.state.outcomes[t.to_outcome].name + "." + str(t.to_outcome)
+                    to_state_label = 'parent (' + self.model.parent.state.name + ")"
+                    to_outcome_label = self.model.parent.state.outcomes[t.to_outcome].name
                 else:
                     if t.to_state == self.model.state.state_id:
-                        to_state_label = "self." + self.model.state.name + "." + t.to_state
+                        to_state_label = "self (" + self.model.state.name + ")"
                     else:
-                        to_state_label = self.model.parent.states[t.to_state].state.name + "." + t.to_state
+                        to_state_label = self.model.parent.states[t.to_state].state.name
                     to_outcome_label = None
 
                 # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
