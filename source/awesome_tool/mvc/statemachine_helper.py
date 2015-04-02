@@ -2,6 +2,8 @@ from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
 
+from awesome_tool.statemachine.states.state import State
+from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -192,3 +194,104 @@ class StateMachineHelper():
                 if data_flow_m.data_flow.data_flow_id == data_flow_id:
                     return data_flow_m
         return None
+
+    @staticmethod
+    def change_state_type(state_m, new_state_class):
+        assert isinstance(state_m, StateModel)
+        assert issubclass(new_state_class, State)
+        current_state_is_container = isinstance(state_m, ContainerStateModel)
+        new_state_is_container = new_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
+
+        state = state_m.state
+        parent_m = state_m.parent
+        parent = state.parent
+        assert isinstance(parent, ContainerState)
+        name = state.name
+        state_id = state.state_id
+        description = state.description
+        inputs = state.input_data_ports
+        outputs = state.output_data_ports
+        outcomes = state.outcomes
+
+        script = state.script
+
+        copy_from_model = ['meta', 'input_data_ports', 'output_data_ports']
+
+        connected_transitions = []
+        for transition_m in parent_m.transitions:
+            transition = transition_m.transition
+            if transition.from_state == state_id or transition.to_state == state_id:
+                connected_transitions.append({"transition": transition, "meta": transition_m.meta})
+        connected_data_flows = []
+        for data_flow_m in parent_m.data_flows:
+            data_flow = data_flow_m.data_flow
+            if data_flow.from_state == state_id or data_flow.to_state == state_id:
+                connected_data_flows.append({"data_flow": data_flow, "meta": data_flow_m.meta})
+
+        if current_state_is_container and new_state_is_container:
+            assert isinstance(state, ContainerState)
+            start_state_id = state.start_state_id
+            states = state.states
+            scoped_vars = state.scoped_variables
+            transitions = state.transitions
+            data_flows = state.data_flows
+            v_checker = state.v_checker
+
+            copy_from_model.extend(['states', 'transitions', 'data_flows', 'scoped_variables'])
+
+            new_state = new_state_class(name=name, state_id=state_id,
+                                        input_data_ports=inputs, output_data_ports=outputs,
+                                        outcomes=outcomes, states=states,
+                                        transitions=transitions, data_flows=data_flows,
+                                        start_state_id=start_state_id, scoped_variables=scoped_vars,
+                                        v_checker=v_checker,
+                                        path=script.path, filename=script.filename,
+                                        check_path=False)
+        else:
+            new_state = new_state_class(name=name, state_id=state_id,
+                                        input_data_ports=inputs, output_data_ports=outputs,
+                                        outcomes=outcomes, path=script.path, filename=script.filename,
+                                        check_path=False)
+      
+        new_state.parent = parent
+
+        if description is not None and len(description) > 0:
+            new_state.description = description
+
+        model_properties = {}
+        for prop_name in copy_from_model:
+            model_properties[prop_name] = state_m.__getattribute__(prop_name)
+
+        parent.remove_state(state_id, recursive_deletion=False)
+        parent.add_state(new_state)
+
+        new_state_m = parent_m.states[state_id]
+        print new_state_m.states
+        print new_state_m.transitions
+        print new_state_m.data_flows
+
+        for prop_name, value in model_properties.iteritems():
+            new_state_m.__setattr__(prop_name, value)
+
+        for transition_data in connected_transitions:
+            t = transition_data["transition"]
+            parent.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
+            transition_m = StateMachineHelper.get_transition_model(parent_m, t.transition_id)
+            transition_m.meta = transition_data["meta"]
+        
+        for data_flow_data in connected_data_flows:
+            d = data_flow_data["data_flow"]
+            parent.add_data_flow(d.from_state, d.from_key, d.to_state, d.to_key, d.data_flow_id)
+            data_flow_m = StateMachineHelper.get_data_flow_model(parent_m, d.data_flow_id)
+            data_flow_m.meta = data_flow_data["meta"]
+
+        # TODO: different types of states have different constraints, e. g. barrier concurrency states can only have
+        # one outcome. Shell the restrictions be checked here?
+
+        # TODO: check all references, are there references remaining to the old state? are the references to all
+        # models correct?
+
+        return new_state_m
+
+
+

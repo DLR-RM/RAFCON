@@ -195,7 +195,7 @@ class ContainerState(State):
             self._states[state.state_id] = state
 
     @Observable.observed
-    def remove_state(self, state_id):
+    def remove_state(self, state_id, recursive_deletion=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
@@ -216,7 +216,7 @@ class ContainerState(State):
             awesome_tool.statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
                                                                                   self.states[state_id].script.path)
 
-        #first delete all transitions and data_flows in this state
+        #first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state_id or transition.to_state == state_id:
@@ -231,14 +231,15 @@ class ContainerState(State):
         for key in keys_to_delete:
             self.remove_data_flow(key)
 
-        # second delete all states in this state
-        if isinstance(self.states[state_id], ContainerState):
-            for child_state_id in self.states[state_id].states.keys():
-                self.states[state_id].remove_state(child_state_id)
-            for transition_id in self.states[state_id].transitions.keys():
-                self.states[state_id].remove_transition(transition_id)
-            for data_flow_id in self.states[state_id].data_flows.keys():
-                self.states[state_id].remove_data_flow(data_flow_id)
+        if recursive_deletion:
+            # Recursively delete all transitions, data flows and states within the state to be deleted
+            if isinstance(self.states[state_id], ContainerState):
+                for child_state_id in self.states[state_id].states.keys():
+                    self.states[state_id].remove_state(child_state_id)
+                for transition_id in self.states[state_id].transitions.keys():
+                    self.states[state_id].remove_transition(transition_id)
+                for data_flow_id in self.states[state_id].data_flows.keys():
+                    self.states[state_id].remove_data_flow(data_flow_id)
 
         # final delete the state it self
         del self.states[state_id]
