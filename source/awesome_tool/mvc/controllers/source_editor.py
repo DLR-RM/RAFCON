@@ -77,14 +77,14 @@ class SourceEditorController(ExtendedController):
 
         invalid_sytax = False
         for elem in pylint_stdout_data:
-            if " Error " in elem or " error " in elem:
+            if "error" in elem:
                 invalid_sytax = True
 
         if invalid_sytax:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "Are you sure you want the save this file \nThe following errors were found:"
             for elem in pylint_stdout_data:
-                if " Error " in elem or " error " in elem:
+                if "error" in elem:
                     message_string = "%s \n %s " % (message_string, str(elem))
             message.set_markup(message_string)
             message.add_button("Yes", 42)
