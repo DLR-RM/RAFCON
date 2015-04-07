@@ -130,7 +130,6 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                               states=None,
                               transitions=dict_representation['transitions'],
                               data_flows=dict_representation['data_flows'],
-                              start_state_id=dict_representation['start_state'],
                               scoped_variables=dict_representation['scoped_variables'],
                               v_checker=None,
                               path=dict_representation['path'],
