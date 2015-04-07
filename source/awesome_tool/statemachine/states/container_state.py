@@ -261,6 +261,8 @@ class ContainerState(State):
         """Get the start state of the container state
 
         """
+        if self.start_state_id is None:
+            return None
         return self.states[self.start_state_id]
 
         # If there is a value in the dependency tree for this state start with the this one
@@ -433,8 +435,11 @@ class ContainerState(State):
         """
         # validity checks
         self.is_valid_transition_id(transition_id)
-        self.is_valid_state_id(from_state)
-        self.states[from_state].is_valid_outcome_id(from_outcome)
+        if from_state is not None:
+            self.is_valid_state_id(from_state)
+            self.states[from_state].is_valid_outcome_id(from_outcome)
+        elif from_outcome is not None:
+            raise AttributeError("from_outcome must be None id from_state is None")
         # set properties
         self.transitions[transition_id].modify_origin(from_state, from_outcome)
 

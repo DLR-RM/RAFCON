@@ -92,10 +92,11 @@ class Transition(Observable, yaml.YAMLObject):
         :param int from_outcome: valid origin outcome
         :return:
         """
-        if not isinstance(from_state, str):
-            raise TypeError("from_state must be of type str")
-        if not isinstance(from_outcome, int):
-            raise TypeError("from_outcome must be of type int")
+        if not (from_state is None and from_outcome is None):
+            if not isinstance(from_state, str):
+                raise TypeError("from_state must be of type str")
+            if not isinstance(from_outcome, int):
+                raise TypeError("from_outcome must be of type int")
 
         self._from_state = from_state
         self._from_outcome = from_outcome
