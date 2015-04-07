@@ -147,7 +147,7 @@ style "indicator_label" = "my_default"
 }
 widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
 widget_class "*VBox.GtkLabel"				style "indicator_label"
-widget_class "*EventBox.GtkLabel"				style "indicator_label"
+widget_class "*EventBox.GtkAlignment.GtkLabel"		style "indicator_label"
 widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
 
 

@@ -47,7 +47,7 @@ class Config(object):
             self.storage.write_dict_to_yaml(yaml_dict, os.path.join(CONFIG_PATH, CONFIG_FILE))
         self.__config_dict = self.storage.load_dict_from_yaml(os.path.join(CONFIG_PATH, CONFIG_FILE))
         logger.info("Config initialized ... loaded configuration from %s" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
-        self.configure_font("DIN Next LT Pro")
+        self.configure_fonts()
         self.configure_source_view_style()
 
     def get_config_value(self, key, default=None):
@@ -73,19 +73,29 @@ class Config(object):
         self.storage.write_dict_to_yaml(self.__config_dict, os.path.join(CONFIG_PATH, CONFIG_FILE))
         logger.info("Saved configuration to filesystem (path: %s)" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
 
-    def configure_font(self, font_name):
+    def configure_fonts(self):
         tv = gtk.TextView()
         context = tv.get_pango_context()
         fonts = context.list_families()
 
-        for font in fonts:
-            if font.get_name() == font_name:
-                logger.info("Font %s found" % font_name)
-                return
-        logger.info("Copy font %s to ~/.fonts" % font_name)
-        if not os.path.isdir(os.getenv("HOME") + "/.fonts"):
-            os.system("mkdir ~/.fonts")
-        os.system("cp -r ./themes/black/fonts/DIN\\ Next\\ LT\\ Pro ~/.fonts")
+        font_names = ["DIN Next LT Pro", "FontAwesome"]
+
+        for font_name in font_names:
+            found = False
+            for font in fonts:
+                if font.get_name() == font_name:
+                    logger.info("Font %s found" % font_name)
+                    found = True
+            if not found:
+                logger.info("Copy font %s to ~/.fonts" % font_name)
+                if not os.path.isdir(os.getenv("HOME") + "/.fonts"):
+                    os.system("mkdir ~/.fonts")
+                font_name = font_name.replace(" ", "\\ ")
+                if font_name == "FontAwesome":
+                    font_name = font_name + ".otf"
+                os.system("cp -r ./themes/black/fonts/%s ~/.fonts" % font_name)
+
+
 
     def configure_source_view_style(self):
         path = os.getenv("HOME") + "/.local/share/gtksourceview-2.0"

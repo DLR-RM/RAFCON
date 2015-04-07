@@ -6,8 +6,9 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.views.graphical_editor import GraphicalEditorView
 from awesome_tool.mvc.controllers.graphical_editor import GraphicalEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
-from awesome_tool.mvc.models.state_machine import StateMachineModel
+from awesome_tool.mvc.models.state_machine import StateMachineModel, StateMachine
 from awesome_tool.utils import log
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.singleton
 
@@ -57,6 +58,15 @@ class StateMachinesEditorController(ExtendedController):
         self.act_model = None
         self._view = view
         self.registered_state_machines = {}
+
+        self._view['notebook'].connect("add_state_machine", self.add_state_machine)
+
+    def add_state_machine(self, widget, event=None):
+        logger.debug("Creating new statemachine ...")
+        root_state = HierarchyState("new_root_state")
+        sm = StateMachine(root_state)
+        awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+        awesome_tool.statemachine.singleton.global_storage.mark_dirty(sm.state_machine_id)
 
     def register_view(self, view):
         self.view.notebook.connect('switch-page', self.on_switch_page)
