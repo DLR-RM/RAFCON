@@ -9,6 +9,7 @@
 """
 import yaml
 import os
+import sys
 import gtk
 
 from awesome_tool.utils.storage_utils import StorageUtils
@@ -79,6 +80,7 @@ class Config(object):
         fonts = context.list_families()
 
         font_names = ["DIN Next LT Pro", "FontAwesome"]
+        font_copied = False
 
         for font_name in font_names:
             found = False
@@ -94,8 +96,12 @@ class Config(object):
                 if font_name == "FontAwesome":
                     font_name = font_name + ".otf"
                 os.system("cp -r ./themes/black/fonts/%s ~/.fonts" % font_name)
+                font_copied = True
 
-
+        if font_copied:
+            logger.info("Restart application to apply new fonts")
+            python = sys.executable
+            os.execl(python, python, * sys.argv)
 
     def configure_source_view_style(self):
         path = os.getenv("HOME") + "/.local/share/gtksourceview-2.0"
