@@ -53,7 +53,8 @@ class ContainerState(State):
         self.transitions = transitions
         self._data_flows = None
         self.data_flows = data_flows
-        self.start_state_id = start_state_id
+        if start_state_id is not None:
+            self.start_state_id = start_state_id
         self._scoped_variables = None
         self.scoped_variables = scoped_variables
         self.__scoped_variables_names = []
@@ -999,7 +1000,6 @@ class ContainerState(State):
             'filename': data.script.filename,
             'transitions': data.transitions,
             'data_flows': data.data_flows,
-            'start_state': data.start_state_id,
             'scoped_variables': data.scoped_variables
         }
         return dict_representation
