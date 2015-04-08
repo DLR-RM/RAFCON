@@ -1,6 +1,7 @@
 import gtk
 import gobject
 from gtkmvc import View
+from utils import constants
 
 
 class StateOutcomesTreeView(View):
@@ -67,12 +68,12 @@ class StateOutcomesEditorView(View):
 
         add_button = gtk.Button('Add')
         add_button.set_focus_on_click(False)
-        add_button.set_border_width(5)
+        add_button.set_border_width(constants.BORDER_WIDTH)
         add_button.set_size_request(90, 40)
 
         remove_button = gtk.Button('Remove')
         remove_button.set_focus_on_click(False)
-        remove_button.set_border_width(5)
+        remove_button.set_border_width(constants.BORDER_WIDTH)
         remove_button.set_size_request(90, 40)
 
         self['add_button'] = add_button

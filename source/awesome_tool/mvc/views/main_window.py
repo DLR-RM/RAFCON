@@ -68,7 +68,7 @@ class MainWindowView(View):
         self["top_menu_hbox"].pack_end(self.top_tool_bar.get_top_widget(), expand=True, fill=True, padding=0)
         self["top_menu_hbox"].reorder_child(self.top_tool_bar.get_top_widget(), 1)
 
-        self.menu_bar = MenuBarView()
+        self.menu_bar = MenuBarView(self)
         self.menu_bar.show()
         self["top_menu_hbox"].remove(self["menu_bar_placeholder"])
         self["top_menu_hbox"].pack_start(self.menu_bar.get_top_widget(), expand=False, fill=True, padding=0)
