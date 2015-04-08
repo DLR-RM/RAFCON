@@ -314,8 +314,9 @@ class GraphicalEditorController(ExtendedController):
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
             elif self.selected_outcome is not None and isinstance(new_selection, StateModel) and \
-                            new_selection.parent is self.selected_outcome[0].parent and \
-                            self.selected_outcome[1] is not None:
+                    ((new_selection.parent is self.selected_outcome[0].parent and
+                              self.selected_outcome[1] is not None) or
+                    (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
                 self._create_new_transition(new_selection)
             # Allow the user to create waypoints while creating a new transition
             elif self.selected_outcome is not None:
@@ -598,7 +599,7 @@ class GraphicalEditorController(ExtendedController):
             frame_top = lower_right[1]
 
             print "frame", frame_left, frame_right, frame_bottom, frame_top
-            
+
             def is_within_frame(model):
                 left, right, bottom, top = self.get_boundaries(model)
                 print "lrbt", left, right, bottom, top, model
