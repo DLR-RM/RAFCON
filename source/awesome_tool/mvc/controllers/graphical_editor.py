@@ -280,7 +280,7 @@ class GraphicalEditorController(ExtendedController):
                         if self.selection is None:
                             self.selection = new_selection
                 # Only do something, if the user didn't click the second time on a specific model
-                elif new_selection != self.selection:
+                elif new_selection != self.selection or len(self.model.selection) > 1:
                     # No multi selection, thus we first have to clear the current selection
                     if self.selection is not None:
                         self.model.selection.clear()
@@ -598,11 +598,8 @@ class GraphicalEditorController(ExtendedController):
             frame_bottom = upper_left[1]
             frame_top = lower_right[1]
 
-            print "frame", frame_left, frame_right, frame_bottom, frame_top
-
             def is_within_frame(model):
                 left, right, bottom, top = self.get_boundaries(model)
-                print "lrbt", left, right, bottom, top, model
                 if left is not None:
                     if frame_left < left < right < frame_right and frame_bottom < bottom < top < frame_top:
                         return True
