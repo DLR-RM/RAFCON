@@ -59,14 +59,17 @@ class PlusAddNotebook (gtk.Notebook):
             self.emit("add_state_machine", self)
 
     def do_expose_event(self, event):
-        gtk.Notebook.do_expose_event(self, event)
 
-        x, y = self.get_pixbuf_xy()
+        # check if number of pages is greater zero, else the drawing will raise errors
+        if self.get_n_pages() > 0:
+            gtk.Notebook.do_expose_event(self, event)
 
-        self.add_visible = x < self.get_allocation().x + self.get_allocation().width - self.pixbuf.get_width()
+            x, y = self.get_pixbuf_xy()
 
-        if self.add_visible:
-            self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
+            self.add_visible = x < self.get_allocation().x + self.get_allocation().width - self.pixbuf.get_width()
+
+            if self.add_visible:
+                self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
 
         return True
 

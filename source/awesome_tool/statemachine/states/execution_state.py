@@ -47,12 +47,16 @@ class ExecutionState(State, yaml.YAMLObject):
         """
         self.script.load_and_build_module()
 
-        outcome_id = self.script.execute(self, execute_inputs, execute_outputs)
-        if outcome_id in self.outcomes.keys():
-            return self.outcomes[outcome_id]
-        else:
-            logger.error("No valid outcome for execution state %s returned", self.name)
-            return None
+        outcome_item = self.script.execute(self, execute_inputs, execute_outputs)
+        if outcome_item in self.outcomes.keys():
+            return self.outcomes[outcome_item]
+
+        for outcome_id, outcome in self.outcomes.iteritems():
+            if outcome.name == outcome_item:
+                return self.outcomes[outcome_id]
+
+        logger.error("No valid outcome for execution state %s returned. Outcome item is %s.", self.name, outcome_item)
+        return None
 
     def run(self):
         """ This defines the sequence of actions that are taken when the execution state is executed
