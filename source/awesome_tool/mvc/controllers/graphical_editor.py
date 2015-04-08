@@ -304,7 +304,7 @@ class GraphicalEditorController(ExtendedController):
                 # Store the selected outcome if no outcome was selected before, this is the start of a drag and drop
                 # operation to create a new transition
                 if self.selected_outcome is None:
-                    if outcome_state is not self.root_state_m:
+                    if outcome_state is not self.root_state_m or outcome_key is None:
                         self.selected_outcome = outcome_state, outcome_key
                         self.mouse_move_redraw = True
                 # If there is already a selected outcome, then we create a transition between the previously selected
@@ -314,7 +314,9 @@ class GraphicalEditorController(ExtendedController):
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
             elif self.selected_outcome is not None and isinstance(new_selection, StateModel) and \
-                            new_selection.parent is self.selected_outcome[0].parent:
+                    ((new_selection.parent is self.selected_outcome[0].parent and
+                              self.selected_outcome[1] is not None) or
+                    (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
                 self._create_new_transition(new_selection)
             # Allow the user to create waypoints while creating a new transition
             elif self.selected_outcome is not None:
@@ -511,6 +513,11 @@ class GraphicalEditorController(ExtendedController):
             for key in outcomes:
                 if dist(outcomes[key], coords) < outcomes_close_threshold:
                     return state_m, key
+            income_pos = (state_m.meta['gui']['editor']['pos_x'], state_m.meta['gui']['editor']['pos_y'] +
+                          state_m.meta['gui']['editor']['height'] / 2)
+            if dist(income_pos, coords) < outcomes_close_threshold:
+                print "income selected"
+                return state_m, None
         return None, None
 
     @staticmethod
@@ -592,7 +599,7 @@ class GraphicalEditorController(ExtendedController):
             frame_top = lower_right[1]
 
             print "frame", frame_left, frame_right, frame_bottom, frame_top
-            
+
             def is_within_frame(model):
                 left, right, bottom, top = self.get_boundaries(model)
                 print "lrbt", left, right, bottom, top, model
@@ -688,11 +695,14 @@ class GraphicalEditorController(ExtendedController):
         from_state_id = self.selected_outcome[0].state.state_id
         from_outcome_id = self.selected_outcome[1]
         to_state_id = to_state_m.state.state_id
-
         # Prevent accidental creation of transitions with double click on one outcome
-        if from_state_id == to_state_id and to_outcome_id is not None:
+        if from_state_id == to_state_id and from_outcome_id == to_outcome_id:
             self._abort()
             return
+
+        # Start transition
+        if from_outcome_id is None:
+            from_state_id = None
 
         if to_outcome_id is None:
             responsible_parent_m = to_state_m.parent
@@ -702,7 +712,7 @@ class GraphicalEditorController(ExtendedController):
 
         try:
             transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
-                                                                    to_outcome_id)
+                                                                      to_outcome_id)
             transition_m = StateMachineHelper.get_transition_model(responsible_parent_m, transition_id)
             transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
         except AttributeError as e:
@@ -1202,10 +1212,6 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
         state_m.meta['gui']['editor']['resize_length'] = resize_length
 
-        if state_m.parent is not None and (state_m.parent.state.start_state_id == state_m.state.state_id or
-                                               isinstance(state_m.parent.state, ConcurrencyState)):
-            self.draw_start_transition(state_m.parent, state_m, depth)
-
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
         if self.has_content(state_m):
@@ -1316,23 +1322,29 @@ class GraphicalEditorController(ExtendedController):
         for transition_m in parent_state_m.transitions:
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
+            if from_state_id is None:
+                from_x = parent_state_m.meta['gui']['editor']['pos_x']
+                from_y = parent_state_m.meta['gui']['editor']['pos_y'] + \
+                         parent_state_m.meta['gui']['editor']['height'] / 2
+            else:
+                from_state = parent_state_m.states[from_state_id]
+
+                assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
+                    id=from_state_id)
+
+                try:
+                    # Set the from coordinates to the outcome coordinates received earlier
+                    from_x = parent_state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
+                        transition_m.transition.from_outcome][0]
+                    from_y = parent_state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
+                        transition_m.transition.from_outcome][1]
+                except Exception as e:
+                    logger.error("""Outcome position was not found. \
+                                maybe the outcome for the transition was not found: {err}""".format(err=e))
+                    continue
+
             to_state_id = transition_m.transition.to_state
-            from_state = parent_state_m.states[from_state_id]
             to_state = None if to_state_id is None else parent_state_m.states[to_state_id]
-
-            assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
-                id=from_state_id)
-
-            try:
-                # Set the from coordinates to the outcome coordinates received earlier
-                from_x = parent_state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
-                    transition_m.transition.from_outcome][0]
-                from_y = parent_state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
-                    transition_m.transition.from_outcome][1]
-            except Exception as e:
-                logger.error("""Outcome position was not found. \
-                            maybe the outcome for the transition was not found: {err}""".format(err=e))
-                continue
 
             if to_state is None:  # Transition goes back to parent
                 # Set the to coordinates to the outcome coordinates received earlier
@@ -1360,16 +1372,6 @@ class GraphicalEditorController(ExtendedController):
             transition_m.meta['gui']['editor']['from_pos_y'] = from_y
             transition_m.meta['gui']['editor']['to_pos_x'] = to_x
             transition_m.meta['gui']['editor']['to_pos_y'] = to_y
-
-    def draw_start_transition(self, parent_state_m, start_state_m, parent_depth):
-        parent_info = parent_state_m.meta['gui']['editor']
-        start_info = start_state_m.meta['gui']['editor']
-        from_x = parent_info['pos_x']
-        from_y = parent_info['pos_y'] + parent_info['height'] / 2.
-        to_x = start_info['pos_x']
-        to_y = start_info['pos_y'] + start_info['height'] / 2.
-        line_width = min(parent_info['width'], parent_info['height']) / 25.0
-        self.view.editor.draw_transition(from_x, from_y, to_x, to_y, line_width, [], False, parent_depth + 0.5)
 
     def draw_data_flows(self, parent_state_m, parent_depth):
         """Draw all data flows contained in the given container state
@@ -1441,7 +1443,10 @@ class GraphicalEditorController(ExtendedController):
         cursor is within the parent state of the new connection.
         """
         if self.selected_outcome is not None:
-            parent_state_m = self.selected_outcome[0].parent
+            if self.selected_outcome[1] is not None:
+                parent_state_m = self.selected_outcome[0].parent
+            else:
+                parent_state_m = self.selected_outcome[0]
         elif self.selected_port_connector:
             parent_state_m = self.selection.parent if self.selected_port_type != "outer" else \
                 self.selection.parent.parent
@@ -1467,13 +1472,21 @@ class GraphicalEditorController(ExtendedController):
             # self.selected_outcome[0] references the state model of the selected outcome
             if self.selected_outcome[0] == parent_state_m:
                 # self.selected_outcome[1] stores the id of the outcome
-                outcome = parent_state_m.meta['gui']['editor']['outcome_pos'][self.selected_outcome[1]]
+                # if the outcome id is None, the transition starts at an income
+                if self.selected_outcome[1] is None:
+                    origin = (parent_state_m.meta['gui']['editor']['pos_x'],
+                              parent_state_m.meta['gui']['editor']['pos_y'] +
+                              parent_state_m.meta['gui']['editor']['height'] / 2)
+                else:
+                    outcome = parent_state_m.meta['gui']['editor']['outcome_pos'][self.selected_outcome[1]]
+                    origin = outcome
                 cur = self.mouse_move_last_coords
                 target = self._limit_position_to_state(parent_state_m.parent, cur[0], cur[1])
-                line_width = min(parent_state_m.parent.meta['gui']['editor']['width'],
-                                 parent_state_m.parent.meta['gui']['editor'][
+                parent_state_m = parent_state_m if parent_state_m.parent is None else parent_state_m.parent
+                line_width = min(parent_state_m.meta['gui']['editor']['width'],
+                                 parent_state_m.meta['gui']['editor'][
                                      'height']) / 25.0
-                self.view.editor.draw_transition(outcome[0], outcome[1], target[0], target[1], line_width,
+                self.view.editor.draw_transition(origin[0], origin[1], target[0], target[1], line_width,
                                                  self.temporary_waypoints, True, parent_depth + 0.6)
 
     def _handle_new_data_flow(self, parent_state_m, parent_depth):

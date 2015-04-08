@@ -151,21 +151,12 @@ class ContainerStateModel(StateModel):
             scoped variable models
         """
 
-        if info.method_name == 'start_state_id':
-            c_state_m = None
-            if self.state.start_state_id:
-                c_state_m = self.states[self.state.start_state_id]
-                c_state_m.is_start = True if c_state_m.parent is None or \
-                                             c_state_m.state.state_id == c_state_m.parent.state.start_state_id else False
-            # remove other state_models is_start flag
-            state_list = filter(lambda state_model: state_model.is_start and state_model is not c_state_m,
-                                self.states.values())
-            if len(state_list) > 1:
-                logger.warning("There are more then one start state.")
-            for state_model in state_list:
-                logger.debug("State %s %s is no longer start state" % (state_model.state.state_id,
-                                                                       state_model.state.name))
-                state_model.is_start = False
+        # Update is_start flag in child states if the start state has changed (eventually)
+        if info.method_name in ['start_state_id', 'add_transition', 'remove_transition']:
+            start_state_id = self.state.start_state_id
+            for state_id, state_m in self.states.iteritems():
+                if state_m.is_start != (state_id == start_state_id):
+                    state_m.is_start = (state_id == start_state_id)
 
         model_list = None
 
