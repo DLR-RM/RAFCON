@@ -198,7 +198,7 @@ class State(Observable, yaml.YAMLObject, object):
             raise AttributeError("input data port with name %s does not exit", data_port_id)
 
     def remove_data_flows_with_data_port_id(self, data_port_id):
-        """Remove an data ports whose from_key or to_key equals the passed data_port_id
+        """Remove all data flows whose from_key or to_key equals the passed data_port_id
 
         :param data_port_id: the id of a data_port of which all data_flows should be removed, the id can be a input or
                             output data port id
