@@ -3,6 +3,7 @@ from gtkmvc import Observable
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.statemachine.state_machine_manager import StateMachineManager
 from awesome_tool.utils.vividict import Vividict
+import awesome_tool.mvc.singleton as mvc_single
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -22,8 +23,11 @@ class StateMachineManagerModel(ModelMT, Observable):
     state_machine_manager = None
     selected_state_machine_id = None
     state_machines = {}
+    state_machine_mark_dirty = 0
+    state_machine_un_mark_dirty = 0
 
-    __observables__ = ("state_machine_manager", "selected_state_machine_id", "state_machines")
+    __observables__ = ("state_machine_manager", "selected_state_machine_id", "state_machines",
+                       "state_machine_mark_dirty", "state_machine_un_mark_dirty")
 
     def __init__(self, state_machine_manager, meta=None):
         """Constructor
@@ -37,7 +41,7 @@ class StateMachineManagerModel(ModelMT, Observable):
         self.state_machine_manager = state_machine_manager
         self.state_machines = {}
         for sm_id, sm in state_machine_manager.state_machines.iteritems():
-            self.state_machines[sm_id] = StateMachineModel(sm)
+            self.state_machines[sm_id] = StateMachineModel(sm, self)
 
         self._selected_state_machine_id = None
         if len(self.state_machines.keys()) > 0:
@@ -47,6 +51,12 @@ class StateMachineManagerModel(ModelMT, Observable):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+        # check if the sm_manager_model exists several times
+        mvc_single.sm_manager_creation_counter += 1
+        if mvc_single.sm_manager_creation_counter == 2:
+            logger.error("Sm_manager_model exists several times!")
+            exit(1)
 
     def delete_state_machine_models(self):
         sm_keys = self.state_machines.keys()
@@ -60,7 +70,7 @@ class StateMachineManagerModel(ModelMT, Observable):
             for sm_id, sm in self.state_machine_manager.state_machines.iteritems():
                 if sm_id not in self.state_machines:
                     logger.debug("Create new state machine model for state machine with id %s", sm.state_machine_id)
-                    self.state_machines[sm_id] = StateMachineModel(sm)
+                    self.state_machines[sm_id] = StateMachineModel(sm, self)
                     #TODO: check when meta data cannot be loaded
                     logger.debug("Load meta data for state machine with state machine id %s " % str(sm_id))
                     self.state_machines[sm_id].root_state.load_meta_data_for_state()

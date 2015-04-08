@@ -48,24 +48,6 @@ class StateMachineStorage(Observable):
         self.base_path = os.path.abspath(base_path)
         logger.debug("Storage class initialized!")
         self._paths_to_remove_before_sm_save = {}
-        self.ids_of_modified_state_machines = []
-
-    def reset_dirty_flags(self):
-        """
-        Resets the dirty flags of all state machines.
-        :return:
-        """
-        self.ids_of_modified_state_machines = []
-
-    def mark_dirty(self, sm_id):
-        """
-        Marks the sate machine as dirty i.e. the state machine is changed since the last saving
-        :param sm_id: the state machine id of the state machine to mark as dirty
-        :return:
-        """
-        if sm_id not in self.ids_of_modified_state_machines:
-            logger.debug("State machine with state machine id %s was marked as dirty!" % str(sm_id))
-            self.ids_of_modified_state_machines.append(sm_id)
 
     def mark_path_for_removal_for_sm_id(self, state_machine_id, path):
         """
@@ -122,8 +104,8 @@ class StateMachineStorage(Observable):
         f.close()
         # add root state recursively
         self.save_state_recursively(root_state, "")
-        if statemachine.state_machine_id in self.ids_of_modified_state_machines:
-            self.ids_of_modified_state_machines.remove(statemachine.state_machine_id)
+        if statemachine.marked_dirty:
+            statemachine.marked_dirty = False
         statemachine.base_path = self.base_path
         logger.debug("Successfully saved statemachine!")
 
@@ -207,6 +189,7 @@ class StateMachineStorage(Observable):
                 logger.debug("Going up back to state %s" % str(tmp_base_path))
 
         sm.base_path = self.base_path
+        sm.marked_dirty = False
         return [sm, version, creation_time]
 
     def load_state_from_yaml(self, state_path):

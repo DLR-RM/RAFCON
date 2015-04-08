@@ -25,7 +25,7 @@ class StateMachineModel(ModelMT):
 
     __observables__ = ("state_machine", "root_state", "selection")
 
-    def __init__(self, state_machine, meta=None):
+    def __init__(self, state_machine, sm_manager_model, meta=None):
         """Constructor
         """
         ModelMT.__init__(self)  # pass columns as separate parameters
@@ -41,6 +41,9 @@ class StateMachineModel(ModelMT):
             self.root_state = StateModel(root_state)
 
         self.root_state.register_observer(self)
+        self.register_observer(self)
+
+        self.sm_manager_model = sm_manager_model
 
         self.selection = Selection()
         
@@ -50,6 +53,23 @@ class StateMachineModel(ModelMT):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+    @ModelMT.observe("state_machine", after=True)
+    def marked_dirty_flag_changed(self, model, prop_name, info):
+        if not self.state_machine.old_marked_dirty == self.state_machine.marked_dirty:
+            if self.state_machine.marked_dirty:
+                self.sm_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
+            else:
+                self.sm_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
+
+    @ModelMT.observe("state", after=True)
+    def name_of_root_state_changed(self, model, prop_name, info):
+        if info["method_name"] is "name":
+            if self.state_machine.marked_dirty:
+                self.sm_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
+            else:
+                self.sm_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
+
 
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("outcomes", before=True)

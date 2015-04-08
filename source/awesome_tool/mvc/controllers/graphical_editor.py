@@ -1664,7 +1664,7 @@ class GraphicalEditorController(ExtendedController):
         return None, None, None, None
 
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
-        global_storage.mark_dirty(self.model.state_machine.state_machine_id)
+        self.model.state_machine.marked_dirty = True
         # History.meta_changed_notify_after(self, model, name, affects_children)
         pass
 
