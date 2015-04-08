@@ -1,6 +1,6 @@
 from gtkmvc import View
 import gtk
-from utils import constants
+from awesome_tool.utils import constants
 
 
 class ToolBarView(View):

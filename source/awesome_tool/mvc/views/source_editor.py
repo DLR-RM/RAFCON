@@ -6,7 +6,7 @@ except:
 from gtkmvc import View
 
 import awesome_tool.statemachine.config as config
-from utils import constants
+from awesome_tool.utils import constants
 
 # TODO: comment
 

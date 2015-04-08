@@ -1,6 +1,6 @@
 from gtkmvc import View
-import gtk, pango
-from utils import constants
+import gtk
+from awesome_tool.utils import constants
 
 
 class TopToolBarView(View):

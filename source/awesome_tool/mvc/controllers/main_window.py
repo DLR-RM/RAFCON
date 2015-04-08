@@ -19,7 +19,7 @@ import awesome_tool.statemachine.config
 from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
 from awesome_tool.mvc.controllers.top_tool_bar_controller import TopToolBarController
-from utils import constants
+from awesome_tool.utils import constants
 
 
 class MainWindowController(ExtendedController):

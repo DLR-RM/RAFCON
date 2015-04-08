@@ -1,7 +1,7 @@
 from gtkmvc import View
 import gtk
 import pango
-from utils import constants
+from awesome_tool.utils import constants
 
 
 class MenuBarView(View):

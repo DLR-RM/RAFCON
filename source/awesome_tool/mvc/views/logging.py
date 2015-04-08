@@ -1,7 +1,7 @@
 import gtk
 from gtkmvc import View
 import glib
-from utils import constants
+from awesome_tool.utils import constants
 
 
 class LoggingView(View):
