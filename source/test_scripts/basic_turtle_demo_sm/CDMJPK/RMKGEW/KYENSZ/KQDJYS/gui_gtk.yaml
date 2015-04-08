@@ -10,7 +10,7 @@ vivid_dict_content:
                         state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
                     - !!binary |
                         LdjBD8rlG0A=
-                    id: 11
+                    id: 9
                     input_pos:
                         6: !!python/tuple
                         - !!python/object/apply:numpy.core.multiarray.scalar

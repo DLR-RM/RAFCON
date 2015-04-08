@@ -9,9 +9,10 @@ outcomes:
 output_data_ports: {}
 path: ../../test_scripts/basic_turtle_demo_sm/CDMJPK/RMKGEW/WQKFUS
 scoped_variables: {}
-start_state: UVLRTI
 state_id: WQKFUS
 state_type: STATE_TYPE.HIERARCHY
 transitions:
-    15: !Transition {from_outcome: 0, from_state: UVLRTI, to_outcome: null, to_state: UVLRTI,
-        transition_id: 15}
+    1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: UVLRTI,
+        transition_id: 1}
+    2: !Transition {from_outcome: 0, from_state: UVLRTI, to_outcome: null, to_state: UVLRTI,
+        transition_id: 2}

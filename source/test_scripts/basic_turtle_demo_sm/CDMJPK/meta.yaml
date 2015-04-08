@@ -10,7 +10,6 @@ outcomes:
 output_data_ports: {}
 path: ../../test_scripts/basic_turtle_demo_sm/CDMJPK
 scoped_variables: {}
-start_state: CKIWDE
 state_id: CDMJPK
 state_type: STATE_TYPE.HIERARCHY
 transitions:
@@ -18,3 +17,5 @@ transitions:
         transition_id: 1}
     2: !Transition {from_outcome: 0, from_state: RMKGEW, to_outcome: 0, to_state: null,
         transition_id: 2}
+    3: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: CKIWDE,
+        transition_id: 3}
