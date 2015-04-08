@@ -12,4 +12,4 @@ def execute(self, inputs, outputs, gvm):
     self.logger.info("Take one down and pass it around, " + str(bottles) + " bottles of beer on the wall.")
     time.sleep(1)
     
-    return 0
+    return "done"

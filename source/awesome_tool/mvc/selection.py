@@ -1,5 +1,6 @@
 from gtkmvc import Observable
 from awesome_tool.mvc.models import StateModel, TransitionModel, DataFlowModel
+from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 
 class Selection(Observable):
@@ -25,6 +26,7 @@ class Selection(Observable):
     @Observable.observed
     def add(self, item):
         self.__selected.add(item)
+        self.__selected = StateMachineHelper.reduce_to_parent_states(self.__selected)
 
     @Observable.observed
     def remove(self, item):
@@ -34,12 +36,15 @@ class Selection(Observable):
     @Observable.observed
     def append(self, selection):
         self.__selected.update(selection)
+        self.__selected = StateMachineHelper.reduce_to_parent_states(self.__selected)
 
     @Observable.observed
     def set(self, selection):
         self.__selected.clear()
         if not isinstance(selection, list):
             selection = [selection]
+        else:
+            selection = StateMachineHelper.reduce_to_parent_states(selection)
         self.__selected.update(selection)
 
     def __iter__(self):

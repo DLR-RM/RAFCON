@@ -298,5 +298,19 @@ class StateMachineHelper():
 
         return new_state_m
 
+    @staticmethod
+    def reduce_to_parent_states(models):
+        models_to_remove = []
+        for model in models:
+            parent_m = model.parent
+            while parent_m is not None:
+                if parent_m in models:
+                    models_to_remove.append(model)
+                    break
+                parent_m = parent_m.parent
+        for model in models_to_remove:
+            models.remove(model)
+        return models
+
 
 
