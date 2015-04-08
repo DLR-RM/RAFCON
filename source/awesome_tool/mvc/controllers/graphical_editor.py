@@ -783,7 +783,10 @@ class GraphicalEditorController(ExtendedController):
                 for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                               state_m.scoped_variables):
                     old_pos = port_m.meta['gui']['editor']['inner_pos']
-                    port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
+                    try:  # If data connections are not shown, not all position may be calculated
+                        port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
+                    except TypeError:
+                        pass
             # Move child states
             for child_state in state_m.states.itervalues():
                 child_state.meta['gui']['editor']['pos_x'] += move_x
