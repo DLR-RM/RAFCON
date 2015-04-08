@@ -148,7 +148,8 @@ class StateModel(ModelMT):
             pass
         else:
             own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
-            awesome_tool.statemachine.singleton.global_storage.mark_dirty(own_sm_id)
+            if own_sm_id is not None:
+                awesome_tool.statemachine.singleton.state_machine_manager.state_machines[own_sm_id].marked_dirty = True
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument

@@ -49,7 +49,7 @@ def create_tab_header(title, close_callback, *additional_parameters):
 class StateMachinesEditorController(ExtendedController):
 
     def __init__(self, sm_manager_model, view, states_editor_ctrl):
-        ExtendedController.__init__(self, sm_manager_model, view)
+        ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
@@ -66,7 +66,6 @@ class StateMachinesEditorController(ExtendedController):
         root_state = HierarchyState("new_root_state")
         sm = StateMachine(root_state)
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-        awesome_tool.statemachine.singleton.global_storage.mark_dirty(sm.state_machine_id)
 
     def register_view(self, view):
         self.view.notebook.connect('switch-page', self.on_switch_page)
@@ -95,9 +94,14 @@ class StateMachinesEditorController(ExtendedController):
 
         graphical_editor_ctrl = GraphicalEditorController(state_machine_model, graphical_editor_view)
         self.add_controller(sm_identifier, graphical_editor_ctrl)
-        (event_box, new_label) = create_tab_header("%s|%s" % (sm_identifier, state_machine_model.root_state.state.name),
+        name_add_on = ""
+        if state_machine_model.state_machine.marked_dirty:
+            name_add_on = "*"
+        (event_box, new_label) = create_tab_header("%s|%s" % (sm_identifier,
+                                                              state_machine_model.root_state.state.name + name_add_on),
                                                    self.on_close_clicked,
-                                                   state_machine_model, 'refused')
+                                                   state_machine_model,
+                                                   'refused')
         graphical_editor_view.get_top_widget().title_label = new_label
 
         idx = self._view.notebook.append_page(graphical_editor_view['main_frame'], event_box)
@@ -134,6 +138,28 @@ class StateMachinesEditorController(ExtendedController):
             if sm_id not in self.registered_state_machines:
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
 
+    @ExtendedController.observe("state_machine_mark_dirty", assign=True)
+    def sm_marked_dirty(self, model, prop_name, info):
+        sm_id = self.model.state_machine_mark_dirty
+        if sm_id in self.model.state_machine_manager.state_machines.iterkeys():
+            logger.debug("State machine mark dirty!")
+            (header_h_box, new_label) = \
+                create_tab_header("%s|%s" % (sm_id,
+                                             self.tabs[sm_id]["state_machine_model"].root_state.state.name + "*"),
+                                  self.on_close_clicked, self.tabs[sm_id]["state_machine_model"], 'refused')
+            self._view.notebook.set_tab_label(self.tabs[sm_id]["page"], header_h_box)
+
+    @ExtendedController.observe("state_machine_un_mark_dirty", assign=True)
+    def sm_un_marked_dirty(self, model, prop_name, info):
+        sm_id = self.model.state_machine_un_mark_dirty
+        if sm_id in self.model.state_machine_manager.state_machines.iterkeys():
+            logger.debug("State machine un mark dirty!")
+            (header_h_box, new_label) = \
+                create_tab_header("%s|%s" % (sm_id,
+                                             self.tabs[sm_id]["state_machine_model"].root_state.state.name),
+                                  self.on_close_clicked, self.tabs[sm_id]["state_machine_model"], 'refused')
+            self._view.notebook.set_tab_label(self.tabs[sm_id]["page"], header_h_box)
+
     def on_close_clicked(self, event, state_machine_model, result, force=False):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
         # print event, state_model, result
@@ -142,7 +168,7 @@ class StateMachinesEditorController(ExtendedController):
 
         if force:
             self.remove_state_machine(state_machine_model)
-        elif sm_identifier in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
+        elif state_machine_model.state_machine.marked_dirty:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "Are you sure you want to close the state machine with id %s ?" % str(sm_identifier)
             message.set_markup(message_string)
@@ -182,8 +208,8 @@ class StateMachinesEditorController(ExtendedController):
                         "The selected state machine id will be None!")
             self.model.selected_state_machine_id = None
 
-        if sm_identifier in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
-            awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines.remove(sm_identifier)
+        if state_machine_model.state_machine.marked_dirty:
+            state_machine_model.state_machine.marked_dirty = False
 
     def close_all_tabs(self):
         """

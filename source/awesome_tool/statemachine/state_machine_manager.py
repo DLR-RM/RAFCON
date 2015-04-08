@@ -69,6 +69,25 @@ class StateMachineManager(Observable):
         logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
         return None
 
+    def check_if_dirty_sms(self):
+        """
+        Checks if one of the registered sm has the marked_dirty flag set to True (i.e. the sm was recently modified,
+        without being saved)
+        :return:
+        """
+        for sm_id, sm in self.state_machines.iteritems():
+            if sm.marked_dirty:
+                return True
+        return False
+
+    def reset_dirty_flags(self):
+        """
+        Set all marked_dirty flags of the state machine to false.
+        :return:
+        """
+        for sm_id, sm in self.state_machines.iteritems():
+            sm.marked_dirty = False
+
     @Observable.observed
     def add_state_machine(self, state_machine):
         """

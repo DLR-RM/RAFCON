@@ -5,8 +5,8 @@ from awesome_tool.mvc.shortcut_manager import ShortcutManager
 
 class ExtendedController(Controller):
 
-    def __init__(self, model, view):
-        Controller.__init__(self, model, view)
+    def __init__(self, model, view, spurious=False):
+        Controller.__init__(self, model, view, spurious=spurious)
         self.__child_controllers = dict()
         self.__shortcut_manager = None
         self.__action_registered_controllers = []

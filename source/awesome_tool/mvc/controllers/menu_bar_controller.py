@@ -48,7 +48,6 @@ class MenuBarController(ExtendedController):
         root_state = HierarchyState("new_root_state")
         sm = StateMachine(root_state)
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-        awesome_tool.statemachine.singleton.global_storage.mark_dirty(sm.state_machine_id)
 
     def on_open_activate(self, widget, data=None, path=None):
         if path is None:
@@ -131,12 +130,13 @@ class MenuBarController(ExtendedController):
         if force:
             self.refresh_libs_and_statemachines()
         else:
-            if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
+            if awesome_tool.statemachine.singleton.state_machine_manager.check_if_dirty_sms():
                 message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
                 message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
                                  "The following state machines were modified and not saved: "
-                for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
-                    message_string = "%s %s " % (message_string, str(sm_id))
+                for sm_id, sm in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.iteritems():
+                    if sm.marked_dirty:
+                        message_string = "%s %s " % (message_string, str(sm_id))
                 message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
                                  "before will be deleted!)" % message_string
                 message.set_markup(message_string)
@@ -162,7 +162,7 @@ class MenuBarController(ExtendedController):
         awesome_tool.statemachine.singleton.library_manager.refresh_libraries()
 
         # delete dirty flags for state machines
-        awesome_tool.statemachine.singleton.global_storage.reset_dirty_flags()
+        awesome_tool.statemachine.singleton.state_machine_manager.reset_dirty_flags()
 
         # create a dictionary from state machine id to state machine path
         state_machine_id_to_path = {}
@@ -203,12 +203,13 @@ class MenuBarController(ExtendedController):
         return False
 
     def check_sm_modified(self):
-        if len(awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines) > 0:
+        if awesome_tool.statemachine.singleton.state_machine_manager.check_if_dirty_sms():
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "Are you sure you want to close the main window? " \
                              "The following state machines were modified and not saved: "
-            for sm_id in awesome_tool.statemachine.singleton.global_storage.ids_of_modified_state_machines:
-                message_string = "%s %s " % (message_string, str(sm_id))
+            for sm_id, sm in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.iteritems():
+                if sm.marked_dirty:
+                    message_string = "%s %s " % (message_string, str(sm_id))
             message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
                              "before will be deleted!)" % message_string
             message.set_markup(message_string)

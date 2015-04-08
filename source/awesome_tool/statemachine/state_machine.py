@@ -40,6 +40,8 @@ class StateMachine(Observable):
         self._root_state = None
         self.root_state = root_state
         self.base_path = None
+        self._marked_dirty = True
+        self.old_marked_dirty = True
 
     def start(self):
         """
@@ -65,6 +67,22 @@ class StateMachine(Observable):
         # if not isinstance(root_state, State):
         #     raise AttributeError("root_state has to be of type State")
         self._root_state = root_state
+
+    @property
+    def marked_dirty(self):
+        """Property for the _marked_dirty field
+
+        """
+        return self._marked_dirty
+
+    @marked_dirty.setter
+    @Observable.observed
+    def marked_dirty(self, marked_dirty):
+        # print "sm-core: marked dirty changed from ", self._marked_dirty, " to ", marked_dirty
+        if not isinstance(marked_dirty, bool):
+            raise AttributeError("marked_dirty has to be of type bool")
+        self.old_marked_dirty = self._marked_dirty
+        self._marked_dirty = marked_dirty
 
     def get_state_by_path(self, path):
         path_item_list = path.split('/')
