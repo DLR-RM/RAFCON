@@ -19,6 +19,7 @@ from awesome_tool.mvc.views.output_port_list import OutputPortsListView
 from awesome_tool.mvc.views.scoped_variables_list import ScopedVariablesListView
 from awesome_tool.mvc.views.state_transitions import StateTransitionsEditorView
 from awesome_tool.mvc.views.state_data_flows import StateDataFlowsEditorView
+from awesome_tool.utils import constants
 
 
 class StateEditorView(View):
@@ -130,6 +131,16 @@ class StateEditorLDView(View):
         self.expanders = [self['data_expander'], self['logic_expander']]
         self['data_expander'].connect('activate', self.resize_logic_data_expander)
         self['logic_expander'].connect('activate', self.resize_logic_data_expander)
+
+        self['data_expander'].set_border_width(constants.BORDER_WIDTH)
+        self['logic_expander'].set_border_width(constants.BORDER_WIDTH)
+
+        self['new_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['delete_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['new_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['delete_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['new_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['delete_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
 
     def resize_logic_data_expander(self, widget, data=None):
     # deactivate other expanders

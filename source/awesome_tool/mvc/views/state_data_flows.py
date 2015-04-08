@@ -11,6 +11,7 @@
 import gtk, gobject
 
 from gtkmvc import View
+from awesome_tool.utils import constants
 
 
 class StateDataFlowsListView(View):
@@ -86,3 +87,8 @@ class StateDataFlowsEditorView(View):
         View.__init__(self)
         self.data_flows_listView = StateDataFlowsListView()
         self['dataflows_scroller'].add(self.data_flows_listView.get_top_widget())
+
+        self['internal_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['connected_to_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['add_d_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['remove_d_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)

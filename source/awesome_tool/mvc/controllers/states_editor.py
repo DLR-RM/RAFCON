@@ -8,17 +8,18 @@ from awesome_tool.mvc.controllers.state_editor import StateEditorController, Sta
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.selection import Selection
 from awesome_tool.utils import log
+from awesome_tool.utils import constants
 logger = log.get_logger(__name__)
 
 
 def create_tab_close_button(callback, *additional_parameters):
     closebutton = gtk.Button()
-    image = gtk.Image()
-    image.set_from_stock(gtk.STOCK_CLOSE, gtk.ICON_SIZE_MENU)
-    image_w, image_h = gtk.icon_size_lookup(gtk.ICON_SIZE_SMALL_TOOLBAR)
+    close_label = gtk.Label()
+    close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT, constants.FONT_SIZE_SMALL,
+                                                                      constants.BUTTON_CLOSE))
     closebutton.set_relief(gtk.RELIEF_NONE)
     closebutton.set_focus_on_click(True)
-    closebutton.add(image)
+    closebutton.add(close_label)
 
     style = gtk.RcStyle()
     style.xthickness = 0

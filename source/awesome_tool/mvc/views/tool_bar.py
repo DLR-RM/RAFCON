@@ -25,11 +25,15 @@ class ToolBarView(View):
         button_refresh_libs = self['button_refresh_libs']
         button_refresh_libs.set_label_widget(self.get_label_widget("f021", "Refresh Libraries"))
 
+        self.get_top_widget().set_border_width(constants.BORDER_WIDTH)
+
     def get_label_widget(self, icon, text):
         hbox = gtk.HBox()
 
         icon_label = gtk.Label()
-        icon_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT, constants.FONT_SIZE_NORMAL, icon))
+        icon_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
+                                                                         constants.FONT_SIZE_NORMAL,
+                                                                         icon))
         icon_label.show()
         hbox.pack_start(icon_label, False, True, 2)
 

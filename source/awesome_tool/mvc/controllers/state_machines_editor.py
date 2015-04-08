@@ -11,16 +11,17 @@ from awesome_tool.utils import log
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.singleton
+from awesome_tool.utils import constants
 
 
 def create_tab_close_button(callback, *additional_parameters):
     closebutton = gtk.Button()
-    image = gtk.Image()
-    image.set_from_stock(gtk.STOCK_CLOSE, gtk.ICON_SIZE_MENU)
-    image_w, image_h = gtk.icon_size_lookup(gtk.ICON_SIZE_SMALL_TOOLBAR)
+    close_label = gtk.Label()
+    close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT, constants.FONT_SIZE_SMALL,
+                                                                      constants.BUTTON_CLOSE))
     closebutton.set_relief(gtk.RELIEF_NONE)
     closebutton.set_focus_on_click(True)
-    closebutton.add(image)
+    closebutton.add(close_label)
 
     style = gtk.RcStyle()
     style.xthickness = 0

@@ -24,7 +24,7 @@
             <child>
               <object class="GtkHBox" id="top_menu_hbox">
                 <property name="visible">True</property>
-                <property name="border_width">3</property>
+                <property name="border_width">5</property>
                 <child>
                   <object class="GtkLabel" id="menu_bar_placeholder">
                     <property name="visible">True</property>
@@ -327,7 +327,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkEventBox" id="eventbox1">
+                          <object class="GtkEventBox" id="debug_eventbox">
                             <property name="visible">True</property>
                             <property name="border_width">5</property>
                             <child>
@@ -335,7 +335,7 @@
                                 <property name="visible">True</property>
                                 <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkEventBox" id="eventbox2">
+                                  <object class="GtkEventBox" id="debug_label_eventbox">
                                     <property name="visible">True</property>
                                     <property name="border_width">10</property>
                                     <child>

@@ -5,6 +5,7 @@ from awesome_tool.mvc.views import StatePropertiesView, ContainerStateView, Grap
      LoggingView, StateMachineTreeView, LibraryTreeView, MenuBarView, ToolBarView, TopToolBarView
 from awesome_tool.mvc.views.states_editor import StatesEditorView
 from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
+from awesome_tool.utils import constants
 
 
 class MainWindowView(View):
@@ -95,3 +96,13 @@ class MainWindowView(View):
         #self['vbox1'].reparent(self['lower_statusbar'])
 
         self.get_top_widget().set_decorated(False)
+
+        self['main_window'].set_border_width(constants.MAIN_WINDOW_BORDER_WIDTH)
+
+        self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook'].set_border_width(constants.BORDER_WIDTH)
+        self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
+        self['graphical_editor_frame'].set_border_width(constants.BORDER_WIDTH)
+        self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
+        self['debug_label_eventbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        self['state_editor'].set_border_width(constants.BORDER_WIDTH)

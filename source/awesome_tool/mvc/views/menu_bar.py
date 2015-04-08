@@ -22,15 +22,23 @@ class MenuBarView(View):
         'cut_selection': "f0c4",
         'copy_selection': "f0c5",
         'paste_clipboard': "f0ea",
+        'add_state': "f067",
+        'group_states': "f090",
+        'ungroup_states': "f08b",
         'delete': "f1f8",
         'undo': "f0e2",
         'redo': "f01e",
+        # View
+        'expert_view': "f06e",
         # Execution
         'start': "f04b",
         'pause': "f04c",
         'stop': "f04d",
+        'step_mode': "f050",
         'step': "f051",
-        'backward_step_mode': "f048"
+        'backward_step_mode': "f048",
+        # Help
+        'about': "f0a3"
         }
 
     def __init__(self, top_window):
@@ -54,7 +62,7 @@ class MenuBarView(View):
         layout.set_markup('<span fgcolor="%s" font_desc="%s %s">&#x%s;</span>' %
                           (constants.TEXT_COLOR,
                            constants.DEFAULT_FONT,
-                           constants.FONT_SIZE_NORMAL,
+                           constants.FONT_SIZE_BIG,
                            self.buttons[button_name]))
 
         pixmap.draw_layout(pixmap.new_gc(), 2, 2, layout)
