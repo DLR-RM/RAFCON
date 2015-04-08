@@ -8,31 +8,6 @@ class MenuBarView(View):
     builder = './glade/menu_bar.glade'
     top = 'menubar'
 
-    pixbuf_data = [
-        "20 20 1 1",
-        "  c None",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    ",
-        "                    "
-    ]
-
     buttons = {
         # File
         'new': "f016",
@@ -73,7 +48,8 @@ class MenuBarView(View):
 
         pixmap, mask = gtk.gdk.pixmap_create_from_xpm_d(self.win.window,
                                                         self.win.get_style().bg[gtk.STATE_NORMAL],
-                                                        self.pixbuf_data)
+                                                        self.create_empty_pixbuf_xpm(constants.ICON_SIZE_IN_PIXEL,
+                                                                                     constants.ICON_SIZE_IN_PIXEL))
 
         layout.set_markup('<span fgcolor="%s" font_desc="%s %s">&#x%s;</span>' %
                           (constants.TEXT_COLOR,
@@ -85,3 +61,9 @@ class MenuBarView(View):
         mask.draw_layout(mask.new_gc(), 2, 2, layout)
 
         button.set_image(gtk.image_new_from_pixmap(pixmap, mask))
+
+    def create_empty_pixbuf_xpm(self, width, height):
+        xpm = ["%i %i 1 1" % (width, height), "  c None"]
+        for i in range(0, height):
+            xpm.append(" " * width)
+        return xpm
