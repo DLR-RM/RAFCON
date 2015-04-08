@@ -250,26 +250,29 @@
           <object class="GtkMenu" id="menuitem_execution">
             <property name="visible">True</property>
             <child>
-              <object class="GtkMenuItem" id="start">
-                <property name="visible">True</property>
+              <object class="GtkImageMenuItem" id="start">
                 <property name="label" translatable="yes">start</property>
-                <property name="use_underline">True</property>
+                <property name="visible">True</property>
+                <property name="image">image3</property>
+                <property name="use_stock">False</property>
                 <signal name="activate" handler="on_start_activate"/>
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="pause">
-                <property name="visible">True</property>
+              <object class="GtkImageMenuItem" id="pause">
                 <property name="label" translatable="yes">pause</property>
-                <property name="use_underline">True</property>
+                <property name="visible">True</property>
+                <property name="image">image4</property>
+                <property name="use_stock">False</property>
                 <signal name="activate" handler="on_pause_activate"/>
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="stop">
-                <property name="visible">True</property>
+              <object class="GtkImageMenuItem" id="stop">
                 <property name="label" translatable="yes">stop</property>
-                <property name="use_underline">True</property>
+                <property name="visible">True</property>
+                <property name="image">image5</property>
+                <property name="use_stock">False</property>
                 <signal name="activate" handler="on_stop_activate"/>
               </object>
             </child>
@@ -287,18 +290,20 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="step">
-                <property name="visible">True</property>
+              <object class="GtkImageMenuItem" id="step">
                 <property name="label" translatable="yes">step</property>
-                <property name="use_underline">True</property>
+                <property name="visible">True</property>
+                <property name="image">image6</property>
+                <property name="use_stock">False</property>
                 <signal name="activate" handler="on_step_activate"/>
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="backward_step_mode">
-                <property name="visible">True</property>
+              <object class="GtkImageMenuItem" id="backward_step_mode">
                 <property name="label" translatable="yes">backward step</property>
-                <property name="use_underline">True</property>
+                <property name="visible">True</property>
+                <property name="image">image7</property>
+                <property name="use_stock">False</property>
                 <signal name="activate" handler="on_backward_step_mode_activate"/>
               </object>
             </child>
@@ -326,13 +331,33 @@
       </object>
     </child>
   </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
-    <property name="stock">gtk-refresh</property>
-  </object>
+  <object class="GtkAccelGroup" id="accelgroup1"/>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="stock">gtk-refresh</property>
   </object>
-  <object class="GtkAccelGroup" id="accelgroup1"/>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="stock">gtk-refresh</property>
+  </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image4">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image5">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image6">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image7">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
 </interface>

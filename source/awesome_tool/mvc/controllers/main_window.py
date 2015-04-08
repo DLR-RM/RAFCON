@@ -19,6 +19,7 @@ import awesome_tool.statemachine.config
 from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
 from awesome_tool.mvc.controllers.top_tool_bar_controller import TopToolBarController
+from utils import constants
 
 
 class MainWindowController(ExtendedController):
@@ -92,7 +93,7 @@ class MainWindowController(ExtendedController):
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
         state_machine_label = gtk.Label('STATE TREE')
         state_machine_event_box = gtk.EventBox()
-        state_machine_event_box.set_border_width(5)
+        state_machine_event_box.set_border_width(constants.BORDER_WIDTH)
         state_machine_alignment = gtk.Alignment(0.0, 0.5, 0.0, 0.0)
         state_machine_alignment.add(state_machine_label)
         state_machine_event_box.add(state_machine_alignment)
@@ -133,7 +134,7 @@ class MainWindowController(ExtendedController):
         global_variables_alignment = gtk.Alignment(0.0, 0.5, 0.0, 0.0)
         global_variables_alignment.add(global_variables_label)
         global_variables_event_box.add(global_variables_alignment)
-        global_variables_event_box.set_border_width(5)
+        global_variables_event_box.set_border_width(constants.BORDER_WIDTH)
         global_variables_tab_label = gtk.Label('Global Variables')
         global_variables_vbox = gtk.VBox()
         global_variables_vbox.pack_start(global_variables_event_box, False, True, 0)

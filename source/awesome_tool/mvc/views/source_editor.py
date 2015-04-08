@@ -6,6 +6,7 @@ except:
 from gtkmvc import View
 
 import awesome_tool.statemachine.config as config
+from utils import constants
 
 # TODO: comment
 
@@ -24,9 +25,9 @@ class SourceEditorView(View):
         cancel_button = gtk.Button("Cancel")
         cancel_button.set_focus_on_click(False)
         cancel_button.set_size_request(90, 30)
-        hbox.pack_end(cancel_button, False, True, 5)
-        hbox.pack_end(apply_button, False, True, 5)
-        hbox.set_border_width(5)
+        hbox.pack_end(cancel_button, False, True, constants.PADDING)
+        hbox.pack_end(apply_button, False, True, constants.PADDING)
+        hbox.set_border_width(constants.BORDER_WIDTH)
 
         editor_frame = gtk.Frame()
         vbox.pack_start(editor_frame, expand=True, fill=True)

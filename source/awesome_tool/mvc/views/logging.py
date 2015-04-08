@@ -1,6 +1,7 @@
 import gtk
 from gtkmvc import View
 import glib
+from utils import constants
 
 
 class LoggingView(View):
@@ -22,7 +23,7 @@ class LoggingView(View):
         self.textview.get_buffer().create_tag("set_gray_text", foreground="#c2c3c4")
         self.textview.get_buffer().create_tag("set_white_text", foreground="#ffffff")
 
-        self.textview.set_border_width(10)
+        self.textview.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)

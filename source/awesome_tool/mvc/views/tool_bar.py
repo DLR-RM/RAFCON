@@ -1,12 +1,11 @@
 from gtkmvc import View
 import gtk
+from utils import constants
 
 
 class ToolBarView(View):
     builder = './glade/tool_bar.glade'
     top = 'toolbar'
-
-    button_font = "FontAwesome 12"
 
     def __init__(self):
         View.__init__(self)
@@ -30,7 +29,7 @@ class ToolBarView(View):
         hbox = gtk.HBox()
 
         icon_label = gtk.Label()
-        icon_label.set_markup('<span font_desc="%s">&#x%s;</span>' % (self.button_font, icon))
+        icon_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT, constants.FONT_SIZE_NORMAL, icon))
         icon_label.show()
         hbox.pack_start(icon_label, False, True, 2)
 

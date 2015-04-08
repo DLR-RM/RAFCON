@@ -6,9 +6,6 @@
 # Olivier Fourdan <fourdan@xfce.org>
 # Released under the GPL license
 
-# original: xfce default style from /home/buet_ma/PycharmProjects/Glade3/gtk-xfce-engine-2.10.0/themes/xfce/gtk-2.0/gtkrc
-# to remove boarders and make everything look flat change xthickness = ythickness = 0 where needed
-
 style "my_default"
 {
     GtkWidget::focus-line-width                  = 0
