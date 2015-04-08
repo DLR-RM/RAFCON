@@ -9,6 +9,6 @@ outcomes:
     0: !Outcome {name: ==0, outcome_id: 0}
     1: !Outcome {name: '>0', outcome_id: 1}
 output_data_ports: {}
-path: /home_local/stei_fn/taskcontrol/source/test_scripts/99 bottles of beer/GLSUJY/SFZGMH
+path: /home_local/brun_sb/develop/taskcontrol/source/test_scripts/99 bottles of beer/GLSUJY/SFZGMH
 state_id: SFZGMH
 state_type: STATE_TYPE.EXECUTION
