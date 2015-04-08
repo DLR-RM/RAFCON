@@ -20,7 +20,7 @@ from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
 from awesome_tool.mvc.controllers.top_tool_bar_controller import TopToolBarController
 from awesome_tool.utils import constants
-
+from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 
 class MainWindowController(ExtendedController):
 
@@ -211,3 +211,69 @@ class MainWindowController(ExtendedController):
         status_bar3_string = "Execution status: " + \
                              str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         status_bar3.push(0, status_bar3_string)
+
+        if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.RUNNING:
+            self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+            self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
+            self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+        elif awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.PAUSED:
+            self.set_button_active(True, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
+            self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+            self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+        elif awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.STOPPED:
+            self.on_button_stop_shortcut_clicked(None)
+        elif awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.STEPPING:
+            self.set_button_active(True, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+            self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
+            self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+
+    # Shortcut buttons
+
+    def on_button_start_shortcut_toggled(self, widget, event=None):
+        if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not ExecutionMode.RUNNING:
+            self.get_controller("menu_bar_controller").on_start_activate(None)
+
+            self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
+            self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+        else:
+            logger.info("Statemachine running")
+            self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+
+    def on_button_pause_shortcut_toggled(self, widget, event=None):
+        if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not ExecutionMode.PAUSED:
+            self.get_controller("menu_bar_controller").on_pause_activate(None)
+
+            self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+            self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+        else:
+            logger.info("Statemachine paused")
+            self.set_button_active(True, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
+
+    def on_button_stop_shortcut_clicked(self, widget, event=None):
+        if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not ExecutionMode.STOPPED:
+            self.get_controller("menu_bar_controller").on_stop_activate(None)
+
+        self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+        self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
+        self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+
+    def on_button_step_mode_shortcut_toggled(self, widget, event=None):
+        if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not ExecutionMode.STEPPING:
+            self.get_controller("menu_bar_controller").on_step_mode_activate(None)
+
+            self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
+            self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+        else:
+            logger.info("Statemachine stepping")
+            self.set_button_active(True, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+
+    def on_button_step_shortcut_clicked(self, widget, event=None):
+        self.get_controller("menu_bar_controller").on_step_activate(None)
+
+    def on_button_step_backward_shortcut_clicked(self, widget, event=None):
+        self.get_controller("menu_bar_controller").on_backward_step_mode_activate(None)
+
+    def set_button_active(self, active, button, func):
+        button.handler_block_by_func(func)
+        button.set_active(active)
+        button.handler_unblock_by_func(func)
