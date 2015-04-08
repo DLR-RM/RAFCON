@@ -302,13 +302,17 @@ class ContainerState(State):
             while transition_id in self._transitions.iterkeys():
                 transition_id = generate_transition_id()
 
+        # Check if transition is starting transition and the start state is already defined
+        if from_state_id is None and self.start_state_id is not None:
+            raise AttributeError("The start state is already defined: {0}".format(self.get_start_state().name))
+
         # check if states are existing
         if from_state_id is not None and not (from_state_id in self.states or from_state_id == self.state_id):
-            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id)
+            raise AttributeError("From_state_id {0} does not exist in the container state".format(from_state_id))
 
         if to_state_id is not None:
             if not (to_state_id in self.states or to_state_id == self.state_id):
-                raise AttributeError("To_state %s does not exist in the container state" % to_state_id)
+                raise AttributeError("To_state {0} does not exist in the container state".format(to_state_id))
 
         if to_state_id is None and to_outcome is None:
             raise AttributeError("Either the to_state_id or the to_outcome must be None")
