@@ -58,7 +58,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             transition = None
 
-            state = self.get_start_state()
+            state = self.get_start_state(set_final_outcome=True)
 
             self.child_execution = True
             while state is not self:
@@ -123,7 +123,10 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 self.active = False
                 return
 
-            self.final_outcome = self.outcomes[transition.to_outcome]
+            # At least one child state was executed (if no child state was executed, the income is connected to an
+            # outcome and the final_outcome is set by the get_start_state method)
+            if transition is not None:
+                self.final_outcome = self.outcomes[transition.to_outcome]
             self.active = False
             logger.debug("Return from hierarchy state %s", self.name)
             return

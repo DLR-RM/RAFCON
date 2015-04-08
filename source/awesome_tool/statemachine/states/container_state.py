@@ -257,12 +257,21 @@ class ContainerState(State):
         else:
             self.start_state_id = state
 
-    def get_start_state(self):
+    def get_start_state(self, set_final_outcome=False):
         """Get the start state of the container state
 
         """
         if self.start_state_id is None:
             return None
+        # It is possible to connect the income directly with an outcome
+        if self.start_state_id == self.state_id:
+            if set_final_outcome:
+                for transition_id in self.transitions:
+                    if self.transitions[transition_id].from_state is None:
+                        to_outcome_id = self.transitions[transition_id].to_outcome
+                        self.final_outcome = self.outcomes[to_outcome_id]
+                        break
+            return self
         return self.states[self.start_state_id]
 
         # If there is a value in the dependency tree for this state start with the this one
@@ -342,7 +351,7 @@ class ContainerState(State):
                 raise AttributeError("from_state does not have outcome %s", from_state)
         else:
             self.transitions[transition_id] =\
-                        Transition(None, None, to_state_id, None, transition_id)
+                        Transition(None, None, to_state_id, to_outcome, transition_id)
 
         # notify all states waiting for transition to be connected
         self._transitions_cv.acquire()
@@ -1084,12 +1093,16 @@ class ContainerState(State):
         """
         for transition_id in self.transitions:
             if self.transitions[transition_id].from_state is None:
-                return self.transitions[transition_id].to_state
+                to_state = self.transitions[transition_id].to_state
+                if to_state is not None:
+                    return to_state
+                else:
+                    return self.state_id
         return None
 
     @start_state_id.setter
     @Observable.observed
-    def start_state_id(self, start_state_id):
+    def start_state_id(self, start_state_id, to_outcome=None):
         """Set the start state of the container state
 
         The start state is the state to which the first transition goes to. Therefore the method creates a unique
@@ -1099,7 +1112,11 @@ class ContainerState(State):
         :param start_state_id: The state id of the state which should be executed first in the Container state
         """
         if start_state_id is not None and start_state_id not in self.states:
-            raise AttributeError("start_state_id is not existing")
+            raise AttributeError("start_state_id does not exist")
+
+        if start_state_id is None and to_outcome is not None:
+            if to_outcome not in self.outcomes:
+                raise AttributeError("to_outcome does not exist")
 
         # First we remove the transition to the start state
         for transition_id in self.transitions:
@@ -1110,7 +1127,7 @@ class ContainerState(State):
                 self.remove_transition(transition_id)
                 break
         if start_state_id is not None:
-            self.add_transition(None, None, start_state_id, None)
+            self.add_transition(None, None, start_state_id, to_outcome)
 
     @property
     def scoped_variables(self):
