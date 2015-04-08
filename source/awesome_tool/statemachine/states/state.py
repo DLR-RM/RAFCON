@@ -407,7 +407,7 @@ class State(Observable, yaml.YAMLObject, object):
 
         """
         for output_port_id, output_port in self.output_data_ports.iteritems():
-            if not self.output_data[output_port.name] is None:
+            if hasattr(self.output_data, output_port.name) and self.output_data[output_port.name] is not None:
                 #check for primitive data types
                 if not str(type(self.output_data[output_port.name]).__name__) == output_port.data_type:
                     #check for classes
