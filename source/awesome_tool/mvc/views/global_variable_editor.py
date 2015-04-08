@@ -1,5 +1,5 @@
 from gtkmvc import View
-from utils import constants
+from awesome_tool.utils import constants
 
 
 class GlobalVariableEditorView(View):

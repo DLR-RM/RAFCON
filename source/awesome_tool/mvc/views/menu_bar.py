@@ -10,35 +10,35 @@ class MenuBarView(View):
 
     buttons = {
         # File
-        'new': "f016",
-        'open': "f115",
-        'save': "f0c7",
-        'save_as': "f0c7",
-        'menu_properties': "f0ad",
-        'refresh_all': "f021",
-        'refresh_libraries': "f021",
-        'quit': "f08b",
+        'new': constants.BUTTON_NEW,
+        'open': constants.BUTTON_OPEN,
+        'save': constants.BUTTON_SAVE,
+        'save_as': constants.BUTTON_SAVE,
+        'menu_properties': constants.BUTTON_PROP,
+        'refresh_all': constants.BUTTON_REFR,
+        'refresh_libraries': constants.BUTTON_REFR,
+        'quit': constants.BUTTON_QUIT,
         # Edit
-        'cut_selection': "f0c4",
-        'copy_selection': "f0c5",
-        'paste_clipboard': "f0ea",
-        'add_state': "f067",
-        'group_states': "f090",
-        'ungroup_states': "f08b",
-        'delete': "f1f8",
-        'undo': "f0e2",
-        'redo': "f01e",
+        'cut_selection': constants.BUTTON_CUT,
+        'copy_selection': constants.BUTTON_COPY,
+        'paste_clipboard': constants.BUTTON_PASTE,
+        'add_state': constants.BUTTON_ADD,
+        'group_states': constants.BUTTON_GROUP,
+        'ungroup_states': constants.BUTTON_UNGR,
+        'delete': constants.BUTTON_DEL,
+        'undo': constants.BUTTON_UNDO,
+        'redo': constants.BUTTON_REDO,
         # View
-        'expert_view': "f06e",
+        'expert_view': constants.BUTTON_VIEW,
         # Execution
-        'start': "f04b",
-        'pause': "f04c",
-        'stop': "f04d",
-        'step_mode': "f050",
-        'step': "f051",
-        'backward_step_mode': "f048",
+        'start': constants.BUTTON_START,
+        'pause': constants.BUTTON_PAUSE,
+        'stop': constants.BUTTON_STOP,
+        'step_mode': constants.BUTTON_STEPM,
+        'step': constants.BUTTON_STEP,
+        'backward_step_mode': constants.BUTTON_BACKW,
         # Help
-        'about': "f0a3"
+        'about': constants.BUTTON_ABOUT
         }
 
     def __init__(self, top_window):
@@ -62,7 +62,7 @@ class MenuBarView(View):
         layout.set_markup('<span fgcolor="%s" font_desc="%s %s">&#x%s;</span>' %
                           (constants.TEXT_COLOR,
                            constants.DEFAULT_FONT,
-                           constants.FONT_SIZE_BIG,
+                           constants.FONT_SIZE_NORMAL,
                            self.buttons[button_name]))
 
         pixmap.draw_layout(pixmap.new_gc(), 2, 2, layout)
