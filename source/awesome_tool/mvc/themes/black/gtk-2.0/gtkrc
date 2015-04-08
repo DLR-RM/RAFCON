@@ -6,6 +6,8 @@
 # Olivier Fourdan <fourdan@xfce.org>
 # Released under the GPL license
 
+gtk-menu-images = 0
+
 style "my_default"
 {
     GtkWidget::focus-line-width                  = 0
@@ -143,7 +145,7 @@ style "indicator_label" = "my_default"
     fg[SELECTED]    	= @text_color_dark
 }
 widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
-widget_class "*VBox.GtkLabel"				style "indicator_label"
+widget_class "*GtkVBox.GtkHBox.GtkLabel"			style "indicator_label"
 widget_class "*EventBox.GtkAlignment.GtkLabel"		style "indicator_label"
 widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
 

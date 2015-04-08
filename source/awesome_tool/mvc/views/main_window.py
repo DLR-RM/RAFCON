@@ -1,4 +1,5 @@
 
+import gtk
 from gtkmvc import View
 from awesome_tool.mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
      GlobalVariableEditorView, SourceEditorView, SingleWidgetWindowView, StateEditorView, \
@@ -50,7 +51,7 @@ class MainWindowView(View):
         ##################################################
         self.state_machines_editor = StateMachinesEditorView()
         self.state_machines_editor.show()
-        self['graphical_editor_frame'].add(self.state_machines_editor.get_top_widget())
+        self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
         # self['state_machines_vbox'].add(self.state_machines_editor.get_top_widget())
 
         ##################################################
@@ -95,6 +96,26 @@ class MainWindowView(View):
         # insert status-bar
         #self['vbox1'].reparent(self['lower_statusbar'])
 
+        # --------------------------------------------------------------------------
+        # Edit graphical_editor_shortcuts
+        # --------------------------------------------------------------------------
+
+        button_start_shortcut = self['button_start_shortcut']
+        button_pause_shortcut = self['button_pause_shortcut']
+        button_stop_shortcut = self['button_stop_shortcut']
+        button_step_mode_shortcut = self['button_step_mode_shortcut']
+        button_step_shortcut = self['button_step_shortcut']
+        button_step_backward_shortcut = self['button_step_backward_shortcut']
+
+        button_start_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_START))
+        button_pause_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_PAUSE))
+        button_stop_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STOP))
+        button_step_mode_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEPM))
+        button_step_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEP))
+        button_step_backward_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_BACKW))
+
+        # --------------------------------------------------------------------------
+
         self.get_top_widget().set_decorated(False)
 
         self['main_window'].set_border_width(constants.MAIN_WINDOW_BORDER_WIDTH)
@@ -102,7 +123,15 @@ class MainWindowView(View):
         self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
         self['tree_notebook'].set_border_width(constants.BORDER_WIDTH)
         self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
-        self['graphical_editor_frame'].set_border_width(constants.BORDER_WIDTH)
+        self['graphical_editor_vbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_label_eventbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         self['state_editor'].set_border_width(constants.BORDER_WIDTH)
+
+    def create_button_label(self, icon):
+        label = gtk.Label()
+        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
+                                                                    constants.FONT_SIZE_SMALL,
+                                                                    icon))
+        label.show()
+        return label
