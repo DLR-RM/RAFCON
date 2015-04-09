@@ -631,19 +631,33 @@ class StateDataFlowsEditorController(ExtendedController):
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action("delete", self.remove_data_flow)
+        shortcut_manager.add_callback_for_action("add", self.add_data_flow)
+
+    def add_data_flow(self, *_):
+        if self.view.data_flows_listView.tree_view.has_focus():
+            self.df_list_ctrl.on_add(None)
+
+    def remove_data_flow(self, *_):
+        if self.view.data_flows_listView.tree_view.has_focus():
+            self.df_list_ctrl.on_remove(None)
+
     def toggled_button(self, button, name=None):
 
         if name in ['data_flows_external'] and self.model.parent is not None:
             self.df_list_ctrl.view_dict[name] = button.get_active()
-            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
-        elif not name in ['data_flows_internal']:
+        elif name not in ['data_flows_internal']:
             self.df_list_ctrl.view_dict['data_flows_external'] = False
             button.set_active(False)
 
         if name in ['data_flows_internal'] and hasattr(self.model, 'states'):
             self.df_list_ctrl.view_dict[name] = button.get_active()
-            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
-        elif not name in ['data_flows_external']:
+        elif name not in ['data_flows_external']:
             self.df_list_ctrl.view_dict['data_flows_internal'] = False
             button.set_active(False)
 
