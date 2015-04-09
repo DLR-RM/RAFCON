@@ -72,9 +72,6 @@ class StateEditorController(ExtendedController):
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
 
-    def register_actions(self, shortcut_manager):
-        pass
-
     def model_changed(self, model):
         for controller in self.get_child_controllers():
             controller.model = model
@@ -176,9 +173,6 @@ class StateEditorEggController(ExtendedController):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
-
-    def register_actions(self, shortcut_manager):
-        pass
 
     def resize_port_widget(self, expander, x):
 
@@ -329,6 +323,3 @@ class StateEditorLDController(ExtendedController):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
-
-    def register_actions(self, shortcut_manager):
-        pass
