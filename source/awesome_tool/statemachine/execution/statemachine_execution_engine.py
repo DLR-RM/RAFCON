@@ -42,6 +42,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._validity_checker = None
         logger.debug("Statemachine execution engine initialized")
         self._execution_started = False
+        self._forward_step = True
 
     #TODO: pause all external modules
     @Observable.observed
@@ -75,6 +76,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """
         self._status.execution_mode = ExecutionMode.STOPPED
         self._execution_started = False
+        self._status.execution_condition_variable.acquire()
+        self._status.execution_condition_variable.notify_all()
+        self._status.execution_condition_variable.release()
 
     @Observable.observed
     def step_mode(self):
@@ -88,16 +92,20 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
             self._execution_started = True
 
-    @Observable.observed
-    def backward_step_mode(self):
+    def backward_step(self):
         """Take a backward step for all active states in the state machine
         """
-        self._status.execution_mode = ExecutionMode.BACKWARD_STEPPING
+        logger.debug("Notify all threads waiting for the the execution condition variable")
+        self._forward_step = False
+        self._status.execution_condition_variable.acquire()
+        self._status.execution_condition_variable.notify_all()
+        self._status.execution_condition_variable.release()
 
     def step(self):
         """Take a forward step for all active states in the state machine
         """
         logger.debug("Notify all threads waiting for the the execution condition variable")
+        self._forward_step = True
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
@@ -115,8 +123,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
         This functions is called by the hierarchy states.
         """
+        return_value = "run"
         if self._status.execution_mode is ExecutionMode.RUNNING:
-            return
+            return_value = "run"
 
         elif self._status.execution_mode is ExecutionMode.STOPPED:
             # try:
@@ -125,7 +134,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             # finally:
             #     self._status.execution_condition_variable.release()
             logger.debug("Execution engine stopped. State %s is going to quit!", state.name)
-            return "stop"
+            return_value = "stop"
 
         elif self._status.execution_mode is ExecutionMode.PAUSED:
             try:
@@ -133,6 +142,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 self._status.execution_condition_variable.wait()
             finally:
                 self._status.execution_condition_variable.release()
+                return_value = "paused"
 
         elif self._status.execution_mode is ExecutionMode.STEPPING:
             logger.debug("Stepping mode: wait for next step")
@@ -142,13 +152,15 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             finally:
                 self._status.execution_condition_variable.release()
 
-        elif self._status.execution_mode is ExecutionMode.BACKWARD_STEPPING:
-            try:
-                self._status.execution_condition_variable.acquire()
-                self._status.execution_condition_variable.wait()
-            finally:
-                self._status.execution_condition_variable.release()
-        return "run"
+            if self._forward_step:
+                return_value = "step"
+            else:
+                return_value = "backward_step"
+
+        # this is the case when the stop method wakes up the paused or step mode
+        if self._status.execution_mode is ExecutionMode.STOPPED:
+            return "stop"
+        return return_value
 
     def start_from_selected_state(self, state):
         """Starts the active statemachine from a given state

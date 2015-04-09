@@ -78,7 +78,16 @@ class ContainerState(State):
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 
-    def enter(self, scoped_variables_dict):
+    def setup_run(self):
+        """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
+
+        :return:
+        """
+        State.setup_run(self)
+        self.add_input_data_to_scoped_data(self.input_data, self)
+        self.add_default_values_of_scoped_variables_to_scoped_data()
+
+    def enter(self, scoped_variables_dict, backward_execution=False):
         """Called on entering the container state
 
         Here initializations of scoped variables and modules that are supposed to be used by the children take place.
@@ -88,9 +97,9 @@ class ContainerState(State):
         """
         logger.debug("Calling enter() script of container state with name %s", self.name)
         self.script.load_and_build_module()
-        self.script.enter(self, scoped_variables_dict)
+        self.script.enter(self, scoped_variables_dict, backward_execution)
 
-    def exit(self, scoped_variables_dict):
+    def exit(self, scoped_variables_dict, backward_execution=False):
         """Called on exiting the container state
 
         Clean up code for the state and its variables is executed here. This method calls the custom exit function
@@ -99,7 +108,7 @@ class ContainerState(State):
         """
         logger.debug("Calling exit() script of container state with name %s", self.name)
         self.script.load_and_build_module()
-        self.script.exit(self, scoped_variables_dict)
+        self.script.exit(self, scoped_variables_dict, backward_execution)
 
     def handle_no_transition(self, state):
         """
@@ -1165,9 +1174,9 @@ class ContainerState(State):
     def scoped_data(self, scoped_data):
         if not isinstance(scoped_data, dict):
             raise TypeError("scoped_results must be of type dict")
-        for s in scoped_data:
+        for key, s in scoped_data.iteritems():
             if not isinstance(s, ScopedData):
-                raise TypeError("element of scoped_data must be of type ScopedResult")
+                raise TypeError("element of scoped_data must be of type ScopedData")
         self._scoped_data = scoped_data
 
     @property

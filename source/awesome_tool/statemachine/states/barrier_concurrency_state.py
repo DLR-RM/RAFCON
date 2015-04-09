@@ -40,9 +40,6 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         """
         self.setup_run()
 
-        self.add_input_data_to_scoped_data(self.input_data, self)
-        self.add_default_values_of_scoped_variables_to_scoped_data()
-
         try:
             logger.debug("Starting preemptive concurrency state with id %s" % self._state_id)
 

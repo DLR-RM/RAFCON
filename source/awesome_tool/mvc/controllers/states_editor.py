@@ -181,7 +181,7 @@ class StatesEditorController(ExtendedController):
         for identifier, meta in self.tabs.iteritems():
             if meta['page'] is page:
                 model = meta['state_model']
-                logger.debug("switch-page %s" % model.state.name)
+                # logger.debug("switch-page %s" % model.state.name)
                 if not self._selected_state_machine_model.selection.get_selected_state() == model:
                     self.model.selected_state_machine_id = int(identifier.split('|')[0])
                     self._selected_state_machine_model.selection.set([model])
@@ -192,7 +192,7 @@ class StatesEditorController(ExtendedController):
         state_identifier = "%s|%s" % (self.model.state_machine_manager.get_sm_id_for_state(selected_model.state),
                                        selected_model.state.get_path())
         if self.act_model is None or not self.act_model.state.get_path() == selected_model.state.get_path():
-            logger.debug("State %s is SELECTED" % selected_model.state.name)
+            # logger.debug("State %s is SELECTED" % selected_model.state.name)
 
             # print "state_identifier: %s" % state_identifier
             if not state_identifier in self.tabs:

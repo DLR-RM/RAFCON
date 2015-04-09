@@ -8,14 +8,13 @@
 
 """
 import yaml
-from gtkmvc import Observable
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.enums import StateType
-import awesome_tool.statemachine.singleton
+import awesome_tool.statemachine.singleton as singleton
 from awesome_tool.statemachine.enums import MethodName
 
 
@@ -43,28 +42,48 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
         to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
         :return:
         """
-        self.setup_run()
 
-        self.add_input_data_to_scoped_data(self.input_data, self)
-        self.add_default_values_of_scoped_variables_to_scoped_data()
+        if self.backward_execution:
+            self.setup_backward_run()
+        else:  # forward_execution
+            self.setup_run()
 
         try:
-            logger.debug("Starting hierarchy state with id %s and name %s" % (self._state_id, self.name))
 
-            #handle data for the entry script
-            scoped_variables_as_dict = {}
-            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
-            self.execution_history.add_call_history_item(self, MethodName.ENTRY)
-            self.enter(scoped_variables_as_dict)
-            self.execution_history.add_return_history_item(self, MethodName.ENTRY)
-            self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+            if self.backward_execution:
+                logger.debug("Backward executing hierarchy state with id %s and name %s" % (self._state_id, self.name))
 
-            transition = None
+                # pop the ReturnItem of the last hierarchy run from the history
+                last_history_item = self.execution_history.pop_last_item()
+                self.scoped_data = last_history_item.scoped_data
 
-            state = self.get_start_state(set_final_outcome=True)
+                scoped_variables_as_dict = {}
+                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                self.exit(scoped_variables_as_dict, backward_execution=True)
+                # do not write the output of the exit script as
+                # pop the remaining CallItem of the last hierarchy run from the history
+                last_history_item = self.execution_history.pop_last_item()
+                self.scoped_data = last_history_item.scoped_data
 
+                self.execute_backward_one_state()
+
+            else:  # forward_execution
+                logger.debug("Executing hierarchy state with id %s and name %s" % (self._state_id, self.name))
+                #handle data for the entry script
+                scoped_variables_as_dict = {}
+                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                self.execution_history.add_call_history_item(self, MethodName.ENTRY)
+                self.enter(scoped_variables_as_dict)
+                self.execution_history.add_return_history_item(self, MethodName.ENTRY)
+                self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+                state = self.get_start_state(set_final_outcome=True)
+
+            ########################################################
+            # global execution loop, where all children are executed
+            ########################################################
             self.child_execution = True
             while state is not self:
+
                 if self.preempted:
                     if self.concurrency_queue:
                         self.concurrency_queue.put(self.state_id)
@@ -76,38 +95,57 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     return
 
                 # depending on the execution mode pause execution
-                execution_signal = awesome_tool.statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+                print "Handling execution mode"
+                execution_signal = singleton.state_machine_execution_engine.handle_execution_mode(self)
+                last_history_item = None
                 if execution_signal == "stop":
                     # this will be caught at the end of the run method
                     raise RuntimeError("state stopped")
+                elif execution_signal == "backward_step":
+                    self.backward_execution = True
+                    # the item popped from the history will be a ReturnItem
+                    last_history_item = self.execution_history.pop_last_item()
+                    # the scoped data that was valid after the execution of the state
+                    # will loaded for the backward execution
+                    self.scoped_data = last_history_item.scoped_data
+                    state = last_history_item.state_reference
+                    return_value = self.execute_backward_one_state(state)
+                    if return_value == "exit":
+                        return
+                else:
+                    self.backward_execution = False
+                    logger.debug("Executing next state with id \"%s\", type \"%s\" and name \"%s\"" %
+                                 (state.state_id, str(state.state_type), state.name))
+                    state.input_data = self.get_inputs_for_state(state)
+                    state.output_data = self.get_outputs_for_state(state)
+                    #execute the state
+                    state.start(self.execution_history)
+                    state.join()
+                    state.active = False
+                    if state.backward_execution:
+                        # do go to the next state as it was a backward execution
+                        pass
+                    else:
+                        self.add_state_execution_output_to_scoped_data(state.output_data, state)
+                        self.update_scoped_variables_with_output_dictionary(state.output_data, state)
+                        # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
+                        transition = self.get_transition_for_outcome(state, state.final_outcome)
 
-                logger.debug("Executing next state with id \"%s\", type \"%s\" and name \"%s\"" %
-                             (state.state_id, str(state.state_type), state.name))
-                state_input = self.get_inputs_for_state(state)
-                state_output = self.get_outputs_for_state(state)
-                state.input_data = state_input
-                state.output_data = state_output
-                #execute the state
-                # TODO: test as it was before: state.run()
-                state.start(self.execution_history)
-                state.join()
-                state.active = False
-                self.add_state_execution_output_to_scoped_data(state.output_data, state)
-                self.update_scoped_variables_with_output_dictionary(state.output_data, state)
-                # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
-                transition = self.get_transition_for_outcome(state, state.final_outcome)
+                        if transition is None:
+                            transition = self.handle_no_transition(state)
+                        # it the transition is still None, then the state was preempted or aborted, in this case return
+                        if transition is None:
+                            self.child_execution = False
+                            return
 
-                if transition is None:
-                    transition = self.handle_no_transition(state)
-                # it the transition is still None, then the state was preempted or aborted, in this case return
-                if transition is None:
-                    self.child_execution = False
-                    return
+                        state = self.get_state_for_transition(transition)
 
-                state = self.get_state_for_transition(transition)
+            ########################################################
+            # global execution loop end
+            ########################################################
 
             self.child_execution = False
-            #handle data for the exit script
+            # handle data for the exit script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.execution_history.add_call_history_item(self, MethodName.EXIT)
@@ -116,7 +154,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
             self.write_output_data()
-
             self.check_output_data_type()
 
             # notify other threads that wait for this thread to finish
@@ -148,6 +185,40 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.active = False
             self.child_execution = False
             return
+
+    def execute_backward_one_state(self, state):
+
+        if state is self:
+            logger.debug("Backward-executing entry script of the state with id \"%s\", type \"%s\" and name \"%s\"" %
+                         (state.state_id, str(state.state_type), state.name))
+            # the last_history_item is the ReturnItem from the entry function,
+            # thus backward execute the entry function
+            scoped_variables_as_dict = {}
+            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            self.enter(scoped_variables_as_dict, backward_execution=True)
+            # do not write the output of the entry script
+            # pop the remaining CallItem from the history
+            last_history_item = self.execution_history.pop_last_item()
+            # final outcome is not important as the execution order is fixed during backward stepping
+            return "exit"
+        else:
+            logger.debug("Backward-executing next state with id \"%s\", type \"%s\" and name \"%s\"" %
+                         (state.state_id, str(state.state_type), state.name))
+            state.input_data = self.get_inputs_for_state(state)
+            state.output_data = self.get_outputs_for_state(state)
+            #execute the state
+            state.start(self.execution_history, backward_execution=True)
+            state.join()
+            state.active = False
+            # do not alter the scoped data with the data of the backward executed state
+            # the item popped now from the history will be a CallItem and will contain the scoped data,
+            # that was valid before executing the state
+            last_history_item = self.execution_history.pop_last_item()
+            # copy the scoped_data of the history from the point before the state was executed
+            self.scoped_data = last_history_item.scoped_data
+            # do not transit to the next state
+            return "continue"
+
 
     @classmethod
     def to_yaml(cls, dumper, data):
