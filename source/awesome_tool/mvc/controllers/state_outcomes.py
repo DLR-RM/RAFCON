@@ -133,7 +133,15 @@ class StateOutcomesListController(ExtendedController):
 
     def on_add(self, button, info=None):
         # logger.debug("add outcome")
-        self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
+        outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
+        # Search for new entry and select it
+        ctr = 0
+        for outcome_entry in self.tree_store:
+            # Compare outcome ids
+            if outcome_entry[6].outcome_id == outcome_id:
+                self.view.tree_view.set_cursor(ctr)
+                break
+            ctr += 1
 
     def on_remove(self, button, info=None):
 
@@ -143,6 +151,11 @@ class StateOutcomesListController(ExtendedController):
             outcome_id = self.tree_store[path[0][0]][6].outcome_id
             try:
                 self.model.state.remove_outcome(outcome_id)
+                row_number = path[0][0]
+                if len(self.tree_store) > row_number:
+                    self.view.tree_view.set_cursor(row_number)
+                elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
+                    self.view.tree_view.set_cursor(max(row_number-1, 0))
             except AttributeError as e:
                 logger.warning("Error while removing outcome: {0}".format(e))
 

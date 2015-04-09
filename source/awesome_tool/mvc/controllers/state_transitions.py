@@ -167,9 +167,9 @@ class StateTransitionsListController(ExtendedController):
             # selection to next element
             row_number = path[0][0]
             if len(self.tree_store) > row_number:
-                self.view.tree_view.set_cursor(path[0][0])
+                self.view.tree_view.set_cursor(row_number)
             elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
-                self.view.tree_view.set_cursor(path[0][0]-1)
+                self.view.tree_view.set_cursor(row_number-1)
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -395,8 +395,6 @@ class StateTransitionsListController(ExtendedController):
                     self.combo['free_ext_from_state_models'] = free_from_state_models
                     self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
-        # print "state.name: ", self.model.state.name
-
     def update_tree_store(self):
 
         self.tree_store.clear()
@@ -426,10 +424,6 @@ class StateTransitionsListController(ExtendedController):
                         to_state_label = self.model.states[t.to_state].state.name
                     to_outcome_label = None
 
-                # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
-
-                # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
-    #                   name-color, to-state-color, transition-object, state-object, is_editable
                 self.tree_store.append(None, [transition_id,  # id
                                               from_state_label,  # from-state
                                               from_outcome_label,  # from-outcome
@@ -467,10 +461,6 @@ class StateTransitionsListController(ExtendedController):
                         to_state_label = self.model.parent.states[t.to_state].state.name
                     to_outcome_label = None
 
-                # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
-
-                # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
-    #                   name-color, to-state-color, transition-object, state-object, is_editable
                 self.tree_store.append(None, [transition_id,  # id
                                               from_state_label,  # from-state
                                               from_outcome_label,  # from-outcome
@@ -566,7 +556,7 @@ class StateTransitionsEditorController(ExtendedController):
 
         if name in ['transitions_external'] and self.model.parent is not None:
             self.trans_list_ctrl.view_dict[name] = button.get_active()
-        elif not name in ['transitions_internal']:
+        elif name not in ['transitions_internal']:
             self.trans_list_ctrl.view_dict['transitions_external'] = False
             button.set_active(False)
 
