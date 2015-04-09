@@ -15,6 +15,7 @@ from awesome_tool.statemachine.states.state import State
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.outcome import Outcome
+from awesome_tool.statemachine.enums import MethodName
 
 
 class ExecutionState(State, yaml.YAMLObject):
@@ -67,6 +68,7 @@ class ExecutionState(State, yaml.YAMLObject):
         try:
 
             logger.debug("Starting state with id %s and name %s" % (self._state_id, self.name))
+            self.execution_history.add_call_history_item(self, MethodName.EXECUTE)
             outcome = self._execute(self.input_data, self.output_data)
 
             #check output data
@@ -82,6 +84,7 @@ class ExecutionState(State, yaml.YAMLObject):
 
             self.final_outcome = outcome
             self.active = False
+            self.execution_history.add_return_history_item(self, MethodName.EXECUTE)
             return
 
         except Exception, e:

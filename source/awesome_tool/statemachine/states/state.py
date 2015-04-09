@@ -101,6 +101,9 @@ class State(Observable, yaml.YAMLObject, object):
         # a flag that shows if the state is currently running
         self._active = None
 
+        self.edited_since_last_execution = False
+        self.execution_history = None
+
         logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
@@ -108,11 +111,12 @@ class State(Observable, yaml.YAMLObject, object):
     # ---------------------------------------------------------------------------------------------
 
     # give the state the appearance of a thread that can be started several times
-    def start(self):
+    def start(self, execution_history):
         """ Starts the execution of the state in a new thread.
 
         :return:
         """
+        self.execution_history = execution_history
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 
@@ -557,9 +561,6 @@ class State(Observable, yaml.YAMLObject, object):
             self.add_outcome("success", 0)
             self.add_outcome("aborted", -1)
             self.add_outcome("preempted", -2)
-            if self.state_type is StateType.BARRIER_CONCURRENCY:
-                #for a barrier concurrency case, there is only one successfull outcome
-                self.add_outcome("success", 0)
 
         else:
             if not isinstance(outcomes, dict):

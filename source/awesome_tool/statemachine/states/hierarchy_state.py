@@ -16,6 +16,7 @@ logger = log.get_logger(__name__)
 from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.enums import StateType
 import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.enums import MethodName
 
 
 class HierarchyState(ContainerState, yaml.YAMLObject):
@@ -53,7 +54,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             #handle data for the entry script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            self.execution_history.add_call_history_item(self, MethodName.ENTRY)
             self.enter(scoped_variables_as_dict)
+            self.execution_history.add_return_history_item(self, MethodName.ENTRY)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
             transition = None
@@ -78,7 +81,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     # this will be caught at the end of the run method
                     raise RuntimeError("state stopped")
 
-                logger.debug("Executing next state state with id \"%s\", type \"%s\" and name \"%s\"" %
+                logger.debug("Executing next state with id \"%s\", type \"%s\" and name \"%s\"" %
                              (state.state_id, str(state.state_type), state.name))
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)
@@ -86,7 +89,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 state.output_data = state_output
                 #execute the state
                 # TODO: test as it was before: state.run()
-                state.start()
+                state.start(self.execution_history)
                 state.join()
                 state.active = False
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
@@ -107,7 +110,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             #handle data for the exit script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            self.execution_history.add_call_history_item(self, MethodName.EXIT)
             self.exit(scoped_variables_as_dict)
+            self.execution_history.add_return_history_item(self, MethodName.EXIT)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
             self.write_output_data()

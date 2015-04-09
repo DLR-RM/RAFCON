@@ -143,7 +143,7 @@ class StateMachinesEditorController(ExtendedController):
     def sm_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_mark_dirty
         if sm_id in self.model.state_machine_manager.state_machines.iterkeys():
-            logger.debug("State machine mark dirty!")
+            #logger.debug("State machine mark dirty!")
             (header_h_box, new_label) = \
                 create_tab_header("%s|%s" % (sm_id,
                                              self.tabs[sm_id]["state_machine_model"].root_state.state.name + "*"),
@@ -154,7 +154,7 @@ class StateMachinesEditorController(ExtendedController):
     def sm_un_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_un_mark_dirty
         if sm_id in self.model.state_machine_manager.state_machines.iterkeys():
-            logger.debug("State machine un mark dirty!")
+            #logger.debug("State machine un mark dirty!")
             (header_h_box, new_label) = \
                 create_tab_header("%s|%s" % (sm_id,
                                              self.tabs[sm_id]["state_machine_model"].root_state.state.name),

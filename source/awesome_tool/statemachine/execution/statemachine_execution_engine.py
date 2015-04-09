@@ -40,7 +40,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self.status = StateMachineStatus(ExecutionMode.STOPPED)
         # TODO: write validity checker of the statemachine
         self._validity_checker = None
-        self.execution_history = ExecutionHistory()
         logger.debug("Statemachine execution engine initialized")
         self._execution_started = False
 
@@ -66,7 +65,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             self._status.execution_mode = ExecutionMode.RUNNING
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
-            self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].root_state.start()
+            self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
             self._execution_started = True
 
     #TODO: stop all external modules
@@ -86,7 +85,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             self._status.execution_mode = ExecutionMode.STEPPING
         else:
             self._status.execution_mode = ExecutionMode.STEPPING
-            self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].root_state.start()
+            self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
             self._execution_started = True
 
     @Observable.observed
