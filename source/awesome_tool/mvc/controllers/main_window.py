@@ -277,3 +277,10 @@ class MainWindowController(ExtendedController):
         button.handler_block_by_func(func)
         button.set_active(active)
         button.handler_unblock_by_func(func)
+
+    def on_debug_content_change(self, widget, data=None):
+        info = self.view['button_show_info'].get_active()
+        debug = self.view['button_show_debug'].get_active()
+        warning = self.view['button_show_warning'].get_active()
+        error = self.view['button_show_error'].get_active()
+        self.view.logging_view.update_filtered_buffer(info, debug, warning, error)
