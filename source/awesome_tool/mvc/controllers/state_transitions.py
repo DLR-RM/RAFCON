@@ -546,19 +546,33 @@ class StateTransitionsEditorController(ExtendedController):
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action("delete", self.remove_transition)
+        shortcut_manager.add_callback_for_action("add", self.add_transition)
+
+    def add_transition(self, *_):
+        if self.view.transitions_listView.tree_view.has_focus():
+            self.trans_list_ctrl.on_add(None)
+
+    def remove_transition(self, *_):
+        if self.view.transitions_listView.tree_view.has_focus():
+            self.trans_list_ctrl.on_remove(None)
+
     def toggled_button(self, button, name=None):
 
         if name in ['transitions_external'] and self.model.parent is not None:
             self.trans_list_ctrl.view_dict[name] = button.get_active()
-            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
         elif not name in ['transitions_internal']:
             self.trans_list_ctrl.view_dict['transitions_external'] = False
             button.set_active(False)
 
         if name in ['transitions_internal'] and hasattr(self.model, 'states'):
             self.trans_list_ctrl.view_dict[name] = button.get_active()
-            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
-        elif not name in ['transitions_external']:
+        elif name not in ['transitions_external']:
             self.trans_list_ctrl.view_dict['transitions_internal'] = False
             button.set_active(False)
 
