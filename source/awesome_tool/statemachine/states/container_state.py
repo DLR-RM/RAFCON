@@ -95,7 +95,8 @@ class ContainerState(State):
 
         :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
-        logger.debug("Calling enter() script of container state with name %s", self.name)
+        logger.debug("Calling enter() script of container state with name %s (backward: %s)",
+                     self.name, backward_execution)
         self.script.load_and_build_module()
         self.script.enter(self, scoped_variables_dict, backward_execution)
 
@@ -106,7 +107,8 @@ class ContainerState(State):
         provided by a python script.
         :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
-        logger.debug("Calling exit() script of container state with name %s", self.name)
+        logger.debug("Calling exit() script of container state with name %s (backward: %s)",
+                     self.name, backward_execution)
         self.script.load_and_build_module()
         self.script.exit(self, scoped_variables_dict, backward_execution)
 
