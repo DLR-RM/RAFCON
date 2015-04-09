@@ -62,26 +62,11 @@ class MenuBarView(View):
     def set_image_for_button(self, button_name):
         button = self[button_name]
 
-        layout = pango.Layout(gtk.TextView().get_pango_context())
-
-        pixmap, mask = gtk.gdk.pixmap_create_from_xpm_d(self.win.window,
-                                                        self.win.get_style().bg[gtk.STATE_NORMAL],
-                                                        self.create_empty_pixbuf_xpm(constants.ICON_SIZE_IN_PIXEL,
-                                                                                     constants.ICON_SIZE_IN_PIXEL))
-
-        layout.set_markup('<span fgcolor="%s" font_desc="%s %s">&#x%s;</span>' %
+        label = gtk.Label()
+        label.set_markup('<span fgcolor="%s" font_desc="%s %s">&#x%s;</span>' %
                           (constants.TEXT_COLOR,
                            constants.DEFAULT_FONT,
                            constants.FONT_SIZE_NORMAL,
                            self.buttons[button_name]))
 
-        pixmap.draw_layout(pixmap.new_gc(), 2, 2, layout)
-        mask.draw_layout(mask.new_gc(), 2, 2, layout)
-
-        button.set_image(gtk.image_new_from_pixmap(pixmap, mask))
-
-    def create_empty_pixbuf_xpm(self, width, height):
-        xpm = ["%i %i 1 1" % (width, height), "  c None"]
-        for i in range(0, height):
-            xpm.append(" " * width)
-        return xpm
+        button.set_image(label)
