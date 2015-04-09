@@ -152,19 +152,6 @@ class MainWindowController(ExtendedController):
             tab_label.set_angle(90)
 
         ######################################################
-        # status bar
-        ######################################################
-        # add some data to the status bar
-        status_bar1 = view["statusbar1"]
-        status_bar1.push(0, "The awesome tool")
-        status_bar2 = view["statusbar2"]
-        status_bar2.push(0, "is awesome :-)")
-        status_bar3 = view["statusbar3"]
-        status_bar3_string = "Execution status: " + \
-                             str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
-        status_bar3.push(0, status_bar3_string)
-
-        ######################################################
         # menu bar
         ######################################################
         menu_bar_controller = MenuBarController(state_machine_manager_model,
@@ -207,10 +194,6 @@ class MainWindowController(ExtendedController):
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
-        status_bar3 = self.view["statusbar3"]
-        status_bar3_string = "Execution status: " + \
-                             str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
-        status_bar3.push(0, status_bar3_string)
 
         if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.RUNNING:
             self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)

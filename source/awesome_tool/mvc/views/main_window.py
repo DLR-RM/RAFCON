@@ -82,8 +82,6 @@ class MainWindowView(View):
         self["top_level_vbox"].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
         self["top_level_vbox"].reorder_child(self.tool_bar.get_top_widget(), 1)
 
-        self["top_level_vbox"].reorder_child(self["top_bar_separator"], 2)
-
         # insert global-variable-manager
         #self['global_variable_manager_vbox'].add(self.global_variable_manager.get_top_widget())
 
@@ -131,7 +129,7 @@ class MainWindowView(View):
     def create_button_label(self, icon):
         label = gtk.Label()
         label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
-                                                                    constants.FONT_SIZE_SMALL,
+                                                                    constants.FONT_SIZE_BIG,
                                                                     icon))
         label.show()
         return label
