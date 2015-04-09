@@ -284,7 +284,6 @@ class StateTransitionsListController(ExtendedController):
         # if transition.from_state == self_model.state.state_id:
         #     free_from_outcomes_dict[state_model.state.state_id].append(None)
         if model.state.start_state_id is None:
-            print "no start state for state", model.state.name
             free_from_outcomes_dict[model.state.state_id] = [None]
 
         if from_state is not None and from_state.state_id in free_from_outcomes_dict:

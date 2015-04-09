@@ -182,7 +182,8 @@ class GraphicalEditorController(ExtendedController):
         redraw_after = 1 / 50.  # sec
         # Check if initialized
         # and whether the last redraw was more than redraw_after ago
-        if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after):
+        if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
+                self.view.editor.has_focus():
             # Remove any existing timer id
             self.timer_id = None
             self.view.editor.emit("configure_event", None)
