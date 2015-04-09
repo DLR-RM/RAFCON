@@ -51,6 +51,27 @@ class DataPortListController(ExtendedController):
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action("delete", self.remove_port)
+        shortcut_manager.add_callback_for_action("add", self.add_port)
+
+    def add_port(self, *_):
+        if self.view[self.view.top].has_focus():
+            if self.type == "input":
+                self.on_new_input_port_button_clicked(None)
+            else:
+                self.on_new_output_port_button_clicked(None)
+
+    def remove_port(self, *_):
+        if self.view[self.view.top].has_focus():
+            if self.type == "input":
+                self.on_delete_input_port_button_clicked(None)
+            else:
+                self.on_delete_output_port_button_clicked(None)
 
     @ExtendedController.observe("input_data_ports", after=True)
     def input_data_ports_changed(self, model, prop_name, info):
@@ -74,7 +95,10 @@ class DataPortListController(ExtendedController):
 
     def on_delete_input_port_button_clicked(self, widget, data=None):
         tree_view = self.view["input_ports_tree_view"]
-        path = tree_view.get_cursor()[0][0]
+        cursor = tree_view.get_cursor()
+        if cursor[0] is None:
+            return
+        path = cursor[0][0]
         if path is not None:
             data_port_id = copy.copy(self.dataport_list_store[int(path)][3])
             self.dataport_list_store.clear()
@@ -82,7 +106,10 @@ class DataPortListController(ExtendedController):
 
     def on_delete_output_port_button_clicked(self, widget, data=None):
         tree_view = self.view["output_ports_tree_view"]
-        path = tree_view.get_cursor()[0][0]
+        cursor = tree_view.get_cursor()
+        if cursor[0] is None:
+            return
+        path = cursor[0][0]
         if path is not None:
             data_port_id = copy.copy(self.dataport_list_store[int(path)][3])
             self.dataport_list_store.clear()
