@@ -152,24 +152,21 @@ class StateTransitionsListController(ExtendedController):
             logger.error("Unexpected exception while creating transition: {0}".format(e))
 
     def on_remove(self, button, info=None):
-        # print "remove transition"
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        # print path, tree
         if path:
-            # print "Transition: ", self.tree_store[path[0][0]][0]
-            transition_id = self.tree_store[path[0][0]][0]
-            if self.tree_store[path[0][0]][5]:
-                # print self.model.parent.state.transitions
+            row_number = path[0][0]
+            transition_id = self.tree_store[row_number][0]
+            if self.tree_store[row_number][5]:
                 self.model.parent.state.remove_transition(int(transition_id))
             else:
                 self.model.state.remove_transition(int(transition_id))
 
             # selection to next element
-            row_number = path[0][0]
-            if len(self.tree_store) > row_number:
-                self.view.tree_view.set_cursor(row_number)
-            elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
-                self.view.tree_view.set_cursor(row_number-1)
+            if len(self.tree_store) > 0:
+                self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
+        else:
+            logger.warning("Please select the data flow to be deleted")
+            return
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))

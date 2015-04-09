@@ -152,10 +152,8 @@ class StateOutcomesListController(ExtendedController):
             try:
                 self.model.state.remove_outcome(outcome_id)
                 row_number = path[0][0]
-                if len(self.tree_store) > row_number:
-                    self.view.tree_view.set_cursor(row_number)
-                elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
-                    self.view.tree_view.set_cursor(max(row_number-1, 0))
+                if len(self.tree_store) > 0:
+                    self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
             except AttributeError as e:
                 logger.warning("Error while removing outcome: {0}".format(e))
 

@@ -130,23 +130,20 @@ class StateDataFlowsListController(ExtendedController):
         self.view.tree_view.set_cursor(len(self.tree_store)-1)
 
     def on_remove(self, button, info=None):
-        # print "remove dataflow"
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        # print path, tree
         if path:
             if self.tree_store[path[0][0]][5]:
                 self.model.parent.state.remove_data_flow(self.tree_store[path[0][0]][0])
             else:
                 self.model.state.remove_data_flow(self.tree_store[path[0][0]][0])
         else:
-            logger.warning("NO selection to remove data-flow")
+            logger.warning("Please select the data flow to be deleted")
+            return
 
         # selection to next element
         row_number = path[0][0]
-        if len(self.tree_store) > row_number:
-            self.view.tree_view.set_cursor(path[0][0])
-        elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
-            self.view.tree_view.set_cursor(path[0][0]-1)
+        if len(self.tree_store) > 0:
+            self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))

@@ -86,34 +86,53 @@ class DataPortListController(ExtendedController):
     def on_new_input_port_button_clicked(self, widget, data=None):
         new_input_port_name = "input_%s" % str(self.new_port_counter)
         self.new_port_counter += 1
-        self.model.state.add_input_data_port(new_input_port_name, "str", "val")
+        data_port_id = self.model.state.add_input_data_port(new_input_port_name, "str", "val")
+        self.select_entry(data_port_id)
 
     def on_new_output_port_button_clicked(self, widget, data=None):
         new_output_port_name = "output_%s" % str(self.new_port_counter)
         self.new_port_counter += 1
-        self.model.state.add_output_data_port(new_output_port_name, "str", "val")
+        data_port_id = self.model.state.add_output_data_port(new_output_port_name, "str", "val")
+        self.select_entry(data_port_id)
 
     def on_delete_input_port_button_clicked(self, widget, data=None):
-        tree_view = self.view["input_ports_tree_view"]
-        cursor = tree_view.get_cursor()
-        if cursor[0] is None:
-            return
-        path = cursor[0][0]
-        if path is not None:
-            data_port_id = copy.copy(self.dataport_list_store[int(path)][3])
-            self.dataport_list_store.clear()
+        path = self.get_path()
+        print path
+        data_port_id = self.get_data_port_id_from_selection()
+        if data_port_id is not None:
             self.model.state.remove_input_data_port(data_port_id)
+            if len(self.dataport_list_store) > 0:
+                self.view[self.view.top].set_cursor(min(path, len(self.dataport_list_store)-1))
 
     def on_delete_output_port_button_clicked(self, widget, data=None):
-        tree_view = self.view["output_ports_tree_view"]
-        cursor = tree_view.get_cursor()
-        if cursor[0] is None:
-            return
-        path = cursor[0][0]
-        if path is not None:
-            data_port_id = copy.copy(self.dataport_list_store[int(path)][3])
-            self.dataport_list_store.clear()
+        path = self.get_path()
+        data_port_id = self.get_data_port_id_from_selection()
+        if data_port_id is not None:
             self.model.state.remove_output_data_port(data_port_id)
+            if len(self.dataport_list_store) > 0:
+                self.view[self.view.top].set_cursor(min(path, len(self.dataport_list_store)-1))
+
+    def get_data_port_id_from_selection(self):
+        path = self.get_path()
+        if path is not None:
+            data_port_id = self.dataport_list_store[int(path)][3]
+            return data_port_id
+        return None
+
+    def select_entry(self, data_port_id):
+        ctr = 0
+        for data_port_entry in self.dataport_list_store:
+            # Compare transition ids
+            if data_port_entry[3] == data_port_id:
+                self.view[self.view.top].set_cursor(ctr)
+                break
+            ctr += 1
+
+    def get_path(self):
+        cursor = self.view[self.view.top].get_cursor()
+        if cursor[0] is None:
+            return None
+        return cursor[0][0]
 
     def on_name_changed(self, widget, path, text):
         data_port_id = self.dataport_list_store[int(path)][3]
