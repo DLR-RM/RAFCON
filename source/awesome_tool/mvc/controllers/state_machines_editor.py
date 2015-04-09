@@ -11,14 +11,14 @@ from awesome_tool.utils import log
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.singleton
-from awesome_tool.utils import constants
+from awesome_tool.utils import constants, helper
 
 
 def create_tab_close_button(callback, *additional_parameters):
     closebutton = gtk.Button()
     close_label = gtk.Label()
     close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT, constants.FONT_SIZE_SMALL,
-                                                                      constants.BUTTON_QUIT))
+                                                                      constants.BUTTON_CLOSE))
     closebutton.set_relief(gtk.RELIEF_NONE)
     closebutton.set_focus_on_click(True)
     closebutton.add(close_label)
@@ -176,6 +176,7 @@ class StateMachinesEditorController(ExtendedController):
             message.add_button("Yes", 42)
             message.add_button("No", 43)
             message.connect('response', self.on_close_message_dialog_response_signal, state_machine_model)
+            helper.set_button_children_size_request(message)
             message.show()
         else:
             self.remove_state_machine(state_machine_model)

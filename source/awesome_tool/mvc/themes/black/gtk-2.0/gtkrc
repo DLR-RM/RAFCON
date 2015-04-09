@@ -187,6 +187,24 @@ style "check_button" = "my_default"
     fg[INSENSITIVE]   = @dark_gray
 }
 widget_class "*CheckButton*"				style "check_button"
+
+
+
+style "dialog_button" = "my_default"
+{
+    GtkButton::size_request = 90
+   
+    bg[ACTIVE]        = @button_active
+    bg[NORMAL]        = @text_background
+    bg[PRELIGHT]      = @medium_gray
+    bg[SELECTED]      = @button_active
+    bg[INSENSITIVE]   = @widget_background
+
+    fg[ACTIVE]        = @white
+    fg[SELECTED]      = @white
+    fg[INSENSITIVE]   = @dark_gray
+}
+widget_class "*Dialog*Button*"				style "dialog_button"
 #----------------------------
 
 

@@ -8,6 +8,7 @@ from awesome_tool.utils import log
 from awesome_tool.mvc.views.about_dialog import MyAboutDialog
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
+from awesome_tool.utils import helper
 
 
 
@@ -216,6 +217,7 @@ class MenuBarController(ExtendedController):
             message.add_button("Yes", 42)
             message.add_button("No", 43)
             message.connect('response', self.on_quit_message_dialog_response_signal_open_changes)
+            helper.set_button_children_size_request(message)
             message.show()
             return True
         return False
@@ -229,6 +231,7 @@ class MenuBarController(ExtendedController):
             message.add_button("Yes", 42)
             message.add_button("No", 43)
             message.connect('response', self.on_quit_message_dialog_response_signal_sm_running)
+            helper.set_button_children_size_request(message)
             message.show()
             return True
         return False
@@ -339,6 +342,7 @@ class MenuBarController(ExtendedController):
     ######################################################
     def on_about_activate(self, widget, data=None):
         about = MyAboutDialog()
+        helper.set_button_children_size_request(about)
         response = about.run()
         if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
             about.destroy()

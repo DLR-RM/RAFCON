@@ -63,10 +63,9 @@ class MenuBarView(View):
         button = self[button_name]
 
         label = gtk.Label()
-        label.set_markup('<span fgcolor="%s" font_desc="%s %s">&#x%s;</span>' %
-                         (constants.TEXT_COLOR,
-                          constants.DEFAULT_FONT,
-                          constants.FONT_SIZE_NORMAL,
+        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
+                         (constants.DEFAULT_FONT,
+                          constants.FONT_SIZE_BIG,
                           self.buttons[button_name]))
 
         button.set_image(label)
