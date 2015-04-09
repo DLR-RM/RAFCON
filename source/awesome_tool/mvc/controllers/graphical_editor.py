@@ -182,8 +182,9 @@ class GraphicalEditorController(ExtendedController):
         redraw_after = 1 / 50.  # sec
         # Check if initialized
         # and whether the last redraw was more than redraw_after ago
+
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
-                self.view.editor.has_focus():
+                self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id:
             # Remove any existing timer id
             self.timer_id = None
             self.view.editor.emit("configure_event", None)
@@ -941,8 +942,9 @@ class GraphicalEditorController(ExtendedController):
             # Check lower right corner of all child states
             for child_state_m in state_m.states.itervalues():
                 _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
-                min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
-                max_bottom_edge = child_bottom_edge if max_bottom_edge > child_bottom_edge else max_bottom_edge
+                if child_right_edge is not None and child_bottom_edge is not None:
+                    min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
+                    max_bottom_edge = child_bottom_edge if max_bottom_edge > child_bottom_edge else max_bottom_edge
             # Check position of all waypoints of all transitions
             for transition_m in state_m.transitions:
                 for waypoint in transition_m.meta['gui']['editor']['waypoints']:
@@ -957,8 +959,9 @@ class GraphicalEditorController(ExtendedController):
             for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                           state_m.scoped_variables):
                 _, port_right_edge, port_bottom_edge, _ = self.get_boundaries(port_m)
-                min_right_edge = port_right_edge if min_right_edge < port_right_edge else min_right_edge
-                max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
+                if port_right_edge is not None and port_bottom_edge is not None:
+                    min_right_edge = port_right_edge if min_right_edge < port_right_edge else min_right_edge
+                    max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
 
         # Check for parent size limitation
         max_right_edge = sys.maxint
@@ -1662,19 +1665,23 @@ class GraphicalEditorController(ExtendedController):
             return min(x_coordinates), max(x_coordinates), min(y_coordinates), max(y_coordinates)
 
         if isinstance(model, (DataPortModel, ScopedVariableModel)):
-            left = meta['inner_pos'][0]
-            right = meta['inner_pos'][0] + meta['width']
-            bottom = meta['inner_pos'][1]
-            top = meta['inner_pos'][1] + meta['height']
+            try: # Data port position might not be set if data connections are not shown
+                left = meta['inner_pos'][0]
+                right = meta['inner_pos'][0] + meta['width']
+                bottom = meta['inner_pos'][1]
+                top = meta['inner_pos'][1] + meta['height']
 
-            if model in model.parent.output_data_ports:
-                left = meta['inner_pos'][0] - meta['width']
-                right = meta['inner_pos'][0]
-            if model in model.parent.scoped_variables:
-                bottom = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
-                top = bottom + meta['height']
+                if model in model.parent.output_data_ports:
+                    left = meta['inner_pos'][0] - meta['width']
+                    right = meta['inner_pos'][0]
+                if model in model.parent.scoped_variables:
+                    bottom = meta['inner_pos'][1] - meta['height'] + meta['rect_height']
+                    top = bottom + meta['height']
 
-            return left, right, bottom, top
+                return left, right, bottom, top
+            except TypeError:
+                return None, None, None, None
+
         return None, None, None, None
 
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
