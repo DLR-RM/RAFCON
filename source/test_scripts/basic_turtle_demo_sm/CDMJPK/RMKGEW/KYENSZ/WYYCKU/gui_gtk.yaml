@@ -10,7 +10,7 @@ vivid_dict_content:
                         state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
                     - !!binary |
                         LdjBD8rlG0A=
-                    id: 14
+                    id: 11
                     input_pos: {}
                     outcome_pos:
                         -2: !!python/tuple

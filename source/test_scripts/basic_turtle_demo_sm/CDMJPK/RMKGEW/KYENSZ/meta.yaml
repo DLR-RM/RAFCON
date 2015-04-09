@@ -10,12 +10,13 @@ outcomes:
 output_data_ports: {}
 path: ../../test_scripts/basic_turtle_demo_sm/CDMJPK/RMKGEW/KYENSZ
 scoped_variables: {}
-start_state: PAYECU
 state_id: KYENSZ
 state_type: STATE_TYPE.HIERARCHY
 transitions:
     1: !Transition {from_outcome: 0, from_state: UEPNNW, to_outcome: null, to_state: KQDJYS,
         transition_id: 1}
+    2: !Transition {from_outcome: 1, from_state: MCOLIQ, to_outcome: null, to_state: MCOLIQ,
+        transition_id: 2}
     4: !Transition {from_outcome: 0, from_state: PAYECU, to_outcome: null, to_state: UEPNNW,
         transition_id: 4}
     6: !Transition {from_outcome: 0, from_state: KQDJYS, to_outcome: null, to_state: FGIXTU,
@@ -30,9 +31,9 @@ transitions:
         transition_id: 10}
     11: !Transition {from_outcome: 0, from_state: RQXPAI, to_outcome: null, to_state: MCOLIQ,
         transition_id: 11}
-    12: !Transition {from_outcome: 1, from_state: MCOLIQ, to_outcome: null, to_state: MCOLIQ,
-        transition_id: 12}
     13: !Transition {from_outcome: 0, from_state: MCOLIQ, to_outcome: null, to_state: HRARIS,
         transition_id: 13}
     14: !Transition {from_outcome: 0, from_state: HRARIS, to_outcome: 0, to_state: null,
         transition_id: 14}
+    15: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: PAYECU,
+        transition_id: 15}

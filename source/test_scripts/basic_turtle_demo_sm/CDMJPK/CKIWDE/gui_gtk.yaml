@@ -5,7 +5,7 @@ vivid_dict_content:
             editor: !Vividict
                 vivid_dict_content:
                     height: 20.0
-                    id: 33
+                    id: 31
                     input_pos:
                         1: !!python/tuple
                         - 17.060112191833582

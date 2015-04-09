@@ -114,7 +114,7 @@ vivid_dict_content:
                                     -1, 0]
                             - !!binary |
                                 8KaLjRXuNEA=
-                            id: 35
+                            id: 32
                             to_pos_x: 50.276483050847474
                             to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
@@ -139,7 +139,7 @@ vivid_dict_content:
                                     -1, 0]
                             - !!binary |
                                 iFq1WmuuLUA=
-                            id: 36
+                            id: 33
                             to_pos_x: 267.2177178642908
                             to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
                             - !!python/object/apply:numpy.dtype
@@ -150,3 +150,27 @@ vivid_dict_content:
                                 fgGYHo1AP0A=
                             waypoints: !Vividict
                                 vivid_dict_content: {}
+    transition3: !Vividict
+        vivid_dict_content:
+            gui: !Vividict
+                vivid_dict_content:
+                    editor: !Vividict
+                        vivid_dict_content:
+                            from_pos_x: 0.0
+                            from_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                fgGYHo1AP0A=
+                            id: 34
+                            to_pos_x: 13.060112191833582
+                            to_pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                8KaLjRXuNEA=
+                            waypoints: []

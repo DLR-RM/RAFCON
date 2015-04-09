@@ -302,7 +302,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glFlush()
 
         # OpenGL end
-        #gldrawable.gl_end()
+        gldrawable.gl_end()
 
         # logger.debug("expose_finish")
 
