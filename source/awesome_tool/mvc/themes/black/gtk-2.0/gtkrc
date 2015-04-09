@@ -6,8 +6,6 @@
 # Olivier Fourdan <fourdan@xfce.org>
 # Released under the GPL license
 
-gtk-menu-images = 0
-
 style "my_default"
 {
     GtkWidget::focus-line-width                  = 0
