@@ -13,7 +13,9 @@ import copy
 # from awesome_tool.statemachine.states.state import State
 # from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.enums import MethodName
-
+from awesome_tool.statemachine.enums import StateType
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
 
 class ExecutionHistory():
 
@@ -57,6 +59,15 @@ class ExecutionHistory():
         self.history_items.append(return_item)
         return return_item
 
+    def pop_last_item(self):
+        if len(self.history_items) >= 1:
+            return_item = self.history_items[len(self.history_items) - 1]
+            self.history_items.remove(return_item)
+            return return_item
+        else:
+            logger.error("No item left in the history item list in the execution history.")
+            return None
+
 
 class HistoryItem():
 
@@ -86,16 +97,23 @@ class CallItem(ScriptItem):
 
     def __init__(self, state, prev, method_name):
         ScriptItem.__init__(self, state, prev, method_name)
-        # copy the input data of the state before execution of the state
-        self.input_data = copy.deepcopy(state._input_data)
+        # copy the scoped_data
+        if state.state_type is StateType.EXECUTION:
+            self.scoped_data = copy.deepcopy(state.parent._scoped_data)
+        else:
+            self.scoped_data = copy.deepcopy(state._scoped_data)
 
 
 class ReturnItem(ScriptItem):
 
     def __init__(self, state, prev, method_name):
         ScriptItem.__init__(self, state, prev, method_name)
-        # copy the output data of the state after execution of the state
-        self.output_data = copy.deepcopy(state._output_data)
+
+        # copy the scoped_data
+        if state.state_type is StateType.EXECUTION:
+            self.scoped_data = copy.deepcopy(state.parent._scoped_data)
+        else:
+            self.scoped_data = copy.deepcopy(state._scoped_data)
         self.outcome = None
         if method_name is MethodName.EXECUTE or method_name is MethodName.EXIT:
             self.outcome = state.final_outcome

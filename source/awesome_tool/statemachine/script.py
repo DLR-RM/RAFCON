@@ -113,7 +113,7 @@ def exit(self, scoped_variables, gvm):
         script_file.write(self.script)
         script_file.close()
 
-    def execute(self, state, inputs={}, outputs={}):
+    def execute(self, state, inputs={}, outputs={}, backward_execution=False):
         """
         Execute the custom "execute" function specified in the script.
         :param state: the state to which runs the execute function
@@ -121,10 +121,23 @@ def exit(self, scoped_variables, gvm):
         :param outputs: the output data of the script
         :return:
         """
-        return self._compiled_module.execute(state, inputs, outputs,
-                                             awesome_tool.statemachine.singleton.global_variable_manager)
+        print "Script: execute function"
+        if backward_execution:
+            print "Try to execute backward."
+            if hasattr(self._compiled_module, "backward_execute"):
+                print "Executing backward."
+                return self._compiled_module.backward_execute(
+                    state, inputs, outputs, awesome_tool.statemachine.singleton.global_variable_manager
+                )
+            else:
+                print "No backward execution method found"
+                return None
+        else:
+            print "Executing forward"
+            return self._compiled_module.execute(state, inputs, outputs,
+                                                 awesome_tool.statemachine.singleton.global_variable_manager)
 
-    def enter(self, state, scoped_variables={}):
+    def enter(self, state, scoped_variables={}, backward_execution=False):
         """
         Execute the custom "enter" function specified in the script.
         :param state: the state to which runs the execute function
@@ -132,10 +145,18 @@ def exit(self, scoped_variables, gvm):
         :param outputs: the output data of the script
         :return:
         """
-        return self._compiled_module.enter(state, scoped_variables,
-                                           awesome_tool.statemachine.singleton.global_variable_manager)
+        if backward_execution:
+            if hasattr(self._compiled_module, "backward_enter"):
+                return self._compiled_module.backward_enter(
+                    state, scoped_variables, awesome_tool.statemachine.singleton.global_variable_manager
+                )
+            else:
+                return None
+        else:
+            return self._compiled_module.enter(state, scoped_variables,
+                                               awesome_tool.statemachine.singleton.global_variable_manager)
 
-    def exit(self, state, scoped_variables={}):
+    def exit(self, state, scoped_variables={}, backward_execution=False):
         """
         Execute the custom "exit" function specified in the script.
         :param state: the state to which runs the execute function
@@ -143,8 +164,16 @@ def exit(self, scoped_variables, gvm):
         :param outputs: the output data of the script
         :return:
         """
-        return self._compiled_module.exit(state, scoped_variables,
-                                          awesome_tool.statemachine.singleton.global_variable_manager)
+        if backward_execution:
+            if hasattr(self._compiled_module, "backward_exit"):
+                return self._compiled_module.backward_exit(
+                    state, scoped_variables, awesome_tool.statemachine.singleton.global_variable_manager
+                )
+            else:
+                return None
+        else:
+            return self._compiled_module.exit(state, scoped_variables,
+                                              awesome_tool.statemachine.singleton.global_variable_manager)
 
     def load_and_build_module(self):
         """Loads and builds the module given by the path and the filename

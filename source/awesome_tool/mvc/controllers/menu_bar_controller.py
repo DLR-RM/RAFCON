@@ -334,8 +334,8 @@ class MenuBarController(ExtendedController):
         awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
 
     def on_backward_step_mode_activate(self, widget, data=None):
-        logger.debug("Backward execution step not implemented yet!")
-        pass
+        logger.debug("Executing backward step ...")
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.backward_step()
 
     ######################################################
     # menu bar functionality - Help

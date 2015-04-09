@@ -103,6 +103,7 @@ class State(Observable, yaml.YAMLObject, object):
 
         self.edited_since_last_execution = False
         self.execution_history = None
+        self.backward_execution = False
 
         logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))
 
@@ -111,12 +112,13 @@ class State(Observable, yaml.YAMLObject, object):
     # ---------------------------------------------------------------------------------------------
 
     # give the state the appearance of a thread that can be started several times
-    def start(self, execution_history):
+    def start(self, execution_history, backward_execution=False):
         """ Starts the execution of the state in a new thread.
 
         :return:
         """
         self.execution_history = execution_history
+        self.backward_execution = backward_execution
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 
@@ -145,6 +147,10 @@ class State(Observable, yaml.YAMLObject, object):
         if not isinstance(self.output_data, dict):
             raise TypeError("states must be of type dict")
         self.check_input_data_type(self.input_data)
+
+    def setup_backward_run(self):
+        self.active = True
+        self.preempted = False
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`

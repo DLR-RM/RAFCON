@@ -165,8 +165,11 @@ def run_turtle_demo():
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
 
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/99 bottles of beer")
+
     [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/99 bottles of beer")
+        global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_test")
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()
@@ -185,9 +188,8 @@ def run_turtle_demo():
     logger.debug("Gtk main loop exited!")
 
     sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
-    print sm.root_state.execution_history.history_items
-    for item in sm.root_state.execution_history.history_items:
-        print item
+    # for item in sm.root_state.execution_history.history_items:
+    #     print item
     if sm:
         sm.root_state.join()
 

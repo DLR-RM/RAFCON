@@ -42,13 +42,17 @@ class ExecutionState(State, yaml.YAMLObject):
         print "Id of the state: " + self.state_id
         print "---"
 
-    def _execute(self, execute_inputs, execute_outputs):
+    def _execute(self, execute_inputs, execute_outputs, backward_execution=False):
         """Calls the custom execute function of the script.py of the state
 
         """
         self.script.load_and_build_module()
 
-        outcome_item = self.script.execute(self, execute_inputs, execute_outputs)
+        outcome_item = self.script.execute(self, execute_inputs, execute_outputs, backward_execution)
+
+        if backward_execution:
+            return  # in the case of backward execution the outcome is not relevant
+
         if outcome_item in self.outcomes.keys():
             return self.outcomes[outcome_item]
 
@@ -64,28 +68,40 @@ class ExecutionState(State, yaml.YAMLObject):
 
         :return:
         """
-        self.setup_run()
+        if self.backward_execution:
+            self.setup_backward_run()
+        else:
+            self.setup_run()
         try:
 
-            logger.debug("Starting state with id %s and name %s" % (self._state_id, self.name))
-            self.execution_history.add_call_history_item(self, MethodName.EXECUTE)
-            outcome = self._execute(self.input_data, self.output_data)
-
-            #check output data
-            self.check_output_data_type()
-
-            if self.concurrency_queue:
-                self.concurrency_queue.put(self.state_id)
-
-            if self.preempted:
-                self.final_outcome = Outcome(-2, "preempted")
+            if self.backward_execution:
+                logger.debug("Backward executing state with id %s and name %s" % (self._state_id, self.name))
+                outcome = self._execute(self.input_data, self.output_data, backward_execution=True)
+                # outcome handling is not required as we are in backward mode and the execution order is fixed
                 self.active = False
+                logger.debug("Finished backward executing state with id %s and name %s" % (self._state_id, self.name))
                 return
 
-            self.final_outcome = outcome
-            self.active = False
-            self.execution_history.add_return_history_item(self, MethodName.EXECUTE)
-            return
+            else:
+                logger.debug("Executing state with id %s and name %s" % (self._state_id, self.name))
+                self.execution_history.add_call_history_item(self, MethodName.EXECUTE)
+                outcome = self._execute(self.input_data, self.output_data)
+
+                #check output data
+                self.check_output_data_type()
+
+                if self.concurrency_queue:
+                    self.concurrency_queue.put(self.state_id)
+
+                if self.preempted:
+                    self.final_outcome = Outcome(-2, "preempted")
+                    self.active = False
+                    return
+
+                self.final_outcome = outcome
+                self.active = False
+                self.execution_history.add_return_history_item(self, MethodName.EXECUTE)
+                return
 
         except Exception, e:
             logger.error("State %s had an internal error: %s" % (self.name, str(e)))

@@ -119,7 +119,7 @@ class GraphicalEditorController(ExtendedController):
                 cause = info['kwargs']['method_name']
                 root_cause_is_state = True
 
-            logger.debug("Change in SM, cause: " + cause + " (root cause was state: " + str(root_cause_is_state) + ")")
+            # logger.debug("Change in SM, cause: " + cause + " (root cause was state: " + str(root_cause_is_state) + ")")
 
             self._redraw()
 

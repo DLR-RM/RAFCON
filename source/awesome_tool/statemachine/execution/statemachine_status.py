@@ -17,7 +17,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
-ExecutionMode = Enum('EXECUTION_MODE', 'PAUSED RUNNING STOPPED STEPPING BACKWARD_STEPPING')
+ExecutionMode = Enum('EXECUTION_MODE', 'PAUSED RUNNING STOPPED STEPPING')
 
 
 class StateMachineStatus(Observable):
