@@ -16,6 +16,7 @@ from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.enums import MethodName
 
 
 class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
@@ -48,18 +49,24 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             #handle data for the entry script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            self.execution_history.add_call_history_item(self, MethodName.ENTRY)
             self.enter(scoped_variables_as_dict)
+            self.execution_history.add_return_history_item(self, MethodName.ENTRY)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
             self.child_execution = True
 
+            history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
+
             #start all threads
+            history_index = 0
             for key, state in self.states.iteritems():
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.get_outputs_for_state(state)
                 state.input_data = state_input
                 state.output_data = state_output
-                state.start()
+                state.start(history_item.execution_histories[history_index])
+                history_index += 1
 
             #wait for all threads
             for key, state in self.states.iteritems():
@@ -72,7 +79,9 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             #handle data for the exit script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+            self.execution_history.add_call_history_item(self, MethodName.EXIT)
             self.exit(scoped_variables_as_dict)
+            self.execution_history.add_return_history_item(self, MethodName.EXIT)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
 
             self.write_output_data()

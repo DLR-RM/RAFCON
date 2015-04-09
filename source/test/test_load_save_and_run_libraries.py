@@ -130,7 +130,7 @@ def test_hierarchy_state_library():
 
     # print output_data["data_output_port1"]
     assert output_data["data_output_port1"] == 42.0
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm)
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
 def test_execution_state_library():
@@ -150,7 +150,7 @@ def test_execution_state_library():
 
     # print output_data["data_output_port1"]
     assert output_data["data_output_port1"] == 42.0
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm)
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
 def test_nested_library_state_machine():
@@ -171,7 +171,7 @@ def test_nested_library_state_machine():
 
     #print output_data["data_output_port1"]
     assert output_data["data_output_port1"] == 42.0
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
 if __name__ == '__main__':

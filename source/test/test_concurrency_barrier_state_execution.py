@@ -53,7 +53,7 @@ def test_concurrency_barrier_state_execution():
 
     assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
     assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
 
@@ -88,4 +88,5 @@ def test_concurrency_barrier_save_load():
 
 if __name__ == '__main__':
     #pytest.main()
-    test_concurrency_barrier_save_load()
+    test_concurrency_barrier_state_execution()
+    #test_concurrency_barrier_save_load()
