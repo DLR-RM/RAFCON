@@ -65,7 +65,12 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 last_history_item = self.execution_history.pop_last_item()
                 self.scoped_data = last_history_item.scoped_data
 
-                self.execute_backward_one_state()
+                self.backward_execution = True
+                # the item popped from the history will be a ReturnItem
+                last_history_item = self.execution_history.pop_last_item()
+                self.scoped_data = last_history_item.scoped_data
+                state = last_history_item.state_reference
+                self.execute_backward_one_state(state)
 
             else:  # forward_execution
                 logger.debug("Executing hierarchy state with id %s and name %s" % (self._state_id, self.name))
@@ -105,8 +110,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     self.backward_execution = True
                     # the item popped from the history will be a ReturnItem
                     last_history_item = self.execution_history.pop_last_item()
-                    # the scoped data that was valid after the execution of the state
-                    # will loaded for the backward execution
                     self.scoped_data = last_history_item.scoped_data
                     state = last_history_item.state_reference
                     return_value = self.execute_backward_one_state(state)

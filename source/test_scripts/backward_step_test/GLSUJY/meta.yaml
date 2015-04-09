@@ -1,5 +1,8 @@
 !HierarchyState
 data_flows:
+    9: !DataFlow {data_flow_id: 9, from_key: 8, from_state: SMCOIB, to_key: 29, to_state: GLSUJY}
+    10: !DataFlow {data_flow_id: 10, from_key: 31, from_state: NDIVLD, to_key: 2,
+        to_state: SMCOIB}
     27: !DataFlow {data_flow_id: 27, from_key: 31, from_state: NDIVLD, to_key: 35,
         to_state: SFZGMH}
     28: !DataFlow {data_flow_id: 28, from_key: 31, from_state: NDIVLD, to_key: 29,
@@ -24,11 +27,13 @@ state_type: STATE_TYPE.HIERARCHY
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: PXTKIH,
         transition_id: 1}
+    2: !Transition {from_outcome: 1, from_state: SFZGMH, to_outcome: null, to_state: SMCOIB,
+        transition_id: 2}
+    3: !Transition {from_outcome: 0, from_state: SMCOIB, to_outcome: null, to_state: PXTKIH,
+        transition_id: 3}
     7: !Transition {from_outcome: 0, from_state: SFZGMH, to_outcome: 0, to_state: null,
         transition_id: 7}
     8: !Transition {from_outcome: 0, from_state: PXTKIH, to_outcome: null, to_state: NDIVLD,
         transition_id: 8}
-    9: !Transition {from_outcome: 1, from_state: SFZGMH, to_outcome: null, to_state: PXTKIH,
-        transition_id: 9}
     10: !Transition {from_outcome: 0, from_state: NDIVLD, to_outcome: null, to_state: SFZGMH,
         transition_id: 10}
