@@ -8,16 +8,95 @@ class StateMachinesEditorView(View):
 
     def __init__(self):
         View.__init__(self)
-        self.notebook = PlusAddNotebook()
-        #self.notebook = gtk.Notebook()
-        self.notebook.set_scrollable(True)
+        self.notebook = PlusAddNotebook2()
+        # self.notebook = gtk.Notebook()
+        # self.notebook.set_scrollable(True)
         self.notebook.show()
         self['notebook'] = self.notebook
 
 
-gobject.signal_new("add_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None,
-                   (gtk.Notebook, ))
+gobject.signal_new("add_state_machine", gtk.VBox, gobject.SIGNAL_RUN_FIRST, None,
+                   (gtk.VBox, ))
+gobject.signal_new("switch-page", gtk.VBox, gobject.SIGNAL_RUN_LAST, None, (gtk.Notebook, gobject.GPointer, gobject.TYPE_UINT))
 
+
+class PlusAddNotebook2 (gtk.VBox):
+
+    def __init__(self):
+        gtk.VBox.__init__(self)
+
+        hbox = gtk.HBox()
+
+        self.nb1 = gtk.Notebook()
+        self.nb1.set_show_border(False)
+        self.nb1.set_border_width(5)
+        self.nb1.set_scrollable(True)
+
+        add = gtk.Button("Add")
+
+        self.nb2 = gtk.Notebook()
+        self.nb2.set_show_border(False)
+        self.nb2.set_border_width(5)
+
+        add.connect("clicked", self.add_page)
+
+        self.nb1.connect("switch-page", self.sel_page)
+        self.nb1.set_tab_pos(gtk.POS_TOP)
+
+        self.nb2.set_show_tabs(False)
+        self.nb2.set_tab_pos(gtk.POS_TOP)
+
+        self.pack_start(hbox, False, True, 0)
+        self.pack_start(self.nb2, True, True, 0)
+
+        hbox.pack_start(self.nb1, True, True, 0)
+        hbox.pack_end(add, False, True, 0)
+
+        self.add_page(None)
+
+        add.show()
+        self.nb1.show()
+        self.nb2.show()
+        hbox.show()
+
+    def add_page(self, widget, data=None):
+        self.emit("add_state_machine", self)
+
+    def append_page(self, widget, label):
+        alignment = gtk.Alignment()
+        alignment.show()
+        self.nb1.append_page(alignment, label)
+        self.nb2.append_page(widget, gtk.Label())
+
+        return self.nb1.get_n_pages() - 1
+
+    def remove_page(self, page_num):
+        self.nb1.remove_page(page_num)
+        self.nb2.remove_page(page_num)
+
+    def sel_page(self, widget, page, page_num):
+        self.emit("switch-page", widget, page, page_num)
+        self.nb2.set_current_page(page_num)
+
+    def get_nth_page(self, page_num):
+        return self.nb2.get_nth_page(page_num)
+
+    def set_tab_reorderable(self, page, reorderable):
+        pass
+
+    def page_num(self, widget):
+        return self.nb2.page_num(widget)
+
+    def get_current_page(self):
+        return self.nb1.get_current_page()
+
+    def set_current_page(self, page_num):
+        self.nb1.set_current_page(page_num)
+        self.nb2.set_current_page(page_num)
+
+    def set_tab_label(self, child, tab_label):
+        nb1_child = self.nb1.get_nth_page(self.page_num(child))
+        self.nb1.set_tab_label(nb1_child, tab_label)
 
 class PlusAddNotebook (gtk.Notebook):
 

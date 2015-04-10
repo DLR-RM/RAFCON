@@ -73,7 +73,7 @@ class StateMachinesEditorController(ExtendedController):
         for sm_id, sm in self.model.state_machines.iteritems():
             self.add_graphical_state_machine_editor(sm)
 
-    def on_switch_page(self, notebook, page, page_num):
+    def on_switch_page(self,mynotebook, notebook, page, page_num):
         logger.debug("switch to page number %s (for page %s)" % (page_num, page))
         page = notebook.get_nth_page(page_num)
         for identifier, meta in self.tabs.iteritems():
