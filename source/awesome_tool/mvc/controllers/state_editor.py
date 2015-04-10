@@ -1,13 +1,11 @@
 
-import gtk
-
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
-from awesome_tool.mvc.controllers import StateOverviewController, StateConnectionsEditorController, SourceEditorController, \
+from awesome_tool.mvc.controllers import StateOverviewController, SourceEditorController, \
     DataPortListController, ScopedVariableListController, StateOutcomesEditorController
 
 from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEditorController
 from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
-from awesome_tool.mvc.models import StateModel, ContainerStateModel
+from awesome_tool.mvc.models import ContainerStateModel
 
 
 class StateEditorController(ExtendedController):
@@ -40,8 +38,6 @@ class StateEditorController(ExtendedController):
         view['transitions_view'].show()
         view['data_flows_view'].show()
 
-        self.get_controller('inputs_ctrl').reload_data_port_list_store()
-        self.get_controller('outputs_ctrl').reload_data_port_list_store()
         if isinstance(model, ContainerStateModel):
             self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
 
@@ -50,19 +46,19 @@ class StateEditorController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        view['new_input_port_button'].connect('clicked', self.get_controller(
-            'inputs_ctrl').on_new_input_port_button_clicked)
-        view['new_output_port_button'].connect('clicked', self.get_controller(
-            'outputs_ctrl').on_new_output_port_button_clicked)
-        view['new_scoped_variable_button'].connect('clicked', self.get_controller(
-            'scoped_ctrl').on_new_scoped_variable_button_clicked)
+        view['new_input_port_button'].connect('clicked',
+            self.get_controller('inputs_ctrl').on_new_port_button_clicked)
+        view['new_output_port_button'].connect('clicked',
+            self.get_controller('outputs_ctrl').on_new_port_button_clicked)
+        view['new_scoped_variable_button'].connect('clicked',
+            self.get_controller('scoped_ctrl').on_new_scoped_variable_button_clicked)
 
-        view['delete_input_port_button'].connect('clicked', self.get_controller(
-            'inputs_ctrl').on_delete_input_port_button_clicked)
-        view['delete_output_port_button'].connect('clicked', self.get_controller(
-            'outputs_ctrl').on_delete_output_port_button_clicked)
-        view['delete_scoped_variable_button'].connect('clicked', self.get_controller(
-            'scoped_ctrl').on_delete_scoped_variable_button_clicked)
+        view['delete_input_port_button'].connect('clicked',
+            self.get_controller('inputs_ctrl').on_delete_port_button_clicked)
+        view['delete_output_port_button'].connect('clicked',
+            self.get_controller('outputs_ctrl').on_delete_port_button_clicked)
+        view['delete_scoped_variable_button'].connect('clicked',
+            self.get_controller('scoped_ctrl').on_delete_scoped_variable_button_clicked)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
