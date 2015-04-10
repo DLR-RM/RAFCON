@@ -11,6 +11,7 @@
 import threading
 import sys
 import Queue
+import copy
 
 from gtkmvc import Observable
 import yaml
@@ -118,7 +119,7 @@ class State(Observable, yaml.YAMLObject, object):
         :return:
         """
         self.execution_history = execution_history
-        self.backward_execution = backward_execution
+        self.backward_execution = copy.copy(backward_execution)
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 

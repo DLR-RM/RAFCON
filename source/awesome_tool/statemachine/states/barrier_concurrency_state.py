@@ -9,6 +9,7 @@
 """
 
 import yaml
+import traceback
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -17,6 +18,7 @@ from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.statemachine.enums import MethodName
+from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
 
 
 class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
@@ -49,8 +51,8 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             if self.backward_execution:
                 logger.debug("Backward executing barrier concurrency state with id %s and name %s" % (self._state_id, self.name))
 
-                # pop the ReturnItem of the last barrier concurrency run from the history
                 last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, ReturnItem)
                 self.scoped_data = last_history_item.scoped_data
 
                 scoped_variables_as_dict = {}
@@ -59,17 +61,17 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 # do not write the output of the exit script
                 # pop the remaining CallItem of the last barrier concurrency run from the history
                 last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, CallItem)
                 self.scoped_data = last_history_item.scoped_data
 
-                self.backward_execution = True
-                # the item popped from the history will be a ConcurrencyItem
-                history_item = self.execution_history.pop_last_item()
+                history_item = self.execution_history.get_last_history_item()
+                assert isinstance(history_item, ConcurrencyItem)
                 # history_item.state_reference must be "self" in this case
 
             else:  # forward_execution
                 logger.debug("Executing barrier concurrency state with id %s" % self._state_id)
 
-                #handle data for the entry script
+                # handle data for the entry script
                 scoped_variables_as_dict = {}
                 self.get_scoped_variables_as_dict(scoped_variables_as_dict)
                 self.execution_history.add_call_history_item(self, MethodName.ENTRY)
@@ -80,7 +82,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 self.child_execution = True
                 history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
 
-            #start all threads
+            # start all threads
             history_index = 0
             for key, state in self.states.iteritems():
                 state_input = self.get_inputs_for_state(state)
@@ -99,9 +101,32 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
 
+            # in the backward executing case, only backward execute the entry function and return
+            if len(self.states) > 0:
+                first_state = self.states.itervalues().next()
+                if first_state.backward_execution:
+                    # backward_execution needs to be True to signal the parent container state the backward execution
+                    self.backward_execution = True
+                    logger.debug("Backward-executing entry script of concurrency barrier state %s" % self.name)
+                    # pop the ConcurrencyItem as we are leaving the barrier concurrency state
+                    last_history_item = self.execution_history.pop_last_item()
+                    assert isinstance(last_history_item, ConcurrencyItem)
+                    last_history_item = self.execution_history.pop_last_item()
+                    assert isinstance(last_history_item, ReturnItem)
+                    # the last_history_item is the ReturnItem from the entry function,
+                    # thus backward execute the entry function
+                    scoped_variables_as_dict = {}
+                    self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                    self.enter(scoped_variables_as_dict, backward_execution=True)
+                    # do not write the output of the entry script
+                    # final outcome is not important as the execution order is fixed during backward stepping
+                    self.active = False
+                    self.child_execution = False
+                    return
+
             self.child_execution = False
 
-            #handle data for the exit script
+            # handle data for the exit script
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.execution_history.add_call_history_item(self, MethodName.EXIT)
@@ -119,7 +144,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             # check the outcomes of all states for aborted or preempted
             # check as well if the states were stopped
             for key, state in self.states.iteritems():
-                #This is the case if execution was stopped
+                # This is the case if execution was stopped
                 if state.final_outcome is None:
                     quit()
                 if state.final_outcome.outcome_id == -1:
@@ -141,7 +166,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             return
 
         except Exception, e:
-            logger.error("Runtime error %s" % e)
+            logger.error("Runtime error %s %s" % (e, str(traceback.format_exc())))
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
             self.child_execution = False

@@ -121,19 +121,15 @@ def exit(self, scoped_variables, gvm):
         :param outputs: the output data of the script
         :return:
         """
-        print "Script: execute function"
         if backward_execution:
-            print "Try to execute backward."
             if hasattr(self._compiled_module, "backward_execute"):
-                print "Executing backward."
                 return self._compiled_module.backward_execute(
                     state, inputs, outputs, awesome_tool.statemachine.singleton.global_variable_manager
                 )
             else:
-                print "No backward execution method found"
+                logger.debug("No backward execution method found for state %s" % state.name)
                 return None
         else:
-            print "Executing forward"
             return self._compiled_module.execute(state, inputs, outputs,
                                                  awesome_tool.statemachine.singleton.global_variable_manager)
 

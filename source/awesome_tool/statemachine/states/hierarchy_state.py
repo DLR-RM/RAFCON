@@ -17,9 +17,7 @@ from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.enums import StateType
 import awesome_tool.statemachine.singleton as singleton
 from awesome_tool.statemachine.enums import MethodName
-from awesome_tool.statemachine.execution.execution_history import ExecutionHistory, CallItem, ReturnItem, \
-    ConcurrencyItem
-
+from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem
 
 class HierarchyState(ContainerState, yaml.YAMLObject):
 
@@ -57,7 +55,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 logger.debug("Backward executing hierarchy state with id %s and name %s" % (self._state_id, self.name))
 
                 last_history_item = self.execution_history.pop_last_item()
-                print last_history_item
                 assert isinstance(last_history_item, ReturnItem)
                 self.scoped_data = last_history_item.scoped_data
 
@@ -74,7 +71,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 # Only the states themselves are allowed to pop their Return item
                 last_history_item = self.execution_history.get_last_history_item()
                 assert isinstance(last_history_item, ReturnItem)
-                print last_history_item
                 self.scoped_data = last_history_item.scoped_data
                 state = last_history_item.state_reference
                 self.execute_backward_one_state(state)
@@ -107,7 +103,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     return
 
                 # depending on the execution mode pause execution
-                print "Handling execution mode"
+                logger.debug("Handling execution mode")
                 execution_signal = singleton.state_machine_execution_engine.handle_execution_mode(self)
                 last_history_item = None
                 if execution_signal == "stop":
@@ -118,7 +114,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     # Only the states themselves are allowed to pop their Return item
                     last_history_item = self.execution_history.get_last_history_item()
                     assert isinstance(last_history_item, ReturnItem)
-                    print last_history_item
                     self.scoped_data = last_history_item.scoped_data
                     state = last_history_item.state_reference
                     return_value = self.execute_backward_one_state(state)
@@ -138,8 +133,11 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     state.join()
                     state.active = False
                     if state.backward_execution:
-                        # do go to the next state as it was a backward execution
-                        pass
+                        # the item popped now from the history will be a CallItem and will contain the scoped data,
+                        # that was valid before executing the state
+                        last_history_item = self.execution_history.pop_last_item()
+                        assert isinstance(last_history_item, CallItem)
+                        # go to the next state as it was a backward execution
                     else:
                         self.add_state_execution_output_to_scoped_data(state.output_data, state)
                         # print "---------------------- scoped data -----------------------"
