@@ -17,6 +17,7 @@ from awesome_tool.statemachine.enums import StateType
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
+
 class ExecutionHistory():
 
     """A class for the history of a state machine execution
@@ -83,7 +84,7 @@ class HistoryItem():
         self._name = state.name
 
     def __str__(self):
-        return "History element with name %s (time: %s)\n" % (self._name, self.timestamp)
+        return "History element with reference state name %s (time: %s)\n" % (self._name, self.timestamp)
 
 
 class ScriptItem(HistoryItem):
@@ -91,6 +92,9 @@ class ScriptItem(HistoryItem):
     def __init__(self, state, prev, method_name):
         HistoryItem.__init__(self, state, prev)
         self.method_name = method_name
+
+    def __str__(self):
+        return "ScriptItem %s" % (HistoryItem.__str__(self))
 
 
 class CallItem(ScriptItem):
@@ -102,6 +106,9 @@ class CallItem(ScriptItem):
             self.scoped_data = copy.deepcopy(state.parent._scoped_data)
         else:
             self.scoped_data = copy.deepcopy(state._scoped_data)
+
+    def __str__(self):
+        return "CallItem %s" % (ScriptItem.__str__(self))
 
 
 class ReturnItem(ScriptItem):
@@ -117,6 +124,9 @@ class ReturnItem(ScriptItem):
         self.outcome = None
         if method_name is MethodName.EXECUTE or method_name is MethodName.EXIT:
             self.outcome = state.final_outcome
+
+    def __str__(self):
+        return "ReturnItem %s" % (ScriptItem.__str__(self))
 
 
 class ConcurrencyItem(HistoryItem):
@@ -135,6 +145,9 @@ class ConcurrencyItem(HistoryItem):
 
         for i in range(number_concurrent_threads):
             self.execution_histories[i] = ExecutionHistory()
+
+    def __str__(self):
+        return "ConcurrencyItem %s" % (HistoryItem.__str__(self))
 
     def get_index_for_head(self, head):
         index = 0

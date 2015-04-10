@@ -74,6 +74,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def stop(self):
         """Set the execution mode to stopped
         """
+        logger.debug("Stop execution ...")
         self._status.execution_mode = ExecutionMode.STOPPED
         self._execution_started = False
         self._status.execution_condition_variable.acquire()
@@ -104,7 +105,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def step(self):
         """Take a forward step for all active states in the state machine
         """
-        logger.debug("Notify all threads waiting for the the execution condition variable")
+        logger.debug("Triggered step ...")
         self._forward_step = True
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
