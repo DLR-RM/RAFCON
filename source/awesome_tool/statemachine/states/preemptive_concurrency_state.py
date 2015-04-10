@@ -9,8 +9,8 @@
 """
 
 import Queue
-
 import yaml
+import traceback
 
 from awesome_tool.utils import log
 
@@ -20,6 +20,7 @@ from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.statemachine.enums import MethodName
+from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
 
 
 class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
@@ -47,21 +48,45 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         self.setup_run()
 
         try:
-            logger.debug("Starting preemptive concurrency state with id %s" % self._state_id)
+            #######################################################
+            # start threads
+            #######################################################
 
-            #handle data for the entry script
-            scoped_variables_as_dict = {}
-            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
-            self.execution_history.add_call_history_item(self, MethodName.ENTRY)
-            self.enter(scoped_variables_as_dict)
-            self.execution_history.add_return_history_item(self, MethodName.ENTRY)
-            self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+            if self.backward_execution:
+                logger.debug("Backward executing preemptive concurrency state with id %s and name %s" % (self._state_id, self.name))
 
-            self.child_execution = True
-            #infinite Queue size
-            concurrency_queue = Queue.Queue(maxsize=0)
+                last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, ReturnItem)
+                self.scoped_data = last_history_item.scoped_data
 
-            history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
+                scoped_variables_as_dict = {}
+                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                self.exit(scoped_variables_as_dict, backward_execution=True)
+                # do not write the output of the exit script
+                # pop the remaining CallItem of the last barrier concurrency run from the history
+                last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, CallItem)
+                self.scoped_data = last_history_item.scoped_data
+
+                history_item = self.execution_history.get_last_history_item()
+                assert isinstance(history_item, ConcurrencyItem)
+                # history_item.state_reference must be "self" in this case
+
+            else:  # forward_execution
+                logger.debug("Executing preemptive concurrency state with id %s" % self._state_id)
+
+                # handle data for the entry script
+                scoped_variables_as_dict = {}
+                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                self.execution_history.add_call_history_item(self, MethodName.ENTRY)
+                self.enter(scoped_variables_as_dict)
+                self.execution_history.add_return_history_item(self, MethodName.ENTRY)
+                self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+
+                self.child_execution = True
+                history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
+
+            concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
             queue_ids = 0
             history_index = 0
             for key, state in self.states.iteritems():
@@ -73,11 +98,42 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 state_output = self.get_outputs_for_state(state)
                 state.input_data = state_input
                 state.output_data = state_output
-                state.start(history_item.execution_histories[history_index])
+                state.start(history_item.execution_histories[history_index], self.backward_execution)
                 history_index += 1
+
+            #######################################################
+            # wait for the first threads to finish
+            #######################################################
 
             finished_thread_id = concurrency_queue.get()
             self.states[finished_thread_id].join()
+
+            # in the backward executing case, only backward execute the entry function and return
+            if self.states[finished_thread_id].backward_execution:
+                # wait until all states finished their jobs in the backward execution case
+                for key, state in self.states.iteritems():
+                    state.join()
+
+                # backward_execution needs to be True to signal the parent container state the backward execution
+                self.backward_execution = True
+                logger.debug("Backward-executing entry script of preemption concurrency state %s" % self.name)
+                # pop the ConcurrencyItem as we are leaving the barrier concurrency state
+                last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, ConcurrencyItem)
+                last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, ReturnItem)
+                # the last_history_item is the ReturnItem from the entry function,
+                # thus backward execute the entry function
+                scoped_variables_as_dict = {}
+                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                self.enter(scoped_variables_as_dict, backward_execution=True)
+                # do not write the output of the entry script
+                # final outcome is not important as the execution order is fixed during backward stepping
+                self.active = False
+                self.child_execution = False
+                if self.concurrency_queue:
+                    self.concurrency_queue.put(self.state_id)
+                return
 
             self.add_state_execution_output_to_scoped_data(self.states[finished_thread_id].output_data,
                                                            self.states[finished_thread_id])
@@ -138,7 +194,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             return
 
         except Exception, e:
-            logger.error("Runtime error %s" % e)
+            logger.error("Runtime error %s %s" % (e, str(traceback.format_exc())))
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
             self.child_execution = False

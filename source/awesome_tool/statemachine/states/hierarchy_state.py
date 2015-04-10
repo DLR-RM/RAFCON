@@ -93,14 +93,15 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             while state is not self:
 
                 if self.preempted:
-                    if self.concurrency_queue:
-                        self.concurrency_queue.put(self.state_id)
-                    self.final_outcome = Outcome(-2, "preempted")
-                    self.active = False
-                    self.child_execution = False
-                    logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
-                                 "was preempted!" % self.name)
-                    return
+                    break
+                    # if self.concurrency_queue:
+                    #     self.concurrency_queue.put(self.state_id)
+                    # self.final_outcome = Outcome(-2, "preempted")
+                    # self.active = False
+                    # self.child_execution = False
+                    # logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
+                    #              "was preempted!" % self.name)
+                    # return
 
                 # depending on the execution mode pause execution
                 logger.debug("Handling execution mode")
@@ -121,6 +122,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         # outcome is not important as it is a backward execution
                         self.active = False
                         self.child_execution = False
+                        if self.concurrency_queue:
+                            self.concurrency_queue.put(self.state_id)
                         return
                 else:
                     self.backward_execution = False
@@ -151,8 +154,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                             transition = self.handle_no_transition(state)
                         # it the transition is still None, then the state was preempted or aborted, in this case return
                         if transition is None:
-                            self.child_execution = False
-                            return
+                            # concurrency flag and active flag is set in self.handle_no_transition()
+                            break
 
                         state = self.get_state_for_transition(transition)
 

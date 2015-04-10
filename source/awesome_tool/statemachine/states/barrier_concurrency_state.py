@@ -122,6 +122,8 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                     # final outcome is not important as the execution order is fixed during backward stepping
                     self.active = False
                     self.child_execution = False
+                    if self.concurrency_queue:
+                        self.concurrency_queue.put(self.state_id)
                     return
 
             self.child_execution = False

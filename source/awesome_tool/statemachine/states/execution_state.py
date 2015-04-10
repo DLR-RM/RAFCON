@@ -102,6 +102,7 @@ class ExecutionState(State, yaml.YAMLObject):
                 if self.preempted:
                     self.final_outcome = Outcome(-2, "preempted")
                     self.active = False
+                    self.execution_history.add_return_history_item(self, MethodName.EXECUTE)
                     return
 
                 self.final_outcome = outcome

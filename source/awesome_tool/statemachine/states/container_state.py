@@ -124,30 +124,21 @@ class ContainerState(State):
 
             # aborted case for child state
             if state.final_outcome.outcome_id == -1:
-                if self.concurrency_queue:
-                    self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-1, "aborted")
-                self.active = False
                 logger.debug("Exit hierarchy state %s with outcome aborted, as the child state returned "
                              "aborted and no transition was added to the aborted outcome!" % self.name)
                 return None
 
             # preempted case for child state
             elif state.final_outcome.outcome_id == -2:
-                if self.concurrency_queue:
-                    self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
                 logger.debug("Exit hierarchy state %s with outcome preempted, as the child state returned "
                              "preempted and no transition was added to the preempted outcome!" % self.name)
                 return None
 
             # preempted case
             if self.preempted:
-                if self.concurrency_queue:
-                    self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
                 logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
                              "was preempted!" % self.name)
                 return None
@@ -1012,8 +1003,12 @@ class ContainerState(State):
             for data_flow_id, data_flow in self.data_flows.iteritems():
                 if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
-                        self.output_data[output_name] = \
-                            copy.deepcopy(self.scoped_data[str(data_flow.from_key)+data_flow.from_state].value)
+                        scoped_data_key = str(data_flow.from_key)+data_flow.from_state
+                        if scoped_data_key in self.scoped_data:
+                            self.output_data[output_name] = copy.deepcopy(self.scoped_data[scoped_data_key].value)
+                        else:
+                            self.output_data[output_name] = None
+                        break
 
     def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
         """ Copy the data of the enter/exit scripts to the scoped data
