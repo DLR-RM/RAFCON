@@ -119,7 +119,8 @@ class MainWindowView(View):
         self['main_window'].set_border_width(constants.MAIN_WINDOW_BORDER_WIDTH)
 
         self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
-        self['tree_notebook'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook_1'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook_2'].set_border_width(constants.BORDER_WIDTH)
         self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
         self['graphical_editor_vbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)

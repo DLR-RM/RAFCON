@@ -85,8 +85,8 @@ class MainWindowController(ExtendedController):
         # remove placeholder tab
 
         state_machine_tree_tab = view['state_machine_tree_placeholder']
-        page_num = view["tree_notebook"].page_num(state_machine_tree_tab)
-        view["tree_notebook"].remove_page(page_num)
+        page_num = view["tree_notebook_1"].page_num(state_machine_tree_tab)
+        view["tree_notebook_1"].remove_page(page_num)
         #append new tab
         #TODO: this is not always the active state machine
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
@@ -102,7 +102,7 @@ class MainWindowController(ExtendedController):
         state_machine_vbox.pack_start(state_machine_event_box, False, True, 0)
         state_machine_vbox.pack_start(view.state_machine_tree, True, True, 0)
         state_machine_vbox.show_all()
-        view["tree_notebook"].insert_page(state_machine_vbox, state_machine_tab_label, page_num)
+        view["tree_notebook_1"].insert_page(state_machine_vbox, state_machine_tab_label, page_num)
 
         ######################################################
         # state editor
@@ -124,8 +124,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         #remove placeholder tab
         global_variables_tab = view['global_variables_placeholder']
-        page_num = view["tree_notebook"].page_num(global_variables_tab)
-        view["tree_notebook"].remove_page(page_num)
+        page_num = view["tree_notebook_1"].page_num(global_variables_tab)
+        view["tree_notebook_1"].remove_page(page_num)
         #append new tab
         global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
@@ -140,16 +140,25 @@ class MainWindowController(ExtendedController):
         global_variables_vbox.pack_start(global_variables_event_box, False, True, 0)
         global_variables_vbox.pack_start(view.global_var_manager_view.get_top_widget(), True, True, 0)
         global_variables_vbox.show_all()
-        view["tree_notebook"].insert_page(global_variables_vbox, global_variables_tab_label, page_num)
+        view["tree_notebook_1"].insert_page(global_variables_vbox, global_variables_tab_label, page_num)
 
         ######################################################
-        # rotate all tab labels by 90 degrees
+        # rotate all tab labels by 90 degrees and make detachable
         ######################################################
 
-        for i in range(view["tree_notebook"].get_n_pages()):
-            child = view["tree_notebook"].get_nth_page(i)
-            tab_label = view["tree_notebook"].get_tab_label(child)
+        for i in range(view["tree_notebook_1"].get_n_pages()):
+            child = view["tree_notebook_1"].get_nth_page(i)
+            tab_label = view["tree_notebook_1"].get_tab_label(child)
             tab_label.set_angle(90)
+            view["tree_notebook_1"].set_tab_reorderable(child, True)
+            view["tree_notebook_1"].set_tab_detachable(child, True)
+
+        for i in range(view["tree_notebook_2"].get_n_pages()):
+            child = view["tree_notebook_2"].get_nth_page(i)
+            tab_label = view["tree_notebook_2"].get_tab_label(child)
+            tab_label.set_angle(90)
+            view["tree_notebook_2"].set_tab_reorderable(child, True)
+            view["tree_notebook_2"].set_tab_detachable(child, True)
 
         ######################################################
         # menu bar
@@ -185,7 +194,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         view['top_level_h_pane'].set_position(1200)
         view['left_h_pane'].set_position(300)
-        view['left_v_pane'].set_position(600)
+        view['left_v_pane_1'].set_position(600)
+        view['left_v_pane_2'].set_position(600)
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
