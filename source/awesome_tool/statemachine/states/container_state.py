@@ -780,7 +780,8 @@ class ContainerState(State):
         self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
 
         # remove scoped variable name
-        self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
+        if self._scoped_variables[scoped_variable_id].name in self.__scoped_variables_names:
+            self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
 
@@ -889,12 +890,23 @@ class ContainerState(State):
 
         """
         for key, value in dictionary.iteritems():
+            output_data_port_key = None
+            # search for the correct output data port key of the source state
+            for o_key, o_port in state.output_data_ports.iteritems():
+                if o_port.name == key:
+                    output_data_port_key = o_key
+                    break
+            if output_data_port_key is None:
+                logger.warning("Output variable %s was written during state execution, "
+                               "that has no data port connected to it.", str(key))
             for data_flow_key, data_flow in self.data_flows.iteritems():
-                if data_flow.to_state == self.state_id:
-                    if data_flow.to_key in self.scoped_variables:
-                        current_scoped_variable = self.scoped_variables[data_flow.to_key]
-                        self.scoped_data[str(data_flow.to_key) + self.state_id] =\
-                            ScopedData(current_scoped_variable.name, value, type(value).__name__, state.state_id, DataPortType.SCOPED)
+                if data_flow.from_key == output_data_port_key and data_flow.from_state == state.state_id:
+                    if data_flow.to_state == self.state_id:  # is target of data flow own state id?
+                        if data_flow.to_key in self.scoped_variables.iterkeys():  # is target data port scoped?
+                            current_scoped_variable = self.scoped_variables[data_flow.to_key]
+                            self.scoped_data[str(data_flow.to_key) + self.state_id] = \
+                                ScopedData(current_scoped_variable.name, value, type(value).__name__, state.state_id,
+                                           DataPortType.SCOPED)
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------ functions to modify the scoped data end ----------------------------

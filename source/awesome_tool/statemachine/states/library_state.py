@@ -87,6 +87,7 @@ class LibraryState(State, yaml.YAMLObject):
         """
         self.active = True
         logger.debug("Entering library state %s" % self.library_name)
+        self.state_copy.parent = self.parent
         self.state_copy.input_data = self.input_data
         self.state_copy.output_data = self.output_data
         self.state_copy.execution_history = self.execution_history

@@ -41,19 +41,44 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         self.setup_run()
 
         try:
-            logger.debug("Starting preemptive concurrency state with id %s" % self._state_id)
 
-            #handle data for the entry script
-            scoped_variables_as_dict = {}
-            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
-            self.execution_history.add_call_history_item(self, MethodName.ENTRY)
-            self.enter(scoped_variables_as_dict)
-            self.execution_history.add_return_history_item(self, MethodName.ENTRY)
-            self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+            #######################################################
+            # start threads
+            #######################################################
 
-            self.child_execution = True
+            if self.backward_execution:
+                logger.debug("Backward executing barrier concurrency state with id %s and name %s" % (self._state_id, self.name))
 
-            history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
+                # pop the ReturnItem of the last barrier concurrency run from the history
+                last_history_item = self.execution_history.pop_last_item()
+                self.scoped_data = last_history_item.scoped_data
+
+                scoped_variables_as_dict = {}
+                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                self.exit(scoped_variables_as_dict, backward_execution=True)
+                # do not write the output of the exit script
+                # pop the remaining CallItem of the last barrier concurrency run from the history
+                last_history_item = self.execution_history.pop_last_item()
+                self.scoped_data = last_history_item.scoped_data
+
+                self.backward_execution = True
+                # the item popped from the history will be a ConcurrencyItem
+                history_item = self.execution_history.pop_last_item()
+                # history_item.state_reference must be "self" in this case
+
+            else:  # forward_execution
+                logger.debug("Executing barrier concurrency state with id %s" % self._state_id)
+
+                #handle data for the entry script
+                scoped_variables_as_dict = {}
+                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                self.execution_history.add_call_history_item(self, MethodName.ENTRY)
+                self.enter(scoped_variables_as_dict)
+                self.execution_history.add_return_history_item(self, MethodName.ENTRY)
+                self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+
+                self.child_execution = True
+                history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
 
             #start all threads
             history_index = 0
@@ -62,10 +87,13 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 state_output = self.get_outputs_for_state(state)
                 state.input_data = state_input
                 state.output_data = state_output
-                state.start(history_item.execution_histories[history_index])
+                state.start(history_item.execution_histories[history_index], self.backward_execution)
                 history_index += 1
 
-            #wait for all threads
+            #######################################################
+            # wait for all threads to finish
+            #######################################################
+
             for key, state in self.states.iteritems():
                 state.join()
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)

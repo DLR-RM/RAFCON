@@ -49,7 +49,7 @@ def test_hierarchy_state_execution():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     hierarchy_state.join()
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
     assert output_data["output1"] == 52.0
@@ -82,4 +82,5 @@ def test_hierarchy_save_load_test():
 
 if __name__ == '__main__':
     #pytest.main()
-    test_hierarchy_save_load_test()
+    test_hierarchy_state_execution()
+    #test_hierarchy_save_load_test()

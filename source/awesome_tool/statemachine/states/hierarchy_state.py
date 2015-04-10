@@ -8,6 +8,7 @@
 
 """
 import yaml
+import traceback
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.utils import log
@@ -16,6 +17,8 @@ from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.enums import StateType
 import awesome_tool.statemachine.singleton as singleton
 from awesome_tool.statemachine.enums import MethodName
+from awesome_tool.statemachine.execution.execution_history import ExecutionHistory, CallItem, ReturnItem, \
+    ConcurrencyItem
 
 
 class HierarchyState(ContainerState, yaml.YAMLObject):
@@ -53,21 +56,25 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             if self.backward_execution:
                 logger.debug("Backward executing hierarchy state with id %s and name %s" % (self._state_id, self.name))
 
-                # pop the ReturnItem of the last hierarchy run from the history
                 last_history_item = self.execution_history.pop_last_item()
+                print last_history_item
+                assert isinstance(last_history_item, ReturnItem)
                 self.scoped_data = last_history_item.scoped_data
 
                 scoped_variables_as_dict = {}
                 self.get_scoped_variables_as_dict(scoped_variables_as_dict)
                 self.exit(scoped_variables_as_dict, backward_execution=True)
-                # do not write the output of the exit script as
+                # do not write the output of the exit script
                 # pop the remaining CallItem of the last hierarchy run from the history
                 last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, CallItem)
                 self.scoped_data = last_history_item.scoped_data
 
                 self.backward_execution = True
-                # the item popped from the history will be a ReturnItem
-                last_history_item = self.execution_history.pop_last_item()
+                # Only the states themselves are allowed to pop their Return item
+                last_history_item = self.execution_history.get_last_history_item()
+                assert isinstance(last_history_item, ReturnItem)
+                print last_history_item
                 self.scoped_data = last_history_item.scoped_data
                 state = last_history_item.state_reference
                 self.execute_backward_one_state(state)
@@ -84,7 +91,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 state = self.get_start_state(set_final_outcome=True)
 
             ########################################################
-            # global execution loop, where all children are executed
+            # children execution loop
             ########################################################
             self.child_execution = True
             while state is not self:
@@ -108,12 +115,17 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     raise RuntimeError("state stopped")
                 elif execution_signal == "backward_step":
                     self.backward_execution = True
-                    # the item popped from the history will be a ReturnItem
-                    last_history_item = self.execution_history.pop_last_item()
+                    # Only the states themselves are allowed to pop their Return item
+                    last_history_item = self.execution_history.get_last_history_item()
+                    assert isinstance(last_history_item, ReturnItem)
+                    print last_history_item
                     self.scoped_data = last_history_item.scoped_data
                     state = last_history_item.state_reference
                     return_value = self.execute_backward_one_state(state)
                     if return_value == "exit":
+                        # outcome is not important as it is a backward execution
+                        self.active = False
+                        self.child_execution = False
                         return
                 else:
                     self.backward_execution = False
@@ -130,6 +142,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         pass
                     else:
                         self.add_state_execution_output_to_scoped_data(state.output_data, state)
+                        # print "---------------------- scoped data -----------------------"
+                        # for key, value in self.scoped_data.iteritems():
+                        #     print key, value
                         self.update_scoped_variables_with_output_dictionary(state.output_data, state)
                         # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
                         transition = self.get_transition_for_outcome(state, state.final_outcome)
@@ -144,7 +159,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         state = self.get_state_for_transition(transition)
 
             ########################################################
-            # global execution loop end
+            # children execution loop end
             ########################################################
 
             self.child_execution = False
@@ -180,7 +195,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             if str(e) == "state stopped":
                 logger.debug("State %s was stopped!" % self.name)
             else:
-                logger.error("State %s had an internal error: %s" % (self.name, str(e)))
+                logger.error("State %s had an internal error: %s %s" % (self.name, str(e), str(traceback.format_exc())))
             # notify other threads that wait for this thread to finish
             if self.concurrency_queue:
                 self.concurrency_queue.put(self.state_id)
@@ -194,14 +209,14 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
         if state is self:
             logger.debug("Backward-executing entry script of the state with id \"%s\", type \"%s\" and name \"%s\"" %
                          (state.state_id, str(state.state_type), state.name))
+            last_history_item = self.execution_history.pop_last_item()
+            assert isinstance(last_history_item, ReturnItem)
             # the last_history_item is the ReturnItem from the entry function,
             # thus backward execute the entry function
             scoped_variables_as_dict = {}
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.enter(scoped_variables_as_dict, backward_execution=True)
             # do not write the output of the entry script
-            # pop the remaining CallItem from the history
-            last_history_item = self.execution_history.pop_last_item()
             # final outcome is not important as the execution order is fixed during backward stepping
             return "exit"
         else:
@@ -209,7 +224,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                          (state.state_id, str(state.state_type), state.name))
             state.input_data = self.get_inputs_for_state(state)
             state.output_data = self.get_outputs_for_state(state)
-            #execute the state
             state.start(self.execution_history, backward_execution=True)
             state.join()
             state.active = False
@@ -217,6 +231,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             # the item popped now from the history will be a CallItem and will contain the scoped data,
             # that was valid before executing the state
             last_history_item = self.execution_history.pop_last_item()
+            assert isinstance(last_history_item, CallItem)
             # copy the scoped_data of the history from the point before the state was executed
             self.scoped_data = last_history_item.scoped_data
             # do not transit to the next state

@@ -9,6 +9,7 @@
 """
 
 import yaml
+import traceback
 
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.statemachine.states.state import State
@@ -16,6 +17,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.enums import MethodName
+from awesome_tool.statemachine.execution.execution_history import ReturnItem
 
 
 class ExecutionState(State, yaml.YAMLObject):
@@ -75,6 +77,10 @@ class ExecutionState(State, yaml.YAMLObject):
         try:
 
             if self.backward_execution:
+                # pop the last history item from the execution history as the hierarchy state just read it and
+                # dit not pop it
+                last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, ReturnItem)
                 logger.debug("Backward executing state with id %s and name %s" % (self._state_id, self.name))
                 outcome = self._execute(self.input_data, self.output_data, backward_execution=True)
                 # outcome handling is not required as we are in backward mode and the execution order is fixed
@@ -104,7 +110,8 @@ class ExecutionState(State, yaml.YAMLObject):
                 return
 
         except Exception, e:
-            logger.error("State %s had an internal error: %s" % (self.name, str(e)))
+            logger.error("State %s had an internal error: %s %s" % (self.name, str(e), str(traceback.format_exc())))
+            traceback.format_exc()
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
             return
