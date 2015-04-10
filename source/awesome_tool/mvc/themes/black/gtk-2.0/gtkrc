@@ -143,7 +143,7 @@ style "indicator_label" = "my_default"
     fg[SELECTED]    	= @text_color_dark
 }
 widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
-widget_class "*GtkVBox.GtkHBox.GtkLabel"			style "indicator_label"
+widget_class "*GtkVBox.GtkLabel"				style "indicator_label"
 widget_class "*EventBox.GtkAlignment.GtkLabel"		style "indicator_label"
 widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
 

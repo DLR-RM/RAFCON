@@ -354,28 +354,43 @@
                             <property name="border_width">5</property>
                             <property name="orientation">vertical</property>
                             <child>
+                              <object class="GtkLabel" id="graphical_editor_label">
+                                <property name="visible">True</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">GRAPHICAL EDITOR</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
                               <object class="GtkHBox" id="hbox3">
                                 <property name="visible">True</property>
-                                <child>
-                                  <object class="GtkLabel" id="graphical_editor_label">
-                                    <property name="visible">True</property>
-                                    <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">GRAPHICAL EDITOR</property>
-                                  </object>
-                                  <packing>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
+                                <property name="border_width">5</property>
                                 <child>
                                   <object class="GtkToolbar" id="graphical_editor_shortcut_bar">
                                     <property name="visible">True</property>
                                     <property name="toolbar_style">text</property>
                                     <property name="show_arrow">False</property>
                                     <property name="icon_size">1</property>
+                                    <property name="icon_size_set">True</property>
+                                    <child>
+                                      <object class="GtkSeparatorToolItem" id="toolbutton8">
+                                        <property name="visible">True</property>
+                                        <property name="draw">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
                                     <child>
                                       <object class="GtkToggleToolButton" id="button_start_shortcut">
                                         <property name="visible">True</property>
-                                        <property name="tooltip_text" translatable="yes">Start</property>
                                         <property name="label" translatable="yes">s</property>
                                         <property name="use_underline">True</property>
                                         <signal name="toggled" handler="on_button_start_shortcut_toggled"/>
@@ -386,9 +401,18 @@
                                       </packing>
                                     </child>
                                     <child>
+                                      <object class="GtkSeparatorToolItem" id="toolbutton2">
+                                        <property name="visible">True</property>
+                                        <property name="draw">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
                                       <object class="GtkToggleToolButton" id="button_pause_shortcut">
                                         <property name="visible">True</property>
-                                        <property name="tooltip_text" translatable="yes">Pause</property>
                                         <property name="label" translatable="yes">p</property>
                                         <property name="use_underline">True</property>
                                         <signal name="toggled" handler="on_button_pause_shortcut_toggled"/>
@@ -399,9 +423,18 @@
                                       </packing>
                                     </child>
                                     <child>
+                                      <object class="GtkSeparatorToolItem" id="toolbutton3">
+                                        <property name="visible">True</property>
+                                        <property name="draw">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
                                       <object class="GtkToolButton" id="button_stop_shortcut">
                                         <property name="visible">True</property>
-                                        <property name="tooltip_text" translatable="yes">Stop</property>
                                         <property name="label" translatable="yes">s</property>
                                         <property name="use_underline">True</property>
                                         <signal name="clicked" handler="on_button_stop_shortcut_clicked"/>
@@ -414,6 +447,27 @@
                                     <child>
                                       <object class="GtkSeparatorToolItem" id="toolbutton1">
                                         <property name="visible">True</property>
+                                        <property name="draw">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkSeparatorToolItem" id="toolbutton4">
+                                        <property name="visible">True</property>
+                                        <property name="draw">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkSeparatorToolItem" id="toolbutton7">
+                                        <property name="visible">True</property>
+                                        <property name="draw">False</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -423,7 +477,6 @@
                                     <child>
                                       <object class="GtkToggleToolButton" id="button_step_mode_shortcut">
                                         <property name="visible">True</property>
-                                        <property name="tooltip_text" translatable="yes">Step mode</property>
                                         <property name="label" translatable="yes">s</property>
                                         <property name="use_underline">True</property>
                                         <signal name="toggled" handler="on_button_step_mode_shortcut_toggled"/>
@@ -434,9 +487,18 @@
                                       </packing>
                                     </child>
                                     <child>
+                                      <object class="GtkSeparatorToolItem" id="toolbutton5">
+                                        <property name="visible">True</property>
+                                        <property name="draw">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
                                       <object class="GtkToolButton" id="button_step_shortcut">
                                         <property name="visible">True</property>
-                                        <property name="tooltip_text" translatable="yes">Step forward</property>
                                         <property name="label" translatable="yes">s</property>
                                         <property name="use_underline">True</property>
                                         <signal name="clicked" handler="on_button_step_shortcut_clicked"/>
@@ -447,9 +509,18 @@
                                       </packing>
                                     </child>
                                     <child>
+                                      <object class="GtkSeparatorToolItem" id="toolbutton6">
+                                        <property name="visible">True</property>
+                                        <property name="draw">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
                                       <object class="GtkToolButton" id="button_step_backward_shortcut">
                                         <property name="visible">True</property>
-                                        <property name="tooltip_text" translatable="yes">Step backward</property>
                                         <property name="label" translatable="yes">b</property>
                                         <property name="use_underline">True</property>
                                         <signal name="clicked" handler="on_button_step_backward_shortcut_clicked"/>
@@ -459,20 +530,43 @@
                                         <property name="homogeneous">True</property>
                                       </packing>
                                     </child>
+                                    <child>
+                                      <object class="GtkSeparatorToolItem" id="toolbutton9">
+                                        <property name="visible">True</property>
+                                        <property name="draw">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkEventBox" id="eventbox1">
+                                    <property name="visible">True</property>
+                                    <property name="border_width">5</property>
+                                    <child>
+                                      <object class="GtkLabel" id="execution_status_label">
+                                        <property name="visible">True</property>
+                                        <property name="xalign">0</property>
+                                        <property name="label" translatable="yes">STOPPED</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
-                                <property name="position">0</property>
+                                <property name="position">2</property>
                               </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
                             </child>
                           </object>
                           <packing>

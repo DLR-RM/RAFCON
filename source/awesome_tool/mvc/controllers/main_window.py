@@ -194,7 +194,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         view['top_level_h_pane'].set_position(1200)
         view['left_h_pane'].set_position(300)
-        view['left_v_pane_1'].set_position(600)
+        view['left_v_pane_1'].set_position(400)
         view['left_v_pane_2'].set_position(600)
 
     def register_view(self, view):
@@ -204,6 +204,9 @@ class MainWindowController(ExtendedController):
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
+        label_string = str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
+        label_string = label_string.replace("EXECUTION_MODE.", "")
+        self.view['execution_status_label'].set_text(label_string)
 
         if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.RUNNING:
             self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)

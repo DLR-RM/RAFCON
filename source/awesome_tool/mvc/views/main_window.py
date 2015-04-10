@@ -52,6 +52,7 @@ class MainWindowView(View):
         self.state_machines_editor = StateMachinesEditorView()
         self.state_machines_editor.show()
         self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
+        self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 1)
         # self['state_machines_vbox'].add(self.state_machines_editor.get_top_widget())
 
         ##################################################
@@ -130,7 +131,7 @@ class MainWindowView(View):
     def create_button_label(self, icon):
         label = gtk.Label()
         label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
-                                                                    constants.FONT_SIZE_BIG,
+                                                                    constants.FONT_SIZE_NORMAL,
                                                                     icon))
         label.show()
         return label

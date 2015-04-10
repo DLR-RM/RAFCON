@@ -9,15 +9,17 @@ class StateMachinesEditorView(View):
 
     def __init__(self):
         View.__init__(self)
-        self.notebook = PlusAddNotebook2()
+        self.notebook = PlusAddNotebook()
         # self.notebook = gtk.Notebook()
-        # self.notebook.set_scrollable(True)
+        self.notebook.set_scrollable(True)
         self.notebook.show()
         self['notebook'] = self.notebook
 
 
 gobject.signal_new("add_state_machine", gtk.VBox, gobject.SIGNAL_RUN_FIRST, None,
                    (gtk.VBox, ))
+gobject.signal_new("add_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None,
+                   (gtk.Notebook, ))
 gobject.signal_new("switch-page", gtk.VBox, gobject.SIGNAL_RUN_LAST, None, (gtk.Notebook, gobject.GPointer, gobject.TYPE_UINT))
 
 
