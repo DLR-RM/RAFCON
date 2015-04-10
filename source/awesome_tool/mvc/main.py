@@ -156,7 +156,7 @@ if __name__ == '__main__':
     # state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorEggController)
 
     # state_editor_view = SingleWidgetWindowView(StateEditorLDView, width=550, height=500, title='State Editor LD View')
-    # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorLDController)
+    # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
 
     # trans_editor_view = SingleWidgetWindowView(StateTransitionsEditorView, width=550, height=400, title='Transitions Editor')
     # trans_editor_ctrl = SingleWidgetWindowController(this_model, trans_editor_view, StateTransitionsEditorController)

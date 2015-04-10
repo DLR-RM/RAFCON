@@ -4,7 +4,7 @@ import gtk
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
-from awesome_tool.mvc.controllers.state_editor import StateEditorController, StateEditorEggController, StateEditorLDController
+from awesome_tool.mvc.controllers.state_editor import StateEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.selection import Selection
 from awesome_tool.utils import log
@@ -113,7 +113,7 @@ class StatesEditorController(ExtendedController):
             state_editor_ctrl = StateEditorController(state_model, state_editor_view)
         elif editor_type == 'LogicDataGrouped':
             state_editor_view = StateEditorLDView()
-            state_editor_ctrl = StateEditorLDController(state_model, state_editor_view)
+            state_editor_ctrl = StateEditorController(state_model, state_editor_view)
         else:  # editor_type == 'PortConnectionGrouped':
             state_editor_view = StateEditorEggView()
             state_editor_ctrl = StateEditorEggController(state_model, state_editor_view)
