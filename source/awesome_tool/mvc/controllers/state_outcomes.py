@@ -146,7 +146,6 @@ class StateOutcomesListController(ExtendedController):
     def on_remove(self, button, info=None):
 
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        # print path, tree
         if path:  #  and not self.tree_store[path[0][0]][6].outcome_id < 0 leave this check for the state
             outcome_id = self.tree_store[path[0][0]][6].outcome_id
             try:

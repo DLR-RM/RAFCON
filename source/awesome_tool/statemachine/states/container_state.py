@@ -492,41 +492,16 @@ class ContainerState(State):
         # set properties
         self.transitions[transition_id].to_outcome = to_outcome
 
-    @Observable.observed
-    def remove_outcome(self, outcome_id):
-        """Remove an outcome from the state
-
-        :param outcome_id: the id of the outcome to remove
-
+    def remove_outcome_hook(self, outcome_id):
+        """Removes internal transition going to the outcome
         """
-        if not outcome_id in self._used_outcome_ids:
-            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
-
-        if outcome_id == -1 or outcome_id == -2:
-            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
-                                 "return aborted or preempted")
-
-        # delete all transitions connected to this outcome
-        if not self.parent is None:
-            # delete external -> should be only one
-            for transition_id, transition in self.parent.transitions.iteritems():
-                if transition.from_outcome == outcome_id:
-                    self.parent.remove_transition(transition_id)
-                    # del self.parent.transitions[transition_id]
-                    break  # found the one outgoing transition
-
-        # delete internal -> could be multiple
         transition_ids_to_remove = []
         for transition_id, transition in self.transitions.iteritems():
-            if transition.to_outcome == outcome_id:
+            if transition.to_outcome == outcome_id and transition.to_state is None:
                 transition_ids_to_remove.append(transition_id)
 
         for transition_id in transition_ids_to_remove:
             self.remove_transition(transition_id)
-
-        # delete outcome it self
-        self._used_outcome_ids.remove(outcome_id)
-        self._outcomes.pop(outcome_id, None)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data-flow functions -------------------------------------
