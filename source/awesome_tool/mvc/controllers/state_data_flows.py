@@ -1,10 +1,8 @@
 
 import gobject
 from gtk import ListStore, TreeStore
-from gtkmvc import Observer
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 
-from awesome_tool.statemachine.states.state import State
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 

@@ -54,14 +54,16 @@ def test_start_stop_pause_step():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.step_mode()
 
     for i in range(5):
-        time.sleep(0.1)
+        time.sleep(0.01)
         awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
 
+    # give the state machine time to execute
+    time.sleep(0.01)
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     sm_loaded.root_state.join()
 
     assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded)
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
     # gtk.main()
 

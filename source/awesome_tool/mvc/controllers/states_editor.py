@@ -3,7 +3,7 @@ import pango
 import gtk
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
-from awesome_tool.mvc.views.state_editor import StateEditorView, StateEditorEggView, StateEditorLDView
+from awesome_tool.mvc.views.state_editor import StateEditorView
 from awesome_tool.mvc.controllers.state_editor import StateEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.selection import Selection
@@ -78,6 +78,17 @@ class StatesEditorController(ExtendedController):
     def state_machine_manager_notification(self, model, property, info):
         self.register()
 
+    @ExtendedController.observe("state_machines", after=True)
+    def state_machines_notification(self, model, property, info):
+        if info['method_name'] == '__delitem__':
+            tab_ids_to_remove = []
+            for tab_id, tab in self.tabs.iteritems():
+                state_machine_id = tab['sm_id']
+                if state_machine_id not in self.model.state_machines:
+                    tab_ids_to_remove.append(tab_id)
+            for tab_id in tab_ids_to_remove:
+                self.on_close_clicked(None, self.tabs[tab_id]['state_model'], None)
+
     def register(self):
         """
         Change the state machine that is observed for new selected states to the selected state machine.
@@ -108,16 +119,8 @@ class StatesEditorController(ExtendedController):
         # new StateEditor*View
         # new StateEditor*Controller
 
-        if editor_type == 'CommonGrouped':
-            state_editor_view = StateEditorView()
-            state_editor_ctrl = StateEditorController(state_model, state_editor_view)
-        elif editor_type == 'LogicDataGrouped':
-            state_editor_view = StateEditorLDView()
-            state_editor_ctrl = StateEditorController(state_model, state_editor_view)
-        else:  # editor_type == 'PortConnectionGrouped':
-            state_editor_view = StateEditorEggView()
-            state_editor_ctrl = StateEditorEggController(state_model, state_editor_view)
-        self.add_controller(state_model.state.state_id, state_editor_ctrl)
+        state_editor_view = StateEditorView()
+        state_editor_ctrl = StateEditorController(state_model, state_editor_view)
 
         tab_label_text = limit_tab_label_text("%s|%s" % (sm_id, str(state_model.state.name)))
         (evtbox, new_label) = create_tab_header(tab_label_text, self.on_close_clicked,
@@ -181,7 +184,7 @@ class StatesEditorController(ExtendedController):
         for identifier, meta in self.tabs.iteritems():
             if meta['page'] is page:
                 model = meta['state_model']
-                logger.debug("switch-page %s" % model.state.name)
+                # logger.debug("switch-page %s" % model.state.name)
                 if not self._selected_state_machine_model.selection.get_selected_state() == model:
                     self.model.selected_state_machine_id = int(identifier.split('|')[0])
                     self._selected_state_machine_model.selection.set([model])
@@ -192,7 +195,7 @@ class StatesEditorController(ExtendedController):
         state_identifier = "%s|%s" % (self.model.state_machine_manager.get_sm_id_for_state(selected_model.state),
                                        selected_model.state.get_path())
         if self.act_model is None or not self.act_model.state.get_path() == selected_model.state.get_path():
-            logger.debug("State %s is SELECTED" % selected_model.state.name)
+            # logger.debug("State %s is SELECTED" % selected_model.state.name)
 
             # print "state_identifier: %s" % state_identifier
             if not state_identifier in self.tabs:

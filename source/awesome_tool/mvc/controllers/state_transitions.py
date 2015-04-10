@@ -36,8 +36,7 @@ class StateTransitionsListController(ExtendedController):
         if self.model.parent is not None:
             self.observe_model(self.model.parent)
 
-        self.update_internal_data_base()
-        self.update_tree_store()
+        self.update()
         view.get_top_widget().set_model(self.tree_store)
 
     def register_view(self, view):
@@ -94,8 +93,7 @@ class StateTransitionsListController(ExtendedController):
     def on_focus(self, widget, data=None):
         logger.debug("TRANSITIONS_LIST get new FOCUS")
         path = self.view.tree_view.get_cursor()
-        self.update_internal_data_base()
-        self.update_tree_store()
+        self.update()
         if path[0]:
             self.view.tree_view.set_cursor(path[0])
 
@@ -329,7 +327,11 @@ class StateTransitionsListController(ExtendedController):
 
         return from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict
 
-    def update_internal_data_base(self):
+    def update(self):
+        self._update_internal_data_base()
+        self._update_tree_store()
+
+    def _update_internal_data_base(self):
 
         model = self.model
 
@@ -392,7 +394,7 @@ class StateTransitionsListController(ExtendedController):
                     self.combo['free_ext_from_state_models'] = free_from_state_models
                     self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
-    def update_tree_store(self):
+    def _update_tree_store(self):
 
         self.tree_store.clear()
         if self.view_dict['transitions_internal'] and hasattr(self.model.state, 'transitions') and \
@@ -472,8 +474,7 @@ class StateTransitionsListController(ExtendedController):
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         # self.notification_logs(model, prop_name, info)
 
-        self.update_internal_data_base()
-        self.update_tree_store()
+        self.update()
 
     def notification_logs(self, model, prop_name, info):
         #logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
@@ -563,5 +564,4 @@ class StateTransitionsEditorController(ExtendedController):
             self.trans_list_ctrl.view_dict['transitions_internal'] = False
             button.set_active(False)
 
-        self.trans_list_ctrl.update_internal_data_base()
-        self.trans_list_ctrl.update_tree_store()
+        self.trans_list_ctrl.update()

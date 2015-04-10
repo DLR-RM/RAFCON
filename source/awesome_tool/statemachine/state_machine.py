@@ -15,6 +15,7 @@ from gtkmvc import Observable
 from awesome_tool.statemachine.id_generator import generate_state_machine_id
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+from awesome_tool.statemachine.execution.execution_history import ExecutionHistory
 
 
 class StateMachine(Observable):
@@ -42,13 +43,14 @@ class StateMachine(Observable):
         self.base_path = None
         self._marked_dirty = True
         self.old_marked_dirty = True
+        self.execution_history = ExecutionHistory()
 
     def start(self):
         """
         Starts the execution of the root state.
         :return:
         """
-        self._root_state.start()
+        self._root_state.start(self.execution_history)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

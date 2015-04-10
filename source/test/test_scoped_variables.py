@@ -11,7 +11,6 @@ import variables_for_pytest
 
 def create_statemachine():
     state1 = ExecutionState("scoped_data_test_state", path="../test_scripts", filename="scoped_variable_test_state.py")
-    state1.add_outcome("success", 0)
     state1.add_outcome("loop", 1)
     input1_state1 = state1.add_input_data_port("input_data_port1", "float")
     input2_state1 = state1.add_input_data_port("input_data_port2", "float")
@@ -20,7 +19,6 @@ def create_statemachine():
     state2 = HierarchyState("scoped_data_hierarchy_state", path="../test_scripts", filename="scoped_variable_hierarchy_state.py")
     state2.add_state(state1)
     state2.set_start_state(state1.state_id)
-    state2.add_outcome("success", 0)
     state2.add_transition(state1.state_id, 0, None, 0)
     state2.add_transition(state1.state_id, 1, state1.state_id, None)
     input_state2 = state2.add_input_data_port("input_data_port1", "float")
@@ -73,7 +71,7 @@ def test_scoped_variables():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     sm_loaded.root_state.join()
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["output_data_port1"]

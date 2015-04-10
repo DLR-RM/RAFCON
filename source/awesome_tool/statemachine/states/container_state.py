@@ -78,7 +78,16 @@ class ContainerState(State):
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 
-    def enter(self, scoped_variables_dict):
+    def setup_run(self):
+        """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
+
+        :return:
+        """
+        State.setup_run(self)
+        self.add_input_data_to_scoped_data(self.input_data, self)
+        self.add_default_values_of_scoped_variables_to_scoped_data()
+
+    def enter(self, scoped_variables_dict, backward_execution=False):
         """Called on entering the container state
 
         Here initializations of scoped variables and modules that are supposed to be used by the children take place.
@@ -86,20 +95,22 @@ class ContainerState(State):
 
         :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
-        logger.debug("Calling enter() script of container state with name %s", self.name)
+        logger.debug("Calling enter() script of container state with name %s (backward: %s)",
+                     self.name, backward_execution)
         self.script.load_and_build_module()
-        self.script.enter(self, scoped_variables_dict)
+        self.script.enter(self, scoped_variables_dict, backward_execution)
 
-    def exit(self, scoped_variables_dict):
+    def exit(self, scoped_variables_dict, backward_execution=False):
         """Called on exiting the container state
 
         Clean up code for the state and its variables is executed here. This method calls the custom exit function
         provided by a python script.
         :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
-        logger.debug("Calling exit() script of container state with name %s", self.name)
+        logger.debug("Calling exit() script of container state with name %s (backward: %s)",
+                     self.name, backward_execution)
         self.script.load_and_build_module()
-        self.script.exit(self, scoped_variables_dict)
+        self.script.exit(self, scoped_variables_dict, backward_execution)
 
     def handle_no_transition(self, state):
         """
@@ -492,41 +503,16 @@ class ContainerState(State):
         # set properties
         self.transitions[transition_id].to_outcome = to_outcome
 
-    @Observable.observed
-    def remove_outcome(self, outcome_id):
-        """Remove an outcome from the state
-
-        :param outcome_id: the id of the outcome to remove
-
+    def remove_outcome_hook(self, outcome_id):
+        """Removes internal transition going to the outcome
         """
-        if not outcome_id in self._used_outcome_ids:
-            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
-
-        if outcome_id == -1 or outcome_id == -2:
-            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
-                                 "return aborted or preempted")
-
-        # delete all transitions connected to this outcome
-        if not self.parent is None:
-            # delete external -> should be only one
-            for transition_id, transition in self.parent.transitions.iteritems():
-                if transition.from_outcome == outcome_id:
-                    self.parent.remove_transition(transition_id)
-                    # del self.parent.transitions[transition_id]
-                    break  # found the one outgoing transition
-
-        # delete internal -> could be multiple
         transition_ids_to_remove = []
         for transition_id, transition in self.transitions.iteritems():
-            if transition.to_outcome == outcome_id:
+            if transition.to_outcome == outcome_id and transition.to_state is None:
                 transition_ids_to_remove.append(transition_id)
 
         for transition_id in transition_ids_to_remove:
             self.remove_transition(transition_id)
-
-        # delete outcome it self
-        self._used_outcome_ids.remove(outcome_id)
-        self._outcomes.pop(outcome_id, None)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data-flow functions -------------------------------------
@@ -794,7 +780,8 @@ class ContainerState(State):
         self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
 
         # remove scoped variable name
-        self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
+        if self._scoped_variables[scoped_variable_id].name in self.__scoped_variables_names:
+            self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
 
@@ -903,12 +890,23 @@ class ContainerState(State):
 
         """
         for key, value in dictionary.iteritems():
+            output_data_port_key = None
+            # search for the correct output data port key of the source state
+            for o_key, o_port in state.output_data_ports.iteritems():
+                if o_port.name == key:
+                    output_data_port_key = o_key
+                    break
+            if output_data_port_key is None:
+                logger.warning("Output variable %s was written during state execution, "
+                               "that has no data port connected to it.", str(key))
             for data_flow_key, data_flow in self.data_flows.iteritems():
-                if data_flow.to_state == self.state_id:
-                    if data_flow.to_key in self.scoped_variables:
-                        current_scoped_variable = self.scoped_variables[data_flow.to_key]
-                        self.scoped_data[str(data_flow.to_key) + self.state_id] =\
-                            ScopedData(current_scoped_variable.name, value, type(value).__name__, state.state_id, DataPortType.SCOPED)
+                if data_flow.from_key == output_data_port_key and data_flow.from_state == state.state_id:
+                    if data_flow.to_state == self.state_id:  # is target of data flow own state id?
+                        if data_flow.to_key in self.scoped_variables.iterkeys():  # is target data port scoped?
+                            current_scoped_variable = self.scoped_variables[data_flow.to_key]
+                            self.scoped_data[str(data_flow.to_key) + self.state_id] = \
+                                ScopedData(current_scoped_variable.name, value, type(value).__name__, state.state_id,
+                                           DataPortType.SCOPED)
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------ functions to modify the scoped data end ----------------------------
@@ -1165,9 +1163,9 @@ class ContainerState(State):
     def scoped_data(self, scoped_data):
         if not isinstance(scoped_data, dict):
             raise TypeError("scoped_results must be of type dict")
-        for s in scoped_data:
+        for key, s in scoped_data.iteritems():
             if not isinstance(s, ScopedData):
-                raise TypeError("element of scoped_data must be of type ScopedResult")
+                raise TypeError("element of scoped_data must be of type ScopedData")
         self._scoped_data = scoped_data
 
     @property

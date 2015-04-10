@@ -11,6 +11,7 @@
 import threading
 import sys
 import Queue
+import copy
 
 from gtkmvc import Observable
 import yaml
@@ -101,6 +102,10 @@ class State(Observable, yaml.YAMLObject, object):
         # a flag that shows if the state is currently running
         self._active = None
 
+        self.edited_since_last_execution = False
+        self.execution_history = None
+        self.backward_execution = False
+
         logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
@@ -108,11 +113,13 @@ class State(Observable, yaml.YAMLObject, object):
     # ---------------------------------------------------------------------------------------------
 
     # give the state the appearance of a thread that can be started several times
-    def start(self):
+    def start(self, execution_history, backward_execution=False):
         """ Starts the execution of the state in a new thread.
 
         :return:
         """
+        self.execution_history = execution_history
+        self.backward_execution = copy.copy(backward_execution)
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 
@@ -141,6 +148,10 @@ class State(Observable, yaml.YAMLObject, object):
         if not isinstance(self.output_data, dict):
             raise TypeError("states must be of type dict")
         self.check_input_data_type(self.input_data)
+
+    def setup_backward_run(self):
+        self.active = True
+        self.preempted = False
 
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
@@ -324,24 +335,35 @@ class State(Observable, yaml.YAMLObject, object):
         :param outcome_id: the id of the outcome to remove
 
         """
-        if not outcome_id in self._used_outcome_ids:
+        if outcome_id not in self._used_outcome_ids:
             raise AttributeError("There is no outcome_id %s" % str(outcome_id))
 
         if outcome_id == -1 or outcome_id == -2:
             raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
                                  "return aborted or preempted")
 
+        self.remove_outcome_hook(outcome_id)
+
         # delete possible transition connected to this outcome
-        if not self.parent is None:
+        if self.parent is not None:
             for transition_id, transition in self.parent.transitions.iteritems():
-                if transition.from_outcome == outcome_id:
+                if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
-                    # del self.parent.transitions[transition_id]
                     break  # found the one outgoing transition
 
         # delete outcome it self
         self._used_outcome_ids.remove(outcome_id)
         self._outcomes.pop(outcome_id, None)
+
+    def remove_outcome_hook(self, outcome_id):
+        """Hook for adding more logic when removing an outcome
+
+        This hook is intended for the use of inherited classed, which can add more functionality if needed. A
+        container state would remove its transitions going the removed outcome here.
+
+        :param outcome_id: The id of the outcome that is removed
+        """
+        pass
 
     def is_valid_outcome_id(self, outcome_id):
         """Checks if outcome_id valid type and points to element of state.
@@ -546,9 +568,6 @@ class State(Observable, yaml.YAMLObject, object):
             self.add_outcome("success", 0)
             self.add_outcome("aborted", -1)
             self.add_outcome("preempted", -2)
-            if self.state_type is StateType.BARRIER_CONCURRENCY:
-                #for a barrier concurrency case, there is only one successfull outcome
-                self.add_outcome("success", 0)
 
         else:
             if not isinstance(outcomes, dict):

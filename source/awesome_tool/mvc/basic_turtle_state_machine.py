@@ -162,11 +162,17 @@ def run_turtle_demo():
     awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/basic_turtle_demo_sm"
 
     # # load the state machine
-    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/99 bottles of beer")
+
+    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+        global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
+
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_hierarchy_test")
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()
@@ -185,6 +191,8 @@ def run_turtle_demo():
     logger.debug("Gtk main loop exited!")
 
     sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
+    # for item in sm.root_state.execution_history.history_items:
+    #     print item
     if sm:
         sm.root_state.join()
 

@@ -55,7 +55,7 @@ def test_default_values_of_data_ports():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
     #print output_data["output_data_port1"]
