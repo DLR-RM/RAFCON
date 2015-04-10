@@ -1,6 +1,7 @@
 import gtk
 from gtkmvc import View
 import gobject
+from awesome_tool.utils import constants
 
 
 class StateMachinesEditorView(View):
@@ -32,7 +33,18 @@ class PlusAddNotebook2 (gtk.VBox):
         self.nb1.set_border_width(5)
         self.nb1.set_scrollable(True)
 
-        add = gtk.Button("Add")
+        self.nb1.set_can_focus(False)
+        self.nb1.set_tab_border(6)
+
+        add = gtk.Button()
+        add.set_border_width(5)
+        add_label = gtk.Label()
+        add_label.set_markup('<span font_desc="%s %s"> &#x%s; </span>' % (constants.DEFAULT_FONT,
+                                                                          constants.FONT_SIZE_NORMAL,
+                                                                          constants.BUTTON_ADD))
+        add_label.show()
+        add.set_image(add_label)
+        add.set_focus_on_click(False)
 
         self.nb2 = gtk.Notebook()
         self.nb2.set_show_border(False)
@@ -41,6 +53,7 @@ class PlusAddNotebook2 (gtk.VBox):
         add.connect("clicked", self.add_page)
 
         self.nb1.connect("switch-page", self.sel_page)
+        self.nb1.connect("page-reordered", self.reorder_tabs)
         self.nb1.set_tab_pos(gtk.POS_TOP)
 
         self.nb2.set_show_tabs(False)
@@ -82,7 +95,13 @@ class PlusAddNotebook2 (gtk.VBox):
         return self.nb2.get_nth_page(page_num)
 
     def set_tab_reorderable(self, page, reorderable):
+        nb1_child = self.nb1.get_nth_page(self.page_num(page))
+        self.nb1.set_tab_reorderable(nb1_child, reorderable)
         pass
+
+    def reorder_tabs(self, widget, dir, arg2, data=None):
+        child = self.nb2.get_nth_page(self.nb2.get_current_page())
+        self.nb2.reorder_child(child, widget.get_current_page())
 
     def page_num(self, widget):
         return self.nb2.page_num(widget)
@@ -97,6 +116,7 @@ class PlusAddNotebook2 (gtk.VBox):
     def set_tab_label(self, child, tab_label):
         nb1_child = self.nb1.get_nth_page(self.page_num(child))
         self.nb1.set_tab_label(nb1_child, tab_label)
+
 
 class PlusAddNotebook (gtk.Notebook):
 
