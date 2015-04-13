@@ -22,7 +22,7 @@ output_data_ports:
     19: !DataPort {data_port_id: 19, data_type: int, default_value: null, name: beer_number_out}
     20: !DataPort {data_port_id: 20, data_type: int, default_value: null, name: wine_number_out}
     21: !DataPort {data_port_id: 21, data_type: int, default_value: null, name: whiskey_number_out}
-path: ../../test_scripts/backward_step_test/GLSUJY/OOECFM
+path: ../../test_scripts/backward_step_barrier_test/GLSUJY/OOECFM
 scoped_variables: {}
 state_id: OOECFM
 state_type: STATE_TYPE.BARRIER_CONCURRENCY

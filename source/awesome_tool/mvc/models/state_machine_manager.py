@@ -3,7 +3,6 @@ from gtkmvc import Observable
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.statemachine.state_machine_manager import StateMachineManager
 from awesome_tool.utils.vividict import Vividict
-import awesome_tool.mvc.singleton as mvc_single
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -51,12 +50,6 @@ class StateMachineManagerModel(ModelMT, Observable):
             self.meta = meta
         else:
             self.meta = Vividict()
-
-        # check if the sm_manager_model exists several times
-        mvc_single.sm_manager_creation_counter += 1
-        if mvc_single.sm_manager_creation_counter == 2:
-            logger.error("Sm_manager_model exists several times!")
-            exit(1)
 
     def delete_state_machine_models(self):
         sm_keys = self.state_machines.keys()

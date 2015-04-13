@@ -53,7 +53,7 @@ def trigger_gui_signals(*args):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     glib.idle_add(menubar_ctrl.on_step_mode_activate, None, None)
-    number_of_steps = 16
+    number_of_steps = 9
     sleep_time = 0.5
     time.sleep(sleep_time)
     for i in range(number_of_steps):
@@ -73,11 +73,11 @@ def trigger_gui_signals(*args):
 
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
-            assert sd.value == 94
+            assert sd.value == 97
         elif sd.name == "wine_number":
-            assert sd.value == 34
+            assert sd.value == 37
         elif sd.name == "whiskey_number":
-            assert sd.value == 14
+            assert sd.value == 17
 
     glib.idle_add(menubar_ctrl.on_stop_activate, None)
     glib.idle_add(menubar_ctrl.on_quit_activate, None)
@@ -102,14 +102,17 @@ def test_backward_stepping():
 
     main_window_view = MainWindowView(logging_view)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
+    if variables_for_pytest.sm_manager_model is None:
+        variables_for_pytest.sm_manager_model = StateMachineManagerModel(
+            awesome_tool.statemachine.singleton.state_machine_manager)
 
     # load the meta data for the state machine
-    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+    variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view, gvm_model,
                                                   editor_type="LogicDataGrouped")
-    thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model, main_window_controller])
+    thread = threading.Thread(target=trigger_gui_signals,
+                              args=[variables_for_pytest.sm_manager_model,main_window_controller])
     thread.start()
 
     gtk.main()

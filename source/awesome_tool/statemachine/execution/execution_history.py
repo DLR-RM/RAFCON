@@ -33,19 +33,19 @@ class ExecutionHistory():
         else:  # this is the case for the very first executed state
             return None
 
-    def add_call_history_item(self, state, method_name):
+    def add_call_history_item(self, state, method_name, state_for_scoped_data):
         # if not isinstance(state, State):
         #     raise AttributeError("state must be of type State")
-        return_item = CallItem(state, self.get_last_history_item(), method_name)
+        return_item = CallItem(state, self.get_last_history_item(), method_name, state_for_scoped_data)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
         self.history_items.append(return_item)
         return return_item
 
-    def add_return_history_item(self, state, method_name):
+    def add_return_history_item(self, state, method_name, state_for_scoped_data):
         # if not isinstance(state, State):
         #     raise AttributeError("state must be of type State")
-        return_item = ReturnItem(state, self.get_last_history_item(), method_name)
+        return_item = ReturnItem(state, self.get_last_history_item(), method_name, state_for_scoped_data)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
         self.history_items.append(return_item)
@@ -99,13 +99,10 @@ class ScriptItem(HistoryItem):
 
 class CallItem(ScriptItem):
 
-    def __init__(self, state, prev, method_name):
+    def __init__(self, state, prev, method_name, state_for_scoped_data):
         ScriptItem.__init__(self, state, prev, method_name)
         # copy the scoped_data
-        if state.state_type is StateType.EXECUTION or state.state_type is StateType.LIBRARY:
-            self.scoped_data = copy.deepcopy(state.parent._scoped_data)
-        else:
-            self.scoped_data = copy.deepcopy(state._scoped_data)
+        self.scoped_data = copy.deepcopy(state_for_scoped_data._scoped_data)
 
     def __str__(self):
         return "CallItem %s" % (ScriptItem.__str__(self))
@@ -113,14 +110,12 @@ class CallItem(ScriptItem):
 
 class ReturnItem(ScriptItem):
 
-    def __init__(self, state, prev, method_name):
+    def __init__(self, state, prev, method_name, state_for_scoped_data):
         ScriptItem.__init__(self, state, prev, method_name)
 
         # copy the scoped_data
-        if state.state_type is StateType.EXECUTION or state.state_type is StateType.LIBRARY:
-            self.scoped_data = copy.deepcopy(state.parent._scoped_data)
-        else:
-            self.scoped_data = copy.deepcopy(state._scoped_data)
+        self.scoped_data = copy.deepcopy(state_for_scoped_data._scoped_data)
+
         self.outcome = None
         if method_name is MethodName.EXECUTE or method_name is MethodName.EXIT:
             self.outcome = state.final_outcome
@@ -158,26 +153,26 @@ class ConcurrencyItem(HistoryItem):
             else:
                 index += 1
 
-    def add_call_history_item(self, head, state, method_name):
+    def add_call_history_item(self, head, state, method_name, state_for_scoped_data):
         # if not isinstance(state, State):
         #     raise AttributeError("state must be of type State")
         if not isinstance(head, HistoryItem):
             raise AttributeError("head must be of type HistoryItem")
 
         new_history_item = self.execution_histories[self.get_index_for_head(head)].add_call_history_item(
-            state, method_name
+            state, method_name, state_for_scoped_data
         )
         self.execution_heads[self.get_index_for_head(head)] = new_history_item
         return new_history_item
 
-    def add_return_history_item(self, head, state, method_name):
+    def add_return_history_item(self, head, state, method_name, state_for_scoped_data):
         # if not isinstance(state, State):
         #     raise AttributeError("state must be of type State")
         if not isinstance(head, HistoryItem):
             raise AttributeError("head must be of type HistoryItem")
 
         new_history_item = self.execution_histories[self.get_index_for_head(head)].add_return_history_item(
-            state, method_name
+            state, method_name, state_for_scoped_data
         )
         self.execution_heads[self.get_index_for_head(head)] = new_history_item
         return new_history_item

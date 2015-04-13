@@ -73,26 +73,26 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 logger.debug("Executing hierarchy state with id %s and name %s" % (self._state_id, self.name))
                 # handle data for the entry script
                 scoped_variables_as_dict = {}
-                self.execution_history.add_call_history_item(self, MethodName.ENTRY)
+                self.execution_history.add_call_history_item(self, MethodName.ENTRY, self)
                 self.get_scoped_variables_as_dict(scoped_variables_as_dict)
                 self.enter(scoped_variables_as_dict)
                 self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
-                self.execution_history.add_return_history_item(self, MethodName.ENTRY)
+                self.execution_history.add_return_history_item(self, MethodName.ENTRY, self)
                 state = self.get_start_state(set_final_outcome=True)
 
             ########################################################
             # children execution loop
             ########################################################
             self.child_execution = True
+            # depending on the execution mode pause execution
+            logger.debug("Handling execution mode")
+            execution_signal = singleton.state_machine_execution_engine.handle_execution_mode(self)
             while state is not self:
 
                 self.backward_execution = False
                 if self.preempted:
                     break
 
-                # depending on the execution mode pause execution
-                logger.debug("Handling execution mode")
-                execution_signal = singleton.state_machine_execution_engine.handle_execution_mode(self)
                 last_history_item = None
                 if execution_signal == "stop":
                     # this will be caught at the end of the run method
@@ -126,7 +126,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     logger.debug("Executing next state with id \"%s\", type \"%s\" and name \"%s\" (backward: %s)" %
                                  (state.state_id, str(state.state_type), state.name, self.backward_execution))
                     if not self.backward_execution:  # only add history item if it is not a backward execution
-                        self.execution_history.add_call_history_item(state, MethodName.EXECUTE)
+                        self.execution_history.add_call_history_item(state, MethodName.EXECUTE, self)
                     state.input_data = self.get_inputs_for_state(state)
                     state.output_data = self.get_outputs_for_state(state)
                     # execute the state
@@ -147,7 +147,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         # for key, value in self.scoped_data.iteritems():
                         #     print key, value
                         self.update_scoped_variables_with_output_dictionary(state.output_data, state)
-                        self.execution_history.add_return_history_item(state, MethodName.EXECUTE)
+                        self.execution_history.add_return_history_item(state, MethodName.EXECUTE, self)
                         # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
                         transition = self.get_transition_for_outcome(state, state.final_outcome)
 
@@ -160,6 +160,10 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
                         state = self.get_state_for_transition(transition)
 
+                    # depending on the execution mode pause execution
+                    logger.debug("Handling execution mode")
+                    execution_signal = singleton.state_machine_execution_engine.handle_execution_mode(self)
+
             ########################################################
             # children execution loop end
             ########################################################
@@ -167,11 +171,11 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.child_execution = False
             # handle data for the exit script
             scoped_variables_as_dict = {}
-            self.execution_history.add_call_history_item(self, MethodName.EXIT)
+            self.execution_history.add_call_history_item(self, MethodName.EXIT, self)
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
-            self.execution_history.add_return_history_item(self, MethodName.EXIT)
+            self.execution_history.add_return_history_item(self, MethodName.EXIT, self)
 
             self.write_output_data()
             self.check_output_data_type()

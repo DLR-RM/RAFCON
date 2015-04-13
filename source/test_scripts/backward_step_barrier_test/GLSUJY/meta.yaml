@@ -26,7 +26,7 @@ outcomes:
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: the end, outcome_id: 0}
 output_data_ports: {}
-path: ../../test_scripts/backward_step_test/GLSUJY
+path: ../../test_scripts/backward_step_barrier_test/GLSUJY
 scoped_variables:
     29: !ScopedVariable {data_type: int, default_value: 100, name: beer_number, scoped_variable_id: 29}
     30: !ScopedVariable {data_type: int, default_value: 40, name: wine_number, scoped_variable_id: 30}

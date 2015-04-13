@@ -156,12 +156,12 @@ def test_gui():
 
     state_machine = StateMachine(ctr_state)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
+    variables_for_pytest.sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view, gvm_model,
                                                   editor_type='LogicDataGrouped')
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model, main_window_controller])
+    thread = threading.Thread(target=trigger_gui_signals, args=[variables_for_pytest.sm_manager_model, main_window_controller])
     thread.start()
 
     gtk.main()

@@ -77,11 +77,11 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
                 # handle data for the entry script
                 scoped_variables_as_dict = {}
-                self.execution_history.add_call_history_item(self, MethodName.ENTRY)
+                self.execution_history.add_call_history_item(self, MethodName.ENTRY, self)
                 self.get_scoped_variables_as_dict(scoped_variables_as_dict)
                 self.enter(scoped_variables_as_dict)
                 self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
-                self.execution_history.add_return_history_item(self, MethodName.ENTRY)
+                self.execution_history.add_return_history_item(self, MethodName.ENTRY, self)
 
                 self.child_execution = True
                 history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
@@ -120,6 +120,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 # pop the ConcurrencyItem as we are leaving the barrier concurrency state
                 last_history_item = self.execution_history.pop_last_item()
                 assert isinstance(last_history_item, ConcurrencyItem)
+
                 last_history_item = self.execution_history.pop_last_item()
                 assert isinstance(last_history_item, ReturnItem)
                 self.scoped_data = last_history_item.scoped_data
@@ -128,6 +129,11 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 scoped_variables_as_dict = {}
                 self.get_scoped_variables_as_dict(scoped_variables_as_dict)
                 self.enter(scoped_variables_as_dict, backward_execution=True)
+
+                last_history_item = self.execution_history.pop_last_item()
+                assert isinstance(last_history_item, CallItem)
+                self.scoped_data = last_history_item.scoped_data
+
                 # do not write the output of the entry script
                 # final outcome is not important as the execution order is fixed during backward stepping
                 self.active = False
@@ -135,6 +141,9 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
                 return
+
+            else:
+                self.backward_execution = False
 
             self.add_state_execution_output_to_scoped_data(self.states[finished_thread_id].output_data,
                                                            self.states[finished_thread_id])
@@ -152,15 +161,17 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             # handle data for the exit script
             scoped_variables_as_dict = {}
-            self.execution_history.add_call_history_item(self, MethodName.EXIT)
+            self.execution_history.add_call_history_item(self, MethodName.EXIT, self)
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.exit(scoped_variables_as_dict)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
-            self.execution_history.add_return_history_item(self, MethodName.EXIT)
+            self.execution_history.add_return_history_item(self, MethodName.EXIT, self)
 
             self.write_output_data()
 
             self.check_output_data_type()
+
+            print self.output_data
 
             if self.concurrency_queue:
                 self.concurrency_queue.put(self.state_id)
