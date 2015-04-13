@@ -61,12 +61,22 @@ class StateMachinesEditorController(ExtendedController):
         self.registered_state_machines = {}
 
         self._view['notebook'].connect("add_state_machine", self.add_state_machine)
+        self._view['notebook'].connect("close_state_machine", self.close_state_machine)
 
     def add_state_machine(self, widget, event=None):
         logger.debug("Creating new statemachine ...")
         root_state = HierarchyState("new_root_state")
         sm = StateMachine(root_state)
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+
+    def close_state_machine(self, widget, page_number):
+        page = widget.get_nth_page(page_number)
+        for identifier, meta in self.tabs.iteritems():
+            if meta['page'] is page:
+                model = meta['state_machine_model']
+                sm_id = model.state_machine.state_machine_id
+                self.on_close_clicked(None, self.tabs[sm_id]["state_machine_model"], None)
+                return
 
     def register_view(self, view):
         self.view.notebook.connect('switch-page', self.on_switch_page)

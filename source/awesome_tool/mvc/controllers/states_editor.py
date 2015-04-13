@@ -70,9 +70,22 @@ class StatesEditorController(ExtendedController):
         self._selected_state_machine_model = None
         self.editor_type = editor_type
 
+        logger.warning("Workaround used for tab-close on middle click")
+        logger.warning("Tab will close on button press!")
+        view.notebook.connect("close_state_tab", self.close_state_tab)
+
         self.tabs = {}
         self.act_model = None
         self.register()
+
+    def close_state_tab(self, widget, page_num):
+        page_to_close = widget.get_nth_page(page_num)
+        for key, items in self.tabs.iteritems():
+            if page_to_close == items['page']:
+                state_model = items['state_model']
+                break
+
+        self.on_close_clicked(None, state_model, None)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):

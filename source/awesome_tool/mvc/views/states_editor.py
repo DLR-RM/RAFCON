@@ -1,6 +1,10 @@
 import gtk
 from gtkmvc import View
 from awesome_tool.utils import constants
+import gobject
+
+
+gobject.signal_new("close_state_tab", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int, ))
 
 
 class StatesEditorView(View):
@@ -13,5 +17,24 @@ class StatesEditorView(View):
         self.notebook.show()
         self.notebook.set_tab_hborder(constants.BORDER_WIDTH * 2)
         self.notebook.set_tab_vborder(constants.BORDER_WIDTH * 3)
+
+        self.notebook.connect("button_press_event", self.button_released)
+
         self['notebook'] = self.notebook
 
+    def button_released(self, widget, event=None):
+        x, y = event.x, event.y
+        for i in range(0, self.notebook.get_n_pages()):
+            alloc = self.notebook.get_tab_label(self.notebook.get_nth_page(i)).get_allocation()
+            widget_position = widget.get_allocation()
+            mouse_x = widget_position.x + x
+            mouse_y = widget_position.y + y
+            print event.state
+            print "MOUSE X, Y: (%d,%d)" % (mouse_x, mouse_y)
+            print "ALLOC X, Y: (%d,%d)" % (alloc.x, alloc.y)
+            print "ALLOC WIDTH, HEIGHT: (%d,%d)\n" % (alloc.width, alloc.height)
+            if mouse_x > alloc.x and mouse_x < alloc.x + alloc.width and mouse_y > alloc.y\
+                    and mouse_y < alloc.y + alloc.height and event.button == 2:
+                print "test"
+                self.notebook.emit("close_state_tab", i)
+                return

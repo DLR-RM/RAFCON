@@ -45,14 +45,6 @@ class StateEditorView(View):
         self['transitions_viewport'].add(self['transitions_view'].get_top_widget())
         self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
 
-        #self.top_box = self['vbox1']
-        #self.expanders = [self['data_expander'], self['logic_expander']]
-        #self['data_expander'].connect('activate', self.resize_logic_data_expander)
-        #self['logic_expander'].connect('activate', self.resize_logic_data_expander)
-
-        #self['data_expander'].set_border_width(constants.BORDER_WIDTH)
-        #self['logic_expander'].set_border_width(constants.BORDER_WIDTH)
-
         self['data_vpaned'].set_position(300)
         self['logic_vpaned'].set_position(300)
 
