@@ -102,7 +102,7 @@ class CallItem(ScriptItem):
     def __init__(self, state, prev, method_name):
         ScriptItem.__init__(self, state, prev, method_name)
         # copy the scoped_data
-        if state.state_type is StateType.EXECUTION:
+        if state.state_type is StateType.EXECUTION or state.state_type is StateType.LIBRARY:
             self.scoped_data = copy.deepcopy(state.parent._scoped_data)
         else:
             self.scoped_data = copy.deepcopy(state._scoped_data)
@@ -117,7 +117,7 @@ class ReturnItem(ScriptItem):
         ScriptItem.__init__(self, state, prev, method_name)
 
         # copy the scoped_data
-        if state.state_type is StateType.EXECUTION:
+        if state.state_type is StateType.EXECUTION or state.state_type is StateType.LIBRARY:
             self.scoped_data = copy.deepcopy(state.parent._scoped_data)
         else:
             self.scoped_data = copy.deepcopy(state._scoped_data)

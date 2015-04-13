@@ -119,7 +119,7 @@ class ScopedData(Observable):
         self.data_port_type = data_port_type
 
         self._timestamp = generate_time_stamp()
-        # for storage purpose inside the container states (generated from key_name and from_state
+        # for storage purpose inside the container states (generated from key_name and from_state)
         self._primary_key = None
 
     def __str__(self):

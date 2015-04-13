@@ -271,7 +271,7 @@ class MainWindowController(ExtendedController):
         self.get_controller("menu_bar_controller").on_step_activate(None)
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
-        self.get_controller("menu_bar_controller").on_backward_step_mode_activate(None)
+        self.get_controller("menu_bar_controller").on_backward_step_activate(None)
 
     def set_button_active(self, active, button, func):
         button.handler_block_by_func(func)

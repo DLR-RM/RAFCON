@@ -19,6 +19,7 @@ import awesome_tool.statemachine.singleton as singleton
 from awesome_tool.statemachine.enums import MethodName
 from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem
 
+
 class HierarchyState(ContainerState, yaml.YAMLObject):
 
     """A class tto represent a hierarchy state for the state machine
@@ -51,6 +52,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
         try:
 
+            state = None
             if self.backward_execution:
                 logger.debug("Backward executing hierarchy state with id %s and name %s" % (self._state_id, self.name))
 
@@ -67,23 +69,15 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 assert isinstance(last_history_item, CallItem)
                 self.scoped_data = last_history_item.scoped_data
 
-                self.backward_execution = True
-                # Only the states themselves are allowed to pop their Return item
-                last_history_item = self.execution_history.get_last_history_item()
-                assert isinstance(last_history_item, ReturnItem)
-                self.scoped_data = last_history_item.scoped_data
-                state = last_history_item.state_reference
-                self.execute_backward_one_state(state)
-
             else:  # forward_execution
                 logger.debug("Executing hierarchy state with id %s and name %s" % (self._state_id, self.name))
-                #handle data for the entry script
+                # handle data for the entry script
                 scoped_variables_as_dict = {}
-                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
                 self.execution_history.add_call_history_item(self, MethodName.ENTRY)
+                self.get_scoped_variables_as_dict(scoped_variables_as_dict)
                 self.enter(scoped_variables_as_dict)
-                self.execution_history.add_return_history_item(self, MethodName.ENTRY)
                 self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+                self.execution_history.add_return_history_item(self, MethodName.ENTRY)
                 state = self.get_start_state(set_final_outcome=True)
 
             ########################################################
@@ -92,16 +86,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.child_execution = True
             while state is not self:
 
+                self.backward_execution = False
                 if self.preempted:
                     break
-                    # if self.concurrency_queue:
-                    #     self.concurrency_queue.put(self.state_id)
-                    # self.final_outcome = Outcome(-2, "preempted")
-                    # self.active = False
-                    # self.child_execution = False
-                    # logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
-                    #              "was preempted!" % self.name)
-                    # return
 
                 # depending on the execution mode pause execution
                 logger.debug("Handling execution mode")
@@ -112,27 +99,38 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     raise RuntimeError("state stopped")
                 elif execution_signal == "backward_step":
                     self.backward_execution = True
-                    # Only the states themselves are allowed to pop their Return item
-                    last_history_item = self.execution_history.get_last_history_item()
+                    last_history_item = self.execution_history.pop_last_item()
                     assert isinstance(last_history_item, ReturnItem)
                     self.scoped_data = last_history_item.scoped_data
                     state = last_history_item.state_reference
-                    return_value = self.execute_backward_one_state(state)
-                    if return_value == "exit":
-                        # outcome is not important as it is a backward execution
-                        self.active = False
-                        self.child_execution = False
-                        if self.concurrency_queue:
-                            self.concurrency_queue.put(self.state_id)
-                        return
-                else:
-                    self.backward_execution = False
-                    logger.debug("Executing next state with id \"%s\", type \"%s\" and name \"%s\"" %
-                                 (state.state_id, str(state.state_type), state.name))
+
+                if state is self:  # only in a backward execution case
+                    # the last_history_item is the ReturnItem from the entry function,
+                    # thus backward execute the entry function
+                    scoped_variables_as_dict = {}
+                    self.get_scoped_variables_as_dict(scoped_variables_as_dict)
+                    self.enter(scoped_variables_as_dict, backward_execution=True)
+                    # do not write the output of the entry script to the scoped data
+                    # final outcome is not important as the execution order is fixed during backward stepping
+                    # pop the last history item as it is the call item of the last entry execution
+                    last_history_item = self.execution_history.pop_last_item()
+                    assert isinstance(last_history_item, CallItem)
+                    # copy the scoped_data of the history from the point before the state was executed
+                    self.scoped_data = last_history_item.scoped_data
+                    self.active = False
+                    self.child_execution = False
+                    if self.concurrency_queue:
+                        self.concurrency_queue.put(self.state_id)
+                    return  # outcome is not important as it is a backward execution
+                else:  # forward step
+                    logger.debug("Executing next state with id \"%s\", type \"%s\" and name \"%s\" (backward: %s)" %
+                                 (state.state_id, str(state.state_type), state.name, self.backward_execution))
+                    if not self.backward_execution:  # only add history item if it is not a backward execution
+                        self.execution_history.add_call_history_item(state, MethodName.EXECUTE)
                     state.input_data = self.get_inputs_for_state(state)
                     state.output_data = self.get_outputs_for_state(state)
-                    #execute the state
-                    state.start(self.execution_history)
+                    # execute the state
+                    state.start(self.execution_history, backward_execution=self.backward_execution)
                     state.join()
                     state.active = False
                     if state.backward_execution:
@@ -140,6 +138,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         # that was valid before executing the state
                         last_history_item = self.execution_history.pop_last_item()
                         assert isinstance(last_history_item, CallItem)
+                        # copy the scoped_data of the history from the point before the state was executed
+                        self.scoped_data = last_history_item.scoped_data
                         # go to the next state as it was a backward execution
                     else:
                         self.add_state_execution_output_to_scoped_data(state.output_data, state)
@@ -147,6 +147,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         # for key, value in self.scoped_data.iteritems():
                         #     print key, value
                         self.update_scoped_variables_with_output_dictionary(state.output_data, state)
+                        self.execution_history.add_return_history_item(state, MethodName.EXECUTE)
                         # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
                         transition = self.get_transition_for_outcome(state, state.final_outcome)
 
@@ -166,11 +167,11 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.child_execution = False
             # handle data for the exit script
             scoped_variables_as_dict = {}
-            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.execution_history.add_call_history_item(self, MethodName.EXIT)
+            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
             self.exit(scoped_variables_as_dict)
-            self.execution_history.add_return_history_item(self, MethodName.EXIT)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+            self.execution_history.add_return_history_item(self, MethodName.EXIT)
 
             self.write_output_data()
             self.check_output_data_type()
@@ -204,40 +205,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.active = False
             self.child_execution = False
             return
-
-    def execute_backward_one_state(self, state):
-
-        if state is self:
-            logger.debug("Backward-executing entry script of the state with id \"%s\", type \"%s\" and name \"%s\"" %
-                         (state.state_id, str(state.state_type), state.name))
-            last_history_item = self.execution_history.pop_last_item()
-            assert isinstance(last_history_item, ReturnItem)
-            # the last_history_item is the ReturnItem from the entry function,
-            # thus backward execute the entry function
-            scoped_variables_as_dict = {}
-            self.get_scoped_variables_as_dict(scoped_variables_as_dict)
-            self.enter(scoped_variables_as_dict, backward_execution=True)
-            # do not write the output of the entry script
-            # final outcome is not important as the execution order is fixed during backward stepping
-            return "exit"
-        else:
-            logger.debug("Backward-executing next state with id \"%s\", type \"%s\" and name \"%s\"" %
-                         (state.state_id, str(state.state_type), state.name))
-            state.input_data = self.get_inputs_for_state(state)
-            state.output_data = self.get_outputs_for_state(state)
-            state.start(self.execution_history, backward_execution=True)
-            state.join()
-            state.active = False
-            # do not alter the scoped data with the data of the backward executed state
-            # the item popped now from the history will be a CallItem and will contain the scoped data,
-            # that was valid before executing the state
-            last_history_item = self.execution_history.pop_last_item()
-            assert isinstance(last_history_item, CallItem)
-            # copy the scoped_data of the history from the point before the state was executed
-            self.scoped_data = last_history_item.scoped_data
-            # do not transit to the next state
-            return "continue"
-
 
     @classmethod
     def to_yaml(cls, dumper, data):

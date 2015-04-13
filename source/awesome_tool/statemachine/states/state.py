@@ -71,6 +71,7 @@ class State(Observable, yaml.YAMLObject, object):
         self._state_type = None
         self.state_type = state_type
 
+        self._used_data_port_ids = set([])
         self._input_data_ports = None
         self.input_data_ports = input_data_ports
 
@@ -176,7 +177,6 @@ class State(Observable, yaml.YAMLObject, object):
                             state.state_copy.state_type is not StateType.LIBRARY:
                 state.state_copy.recursively_preempt_states(state.state_copy)
 
-
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data port functions -------------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -190,8 +190,10 @@ class State(Observable, yaml.YAMLObject, object):
         :param default_value: the default value of the data port
 
         """
-        if data_port_id is None:
+        data_port_id = generate_data_flow_id()
+        while data_port_id in self._used_data_port_ids:
             data_port_id = generate_data_flow_id()
+        self._used_data_port_ids.add(data_port_id)
         self._input_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id)
         return data_port_id
 
@@ -205,6 +207,7 @@ class State(Observable, yaml.YAMLObject, object):
         if data_port_id in self._input_data_ports:
             self.remove_data_flows_with_data_port_id(data_port_id)
             del self._input_data_ports[data_port_id]
+            self._used_data_port_ids.remove(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
 
@@ -236,8 +239,10 @@ class State(Observable, yaml.YAMLObject, object):
         :param default_value: the default value of the data port
 
         """
-        if data_port_id is None:
+        data_port_id = generate_data_flow_id()
+        while data_port_id in self._used_data_port_ids:
             data_port_id = generate_data_flow_id()
+        self._used_data_port_ids.add(data_port_id)
         self._output_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id)
         return data_port_id
 
@@ -251,6 +256,7 @@ class State(Observable, yaml.YAMLObject, object):
         if data_port_id in self._output_data_ports:
             self.remove_data_flows_with_data_port_id(data_port_id)
             del self._output_data_ports[data_port_id]
+            self._used_data_port_ids.remove(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
 
@@ -520,6 +526,9 @@ class State(Observable, yaml.YAMLObject, object):
                     raise TypeError("element of input_data_ports must be of type DataPort")
                 if not key == value.data_port_id:
                     raise AttributeError("the key of the input dictionary and the name of the data port do not match")
+                if value.data_port_id in self._used_data_port_ids:
+                    raise AttributeError("data_port_id %s already exists" % (str(value.data_port_id)))
+                self._used_data_port_ids.add(value.data_port_id)
             self._input_data_ports = input_data_ports
 
     @property
@@ -540,6 +549,11 @@ class State(Observable, yaml.YAMLObject, object):
             for key, value in output_data_ports.iteritems():
                 if not isinstance(value, DataPort):
                     raise TypeError("element of output_data_ports must be of type DataPort")
+                if not key == value.data_port_id:
+                    raise AttributeError("the key of the output dictionary and the name of the data port do not match")
+                if value.data_port_id in self._used_data_port_ids:
+                    raise AttributeError("data_port_id %s already exists" % (str(value.data_port_id)))
+                self._used_data_port_ids.add(value.data_port_id)
             self._output_data_ports = output_data_ports
 
     @property

@@ -10,7 +10,6 @@
 from threading import Condition
 import copy
 from gtkmvc import Observable
-import os
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -84,6 +83,7 @@ class ContainerState(State):
         :return:
         """
         State.setup_run(self)
+        self.scoped_data = {}
         self.add_input_data_to_scoped_data(self.input_data, self)
         self.add_default_values_of_scoped_variables_to_scoped_data()
 
@@ -764,7 +764,7 @@ class ContainerState(State):
                 return scoped_variable_id
         raise AttributeError("Name %s is not in scoped_variables", name)
 
-    #Primary key is the name of scoped variable.str
+    # Primary key is the name of scoped variable.str
     @Observable.observed
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
         """ Adds a scoped variable to the container state
@@ -777,6 +777,9 @@ class ContainerState(State):
         """
         if scoped_variable_id is None:
             scoped_variable_id = generate_data_flow_id()
+        while scoped_variable_id in self._used_data_port_ids:
+            scoped_variable_id = generate_data_flow_id()
+        self._used_data_port_ids.add(scoped_variable_id)
         if name in self.__scoped_variables_names:
             raise AttributeError("A scoped variable with name %s already exists", name)
         self.__scoped_variables_names.append(name)
@@ -789,7 +792,7 @@ class ContainerState(State):
 
         :param scoped_variable_id: the id of the scoped variable to remove
         """
-        if not scoped_variable_id in self._scoped_variables:
+        if scoped_variable_id not in self._scoped_variables:
             raise AttributeError("A scoped variable with id %s does not exist" % str(scoped_variable_id))
 
         # delete all data flows connected to scoped_variable
@@ -800,6 +803,7 @@ class ContainerState(State):
             self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
+        self._used_data_port_ids.remove(scoped_variable_id)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------
@@ -1169,6 +1173,12 @@ class ContainerState(State):
             for key, svar in scoped_variables.iteritems():
                 if not isinstance(svar, ScopedVariable):
                     raise TypeError("element of scope must be of type ScopedVariable")
+                if not key == svar.data_port_id:
+                    raise AttributeError("the key of the scoped variable dictionary and the name of the "
+                                         "data port do not match")
+                if svar.data_port_id in self._used_data_port_ids:
+                    raise AttributeError("data_port_id %s already exists" % (str(svar.data_port_id)))
+                self._used_data_port_ids.add(svar.data_port_id)
             self._scoped_variables = scoped_variables
 
     @property

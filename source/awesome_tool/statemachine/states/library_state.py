@@ -67,6 +67,7 @@ class LibraryState(State, yaml.YAMLObject):
             raise AttributeError("Library does not have the correct version!")
 
         #copy all ports and outcomes of self.state_copy to let the library state appear like the container state
+        self._used_data_port_ids = set([])
         self.input_data_ports = self.state_copy.input_data_ports
         self.output_data_ports = self.state_copy.output_data_ports
         self.outcomes = self.state_copy.outcomes
