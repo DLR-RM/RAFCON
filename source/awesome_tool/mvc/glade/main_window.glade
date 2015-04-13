@@ -22,29 +22,34 @@
             <property name="orientation">vertical</property>
             <property name="spacing">4</property>
             <child>
-              <object class="GtkHBox" id="top_menu_hbox">
+              <object class="GtkEventBox" id="eventbox2">
                 <property name="visible">True</property>
-                <property name="border_width">5</property>
                 <child>
-                  <object class="GtkLabel" id="menu_bar_placeholder">
+                  <object class="GtkHBox" id="top_menu_hbox">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">menu_bar_placeholder</property>
+                    <property name="border_width">5</property>
+                    <child>
+                      <object class="GtkLabel" id="menu_bar_placeholder">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">menu_bar_placeholder</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="top_tool_bar_placeholder">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">top_toolbar_placeholder</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="pack_type">end</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
                   </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="top_tool_bar_placeholder">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">top_toolbar_placeholder</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="pack_type">end</property>
-                    <property name="position">1</property>
-                  </packing>
                 </child>
               </object>
               <packing>
@@ -269,7 +274,7 @@
                             <property name="tab_vborder">6</property>
                             <property name="group_id">1</property>
                             <child>
-                              <object class="GtkVBox" id="vbox1">
+                              <object class="GtkVBox" id="history_vbox_placeholder">
                                 <property name="visible">True</property>
                                 <property name="orientation">vertical</property>
                                 <child>
@@ -349,15 +354,26 @@
                         <property name="position">400</property>
                         <property name="position_set">True</property>
                         <child>
-                          <object class="GtkVBox" id="graphical_editor_vbox">
+                          <object class="GtkVBox" id="graphical_editor_outer_vbox">
                             <property name="visible">True</property>
                             <property name="border_width">5</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="graphical_editor_label">
+                              <object class="GtkEventBox" id="eventbox3">
                                 <property name="visible">True</property>
-                                <property name="xalign">0</property>
-                                <property name="label" translatable="yes">GRAPHICAL EDITOR</property>
+                                <child>
+                                  <object class="GtkEventBox" id="eventbox4">
+                                    <property name="visible">True</property>
+                                    <property name="border_width">10</property>
+                                    <child>
+                                      <object class="GtkLabel" id="graphical_editor_label">
+                                        <property name="visible">True</property>
+                                        <property name="xalign">0</property>
+                                        <property name="label" translatable="yes">GRAPHICAL EDITOR</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -365,207 +381,221 @@
                               </packing>
                             </child>
                             <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <object class="GtkHBox" id="hbox3">
+                              <object class="GtkEventBox" id="eventbox7">
                                 <property name="visible">True</property>
-                                <property name="border_width">5</property>
                                 <child>
-                                  <object class="GtkToolbar" id="graphical_editor_shortcut_bar">
+                                  <object class="GtkVBox" id="graphical_editor_vbox">
                                     <property name="visible">True</property>
-                                    <property name="toolbar_style">text</property>
-                                    <property name="show_arrow">False</property>
-                                    <property name="icon_size">1</property>
-                                    <property name="icon_size_set">True</property>
+                                    <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton8">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
+                                      <placeholder/>
                                     </child>
                                     <child>
-                                      <object class="GtkToggleToolButton" id="button_start_shortcut">
+                                      <object class="GtkHBox" id="hbox3">
                                         <property name="visible">True</property>
-                                        <property name="label" translatable="yes">s</property>
-                                        <property name="use_underline">True</property>
-                                        <signal name="toggled" handler="on_button_start_shortcut_toggled"/>
+                                        <property name="border_width">5</property>
+                                        <child>
+                                          <object class="GtkToolbar" id="graphical_editor_shortcut_bar">
+                                            <property name="visible">True</property>
+                                            <property name="toolbar_style">text</property>
+                                            <property name="show_arrow">False</property>
+                                            <property name="icon_size">1</property>
+                                            <property name="icon_size_set">True</property>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton8">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkToggleToolButton" id="button_start_shortcut">
+                                                <property name="visible">True</property>
+                                                <property name="label" translatable="yes">s</property>
+                                                <property name="use_underline">True</property>
+                                                <signal name="toggled" handler="on_button_start_shortcut_toggled"/>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton2">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkToolButton" id="button_stop_shortcut">
+                                                <property name="visible">True</property>
+                                                <property name="label" translatable="yes">s</property>
+                                                <property name="use_underline">True</property>
+                                                <signal name="clicked" handler="on_button_stop_shortcut_clicked"/>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton3">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkToggleToolButton" id="button_pause_shortcut">
+                                                <property name="visible">True</property>
+                                                <property name="label" translatable="yes">p</property>
+                                                <property name="use_underline">True</property>
+                                                <signal name="toggled" handler="on_button_pause_shortcut_toggled"/>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton1">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton4">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton7">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkToggleToolButton" id="button_step_mode_shortcut">
+                                                <property name="visible">True</property>
+                                                <property name="label" translatable="yes">s</property>
+                                                <property name="use_underline">True</property>
+                                                <signal name="toggled" handler="on_button_step_mode_shortcut_toggled"/>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton5">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkToolButton" id="button_step_shortcut">
+                                                <property name="visible">True</property>
+                                                <property name="label" translatable="yes">s</property>
+                                                <property name="use_underline">True</property>
+                                                <signal name="clicked" handler="on_button_step_shortcut_clicked"/>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton6">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkToolButton" id="button_step_backward_shortcut">
+                                                <property name="visible">True</property>
+                                                <property name="label" translatable="yes">b</property>
+                                                <property name="use_underline">True</property>
+                                                <signal name="clicked" handler="on_button_step_backward_shortcut_clicked"/>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkSeparatorToolItem" id="toolbutton9">
+                                                <property name="visible">True</property>
+                                                <property name="draw">False</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkEventBox" id="eventbox1">
+                                            <property name="visible">True</property>
+                                            <property name="border_width">5</property>
+                                            <child>
+                                              <object class="GtkLabel" id="execution_status_label">
+                                                <property name="visible">True</property>
+                                                <property name="xalign">0</property>
+                                                <property name="label" translatable="yes">STOPPED</property>
+                                              </object>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton2">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkToggleToolButton" id="button_pause_shortcut">
-                                        <property name="visible">True</property>
-                                        <property name="label" translatable="yes">p</property>
-                                        <property name="use_underline">True</property>
-                                        <signal name="toggled" handler="on_button_pause_shortcut_toggled"/>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton3">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkToolButton" id="button_stop_shortcut">
-                                        <property name="visible">True</property>
-                                        <property name="label" translatable="yes">s</property>
-                                        <property name="use_underline">True</property>
-                                        <signal name="clicked" handler="on_button_stop_shortcut_clicked"/>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton1">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton4">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton7">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkToggleToolButton" id="button_step_mode_shortcut">
-                                        <property name="visible">True</property>
-                                        <property name="label" translatable="yes">s</property>
-                                        <property name="use_underline">True</property>
-                                        <signal name="toggled" handler="on_button_step_mode_shortcut_toggled"/>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton5">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkToolButton" id="button_step_shortcut">
-                                        <property name="visible">True</property>
-                                        <property name="label" translatable="yes">s</property>
-                                        <property name="use_underline">True</property>
-                                        <signal name="clicked" handler="on_button_step_shortcut_clicked"/>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton6">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkToolButton" id="button_step_backward_shortcut">
-                                        <property name="visible">True</property>
-                                        <property name="label" translatable="yes">b</property>
-                                        <property name="use_underline">True</property>
-                                        <signal name="clicked" handler="on_button_step_backward_shortcut_clicked"/>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSeparatorToolItem" id="toolbutton9">
-                                        <property name="visible">True</property>
-                                        <property name="draw">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="homogeneous">True</property>
+                                        <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkEventBox" id="eventbox1">
-                                    <property name="visible">True</property>
-                                    <property name="border_width">5</property>
-                                    <child>
-                                      <object class="GtkLabel" id="execution_status_label">
-                                        <property name="visible">True</property>
-                                        <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">STOPPED</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="position">1</property>
-                                  </packing>
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="position">2</property>
+                                <property name="position">1</property>
                               </packing>
                             </child>
                           </object>
@@ -583,104 +613,99 @@
                                 <property name="visible">True</property>
                                 <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkEventBox" id="debug_label_eventbox">
+                                  <object class="GtkHBox" id="debug_label_hbox">
                                     <property name="visible">True</property>
                                     <property name="border_width">10</property>
                                     <child>
-                                      <object class="GtkHBox" id="hbox4">
+                                      <object class="GtkLabel" id="debug_console_label">
+                                        <property name="visible">True</property>
+                                        <property name="xalign">0</property>
+                                        <property name="label" translatable="yes">DEBUG CONSOLE</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkHButtonBox" id="hbuttonbox1">
                                         <property name="visible">True</property>
                                         <child>
-                                          <object class="GtkLabel" id="debug_console_label">
+                                          <object class="GtkCheckButton" id="button_show_info">
+                                            <property name="label" translatable="yes">INFO</property>
                                             <property name="visible">True</property>
-                                            <property name="xalign">0</property>
-                                            <property name="label" translatable="yes">DEBUG CONSOLE</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">False</property>
+                                            <property name="focus_on_click">False</property>
+                                            <property name="active">True</property>
+                                            <property name="draw_indicator">True</property>
+                                            <signal name="toggled" handler="on_debug_content_change"/>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
+                                            <property name="fill">False</property>
                                             <property name="position">0</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkHButtonBox" id="hbuttonbox1">
+                                          <object class="GtkCheckButton" id="button_show_debug">
+                                            <property name="label" translatable="yes">DEBUG</property>
                                             <property name="visible">True</property>
-                                            <child>
-                                              <object class="GtkCheckButton" id="button_show_info">
-                                                <property name="label" translatable="yes">INFO</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="focus_on_click">False</property>
-                                                <property name="active">True</property>
-                                                <property name="draw_indicator">True</property>
-                                                <signal name="toggled" handler="on_debug_content_change"/>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">False</property>
-                                                <property name="position">0</property>
-                                              </packing>
-                                            </child>
-                                            <child>
-                                              <object class="GtkCheckButton" id="button_show_debug">
-                                                <property name="label" translatable="yes">DEBUG</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="focus_on_click">False</property>
-                                                <property name="active">True</property>
-                                                <property name="draw_indicator">True</property>
-                                                <signal name="toggled" handler="on_debug_content_change"/>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">False</property>
-                                                <property name="position">1</property>
-                                              </packing>
-                                            </child>
-                                            <child>
-                                              <object class="GtkCheckButton" id="button_show_warning">
-                                                <property name="label" translatable="yes">WARNING</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="relief">none</property>
-                                                <property name="focus_on_click">False</property>
-                                                <property name="active">True</property>
-                                                <property name="draw_indicator">True</property>
-                                                <signal name="toggled" handler="on_debug_content_change"/>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">False</property>
-                                                <property name="position">2</property>
-                                              </packing>
-                                            </child>
-                                            <child>
-                                              <object class="GtkCheckButton" id="button_show_error">
-                                                <property name="label" translatable="yes">ERROR</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="focus_on_click">False</property>
-                                                <property name="yalign">0.54000002145767212</property>
-                                                <property name="active">True</property>
-                                                <property name="draw_indicator">True</property>
-                                                <signal name="toggled" handler="on_debug_content_change"/>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">False</property>
-                                                <property name="position">3</property>
-                                              </packing>
-                                            </child>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">False</property>
+                                            <property name="focus_on_click">False</property>
+                                            <property name="active">True</property>
+                                            <property name="draw_indicator">True</property>
+                                            <signal name="toggled" handler="on_debug_content_change"/>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
-                                            <property name="pack_type">end</property>
+                                            <property name="fill">False</property>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
+                                        <child>
+                                          <object class="GtkCheckButton" id="button_show_warning">
+                                            <property name="label" translatable="yes">WARNING</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">False</property>
+                                            <property name="relief">none</property>
+                                            <property name="focus_on_click">False</property>
+                                            <property name="active">True</property>
+                                            <property name="draw_indicator">True</property>
+                                            <signal name="toggled" handler="on_debug_content_change"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">False</property>
+                                            <property name="position">2</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkCheckButton" id="button_show_error">
+                                            <property name="label" translatable="yes">ERROR</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">False</property>
+                                            <property name="focus_on_click">False</property>
+                                            <property name="yalign">0.54000002145767212</property>
+                                            <property name="active">True</property>
+                                            <property name="draw_indicator">True</property>
+                                            <signal name="toggled" handler="on_debug_content_change"/>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">False</property>
+                                            <property name="position">3</property>
+                                          </packing>
+                                        </child>
                                       </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="pack_type">end</property>
+                                        <property name="position">1</property>
+                                      </packing>
                                     </child>
                                   </object>
                                   <packing>
@@ -722,24 +747,45 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkFrame" id="state_editor">
+                  <object class="GtkVBox" id="state_editor">
                     <property name="visible">True</property>
-                    <property name="border_width">5</property>
-                    <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="orientation">vertical</property>
                     <child>
-                      <placeholder/>
-                    </child>
-                    <child type="label">
-                      <object class="GtkLabel" id="state_editor_label">
+                      <object class="GtkEventBox" id="eventbox5">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">STATE EDITOR</property>
-                        <property name="use_markup">True</property>
+                        <child>
+                          <object class="GtkEventBox" id="eventbox6">
+                            <property name="visible">True</property>
+                            <property name="border_width">10</property>
+                            <child>
+                              <object class="GtkLabel" id="state_editor_label">
+                                <property name="visible">True</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">STATE EDITOR</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEventBox" id="state_editor_eventbox">
+                        <property name="visible">True</property>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="resize">False</property>
+                    <property name="resize">True</property>
                     <property name="shrink">True</property>
                   </packing>
                 </child>

@@ -52,14 +52,14 @@ class MainWindowView(View):
         self.state_machines_editor = StateMachinesEditorView()
         self.state_machines_editor.show()
         self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
-        self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 1)
+        self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
         # self['state_machines_vbox'].add(self.state_machines_editor.get_top_widget())
 
         ##################################################
         # insert states-editor
         ##################################################
         self.states_editor = StatesEditorView()
-        self["state_editor"].add(self.states_editor.get_top_widget())
+        self["state_editor_eventbox"].add(self.states_editor.get_top_widget())
         self.states_editor.show()
 
         ##################################################
@@ -121,11 +121,14 @@ class MainWindowView(View):
 
         self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
         self['tree_notebook_1'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH)
+        self['tree_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH_TEXTVIEW)
         self['tree_notebook_2'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH)
+        self['tree_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH_TEXTVIEW)
         self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
-        self['graphical_editor_vbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
-        self['debug_label_eventbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         self['state_editor'].set_border_width(constants.BORDER_WIDTH)
 
     def create_button_label(self, icon):

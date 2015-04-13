@@ -109,9 +109,9 @@ class LoggingView(View):
         buffer.create_tag("default", font="Monospace 10")
         buffer.create_tag("set_warning_color", foreground="orange")
         buffer.create_tag("set_error_color", foreground="red")
-        buffer.create_tag("set_debug_color", foreground="#288cff")
+        buffer.create_tag("set_debug_color", foreground="#00baf8")
         buffer.create_tag("set_info_color", foreground="#39af57")
-        buffer.create_tag("set_gray_text", foreground="#c2c3c4")
+        buffer.create_tag("set_gray_text", foreground="#93959a")
         buffer.create_tag("set_white_text", foreground="#ffffff")
         return buffer
 

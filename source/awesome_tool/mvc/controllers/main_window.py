@@ -65,8 +65,18 @@ class MainWindowController(ExtendedController):
         library_manager_model = LibraryManagerModel(awesome_tool.statemachine.singleton.library_manager)
         library_controller = LibraryTreeController(library_manager_model, view.library_tree, state_machine_manager_model)
         self.add_controller('library_controller', library_controller)
-        view['library_vbox'].remove(view['library_tree_placeholder'])
-        view['library_vbox'].pack_start(view.library_tree, True, True, 0)
+        #view['library_vbox'].remove(view['library_tree_placeholder'])
+
+        #view['library_vbox'].pack_start(view.library_tree, True, True, 0)
+
+        library_tree_tab = view['library_vbox']
+        page_num = view["tree_notebook_1"].page_num(library_tree_tab)
+        view["tree_notebook_1"].remove_page(page_num)
+
+        library_tab_label = gtk.Label('Libraries')
+        library_notebook_widget = self.create_notebook_widget('LIBRARIES', view.library_tree)
+        view["tree_notebook_1"].insert_page(library_notebook_widget, library_tab_label, page_num)
+
         # view['add_link_button'].connect("clicked", library_controller.add_link_button_clicked,
         #                                 state_machine_manager_model)
         # view['add_template_button'].connect("clicked", library_controller.add_template_button_clicked,
@@ -91,18 +101,10 @@ class MainWindowController(ExtendedController):
         #TODO: this is not always the active state machine
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
-        state_machine_label = gtk.Label('STATE TREE')
-        state_machine_event_box = gtk.EventBox()
-        state_machine_event_box.set_border_width(constants.BORDER_WIDTH)
-        state_machine_alignment = gtk.Alignment(0.0, 0.5, 0.0, 0.0)
-        state_machine_alignment.add(state_machine_label)
-        state_machine_event_box.add(state_machine_alignment)
+
         state_machine_tab_label = gtk.Label('State Tree')
-        state_machine_vbox = gtk.VBox()
-        state_machine_vbox.pack_start(state_machine_event_box, False, True, 0)
-        state_machine_vbox.pack_start(view.state_machine_tree, True, True, 0)
-        state_machine_vbox.show_all()
-        view["tree_notebook_1"].insert_page(state_machine_vbox, state_machine_tab_label, page_num)
+        state_machine_notebook_widget = self.create_notebook_widget('STATE TREE', view.state_machine_tree)
+        view["tree_notebook_1"].insert_page(state_machine_notebook_widget, state_machine_tab_label, page_num)
 
         ######################################################
         # state editor
@@ -129,18 +131,26 @@ class MainWindowController(ExtendedController):
         #append new tab
         global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
-        global_variables_label = gtk.Label('GLOBAL VARIABLES')
-        global_variables_event_box = gtk.EventBox()
-        global_variables_alignment = gtk.Alignment(0.0, 0.5, 0.0, 0.0)
-        global_variables_alignment.add(global_variables_label)
-        global_variables_event_box.add(global_variables_alignment)
-        global_variables_event_box.set_border_width(constants.BORDER_WIDTH)
+
         global_variables_tab_label = gtk.Label('Global Variables')
-        global_variables_vbox = gtk.VBox()
-        global_variables_vbox.pack_start(global_variables_event_box, False, True, 0)
-        global_variables_vbox.pack_start(view.global_var_manager_view.get_top_widget(), True, True, 0)
-        global_variables_vbox.show_all()
-        view["tree_notebook_1"].insert_page(global_variables_vbox, global_variables_tab_label, page_num)
+        global_variables_notebook_widget = self.create_notebook_widget('GLOBAL VARIABLES',
+                                                                       view.global_var_manager_view.get_top_widget())
+        view["tree_notebook_1"].insert_page(global_variables_notebook_widget, global_variables_tab_label, page_num)
+
+        view["tree_notebook_1"].set_current_page(0)
+
+        ######################################################
+        # history
+        ######################################################
+        #remove placeholder tab
+        history_tab = view['history_vbox_placeholder']
+        page_num = view["tree_notebook_2"].page_num(history_tab)
+        view["tree_notebook_2"].remove_page(page_num)
+        #append new tab
+
+        history_tab_label = gtk.Label('History')
+        history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
+        view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
 
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
@@ -222,6 +232,23 @@ class MainWindowController(ExtendedController):
             self.set_button_active(True, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
             self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
             self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+
+    def create_label_box(self, text):
+        label = gtk.Label(text)
+        alignment = gtk.Alignment(0.0, 0.5, 0.0, 0.0)
+        alignment.add(label)
+        alignment.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        return alignment
+
+    def create_notebook_widget(self, title, widget):
+        title_label = self.create_label_box(title)
+        event_box = gtk.EventBox()
+        vbox = gtk.VBox()
+        vbox.pack_start(title_label, False, True, 0)
+        vbox.pack_start(widget, True, True, 0)
+        event_box.add(vbox)
+        event_box.show_all()
+        return event_box
 
     # Shortcut buttons
 

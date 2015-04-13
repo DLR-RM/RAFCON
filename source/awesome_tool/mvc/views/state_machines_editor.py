@@ -125,7 +125,7 @@ class PlusAddNotebook (gtk.Notebook):
     pixbuf_data = [
         "13 13 2 1",
         "  c None",
-        "x c #787b7e",
+        "x c %s" % constants.TEXT_COLOR_DARK,
         "     xxx     ",
         "     xxx     ",
         "     xxx     ",
@@ -147,15 +147,18 @@ class PlusAddNotebook (gtk.Notebook):
         self.connect("button_release_event", self.on_button_release)
         self.pixbuf = gtk.gdk.pixbuf_new_from_xpm_data(self.pixbuf_data)
 
+        self.set_tab_hborder(constants.BORDER_WIDTH * 2)
+        self.set_tab_vborder(constants.BORDER_WIDTH * 3)
+
         self.add_visible = True
 
     def on_button_release(self, widget, event):
-        x, y = self.get_pixbuf_xy_root()
+        x, y = self.get_pixbuf_xy()
 
         pb_width = self.pixbuf.get_width()
         pb_height = self.pixbuf.get_height()
 
-        if event.x_root >= x and event.x_root <= x + pb_width and event.y_root >= y and event.y_root <= y + pb_height\
+        if event.x >= x and event.x <= x + pb_width and event.y >= y and event.y <= y + pb_height\
                 and self.add_visible:
             self.emit("add_state_machine", self)
 
@@ -179,7 +182,7 @@ class PlusAddNotebook (gtk.Notebook):
         pb_height = self.pixbuf.get_height()
 
         allocation = self.get_tab_label(self.get_nth_page(self.get_n_pages() - 1)).get_allocation()
-        x = allocation.x + allocation.width + pb_width
+        x = allocation.x + allocation.width + pb_width + constants.ICON_MARGIN
         y = allocation.y + (allocation.height - pb_height) / 2
 
         return x, y
