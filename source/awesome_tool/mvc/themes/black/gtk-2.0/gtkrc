@@ -100,6 +100,7 @@ style "my_default"
     color["top_bar_background_black"]	= "#0A0F19"
     color["background_black"]		= "#131822"
     color["widget_background"]		= "#1D222C"
+    color["tab_not_active_background"]	= "#202020"
     color["widget_active_background"]	= "#272C36"
     color["scrollbar_background"]	= "#313640"
     color["text_background"]		= "#383d42"
@@ -232,21 +233,6 @@ widget_class "*Dialog*Button*"				style "dialog_button"
 
 
 #---------NOTEBOOKS----------
-style "notebook_blue" = "my_default"
-{
-    xthickness = 0
-    ythickness = 0
-
-    bg[ACTIVE]	        = @text_background
-    bg[NORMAL]		= @button_active
-
-    fg[INSENSITIVE]	= @very_dark_gray
-
-}
-widget_class "*VPaned.GtkNotebook"			style "notebook_blue"
-
-
-
 style "notebook" = "my_default"
 {
     xthickness = 0
@@ -259,17 +245,33 @@ style "notebook" = "my_default"
 
 }
 widget_class "*VBox.GtkEventBox*Notebook"			style "notebook"
-#----------------------------
+widget_class "*Notebook*Notebook"				style "notebook"
+widget_class "*Notebook*Viewport"				style "notebook"
 
 
 
-style "notebook_viewport" = "notebook"
+style "notebook_blue" = "my_default"
 {
     xthickness = 0
     ythickness = 0
+
+    bg[ACTIVE]	        = @widget_active_background
+    bg[NORMAL]		= @button_active
+
+    fg[INSENSITIVE]	= @very_dark_gray
+
 }
-widget_class "*Notebook*Notebook"				style "notebook_viewport"
-widget_class "*Notebook*Viewport"				style "notebook_viewport"
+widget_class "*VPaned.GtkNotebook"			style "notebook_blue"
+widget_class "*VBox.GtkNotebook"				style "notebook_blue"
+
+
+
+style "right_notebook_event_box" = "my_default"
+{
+    bg[NORMAL]		= @widget_active_background
+}
+widget_class "*VBox.GtkNotebook.GtkEventBox"		style "right_notebook_event_box"
+#----------------------------
 
 
 

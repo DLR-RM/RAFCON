@@ -120,12 +120,15 @@ class MainWindowView(View):
         self['main_window'].set_border_width(constants.MAIN_WINDOW_BORDER_WIDTH)
 
         self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
+
         self['tree_notebook_1'].set_border_width(constants.BORDER_WIDTH)
-        self['tree_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH)
-        self['tree_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH_TEXTVIEW)
+        self['tree_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
+        self['tree_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+
         self['tree_notebook_2'].set_border_width(constants.BORDER_WIDTH)
-        self['tree_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH)
-        self['tree_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH_TEXTVIEW)
+        self['tree_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
+        self['tree_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+
         self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
         self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)

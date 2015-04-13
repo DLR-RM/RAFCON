@@ -21,7 +21,7 @@ from awesome_tool.utils import constants
 
 
 class StateEditorView(View):
-    builder = './glade/state_editor_ld_widget.glade'
+    builder = './glade/state_editor_ld_widget_tab.glade'
     top = 'main_frame_vbox'
 
     def __init__(self):
@@ -45,13 +45,19 @@ class StateEditorView(View):
         self['transitions_viewport'].add(self['transitions_view'].get_top_widget())
         self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
 
-        self.top_box = self['vbox1']
-        self.expanders = [self['data_expander'], self['logic_expander']]
-        self['data_expander'].connect('activate', self.resize_logic_data_expander)
-        self['logic_expander'].connect('activate', self.resize_logic_data_expander)
+        #self.top_box = self['vbox1']
+        #self.expanders = [self['data_expander'], self['logic_expander']]
+        #self['data_expander'].connect('activate', self.resize_logic_data_expander)
+        #self['logic_expander'].connect('activate', self.resize_logic_data_expander)
 
-        self['data_expander'].set_border_width(constants.BORDER_WIDTH)
-        self['logic_expander'].set_border_width(constants.BORDER_WIDTH)
+        #self['data_expander'].set_border_width(constants.BORDER_WIDTH)
+        #self['logic_expander'].set_border_width(constants.BORDER_WIDTH)
+
+        self['data_vpaned'].set_position(300)
+        self['logic_vpaned'].set_position(300)
+
+        self['main_notebook'].set_tab_hborder(constants.BORDER_WIDTH * 2)
+        self['main_notebook'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
         self['new_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
