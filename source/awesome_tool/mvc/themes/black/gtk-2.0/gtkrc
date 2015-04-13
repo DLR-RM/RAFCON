@@ -205,13 +205,8 @@ widget_class "*ComboBox*"				style "button"
 
 style "check_button" = "my_default"
 {
-    bg[ACTIVE]        = @button_active
-    bg[NORMAL]        = @text_background
-    bg[PRELIGHT]      = @medium_gray
+    bg[NORMAL]        = @text_color
     bg[SELECTED]      = @button_active
-    bg[INSENSITIVE]   = @widget_background
-
-    fg[INSENSITIVE]   = @dark_gray
 }
 widget_class "*CheckButton*"				style "check_button"
 
@@ -346,6 +341,27 @@ style "treeview" = "my_default"
 {
     font_name 				= "DIN Next LT Pro 11"
     bg[ACTIVE]				= @text_background
+    bg[NORMAL]				= @widget_active_background
+    bg[SELECTED]			= @widget_background
+
+    fg[SELECTED]			= @widget_background
+
+    base[ACTIVE]			= @medium_gray
+    base[SELECTED]			= @button_active
+
+    text[SELECTED]			= @white
+}
+
+
+
+style "chooser_treeview" = "my_default"
+{
+    font_name 				= "DIN Next LT Pro 11"
+
+    GtkTreeView::even_row_color	= @text_background
+    GtkTreeView::odd_row_color		= @text_background
+
+    bg[ACTIVE]				= @text_background
     bg[NORMAL]				= @text_background
     bg[SELECTED]			= @widget_background
 
@@ -355,15 +371,6 @@ style "treeview" = "my_default"
     base[SELECTED]			= @button_active
     base[NORMAL]			= @widget_active_background
 
-    text[SELECTED]			= @white
-}
-
-
-
-style "chooser_treeview" = "treeview"
-{
-    GtkTreeView::even_row_color	= @text_background
-    GtkTreeView::odd_row_color		= @text_background
     text[SELECTED]			= @white
     text[INSENSITIVE]			= @very_dark_gray
 }
