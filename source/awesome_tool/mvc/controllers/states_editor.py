@@ -80,12 +80,8 @@ class StatesEditorController(ExtendedController):
 
     def close_state_tab(self, widget, page_num):
         page_to_close = widget.get_nth_page(page_num)
-        for key, items in self.tabs.iteritems():
-            if page_to_close == items['page']:
-                state_model = items['state_model']
-                break
 
-        self.on_close_clicked(None, state_model, None)
+        self.close_page(page_to_close)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):

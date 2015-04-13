@@ -29,12 +29,7 @@ class StatesEditorView(View):
             widget_position = widget.get_allocation()
             mouse_x = widget_position.x + x
             mouse_y = widget_position.y + y
-            print event.state
-            print "MOUSE X, Y: (%d,%d)" % (mouse_x, mouse_y)
-            print "ALLOC X, Y: (%d,%d)" % (alloc.x, alloc.y)
-            print "ALLOC WIDTH, HEIGHT: (%d,%d)\n" % (alloc.width, alloc.height)
             if mouse_x > alloc.x and mouse_x < alloc.x + alloc.width and mouse_y > alloc.y\
                     and mouse_y < alloc.y + alloc.height and event.button == 2:
-                print "test"
                 self.notebook.emit("close_state_tab", i)
                 return
