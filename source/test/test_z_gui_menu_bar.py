@@ -12,13 +12,13 @@ from awesome_tool.mvc.controllers import MainWindowController, StateDataPortEdit
     SingleWidgetWindowController, SourceEditorController
 from awesome_tool.mvc.views.main_window import MainWindowView
 from awesome_tool.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
-import awesome_tool.statemachine.singleton
+import awesome_tool.mvc.singleton
 from awesome_tool.statemachine.state_machine import StateMachine
 
 import variables_for_pytest
+
 
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
@@ -99,7 +99,7 @@ def create_models(*args, **kargs):
     return state5, logger, ctr_state, global_var_manager_model
 
 
-def wait_for_values_identical_number_statemachines(sm_manager_model, val2):
+def wait_for_values_identical_number_state_machines(sm_manager_model, val2):
     values_identical = len(sm_manager_model.state_machines) == val2
     counter = 0
     while not values_identical:
@@ -123,17 +123,17 @@ def trigger_gui_signals(*args):
     current_sm_length = len(sm_manager_model.state_machines)
     glib.idle_add(menubar_ctrl.on_new_activate, None)
 
-    wait_for_values_identical_number_statemachines(sm_manager_model, current_sm_length+1)
+    wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
 
     glib.idle_add(menubar_ctrl.on_open_activate, None, None, "../../test_scripts/basic_turtle_demo_sm")
-    wait_for_values_identical_number_statemachines(sm_manager_model, current_sm_length+2)
+    wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
     assert len(sm_manager_model.state_machines) == current_sm_length+2
 
     glib.idle_add(menubar_ctrl.on_refresh_libraries_activate, None)
     glib.idle_add(menubar_ctrl.on_refresh_all_activate, None, None, True)
 
-    wait_for_values_identical_number_statemachines(sm_manager_model, 1)
+    wait_for_values_identical_number_state_machines(sm_manager_model, 1)
     assert len(sm_manager_model.state_machines) == 1
 
     glib.idle_add(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
@@ -156,12 +156,13 @@ def test_gui():
 
     state_machine = StateMachine(ctr_state)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    variables_for_pytest.sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
+    variables_for_pytest.sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view, gvm_model,
                                                   editor_type='LogicDataGrouped')
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[variables_for_pytest.sm_manager_model, main_window_controller])
+    thread = threading.Thread(target=trigger_gui_signals, args=[variables_for_pytest.sm_manager_model,
+                                                                main_window_controller])
     thread.start()
 
     gtk.main()
