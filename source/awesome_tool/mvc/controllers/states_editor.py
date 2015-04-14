@@ -203,6 +203,7 @@ class StatesEditorController(ExtendedController):
 
         self.close_page(page)
         self.destroy_state_editor_page(state_identifier)
+
     def close_all_tabs(self):
         """
         Closes all tabs of the states editor
