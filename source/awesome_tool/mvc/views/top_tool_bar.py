@@ -20,7 +20,7 @@ class TopToolBarView(View):
         label = gtk.Label()
         label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
                                                                     constants.FONT_SIZE_BIG,
-                                                                    constants.BUTTON_QUIT))  # close button sign
+                                                                    constants.BUTTON_CLOSE))  # close button sign
         cb.set_label_widget(label)
 
         label = gtk.Label()

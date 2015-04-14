@@ -341,24 +341,35 @@ class State(Observable, yaml.YAMLObject, object):
         :param outcome_id: the id of the outcome to remove
 
         """
-        if not outcome_id in self._used_outcome_ids:
+        if outcome_id not in self._used_outcome_ids:
             raise AttributeError("There is no outcome_id %s" % str(outcome_id))
 
         if outcome_id == -1 or outcome_id == -2:
             raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
                                  "return aborted or preempted")
 
+        self.remove_outcome_hook(outcome_id)
+
         # delete possible transition connected to this outcome
-        if not self.parent is None:
+        if self.parent is not None:
             for transition_id, transition in self.parent.transitions.iteritems():
-                if transition.from_outcome == outcome_id:
+                if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
-                    # del self.parent.transitions[transition_id]
                     break  # found the one outgoing transition
 
         # delete outcome it self
         self._used_outcome_ids.remove(outcome_id)
         self._outcomes.pop(outcome_id, None)
+
+    def remove_outcome_hook(self, outcome_id):
+        """Hook for adding more logic when removing an outcome
+
+        This hook is intended for the use of inherited classed, which can add more functionality if needed. A
+        container state would remove its transitions going the removed outcome here.
+
+        :param outcome_id: The id of the outcome that is removed
+        """
+        pass
 
     def is_valid_outcome_id(self, outcome_id):
         """Checks if outcome_id valid type and points to element of state.

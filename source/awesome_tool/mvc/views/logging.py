@@ -14,14 +14,11 @@ class LoggingView(View):
         self.textview = None
         self.textview = gtk.TextView()
         self.textview.set_property('editable', False)
-        #self.textview.get_buffer().create_tag("dead_color", foreground="gray")
-        self.textview.get_buffer().create_tag("default", font="Monospace 10")
-        self.textview.get_buffer().create_tag("set_warning_color", foreground="#288cff")
-        self.textview.get_buffer().create_tag("set_error_color", foreground="red")
-        self.textview.get_buffer().create_tag("set_debug_color", foreground="green")
-        self.textview.get_buffer().create_tag("set_info_color", foreground="orange")
-        self.textview.get_buffer().create_tag("set_gray_text", foreground="#c2c3c4")
-        self.textview.get_buffer().create_tag("set_white_text", foreground="#ffffff")
+
+        self.complete_buffer = self.create_text_buffer()
+        self.filtered_buffer = self.create_text_buffer()
+
+        self.textview.set_buffer(self.complete_buffer)
 
         self.textview.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
 
@@ -29,6 +26,12 @@ class LoggingView(View):
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.add(self.textview)
         self.textview.show()
+
+        # TODO: insert default values to config file
+        self.info = True
+        self.debug = True
+        self.warning = True
+        self.error = True
 
         self['scrollable'] = scrollable
         self.quit_flag = False
@@ -40,13 +43,24 @@ class LoggingView(View):
 
     # LOOK OUT: This will be called from several threads => make it thread safe
     def print_debug(self, text):
-        pass
-        glib.idle_add(self.print_add, text, "set_warning_color")
-        #self.print_add(text, "set_warning_color")
+        glib.idle_add(self.print_add, text, self.complete_buffer, "set_debug_color")
+        if self.debug:
+            glib.idle_add(self.print_add, text, self.filtered_buffer, "set_debug_color")
 
     def print_error(self, text):
-        glib.idle_add(self.print_add, text, "set_error_color")
-        #self.print_add(text, "set_error_color")
+        glib.idle_add(self.print_add, text, self.complete_buffer, "set_error_color")
+        if self.error:
+            glib.idle_add(self.print_add, text, self.filtered_buffer, "set_error_color")
+
+    def print_info(self, text):
+        glib.idle_add(self.print_add, text, self.complete_buffer, "set_info_color")
+        if self.info:
+            glib.idle_add(self.print_add, text, self.filtered_buffer, "set_info_color")
+
+    def print_warning(self, text):
+        glib.idle_add(self.print_add, text, self.complete_buffer, "set_warning_color")
+        if self.warning:
+            glib.idle_add(self.print_add, text, self.filtered_buffer, "set_warning_color")
 
     # def get_buffer(self):
     #     return self.textview.get_buffer()
@@ -54,12 +68,11 @@ class LoggingView(View):
     # def set_text(self, text):
     #     self.textview.get_buffer().set_text(text)
 
-    def print_add(self, text_to_add, use_tag=None):
+    def print_add(self, text_to_add, text_buf, use_tag=None):
         text_to_add += "\n"
-        self.print_push(text_to_add, use_tag)
+        self.print_push(text_to_add, text_buf, use_tag)
 
-    def print_push(self, text_to_push, use_tag=None):
-        text_buf = self.textview.get_buffer()
+    def print_push(self, text_to_push, text_buf, use_tag=None):
         text_to_push = self.split_text(text_to_push)
         text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push[0], "set_gray_text")
         text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), text_to_push[1], "set_white_text")
@@ -73,11 +86,12 @@ class LoggingView(View):
 
         if not self.quit_flag:
             # print self.quit_flag
-            self.textview.scroll_to_iter(text_buf.get_end_iter(), 0.0, use_align=True, yalign=0.0)
+            # self.textview.scroll_to_iter(text_buf.get_end_iter(), 0.0, use_align=True, yalign=0.0)
+            self.textview.scroll_mark_onscreen(self.textview.get_buffer().get_insert())
 
     def split_text(self, text_to_split):
         """
-        Splits the debug text into its different parts: 'Time + LogLevel', 'Module Name', 'Debug message'
+        Splits the debug text into its different parts: 'Time', 'LogLevel + Module Name', 'Debug message'
         :param text_to_split: Text to split
         :return: Array containing the content of text_to_split split up
         """
@@ -90,11 +104,51 @@ class LoggingView(View):
         splitt.append(text_to_split[second_separation:])
         return splitt
 
-        #split = text_to_split.split("-")
-        #split2 = split[1].split("  ")
-        #if len(split) == 2:
-        #    return [split[0], split2[0], split2[1]]
-        #return [split[0], split2[0], split2[1] + "-" + split[2]]
+    def create_text_buffer(self):
+        buffer = gtk.TextBuffer()
+        buffer.create_tag("default", font="Monospace 10")
+        buffer.create_tag("set_warning_color", foreground="orange")
+        buffer.create_tag("set_error_color", foreground="red")
+        buffer.create_tag("set_debug_color", foreground="#00baf8")
+        buffer.create_tag("set_info_color", foreground="#39af57")
+        buffer.create_tag("set_gray_text", foreground="#93959a")
+        buffer.create_tag("set_white_text", foreground="#ffffff")
+        return buffer
+
+    def update_filtered_buffer(self, info, debug, warning, error):
+        self.info = info
+        self.debug = debug
+        self.warning = warning
+        self.error = error
+
+        if info and debug and warning and error:
+            self.textview.set_buffer(self.complete_buffer)
+        else:
+            self.print_filtered_buffer()
+
+        self.textview.scroll_mark_onscreen(self.textview.get_buffer().get_insert())
+
+    def print_filtered_buffer(self):
+        self.textview.set_buffer(self.filtered_buffer)
+
+        start, end = self.filtered_buffer.get_bounds()
+        self.filtered_buffer.delete(start, end)
+
+        has_line = True
+        iter1 = self.complete_buffer.get_start_iter()
+        iter2 = self.complete_buffer.get_start_iter()
+        while has_line:
+            iter2.forward_line()
+            line = self.complete_buffer.get_text(iter1, iter2)
+            has_line = iter1.forward_line()
+            if line.find("INFO") != -1 and self.info:
+                self.print_push(line, self.filtered_buffer, "set_info_color")
+            elif line.find("DEBUG") != -1 and self.debug:
+                self.print_push(line, self.filtered_buffer, "set_debug_color")
+            elif line.find("WARNING") != -1 and self.warning:
+                self.print_push(line, self.filtered_buffer, "set_warning_color")
+            elif line.find("ERROR") != -1 and self.error:
+                self.print_push(line, self.filtered_buffer, "set_error_color")
 
     # def print_clean(self, keep_lines=0):
     #     text_buf = self.textview.get_buffer()

@@ -7,6 +7,7 @@ from math import sin, cos, pi, atan2
 
 from enum import Enum
 
+from awesome_tool.utils import constants as const
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -136,7 +137,7 @@ class GraphicalEditorView(View):
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     # background_color = Color.from_hex(0x17242f)
-    background_color = Color.from_hex(0x30353a)
+    background_color = Color.from_hex(const.GRAPHICAL_EDITOR_COLOR_BACKGROUND)
     state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)
     state_selected_color = Color.from_hex(0xd7e0ec)  # Color(0.7, 0, 0, 0.8)
     state_active_color = Color.from_hex(0xb7d9b0)  # Color(0.7, 0, 0, 0.8)
@@ -302,7 +303,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glFlush()
 
         # OpenGL end
-        #gldrawable.gl_end()
+        gldrawable.gl_end()
 
         # logger.debug("expose_finish")
 

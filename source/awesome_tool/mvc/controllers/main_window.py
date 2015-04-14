@@ -65,8 +65,18 @@ class MainWindowController(ExtendedController):
         library_manager_model = LibraryManagerModel(awesome_tool.statemachine.singleton.library_manager)
         library_controller = LibraryTreeController(library_manager_model, view.library_tree, state_machine_manager_model)
         self.add_controller('library_controller', library_controller)
-        view['library_vbox'].remove(view['library_tree_placeholder'])
-        view['library_vbox'].pack_start(view.library_tree, True, True, 0)
+        #view['library_vbox'].remove(view['library_tree_placeholder'])
+
+        #view['library_vbox'].pack_start(view.library_tree, True, True, 0)
+
+        library_tree_tab = view['library_vbox']
+        page_num = view["tree_notebook_1"].page_num(library_tree_tab)
+        view["tree_notebook_1"].remove_page(page_num)
+
+        library_tab_label = gtk.Label('Libraries')
+        library_notebook_widget = self.create_notebook_widget('LIBRARIES', view.library_tree)
+        view["tree_notebook_1"].insert_page(library_notebook_widget, library_tab_label, page_num)
+
         # view['add_link_button'].connect("clicked", library_controller.add_link_button_clicked,
         #                                 state_machine_manager_model)
         # view['add_template_button'].connect("clicked", library_controller.add_template_button_clicked,
@@ -85,24 +95,16 @@ class MainWindowController(ExtendedController):
         # remove placeholder tab
 
         state_machine_tree_tab = view['state_machine_tree_placeholder']
-        page_num = view["tree_notebook"].page_num(state_machine_tree_tab)
-        view["tree_notebook"].remove_page(page_num)
+        page_num = view["tree_notebook_1"].page_num(state_machine_tree_tab)
+        view["tree_notebook_1"].remove_page(page_num)
         #append new tab
         #TODO: this is not always the active state machine
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
-        state_machine_label = gtk.Label('STATE TREE')
-        state_machine_event_box = gtk.EventBox()
-        state_machine_event_box.set_border_width(constants.BORDER_WIDTH)
-        state_machine_alignment = gtk.Alignment(0.0, 0.5, 0.0, 0.0)
-        state_machine_alignment.add(state_machine_label)
-        state_machine_event_box.add(state_machine_alignment)
+
         state_machine_tab_label = gtk.Label('State Tree')
-        state_machine_vbox = gtk.VBox()
-        state_machine_vbox.pack_start(state_machine_event_box, False, True, 0)
-        state_machine_vbox.pack_start(view.state_machine_tree, True, True, 0)
-        state_machine_vbox.show_all()
-        view["tree_notebook"].insert_page(state_machine_vbox, state_machine_tab_label, page_num)
+        state_machine_notebook_widget = self.create_notebook_widget('STATE TREE', view.state_machine_tree)
+        view["tree_notebook_1"].insert_page(state_machine_notebook_widget, state_machine_tab_label, page_num)
 
         ######################################################
         # state editor
@@ -124,45 +126,49 @@ class MainWindowController(ExtendedController):
         ######################################################
         #remove placeholder tab
         global_variables_tab = view['global_variables_placeholder']
-        page_num = view["tree_notebook"].page_num(global_variables_tab)
-        view["tree_notebook"].remove_page(page_num)
+        page_num = view["tree_notebook_1"].page_num(global_variables_tab)
+        view["tree_notebook_1"].remove_page(page_num)
         #append new tab
         global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
-        global_variables_label = gtk.Label('GLOBAL VARIABLES')
-        global_variables_event_box = gtk.EventBox()
-        global_variables_alignment = gtk.Alignment(0.0, 0.5, 0.0, 0.0)
-        global_variables_alignment.add(global_variables_label)
-        global_variables_event_box.add(global_variables_alignment)
-        global_variables_event_box.set_border_width(constants.BORDER_WIDTH)
+
         global_variables_tab_label = gtk.Label('Global Variables')
-        global_variables_vbox = gtk.VBox()
-        global_variables_vbox.pack_start(global_variables_event_box, False, True, 0)
-        global_variables_vbox.pack_start(view.global_var_manager_view.get_top_widget(), True, True, 0)
-        global_variables_vbox.show_all()
-        view["tree_notebook"].insert_page(global_variables_vbox, global_variables_tab_label, page_num)
+        global_variables_notebook_widget = self.create_notebook_widget('GLOBAL VARIABLES',
+                                                                       view.global_var_manager_view.get_top_widget())
+        view["tree_notebook_1"].insert_page(global_variables_notebook_widget, global_variables_tab_label, page_num)
+
+        view["tree_notebook_1"].set_current_page(0)
 
         ######################################################
-        # rotate all tab labels by 90 degrees
+        # history
+        ######################################################
+        #remove placeholder tab
+        history_tab = view['history_vbox_placeholder']
+        page_num = view["tree_notebook_2"].page_num(history_tab)
+        view["tree_notebook_2"].remove_page(page_num)
+        #append new tab
+
+        history_tab_label = gtk.Label('History')
+        history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
+        view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
+
+        ######################################################
+        # rotate all tab labels by 90 degrees and make detachable
         ######################################################
 
-        for i in range(view["tree_notebook"].get_n_pages()):
-            child = view["tree_notebook"].get_nth_page(i)
-            tab_label = view["tree_notebook"].get_tab_label(child)
+        for i in range(view["tree_notebook_1"].get_n_pages()):
+            child = view["tree_notebook_1"].get_nth_page(i)
+            tab_label = view["tree_notebook_1"].get_tab_label(child)
             tab_label.set_angle(90)
+            view["tree_notebook_1"].set_tab_reorderable(child, True)
+            view["tree_notebook_1"].set_tab_detachable(child, True)
 
-        ######################################################
-        # status bar
-        ######################################################
-        # add some data to the status bar
-        status_bar1 = view["statusbar1"]
-        status_bar1.push(0, "The awesome tool")
-        status_bar2 = view["statusbar2"]
-        status_bar2.push(0, "is awesome :-)")
-        status_bar3 = view["statusbar3"]
-        status_bar3_string = "Execution status: " + \
-                             str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
-        status_bar3.push(0, status_bar3_string)
+        for i in range(view["tree_notebook_2"].get_n_pages()):
+            child = view["tree_notebook_2"].get_nth_page(i)
+            tab_label = view["tree_notebook_2"].get_tab_label(child)
+            tab_label.set_angle(90)
+            view["tree_notebook_2"].set_tab_reorderable(child, True)
+            view["tree_notebook_2"].set_tab_detachable(child, True)
 
         ######################################################
         # menu bar
@@ -198,7 +204,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         view['top_level_h_pane'].set_position(1200)
         view['left_h_pane'].set_position(300)
-        view['left_v_pane'].set_position(600)
+        view['left_v_pane_1'].set_position(400)
+        view['left_v_pane_2'].set_position(600)
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
@@ -207,10 +214,9 @@ class MainWindowController(ExtendedController):
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
-        status_bar3 = self.view["statusbar3"]
-        status_bar3_string = "Execution status: " + \
-                             str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
-        status_bar3.push(0, status_bar3_string)
+        label_string = str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
+        label_string = label_string.replace("EXECUTION_MODE.", "")
+        self.view['execution_status_label'].set_text(label_string)
 
         if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.RUNNING:
             self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
@@ -226,6 +232,23 @@ class MainWindowController(ExtendedController):
             self.set_button_active(True, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
             self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
             self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+
+    def create_label_box(self, text):
+        label = gtk.Label(text)
+        alignment = gtk.Alignment(0.0, 0.5, 0.0, 0.0)
+        alignment.add(label)
+        alignment.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        return alignment
+
+    def create_notebook_widget(self, title, widget):
+        title_label = self.create_label_box(title)
+        event_box = gtk.EventBox()
+        vbox = gtk.VBox()
+        vbox.pack_start(title_label, False, True, 0)
+        vbox.pack_start(widget, True, True, 0)
+        event_box.add(vbox)
+        event_box.show_all()
+        return event_box
 
     # Shortcut buttons
 
@@ -277,3 +300,10 @@ class MainWindowController(ExtendedController):
         button.handler_block_by_func(func)
         button.set_active(active)
         button.handler_unblock_by_func(func)
+
+    def on_debug_content_change(self, widget, data=None):
+        info = self.view['button_show_info'].get_active()
+        debug = self.view['button_show_debug'].get_active()
+        warning = self.view['button_show_warning'].get_active()
+        error = self.view['button_show_error'].get_active()
+        self.view.logging_view.update_filtered_buffer(info, debug, warning, error)

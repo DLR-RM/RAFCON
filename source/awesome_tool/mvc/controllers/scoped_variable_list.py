@@ -39,6 +39,22 @@ class ScopedVariableListController(ExtendedController):
         """Adapters should be registered in this method call
         """
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action("delete", self.remove_port)
+        shortcut_manager.add_callback_for_action("add", self.add_port)
+
+    def add_port(self, *_):
+        if self.view[self.view.top].has_focus():
+            self.on_new_scoped_variable_button_clicked(None)
+
+    def remove_port(self, *_):
+        if self.view[self.view.top].has_focus():
+            self.on_delete_scoped_variable_button_clicked(None)
+
     @ExtendedController.observe("scoped_variables", after=True)
     def input_data_ports_changed(self, model, prop_name, info):
         self.reload_scoped_variables_list_store()

@@ -6,8 +6,6 @@
 # Olivier Fourdan <fourdan@xfce.org>
 # Released under the GPL license
 
-gtk-menu-images = 0
-
 style "my_default"
 {
     GtkWidget::focus-line-width                  = 0
@@ -64,8 +62,10 @@ style "my_default"
     GtkScrollbar::has_forward_stepper            = 0
     GtkScrollbar::has_backward_stepper           = 0
     GtkScrollbar::min_slider_length              = 20
+    GtkScrollbar::trough-border 		 = 5
 
     GtkScrolledWindow::scrollbar_spacing         = 0
+    GtkScrolledWindow::scrollbar_within_bevel    = 1
 
     GtkTextView::focus-line-pattern              = "\0"
 
@@ -90,14 +90,24 @@ style "my_default"
     color["very_light_gray"]		= "#c0c5ce"
     color["white"]			= "#ffffff"
 
-    color["background_black"]		= "#1e2328"
-    color["widget_background"]		= "#282d32"
-    color["widget_active_background"]	= "#30353a"
-    color["text_background"]		= "#383d42"
-    color["text_color"]			= "#c2c3c4"
-    color["text_color_dark"]		= "#787b7e"
+    #color["background_black"]		= "#1e2328"
+    #color["widget_background"]		= "#282d32"
+    #color["widget_active_background"]	= "#30353a"
+    #color["text_background"]		= "#383d42"
+    #color["text_color"]			= "#c2c3c4"
+    #color["text_color_dark"]		= "#787b7e"
 
-    color["button_active"]		= "#288cff"
+    color["top_bar_background_black"]	= "#0A0F19"
+    color["background_black"]		= "#131822"
+    color["widget_background"]		= "#1D222C"
+    color["tab_not_active_background"]	= "#202020"
+    color["widget_active_background"]	= "#272C36"
+    color["scrollbar_background"]	= "#313640"
+    color["text_background"]		= "#383d42"
+    color["text_color"]			= "#fefefe"
+    color["text_color_dark"]		= "#8f9195"
+
+    color["button_active"]		= "#278bfe"
     #-------------------------------------------------------------------
 
     font_name = "DIN Next LT Pro 12"
@@ -128,7 +138,7 @@ style "my_default"
 
     engine "clearlooks"
     {
-	
+
     }
 }
 widget_class "*"                   			style "my_default"
@@ -145,9 +155,21 @@ style "indicator_label" = "my_default"
     fg[SELECTED]    	= @text_color_dark
 }
 widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
-widget_class "*GtkVBox.GtkHBox.GtkLabel"			style "indicator_label"
-widget_class "*EventBox.GtkAlignment.GtkLabel"		style "indicator_label"
+widget_class "*GtkVBox.GtkLabel"				style "indicator_label"
+widget_class "*GtkVBox.GtkEventBox.GtkEventBox.GtkLabel"	style "indicator_label"
+widget_class "*Alignment.GtkLabel"			style "indicator_label"
 widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
+widget_class "*EventBox.GtkVBox.GtkHBox.GtkLabel"		style "indicator_label"
+
+
+
+style "text_entry" = "my_default"
+{
+    base[ACTIVE]      = @dark_gray
+    base[SELECTED]    = @dark_gray
+}
+widget_class "*Entry"					style "text_entry"
+widget_class "*TextView"					style "text_entry"
 
 
 
@@ -157,6 +179,10 @@ style "event_box" = "my_default"
 }
 widget_class "*VPaned.GtkEventBox"			style "event_box"
 widget_class "*VBox.GtkEventBox"				style "event_box"
+widget_class "*EventBox.GtkEventBox"			style "event_box"
+widget_class "*HBox.GtkEventBox"				style "event_box"
+widget_class "*HBox.GtkToolbar"				style "event_box"
+widget_class "*Notebook.GtkEventBox"			style "event_box"
 
 
 
@@ -180,59 +206,72 @@ widget_class "*ComboBox*"				style "button"
 
 style "check_button" = "my_default"
 {
+    bg[NORMAL]        = @text_color
+    bg[SELECTED]      = @button_active
+}
+widget_class "*CheckButton*"				style "check_button"
+
+
+
+style "dialog_button" = "my_default"
+{
+    GtkButton::size_request = 90
+   
     bg[ACTIVE]        = @button_active
     bg[NORMAL]        = @text_background
     bg[PRELIGHT]      = @medium_gray
     bg[SELECTED]      = @button_active
     bg[INSENSITIVE]   = @widget_background
 
+    fg[ACTIVE]        = @white
+    fg[SELECTED]      = @white
     fg[INSENSITIVE]   = @dark_gray
 }
-widget_class "*CheckButton*"				style "check_button"
+widget_class "*Dialog*Button*"				style "dialog_button"
 #----------------------------
 
 
 
+#---------NOTEBOOKS----------
 style "notebook" = "my_default"
 {
-    xthickness = 5
-    ythickness = 5
+    xthickness = 0
+    ythickness = 0
 
     bg[ACTIVE]	        = @text_background
-    bg[NORMAL]		= @widget_background
+    bg[NORMAL]		= @widget_active_background
 
     fg[INSENSITIVE]	= @very_dark_gray
 
 }
-widget_class "*Notebook"					style "notebook"
+widget_class "*VBox.GtkEventBox*Notebook"			style "notebook"
+widget_class "*Notebook*Notebook"				style "notebook"
+widget_class "*Notebook*Viewport"				style "notebook"
 
 
 
-style "notebook_viewport" = "notebook"
+style "notebook_blue" = "my_default"
 {
     xthickness = 0
     ythickness = 0
+
+    bg[ACTIVE]	        = @widget_active_background
+    bg[NORMAL]		= @button_active
+
+    fg[INSENSITIVE]	= @very_dark_gray
+
 }
-widget_class "*Notebook*Notebook"				style "notebook_viewport"
-widget_class "*Notebook*Viewport"				style "notebook_viewport"
+widget_class "*VPaned.GtkNotebook"			style "notebook_blue"
+widget_class "*VBox.GtkNotebook"				style "notebook_blue"
 
 
 
-style "scrollbar" = "my_default"
+style "right_notebook_event_box" = "my_default"
 {
-    bg[ACTIVE]		= @widget_background
-    bg[NORMAL]		= @text_background
-    bg[PRELIGHT]	= @medium_gray
-
-    fg[NORMAL]		= @light_gray
-
-    engine "clearlooks"
-    {
-    	colorize_scrollbar = FALSE
-    }
-
+    bg[NORMAL]		= @widget_active_background
 }
-widget_class "*Scrollbar"				style "scrollbar"
+widget_class "*VBox.GtkNotebook.GtkEventBox"		style "right_notebook_event_box"
+#----------------------------
 
 
 
@@ -304,6 +343,27 @@ style "treeview" = "my_default"
 {
     font_name 				= "DIN Next LT Pro 11"
     bg[ACTIVE]				= @text_background
+    bg[NORMAL]				= @widget_active_background
+    bg[SELECTED]			= @widget_background
+
+    fg[SELECTED]			= @widget_background
+
+    base[ACTIVE]			= @medium_gray
+    base[SELECTED]			= @button_active
+
+    text[SELECTED]			= @white
+}
+
+
+
+style "chooser_treeview" = "my_default"
+{
+    font_name 				= "DIN Next LT Pro 11"
+
+    GtkTreeView::even_row_color	= @text_background
+    GtkTreeView::odd_row_color		= @text_background
+
+    bg[ACTIVE]				= @text_background
     bg[NORMAL]				= @text_background
     bg[SELECTED]			= @widget_background
 
@@ -314,18 +374,31 @@ style "treeview" = "my_default"
     base[NORMAL]			= @widget_active_background
 
     text[SELECTED]			= @white
-}
-
-
-
-style "chooser_treeview" = "treeview"
-{
-    GtkTreeView::even_row_color	= @text_background
-    GtkTreeView::odd_row_color		= @text_background
-    text[SELECTED]			= @white
     text[INSENSITIVE]			= @very_dark_gray
 }
 
 widget_class "*GtkEventBox.GtkVBox.GtkScrolledWindow*"	style "scrolled_window"
 widget_class "*Tree*"					style "treeview"
 widget_class "*FileChooserDialog*Tree*"			style "chooser_treeview"
+
+
+
+style "top_bar" = "my_default"
+{
+    bg[NORMAL]		= @top_bar_background_black
+    bg[SELECTED]	= @button_active
+
+    fg[PRELIGHT]	= @white
+}
+widget_class "*EventBox.GtkVBox.GtkEventBox"		style "top_bar"
+widget_class "*EventBox.GtkVBox.GtkEventBox*Menu*"		style "top_bar"
+widget_class "*EventBox.GtkVBox.GtkEventBox*Toolbar"	style "top_bar"
+
+
+
+style "scrollbar" = "my_default"
+{
+    bg[NORMAL]        = @scrollbar_background
+    bg[SELECTED]      = @widget_background
+}
+widget_class "*Scrollbar"				style "scrollbar"

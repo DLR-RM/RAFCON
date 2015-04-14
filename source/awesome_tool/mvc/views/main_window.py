@@ -52,13 +52,14 @@ class MainWindowView(View):
         self.state_machines_editor = StateMachinesEditorView()
         self.state_machines_editor.show()
         self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
+        self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
         # self['state_machines_vbox'].add(self.state_machines_editor.get_top_widget())
 
         ##################################################
         # insert states-editor
         ##################################################
         self.states_editor = StatesEditorView()
-        self["state_editor"].add(self.states_editor.get_top_widget())
+        self["state_editor_eventbox"].add(self.states_editor.get_top_widget())
         self.states_editor.show()
 
         ##################################################
@@ -81,8 +82,6 @@ class MainWindowView(View):
         self["top_level_vbox"].remove(self["tool_bar_placeholder"])
         self["top_level_vbox"].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
         self["top_level_vbox"].reorder_child(self.tool_bar.get_top_widget(), 1)
-
-        self["top_level_vbox"].reorder_child(self["top_bar_separator"], 2)
 
         # insert global-variable-manager
         #self['global_variable_manager_vbox'].add(self.global_variable_manager.get_top_widget())
@@ -121,17 +120,24 @@ class MainWindowView(View):
         self['main_window'].set_border_width(constants.MAIN_WINDOW_BORDER_WIDTH)
 
         self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
-        self['tree_notebook'].set_border_width(constants.BORDER_WIDTH)
+
+        self['tree_notebook_1'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
+        self['tree_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+
+        self['tree_notebook_2'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
+        self['tree_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+
         self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
-        self['graphical_editor_vbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
-        self['debug_label_eventbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         self['state_editor'].set_border_width(constants.BORDER_WIDTH)
 
     def create_button_label(self, icon):
         label = gtk.Label()
         label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
-                                                                    constants.FONT_SIZE_SMALL,
+                                                                    constants.FONT_SIZE_NORMAL,
                                                                     icon))
         label.show()
         return label

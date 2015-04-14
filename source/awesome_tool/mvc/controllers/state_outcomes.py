@@ -93,17 +93,17 @@ class StateOutcomesListController(ExtendedController):
             if text is not None:
                 self.model.parent.state.modify_transition_to_state(t_id, to_state=text.split('.')[1])
             else:
-                self.model.parent.state.remove_transition(t_id)
+                self.model.parent.state.remove_outcome(t_id)
         elif outcome_id in self.dict_to_other_outcome.keys():
             t_id = int(self.dict_to_other_outcome[outcome_id][2])
             if text is not None:
                 self.model.parent.state.modify_transition_to_state(t_id, to_state=text.split('.')[1])
             else:
-                self.model.parent.state.remove_transition(t_id)
+                self.model.parent.state.remove_outcome(t_id)
         else:  # there is no transition till now
             if text is not None:
                 to_state = text.split('.')[1]
-                self.model.parent.state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
+                self.model.parent.state.add_outcome(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                        to_state_id=to_state, to_outcome=None, transition_id=None)
             else:
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
@@ -116,32 +116,45 @@ class StateOutcomesListController(ExtendedController):
             if text is not None:
                 self.model.parent.state.modify_transition_to_outcome(t_id, to_outcome=int(text.split('.')[2]))
             else:
-                self.model.parent.state.remove_transition(t_id)
+                self.model.parent.state.remove_outcome(t_id)
         elif outcome_id in self.dict_to_other_outcome.keys():
             t_id = int(self.dict_to_other_outcome[outcome_id][2])
             if text is not None:
                 self.model.parent.state.modify_transition_to_outcome(t_id, to_outcome=int(text.split('.')[2]))
             else:
-                self.model.parent.state.remove_transition(t_id)
+                self.model.parent.state.remove_outcome(t_id)
         else:  # there is no transition till now
             if text is not None:
                 to_outcome = int(text.split('.')[2])
-                self.model.parent.state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
+                self.model.parent.state.add_outcome(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                        to_state_id=None, to_outcome=to_outcome, transition_id=None)
             else:
                 logger.debug("outcome-editor got None in to_outcome-combo-change no transition is added")
 
     def on_add(self, button, info=None):
         # logger.debug("add outcome")
-        self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
+        outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
+        # Search for new entry and select it
+        ctr = 0
+        for outcome_entry in self.tree_store:
+            # Compare outcome ids
+            if outcome_entry[6].outcome_id == outcome_id:
+                self.view.tree_view.set_cursor(ctr)
+                break
+            ctr += 1
 
     def on_remove(self, button, info=None):
 
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        # print path, tree
-        if path and not self.tree_store[path[0][0]][6].outcome_id < 0:
+        if path:  #  and not self.tree_store[path[0][0]][6].outcome_id < 0 leave this check for the state
             outcome_id = self.tree_store[path[0][0]][6].outcome_id
-            self.model.state.remove_outcome(outcome_id)
+            try:
+                self.model.state.remove_outcome(outcome_id)
+                row_number = path[0][0]
+                if len(self.tree_store) > 0:
+                    self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
+            except AttributeError as e:
+                logger.warning("Error while removing outcome: {0}".format(e))
 
     def update_internal_data_base(self):
 
@@ -253,3 +266,19 @@ class StateOutcomesEditorController(ExtendedController):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
+
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action("delete", self.remove_outcome)
+        shortcut_manager.add_callback_for_action("add", self.add_outcome)
+
+    def add_outcome(self, *_):
+        if self.view.tree.has_focus():
+            self.oc_list_ctrl.on_add(None)
+
+    def remove_outcome(self, *_):
+        if self.view.tree.has_focus():
+            self.oc_list_ctrl.on_remove(None)

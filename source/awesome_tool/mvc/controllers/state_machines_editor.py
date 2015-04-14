@@ -11,14 +11,14 @@ from awesome_tool.utils import log
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.singleton
-from awesome_tool.utils import constants
+from awesome_tool.utils import constants, helper
 
 
 def create_tab_close_button(callback, *additional_parameters):
     closebutton = gtk.Button()
     close_label = gtk.Label()
     close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT, constants.FONT_SIZE_SMALL,
-                                                                      constants.BUTTON_QUIT))
+                                                                      constants.BUTTON_CLOSE))
     closebutton.set_relief(gtk.RELIEF_NONE)
     closebutton.set_focus_on_click(True)
     closebutton.add(close_label)
@@ -61,6 +61,7 @@ class StateMachinesEditorController(ExtendedController):
         self.registered_state_machines = {}
 
         self._view['notebook'].connect("add_state_machine", self.add_state_machine)
+        self._view['notebook'].connect("close_state_machine", self.close_state_machine)
 
     def add_state_machine(self, widget, event=None):
         logger.debug("Creating new statemachine ...")
@@ -68,11 +69,21 @@ class StateMachinesEditorController(ExtendedController):
         sm = StateMachine(root_state)
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
+    def close_state_machine(self, widget, page_number):
+        page = widget.get_nth_page(page_number)
+        for identifier, meta in self.tabs.iteritems():
+            if meta['page'] is page:
+                model = meta['state_machine_model']
+                sm_id = model.state_machine.state_machine_id
+                self.on_close_clicked(None, self.tabs[sm_id]["state_machine_model"], None)
+                return
+
     def register_view(self, view):
         self.view.notebook.connect('switch-page', self.on_switch_page)
         for sm_id, sm in self.model.state_machines.iteritems():
             self.add_graphical_state_machine_editor(sm)
 
+    # def on_switch_page(self, mynotebook, notebook, page, page_num):
     def on_switch_page(self, notebook, page, page_num):
         logger.debug("switch to page number %s (for page %s)" % (page_num, page))
         page = notebook.get_nth_page(page_num)
@@ -176,6 +187,7 @@ class StateMachinesEditorController(ExtendedController):
             message.add_button("Yes", 42)
             message.add_button("No", 43)
             message.connect('response', self.on_close_message_dialog_response_signal, state_machine_model)
+            helper.set_button_children_size_request(message)
             message.show()
         else:
             self.remove_state_machine(state_machine_model)

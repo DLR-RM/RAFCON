@@ -36,8 +36,7 @@ class StateTransitionsListController(ExtendedController):
         if self.model.parent is not None:
             self.observe_model(self.model.parent)
 
-        self.update_internal_data_base()
-        self.update_tree_store()
+        self.update()
         view.get_top_widget().set_model(self.tree_store)
 
     def register_view(self, view):
@@ -94,8 +93,7 @@ class StateTransitionsListController(ExtendedController):
     def on_focus(self, widget, data=None):
         logger.debug("TRANSITIONS_LIST get new FOCUS")
         path = self.view.tree_view.get_cursor()
-        self.update_internal_data_base()
-        self.update_tree_store()
+        self.update()
         if path[0]:
             self.view.tree_view.set_cursor(path[0])
 
@@ -152,24 +150,21 @@ class StateTransitionsListController(ExtendedController):
             logger.error("Unexpected exception while creating transition: {0}".format(e))
 
     def on_remove(self, button, info=None):
-        # print "remove transition"
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        # print path, tree
         if path:
-            # print "Transition: ", self.tree_store[path[0][0]][0]
-            transition_id = self.tree_store[path[0][0]][0]
-            if self.tree_store[path[0][0]][5]:
-                # print self.model.parent.state.transitions
+            row_number = path[0][0]
+            transition_id = self.tree_store[row_number][0]
+            if self.tree_store[row_number][5]:
                 self.model.parent.state.remove_transition(int(transition_id))
             else:
                 self.model.state.remove_transition(int(transition_id))
 
             # selection to next element
-            row_number = path[0][0]
-            if len(self.tree_store) > row_number:
-                self.view.tree_view.set_cursor(path[0][0])
-            elif len(self.tree_store) == row_number and not len(self.tree_store) == 0:
-                self.view.tree_view.set_cursor(path[0][0]-1)
+            if len(self.tree_store) > 0:
+                self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
+        else:
+            logger.warning("Please select the data flow to be deleted")
+            return
 
     def on_combo_changed_from_state(self, widget, path, text):
         logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
@@ -284,7 +279,6 @@ class StateTransitionsListController(ExtendedController):
         # if transition.from_state == self_model.state.state_id:
         #     free_from_outcomes_dict[state_model.state.state_id].append(None)
         if model.state.start_state_id is None:
-            print "no start state for state", model.state.name
             free_from_outcomes_dict[model.state.state_id] = [None]
 
         if from_state is not None and from_state.state_id in free_from_outcomes_dict:
@@ -333,7 +327,11 @@ class StateTransitionsListController(ExtendedController):
 
         return from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict
 
-    def update_internal_data_base(self):
+    def update(self):
+        self._update_internal_data_base()
+        self._update_tree_store()
+
+    def _update_internal_data_base(self):
 
         model = self.model
 
@@ -396,9 +394,7 @@ class StateTransitionsListController(ExtendedController):
                     self.combo['free_ext_from_state_models'] = free_from_state_models
                     self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
-        # print "state.name: ", self.model.state.name
-
-    def update_tree_store(self):
+    def _update_tree_store(self):
 
         self.tree_store.clear()
         if self.view_dict['transitions_internal'] and hasattr(self.model.state, 'transitions') and \
@@ -427,10 +423,6 @@ class StateTransitionsListController(ExtendedController):
                         to_state_label = self.model.states[t.to_state].state.name
                     to_outcome_label = None
 
-                # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
-
-                # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
-    #                   name-color, to-state-color, transition-object, state-object, is_editable
                 self.tree_store.append(None, [transition_id,  # id
                                               from_state_label,  # from-state
                                               from_outcome_label,  # from-outcome
@@ -468,10 +460,6 @@ class StateTransitionsListController(ExtendedController):
                         to_state_label = self.model.parent.states[t.to_state].state.name
                     to_outcome_label = None
 
-                # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
-
-                # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
-    #                   name-color, to-state-color, transition-object, state-object, is_editable
                 self.tree_store.append(None, [transition_id,  # id
                                               from_state_label,  # from-state
                                               from_outcome_label,  # from-outcome
@@ -486,8 +474,7 @@ class StateTransitionsListController(ExtendedController):
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         # self.notification_logs(model, prop_name, info)
 
-        self.update_internal_data_base()
-        self.update_tree_store()
+        self.update()
 
     def notification_logs(self, model, prop_name, info):
         #logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
@@ -547,21 +534,34 @@ class StateTransitionsEditorController(ExtendedController):
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action("delete", self.remove_transition)
+        shortcut_manager.add_callback_for_action("add", self.add_transition)
+
+    def add_transition(self, *_):
+        if self.view.transitions_listView.tree_view.has_focus():
+            self.trans_list_ctrl.on_add(None)
+
+    def remove_transition(self, *_):
+        if self.view.transitions_listView.tree_view.has_focus():
+            self.trans_list_ctrl.on_remove(None)
+
     def toggled_button(self, button, name=None):
 
         if name in ['transitions_external'] and self.model.parent is not None:
             self.trans_list_ctrl.view_dict[name] = button.get_active()
-            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
-        elif not name in ['transitions_internal']:
+        elif name not in ['transitions_internal']:
             self.trans_list_ctrl.view_dict['transitions_external'] = False
             button.set_active(False)
 
         if name in ['transitions_internal'] and hasattr(self.model, 'states'):
             self.trans_list_ctrl.view_dict[name] = button.get_active()
-            # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
-        elif not name in ['transitions_external']:
+        elif name not in ['transitions_external']:
             self.trans_list_ctrl.view_dict['transitions_internal'] = False
             button.set_active(False)
 
-        self.trans_list_ctrl.update_internal_data_base()
-        self.trans_list_ctrl.update_tree_store()
+        self.trans_list_ctrl.update()

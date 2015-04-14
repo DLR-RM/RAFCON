@@ -93,7 +93,7 @@ class DataPort(Observable, yaml.YAMLObject):
     @Observable.observed
     def name(self, name):
         if not isinstance(name, str):
-            raise TypeError("name must be of type str")
+            raise TypeError("Name must be of type str")
         self._name = name
 
     @property
@@ -110,7 +110,7 @@ class DataPort(Observable, yaml.YAMLObject):
             self.check_data_type(data_type)
             self._data_type = data_type
         except (TypeError, AttributeError) as e:
-            logger.error("Could not change data type: {0}".format(e))
+            raise e
 
     @property
     def default_value(self):
@@ -126,7 +126,7 @@ class DataPort(Observable, yaml.YAMLObject):
             default_value = self.check_default_value(default_value)
             self._default_value = default_value
         except (TypeError, AttributeError) as e:
-            logger.error("Could not change default value: {0}".format(e))
+            raise e
 
     @Observable.observed
     def change_data_type(self, data_type, default_value=None):

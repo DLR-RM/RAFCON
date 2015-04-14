@@ -194,8 +194,6 @@ def run_turtle_demo():
     logger.debug("Gtk main loop exited!")
 
     sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
-    # for item in sm.root_state.execution_history.history_items:
-    #     print item
     if sm:
         sm.root_state.join()
 

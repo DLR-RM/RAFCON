@@ -48,7 +48,12 @@ class DebugTextViewFilter(logging.Filter):
         """
         if not self.logging_text_view is None:
             #print "Redirecting debug output to the logging_text_view"
-            self.logging_text_view.print_debug(format_log_record_for_view(record))
+            if record.levelno == 10:
+                self.logging_text_view.print_debug(format_log_record_for_view(record))
+            elif record.levelno == 20:
+                self.logging_text_view.print_info(format_log_record_for_view(record))
+            elif record.levelno == 30:
+                self.logging_text_view.print_warning(format_log_record_for_view(record))
         # Set this to false if the output should not be printed on stdout
         return True
 
