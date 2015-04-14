@@ -251,12 +251,6 @@
                                 <property name="tab_fill">False</property>
                               </packing>
                             </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child type="tab">
-                              <placeholder/>
-                            </child>
                           </object>
                           <packing>
                             <property name="resize">False</property>
@@ -321,18 +315,6 @@
                               <packing>
                                 <property name="tab_fill">False</property>
                               </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child type="tab">
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child type="tab">
-                              <placeholder/>
                             </child>
                           </object>
                           <packing>

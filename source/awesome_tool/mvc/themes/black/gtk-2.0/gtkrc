@@ -155,7 +155,6 @@ style "indicator_label" = "my_default"
     fg[SELECTED]    	= @text_color_dark
 }
 widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
-widget_class "*GtkVBox.GtkLabel"				style "indicator_label"
 widget_class "*GtkVBox.GtkEventBox.GtkEventBox.GtkLabel"	style "indicator_label"
 widget_class "*Alignment.GtkLabel"			style "indicator_label"
 widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
@@ -268,9 +267,9 @@ widget_class "*VBox.GtkNotebook"				style "notebook_blue"
 
 style "right_notebook_event_box" = "my_default"
 {
-    bg[NORMAL]		= @widget_active_background
+    
 }
-widget_class "*VBox.GtkNotebook.GtkEventBox"		style "right_notebook_event_box"
+widget_class "*Notebook.GtkVBox.GtkEventBox"		style "right_notebook_event_box"
 #----------------------------
 
 

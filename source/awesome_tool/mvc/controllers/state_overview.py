@@ -47,12 +47,9 @@ class StateOverviewController(ExtendedController, Model):
         self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
 
         view['entry_name'].connect('focus-out-event', self.change_name)
-        view['description_textview'].connect('focus-out-event', self.change_description)
         if self.model.state.name:
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
-        view['description_textview'].set_buffer(self.model.state.description)
-        view['description_textview'].set_accepts_tab(False)
 
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
@@ -106,16 +103,6 @@ class StateOverviewController(ExtendedController, Model):
                                                                          self.model.state.name, entry_text))
             self.model.state.name = entry_text
             self.view['entry_name'].set_text(self.model.state.name)
-
-    def change_description(self, textview, otherwidget):
-        tbuffer = textview.get_buffer()
-        entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-
-        if len(entry_text) > 0:
-            logger.debug("State %s changed description from '%s' to: '%s'\n" % (self.model.state.state_id,
-                                                                                self.model.state.description, entry_text))
-            self.model.state.description = entry_text
-            self.view['description_textview'].get_buffer().set_text(self.model.state.description)
 
     def change_type(self, widget, model=None, info=None):
         # TODO this function should be realized by a call of the ContainerState (change_type)

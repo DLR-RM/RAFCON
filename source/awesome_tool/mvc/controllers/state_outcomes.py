@@ -59,17 +59,18 @@ class StateOutcomesListController(ExtendedController):
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
             else:
-                logger.warning("Column do not has cell_data_func %s %s" % (column.get_name(), column.get_title()))
+                logger.warning("Column does not have cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
         view['tree_view'].set_model(self.tree_store)
         view['id_col'].set_cell_data_func(view['id_cell'], cell_text, self.model)
         view['name_col'].set_cell_data_func(view['name_cell'], cell_text, self.model)
-        view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
-        view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text, self.model)
+        if view['to_state_col'] and view['to_outcome_col'] and view['to_state_combo'] and view['to_outcome_combo']:
+            view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
+            view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text, self.model)
+            view['to_state_combo'].connect("edited", self.on_to_state_modification)
+            view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
 
         view['name_cell'].connect('edited', self.on_name_modification)
-        view['to_state_combo'].connect("edited", self.on_to_state_modification)
-        view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
         view.tree_view.connect("grab-focus", self.on_focus)
 
     def on_focus(self, widget, data=None):
@@ -257,8 +258,9 @@ class StateOutcomesEditorController(ExtendedController):
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
 
-        view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
-        view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
+        if view['add_button'] and view['remove_button']:
+            view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
+            view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
