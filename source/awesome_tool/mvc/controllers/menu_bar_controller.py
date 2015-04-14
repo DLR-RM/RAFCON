@@ -268,6 +268,7 @@ class MenuBarController(ExtendedController):
         glib.idle_add(awesome_tool.statemachine.config.global_config.save_configuration)
         glib.idle_add(log.debug_filter.set_logging_test_view, None)
         glib.idle_add(log.error_filter.set_logging_test_view, None)
+        self.main_window_view.hide()
         glib.idle_add(gtk.main_quit)
 
     ######################################################
@@ -333,7 +334,7 @@ class MenuBarController(ExtendedController):
         logger.debug("Execution step ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
 
-    def on_backward_step_mode_activate(self, widget, data=None):
+    def on_backward_step_activate(self, widget, data=None):
         logger.debug("Executing backward step ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.backward_step()
 

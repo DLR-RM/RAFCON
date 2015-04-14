@@ -305,12 +305,12 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="backward_step_mode">
+              <object class="GtkImageMenuItem" id="backward_step">
                 <property name="label" translatable="yes">backward step</property>
                 <property name="visible">True</property>
                 <property name="image">image7</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_backward_step_mode_activate"/>
+                <signal name="activate" handler="on_backward_step_activate"/>
               </object>
             </child>
           </object>

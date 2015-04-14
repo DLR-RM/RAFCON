@@ -44,7 +44,7 @@ class MenuBarView(View):
         'stop':                 constants.BUTTON_STOP,
         'step_mode':            constants.BUTTON_STEPM,
         'step':                 constants.BUTTON_STEP,
-        'backward_step_mode':   constants.BUTTON_BACKW,
+        'backward_step':   constants.BUTTON_BACKW,
         # -----------------------------------------------
         # Help
         # -----------------------------------------------

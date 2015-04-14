@@ -40,6 +40,9 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
         :return:
         """
+        print "---------------------- input_data concurrency -----------------------"
+        for key, value in self.input_data.iteritems():
+            print key, value
         self.setup_run()
 
         try:
@@ -73,11 +76,11 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
                 # handle data for the entry script
                 scoped_variables_as_dict = {}
+                self.execution_history.add_call_history_item(self, MethodName.ENTRY, self)
                 self.get_scoped_variables_as_dict(scoped_variables_as_dict)
-                self.execution_history.add_call_history_item(self, MethodName.ENTRY)
                 self.enter(scoped_variables_as_dict)
-                self.execution_history.add_return_history_item(self, MethodName.ENTRY)
                 self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+                self.execution_history.add_return_history_item(self, MethodName.ENTRY, self)
 
                 self.child_execution = True
                 history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
@@ -111,28 +114,39 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                     # pop the ConcurrencyItem as we are leaving the barrier concurrency state
                     last_history_item = self.execution_history.pop_last_item()
                     assert isinstance(last_history_item, ConcurrencyItem)
+
+                    # backward execute the entry function
                     last_history_item = self.execution_history.pop_last_item()
                     assert isinstance(last_history_item, ReturnItem)
-                    # the last_history_item is the ReturnItem from the entry function,
-                    # thus backward execute the entry function
+                    self.scoped_data = last_history_item.scoped_data
+
                     scoped_variables_as_dict = {}
                     self.get_scoped_variables_as_dict(scoped_variables_as_dict)
                     self.enter(scoped_variables_as_dict, backward_execution=True)
+
+                    last_history_item = self.execution_history.pop_last_item()
+                    assert isinstance(last_history_item, CallItem)
+                    self.scoped_data = last_history_item.scoped_data
+
                     # do not write the output of the entry script
                     # final outcome is not important as the execution order is fixed during backward stepping
                     self.active = False
                     self.child_execution = False
+                    if self.concurrency_queue:
+                        self.concurrency_queue.put(self.state_id)
                     return
+                else:
+                    self.backward_execution = False
 
             self.child_execution = False
 
             # handle data for the exit script
             scoped_variables_as_dict = {}
+            self.execution_history.add_call_history_item(self, MethodName.EXIT, self)
             self.get_scoped_variables_as_dict(scoped_variables_as_dict)
-            self.execution_history.add_call_history_item(self, MethodName.EXIT)
             self.exit(scoped_variables_as_dict)
-            self.execution_history.add_return_history_item(self, MethodName.EXIT)
             self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
+            self.execution_history.add_return_history_item(self, MethodName.EXIT, self)
 
             self.write_output_data()
 

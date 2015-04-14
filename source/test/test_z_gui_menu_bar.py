@@ -20,23 +20,6 @@ from awesome_tool.statemachine.state_machine import StateMachine
 
 import variables_for_pytest
 
-
-def setup_path():
-    """Sets up the python include paths to include needed directories"""
-
-    #sys.path.insert(1, '.')
-    #sys.path.insert(0, reduce(os.path.join, (TOPDIR, "resources", "external")))
-    #sys.path.insert(0, os.path.join(TOPDIR, "src"))
-    return
-
-
-def check_requirements():
-    """Checks versions and other requirements"""
-    import gtkmvc
-    gtkmvc.require("1.99.1")
-    return
-
-
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
     log.error_filter.set_logging_test_view(logging_view)
@@ -165,8 +148,6 @@ def test_gui():
     awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir("../awesome_tool/mvc/")
     awesome_tool.statemachine.singleton.library_manager.initialize()
-    setup_path()
-    check_requirements()
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
     #setup_logger(logging_view['main_frame'])
     logging_view = LoggingView()
@@ -175,12 +156,12 @@ def test_gui():
 
     state_machine = StateMachine(ctr_state)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
+    variables_for_pytest.sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view, gvm_model,
                                                   editor_type='LogicDataGrouped')
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model, main_window_controller])
+    thread = threading.Thread(target=trigger_gui_signals, args=[variables_for_pytest.sm_manager_model, main_window_controller])
     thread.start()
 
     gtk.main()

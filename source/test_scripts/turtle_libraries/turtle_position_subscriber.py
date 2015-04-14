@@ -1,4 +1,6 @@
 import rospy
+import time
+
 from turtlesim.msg import *
 
 
@@ -19,6 +21,7 @@ def save_turtle_pose(pose):
 
 def execute(self, inputs, outputs, gvm):
 
+    time.sleep(inputs["frequency"])
     turtle_name = inputs["turtle_name"]
     global_storage_id = inputs["global_storage_id_of_turtle_pos"]
 
@@ -28,7 +31,7 @@ def execute(self, inputs, outputs, gvm):
     global y
     global theta
 
-    r = rospy.Rate(3)
+    r = rospy.Rate(2)
 
     while x is None:
         print "turtle_position_subscriber: Wait for the subscriber to get a position message from turtle ", turtle_name

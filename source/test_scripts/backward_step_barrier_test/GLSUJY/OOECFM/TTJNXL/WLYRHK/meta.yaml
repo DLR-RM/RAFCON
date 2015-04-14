@@ -9,6 +9,6 @@ outcomes:
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports:
     3: !DataPort {data_port_id: 3, data_type: int, default_value: null, name: number}
-path: ../../test_scripts/backward_step_test/GLSUJY/OOECFM/TTJNXL/WLYRHK
+path: ../../test_scripts/backward_step_barrier_test/GLSUJY/OOECFM/TTJNXL/WLYRHK
 state_id: WLYRHK
 state_type: STATE_TYPE.EXECUTION

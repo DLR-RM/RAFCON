@@ -5,6 +5,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from functools import partial
 
+
 class ShortcutManager():
     """Handles shortcuts
 

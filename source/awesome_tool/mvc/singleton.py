@@ -9,5 +9,3 @@
 """
 
 global_focus = None
-
-sm_manager_creation_counter = 0

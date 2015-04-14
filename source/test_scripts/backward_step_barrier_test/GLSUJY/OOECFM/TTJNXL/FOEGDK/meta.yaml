@@ -9,6 +9,6 @@ outcomes:
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports: {}
-path: ../../test_scripts/backward_step_test/GLSUJY/OOECFM/TTJNXL/FOEGDK
+path: ../../test_scripts/backward_step_barrier_test/GLSUJY/OOECFM/TTJNXL/FOEGDK
 state_id: FOEGDK
 state_type: STATE_TYPE.EXECUTION
