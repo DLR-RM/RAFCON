@@ -7,7 +7,7 @@
     <property name="can_focus">True</property>
     <child>
       <object class="GtkTreeViewColumn" id="name_col">
-        <property name="title">column</property>
+        <property name="title">Name</property>
         <child>
           <object class="GtkCellRendererText" id="name_text"/>
         </child>
@@ -15,7 +15,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="data_type_col">
-        <property name="title">column</property>
+        <property name="title">Data Type</property>
         <child>
           <object class="GtkCellRendererText" id="data_type_text"/>
         </child>
