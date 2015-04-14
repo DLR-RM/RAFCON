@@ -13,6 +13,7 @@ from state_outcomes import StateOutcomesListController
 from io_data_port_list import DataPortListController
 from awesome_tool.mvc.controllers.scoped_variable_list import ScopedVariableListController
 from connections_editor import StateConnectionsEditorController
+from linkage_overview import LinkageOverviewController
 from state_editor import StateEditorController
 
 from library_tree import LibraryTreeController

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkTreeView" id="tree_view">
+    <property name="visible">True</property>
+    <property name="can_focus">True</property>
+    <child>
+      <object class="GtkTreeViewColumn" id="id_col">
+        <property name="title">ID</property>
+        <child>
+          <object class="GtkCellRendererText" id="id_cell">
+            <property name="width_chars">5</property>
+          </object>
+          <attributes>
+            <attribute name="text">0</attribute>
+          </attributes>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkTreeViewColumn" id="name_col">
+        <property name="title">Name</property>
+        <child>
+          <object class="GtkCellRendererText" id="name_cell"/>
+          <attributes>
+            <attribute name="text">1</attribute>
+          </attributes>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

@@ -1,11 +1,13 @@
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.controllers import StateOverviewController, SourceEditorController, \
-    DataPortListController, ScopedVariableListController, StateOutcomesEditorController
+    DataPortListController, ScopedVariableListController, StateOutcomesEditorController, LinkageOverviewController
 
 from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEditorController
 from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
 from awesome_tool.mvc.models import ContainerStateModel
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
 
 
 class StateEditorController(ExtendedController):
@@ -30,6 +32,8 @@ class StateEditorController(ExtendedController):
         self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view['transitions_view']))
         self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view['data_flows_view']))
 
+        self.add_controller('linkage_overview_ctrl', LinkageOverviewController(model, view['linkage_overview']))
+
         view['inputs_view'].show()
         view['outputs_view'].show()
         view['scopes_view'].show()
@@ -37,6 +41,22 @@ class StateEditorController(ExtendedController):
         view['source_view'].show()
         view['transitions_view'].show()
         view['data_flows_view'].show()
+
+        view['description_text_view'].connect('focus-out-event', self.change_description)
+
+        for i in range(view["main_notebook_1"].get_n_pages()):
+            child = view["main_notebook_1"].get_nth_page(i)
+            tab_label = view["main_notebook_1"].get_tab_label(child)
+            tab_label.set_angle(270)
+            view["main_notebook_1"].set_tab_reorderable(child, True)
+            view["main_notebook_1"].set_tab_detachable(child, True)
+
+        for i in range(view["main_notebook_2"].get_n_pages()):
+            child = view["main_notebook_2"].get_nth_page(i)
+            tab_label = view["main_notebook_2"].get_tab_label(child)
+            tab_label.set_angle(270)
+            view["main_notebook_2"].set_tab_reorderable(child, True)
+            view["main_notebook_2"].set_tab_detachable(child, True)
 
         if isinstance(model, ContainerStateModel):
             self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
@@ -60,6 +80,9 @@ class StateEditorController(ExtendedController):
         view['delete_scoped_variable_button'].connect('clicked',
             self.get_controller('scoped_ctrl').on_delete_scoped_variable_button_clicked)
 
+        view['description_text_view'].set_buffer(self.model.state.description)
+        view['description_text_view'].set_accepts_tab(False)
+
     def register_adapters(self):
         """Adapters should be registered in this method call
 
@@ -67,3 +90,13 @@ class StateEditorController(ExtendedController):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
+
+    def change_description(self, textview, otherwidget):
+        tbuffer = textview.get_buffer()
+        entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+
+        if len(entry_text) > 0:
+            logger.debug("State %s changed description from '%s' to: '%s'\n" % (self.model.state.state_id,
+                                                                                self.model.state.description, entry_text))
+            self.model.state.description = entry_text
+            self.view['description_text_view'].get_buffer().set_text(self.model.state.description)
