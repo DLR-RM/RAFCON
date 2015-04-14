@@ -112,7 +112,7 @@ def test_backward_stepping():
     main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view, gvm_model,
                                                   editor_type="LogicDataGrouped")
     thread = threading.Thread(target=trigger_gui_signals,
-                              args=[variables_for_pytest.sm_manager_model,main_window_controller])
+                              args=[variables_for_pytest.sm_manager_model, main_window_controller])
     thread.start()
 
     gtk.main()
@@ -120,6 +120,9 @@ def test_backward_stepping():
     sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
     if sm:
         sm.root_state.join()
+        logger.debug("Joined currently executing state machine!")
+        thread.join()
+        logger.debug("Joined test triggering thread!")
     os.chdir("../../test")
     variables_for_pytest.test_multithrading_lock.release()
 

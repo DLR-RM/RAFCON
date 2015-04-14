@@ -58,7 +58,7 @@ singleton
 
 statemachine_helper
 -------------------
-.. automodule:: awesome_tool.mvc.singleton
+.. automodule:: awesome_tool.mvc.statemachine_helper
     :members:
     :undoc-members:
     :show-inheritance:
