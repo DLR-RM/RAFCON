@@ -56,7 +56,7 @@ class StateEditorView(View):
         self['main_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
-        self['vpaned'].set_position(340)
+        self['vpaned'].set_position(325)
 
         self['new_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
@@ -64,6 +64,9 @@ class StateEditorView(View):
         self['delete_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['new_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+
+        self['top_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
+        self['bottom_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
 
     # def resize_logic_data_expander(self, widget, data=None):
     # # deactivate other expanders

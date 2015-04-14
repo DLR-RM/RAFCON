@@ -21,6 +21,8 @@ class LinkageOverviewLogicView(View):
 
         self.treeView = self
         self.tree_view = self['tree_view']
+
+        # Use same tree_store structure as used to display all elements to reduce error possibility
         self.tree_store = gtk.TreeStore(str, str, str, str, str, str,
                                         gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT)
         self.tree_view.set_model(self.tree_store)
