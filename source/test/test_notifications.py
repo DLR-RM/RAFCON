@@ -1332,6 +1332,25 @@ def test_state_property_modify_notification(with_print=False):
         state_m_observer.reset()
     forecast = 0
 
+    # set_start_state(self, state) State or state_id
+    state_dict['Nested'].set_start_state(state2.state_id)
+
+    # check state
+    state_model_observer = states_observer_dict[state_dict['Nested'].get_path()]
+    check_count_of_model_notifications(state_model_observer, {'state': 2, 'transitions': 2})
+
+    # check parent
+    state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
+
+    # check grand parent
+    state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
+
+    for path, state_m_observer in states_observer_dict.iteritems():
+        state_m_observer.reset()
+    forecast = 0
+
     # states(self, states) None or dict
     state_dict['Nested'].states = None
     forecast += 1
