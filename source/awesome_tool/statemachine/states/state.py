@@ -540,6 +540,9 @@ class State(Observable, yaml.YAMLObject, object):
     @Observable.observed
     def input_data_ports(self, input_data_ports):
         if input_data_ports is None:
+            if self._input_data_ports is not None:
+                for input_port_id in self._input_data_ports.keys():
+                    self._used_data_port_ids.remove(input_port_id)
             self._input_data_ports = {}
         else:
             if not isinstance(input_data_ports, dict):
@@ -565,6 +568,9 @@ class State(Observable, yaml.YAMLObject, object):
     @Observable.observed
     def output_data_ports(self, output_data_ports):
         if output_data_ports is None:
+            if self._output_data_ports is not None:
+                for output_port_id in self._output_data_ports.keys():
+                    self._used_data_port_ids.remove(output_port_id)
             self._output_data_ports = {}
         else:
             if not isinstance(output_data_ports, dict):
@@ -590,6 +596,9 @@ class State(Observable, yaml.YAMLObject, object):
     @Observable.observed
     def outcomes(self, outcomes):
         if outcomes is None:
+            if self.outcomes is not None:
+                for id in self.outcomes.keys():
+                    self._used_outcome_ids.remove(id)
             self._outcomes = {}
             self.add_outcome("success", 0)
             self.add_outcome("aborted", -1)
