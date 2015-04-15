@@ -1,5 +1,6 @@
 import gtk
 from gtkmvc import View
+from awesome_tool.utils import constants
 
 
 class ExecutionHistoryTreeView(View, gtk.TreeView):
@@ -26,6 +27,7 @@ class ExecutionHistoryView(View):
 
         history_vbox = gtk.VBox()
         reload_button = gtk.Button("Reload history")
+        reload_button.set_border_width(constants.BORDER_WIDTH)
         reload_button.show()
         history_tree = ExecutionHistoryTreeView()
         history_tree.show()
