@@ -22,6 +22,7 @@ from awesome_tool.mvc.controllers.top_tool_bar_controller import TopToolBarContr
 from awesome_tool.utils import constants
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.mvc.controllers.execution_history import ExecutionHistoryTreeController
+import threading
 
 class MainWindowController(ExtendedController):
 
@@ -251,6 +252,11 @@ class MainWindowController(ExtendedController):
         self.right_bar_child = view['top_level_h_pane'].get_child2()
         self.console_child = view['left_v_pane_2'].get_child2()
 
+        view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
+        view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
+        view['debug_console_button_hbox'].reorder_child(view['button_show_info'], 2)
+        view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
+
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
@@ -269,13 +275,16 @@ class MainWindowController(ExtendedController):
         elif awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.PAUSED:
             self.set_button_active(True, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
             self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+            self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
         elif awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.STOPPED:
             self.on_button_stop_shortcut_clicked(None)
+            self.delay(100, self.get_controller('execution_history_ctrl').update)
         elif awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is ExecutionMode.STEPPING:
             self.set_button_active(True, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
             self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
             self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
+            self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def create_arrow_label(self, icon):
         label = gtk.Label()
@@ -376,9 +385,11 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_shortcut_clicked(self, widget, event=None):
         self.get_controller("menu_bar_controller").on_step_activate(None)
+        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller("menu_bar_controller").on_backward_step_activate(None)
+        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def set_button_active(self, active, button, func):
         button.handler_block_by_func(func)
@@ -391,3 +402,7 @@ class MainWindowController(ExtendedController):
         warning = self.view['button_show_warning'].get_active()
         error = self.view['button_show_error'].get_active()
         self.view.logging_view.update_filtered_buffer(info, debug, warning, error)
+
+    def delay(self, milliseconds, func):
+        thread = threading.Timer(milliseconds / 1000.0, func)
+        thread.start()

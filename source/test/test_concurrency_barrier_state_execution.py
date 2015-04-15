@@ -25,8 +25,8 @@ def create_concurrency_barrier_state():
                                      filename="concurrency_container.py")
     state3.add_state(state1)
     state3.add_state(state2)
-    input_state3 = state3.add_input_data_port("input_data_port1", "float", 3.0)
-    input2_state3 = state3.add_input_data_port("input_data_port2", "float", 3.0)
+    input_state3 = state3.add_input_data_port("input_data_port1", "float", 0.1)
+    input2_state3 = state3.add_input_data_port("input_data_port2", "float", 0.1)
     state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     state3.add_data_flow(state3.state_id, input2_state3, state2.state_id, input_state2)
     state3.add_output_data_port("output_data_port1", "str", "default_output_value")
@@ -38,10 +38,10 @@ def test_concurrency_barrier_state_execution():
 
     concurrency_barrier_state = create_concurrency_barrier_state()
 
-    input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
-    output_data = {"output_data_port1": None}
-    concurrency_barrier_state.input_data = input_data
-    concurrency_barrier_state.output_data = output_data
+    # input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
+    # output_data = {"output_data_port1": None}
+    # concurrency_barrier_state.input_data = input_data
+    # concurrency_barrier_state.output_data = output_data
 
     state_machine = StateMachine(concurrency_barrier_state)
     variables_for_pytest.test_multithrading_lock.acquire()

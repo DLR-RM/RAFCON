@@ -84,8 +84,11 @@ class ContainerState(State):
         :return:
         """
         State.setup_run(self)
-        self.add_input_data_to_scoped_data(self.input_data, self)
+        # print "---------------------- scoped data 1-----------------------"
+        # for key, value in self.scoped_data.iteritems():
+        #     print key, value
         self.add_default_values_of_scoped_variables_to_scoped_data()
+        self.add_input_data_to_scoped_data(self.input_data)
 
     def enter(self, scoped_variables_dict, backward_execution=False):
         """Called on entering the container state
@@ -805,7 +808,7 @@ class ContainerState(State):
             raise AttributeError("Data_Port_id %s is not in input_data_ports, output_data_ports or scoped_variables", data_port_id)
 
     # ---------------------------------------------------------------------------------------------
-    # ------------------------------- input / output data handling --------------------------------
+    # ---------------------------------- input data handling --------------------------------------
     # ---------------------------------------------------------------------------------------------
 
     def get_inputs_for_state(self, state):
@@ -816,9 +819,10 @@ class ContainerState(State):
         """
         result_dict = {}
 
+        tmp_dict = self.get_default_input_values_for_state(state)
+        result_dict.update(tmp_dict)
+
         for input_port_key, value in state.input_data_ports.iteritems():
-            # at first load all default values
-            result_dict[value.name] = copy.copy(value.default_value)
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
             for data_flow_key, data_flow in self.data_flows.iteritems():
                 if data_flow.to_key == input_port_key:
@@ -831,22 +835,11 @@ class ContainerState(State):
                             result_dict[value.name] = value.default_value
         return result_dict
 
-    def get_outputs_for_state(self, state):
-        """Return empty output dictionary for a state
-
-        :param state: the state of which the output data is determined
-        :return: the output data of the target state
-        """
-        result_dict = {}
-        for key, data_port in state.output_data_ports.iteritems():
-            result_dict[data_port.name] = None
-        return result_dict
-
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- functions to modify the scoped data ----------------------------
     # ---------------------------------------------------------------------------------------------
 
-    def add_input_data_to_scoped_data(self, dictionary, state):
+    def add_input_data_to_scoped_data(self, dictionary):
         """Add a dictionary to the scoped data
 
         As the input_data dictionary maps names to values, the functions looks for the proper data_ports keys in the
@@ -857,10 +850,18 @@ class ContainerState(State):
 
         """
         for dict_key, value in dictionary.iteritems():
-            for input_data_port_key, data_port in state.input_data_ports.iteritems():
+            for input_data_port_key, data_port in self.input_data_ports.iteritems():
                 if dict_key == data_port.name:
-                    state.scoped_data[str(input_data_port_key)+self.state_id] =\
-                        ScopedData(data_port.name, value, type(value).__name__, state.state_id, DataPortType.INPUT)
+                    self.scoped_data[str(input_data_port_key)+self.state_id] =\
+                        ScopedData(data_port.name, value, type(value).__name__, self.state_id, DataPortType.INPUT)
+                    # forward the data to scoped variables
+                    for data_flow_key, data_flow in self.data_flows.iteritems():
+                        if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
+                            if data_flow.to_state == self.state_id:
+                                current_scoped_variable = self.scoped_variables[data_flow.to_key]
+                                self.scoped_data[str(data_flow.to_key)+self.state_id] = \
+                                    ScopedData(current_scoped_variable.name, value, type(value).__name__, self.state_id,
+                                               DataPortType.SCOPED)
 
     def add_state_execution_output_to_scoped_data(self, dictionary, state):
         """Add a state execution output to the scoped data
@@ -880,10 +881,11 @@ class ContainerState(State):
         """
         for key, scoped_var in self.scoped_variables.iteritems():
             self.scoped_data[str(scoped_var.data_port_id)+self.state_id] =\
-                ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id, DataPortType.SCOPED)
+                ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id,
+                           DataPortType.SCOPED)
 
     def update_scoped_variables_with_output_dictionary(self, dictionary, state):
-        """Update the values of the scoped variables with the passed dictionary
+        """Update the values of the scoped variables with the output dictionary of a specific state.
 
         :param: the dictionary to update the scoped variables with
         :param: the state the output dictionary belongs to

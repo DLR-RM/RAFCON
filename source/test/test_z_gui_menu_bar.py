@@ -147,6 +147,7 @@ def test_gui():
     # delete all old state machines
     awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir("../awesome_tool/mvc/")
+    gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     awesome_tool.statemachine.singleton.library_manager.initialize()
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
     #setup_logger(logging_view['main_frame'])
