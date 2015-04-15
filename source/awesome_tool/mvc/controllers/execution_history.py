@@ -24,12 +24,12 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
         view['reload_button'].connect('clicked', self.reload_history)
 
+        self.update()
+
     def register_adapters(self):
         pass
 
     def register_view(self, view):
-        # self.view.connect('cursor-changed', self.on_cursor_changed)
-
         self.history_tree.connect('button_press_event', self.right_click)
 
     def right_click(self, widget, event=None):
@@ -61,9 +61,12 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
                 popup_menu.popup(None, None, None, event.button, time)
             return True
 
-    # @ExtendedController.observe("library_manager", after=True)
+    # @ExtendedController.observe("execution_history", after=True)
     # def model_changed(self, model, prop_name, info):
-    #     self.update()
+    #     logger.warning("execution_history changed")
+    #     print info
+    #     #self.update()  # TODO: only update when execution mode is not RUNNING (while running history not interesting)
+    #                     # TODO: update when finished RUNNING all states or other state activated
 
     def reload_history(self, widget, event=None):
         self.update()
@@ -90,9 +93,3 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
                         self.insert_rec(tree_item, item.state_reference.name + " - Call", None, item.scoped_data)
                     else:
                         self.insert_rec(tree_item, item.state_reference.name + " - Return", None, item.scoped_data)
-
-    # def on_cursor_changed(self, widget):
-    #     (model, row) = self.view.get_selection().get_selected()
-    #     library_key = model[row][0]
-    #     library = model[row][1]
-    #     #logger.debug("The library state should be inserted into the statemachine")

@@ -251,6 +251,11 @@ class MainWindowController(ExtendedController):
         self.right_bar_child = view['top_level_h_pane'].get_child2()
         self.console_child = view['left_v_pane_2'].get_child2()
 
+        view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
+        view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
+        view['debug_console_button_hbox'].reorder_child(view['button_show_info'], 2)
+        view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
+
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
