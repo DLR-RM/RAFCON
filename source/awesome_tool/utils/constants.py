@@ -1,4 +1,4 @@
-DEFAULT_FONT = "FontAwesome"
+ICON_FONT = "FontAwesome"
 FONT_SIZE_SMALL = "10"
 FONT_SIZE_NORMAL = "12"
 FONT_SIZE_BIG = "14"

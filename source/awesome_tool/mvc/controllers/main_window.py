@@ -153,6 +153,26 @@ class MainWindowController(ExtendedController):
         view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
 
         ######################################################
+        # execution history
+        ######################################################
+        #remove placeholder tab
+        execution_history_tab = view['execution_history_placeholder']
+        page_num = view["tree_notebook_2"].page_num(execution_history_tab)
+        view["tree_notebook_2"].remove_page(page_num)
+        #append new tab
+
+        execution_history_tab_label = gtk.Label('Execution History')
+        vbox = gtk.VBox()
+        button = gtk.Button("Reload history")
+        button.connect("clicked", self.reload_history)
+        button.set_focus_on_click(False)
+        viewport = gtk.Viewport()
+        vbox.pack_start(button, False, True, 0)
+        vbox.pack_start(viewport, True, True, 0)
+        execution_history_notebook_widget = self.create_notebook_widget('EXECUTION HISTORY', vbox)
+        view["tree_notebook_2"].insert_page(execution_history_notebook_widget, execution_history_tab_label, page_num)
+
+        ######################################################
         # rotate all tab labels by 90 degrees and make detachable
         ######################################################
 
@@ -207,12 +227,12 @@ class MainWindowController(ExtendedController):
         view['left_v_pane_1'].set_position(400)
         view['left_v_pane_2'].set_position(600)
 
-        view['hide_right_bar_label'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
+        view['hide_right_bar_label'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
                                                                                            constants.FONT_SIZE_BIG,
                                                                                            constants.BUTTON_RIGHTA))
         view['hide_right_bar_eventbox'].connect('button_release_event', self.right_bar_hide_clicked)
 
-        view['console_hide_label'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
+        view['console_hide_label'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
                                                                                          constants.FONT_SIZE_BIG,
                                                                                          constants.BUTTON_DOWNA))
         view['console_hide_eventbox'].connect('button_release_event', self.console_hide_clicked)
@@ -225,10 +245,23 @@ class MainWindowController(ExtendedController):
 
         view['console_return_button'].set_image(self.create_arrow_label(constants.BUTTON_UPA))
         view['console_return_button'].set_border_width(constants.BORDER_WIDTH)
+        view['console_return_button'].set_size_request(0, constants.BUTTON_MIN_HEIGHT - 10)
 
         self.left_bar_child = view['left_h_pane'].get_child1()
         self.right_bar_child = view['top_level_h_pane'].get_child2()
         self.console_child = view['left_v_pane_2'].get_child2()
+
+    def reload_history(self, widget, event=None):
+        logger.debug("Reload history")
+        history_list = self.state_machine_execution_engine.state_machine_manager.get_active_state_machine().\
+            execution_history.history_items
+        for item in history_list:
+            logger.debug(item.method_name)
+            scoped_data = item.scoped_data
+            logger.debug(scoped_data)
+            for key in scoped_data.keys():
+                logger.debug(scoped_data[key])
+            logger.debug("\n")
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
@@ -258,7 +291,7 @@ class MainWindowController(ExtendedController):
 
     def create_arrow_label(self, icon):
         label = gtk.Label()
-        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
+        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
                                                                     constants.FONT_SIZE_BIG,
                                                                     icon))
         return label
@@ -269,7 +302,7 @@ class MainWindowController(ExtendedController):
         label.set_alignment(0.0, 0.5)
         inner_eventbox = gtk.EventBox()
         inner_label = gtk.Label()
-        inner_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
+        inner_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
                                                                           constants.FONT_SIZE_BIG,
                                                                           constants.BUTTON_LEFTA))
         inner_eventbox.connect("button_release_event", self.left_bar_hide_clicked)

@@ -38,7 +38,7 @@ class PlusAddNotebook2 (gtk.VBox):
         add = gtk.Button()
         add.set_border_width(5)
         add_label = gtk.Label()
-        add_label.set_markup('<span font_desc="%s %s"> &#x%s; </span>' % (constants.DEFAULT_FONT,
+        add_label.set_markup('<span font_desc="%s %s"> &#x%s; </span>' % (constants.ICON_FONT,
                                                                           constants.FONT_SIZE_NORMAL,
                                                                           constants.BUTTON_ADD))
         add_label.show()

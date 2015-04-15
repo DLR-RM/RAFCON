@@ -31,7 +31,7 @@ class ToolBarView(View):
         hbox = gtk.HBox()
 
         icon_label = gtk.Label()
-        icon_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT,
+        icon_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
                                                                          constants.FONT_SIZE_NORMAL,
                                                                          icon))
         icon_label.show()

@@ -90,13 +90,6 @@ style "my_default"
     color["very_light_gray"]		= "#c0c5ce"
     color["white"]			= "#ffffff"
 
-    #color["background_black"]		= "#1e2328"
-    #color["widget_background"]		= "#282d32"
-    #color["widget_active_background"]	= "#30353a"
-    #color["text_background"]		= "#383d42"
-    #color["text_color"]			= "#c2c3c4"
-    #color["text_color_dark"]		= "#787b7e"
-
     color["top_bar_background_black"]	= "#0A0F19"
     color["background_black"]		= "#131822"
     color["widget_background"]		= "#1D222C"
@@ -156,7 +149,6 @@ style "indicator_label" = "my_default"
 }
 widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
 widget_class "*GtkVBox.GtkEventBox.GtkEventBox.GtkLabel"	style "indicator_label"
-#widget_class "*Alignment.GtkLabel"			style "indicator_label"
 widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
 widget_class "*EventBox.GtkVBox.GtkHBox.GtkLabel"		style "indicator_label"
 

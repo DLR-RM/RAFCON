@@ -316,6 +316,26 @@
                                 <property name="tab_fill">False</property>
                               </packing>
                             </child>
+                            <child>
+                              <object class="GtkLabel" id="execution_history_placeholder">
+                                <property name="visible">True</property>
+                                <property name="label" translatable="yes">label</property>
+                              </object>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child type="tab">
+                              <object class="GtkLabel" id="execution_history_tab">
+                                <property name="visible">True</property>
+                                <property name="label" translatable="yes">Execution History</property>
+                                <property name="angle">90</property>
+                              </object>
+                              <packing>
+                                <property name="position">1</property>
+                                <property name="tab_fill">False</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
                             <property name="resize">False</property>
