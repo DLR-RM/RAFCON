@@ -21,6 +21,7 @@ from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
 from awesome_tool.mvc.controllers.top_tool_bar_controller import TopToolBarController
 from awesome_tool.utils import constants
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
+from awesome_tool.mvc.controllers.execution_history import ExecutionHistoryTreeController
 
 class MainWindowController(ExtendedController):
 
@@ -161,15 +162,14 @@ class MainWindowController(ExtendedController):
         view["tree_notebook_2"].remove_page(page_num)
         #append new tab
 
+        execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model,
+                                                                view.execution_history_view,
+                                                                state_machine_manager)
+        self.add_controller('execution_history_ctrl', execution_history_ctrl)
+
         execution_history_tab_label = gtk.Label('Execution History')
-        vbox = gtk.VBox()
-        button = gtk.Button("Reload history")
-        button.connect("clicked", self.reload_history)
-        button.set_focus_on_click(False)
-        viewport = gtk.Viewport()
-        vbox.pack_start(button, False, True, 0)
-        vbox.pack_start(viewport, True, True, 0)
-        execution_history_notebook_widget = self.create_notebook_widget('EXECUTION HISTORY', vbox)
+        execution_history_notebook_widget = self.create_notebook_widget('EXECUTION HISTORY',
+                                                                        view.execution_history_view.get_top_widget())
         view["tree_notebook_2"].insert_page(execution_history_notebook_widget, execution_history_tab_label, page_num)
 
         ######################################################
@@ -250,18 +250,6 @@ class MainWindowController(ExtendedController):
         self.left_bar_child = view['left_h_pane'].get_child1()
         self.right_bar_child = view['top_level_h_pane'].get_child2()
         self.console_child = view['left_v_pane_2'].get_child2()
-
-    def reload_history(self, widget, event=None):
-        logger.debug("Reload history")
-        history_list = self.state_machine_execution_engine.state_machine_manager.get_active_state_machine().\
-            execution_history.history_items
-        for item in history_list:
-            logger.debug(item.method_name)
-            scoped_data = item.scoped_data
-            logger.debug(scoped_data)
-            for key in scoped_data.keys():
-                logger.debug(scoped_data[key])
-            logger.debug("\n")
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
