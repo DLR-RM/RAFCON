@@ -19,7 +19,7 @@ def create_state_machine():
     state3.set_start_state(state1.state_id)
     state3.add_outcome("Container_Outcome", 6)
     state3.add_transition(state1.state_id, 3, None, 6)
-    input_state3 = state3.add_input_data_port("input_data_port1", "float")
+    input_state3 = state3.add_input_data_port("input_data_port1", "float", 22.0)
     output_state3 = state3.add_output_data_port("output_data_port1", "float")
     state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     state3.add_data_flow(state1.state_id, output_state1, state3.state_id, output_state3)
@@ -32,10 +32,6 @@ def test_concurrency_barrier_state_execution():
     sm = create_state_machine()
 
     root_state = sm.root_state
-    input_data = {"input_data_port1": 22.0}
-    output_data = {"output_data_port1": None}
-    root_state.input_data = input_data
-    root_state.output_data = output_data
     state_machine = StateMachine(root_state)
     variables_for_pytest.test_multithrading_lock.acquire()
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -46,7 +42,7 @@ def test_concurrency_barrier_state_execution():
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
-    assert output_data["output_data_port1"] == 42
+    assert root_state.output_data["output_data_port1"] == 42
 
 
 if __name__ == '__main__':

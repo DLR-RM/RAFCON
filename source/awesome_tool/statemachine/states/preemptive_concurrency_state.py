@@ -95,7 +95,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 queue_ids += 1
 
                 state_input = self.get_inputs_for_state(state)
-                state_output = self.get_outputs_for_state(state)
+                state_output = self.create_output_dictionary_for_state(state)
                 state.input_data = state_input
                 state.output_data = state_output
                 state.start(history_item.execution_histories[history_index], self.backward_execution)
