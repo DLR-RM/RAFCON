@@ -17,7 +17,7 @@ from awesome_tool.utils import constants, helper
 def create_tab_close_button(callback, *additional_parameters):
     closebutton = gtk.Button()
     close_label = gtk.Label()
-    close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.DEFAULT_FONT, constants.FONT_SIZE_SMALL,
+    close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
                                                                       constants.BUTTON_CLOSE))
     closebutton.set_relief(gtk.RELIEF_NONE)
     closebutton.set_focus_on_click(True)
