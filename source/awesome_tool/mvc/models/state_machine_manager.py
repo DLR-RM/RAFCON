@@ -19,6 +19,8 @@ class StateMachineManagerModel(ModelMT, Observable):
     :param StateMachineManager state_machine_manager: The state machine manager to be managed
     """
 
+    # TODO static variable in StateMachineManagerModel
+    __sm_manager_creation_counter = 0
     state_machine_manager = None
     selected_state_machine_id = None
     state_machines = {}
@@ -50,6 +52,12 @@ class StateMachineManagerModel(ModelMT, Observable):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+        # check if the sm_manager_model exists several times
+        self.__class__.__sm_manager_creation_counter += 1
+        if self.__class__.__sm_manager_creation_counter == 2:
+            logger.error("Sm_manager_model exists several times!")
+            exit(1)
 
     def delete_state_machine_models(self):
         sm_keys = self.state_machines.keys()

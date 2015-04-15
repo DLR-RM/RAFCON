@@ -16,7 +16,7 @@ from awesome_tool.mvc.views import LoggingView, StateDataportEditorView, SingleW
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
-import awesome_tool.statemachine.singleton
+import awesome_tool.mvc.singleton
 from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
@@ -39,6 +39,7 @@ def create_models():
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
     return logger, global_var_manager_model
+
 
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
@@ -103,8 +104,7 @@ def test_backward_stepping():
     main_window_view = MainWindowView(logging_view)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     if variables_for_pytest.sm_manager_model is None:
-        variables_for_pytest.sm_manager_model = StateMachineManagerModel(
-            awesome_tool.statemachine.singleton.state_machine_manager)
+        variables_for_pytest.sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
