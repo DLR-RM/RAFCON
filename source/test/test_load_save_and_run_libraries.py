@@ -67,7 +67,7 @@ def create_hierarchy_state_library_state_machine():
     library_container_state.set_start_state(lib_state.state_id)
 
     library_container_state.add_transition(lib_state.state_id, 0, None, 0)
-    lib_container_input = library_container_state.add_input_data_port("data_input_port1", "float")
+    lib_container_input = library_container_state.add_input_data_port("data_input_port1", "float", 22.0)
     lib_container_output = library_container_state.add_output_data_port("data_output_port1", "float")
     library_container_state.add_data_flow(library_container_state.state_id,
                                           lib_container_input,
@@ -91,7 +91,7 @@ def create_execution_state_library_state_machine():
     library_container_state.set_start_state(lib_state.state_id)
 
     library_container_state.add_transition(lib_state.state_id, 0, None, 0)
-    lib_container_input = library_container_state.add_input_data_port("data_input_port1", "float")
+    lib_container_input = library_container_state.add_input_data_port("data_input_port1", "float", 32.0)
     lib_container_output = library_container_state.add_output_data_port("data_output_port1", "float")
     library_container_state.add_data_flow(library_container_state.state_id,
                                           lib_container_input,
@@ -117,11 +117,6 @@ def test_hierarchy_state_library():
     variables_for_pytest.test_multithrading_lock.acquire()
     library_container_state_sm = create_hierarchy_state_library_state_machine()
 
-    input_data = {"data_input_port1": 22.0}
-    output_data = {"data_output_port1": None}
-    library_container_state_sm.root_state.input_data = input_data
-    library_container_state_sm.root_state.output_data = output_data
-
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
     awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
@@ -129,7 +124,7 @@ def test_hierarchy_state_library():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
     # print output_data["data_output_port1"]
-    assert output_data["data_output_port1"] == 42.0
+    assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
@@ -138,11 +133,6 @@ def test_execution_state_library():
     variables_for_pytest.test_multithrading_lock.acquire()
     library_container_state_sm = create_execution_state_library_state_machine()
 
-    input_data = {"data_input_port1": 32.0}
-    output_data = {"data_output_port1": None}
-    library_container_state_sm.root_state.input_data = input_data
-    library_container_state_sm.root_state.output_data = output_data
-
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
     awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
@@ -150,7 +140,7 @@ def test_execution_state_library():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
     # print output_data["data_output_port1"]
-    assert output_data["data_output_port1"] == 42.0
+    assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
@@ -159,10 +149,6 @@ def test_nested_library_state_machine():
     variables_for_pytest.test_multithrading_lock.acquire()
     awesome_tool.statemachine.singleton.library_manager.initialize()
     nested_library_state = LibraryState("test_libraries", "library_with_nested_library", "0.1", "library_state_name")
-    input_data = {"data_input_port1": 22.0}
-    output_data = {"data_output_port1": None}
-    nested_library_state.input_data = input_data
-    nested_library_state.output_data = output_data
     state_machine = StateMachine(nested_library_state)
 
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -172,7 +158,7 @@ def test_nested_library_state_machine():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
     # print output_data["data_output_port1"]
-    assert output_data["data_output_port1"] == 42.0
+    assert nested_library_state.output_data["data_output_port1"] == 42.0
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 

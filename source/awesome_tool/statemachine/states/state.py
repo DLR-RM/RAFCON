@@ -178,6 +178,32 @@ class State(Observable, yaml.YAMLObject, object):
                 state.state_copy.recursively_preempt_states(state.state_copy)
 
     # ---------------------------------------------------------------------------------------------
+    # ------------------------------- input/output data handling ----------------------------------
+    # ---------------------------------------------------------------------------------------------
+
+    def get_default_input_values_for_state(self, state):
+        """ Computes the default input values for a state
+
+        :param state: the state to get the default input values for
+
+        """
+        result_dict = {}
+        for input_port_key, value in state.input_data_ports.iteritems():
+            # at first load all default values
+            result_dict[value.name] = copy.copy(value.default_value)
+        return result_dict
+
+    def create_output_dictionary_for_state(self, state):
+        """Return empty output dictionary for a state
+
+        :param state: the state of which the output data is determined
+        :return: the output data of the target state
+        """
+        result_dict = {}
+        for key, data_port in state.output_data_ports.iteritems():
+            result_dict[data_port.name] = None
+        return result_dict
+    # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data port functions -------------------------------------
     # ---------------------------------------------------------------------------------------------
 

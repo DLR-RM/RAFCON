@@ -21,10 +21,10 @@ def create_statemachine():
     state2.add_transition(state1.state_id, 3, None, 6)
     input_state2 = state2.add_input_data_port("input_data_port1", "str")
     output_state2 = state2.add_output_data_port("output_data_port1", "str")
-    state2.add_data_flow(state2.state_id,
-                         input_state2,
-                         state1.state_id,
-                         input_state1)
+    # state2.add_data_flow(state2.state_id,
+    #                      input_state2,
+    #                      state1.state_id,
+    #                      input_state1)
     state2.add_data_flow(state1.state_id,
                          output_state1,
                          state2.state_id,
@@ -43,10 +43,6 @@ def test_default_values_of_data_ports():
     [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_yaml()
 
     root_state = sm_loaded.root_state
-    input_data = {}
-    output_data = {"output_data_port1": None}
-    root_state.input_data = input_data
-    root_state.output_data = output_data
 
     state_machine = StateMachine(root_state)
     variables_for_pytest.test_multithrading_lock.acquire()
@@ -58,8 +54,8 @@ def test_default_values_of_data_ports():
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
-    #print output_data["output_data_port1"]
-    assert output_data["output_data_port1"] == "default_value"
+    print root_state.output_data
+    assert root_state.output_data["output_data_port1"] == "default_value"
 
 
 if __name__ == '__main__':

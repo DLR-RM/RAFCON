@@ -23,8 +23,8 @@ def create_preemption_statemachine():
     state3.add_state(state1)
     state3.add_state(state2)
     state3.add_outcome("State1 preempted", 3)
-    input_state3 = state3.add_input_data_port("input_data_port1", "float", 3.0)
-    input2_state3 = state3.add_input_data_port("input_data_port2", "float", 3.0)
+    input_state3 = state3.add_input_data_port("input_data_port1", "float", 0.1)
+    input2_state3 = state3.add_input_data_port("input_data_port2", "float", 0.1)
     state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     state3.add_data_flow(state3.state_id, input2_state3, state2.state_id, input_state2)
     state3.add_transition(state1.state_id, 3, None, 3)
@@ -35,10 +35,6 @@ def create_preemption_statemachine():
 def test_concurrency_preemption_state_execution():
 
     preemption_state_sm = create_preemption_statemachine()
-
-    input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
-    preemption_state_sm.root_state.input_data = input_data
-    preemption_state_sm.root_state.output_data = {}
 
     variables_for_pytest.test_multithrading_lock.acquire()
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
@@ -60,11 +56,6 @@ def test_concurrency_preemption_save_load():
 
     s.save_statemachine_as_yaml(preemption_state_sm, "../test_scripts/stored_statemachine")
     [root_state, version, creation_time] = s.load_statemachine_from_yaml()
-
-    input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
-    output_data = {}
-    preemption_state_sm.root_state.input_data = input_data
-    preemption_state_sm.root_state.output_data = output_data
 
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
     awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id

@@ -27,7 +27,7 @@ def create_statemachine():
     state3.add_outcome("Container_Outcome", 6)
     state3.add_transition(state1.state_id, 3, state2.state_id, None)
     state3.add_transition(state2.state_id, 3, None, 6)
-    state3.add_input_data_port("data_input_port1", "float")
+    state3.add_input_data_port("data_input_port1", "float", 22.0)
     state3.add_output_data_port("data_output_port1", "float")
     state3.add_data_flow(state3.state_id,
                          state3.get_io_data_port_id_from_name_and_type("data_input_port1", DataPortType.INPUT),
@@ -54,11 +54,6 @@ def test_scoped_data():
     s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
     [sm_loaded, version, creation_time] = s.load_statemachine_from_yaml()
 
-    input_data = {"data_input_port1": 22.0}
-    output_data = {"data_output_port1": None}
-    sm_loaded.root_state.input_data = input_data
-    sm_loaded.root_state.output_data = output_data
-
     state_machine = StateMachine(sm_loaded.root_state)
 
     variables_for_pytest.test_multithrading_lock.acquire()
@@ -70,8 +65,7 @@ def test_scoped_data():
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
-    #print output_data["data_output_port1"]
-    assert output_data["data_output_port1"] == 42.0
+    assert state_machine.root_state.output_data["data_output_port1"] == 42.0
 
 if __name__ == '__main__':
     #pytest.main()

@@ -50,6 +50,9 @@ class StateMachine(Observable):
         Starts the execution of the root state.
         :return:
         """
+        # load default input data for the state
+        self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
+        self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
         self._root_state.start(self.execution_history)
 
 #########################################################################

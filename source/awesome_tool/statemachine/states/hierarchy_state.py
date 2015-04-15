@@ -128,7 +128,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     if not self.backward_execution:  # only add history item if it is not a backward execution
                         self.execution_history.add_call_history_item(state, MethodName.EXECUTE, self)
                     state.input_data = self.get_inputs_for_state(state)
-                    state.output_data = self.get_outputs_for_state(state)
+                    state.output_data = self.create_output_dictionary_for_state(state)
                     # execute the state
                     state.start(self.execution_history, backward_execution=self.backward_execution)
                     state.join()
