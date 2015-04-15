@@ -190,9 +190,13 @@ class State(Observable, yaml.YAMLObject, object):
         :param default_value: the default value of the data port
 
         """
-        data_port_id = generate_data_flow_id()
-        while data_port_id in self._used_data_port_ids:
+        if data_port_id is None or data_port_id in self._used_data_port_ids:
+            if data_port_id in self._used_data_port_ids:
+                logger.warning("handed data_port_id is already in list of _used_data_port_ids id: %s list: %s" %
+                               (data_port_id, self._used_data_port_ids))
             data_port_id = generate_data_flow_id()
+            while data_port_id in self._used_data_port_ids:
+                data_port_id = generate_data_flow_id()
         self._used_data_port_ids.add(data_port_id)
         self._input_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id)
         return data_port_id
@@ -239,9 +243,17 @@ class State(Observable, yaml.YAMLObject, object):
         :param default_value: the default value of the data port
 
         """
-        data_port_id = generate_data_flow_id()
-        while data_port_id in self._used_data_port_ids:
+
+        if data_port_id is None or data_port_id in self._used_data_port_ids:
+            if data_port_id in self._used_data_port_ids:
+                logger.warning("handed data_port_id is already in list of _used_data_port_ids id: %s list: %s" %
+                               (data_port_id, self._used_data_port_ids))
+                logger.warning("%s %s %s" % (self._input_data_ports.keys(),
+                                             self._output_data_ports.keys(),
+                                             self._scoped_variables.keys()))
             data_port_id = generate_data_flow_id()
+            while data_port_id in self._used_data_port_ids:
+                data_port_id = generate_data_flow_id()
         self._used_data_port_ids.add(data_port_id)
         self._output_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id)
         return data_port_id
