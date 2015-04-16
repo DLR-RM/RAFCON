@@ -37,12 +37,12 @@ class LinkageOverviewView(View):
 
         self['inputs_view'] = LinkageOverviewDataView()
         self['outputs_view'] = LinkageOverviewDataView()
-        self['scopes_view'] = LinkageOverviewDataView()
+        self['scope_view'] = LinkageOverviewDataView()
         self['outcomes_view'] = LinkageOverviewLogicView()
 
         self['inputs_scroller'].add(self['inputs_view'].get_top_widget())
         self['outputs_scroller'].add(self['outputs_view'].get_top_widget())
-        self['scoped_scroller'].add(self['scopes_view'].get_top_widget())
+        self['scoped_scroller'].add(self['scope_view'].get_top_widget())
         self['outcomes_scroller'].add(self['outcomes_view'].get_top_widget())
 
         self['eventbox3'].set_border_width(constants.BORDER_WIDTH)
