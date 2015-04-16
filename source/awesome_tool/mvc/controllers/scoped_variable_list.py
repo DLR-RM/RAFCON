@@ -36,7 +36,8 @@ class ScopedVariableListController(ExtendedController):
         view['name_text'].connect("edited", self.on_name_changed)
         view['data_type_text'].connect("edited", self.on_data_type_changed)
 
-        self.reload_scoped_variables_list_store()
+        if hasattr(self.model, 'scoped_variables'):
+            self.reload_scoped_variables_list_store()
 
     def register_adapters(self):
         """Adapters should be registered in this method call

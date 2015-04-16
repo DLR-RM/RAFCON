@@ -128,11 +128,6 @@ style "my_default"
     text[NORMAL]      = @text_color
     text[PRELIGHT]    = @text_color
     text[SELECTED]    = @text_color
-
-    engine "clearlooks"
-    {
-
-    }
 }
 widget_class "*"                   			style "my_default"
 

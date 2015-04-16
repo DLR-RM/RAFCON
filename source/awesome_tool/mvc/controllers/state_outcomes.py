@@ -42,6 +42,7 @@ class StateOutcomesListController(ExtendedController):
             outcome = model.get_value(iter, 6)
             if column.get_title() == 'ID':
                 if int(outcome.outcome_id) < 0:
+                    cell_renderer.set_alignment(0.9, 0.5)
                     cell_renderer.set_property('editable', False)
             elif column.get_title() == 'Name':
                 if int(outcome.outcome_id) < 0:
