@@ -1,4 +1,6 @@
 
+import gtk
+
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.controllers import StateOverviewController, SourceEditorController, \
     DataPortListController, ScopedVariableListController, StateOutcomesEditorController, LinkageOverviewController
@@ -6,6 +8,7 @@ from awesome_tool.mvc.controllers import StateOverviewController, SourceEditorCo
 from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEditorController
 from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
 from awesome_tool.mvc.models import ContainerStateModel
+from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -15,6 +18,14 @@ class StateEditorController(ExtendedController):
     Widgets concerning logic flow (outcomes and transitions) are grouped in the Logic Linkage expander.
     Widgets concerning data flow (data-ports and data-flows) are grouped in the data linkage expander.
     """
+
+    icons = {
+        "Source":           constants.ICON_SOURCE,
+        "Data Linkage":     constants.ICON_DLINK,
+        "Logical Linkage":  constants.ICON_LLINK,
+        "Linkage Overview": constants.ICON_OVERV,
+        "Description":      constants.ICON_DESC
+    }
 
     def __init__(self, model, view):
         """Constructor
@@ -47,19 +58,36 @@ class StateEditorController(ExtendedController):
         for i in range(view["main_notebook_1"].get_n_pages()):
             child = view["main_notebook_1"].get_nth_page(i)
             tab_label = view["main_notebook_1"].get_tab_label(child)
-            tab_label.set_angle(270)
+            tab_label_text = tab_label.get_text()
+            view["main_notebook_1"].set_tab_label(child, self.create_tab_header_label(tab_label_text, tab_label_text))
             view["main_notebook_1"].set_tab_reorderable(child, True)
             view["main_notebook_1"].set_tab_detachable(child, True)
 
         for i in range(view["main_notebook_2"].get_n_pages()):
             child = view["main_notebook_2"].get_nth_page(i)
             tab_label = view["main_notebook_2"].get_tab_label(child)
-            tab_label.set_angle(270)
+            tab_label_text = tab_label.get_text()
+            view["main_notebook_2"].set_tab_label(child, self.create_tab_header_label(tab_label_text, tab_label_text))
             view["main_notebook_2"].set_tab_reorderable(child, True)
             view["main_notebook_2"].set_tab_detachable(child, True)
 
         if isinstance(model, ContainerStateModel):
             self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
+
+    def create_tab_header_label(self, tab_name, tab_tooltip):
+        tooltip_event_box = gtk.EventBox()
+        tooltip_event_box.set_tooltip_text(tab_tooltip)
+        tab_label = gtk.Label()
+        tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
+                             (constants.ICON_FONT,
+                              constants.FONT_SIZE_BIG,
+                              self.icons[tab_name]))
+        tab_label.show()
+        tooltip_event_box.add(tab_label)
+        tooltip_event_box.set_visible_window(False)
+        tooltip_event_box.show()
+        return tooltip_event_box
+
 
     def register_view(self, view):
         """Called when the View was registered
