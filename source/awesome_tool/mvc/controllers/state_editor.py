@@ -59,7 +59,7 @@ class StateEditorController(ExtendedController):
             child = view["main_notebook_1"].get_nth_page(i)
             tab_label = view["main_notebook_1"].get_tab_label(child)
             tab_label_text = tab_label.get_text()
-            view["main_notebook_1"].set_tab_label(child, self.create_tab_header_label(tab_label_text, tab_label_text))
+            view["main_notebook_1"].set_tab_label(child, self.create_tab_header_label(tab_label_text))
             view["main_notebook_1"].set_tab_reorderable(child, True)
             view["main_notebook_1"].set_tab_detachable(child, True)
 
@@ -67,16 +67,16 @@ class StateEditorController(ExtendedController):
             child = view["main_notebook_2"].get_nth_page(i)
             tab_label = view["main_notebook_2"].get_tab_label(child)
             tab_label_text = tab_label.get_text()
-            view["main_notebook_2"].set_tab_label(child, self.create_tab_header_label(tab_label_text, tab_label_text))
+            view["main_notebook_2"].set_tab_label(child, self.create_tab_header_label(tab_label_text))
             view["main_notebook_2"].set_tab_reorderable(child, True)
             view["main_notebook_2"].set_tab_detachable(child, True)
 
         if isinstance(model, ContainerStateModel):
             self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
 
-    def create_tab_header_label(self, tab_name, tab_tooltip):
+    def create_tab_header_label(self, tab_name):
         tooltip_event_box = gtk.EventBox()
-        tooltip_event_box.set_tooltip_text(tab_tooltip)
+        tooltip_event_box.set_tooltip_text(tab_name)
         tab_label = gtk.Label()
         tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
                              (constants.ICON_FONT,
