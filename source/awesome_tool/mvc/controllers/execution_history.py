@@ -93,3 +93,4 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
                         self.insert_rec(tree_item, item.state_reference.name + " - Call", None, item.scoped_data)
                     else:
                         self.insert_rec(tree_item, item.state_reference.name + " - Return", None, item.scoped_data)
+                self.insert_rec(tree_item, "--------------", None, None)
