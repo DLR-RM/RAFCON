@@ -83,6 +83,13 @@ class StatesEditorController(ExtendedController):
 
         self.close_page(page_to_close)
 
+    @ExtendedController.observe("root_state", assign=True)
+    def root_state_changed(self, model, property, info):
+        old_root_state_m = info['old']
+        # new_root_state_m = info['new']
+        self.on_destroy_clicked(None, old_root_state_m, None)
+        # self.add_state_editor(new_root_state_m)
+
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
         self.register()
@@ -149,7 +156,6 @@ class StatesEditorController(ExtendedController):
         self.tabs[state_identifier] = {'page': page, 'state_model': state_model,
                                        'ctrl': state_editor_ctrl, 'sm_id': self.__my_selected_state_machine_id,
                                        'view': state_editor_view, 'is_sticky': False, 'event_box': evtbox}
-
         return idx
 
     def close_page(self, page_to_close):

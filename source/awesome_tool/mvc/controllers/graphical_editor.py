@@ -123,7 +123,7 @@ class GraphicalEditorController(ExtendedController):
 
             self._redraw()
 
-    @ExtendedController.observe("root_state", after=True)
+    @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
         """Called when the root state was exchanged
 

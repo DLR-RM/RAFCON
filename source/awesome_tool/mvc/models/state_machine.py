@@ -4,7 +4,7 @@ from enum import Enum
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
-from awesome_tool.mvc.selection import Selection
+import awesome_tool.mvc.selection
 
 from awesome_tool.utils.vividict import Vividict
 
@@ -45,7 +45,7 @@ class StateMachineModel(ModelMT):
 
         self.sm_manager_model = sm_manager_model
 
-        self.selection = Selection()
+        self.selection = awesome_tool.mvc.selection.Selection()
         
         self.history = History(self)
 
@@ -53,6 +53,17 @@ class StateMachineModel(ModelMT):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+    @ModelMT.observe("state_machine", after=True)
+    def root_state_changed(self, model, prop_name, info):
+        if info['method_name'] == 'root_state':
+            if self.state_machine.root_state != self.root_state.state:
+                new_root_state = self.state_machine.root_state
+                if isinstance(new_root_state, ContainerState):
+                    self.root_state = ContainerStateModel(new_root_state)
+                else:
+                    self.root_state = StateModel(new_root_state)
+                print "created new root state model", self.root_state
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):

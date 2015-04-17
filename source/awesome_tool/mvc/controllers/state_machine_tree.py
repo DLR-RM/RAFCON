@@ -105,17 +105,19 @@ class StateMachineTreeController(ExtendedController):
             parent_iter = self.path_store[self._selected_sm_model.root_state.state.get_path()]
 
         # check if child are all in
-        for state_id, smodel in self._selected_sm_model.root_state.states.items():
-            self.insert_rec(parent_iter, smodel)
+        if isinstance(self._selected_sm_model.root_state, ContainerStateModel):
+            for state_id, smodel in self._selected_sm_model.root_state.states.items():
+                self.insert_rec(parent_iter, smodel)
 
         # check if child should not be in
         for n in reversed(range(self.tree_store.iter_n_children(parent_iter))):
             child_iter = self.tree_store.iter_nth_child(parent_iter, n)
             path = self.tree_store.get_path(child_iter)
             model = self.view.get_model()
-            if not model[path][1] in self._selected_sm_model.root_state.states:
-                self.tree_store.remove(child_iter)
-                #self.tree_store.row_deleted(self.tree_store.get_path(child_iter))
+            if isinstance(self._selected_sm_model.root_state, ContainerStateModel):
+                if not model[path][1] in self._selected_sm_model.root_state.states:
+                    self.tree_store.remove(child_iter)
+                    #self.tree_store.row_deleted(self.tree_store.get_path(child_iter))
 
     def insert_rec(self, parent_iter, state_model):
         # check if in

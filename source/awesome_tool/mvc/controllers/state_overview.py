@@ -112,10 +112,6 @@ class StateOverviewController(ExtendedController, Model):
             state_name = self.model.state.name
             logger.debug("change type of State %s from %s to %s" % (state_name, self.model.state.state_type, type_text))
 
-            if not self.model.parent:
-                logger.warning("ROOT_STATE types could not be changed!!!")
-                return
-
             new_state_class = self.state_types_dict[type_text]['class']
             state_model = StateMachineHelper.change_state_type(self.model, new_state_class)
 
