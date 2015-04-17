@@ -15,6 +15,8 @@ from awesome_tool.statemachine.states.preemptive_concurrency_state import Preemp
 import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.statemachine.states.library_state import LibraryState
+from awesome_tool.statemachine.singleton import state_machine_manager
+from awesome_tool.mvc.singleton import state_machine_manager_model
 
 
 def setup_logger(logging_view):
@@ -171,13 +173,12 @@ def run_turtle_demo():
     awesome_tool.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
+    state_machine_manager.add_state_machine(state_machine)
 
     # load the meta data for the state machine
-    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+    state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(state_machine_manager_model, main_window_view, gvm_model,
                                                   editor_type="LogicDataGrouped")
     #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
