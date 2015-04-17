@@ -212,7 +212,7 @@ class StateMachineHelper():
         for state_machine_m in state_machine_manager_model.state_machines.itervalues():
             if state_machine_m.root_state is root_state_m:
                 break
-        parent_m = None
+
         if not is_root_state:
             parent_m = state_m.parent
             parent = state.parent
