@@ -10,32 +10,9 @@ from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierCo
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
-import awesome_tool.mvc.models.state_machine
 from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
-
-
-def find_model_in_nested(nested, model):
-    """Takes a nested dict/list and searches return all values of type model
-    """
-    models = []
-
-    if isinstance(nested, model):
-        models.append(nested)
-
-    if isinstance(nested, list):
-        for item in nested:
-            found_models = find_model_in_nested(item, model)
-            for found_model in found_models:
-                models.append(found_model)
-
-    elif isinstance(nested, dict):
-        for value in nested.itervalues():
-            found_models = find_model_in_nested(value, model)
-            for found_model in found_models:
-                models.append(found_model)
-
-    return models
+from awesome_tool.mvc.singleton import state_machine_manager_model
 
 
 class StateMachineHelper():
@@ -231,26 +208,19 @@ class StateMachineHelper():
 
         state = state_m.state
 
+        root_state_m = StateMachineHelper.get_root_state_model(state_m)
+        for state_machine_m in state_machine_manager_model.state_machines.itervalues():
+            if state_machine_m.root_state is root_state_m:
+                break
         parent_m = None
         if not is_root_state:
             parent_m = state_m.parent
             parent = state.parent
             assert isinstance(parent, ContainerState)
         else:
-            # TODO: this is ugly! but there is no global SMM_m or SM_m
-            import gc
-            referrers = gc.get_referrers(state_m)
-            sm_models = find_model_in_nested(referrers, awesome_tool.mvc.models.state_machine.StateMachineModel)
-            parent_m = None
-            for sm_m in sm_models:
-                if sm_m.root_state is state_m:
-                    parent_m = sm_m
-                    break
-            if parent_m is None:
-                logger.error("Could not find state machine model")
-                return None
+            parent_m = state_machine_m
 
-            parent_m.selection.remove(state_m)
+        state_machine_m.selection.remove(state_m)
 
         name = state.name
         state_id = state.state_id
@@ -371,6 +341,12 @@ class StateMachineHelper():
         for model in models_to_remove:
             models.remove(model)
         return models
+
+    @staticmethod
+    def get_root_state_model(state_m):
+        while state_m.parent is not None:
+            state_m = state_m.parent
+        return state_m
 
 
 
