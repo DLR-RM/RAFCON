@@ -13,6 +13,7 @@ import sys
 import gtk
 
 from awesome_tool.utils.storage_utils import StorageUtils
+from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -49,7 +50,7 @@ class Config(object):
         self.__config_dict = self.storage.load_dict_from_yaml(os.path.join(CONFIG_PATH, CONFIG_FILE))
         logger.info("Config initialized ... loaded configuration from %s" % str(os.path.join(CONFIG_PATH, CONFIG_FILE)))
         self.configure_fonts()
-        self.configure_source_view_style()
+        self.configure_source_view_styles()
 
     def get_config_value(self, key, default=None):
         """
@@ -79,23 +80,21 @@ class Config(object):
         context = tv.get_pango_context()
         fonts = context.list_families()
 
-        font_names = ["DIN Next LT Pro", "FontAwesome"]
+        font_path = os.getenv("HOME") + "/.fonts"
+
         font_copied = False
 
-        for font_name in font_names:
+        for font_name in constants.FONT_NAMES:
             found = False
             for font in fonts:
                 if font.get_name() == font_name:
                     logger.info("Font %s found" % font_name)
                     found = True
             if not found:
-                logger.info("Copy font %s to ~/.fonts" % font_name)
-                if not os.path.isdir(os.getenv("HOME") + "/.fonts"):
-                    os.system("mkdir ~/.fonts")
-                font_name = font_name.replace(" ", "\\ ")
-                if font_name == "FontAwesome":
-                    font_name = font_name + ".otf"
-                os.system("cp -r ./themes/black/fonts/%s ~/.fonts" % font_name)
+                logger.info("Copy font %s to %s" % (font_name, font_path))
+                if not os.path.isdir(font_path):
+                    os.system("mkdir -p %s" % font_path)
+                os.system("cp -r %s %s" % (constants.FONT_STYLE_PATHS[font_name], font_path))
                 font_copied = True
 
         if font_copied:
@@ -103,25 +102,22 @@ class Config(object):
             python = sys.executable
             os.execl(python, python, * sys.argv)
 
-    def configure_source_view_style(self):
-        path = os.getenv("HOME") + "/.local/share/gtksourceview-2.0"
+    def configure_source_view_styles(self):
+        path = os.getenv("HOME") + "/.local/share/gtksourceview-2.0/styles"
 
         if not os.path.isdir(path):
-            os.system("mkdir ~/.local/share/gtksourceview-2.0")
+            os.system("mkdir -p %s" % path)
 
-        path += "/styles"
-        if not os.path.isdir(path):
-            os.system("mkdir ~/.local/share/gtksourceview-2.0/styles")
-            
-        if not os.path.isfile(os.path.join(path, "awesome_style.xml")):
-            logger.info("Copy style awesome_style.xml to " + path)
-            os.system("cp ./themes/black/gtksw-styles/awesome_style.xml " + path)
-        else:
-            logger.info("Found awesome_style.xml")
+        for style in constants.STYLE_NAMES:
+            if not os.path.isfile(os.path.join(path, style)):
+                logger.info("Copy style %s to %s" % (style, path))
+                os.system("cp %s %s " % (constants.FONT_STYLE_PATHS[style], path))
+            else:
+                logger.info("Found %s" % style)
 
-            logger.warning("REMOVE THE FOLLOWING TWO LINES AFTER COMPLETION OF AWESOME_STYLE.XML")
-            os.system("rm " + path + "/awesome_style.xml")
-            os.system("cp ./themes/black/gtksw-styles/awesome_style.xml " + path)
+                logger.warning("REMOVE THE FOLLOWING TWO LINES AFTER COMPLETION OF %s" % style)
+                os.system("rm " + path + "/%s" % style)
+                os.system("cp %s %s " % (constants.FONT_STYLE_PATHS[style], path))
 
 
 # This variable holds the global configuration parameters for the statemachine
