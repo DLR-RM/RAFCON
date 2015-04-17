@@ -508,8 +508,7 @@ class State(Observable, yaml.YAMLObject, object):
         self._state_id = new_state_id
 
     def __str__(self):
-        return "State properties of state: %s \nstate_id: %s \nstate_type: %s" \
-               % (self.name, self.state_id, self.state_type)
+        return "State '{0}' with ID '{1}' and and type {2}".format(self.name, self.state_id, self.state_type)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

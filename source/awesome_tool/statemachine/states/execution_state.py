@@ -110,9 +110,6 @@ class ExecutionState(State, yaml.YAMLObject):
             self.active = False
             return
 
-    def __str__(self):
-        return "state type: %s\n%s" % (self.state_type, State.__str__(self))
-
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = {

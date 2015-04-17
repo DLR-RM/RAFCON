@@ -1023,7 +1023,7 @@ class ContainerState(State):
         return dict_representation
 
     def __str__(self):
-        return "%s\nnumber of substates: %s" % (State.__str__(self), len(self.states))
+        return "{0} [{1} child states]".format(State.__str__(self), len(self.states))
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
