@@ -11,7 +11,6 @@ class LoggingView(View):
         View.__init__(self)
 
         # create textview
-        self.textview = None
         self.textview = gtk.TextView()
         self.textview.set_property('editable', False)
 

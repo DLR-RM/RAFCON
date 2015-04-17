@@ -68,6 +68,19 @@ class StateEditorView(View):
         self['top_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
         self['bottom_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
 
+        textview = gtk.TextView()
+        textview.set_accepts_tab(False)
+        textview.set_wrap_mode(gtk.WRAP_WORD)
+        textview.set_left_margin(constants.BORDER_WIDTH_TEXTVIEW)
+        # textview.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        self['description_text_view'] = textview
+
+        vbox = gtk.VBox()
+        vbox.pack_start(textview, True, True, constants.BORDER_WIDTH_TEXTVIEW)
+        vbox.show()
+
+        self['description_scroller'].add_with_viewport(vbox)
+
     # def resize_logic_data_expander(self, widget, data=None):
     # # deactivate other expanders
     #     for expander in self.expanders:

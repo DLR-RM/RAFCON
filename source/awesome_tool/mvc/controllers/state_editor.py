@@ -108,8 +108,8 @@ class StateEditorController(ExtendedController):
         view['delete_scoped_variable_button'].connect('clicked',
             self.get_controller('scoped_ctrl').on_delete_scoped_variable_button_clicked)
 
-        view['description_text_view'].set_buffer(self.model.state.description)
-        view['description_text_view'].set_accepts_tab(False)
+        if self.model.state.description is not None:
+            view['description_text_view'].get_buffer().set_text(self.model.state.description)
 
     def register_adapters(self):
         """Adapters should be registered in this method call

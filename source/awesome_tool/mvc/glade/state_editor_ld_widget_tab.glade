@@ -497,13 +497,14 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkTextView" id="description_text_view">
+                      <object class="GtkScrolledWindow" id="description_scroller">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="border_width">1</property>
-                        <property name="pixels_above_lines">4</property>
-                        <property name="pixels_below_lines">4</property>
-                        <property name="left_margin">5</property>
+                        <property name="hscrollbar_policy">automatic</property>
+                        <property name="vscrollbar_policy">automatic</property>
+                        <child>
+                          <placeholder/>
+                        </child>
                       </object>
                       <packing>
                         <property name="position">1</property>
