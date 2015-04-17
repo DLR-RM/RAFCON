@@ -194,8 +194,11 @@ class StatesEditorController(ExtendedController):
         [page, state_identifier] = self.find_page_of_state_model(state_model)
         if page:
             self.close_page(page)
+            # print "----------- close_page %s" % state_model
         if state_identifier:
             self.destroy_state_editor_page(state_identifier)
+            # print "----------- destroy_state_editor_page%s" % state_model
+            # print "left over tabs ", self.tabs
 
     def on_toogle_sticky_clicked(self, event, state_model, result):
         """ Callback for the "toogle-sticky-check-button" emitted by custom TabLabel widget. """
@@ -238,16 +241,19 @@ class StatesEditorController(ExtendedController):
     def change_state_editor_selection(self, selected_model):
         state_identifier = "%s|%s" % (self.model.state_machine_manager.get_sm_id_for_state(selected_model.state),
                                       selected_model.state.get_path())
+        # print "actual model", self.act_model, self.tabs
         if self.act_model is None or not self.act_model.state.get_path() == selected_model.state.get_path():
             # logger.debug("State %s is SELECTED" % selected_model.state.name)
 
             # print "state_identifier: %s" % state_identifier
             if not state_identifier in self.tabs:
+                # print "--------- add state editor %s" % selected_model
                 idx = self.add_state_editor(selected_model, self.editor_type)
                 self.view.notebook.set_current_page(idx)
                 page = self.view.notebook.get_nth_page(idx)
 
             else:
+                # print "--------- add tab page back %s" % selected_model
                 page = self.tabs[state_identifier]['page']
                 # idx = self.view.notebook.prepend_page(page, self.tabs[state_identifier]['event_box'])
                 idx = self.view.notebook.page_num(page)
@@ -263,6 +269,13 @@ class StatesEditorController(ExtendedController):
             #     self.close_page(page_to_close)
 
             self.act_model = selected_model
+        actual_model_state_identifier = "%s|%s" % (self.model.state_machine_manager.get_sm_id_for_state(self.act_model.state),
+                                                   self.act_model.state.get_path())
+        if actual_model_state_identifier in self.tabs:
+            self.act_model = selected_model
+        else:
+            self.act_model = None
+        # print "final actual model", self.act_model, self.tabs
 
     @ExtendedController.observe("selection", after=True)
     def selection_notification(self, model, property, info):
