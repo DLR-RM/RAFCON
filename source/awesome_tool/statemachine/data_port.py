@@ -220,6 +220,6 @@ class DataPort(Observable, yaml.YAMLObject):
                 converted_value = ast.literal_eval(string_value)
             else:
                 logger.debug("No conversion from string to data type '{0}' defined".format(data_type))
-        except ValueError:
+        except (ValueError, SyntaxError):
             raise AttributeError("Can't convert '{0}' to type '{1}'".format(string_value, data_type))
         return converted_value
