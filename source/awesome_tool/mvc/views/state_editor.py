@@ -48,15 +48,16 @@ class StateEditorView(View):
         self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
         self['linkage_overview_viewport'].add(self['linkage_overview'].get_top_widget())
 
-        self['data_vpaned'].set_position(200)
-        self['logic_vpaned'].set_position(200)
+        self['data_vpaned'].set_position(125)
+        self['logic_vpaned'].set_position(125)
 
         self['main_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
         self['main_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+        self['main_notebook_2'].set_page(1)
 
-        self['vpaned'].set_position(325)
+        self['vpaned'].set_position(425)
 
         self['new_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
@@ -72,7 +73,6 @@ class StateEditorView(View):
         textview.set_accepts_tab(False)
         textview.set_wrap_mode(gtk.WRAP_WORD)
         textview.set_left_margin(constants.BORDER_WIDTH_TEXTVIEW)
-        # textview.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         self['description_text_view'] = textview
 
         vbox = gtk.VBox()
