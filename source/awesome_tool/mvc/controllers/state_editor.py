@@ -54,6 +54,7 @@ class StateEditorController(ExtendedController):
         view['data_flows_view'].show()
 
         view['description_text_view'].connect('focus-out-event', self.change_description)
+        view['description_text_view'].connect('size-allocate', self.scroll_to_bottom)
 
         for i in range(view["main_notebook_1"].get_n_pages()):
             child = view["main_notebook_1"].get_nth_page(i)
@@ -118,6 +119,11 @@ class StateEditorController(ExtendedController):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
+
+    def scroll_to_bottom(self, widget, data=None):
+        scroller = self.view['description_scroller']
+        adj = scroller.get_vadjustment()
+        adj.set_value(adj.get_upper() - adj.get_page_size())
 
     def change_description(self, textview, otherwidget):
         tbuffer = textview.get_buffer()
