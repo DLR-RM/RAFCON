@@ -5,7 +5,7 @@ except:
     print "NO python-module gtksourceview2 found!"
 from gtkmvc import View
 
-import awesome_tool.statemachine.config as config
+from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.utils import constants
 
 # TODO: comment
@@ -45,9 +45,9 @@ class SourceEditorView(View):
                 b = self.textview.get_buffer()
                 b.set_language(language_manager.get_language('python'))
                 b.set_highlight_syntax(True)
-                if style_scheme_manager.get_scheme(config.global_config.get_config_value("SOURCE_EDITOR_STYLE")):
+                if style_scheme_manager.get_scheme(global_gui_config.get_config_value("SOURCE_EDITOR_STYLE")):
                     b.set_style_scheme(style_scheme_manager.get_scheme(
-                        config.global_config.get_config_value("SOURCE_EDITOR_STYLE"))
+                        global_gui_config.get_config_value("SOURCE_EDITOR_STYLE"))
                     )
                 else:
                     b.set_style_scheme(style_scheme_manager.get_scheme('awesome-style'))

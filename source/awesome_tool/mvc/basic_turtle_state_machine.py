@@ -17,6 +17,7 @@ from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerMod
 from awesome_tool.statemachine.states.library_state import LibraryState
 from awesome_tool.statemachine.singleton import state_machine_manager
 from awesome_tool.mvc.singleton import state_machine_manager_model
+from awesome_tool.statemachine.config import global_config
 
 
 def setup_logger(logging_view):

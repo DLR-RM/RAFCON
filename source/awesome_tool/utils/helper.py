@@ -1,6 +1,8 @@
 from gtk import Button
 from awesome_tool.utils import constants
 
+import sys, getopt
+
 
 def set_button_children_size_request(widget):
         try:
@@ -11,3 +13,24 @@ def set_button_children_size_request(widget):
                     set_button_children_size_request(child)
         except AttributeError:
             return
+
+
+def get_opt_paths():
+        sm_path = None
+        gui_path = None
+
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], "hs:g:", ["sm=", "gui="])
+        except getopt.GetoptError:
+            print '%s -s <path/to/statemachine_config> -g <path/to/gui_config>' % sys.executable
+            sys.exit(2)
+        for opt, arg in opts:
+            if opt == '-h':
+                print '%s -s <path/to/statemachine_config> -g <path/to/gui_config>' % sys.executable
+                sys.exit()
+            elif opt in ("-s", "--sm"):
+                sm_path = arg
+            elif opt in ("-g", "--gui"):
+                gui_path = arg
+
+        return sm_path, gui_path
