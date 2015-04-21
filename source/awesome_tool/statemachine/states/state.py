@@ -691,7 +691,7 @@ class State(Observable, yaml.YAMLObject, object):
         """Property for the _preempted field
 
         """
-        return self._preempted.is_set
+        return self._preempted.is_set()
 
     @preempted.setter
     #@Observable.observed
