@@ -314,7 +314,6 @@ class StateMachineHelper():
         else:
             parent_m.state_machine.root_state = new_state
             new_state_m = parent_m.root_state
-            parent_m.selection.add(state_m)
             state_machine_manager_model.selected_state_machine_id = state_machine_m.state_machine.state_machine_id
 
         for prop_name, value in model_properties.iteritems():
