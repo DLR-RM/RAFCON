@@ -78,6 +78,13 @@ class ContainerState(State):
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 
+    def recursively_preempt_states(self):
+        """ Preempt the state and all of it child states.
+        """
+        self.preempted = True
+        for state_id, state in self.states.iteritems():
+            state.recursively_preempt_states()
+
     def setup_run(self):
         """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
 

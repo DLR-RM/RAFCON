@@ -98,6 +98,12 @@ class LibraryState(State, yaml.YAMLObject):
         logger.debug("Exiting library state %s" % self.library_name)
         self.active = False
 
+    def recursively_preempt_states(self):
+        """ Preempt the state and all of it child states.
+        """
+        self.preempted = True
+        self.state_copy.recursively_preempt_states()
+
     def add_outcome(self, name, outcome_id=None):
         """Overwrites the add_outcome method of the State class. Prevents user from adding a
         outcome to the library state.
