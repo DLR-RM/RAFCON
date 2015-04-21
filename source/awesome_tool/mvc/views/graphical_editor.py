@@ -582,25 +582,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         last_p = (to_pos_x, to_pos_y)  # Transition endpoint
         sec_last_p = points[len(points) - 1]  # Point before endpoint
-        # Arrow direction (vector)
-        vec = (last_p[0] - sec_last_p[0], last_p[1] - sec_last_p[1])
-        # Arrow direction (angle)
-        angle = atan2(vec[1], vec[0])
-        angle -= pi  # backwards
         # Calculate max possible arrow length
-        length = min(width, dist((from_pos_x, from_pos_y), last_p) / 2)
-        # Middle point of back end of arrow
-        m_x = last_p[0] + cos(angle) * length
-        m_y = last_p[1] + sin(angle) * length
-        angle += pi / 2
-        dx = cos(angle) * length / 2
-        dy = sin(angle) * length / 2
-        # Corner points
-        p2 = (m_x + dx, m_y + dy)
-        p3 = (m_x - dx, m_y - dy)
+        length = min(width, dist(sec_last_p, last_p) / 2.)
+        mid, p2, p3 = self._calculate_arrow_points(last_p, sec_last_p, length)
         self._draw_triangle(last_p, p2, p3, depth, fill_color=color)
 
-        points.append((m_x, m_y))
+        points.append(mid)
 
         # Draw the transitions as simple straight line connecting start- way- and endpoints
         glBegin(GL_LINE_STRIP)
@@ -644,7 +631,19 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         points = [(from_pos_x, from_pos_y)]
         points.extend(waypoints)
-        points.append((to_pos_x, to_pos_y))
+
+        last_p = (to_pos_x, to_pos_y)  # Transition endpoint
+        sec_last_p = points[len(points) - 1]  # Point before endpoint
+        # Calculate max possible arrow length
+        length = min(width / 1.2, dist(sec_last_p, last_p) / 2.)
+        mid, p2, p3 = self._calculate_arrow_points(last_p, sec_last_p, length)
+        self._draw_triangle(last_p, p2, p3, depth, fill_color=color)
+
+        points.append(mid)
+
+        # points = [(from_pos_x, from_pos_y)]
+        # points.extend(waypoints)
+        # points.append((to_pos_x, to_pos_y))
 
         # Draw the transitions as simple straight line connecting start- way- and endpoints
         glBegin(GL_LINE_STRIP)
@@ -771,6 +770,24 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glLineWidth(stroke_width_range[1])
             return
         glLineWidth(round(width / stroke_width_granularity) * stroke_width_granularity)
+
+    @staticmethod
+    def _calculate_arrow_points(end_point, base_point, max_length):
+        # Arrow direction (vector)
+        vec = (end_point[0] - base_point[0], end_point[1] - base_point[1])
+        # Arrow direction (angle)
+        angle = atan2(vec[1], vec[0])
+        angle -= pi  # backwards
+        # Middle point of back end of arrow
+        m_x = end_point[0] + cos(angle) * max_length
+        m_y = end_point[1] + sin(angle) * max_length
+        angle += pi / 2
+        dx = cos(angle) * max_length / 2
+        dy = sin(angle) * max_length / 2
+        # Corner points
+        p2 = (m_x + dx, m_y + dy)
+        p3 = (m_x - dx, m_y - dy)
+        return (m_x, m_y), p2, p3
 
     def _draw_polygon(self, points, depth, border_width=1, fill_color=None, border_color=None):
         # TODO: Think of method to check for visibility
