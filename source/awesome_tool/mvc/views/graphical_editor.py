@@ -381,7 +381,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             num_outcomes -= 2
         i = 0
         outcome_pos = {}
-        outcome_radius = min(3, height / 20., height / (2. * num_outcomes + 3))
+        outcome_radius = min(min(height, width) / 23., min(height, width) / (2. * num_outcomes + 3))
         for key in outcomes:
             # Color of outcome is defined by its type, "aborted", "preempted" or else
             outcome_name = outcomes[key].name
