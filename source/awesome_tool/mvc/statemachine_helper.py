@@ -17,7 +17,7 @@ from awesome_tool.mvc.singleton import state_machine_manager_model
 
 class StateMachineHelper():
     @staticmethod
-    def delete_model(model):
+    def delete_model(model, raise_exceptions=False):
         """Deletes a model of its state machine
 
         If the model is one of state, data flow or transition, it is tried to delete that model together with its
@@ -36,8 +36,11 @@ class StateMachineHelper():
                     container_m.state.remove_state(state_id)
                     return True
             except AttributeError as e:
-                logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}".format(
-                    state_id, model.state.name, e.message))
+                if not raise_exceptions:
+                    logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}".format(
+                        state_id, model.state.name, e.message))
+                else:
+                    raise
 
         elif isinstance(model, TransitionModel):
             transition_id = model.transition.transition_id
@@ -46,8 +49,11 @@ class StateMachineHelper():
                     container_m.state.remove_transition(transition_id)
                     return True
             except AttributeError as e:
-                logger.error("The transition with the ID {0} could not be deleted: {1}".format(
-                    transition_id, e.message))
+                if not raise_exceptions:
+                    logger.error("The transition with the ID {0} could not be deleted: {1}".format(
+                        transition_id, e.message))
+                else:
+                    raise
 
         elif isinstance(model, DataFlowModel):
             data_flow_id = model.data_flow.data_flow_id
@@ -56,8 +62,11 @@ class StateMachineHelper():
                     container_m.state.remove_data_flow(data_flow_id)
                     return True
             except AttributeError as e:
-                logger.error("The data flow with the ID {0} could not be deleted: {1}".format(
-                    data_flow_id, e.message))
+                if not raise_exceptions:
+                    logger.error("The data flow with the ID {0} could not be deleted: {1}".format(
+                        data_flow_id, e.message))
+                else:
+                    raise
 
         elif isinstance(model, ScopedVariableModel):
             scoped_variable_id = model.scoped_variable.data_port_id
@@ -66,8 +75,11 @@ class StateMachineHelper():
                     container_m.state.remove_scoped_variable(scoped_variable_id)
                     return True
             except AttributeError as e:
-                logger.error("The scoped variable with the ID {0} could not be deleted: {1}".format(
-                    scoped_variable_id, e.message))
+                if not raise_exceptions:
+                    logger.error("The scoped variable with the ID {0} could not be deleted: {1}".format(
+                        scoped_variable_id, e.message))
+                else:
+                    raise
 
         elif isinstance(model, DataPortModel):
             port_id = model.data_port.data_port_id
@@ -79,13 +91,16 @@ class StateMachineHelper():
                     container_m.state.remove_output_data_port(port_id)
                     return True
             except AttributeError as e:
-                logger.error("The data port with the ID {0} could not be deleted: {1}".format(
-                    port_id, e.message))
+                if not raise_exceptions:
+                    logger.error("The data port with the ID {0} could not be deleted: {1}".format(
+                        port_id, e.message))
+                else:
+                    raise
 
         return False
 
     @staticmethod
-    def delete_models(models):
+    def delete_models(models, raise_exceptions=False):
         """Deletes all given models from their state machines
 
         Calls the :func:`StateMachineHelper.delete_model` for all models given.
@@ -97,7 +112,7 @@ class StateMachineHelper():
         if not isinstance(models, list):
             models = [models]
         for model in models:
-            if StateMachineHelper.delete_model(model):
+            if StateMachineHelper.delete_model(model, raise_exceptions):
                 num_deleted += 1
         return num_deleted
 
