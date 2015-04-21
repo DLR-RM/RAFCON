@@ -82,12 +82,7 @@ class State(Observable, yaml.YAMLObject, object):
         self._outcomes = None
         self.outcomes = outcomes
 
-        if state_type is StateType.EXECUTION:
-            self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
-        elif state_type is StateType.LIBRARY:
-            self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path, state=self)
-        else:
-            self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
+        self._script = None
 
         # the input data of the state during execution
         self._input_data = {}
@@ -161,21 +156,10 @@ class State(Observable, yaml.YAMLObject, object):
         """
         raise NotImplementedError("The State.run() function has to be implemented!")
 
-    def recursively_preempt_states(self, state):
-        """ Preempt the provided state and all it sub-states.
-        :param state: The that is going to be preempted recursively.
-        :return:
+    def recursively_preempt_states(self):
+        """ Preempt the state
         """
-        state.preempted = True
-        # only go deeper if the State has a states dictionary = the state is not a Execution State
-        if state.state_type is not StateType.EXECUTION and state.state_type is not StateType.LIBRARY:
-            for key, state in state.states.iteritems():
-                state.recursively_preempt_states(state)
-
-        if state.state_type is StateType.LIBRARY:
-            if state.state_copy.state_type is not StateType.EXECUTION and \
-                            state.state_copy.state_type is not StateType.LIBRARY:
-                state.state_copy.recursively_preempt_states(state.state_copy)
+        self.preempted = True
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------- input/output data handling ----------------------------------

@@ -15,6 +15,7 @@ import os
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.enums import StateType, DataPortType
+from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.transition import Transition
 from awesome_tool.statemachine.outcome import Outcome
@@ -24,6 +25,7 @@ from awesome_tool.statemachine.id_generator import *
 from awesome_tool.statemachine.config import *
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
 import awesome_tool.statemachine.singleton
+
 
 
 class ContainerState(State):
@@ -46,6 +48,8 @@ class ContainerState(State):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                        state_type=state_type, check_path=check_path)
+
+        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
         self._states = None
         self.states = states
@@ -77,6 +81,13 @@ class ContainerState(State):
         Should be filled with code, that should be executed for each container_state derivative.
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
+
+    def recursively_preempt_states(self):
+        """ Preempt the state and all of it child states.
+        """
+        self.preempted = True
+        for state_id, state in self.states.iteritems():
+            state.recursively_preempt_states()
 
     def setup_run(self):
         """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
