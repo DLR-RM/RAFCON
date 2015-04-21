@@ -82,12 +82,7 @@ class State(Observable, yaml.YAMLObject, object):
         self._outcomes = None
         self.outcomes = outcomes
 
-        if state_type is StateType.EXECUTION:
-            self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
-        elif state_type is StateType.LIBRARY:
-            self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path, state=self)
-        else:
-            self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
+        self._script = None
 
         # the input data of the state during execution
         self._input_data = {}

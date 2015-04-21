@@ -11,6 +11,7 @@ from gtkmvc import Observable
 import yaml
 
 from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
 import awesome_tool.statemachine.singleton
 from awesome_tool.utils import log
@@ -42,6 +43,7 @@ class LibraryState(State, yaml.YAMLObject):
         self.initialized = False
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                        state_type=StateType.LIBRARY, check_path=check_path)
+        self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path, state=self)
 
         self._library_path = None
         self.library_path = library_path

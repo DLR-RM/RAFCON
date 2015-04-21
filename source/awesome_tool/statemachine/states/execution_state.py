@@ -16,8 +16,7 @@ from awesome_tool.statemachine.states.state import State
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.outcome import Outcome
-from awesome_tool.statemachine.enums import MethodName
-from awesome_tool.statemachine.execution.execution_history import ReturnItem
+from awesome_tool.statemachine.script import Script, ScriptType
 
 
 class ExecutionState(State, yaml.YAMLObject):
@@ -34,6 +33,7 @@ class ExecutionState(State, yaml.YAMLObject):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                        state_type=StateType.EXECUTION, check_path=check_path)
+        self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
         self.logger = log.get_logger(self.name)
 
     def print_state_information(self):
