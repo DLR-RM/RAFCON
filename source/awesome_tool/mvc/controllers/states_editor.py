@@ -76,6 +76,7 @@ class StatesEditorController(ExtendedController):
 
         self.tabs = {}
         self.act_model = None
+        self.__buffered_root_state = None  # needed to handle exchange of root_state
         self.register()
 
     def close_state_tab(self, widget, page_num):
@@ -114,13 +115,14 @@ class StatesEditorController(ExtendedController):
         # print "states_editor register state_machine"
         # relieve old models
         if self.__my_selected_state_machine_id is not None:  # no old models available
-            self.relieve_model(self._selected_state_machine_model.root_state)
+            self.relieve_model(self.__buffered_root_state)
             self.relieve_model(self._selected_state_machine_model)
         # set own selected state machine id
         self.__my_selected_state_machine_id = self.model.selected_state_machine_id
         if self.__my_selected_state_machine_id is not None:
             # observe new models
             self._selected_state_machine_model = self.model.state_machines[self.__my_selected_state_machine_id]
+            self.__buffered_root_state = self._selected_state_machine_model.root_state
             self.observe_model(self._selected_state_machine_model.root_state)
             self.observe_model(self._selected_state_machine_model)  # for selection
 

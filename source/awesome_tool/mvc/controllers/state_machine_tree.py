@@ -30,6 +30,9 @@ class StateMachineTreeController(ExtendedController):
         self.path_store = {}
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
+
+        self.__buffered_root_state = None  # needed to handle exchange of root_state
+
         self.register()
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
@@ -44,7 +47,7 @@ class StateMachineTreeController(ExtendedController):
         # print "state_machine_tree register state_machine"
         # relieve old models
         if self.__my_selected_sm_id is not None:  # no old models available
-            self.relieve_model(self._selected_sm_model.root_state)
+            self.relieve_model(self.__buffered_root_state)
             self.relieve_model(self._selected_sm_model)
         # set own selected state machine id
         self.__my_selected_sm_id = self.model.selected_state_machine_id
@@ -52,11 +55,15 @@ class StateMachineTreeController(ExtendedController):
             # observe new models
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
             logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
+            self.__buffered_root_state = self._selected_sm_model.root_state
             self.observe_model(self._selected_sm_model.root_state)
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
         else:
             self.tree_store.clear()
+
+    def notification_assign_new_root_state(self):
+        pass
 
     @ExtendedController.observe("states", after=True)
     def states_update(self, model, property, info):

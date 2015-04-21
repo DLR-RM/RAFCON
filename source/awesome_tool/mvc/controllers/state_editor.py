@@ -89,7 +89,6 @@ class StateEditorController(ExtendedController):
         tooltip_event_box.show()
         return tooltip_event_box
 
-
     def register_view(self, view):
         """Called when the View was registered
 
