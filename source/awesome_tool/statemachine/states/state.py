@@ -94,7 +94,7 @@ class State(Observable, yaml.YAMLObject, object):
         # the output data of the state during execution
         self._output_data = {}
         # a flag to show if the state was preempted from outside
-        self._preempted = False
+        self._preempted = threading.Event()
         # a queue to signal a preemptive concurrency state, that the execution of the state finished
         self._concurrency_queue = None
         # the final outcome of a state, when it finished execution
@@ -691,14 +691,17 @@ class State(Observable, yaml.YAMLObject, object):
         """Property for the _preempted field
 
         """
-        return self._preempted
+        return self._preempted.is_set
 
     @preempted.setter
     #@Observable.observed
     def preempted(self, preempted):
         if not isinstance(preempted, bool):
             raise TypeError("preempted must be of type bool")
-        self._preempted = preempted
+        if preempted:
+            self._preempted.set()
+        else:
+            self._preempted.clear()
 
     @property
     def concurrency_queue(self):
@@ -779,3 +782,14 @@ class State(Observable, yaml.YAMLObject, object):
             raise TypeError("active must be of type bool")
 
         self._active = active
+
+    def preemptive_wait(self, time=None):
+        """Waiting method which can be preempted
+
+        Use this method if you want a state to pause. In contrast to time.sleep(), the pause can be preempted. This
+        method can also be used if you want to have a daemon thread within a preemptive concurrency state. In this
+        case, time has to be set to None and the method waits indefinitely or until it is preempted from outside.
+        :param time: The time in seconds to wait or None (default) for infinity
+        :return: True, if the wait was preempted, False else
+        """
+        return self._preempted.wait(time)
