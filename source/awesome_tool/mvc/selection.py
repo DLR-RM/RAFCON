@@ -55,7 +55,7 @@ class Selection(Observable):
         if not isinstance(selection, list):
             selection = [selection]
         else:
-            selection = StateMachineHelper.reduce_to_parent_states(selection)
+            selection = reduce_to_parent_states(selection)
         self.__selected.update(selection)
 
     def __iter__(self):
