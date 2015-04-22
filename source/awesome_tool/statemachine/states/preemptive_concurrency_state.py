@@ -38,7 +38,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
                                   transitions, data_flows, start_state_id, scoped_variables, v_checker, path, filename,
-                                  state_type=StateType.PREEMPTION_CONCURRENCY, check_path=check_path)
+                                  check_path=check_path)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the preemptive concurrency state is executed

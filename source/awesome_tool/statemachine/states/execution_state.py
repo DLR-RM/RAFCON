@@ -31,8 +31,7 @@ class ExecutionState(State, yaml.YAMLObject):
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  path=None, filename=None, check_path=True):
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
-                       state_type=StateType.EXECUTION, check_path=check_path)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
         self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
         self.logger = log.get_logger(self.name)
 
@@ -115,7 +114,6 @@ class ExecutionState(State, yaml.YAMLObject):
         dict_representation = {
             'name': data.name,
             'state_id': data.state_id,
-            'state_type': str(data.state_type),
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,
@@ -131,7 +129,6 @@ class ExecutionState(State, yaml.YAMLObject):
         dict_representation = loader.construct_mapping(node, deep=True)
         name = dict_representation['name']
         state_id = dict_representation['state_id']
-        # state_type = dict_representation['state_type']
         input_data_ports = dict_representation['input_data_ports']
         output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']

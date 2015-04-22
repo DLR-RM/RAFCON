@@ -44,10 +44,9 @@ class ContainerState(State):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None, check_path=True):
+                 scoped_variables=None, v_checker=None, path=None, filename=None, check_path=True):
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
-                       state_type=state_type, check_path=check_path)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
 
         self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
@@ -1023,7 +1022,6 @@ class ContainerState(State):
         dict_representation = {
             'name': data.name,
             'state_id': data.state_id,
-            'state_type': str(data.state_type),
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,

@@ -1288,15 +1288,6 @@ def test_state_property_modify_notification(with_print=False):
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
 
-    # state_type(self, state_type) StateType
-    state_dict['Nested'].state_type = StateType.PREEMPTION_CONCURRENCY
-    forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
-
-    # -> avoid in consistent changes
-    state_dict['Nested'].state_type = StateType.HIERARCHY
-    forecast += 1
-
     # description(self, description) str
     state_dict['Nested'].description = "awesome"
     forecast += 1

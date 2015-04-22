@@ -41,8 +41,7 @@ class LibraryState(State, yaml.YAMLObject):
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
         self.initialized = False
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
-                       state_type=StateType.LIBRARY, check_path=check_path)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
         self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path, state=self)
 
         self._library_path = None
@@ -186,7 +185,6 @@ class LibraryState(State, yaml.YAMLObject):
             'version': data.version,
             'name': data.name,
             'state_id': data.state_id,
-            'state_type': str(data.state_type),
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,
@@ -204,7 +202,6 @@ class LibraryState(State, yaml.YAMLObject):
         version = dict_representation['version']
         name = dict_representation['name']
         state_id = dict_representation['state_id']
-        # state_type = dict_representation['state_type']
         input_data_ports = dict_representation['input_data_ports']
         output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']

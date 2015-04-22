@@ -38,20 +38,15 @@ class State(Observable, yaml.YAMLObject, object):
     :ivar state_id: the id of the state
     :ivar name: the name of the state
     :ivar parent: the parent of the state
-    :ivar state_type: the type of the container state (i.e. hierarchy, concurrency etc.)
     :ivar input_data_ports: holds the input data ports of the state
     :ivar output_data_ports: holds the output data ports of the state
     :ivar outcomes: holds the state outcomes, which are the connection points for transitions
-    :ivar script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
-    :ivar description: a human readable description of the state
+    :ivar parent: a reference to the parent state
 
     """
 
-    #input_data_ports = []
-    #__observables__ = ("input_data_ports", )
-
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 path=None, filename=None, state_type=None, parent=None, check_path=True):
+                 parent=None):
 
         Observable.__init__(self)
         self.thread = None
@@ -67,9 +62,6 @@ class State(Observable, yaml.YAMLObject, object):
 
         self._parent = None
         self.parent = parent
-
-        self._state_type = None
-        self.state_type = state_type
 
         self._used_data_port_ids = set([])
         self._input_data_ports = None
@@ -492,7 +484,7 @@ class State(Observable, yaml.YAMLObject, object):
         self._state_id = new_state_id
 
     def __str__(self):
-        return "State '{0}' with ID '{1}' and and type {2}".format(self.name, self.state_id, self.state_type)
+        return "State '{0}' with ID '{1}' and and type {2}".format(self.name, self.state_id, type(self))
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -718,21 +710,6 @@ class State(Observable, yaml.YAMLObject, object):
         if not isinstance(final_outcome, Outcome):
             raise TypeError("final_outcome must be of type Outcome")
         self._final_outcome = final_outcome
-
-    @property
-    def state_type(self):
-        """Property for the _state_type field
-
-        """
-        return self._state_type
-
-    @state_type.setter
-    @Observable.observed
-    def state_type(self, state_type):
-        if not state_type is None:
-            if not isinstance(state_type, StateType):
-                raise TypeError("state_type must be of type StateType")
-        self._state_type = state_type
 
     @property
     def description(self):

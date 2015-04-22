@@ -104,7 +104,7 @@ class StateMachineTreeController(ExtendedController):
             parent_iter = self.tree_store.insert_before(parent_iter, None,
                                                         (self._selected_sm_model.root_state.state.name,
                                                          self._selected_sm_model.root_state.state.state_id,
-                                                         self._selected_sm_model.root_state.state.state_type,
+                                                         type(self._selected_sm_model.root_state.state),
                                                          self._selected_sm_model.root_state))
             #self.tree_store.row_inserted(path=self.tree_store.get_path(parent_iter), iter=parent_iter)
             self.path_store[self._selected_sm_model.root_state.state.get_path()] = parent_iter
@@ -132,7 +132,7 @@ class StateMachineTreeController(ExtendedController):
             parent_iter = self.tree_store.insert_before(parent_iter, None,
                                                         (state_model.state.name,
                                                          state_model.state.state_id,
-                                                         state_model.state.state_type,
+                                                         type(state_model.state),
                                                          state_model))
             #self.tree_store.row_inserted(path=self.tree_store.get_path(parent_iter), iter=parent_iter)
             self.path_store[state_model.state.get_path()] = parent_iter
@@ -140,9 +140,9 @@ class StateMachineTreeController(ExtendedController):
             parent_iter = self.path_store[state_model.state.get_path()]
             path = self.tree_store.get_path(parent_iter)
             model = self.view.get_model()
-            if not state_model.state.state_type == model[path][2] or not state_model.state.name == model[path][0]:
+            if not type(state_model.state) == model[path][2] or not state_model.state.name == model[path][0]:
                 model[path][0] = state_model.state.name
-                model[path][2] = state_model.state.state_type
+                model[path][2] = type(state_model.state)
                 model[path][3] = state_model
 
         # check if child are all in
