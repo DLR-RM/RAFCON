@@ -521,8 +521,8 @@ class GraphicalEditorController(ExtendedController):
         """
         if isinstance(selection, StateModel):  # and self.selection is not self.root_state_m:
             state_m = selection
-            outcomes_close_threshold = state_m.meta['gui']['editor']['outcome_radius']
-            outcomes = state_m.meta['gui']['editor']['outcome_pos']
+            outcomes_close_threshold = state_m.temp['gui']['editor']['outcome_radius']
+            outcomes = state_m.temp['gui']['editor']['outcome_pos']
             # Check distance between all outcomes of the selected state and the given coordinate
             for key in outcomes:
                 if dist(outcomes[key], coords) < outcomes_close_threshold:
@@ -1225,10 +1225,10 @@ class GraphicalEditorController(ExtendedController):
             state_m.input_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
             state_m.output_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
             selected, active, depth)
-        state_m.meta['gui']['editor']['id'] = opengl_id
+        state_m.temp['gui']['editor']['id'] = opengl_id
         state_m.temp['gui']['editor']['income_pos'] = income_pos
-        state_m.meta['gui']['editor']['outcome_pos'] = outcome_pos
-        state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
+        state_m.temp['gui']['editor']['outcome_pos'] = outcome_pos
+        state_m.temp['gui']['editor']['outcome_radius'] = outcome_radius
         state_m.temp['gui']['editor']['resize_length'] = resize_length
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
@@ -1297,7 +1297,7 @@ class GraphicalEditorController(ExtendedController):
             selected = port_m in self.model.selection.get_all()
             opengl_id = self.view.editor.draw_inner_input_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
                                                                     port_height, selected, parent_depth + 0.5)
-            port_m.meta['gui']['editor']['id'] = opengl_id
+            port_m.temp['gui']['editor']['id'] = opengl_id
             num_input_ports += 1
 
         # Output data ports
@@ -1313,7 +1313,7 @@ class GraphicalEditorController(ExtendedController):
             selected = port_m in self.model.selection.get_all()
             opengl_id = self.view.editor.draw_inner_output_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
                                                                      port_height, selected, parent_depth + 0.5)
-            port_m.meta['gui']['editor']['id'] = opengl_id
+            port_m.temp['gui']['editor']['id'] = opengl_id
             num_output_ports += 1
 
         # Scoped variables
@@ -1332,7 +1332,7 @@ class GraphicalEditorController(ExtendedController):
                 selected = port_m in self.model.selection.get_all()
                 opengl_id = self.view.editor.draw_scoped_data_port(port.name, port_m, pos_x, pos_y, max_port_width,
                                                                    port_height, selected, parent_depth + 0.5)
-                port_m.meta['gui']['editor']['id'] = opengl_id
+                port_m.temp['gui']['editor']['id'] = opengl_id
                 num_scoped_variables += 1
 
     def draw_transitions(self, parent_state_m, parent_depth):
@@ -1359,9 +1359,9 @@ class GraphicalEditorController(ExtendedController):
 
                 try:
                     # Set the from coordinates to the outcome coordinates received earlier
-                    from_x = parent_state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
+                    from_x = parent_state_m.states[from_state_id].temp['gui']['editor']['outcome_pos'][
                         transition_m.transition.from_outcome][0]
-                    from_y = parent_state_m.states[from_state_id].meta['gui']['editor']['outcome_pos'][
+                    from_y = parent_state_m.states[from_state_id].temp['gui']['editor']['outcome_pos'][
                         transition_m.transition.from_outcome][1]
                 except Exception as e:
                     logger.error("""Outcome position was not found. \
@@ -1373,8 +1373,8 @@ class GraphicalEditorController(ExtendedController):
 
             if to_state is None:  # Transition goes back to parent
                 # Set the to coordinates to the outcome coordinates received earlier
-                to_x = parent_state_m.meta['gui']['editor']['outcome_pos'][transition_m.transition.to_outcome][0]
-                to_y = parent_state_m.meta['gui']['editor']['outcome_pos'][transition_m.transition.to_outcome][1]
+                to_x = parent_state_m.temp['gui']['editor']['outcome_pos'][transition_m.transition.to_outcome][0]
+                to_y = parent_state_m.temp['gui']['editor']['outcome_pos'][transition_m.transition.to_outcome][1]
             else:
                 # Set the to coordinates to the center of the next state
                 to_x = to_state.meta['gui']['editor']['pos_x']
@@ -1392,7 +1392,7 @@ class GraphicalEditorController(ExtendedController):
                              parent_state_m.meta['gui']['editor']['height']) / 25.0
             opengl_id = self.view.editor.draw_transition(from_x, from_y, to_x, to_y, line_width, waypoints,
                                                          selected, parent_depth + 0.5)
-            transition_m.meta['gui']['editor']['id'] = opengl_id
+            transition_m.temp['gui']['editor']['id'] = opengl_id
             transition_m.meta['gui']['editor']['from_pos_x'] = from_x
             transition_m.meta['gui']['editor']['from_pos_y'] = from_y
             transition_m.meta['gui']['editor']['to_pos_x'] = to_x
@@ -1454,7 +1454,7 @@ class GraphicalEditorController(ExtendedController):
                              parent_state_m.meta['gui']['editor']['height']) / 25.0
             opengl_id = self.view.editor.draw_data_flow(from_x, from_y, to_x, to_y, line_width, waypoints,
                                                         selected, parent_depth + 0.5)
-            data_flow_m.meta['gui']['editor']['id'] = opengl_id
+            data_flow_m.temp['gui']['editor']['id'] = opengl_id
             data_flow_m.meta['gui']['editor']['from_pos_x'] = from_x
             data_flow_m.meta['gui']['editor']['from_pos_y'] = from_y
             data_flow_m.meta['gui']['editor']['to_pos_x'] = to_x
@@ -1501,7 +1501,7 @@ class GraphicalEditorController(ExtendedController):
                 if self.selected_outcome[1] is None:
                     origin = parent_state_m.temp['gui']['editor']['income']
                 else:
-                    outcome = parent_state_m.meta['gui']['editor']['outcome_pos'][self.selected_outcome[1]]
+                    outcome = parent_state_m.temp['gui']['editor']['outcome_pos'][self.selected_outcome[1]]
                     origin = outcome
                 cur = self.mouse_move_last_coords
                 target = self._limit_position_to_state(parent_state_m.parent, cur[0], cur[1])
@@ -1614,12 +1614,12 @@ class GraphicalEditorController(ExtendedController):
         # Only the element which is furthest down in the hierarchy is selected
         if (search_state_depth > selection_depth or all) and find_states:
             # Check whether the id of the current state matches an id in the selected ids
-            if search_state.meta['gui']['editor']['id'] and search_state.meta['gui']['editor']['id'] in ids:
+            if search_state.temp['gui']['editor']['id'] and search_state.temp['gui']['editor']['id'] in ids:
                 # if so, add the state to the list of selected states
                 selection = update_selection(selection, search_state)
                 selection_depth = search_state_depth
                 # remove the id from the list to fasten up further searches
-                ids.remove(search_state.meta['gui']['editor']['id'])
+                ids.remove(search_state.temp['gui']['editor']['id'])
 
         # Return if there is nothing more to find
         if len(ids) == 0:
@@ -1640,8 +1640,8 @@ class GraphicalEditorController(ExtendedController):
 
             def search_selection_in_model_list(model_list, current_selection):
                 for model in model_list:
-                    if model.meta['gui']['editor']['id'] and model.meta['gui']['editor']['id'] in ids:
-                        ids.remove(model.meta['gui']['editor']['id'])
+                    if model.temp['gui']['editor']['id'] and model.temp['gui']['editor']['id'] in ids:
+                        ids.remove(model.temp['gui']['editor']['id'])
                         current_selection = update_selection(current_selection, model)
                 return current_selection
 
