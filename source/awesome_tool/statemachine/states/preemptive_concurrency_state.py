@@ -150,7 +150,9 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.update_scoped_variables_with_output_dictionary(self.states[finished_thread_id].output_data,
                                                                 self.states[finished_thread_id])
 
-            self.recursively_preempt_states()
+            # preempt all child states
+            for state_id, state in self.states.iteritems():
+                state.recursively_preempt_states()
 
             for key, state in self.states.iteritems():
                 state.join()
@@ -211,11 +213,6 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.active = False
             self.child_execution = False
             return
-
-    def recursively_preempt_states(self):
-        self.preempted = True
-        for state_id, state in self.states.iteritems():
-                state.recursively_preempt_states()
 
     @classmethod
     def to_yaml(cls, dumper, data):
