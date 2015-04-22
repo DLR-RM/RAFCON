@@ -14,7 +14,8 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 import awesome_tool.statemachine.singleton
 from awesome_tool.statemachine.state_machine import StateMachine
-
+from awesome_tool.statemachine.singleton import state_machine_manager
+from awesome_tool.mvc.singleton import state_machine_manager_model
 
 def check_requirements():
     """Checks versions and other requirements"""
@@ -116,10 +117,9 @@ if __name__ == '__main__':
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
+    state_machine_manager.add_state_machine(state_machine)
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(state_machine_manager_model, main_window_view, gvm_model,
                                                   editor_type='LogicDataGrouped')
 
     # ctr_model = ContainerStateModel(ctr_state)

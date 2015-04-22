@@ -8,6 +8,7 @@ from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from awesome_tool.statemachine.states.library_state import LibraryState
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 
@@ -41,15 +42,22 @@ class StateOverviewController(ExtendedController, Model):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        self.state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {'Enum': StateType.EXECUTION, 'class': ExecutionState}
-        self.state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {'Enum': StateType.HIERARCHY, 'class': HierarchyState}
-        self.state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
-        self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
+        self.state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {
+            'Enum': StateType.EXECUTION, 'class': ExecutionState}
+        self.state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {
+            'Enum': StateType.HIERARCHY, 'class': HierarchyState}
+        self.state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {
+            'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
+        self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {
+            'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
 
         view['entry_name'].connect('focus-out-event', self.change_name)
         if self.model.state.name:
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
+
+        if self.model.parent is None:
+            self.view['is_start_state_checkbutton'].hide()
 
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
@@ -61,10 +69,17 @@ class StateOverviewController(ExtendedController, Model):
         combo.show_all()
         view['type_viewport'].add(combo)
         view['type_viewport'].show()
-        l_store.append([str(self.model.state.state_type).split('.')[1]])
-        for key in self.state_types_dict.keys():
-            if not key == str(self.model.state.state_type).split('.')[1]:
-                l_store.append([key])
+
+        # Library states cannot be changed
+        if isinstance(self.model.state, LibraryState):
+            l_store.prepend(['LIBRARY'])
+            combo.set_sensitive(False)
+        else:
+            for key, value in self.state_types_dict.iteritems():
+                if value['class'] == type(self.model.state):
+                    l_store.prepend([key])
+                else:
+                    l_store.append([key])
         combo.set_active(0)
         view['type_combobox'] = combo
         view['type_combobox'].connect('changed', self.change_type)
@@ -108,13 +123,14 @@ class StateOverviewController(ExtendedController, Model):
         # TODO this function should be realized by a call of the ContainerState (change_type)
         # for clean use it is a remove and add approach at the moment
         type_text = widget.get_active_text()
-        if not type_text == str(self.model.state.state_type).split('.')[1] and type_text in self.state_types_dict:
+        if type_text not in self.state_types_dict:
+            return
+        class_of_type_text = self.state_types_dict[type_text]['class']
+        if class_of_type_text != type(self.model.state):
             state_name = self.model.state.name
-            logger.debug("change type of State %s from %s to %s" % (state_name, self.model.state.state_type, type_text))
-
-            if not self.model.parent:
-                logger.warning("ROOT_STATE types could not be changed!!!")
-                return
+            logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
+                                                                             type(self.model.state),
+                                                                             class_of_type_text))
 
             new_state_class = self.state_types_dict[type_text]['class']
             state_model = StateMachineHelper.change_state_type(self.model, new_state_class)

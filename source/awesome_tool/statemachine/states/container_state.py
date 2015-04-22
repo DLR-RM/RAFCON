@@ -15,6 +15,7 @@ import os
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.enums import StateType, DataPortType
+from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.transition import Transition
 from awesome_tool.statemachine.outcome import Outcome
@@ -24,6 +25,7 @@ from awesome_tool.statemachine.id_generator import *
 from awesome_tool.statemachine.config import *
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
 import awesome_tool.statemachine.singleton
+
 
 
 class ContainerState(State):
@@ -42,10 +44,11 @@ class ContainerState(State):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, v_checker=None, path=None, filename=None, state_type=None, check_path=True):
+                 scoped_variables=None, v_checker=None, path=None, filename=None, check_path=True):
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
-                       state_type=state_type, check_path=check_path)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
+
+        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
         self._states = None
         self.states = states
@@ -77,6 +80,13 @@ class ContainerState(State):
         Should be filled with code, that should be executed for each container_state derivative.
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
+
+    def recursively_preempt_states(self):
+        """ Preempt the state and all of it child states.
+        """
+        self.preempted = True
+        for state_id, state in self.states.iteritems():
+            state.recursively_preempt_states()
 
     def setup_run(self):
         """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
@@ -348,8 +358,10 @@ class ContainerState(State):
                     raise AttributeError("outcome %s of state %s is already connected" %
                                          (str(from_outcome), str(from_state_id)))
 
-        # check if state is a concurrency state, in concurrency states only transitions to the parents are allowd
-        if self.state_type is StateType.BARRIER_CONCURRENCY or self.state_type is StateType.PREEMPTION_CONCURRENCY:
+
+        from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
+        # check if state is a concurrency state, in concurrency states only transitions to the parents are allowed
+        if isinstance(self, ConcurrencyState):
             if to_state_id is not None:  # None means that the target state is the containing state
                 raise AttributeError("In concurrency states the to_state must be the container state itself")
 
@@ -1010,7 +1022,6 @@ class ContainerState(State):
         dict_representation = {
             'name': data.name,
             'state_id': data.state_id,
-            'state_type': str(data.state_type),
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,
@@ -1023,7 +1034,7 @@ class ContainerState(State):
         return dict_representation
 
     def __str__(self):
-        return "%s\nnumber of substates: %s" % (State.__str__(self), len(self.states))
+        return "{0} [{1} child states]".format(State.__str__(self), len(self.states))
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

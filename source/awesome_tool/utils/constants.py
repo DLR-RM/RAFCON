@@ -1,3 +1,9 @@
+FONT_NAMES = ["DIN Next LT Pro", "FontAwesome"]
+STYLE_NAMES = ["awesome_style.xml"]
+FONT_STYLE_PATHS = {"DIN Next LT Pro":    "./themes/black/fonts/DIN\\ Next\\ LT\\ Pro",
+                    "FontAwesome":        "./themes/black/fonts/FontAwesome.otf",
+                    "awesome_style.xml":  "./themes/black/gtksw-styles/awesome_style.xml"}
+
 ICON_FONT = "FontAwesome"
 FONT_SIZE_SMALL = "10"
 FONT_SIZE_NORMAL = "12"
@@ -49,5 +55,11 @@ BUTTON_LEFTA = "f0d9"
 BUTTON_RIGHTA = "f0da"
 BUTTON_UPA = "f0d8"
 BUTTON_DOWNA = "f0d7"
+
+ICON_SOURCE = "f121"
+ICON_DLINK = "f0c1"
+ICON_LLINK = "f1e0"
+ICON_OVERV = "f160"
+ICON_DESC = "f036"
 
 GRAPHICAL_EDITOR_COLOR_BACKGROUND = 0x272c36

@@ -1,7 +1,7 @@
 import gtk, gobject
 
-from gtkmvc import Observer
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.statemachine.states.library_state import LibraryState
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -42,6 +42,7 @@ class StateOutcomesListController(ExtendedController):
             outcome = model.get_value(iter, 6)
             if column.get_title() == 'ID':
                 if int(outcome.outcome_id) < 0:
+                    cell_renderer.set_alignment(0.9, 0.5)
                     cell_renderer.set_property('editable', False)
             elif column.get_title() == 'Name':
                 if int(outcome.outcome_id) < 0:
@@ -261,6 +262,10 @@ class StateOutcomesEditorController(ExtendedController):
         if view['add_button'] and view['remove_button']:
             view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
             view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
+
+            if isinstance(self.model.state, LibraryState):
+                view['add_button'].set_sensitive(False)
+                view['remove_button'].set_sensitive(False)
 
     def register_adapters(self):
         """Adapters should be registered in this method call

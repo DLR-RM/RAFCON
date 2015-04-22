@@ -16,11 +16,9 @@ import yaml
 from gtkmvc import Observable
 
 from awesome_tool.statemachine.state_machine import StateMachine
-from awesome_tool.statemachine.enums import StateType
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.utils.storage_utils import StorageUtils
-
 
 class StateMachineStorage(Observable):
 
@@ -227,7 +225,8 @@ class StateMachineStorage(Observable):
         root_state.add_state(state)
         # the library state sets his script file to the script file of the root state of its library, thus it should
         # not be overwritten in this case
-        if state.state_type is not StateType.LIBRARY:
+        from awesome_tool.statemachine.states.library_state import LibraryState
+        if not isinstance(state, LibraryState):
             self.load_script_file(state)
         for p in os.listdir(state_path):
             if os.path.isdir(os.path.join(state_path, p)):

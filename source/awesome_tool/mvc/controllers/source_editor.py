@@ -5,8 +5,7 @@ from pylint import epylint as lint
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.enums import StateType
-
+from awesome_tool.statemachine.states.library_state import LibraryState
 
 #TODO: comment
 
@@ -25,6 +24,8 @@ class SourceEditorController(ExtendedController):
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
         view.set_text(self.model.state.script.script)
+        if isinstance(self.model.state, LibraryState):
+            view.textview.set_sensitive(False)
 
     def register_adapters(self):
         pass
@@ -56,8 +57,8 @@ class SourceEditorController(ExtendedController):
     #===============================================================
     def apply_clicked(self, button):
 
-        if self.model.state.state_type is StateType.LIBRARY:
-            logger.warn("It is not allowed to change the library script file!")
+        if isinstance(self.model.state, LibraryState):
+            logger.warn("It is not allowed to modify libraries.")
             self.view.set_text(self.model.state.script.script)
             return
 
@@ -82,10 +83,11 @@ class SourceEditorController(ExtendedController):
 
         if invalid_sytax:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-            message_string = "Are you sure you want the save this file \nThe following errors were found:"
+            message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
             for elem in pylint_stdout_data:
+                print elem
                 if "error" in elem:
-                    message_string = "%s \n %s " % (message_string, str(elem))
+                    message_string = "%s\n\n%s " % (message_string, str(elem))
             message.set_markup(message_string)
             message.add_button("Yes", 42)
             message.add_button("No", 43)

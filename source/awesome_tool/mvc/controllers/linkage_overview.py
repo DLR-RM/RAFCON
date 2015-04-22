@@ -16,10 +16,10 @@ class LinkageOverviewController(ExtendedController, Model):
 
         self.add_controller('inputs_ctrl', DataPortListController(model, view['inputs_view'], "input"))
         self.add_controller('output_ctlr', DataPortListController(model, view['outputs_view'], "output"))
-        self.add_controller('scoped_ctrl', ScopedVariableListController(model, view['scopes_view']))
+        self.add_controller('scoped_ctrl', ScopedVariableListController(model, view['scope_view']))
         self.add_controller('outcomes_ctrl', StateOutcomesEditorController(model, view['outcomes_view']))
 
         view['inputs_view'].show()
         view['outputs_view'].show()
-        view['scopes_view'].show()
+        view['scope_view'].show()
         view['outcomes_view'].show()

@@ -4,6 +4,7 @@ import gtk
 import gobject
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.statemachine.states.library_state import LibraryState
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -513,10 +514,15 @@ class StateTransitionsEditorController(ExtendedController):
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         view['add_t_button'].connect('clicked', self.trans_list_ctrl.on_add)
-        #view['cancel_t_edit_button'].connect('clicked', self.on_cancel_transition_edit_clicked)
         view['remove_t_button'].connect('clicked', self.trans_list_ctrl.on_remove)
         view['connected_to_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_external')
         view['internal_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_internal')
+
+        if isinstance(self.model.state, LibraryState):
+            view['add_t_button'].set_sensitive(False)
+            view['remove_t_button'].set_sensitive(False)
+            view['internal_t_checkbutton'].set_sensitive(False)
+            view['internal_t_checkbutton'].set_active(False)
 
         if self.model.parent is None:
             self.trans_list_ctrl.view_dict['transitions_external'] = False

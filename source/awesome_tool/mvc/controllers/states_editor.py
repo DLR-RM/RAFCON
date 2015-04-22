@@ -76,12 +76,20 @@ class StatesEditorController(ExtendedController):
 
         self.tabs = {}
         self.act_model = None
+        self.__buffered_root_state = None  # needed to handle exchange of root_state
         self.register()
 
     def close_state_tab(self, widget, page_num):
         page_to_close = widget.get_nth_page(page_num)
 
         self.close_page(page_to_close)
+
+    @ExtendedController.observe("root_state", assign=True)
+    def root_state_changed(self, model, property, info):
+        old_root_state_m = info['old']
+        # new_root_state_m = info['new']
+        self.on_destroy_clicked(None, old_root_state_m, None)
+        # self.add_state_editor(new_root_state_m)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
@@ -107,13 +115,14 @@ class StatesEditorController(ExtendedController):
         # print "states_editor register state_machine"
         # relieve old models
         if self.__my_selected_state_machine_id is not None:  # no old models available
-            self.relieve_model(self._selected_state_machine_model.root_state)
+            self.relieve_model(self.__buffered_root_state)
             self.relieve_model(self._selected_state_machine_model)
         # set own selected state machine id
         self.__my_selected_state_machine_id = self.model.selected_state_machine_id
         if self.__my_selected_state_machine_id is not None:
             # observe new models
             self._selected_state_machine_model = self.model.state_machines[self.__my_selected_state_machine_id]
+            self.__buffered_root_state = self._selected_state_machine_model.root_state
             self.observe_model(self._selected_state_machine_model.root_state)
             self.observe_model(self._selected_state_machine_model)  # for selection
 
@@ -149,7 +158,6 @@ class StatesEditorController(ExtendedController):
         self.tabs[state_identifier] = {'page': page, 'state_model': state_model,
                                        'ctrl': state_editor_ctrl, 'sm_id': self.__my_selected_state_machine_id,
                                        'view': state_editor_view, 'is_sticky': False, 'event_box': evtbox}
-
         return idx
 
     def close_page(self, page_to_close):
@@ -188,8 +196,11 @@ class StatesEditorController(ExtendedController):
         [page, state_identifier] = self.find_page_of_state_model(state_model)
         if page:
             self.close_page(page)
+            # print "----------- close_page %s" % state_model
         if state_identifier:
             self.destroy_state_editor_page(state_identifier)
+            # print "----------- destroy_state_editor_page%s" % state_model
+            # print "left over tabs ", self.tabs
 
     def on_toogle_sticky_clicked(self, event, state_model, result):
         """ Callback for the "toogle-sticky-check-button" emitted by custom TabLabel widget. """
@@ -232,16 +243,19 @@ class StatesEditorController(ExtendedController):
     def change_state_editor_selection(self, selected_model):
         state_identifier = "%s|%s" % (self.model.state_machine_manager.get_sm_id_for_state(selected_model.state),
                                       selected_model.state.get_path())
+        # print "actual model", self.act_model, self.tabs
         if self.act_model is None or not self.act_model.state.get_path() == selected_model.state.get_path():
             # logger.debug("State %s is SELECTED" % selected_model.state.name)
 
             # print "state_identifier: %s" % state_identifier
             if not state_identifier in self.tabs:
+                # print "--------- add state editor %s" % selected_model
                 idx = self.add_state_editor(selected_model, self.editor_type)
                 self.view.notebook.set_current_page(idx)
                 page = self.view.notebook.get_nth_page(idx)
 
             else:
+                # print "--------- add tab page back %s" % selected_model
                 page = self.tabs[state_identifier]['page']
                 # idx = self.view.notebook.prepend_page(page, self.tabs[state_identifier]['event_box'])
                 idx = self.view.notebook.page_num(page)
@@ -257,6 +271,13 @@ class StatesEditorController(ExtendedController):
             #     self.close_page(page_to_close)
 
             self.act_model = selected_model
+        actual_model_state_identifier = "%s|%s" % (self.model.state_machine_manager.get_sm_id_for_state(self.act_model.state),
+                                                   self.act_model.state.get_path())
+        if actual_model_state_identifier in self.tabs:
+            self.act_model = selected_model
+        else:
+            self.act_model = None
+        # print "final actual model", self.act_model, self.tabs
 
     @ExtendedController.observe("selection", after=True)
     def selection_notification(self, model, property, info):

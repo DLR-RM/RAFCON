@@ -12,11 +12,12 @@ from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
+from awesome_tool.mvc.singleton import state_machine_manager_model
 
 
 class StateMachineHelper():
     @staticmethod
-    def delete_model(model):
+    def delete_model(model, raise_exceptions=False):
         """Deletes a model of its state machine
 
         If the model is one of state, data flow or transition, it is tried to delete that model together with its
@@ -35,8 +36,11 @@ class StateMachineHelper():
                     container_m.state.remove_state(state_id)
                     return True
             except AttributeError as e:
-                logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}".format(
-                    state_id, model.state.name, e.message))
+                if not raise_exceptions:
+                    logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}".format(
+                        state_id, model.state.name, e.message))
+                else:
+                    raise
 
         elif isinstance(model, TransitionModel):
             transition_id = model.transition.transition_id
@@ -45,8 +49,11 @@ class StateMachineHelper():
                     container_m.state.remove_transition(transition_id)
                     return True
             except AttributeError as e:
-                logger.error("The transition with the ID {0} could not be deleted: {1}".format(
-                    transition_id, e.message))
+                if not raise_exceptions:
+                    logger.error("The transition with the ID {0} could not be deleted: {1}".format(
+                        transition_id, e.message))
+                else:
+                    raise
 
         elif isinstance(model, DataFlowModel):
             data_flow_id = model.data_flow.data_flow_id
@@ -55,8 +62,11 @@ class StateMachineHelper():
                     container_m.state.remove_data_flow(data_flow_id)
                     return True
             except AttributeError as e:
-                logger.error("The data flow with the ID {0} could not be deleted: {1}".format(
-                    data_flow_id, e.message))
+                if not raise_exceptions:
+                    logger.error("The data flow with the ID {0} could not be deleted: {1}".format(
+                        data_flow_id, e.message))
+                else:
+                    raise
 
         elif isinstance(model, ScopedVariableModel):
             scoped_variable_id = model.scoped_variable.data_port_id
@@ -65,8 +75,11 @@ class StateMachineHelper():
                     container_m.state.remove_scoped_variable(scoped_variable_id)
                     return True
             except AttributeError as e:
-                logger.error("The scoped variable with the ID {0} could not be deleted: {1}".format(
-                    scoped_variable_id, e.message))
+                if not raise_exceptions:
+                    logger.error("The scoped variable with the ID {0} could not be deleted: {1}".format(
+                        scoped_variable_id, e.message))
+                else:
+                    raise
 
         elif isinstance(model, DataPortModel):
             port_id = model.data_port.data_port_id
@@ -78,13 +91,16 @@ class StateMachineHelper():
                     container_m.state.remove_output_data_port(port_id)
                     return True
             except AttributeError as e:
-                logger.error("The data port with the ID {0} could not be deleted: {1}".format(
-                    port_id, e.message))
+                if not raise_exceptions:
+                    logger.error("The data port with the ID {0} could not be deleted: {1}".format(
+                        port_id, e.message))
+                else:
+                    raise
 
         return False
 
     @staticmethod
-    def delete_models(models):
+    def delete_models(models, raise_exceptions=False):
         """Deletes all given models from their state machines
 
         Calls the :func:`StateMachineHelper.delete_model` for all models given.
@@ -96,7 +112,7 @@ class StateMachineHelper():
         if not isinstance(models, list):
             models = [models]
         for model in models:
-            if StateMachineHelper.delete_model(model):
+            if StateMachineHelper.delete_model(model, raise_exceptions):
                 num_deleted += 1
         return num_deleted
 
@@ -197,36 +213,56 @@ class StateMachineHelper():
 
     @staticmethod
     def change_state_type(state_m, new_state_class):
+
         assert isinstance(state_m, StateModel)
         assert issubclass(new_state_class, State)
         current_state_is_container = isinstance(state_m, ContainerStateModel)
         new_state_is_container = new_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
+        is_root_state = state_m.parent is None
+
         state = state_m.state
-        parent_m = state_m.parent
-        parent = state.parent
-        assert isinstance(parent, ContainerState)
+
+        root_state_m = StateMachineHelper.get_root_state_model(state_m)
+        state_machine_m = None
+        for sm_m in state_machine_manager_model.state_machines.itervalues():
+            if sm_m.root_state is root_state_m:
+                state_machine_m = sm_m
+                break
+
+        if not is_root_state:
+            parent_m = state_m.parent
+            parent = state.parent
+            assert isinstance(parent, ContainerState)
+        else:
+            parent_m = state_machine_m
+
+        state_machine_m.selection.remove(state_m)
+
         name = state.name
         state_id = state.state_id
         description = state.description
         inputs = state.input_data_ports
         outputs = state.output_data_ports
         outcomes = state.outcomes
+        used_data_port_ids = state._used_data_port_ids
+        used_outcome_ids = state._used_outcome_ids
 
         script = state.script
 
         copy_from_model = ['meta', 'input_data_ports', 'output_data_ports']
 
-        connected_transitions = []
-        for transition_m in parent_m.transitions:
-            transition = transition_m.transition
-            if transition.from_state == state_id or transition.to_state == state_id:
-                connected_transitions.append({"transition": transition, "meta": transition_m.meta})
-        connected_data_flows = []
-        for data_flow_m in parent_m.data_flows:
-            data_flow = data_flow_m.data_flow
-            if data_flow.from_state == state_id or data_flow.to_state == state_id:
-                connected_data_flows.append({"data_flow": data_flow, "meta": data_flow_m.meta})
+        if not is_root_state:
+            connected_transitions = []
+            for transition_m in parent_m.transitions:
+                transition = transition_m.transition
+                if transition.from_state == state_id or transition.to_state == state_id:
+                    connected_transitions.append({"transition": transition, "meta": transition_m.meta})
+            connected_data_flows = []
+            for data_flow_m in parent_m.data_flows:
+                data_flow = data_flow_m.data_flow
+                if data_flow.from_state == state_id or data_flow.to_state == state_id:
+                    connected_data_flows.append({"data_flow": data_flow, "meta": data_flow_m.meta})
 
         if current_state_is_container and new_state_is_container:
             assert isinstance(state, ContainerState)
@@ -248,12 +284,19 @@ class StateMachineHelper():
                                         path=script.path, filename=script.filename,
                                         check_path=False)
         else:
+            if hasattr(state, "states"):
+                for child_state_id in state.states.keys():
+                    state.remove_state(child_state_id)
             new_state = new_state_class(name=name, state_id=state_id,
                                         input_data_ports=inputs, output_data_ports=outputs,
                                         outcomes=outcomes, path=script.path, filename=script.filename,
                                         check_path=False)
-      
-        new_state.parent = parent
+
+        new_state._used_data_port_ids = used_data_port_ids
+        new_state._used_outcome_ids = used_outcome_ids
+
+        if not is_root_state:
+            new_state.parent = parent
 
         if description is not None and len(description) > 0:
             new_state.description = description
@@ -262,11 +305,16 @@ class StateMachineHelper():
         for prop_name in copy_from_model:
             model_properties[prop_name] = state_m.__getattribute__(prop_name)
 
-        parent.remove_state(state_id, recursive_deletion=False)
-        parent.add_state(new_state)
+        if not is_root_state:
+            parent.remove_state(state_id, recursive_deletion=False)
+            parent.add_state(new_state)
 
-        new_state_m = parent_m.states[state_id]
-        new_state_m.parent = parent_m
+            new_state_m = parent_m.states[state_id]
+            new_state_m.parent = parent_m
+        else:
+            parent_m.state_machine.root_state = new_state
+            new_state_m = parent_m.root_state
+            state_machine_manager_model.selected_state_machine_id = state_machine_m.state_machine.state_machine_id
 
         for prop_name, value in model_properties.iteritems():
             new_state_m.__setattr__(prop_name, value)
@@ -278,17 +326,19 @@ class StateMachineHelper():
                 for model in new_state_m.__getattribute__(prop_name):
                     model.parent = new_state_m
 
-        for transition_data in connected_transitions:
-            t = transition_data["transition"]
-            parent.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
-            transition_m = StateMachineHelper.get_transition_model(parent_m, t.transition_id)
-            transition_m.meta = transition_data["meta"]
-        
-        for data_flow_data in connected_data_flows:
-            d = data_flow_data["data_flow"]
-            parent.add_data_flow(d.from_state, d.from_key, d.to_state, d.to_key, d.data_flow_id)
-            data_flow_m = StateMachineHelper.get_data_flow_model(parent_m, d.data_flow_id)
-            data_flow_m.meta = data_flow_data["meta"]
+        if not is_root_state:
+            for transition_data in connected_transitions:
+                t = transition_data["transition"]
+                parent.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
+                transition_m = StateMachineHelper.get_transition_model(parent_m, t.transition_id)
+                transition_m.meta = transition_data["meta"]
+
+            for data_flow_data in connected_data_flows:
+                d = data_flow_data["data_flow"]
+                parent.add_data_flow(d.from_state, d.from_key, d.to_state, d.to_key, d.data_flow_id)
+                data_flow_m = StateMachineHelper.get_data_flow_model(parent_m, d.data_flow_id)
+                data_flow_m.meta = data_flow_data["meta"]
+
 
         # TODO: different types of states have different constraints, e. g. barrier concurrency states can only have
         # one outcome. Shell the restrictions be checked here?
@@ -311,6 +361,12 @@ class StateMachineHelper():
         for model in models_to_remove:
             models.remove(model)
         return models
+
+    @staticmethod
+    def get_root_state_model(state_m):
+        while state_m.parent is not None:
+            state_m = state_m.parent
+        return state_m
 
 
 

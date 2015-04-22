@@ -2,6 +2,7 @@
 import gobject
 from gtk import ListStore, TreeStore
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.statemachine.states.library_state import LibraryState
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -609,6 +610,12 @@ class StateDataFlowsEditorController(ExtendedController):
         view['remove_d_button'].connect('clicked', self.df_list_ctrl.on_remove)
         view['connected_to_d_checkbutton'].connect('toggled', self.toggled_button, 'data_flows_external')
         view['internal_d_checkbutton'].connect('toggled', self.toggled_button, 'data_flows_internal')
+
+        if isinstance(self.model.state, LibraryState):
+            view['add_d_button'].set_sensitive(False)
+            view['remove_d_button'].set_sensitive(False)
+            view['internal_d_checkbutton'].set_sensitive(False)
+            view['internal_d_checkbutton'].set_active(False)
 
         if self.model.parent is None:
             self.df_list_ctrl.view_dict['data_flows_external'] = False

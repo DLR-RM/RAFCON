@@ -5,7 +5,7 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 import awesome_tool.statemachine.singleton
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.states.library_state import LibraryState
 
 
@@ -92,19 +92,18 @@ class LibraryTreeController(ExtendedController):  # (Controller):
 
         current_selection = smm.state_machines[smm.selected_state_machine_id].selection
         if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
-            logger.error("Wrong number of selected states %s" % str(len(current_selection.get_states())))
+            logger.error("Please select exactly one state for the insertion of a library")
             return
 
         current_state = current_selection.get_states()[0].state
-        state_type = current_state.state_type
-        if state_type is not (StateType.HIERARCHY or StateType.BARRIER_CONCURRENCY or StateType.PREEMPTION_CONCURRENCY):
-            logger.error("State of wrong type selected %s" % str(state_type))
+        if not isinstance(current_state, ContainerState):
+            logger.error("Libraries can only be inserted in container states")
             return
 
         logger.debug("Link library state %s (with file path %s, and library path %s) into the state machine" %
                      (str(library_key), str(library), str(library_path)))
 
-        library_state = LibraryState(library_path, library_key, "0.1", "new_library_state")
+        library_state = LibraryState(library_path, library_key, "0.1", library_key)
 
         current_state.add_state(library_state)
 
@@ -116,13 +115,12 @@ class LibraryTreeController(ExtendedController):  # (Controller):
 
         current_selection = smm.state_machines[smm.selected_state_machine_id].selection
         if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
-            logger.error("Wrong number of selected states %s" % str(len(current_selection.get_states())))
+            logger.error("Please select exactly one state for the insertion of a library template")
             return
 
         current_state = current_selection.get_states()[0].state
-        state_type = current_state.state_type
-        if state_type is not (StateType.HIERARCHY or StateType.BARRIER_CONCURRENCY or StateType.PREEMPTION_CONCURRENCY):
-            logger.error("State of wrong type selected %s" % str(state_type))
+        if not isinstance(current_state, ContainerState):
+            logger.error("Templates can only be inserted in container states")
             return
 
         logger.debug("Insert library template state %s (with file path %s, and library path %s) into the state machine" %

@@ -38,20 +38,15 @@ class State(Observable, yaml.YAMLObject, object):
     :ivar state_id: the id of the state
     :ivar name: the name of the state
     :ivar parent: the parent of the state
-    :ivar state_type: the type of the container state (i.e. hierarchy, concurrency etc.)
     :ivar input_data_ports: holds the input data ports of the state
     :ivar output_data_ports: holds the output data ports of the state
     :ivar outcomes: holds the state outcomes, which are the connection points for transitions
-    :ivar script: a script file that holds the definitions of the custom state functions (entry, execute, exit)
-    :ivar description: a human readable description of the state
+    :ivar parent: a reference to the parent state
 
     """
 
-    #input_data_ports = []
-    #__observables__ = ("input_data_ports", )
-
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 path=None, filename=None, state_type=None, parent=None, check_path=True):
+                 parent=None):
 
         Observable.__init__(self)
         self.thread = None
@@ -68,9 +63,6 @@ class State(Observable, yaml.YAMLObject, object):
         self._parent = None
         self.parent = parent
 
-        self._state_type = None
-        self.state_type = state_type
-
         self._used_data_port_ids = set([])
         self._input_data_ports = None
         self.input_data_ports = input_data_ports
@@ -82,19 +74,14 @@ class State(Observable, yaml.YAMLObject, object):
         self._outcomes = None
         self.outcomes = outcomes
 
-        if state_type is StateType.EXECUTION:
-            self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
-        elif state_type is StateType.LIBRARY:
-            self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path, state=self)
-        else:
-            self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
+        self._script = None
 
         # the input data of the state during execution
         self._input_data = {}
         # the output data of the state during execution
         self._output_data = {}
         # a flag to show if the state was preempted from outside
-        self._preempted = False
+        self._preempted = threading.Event()
         # a queue to signal a preemptive concurrency state, that the execution of the state finished
         self._concurrency_queue = None
         # the final outcome of a state, when it finished execution
@@ -161,21 +148,10 @@ class State(Observable, yaml.YAMLObject, object):
         """
         raise NotImplementedError("The State.run() function has to be implemented!")
 
-    def recursively_preempt_states(self, state):
-        """ Preempt the provided state and all it sub-states.
-        :param state: The that is going to be preempted recursively.
-        :return:
+    def recursively_preempt_states(self):
+        """ Preempt the state
         """
-        state.preempted = True
-        # only go deeper if the State has a states dictionary = the state is not a Execution State
-        if state.state_type is not StateType.EXECUTION and state.state_type is not StateType.LIBRARY:
-            for key, state in state.states.iteritems():
-                state.recursively_preempt_states(state)
-
-        if state.state_type is StateType.LIBRARY:
-            if state.state_copy.state_type is not StateType.EXECUTION and \
-                            state.state_copy.state_type is not StateType.LIBRARY:
-                state.state_copy.recursively_preempt_states(state.state_copy)
+        self.preempted = True
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------- input/output data handling ----------------------------------
@@ -508,8 +484,7 @@ class State(Observable, yaml.YAMLObject, object):
         self._state_id = new_state_id
 
     def __str__(self):
-        return "State properties of state: %s \nstate_id: %s \nstate_type: %s" \
-               % (self.name, self.state_id, self.state_type)
+        return "State '{0}' with ID '{1}' and and type {2}".format(self.name, self.state_id, type(self))
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -692,14 +667,17 @@ class State(Observable, yaml.YAMLObject, object):
         """Property for the _preempted field
 
         """
-        return self._preempted
+        return self._preempted.is_set()
 
     @preempted.setter
     #@Observable.observed
     def preempted(self, preempted):
         if not isinstance(preempted, bool):
             raise TypeError("preempted must be of type bool")
-        self._preempted = preempted
+        if preempted:
+            self._preempted.set()
+        else:
+            self._preempted.clear()
 
     @property
     def concurrency_queue(self):
@@ -734,21 +712,6 @@ class State(Observable, yaml.YAMLObject, object):
         self._final_outcome = final_outcome
 
     @property
-    def state_type(self):
-        """Property for the _state_type field
-
-        """
-        return self._state_type
-
-    @state_type.setter
-    @Observable.observed
-    def state_type(self, state_type):
-        if not state_type is None:
-            if not isinstance(state_type, StateType):
-                raise TypeError("state_type must be of type StateType")
-        self._state_type = state_type
-
-    @property
     def description(self):
         """Property for the _description field
 
@@ -780,3 +743,14 @@ class State(Observable, yaml.YAMLObject, object):
             raise TypeError("active must be of type bool")
 
         self._active = active
+
+    def preemptive_wait(self, time=None):
+        """Waiting method which can be preempted
+
+        Use this method if you want a state to pause. In contrast to time.sleep(), the pause can be preempted. This
+        method can also be used if you want to have a daemon thread within a preemptive concurrency state. In this
+        case, time has to be set to None and the method waits indefinitely or until it is preempted from outside.
+        :param time: The time in seconds to wait or None (default) for infinity
+        :return: True, if the wait was preempted, False else
+        """
+        return self._preempted.wait(time)

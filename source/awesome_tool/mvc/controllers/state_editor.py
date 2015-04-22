@@ -1,4 +1,6 @@
 
+import gtk
+
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.controllers import StateOverviewController, SourceEditorController, \
     DataPortListController, ScopedVariableListController, StateOutcomesEditorController, LinkageOverviewController
@@ -6,6 +8,8 @@ from awesome_tool.mvc.controllers import StateOverviewController, SourceEditorCo
 from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEditorController
 from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
 from awesome_tool.mvc.models import ContainerStateModel
+from awesome_tool.statemachine.states.library_state import LibraryState
+from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -15,6 +19,14 @@ class StateEditorController(ExtendedController):
     Widgets concerning logic flow (outcomes and transitions) are grouped in the Logic Linkage expander.
     Widgets concerning data flow (data-ports and data-flows) are grouped in the data linkage expander.
     """
+
+    icons = {
+        "Source":           constants.ICON_SOURCE,
+        "Data Linkage":     constants.ICON_DLINK,
+        "Logical Linkage":  constants.ICON_LLINK,
+        "Linkage Overview": constants.ICON_OVERV,
+        "Description":      constants.ICON_DESC
+    }
 
     def __init__(self, model, view):
         """Constructor
@@ -43,23 +55,40 @@ class StateEditorController(ExtendedController):
         view['data_flows_view'].show()
 
         view['description_text_view'].connect('focus-out-event', self.change_description)
+        view['description_text_view'].connect('size-allocate', self.scroll_to_bottom)
 
         for i in range(view["main_notebook_1"].get_n_pages()):
             child = view["main_notebook_1"].get_nth_page(i)
             tab_label = view["main_notebook_1"].get_tab_label(child)
-            tab_label.set_angle(270)
+            tab_label_text = tab_label.get_text()
+            view["main_notebook_1"].set_tab_label(child, self.create_tab_header_label(tab_label_text))
             view["main_notebook_1"].set_tab_reorderable(child, True)
             view["main_notebook_1"].set_tab_detachable(child, True)
 
         for i in range(view["main_notebook_2"].get_n_pages()):
             child = view["main_notebook_2"].get_nth_page(i)
             tab_label = view["main_notebook_2"].get_tab_label(child)
-            tab_label.set_angle(270)
+            tab_label_text = tab_label.get_text()
+            view["main_notebook_2"].set_tab_label(child, self.create_tab_header_label(tab_label_text))
             view["main_notebook_2"].set_tab_reorderable(child, True)
             view["main_notebook_2"].set_tab_detachable(child, True)
 
         if isinstance(model, ContainerStateModel):
             self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
+
+    def create_tab_header_label(self, tab_name):
+        tooltip_event_box = gtk.EventBox()
+        tooltip_event_box.set_tooltip_text(tab_name)
+        tab_label = gtk.Label()
+        tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
+                             (constants.ICON_FONT,
+                              constants.FONT_SIZE_BIG,
+                              self.icons[tab_name]))
+        tab_label.show()
+        tooltip_event_box.add(tab_label)
+        tooltip_event_box.set_visible_window(False)
+        tooltip_event_box.show()
+        return tooltip_event_box
 
     def register_view(self, view):
         """Called when the View was registered
@@ -80,8 +109,16 @@ class StateEditorController(ExtendedController):
         view['delete_scoped_variable_button'].connect('clicked',
             self.get_controller('scoped_ctrl').on_delete_scoped_variable_button_clicked)
 
-        view['description_text_view'].set_buffer(self.model.state.description)
-        view['description_text_view'].set_accepts_tab(False)
+        if isinstance(self.model.state, LibraryState):
+            view['new_input_port_button'].set_sensitive(False)
+            view['delete_input_port_button'].set_sensitive(False)
+            view['new_output_port_button'].set_sensitive(False)
+            view['delete_output_port_button'].set_sensitive(False)
+            view['new_scoped_variable_button'].set_sensitive(False)
+            view['delete_scoped_variable_button'].set_sensitive(False)
+
+        if self.model.state.description is not None:
+            view['description_text_view'].get_buffer().set_text(self.model.state.description)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -90,6 +127,11 @@ class StateEditorController(ExtendedController):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
+
+    def scroll_to_bottom(self, widget, data=None):
+        scroller = self.view['description_scroller']
+        adj = scroller.get_vadjustment()
+        adj.set_value(adj.get_upper() - adj.get_page_size())
 
     def change_description(self, textview, otherwidget):
         tbuffer = textview.get_buffer()

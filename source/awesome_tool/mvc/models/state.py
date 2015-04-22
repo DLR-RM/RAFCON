@@ -12,7 +12,6 @@ from awesome_tool.mvc.models.outcome import OutcomeModel
 import awesome_tool.statemachine.singleton
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.utils import log
-from awesome_tool.statemachine.enums import StateType
 
 from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.data_port import DataPort

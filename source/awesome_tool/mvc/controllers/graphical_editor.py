@@ -11,7 +11,7 @@ import gobject
 import itertools
 
 from math import sin, cos, atan2
-from awesome_tool.statemachine.config import global_config
+from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.statemachine.enums import StateType
 from awesome_tool.statemachine.singleton import global_storage
 from awesome_tool.statemachine.states.state_helper import StateHelper
@@ -123,7 +123,7 @@ class GraphicalEditorController(ExtendedController):
 
             self._redraw()
 
-    @ExtendedController.observe("root_state", after=True)
+    @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
         """Called when the root state was exchanged
 
@@ -325,7 +325,7 @@ class GraphicalEditorController(ExtendedController):
                 self._handle_new_waypoint()
 
             # Check, whether a port (input, output, scope) was clicked on
-            if global_config.get_config_value('show_data_flows', True):
+            if global_gui_config.get_config_value('show_data_flows', True):
                 # Check, whether port (connector) was clicked on
                 port_model, port_type, is_connector = self._check_for_port_selection(new_selection,
                                                                                      self.mouse_move_start_coords)
@@ -851,9 +851,9 @@ class GraphicalEditorController(ExtendedController):
 
         # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
         if modifier_keys & SHIFT_MASK != 0:
-            snap_angle = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_ANGLE', 45.))
-            snap_diff = deg2rad(global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_ANGLE', 10.))
-            max_snap_dist = global_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_PIXEL', 50.)
+            snap_angle = deg2rad(global_gui_config.get_config_value('WAYPOINT_SNAP_ANGLE', 45.))
+            snap_diff = deg2rad(global_gui_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_ANGLE', 10.))
+            max_snap_dist = global_gui_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_PIXEL', 50.)
             max_snap_dist /= self.view.editor.pixel_to_size_ratio()
 
             def calculate_snap_point(p1, p2, p3):
@@ -1205,8 +1205,8 @@ class GraphicalEditorController(ExtendedController):
             state_m.state.name,
             pos_x, pos_y, width, height,
             state_m.state.outcomes,
-            state_m.input_data_ports if global_config.get_config_value('show_data_flows', True) else [],
-            state_m.output_data_ports if global_config.get_config_value('show_data_flows', True) else [],
+            state_m.input_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
+            state_m.output_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
             selected, active, depth)
         state_m.meta['gui']['editor']['id'] = opengl_id
         state_m.meta['gui']['editor']['outcome_pos'] = outcome_pos
@@ -1233,17 +1233,17 @@ class GraphicalEditorController(ExtendedController):
                 self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
                                 depth + 1)
 
-            if global_config.get_config_value('show_data_flows', True):
+            if global_gui_config.get_config_value('show_data_flows', True):
                 self.draw_inner_data_ports(state_m, depth)
 
             self.draw_transitions(state_m, depth)
 
-            if global_config.get_config_value('show_data_flows', True):
+            if global_gui_config.get_config_value('show_data_flows', True):
                 self.draw_data_flows(state_m, depth)
 
         self._handle_new_transition(state_m, depth)
 
-        if global_config.get_config_value('show_data_flows', True):
+        if global_gui_config.get_config_value('show_data_flows', True):
             self._handle_new_data_flow(state_m, depth)
 
     def draw_inner_data_ports(self, parent_state_m, parent_depth):
@@ -1641,7 +1641,7 @@ class GraphicalEditorController(ExtendedController):
 
     @staticmethod
     def has_content(state_m):
-        if isinstance(state_m, ContainerStateModel) and state_m.state.state_type != StateType.LIBRARY:
+        if isinstance(state_m, ContainerStateModel):
             return True
         return False
 
@@ -1709,7 +1709,7 @@ class GraphicalEditorController(ExtendedController):
 
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.has_focus():
-            global_config.set_config_value('show_data_flows', not global_config.get_config_value("show_data_flows"))
+            global_gui_config.set_config_value('show_data_flows', not global_gui_config.get_config_value("show_data_flows"))
             self._redraw()
 
     def _abort(self, *args):

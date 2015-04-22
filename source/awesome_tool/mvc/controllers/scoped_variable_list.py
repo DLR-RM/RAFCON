@@ -31,10 +31,13 @@ class ScopedVariableListController(ExtendedController):
         if view['default_value_col'] and view['default_value_text']:
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', 2)
             view['default_value_text'].set_property("editable", True)
-            view['data_type_text'].connect("edited", self.on_data_type_changed)
             view['default_value_text'].connect("edited", self.on_default_value_changed)
 
         view['name_text'].connect("edited", self.on_name_changed)
+        view['data_type_text'].connect("edited", self.on_data_type_changed)
+
+        if hasattr(self.model, 'scoped_variables'):
+            self.reload_scoped_variables_list_store()
 
     def register_adapters(self):
         """Adapters should be registered in this method call
