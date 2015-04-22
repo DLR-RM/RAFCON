@@ -172,8 +172,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # default outer coordinate values which will later be overwritten by the controller
         self.left = -10
         self.right = 110
-        self.top = 110
-        self.bottom = -10
+        self.top = 10
+        self.bottom = -110
 
         # Used to generate unique ids for drawn objects
         self.name_counter = 0
@@ -314,7 +314,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                         border_color=self.frame_border_color)
 
 
-    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0,
+    def draw_state(self, name, pos, size, outcomes=0,
                    input_ports_m=[], output_ports_m=[],
                    selected=False, active=False, depth=0):
         """Draw a state with the given properties
@@ -322,10 +322,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         This method is called by the controller to draw the specified (container) state.
 
         :param name: Name of the state
-        :param pos_x: x position of the state
-        :param pos_y: y position of the state
-        :param width: width of the state
-        :param height: height of the state
+        :param pos: position (x, y) of the state
+        :param size: size (width, height) of the state
         :param outcomes: outcomes of the state (list with outcome objects)
         :param input_ports_m: input ports of the state
         :param output_ports_m: output ports of the state
@@ -340,34 +338,35 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPushName(opengl_id)
         self._set_closest_stroke_width(1.5)
 
+        width = size[0]
+        height = size[1]
+
         # First draw the face of the rectangular, then the outline
         fill_color = self.state_color
         border_color = self.border_color
 
-        border_width = min(width, height) / 10.
+        border_width = min(size) / 10.
         if active == 1:
             fill_color = self.state_active_color
         elif active == 0.5:
             fill_color = self.state_child_active_color
-            #border_color = self.border_active_color
 
         if selected:
             border_width *= 2
-            #fill_color = self.state_selected_color
             border_color = self.border_selected_color
 
-        self._draw_rect(pos_x, pos_x + width, pos_y, pos_y + height, depth, border_width,
+        self._draw_rect(pos[0], pos[0] + width, pos[1] - height, pos[1], depth, border_width,
                         fill_color, border_color)
 
         # Put the name of the state in the upper left corner of the state
-        margin = min(width, height) / 12.
-        font_size = min(width, height) / 8.
+        margin = min(size) / 12.
+        font_size = min(size) / 8.
         name = self._shorten_string(name, font_size, width - 2 * margin)
-        self._write_string(name, pos_x + margin, pos_y + height - margin, font_size, self.state_name_color, True,
+        self._write_string(name, pos[0] + margin, pos[1] - margin, font_size, self.state_name_color, True,
                            False, depth=depth + 0.01)
 
         resize_length = min(width, height) / 8.
-        p1 = (pos_x + width, pos_y)
+        p1 = (pos[0] + width, pos[1] - height)
         p2 = (p1[0] - resize_length, p1[1])
         p3 = (p1[0], p1[1] + resize_length)
         self._draw_triangle(p1, p2, p3, depth + 0.01, border_width, fill_color, border_color)
@@ -388,13 +387,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             color = self.outcome_plain_color
 
             # Distribute outcomes (as circles) on the right edge of the state
-            outcome_x = pos_x + width
-            outcome_y = pos_y + height / (num_outcomes + 1) * (i + 1)
+            outcome_x = pos[0] + width
+            outcome_y = pos[1] - height / (num_outcomes + 1) * (i + 1)
 
             if outcome_name in ["aborted", "preempted"]:
-                size = min(width, height)
-                step = size / 10.
-                outcome_y = pos_y + height
+                step = min(size) / 10.
+                outcome_y = pos[1]
                 if outcome_name == "aborted":
                     outcome_x -= step
                     color = self.outcome_aborted_color
@@ -414,12 +412,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             color.set()
             outcome_pos[key] = (outcome_x, outcome_y)
 
-            # TODO: Show name of the outcome
-
             self._draw_circle(outcome_x, outcome_y, outcome_radius, depth + 0.1, fill_color=color)
 
         # Draw "income" as a half circle of the left center
-        self._draw_circle(pos_x, pos_y + height / 2, outcome_radius, depth + 0.1, fill_color=self.income_color,
+        self._draw_circle(pos[0], pos[1] - height / 2, outcome_radius, depth + 0.1, fill_color=self.income_color,
                           from_angle=1.5 * pi, to_angle=0.5 * pi)
 
         # Draw input and output data ports
@@ -427,7 +423,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         num_ports = len(input_ports_m) + len(output_ports_m)
         if num_ports > 0:
             max_name_width = 0
-            margin = min(width, height) / 10.0
+            margin = min(size) / 10.0
             max_allowed_name_width = 0.7 * width - margin
             str_height = height / 12.0
 
@@ -441,10 +437,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             #fill_color = self.port_color if not selected else self.state_selected_color
 
             port_width = min(max_name_width, max_allowed_name_width)
-            port_pos_left_x = pos_x + (width - port_width - margin) / 2
+            port_pos_left_x = pos[0] + (width - port_width - margin) / 2
             port_pos_right_x = port_pos_left_x + port_width + margin
-            port_pos_bottom_y = pos_y - num_ports * (str_height + margin)
-            self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos_y, depth, border_width,
+            port_pos_bottom_y = pos[1] - height - num_ports * (str_height + margin)
+            self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos[1] - height, depth, border_width,
                             fill_color, border_color)
 
             def draw_port(port_m, num, is_input):
@@ -454,7 +450,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 string_pos_x = port_pos_left_x + margin / 2.
                 if not is_input:
                     string_pos_x += port_width
-                string_pos_y = pos_y - margin / 2. - num * (str_height + margin)
+                string_pos_y = pos[1] - height - margin / 2. - num * (str_height + margin)
                 self._write_string(port_name, string_pos_x, string_pos_y,
                                    str_height, self.port_name_color, False, not is_input, depth + 0.01)
 

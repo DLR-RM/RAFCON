@@ -50,7 +50,7 @@ class StateModel(ModelMT):
         else:
             self.meta = Vividict()
 
-        self.temp = Vividict
+        self.temp = Vividict()
 
         if isinstance(parent, StateModel):
             self.parent = parent

@@ -26,6 +26,12 @@ from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 
 
+def get_abs_pos(absolute_pos, relative_pos):
+    if not isinstance(absolute_pos, tuple) or not isinstance(relative_pos, tuple):
+        ValueError("Positions must be of type tuple")
+    return absolute_pos[0] + relative_pos[0], absolute_pos[1] + relative_pos[1]
+
+
 class GraphicalEditorController(ExtendedController):
     """Controller handling the graphical editor
 
@@ -184,7 +190,7 @@ class GraphicalEditorController(ExtendedController):
         # and whether the last redraw was more than redraw_after ago
 
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
-                self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id:
+                        self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id:
             # Remove any existing timer id
             self.timer_id = None
             self.view.editor.emit("configure_event", None)
@@ -318,7 +324,7 @@ class GraphicalEditorController(ExtendedController):
             elif self.selected_outcome is not None and isinstance(new_selection, StateModel) and \
                     ((new_selection.parent is self.selected_outcome[0].parent and
                               self.selected_outcome[1] is not None) or
-                    (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
+                         (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
                 self._create_new_transition(new_selection)
             # Allow the user to create waypoints while creating a new transition
             elif self.selected_outcome is not None:
@@ -462,17 +468,23 @@ class GraphicalEditorController(ExtendedController):
         self._handle_zooming((event.x, event.y), event.direction)
 
     @staticmethod
-    def _limit_position_to_state(state, pos_x, pos_y, child_width=0, child_height=0):
-        if state is not None:
-            if pos_x < state.meta['gui']['editor']['pos_x']:
-                pos_x = state.meta['gui']['editor']['pos_x']
-            elif pos_x + child_width > state.meta['gui']['editor']['pos_x'] + state.meta['gui']['editor']['width']:
-                pos_x = state.meta['gui']['editor']['pos_x'] + state.meta['gui']['editor']['width'] - child_width
+    def _limit_position_to_state(state_m, pos, child_width=0, child_height=0):
+        pos_x, pos_y = pos
+        if state_m is not None:
+            if pos_x < state_m.temp['gui']['editor']['pos'][0]:
+                pos_x = state_m.temp['gui']['editor']['pos'][0]
+            elif pos_x + child_width > state_m.temp['gui']['editor']['pos'][0] + state_m.temp['gui']['editor']['width']:
+                pos_x = max(state_m.temp['gui']['editor']['pos'][0],
+                            state_m.temp['gui']['editor']['pos'][0] + state_m.temp['gui']['editor']['width'] -
+                            child_width)
 
-            if pos_y < state.meta['gui']['editor']['pos_y']:
-                pos_y = state.meta['gui']['editor']['pos_y']
-            elif pos_y + child_height > state.meta['gui']['editor']['pos_y'] + state.meta['gui']['editor']['height']:
-                pos_y = state.meta['gui']['editor']['pos_y'] + state.meta['gui']['editor']['height'] - child_height
+            if pos_y > state_m.temp['gui']['editor']['pos'][1]:
+                pos_y = state_m.temp['gui']['editor']['pos'][1]
+            elif pos_y - child_height < \
+                            state_m.temp['gui']['editor']['pos'][1] - state_m.temp['gui']['editor']['height']:
+                pos_y = min(state_m.temp['gui']['editor']['pos'][1],
+                            state_m.temp['gui']['editor']['pos'][1] - state_m.temp['gui']['editor']['height'] +
+                            child_height)
         return pos_x, pos_y
 
     def _check_for_waypoint_selection(self, selection, coords):
@@ -1153,7 +1165,7 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(frame, list):
             self.view.editor.draw_frame(frame[0], frame[1], 10)
 
-    def draw_state(self, state_m, pos_x=0.0, pos_y=0.0, width=100.0, height=100.0, depth=1):
+    def draw_state(self, state_m, rel_pos=(0, 0), size=(100, 100), depth=1):
         """Draws a (container) state with all its content
 
         Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
@@ -1168,6 +1180,9 @@ class GraphicalEditorController(ExtendedController):
         """
         assert isinstance(state_m, StateModel)
 
+        width = size[0]
+        height = size[1]
+
         # Use default values if no size information is stored
         if not state_m.meta['gui']['editor']['width']:
             state_m.meta['gui']['editor']['width'] = width
@@ -1177,15 +1192,20 @@ class GraphicalEditorController(ExtendedController):
         width = state_m.meta['gui']['editor']['width']
         height = state_m.meta['gui']['editor']['height']
 
-        # Use default values if no size information is stored
-        # Here the possible case of pos_x and posy_y == 0 must be handled
-        if not state_m.meta['gui']['editor']['pos_x'] and state_m.meta['gui']['editor']['pos_x'] != 0:
-            state_m.meta['gui']['editor']['pos_x'] = pos_x
-        if not state_m.meta['gui']['editor']['pos_y'] and state_m.meta['gui']['editor']['pos_y'] != 0:
-            state_m.meta['gui']['editor']['pos_y'] = pos_y
+        # Root state is always in the origin
+        if state_m.parent is None:
+            pos = (0, 0)
+        else:
+            # Use default values if no size information is stored
+            # Here the possible case of pos_x and posy_y == 0 must be handled
+            if not isinstance(state_m.meta['gui']['editor']['rel_pos'], tuple):
+                state_m.meta['gui']['editor']['rel_pos'] = (rel_pos[0], rel_pos[1])  # copy
 
-        pos_x = state_m.meta['gui']['editor']['pos_x']
-        pos_y = state_m.meta['gui']['editor']['pos_y']
+            parent_pos = state_m.parent.temp['gui']['editor']['pos']
+            rel_pos = state_m.meta['gui']['editor']['rel_pos']
+            pos = get_abs_pos(parent_pos, rel_pos)
+
+        state_m.temp['gui']['editor']['pos'] = pos
 
         # Was the state selected?
         selected_states = self.model.selection.get_states()
@@ -1202,8 +1222,7 @@ class GraphicalEditorController(ExtendedController):
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
         (opengl_id, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
-            state_m.state.name,
-            pos_x, pos_y, width, height,
+            state_m.state.name, pos, size,
             state_m.state.outcomes,
             state_m.input_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
             state_m.output_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
@@ -1219,6 +1238,7 @@ class GraphicalEditorController(ExtendedController):
             state_ctr = 0
             margin = width / 25.
 
+            num_child_state = 0
             for child_state in state_m.states.itervalues():
                 # Calculate default positions for the child states
                 # Make the inset from the top left corner
@@ -1226,20 +1246,25 @@ class GraphicalEditorController(ExtendedController):
 
                 child_width = width / 5.
                 child_height = height / 5.
+                child_size = (child_width, child_height)
+                child_spacing = max(child_size) * 1.2
 
-                child_pos_x = pos_x + state_ctr * margin
-                child_pos_y = pos_y + height - child_height - state_ctr * margin
+                max_cols = width // child_spacing
+                (row, col) = divmod(num_child_state, max_cols)
+                child_rel_pos_x = col * child_spacing + child_spacing - child_width
+                child_rel_pos_y = -child_spacing * (1.5 * row + 1)
+                child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
+                num_child_state += 1
 
-                self.draw_state(child_state, child_pos_x, child_pos_y, child_width, child_height,
-                                depth + 1)
+                self.draw_state(child_state, child_rel_pos, child_size, depth + 1)
 
-            if global_gui_config.get_config_value('show_data_flows', True):
-                self.draw_inner_data_ports(state_m, depth)
-
-            self.draw_transitions(state_m, depth)
-
-            if global_gui_config.get_config_value('show_data_flows', True):
-                self.draw_data_flows(state_m, depth)
+                # if global_gui_config.get_config_value('show_data_flows', True):
+                # self.draw_inner_data_ports(state_m, depth)
+                #
+                # self.draw_transitions(state_m, depth)
+                #
+                # if global_gui_config.get_config_value('show_data_flows', True):
+                #     self.draw_data_flows(state_m, depth)
 
         self._handle_new_transition(state_m, depth)
 
@@ -1665,7 +1690,7 @@ class GraphicalEditorController(ExtendedController):
             return min(x_coordinates), max(x_coordinates), min(y_coordinates), max(y_coordinates)
 
         if isinstance(model, (DataPortModel, ScopedVariableModel)):
-            try: # Data port position might not be set if data connections are not shown
+            try:  # Data port position might not be set if data connections are not shown
                 left = meta['inner_pos'][0]
                 right = meta['inner_pos'][0] + meta['width']
                 bottom = meta['inner_pos'][1]
@@ -1709,7 +1734,8 @@ class GraphicalEditorController(ExtendedController):
 
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.has_focus():
-            global_gui_config.set_config_value('show_data_flows', not global_gui_config.get_config_value("show_data_flows"))
+            global_gui_config.set_config_value('show_data_flows',
+                                               not global_gui_config.get_config_value("show_data_flows"))
             self._redraw()
 
     def _abort(self, *args):
