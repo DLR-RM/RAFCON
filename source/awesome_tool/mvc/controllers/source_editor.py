@@ -18,6 +18,7 @@ class SourceEditorController(ExtendedController):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
+        self.not_pylint_compatible_modules = ["links_and_nodes"]
 
     def register_view(self, view):
         view.get_buffer().connect('changed', self.code_changed)
@@ -54,7 +55,6 @@ class SourceEditorController(ExtendedController):
         #print "The text in the text_buffer changed"
         self.view.apply_tag('default')
 
-    #===============================================================
     def apply_clicked(self, button):
 
         if isinstance(self.model.state, LibraryState):
@@ -69,7 +69,12 @@ class SourceEditorController(ExtendedController):
         text_file.write(current_text)
         text_file.close()
 
-        (pylint_stdout, pylint_stderr) = lint.py_run('/tmp/file_to_get_pylinted.py', True)
+        (pylint_stdout, pylint_stderr) = lint.py_run(
+            "/tmp/file_to_get_pylinted.py --errors-only --disable=print-statement ",
+            True, script="epylint")
+        # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
+
+        # (pylint_stdout, pylint_stderr) = lint.py_run("/tmp/file_to_get_pylinted.py", True)
         pylint_stdout_data = pylint_stdout.readlines()
         pylint_stderr_data = pylint_stderr.readlines()
 
@@ -79,15 +84,16 @@ class SourceEditorController(ExtendedController):
         invalid_sytax = False
         for elem in pylint_stdout_data:
             if "error" in elem:
-                invalid_sytax = True
+                if self.filter_out_not_compatible_modules(elem):
+                    invalid_sytax = True
 
         if invalid_sytax:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
             for elem in pylint_stdout_data:
-                print elem
                 if "error" in elem:
-                    message_string = "%s\n\n%s " % (message_string, str(elem))
+                    if self.filter_out_not_compatible_modules(elem):
+                        message_string = "%s\n\n%s " % (message_string, str(elem))
             message.set_markup(message_string)
             message.add_button("Yes", 42)
             message.add_button("No", 43)
@@ -99,7 +105,18 @@ class SourceEditorController(ExtendedController):
                 awesome_tool.statemachine.singleton.global_storage.save_script_file(self.model.state)
             self.view.set_text(self.model.state.script.script)
 
-    #===============================================================
+    def filter_out_not_compatible_modules(self, pylint_msg):
+        """
+        This method filters out every pylint message that addresses an error of a module that is explicitly ignored
+        and added to  self.not_pylint_compatible_modules
+        :param pylint_msg: the pylint message to be filtered
+        :return:
+        """
+        for elem in self.not_pylint_compatible_modules:
+            if elem in pylint_msg:
+                return False
+        return True
+
     def cancel_clicked(self, button):
         self.view.set_text(self.model.state.script.script)
 

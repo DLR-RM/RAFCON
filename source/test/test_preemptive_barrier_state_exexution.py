@@ -44,6 +44,7 @@ def test_concurrency_preemption_state_execution():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
 
     assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+    assert preemption_state_sm.root_state.final_outcome.outcome_id == 3
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
