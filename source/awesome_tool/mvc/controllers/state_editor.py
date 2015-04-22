@@ -8,6 +8,7 @@ from awesome_tool.mvc.controllers import StateOverviewController, SourceEditorCo
 from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEditorController
 from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
 from awesome_tool.mvc.models import ContainerStateModel
+from awesome_tool.statemachine.states.library_state import LibraryState
 from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -107,6 +108,14 @@ class StateEditorController(ExtendedController):
             self.get_controller('outputs_ctrl').on_delete_port_button_clicked)
         view['delete_scoped_variable_button'].connect('clicked',
             self.get_controller('scoped_ctrl').on_delete_scoped_variable_button_clicked)
+
+        if isinstance(self.model.state, LibraryState):
+            view['new_input_port_button'].set_sensitive(False)
+            view['delete_input_port_button'].set_sensitive(False)
+            view['new_output_port_button'].set_sensitive(False)
+            view['delete_output_port_button'].set_sensitive(False)
+            view['new_scoped_variable_button'].set_sensitive(False)
+            view['delete_scoped_variable_button'].set_sensitive(False)
 
         if self.model.state.description is not None:
             view['description_text_view'].get_buffer().set_text(self.model.state.description)
