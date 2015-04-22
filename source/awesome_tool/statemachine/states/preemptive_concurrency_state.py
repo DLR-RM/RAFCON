@@ -179,11 +179,11 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             # check the outcomes of the finished state for aborted or preempted
             # the output data has to be set before this check can be done
-            if self.states[finished_thread_id].final_outcome.outcome_id == -1:
+            if self.states[finished_thread_id].final_outcome.outcome_id == -2:
                 self.final_outcome = Outcome(-2, "preempted")
                 self.active = False
                 return
-            if self.states[finished_thread_id].final_outcome.outcome_id == -2:
+            if self.states[finished_thread_id].final_outcome.outcome_id == -1:
                 self.final_outcome = Outcome(-1, "aborted")
                 self.active = False
                 return

@@ -161,12 +161,13 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 # This is the case if execution was stopped
                 if state.final_outcome is None:
                     quit()
-                if state.final_outcome.outcome_id == -1:
-                    self.final_outcome = Outcome(-1, "preempted")
+                if state.final_outcome.outcome_id == -2:
+                    self.final_outcome = Outcome(-2, "preempted")
                     self.active = False
                     return
-                if state.final_outcome.outcome_id == -2:
-                    self.final_outcome = Outcome(-2, "aborted")
+                if state.final_outcome.outcome_id == -1:
+                    self.final_outcome = Outcome(-1, "aborted")
+                    self.output_data["error"] = state.output_data["error"]
                     self.active = False
                     return
 

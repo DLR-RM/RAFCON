@@ -45,7 +45,7 @@ class Outcome(Observable, yaml.YAMLObject):
         self._name = None
         self.name = name
 
-        logger.debug("Outcome with name %s initialized" % self.name)
+        logger.debug("Outcome with name %s and id %s initialized" % (self.name, self.outcome_id))
 
     def __str__(self):
         return "Outcome - outcome_id: %s, name: %s" % (self._outcome_id, self._name)
