@@ -1,0 +1,24 @@
+!HierarchyState
+data_flows: {}
+filename: script.py
+input_data_ports: {}
+name: Example_for_Preemption
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+output_data_ports: {}
+path: /home_local/dark_room/taskcontrol/source/test_scripts/simple_preemption_example/YDPJVU
+scoped_variables: {}
+state_id: YDPJVU
+transitions:
+    1: !Transition {from_outcome: 0, from_state: OQTLKU, to_outcome: null, to_state: KWEAZI,
+        transition_id: 1}
+    2: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: OQTLKU,
+        transition_id: 2}
+    6: !Transition {from_outcome: 1, from_state: OQTLKU, to_outcome: null, to_state: OVYHMF,
+        transition_id: 6}
+    8: !Transition {from_outcome: 0, from_state: OVYHMF, to_outcome: 0, to_state: null,
+        transition_id: 8}
+    9: !Transition {from_outcome: 0, from_state: KWEAZI, to_outcome: 0, to_state: null,
+        transition_id: 9}

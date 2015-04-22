@@ -10,7 +10,7 @@ from awesome_tool.mvc.views.logging import LoggingView
 from awesome_tool.mvc.views.main_window import MainWindowView
 from awesome_tool.mvc.models import GlobalVariableManagerModel
 import awesome_tool.statemachine.singleton
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+import awesome_tool.mvc.singleton
 
 
 def setup_logger(logging_view):
@@ -48,7 +48,7 @@ def run_turtle_demo():
     awesome_tool.statemachine.singleton.library_manager.initialize()
 
     # set base path of global storage
-    awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/basic_turtle_demo_sm"
+    awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/basic_turtle_demo_sm"
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/error_propagation_test")
@@ -72,7 +72,7 @@ def run_turtle_demo():
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
+    sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
