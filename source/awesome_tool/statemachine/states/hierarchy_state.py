@@ -83,6 +83,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             ########################################################
             # children execution loop
             ########################################################
+            last_error = None
             self.child_execution = True
             # depending on the execution mode pause execution
             logger.debug("Handling execution mode")
@@ -129,10 +130,15 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         self.execution_history.add_call_history_item(state, MethodName.EXECUTE, self)
                     state.input_data = self.get_inputs_for_state(state)
                     state.output_data = self.create_output_dictionary_for_state(state)
+                    if last_error is not None:
+                        state.input_data["error"] = last_error
+                    last_error = None
                     # execute the state
                     state.start(self.execution_history, backward_execution=self.backward_execution)
                     state.join()
                     state.active = False
+                    if state.final_outcome.outcome_id == -1:  # if the state aborted save the error
+                        last_error = state.output_data["error"]
                     if state.backward_execution:
                         # the item popped now from the history will be a CallItem and will contain the scoped data,
                         # that was valid before executing the state
@@ -206,6 +212,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             if self.concurrency_queue:
                 self.concurrency_queue.put(self.state_id)
             self.final_outcome = Outcome(-1, "aborted")
+            self.output_data["error"] = e
             self.active = False
             self.child_execution = False
             return

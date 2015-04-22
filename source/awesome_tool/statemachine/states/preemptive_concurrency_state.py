@@ -208,6 +208,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         except Exception, e:
             logger.error("Runtime error %s %s" % (e, str(traceback.format_exc())))
             self.final_outcome = Outcome(-1, "aborted")
+            self.output_data["error"] = e
             self.active = False
             self.child_execution = False
             return

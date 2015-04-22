@@ -106,6 +106,8 @@ class ExecutionState(State, yaml.YAMLObject):
         except Exception, e:
             logger.error("State %s had an internal error: %s %s" % (self.name, str(e), str(traceback.format_exc())))
             traceback.format_exc()
+            # write error to the output_data of the state
+            self.output_data["error"] = e
             self.final_outcome = Outcome(-1, "aborted")
             self.active = False
             return

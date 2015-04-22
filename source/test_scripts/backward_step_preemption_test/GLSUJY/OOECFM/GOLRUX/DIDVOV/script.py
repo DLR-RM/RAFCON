@@ -7,7 +7,7 @@ def execute(self, inputs, outputs, gvm):
     while True:
         print "State ", self.name, " waits for beeing preempted"
         time.sleep(1.0)
-        if self._preempted:
+        if self.preempted:
             return 0
  
     return 0
