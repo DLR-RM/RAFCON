@@ -1641,7 +1641,7 @@ class GraphicalEditorController(ExtendedController):
 
     @staticmethod
     def has_content(state_m):
-        if isinstance(state_m, ContainerStateModel) and state_m.state.state_type != StateType.LIBRARY:
+        if isinstance(state_m, ContainerStateModel):
             return True
         return False
 

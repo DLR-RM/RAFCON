@@ -359,8 +359,10 @@ class ContainerState(State):
                     raise AttributeError("outcome %s of state %s is already connected" %
                                          (str(from_outcome), str(from_state_id)))
 
-        # check if state is a concurrency state, in concurrency states only transitions to the parents are allowd
-        if self.state_type is StateType.BARRIER_CONCURRENCY or self.state_type is StateType.PREEMPTION_CONCURRENCY:
+
+        from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
+        # check if state is a concurrency state, in concurrency states only transitions to the parents are allowed
+        if isinstance(self, ConcurrencyState):
             if to_state_id is not None:  # None means that the target state is the containing state
                 raise AttributeError("In concurrency states the to_state must be the container state itself")
 
