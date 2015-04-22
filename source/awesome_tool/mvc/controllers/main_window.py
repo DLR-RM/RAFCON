@@ -24,6 +24,7 @@ from awesome_tool.statemachine.execution.statemachine_status import ExecutionMod
 from awesome_tool.mvc.controllers.execution_history import ExecutionHistoryTreeController
 import threading
 
+
 class MainWindowController(ExtendedController):
 
     def __init__(self, state_machine_manager_model, view, gvm_model, editor_type='PortConnectionGrouped'):

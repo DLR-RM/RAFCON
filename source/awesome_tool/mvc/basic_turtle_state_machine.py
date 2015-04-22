@@ -163,11 +163,11 @@ def run_turtle_demo():
     awesome_tool.statemachine.singleton.global_storage.base_path = "../../tutorials/99_bottles_of_beer" # test_scripts/tutorials/basic_turtle_demo_sm"
 
     # load the state machine
-    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/basic_turtle_demo_sm")
-
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/99_bottles_of_beer")
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/basic_turtle_demo_sm")
+
+    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+        global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/99_bottles_of_beer")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
