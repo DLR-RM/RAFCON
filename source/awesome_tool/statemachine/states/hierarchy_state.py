@@ -239,9 +239,3 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                               path=dict_representation['path'],
                               filename=dict_representation['filename'],
                               check_path=False)
-
-    @staticmethod
-    def copy_state(source_state):
-        state_copy = HierarchyState()
-        # TODO: copy fields from source_state into the state_copy
-        return state_copy
