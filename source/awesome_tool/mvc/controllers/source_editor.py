@@ -1,7 +1,8 @@
 import gtk
-from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from pylint import epylint as lint
+import traceback
 
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.singleton
@@ -69,10 +70,14 @@ class SourceEditorController(ExtendedController):
         text_file.write(current_text)
         text_file.close()
 
-        (pylint_stdout, pylint_stderr) = lint.py_run(
-            "/tmp/file_to_get_pylinted.py --errors-only --disable=print-statement ",
-            True, script="epylint")
-        # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
+        try:
+            (pylint_stdout, pylint_stderr) = lint.py_run(
+                "/tmp/file_to_get_pylinted.py --errors-only --disable=print-statement ",
+                True, script="epylint")
+            # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
+        except Exception, e:
+            logger.error("Error during pylintint the source file occured: %s %s" %
+                         (str(e), str(traceback.format_exc())))
 
         # (pylint_stdout, pylint_stderr) = lint.py_run("/tmp/file_to_get_pylinted.py", True)
         pylint_stdout_data = pylint_stdout.readlines()
