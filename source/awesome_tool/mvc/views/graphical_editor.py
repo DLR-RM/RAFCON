@@ -415,7 +415,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             self._draw_circle(outcome_x, outcome_y, outcome_radius, depth + 0.1, fill_color=color)
 
         # Draw "income" as a half circle of the left center
-        self._draw_circle(pos[0], pos[1] - height / 2, outcome_radius, depth + 0.1, fill_color=self.income_color,
+        income_pos = (pos[0], pos[1] - height / 2)
+        self._draw_circle(income_pos[0], income_pos[1], outcome_radius, depth + 0.1, fill_color=self.income_color,
                           from_angle=1.5 * pi, to_angle=0.5 * pi)
 
         # Draw input and output data ports
@@ -474,7 +475,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 output_num += 1
 
         glPopName()
-        return opengl_id, outcome_pos, outcome_radius, resize_length
+        return opengl_id, income_pos, outcome_pos, outcome_radius, resize_length
 
     def draw_inner_input_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
         return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, selected,

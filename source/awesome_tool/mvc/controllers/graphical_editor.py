@@ -527,10 +527,8 @@ class GraphicalEditorController(ExtendedController):
             for key in outcomes:
                 if dist(outcomes[key], coords) < outcomes_close_threshold:
                     return state_m, key
-            income_pos = (state_m.meta['gui']['editor']['pos_x'], state_m.meta['gui']['editor']['pos_y'] +
-                          state_m.meta['gui']['editor']['height'] / 2)
+            income_pos = state_m.temp['gui']['editor']['income_pos']
             if dist(income_pos, coords) < outcomes_close_threshold:
-                print "income selected"
                 return state_m, None
         return None, None
 
@@ -578,11 +576,12 @@ class GraphicalEditorController(ExtendedController):
         :param coords: Coordinates to check for the resizer
         """
         if isinstance(selection, StateModel):
-            state_editor_data = selection.meta['gui']['editor']
+            state_meta = selection.meta['gui']['editor']
+            state_temp = selection.temp['gui']['editor']
             # Calculate corner points of resizer
-            p1 = (state_editor_data['pos_x'] + state_editor_data['width'], state_editor_data['pos_y'])
-            p2 = (p1[0] - state_editor_data['resize_length'], p1[1])
-            p3 = (p1[0], p1[1] + state_editor_data['resize_length'])
+            p1 = (state_temp['pos'][0] + state_meta['size'][0], state_temp['pos'][1] - state_meta['size'][1])
+            p2 = (p1[0] - state_temp['resize_length'], p1[1])
+            p3 = (p1[0], p1[1] + state_temp['resize_length'])
 
             # The resizer is triangle. Check whether the given coordinates are within that triangle
             if point_in_triangle(coords, p1, p2, p3):
@@ -1184,13 +1183,12 @@ class GraphicalEditorController(ExtendedController):
         height = size[1]
 
         # Use default values if no size information is stored
-        if not state_m.meta['gui']['editor']['width']:
-            state_m.meta['gui']['editor']['width'] = width
-        if not state_m.meta['gui']['editor']['height']:
-            state_m.meta['gui']['editor']['height'] = height
+        if not isinstance(state_m.meta['gui']['editor']['size'], tuple):
+            state_m.meta['gui']['editor']['size'] = (width, height)
 
-        width = state_m.meta['gui']['editor']['width']
-        height = state_m.meta['gui']['editor']['height']
+        size = state_m.meta['gui']['editor']['size']
+        width = size[0]
+        height = size[1]
 
         # Root state is always in the origin
         if state_m.parent is None:
@@ -1221,16 +1219,17 @@ class GraphicalEditorController(ExtendedController):
 
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
-        (opengl_id, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
+        (opengl_id, income_pos, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
             state_m.state.name, pos, size,
             state_m.state.outcomes,
             state_m.input_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
             state_m.output_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
             selected, active, depth)
         state_m.meta['gui']['editor']['id'] = opengl_id
+        state_m.temp['gui']['editor']['income_pos'] = income_pos
         state_m.meta['gui']['editor']['outcome_pos'] = outcome_pos
         state_m.meta['gui']['editor']['outcome_radius'] = outcome_radius
-        state_m.meta['gui']['editor']['resize_length'] = resize_length
+        state_m.temp['gui']['editor']['resize_length'] = resize_length
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
@@ -1500,9 +1499,7 @@ class GraphicalEditorController(ExtendedController):
                 # self.selected_outcome[1] stores the id of the outcome
                 # if the outcome id is None, the transition starts at an income
                 if self.selected_outcome[1] is None:
-                    origin = (parent_state_m.meta['gui']['editor']['pos_x'],
-                              parent_state_m.meta['gui']['editor']['pos_y'] +
-                              parent_state_m.meta['gui']['editor']['height'] / 2)
+                    origin = parent_state_m.temp['gui']['editor']['income']
                 else:
                     outcome = parent_state_m.meta['gui']['editor']['outcome_pos'][self.selected_outcome[1]]
                     origin = outcome
