@@ -432,7 +432,7 @@ class GraphicalEditorController(ExtendedController):
             return
 
         rel_motion = substract_pos(mouse_current_coord, self.mouse_move_start_coords)
-        print self.selection_start_pos, rel_motion
+
         # Translate the mouse movement to OpenGL coordinates
         new_pos = add_pos(self.selection_start_pos, rel_motion)
 
@@ -774,8 +774,7 @@ class GraphicalEditorController(ExtendedController):
         state is kept within its parent, thus restricting the movement.
 
         :param awesome_tool.mvc.models.StateModel state_m: The model of the state to be moved
-        :param new_pos_x: The desired new x coordinate
-        :param new_pos_y: The desired new y coordinate
+        :param new_pos: The desired new position (x, y)
         """
         old_pos = state_m.temp['gui']['editor']['pos']
 
@@ -1085,7 +1084,7 @@ class GraphicalEditorController(ExtendedController):
         self._publish_changes(state_m, "Resize state", affects_children)
         self._redraw()
 
-    def _move_view(self, rel_x_motion, rel_y_motion, opengl_coords=False):
+    def _move_view(self, rel_motion, opengl_coords=False):
         """Move the view according to the relative coordinates
 
         The whole view/scene is moved, causing the state machine to move within the viewport.
@@ -1096,17 +1095,16 @@ class GraphicalEditorController(ExtendedController):
         """
         if not opengl_coords:
             conversion = self.view.editor.pixel_to_size_ratio()
-            rel_x_motion /= conversion
-            rel_y_motion /= -conversion
+            rel_motion = (rel_motion[0] / conversion, -rel_motion[1] / conversion)
             aspect = self.view.editor.allocation.width / float(self.view.editor.allocation.height)
             if aspect > 1:
-                rel_x_motion /= aspect
+                rel_motion = (rel_motion[0] / aspect, rel_motion[1])
             else:
-                rel_y_motion *= aspect
-        self.view.editor.left -= rel_x_motion
-        self.view.editor.right -= rel_x_motion
-        self.view.editor.bottom -= rel_y_motion
-        self.view.editor.top -= rel_y_motion
+                rel_motion = (rel_motion[0], rel_motion[1] * aspect)
+        self.view.editor.left -= rel_motion[0]
+        self.view.editor.right -= rel_motion[0]
+        self.view.editor.bottom -= rel_motion[1]
+        self.view.editor.top -= rel_motion[1]
         self._redraw()
 
     def _handle_zooming(self, pos, direction):
@@ -1136,15 +1134,14 @@ class GraphicalEditorController(ExtendedController):
             # Determine mouse offset to previous position
             aspect = self.view.editor.allocation.width / float(self.view.editor.allocation.height)
             new_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
-            diff_x = new_mouse_pos[0] - old_mouse_pos[0]
-            diff_y = new_mouse_pos[1] - old_mouse_pos[1]
+            diff = substract_pos(new_mouse_pos, old_mouse_pos)
             if aspect < 1:
-                diff_y *= aspect
+                diff = (diff[0], diff[1] * aspect)
             else:
-                diff_x /= aspect
+                diff = (diff[0] / aspect, diff[1])
 
             # Move view to keep the previous mouse position in the view
-            self._move_view(diff_x, diff_y, opengl_coords=True)
+            self._move_view(diff, opengl_coords=True)
 
     def draw_state_machine(self):
         """Draws remaining components of the state machine
@@ -1674,15 +1671,16 @@ class GraphicalEditorController(ExtendedController):
             try:  # Data port position might not be set if data connections are not shown
                 left = temp['inner_pos'][0]
                 right = temp['inner_pos'][0] + temp['size'][0]
-                bottom = temp['inner_pos'][1]
-                top = temp['inner_pos'][1] + temp['size'][1]
+                top = temp['inner_pos'][1]
+                bottom = temp['inner_pos'][1] - temp['size'][1]
 
                 if model in model.parent.output_data_ports:
                     left = temp['inner_pos'][0] - temp['size'][0]
                     right = temp['inner_pos'][0]
                 if model in model.parent.scoped_variables:
-                    bottom = temp['inner_pos'][1] - temp['size'][1] + temp['size_rect'][1]
-                    top = bottom + temp['size'][1]
+                    pass
+                    # bottom = temp['inner_pos'][1] - temp['size'][1] + temp['size_rect'][1]
+                    # top = bottom + temp['size'][1]
 
                 return left, right, bottom, top
             except TypeError:
