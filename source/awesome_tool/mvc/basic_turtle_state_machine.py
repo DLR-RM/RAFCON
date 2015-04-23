@@ -13,11 +13,8 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import awesome_tool.statemachine.singleton
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+import awesome_tool.mvc.singleton
 from awesome_tool.statemachine.states.library_state import LibraryState
-from awesome_tool.statemachine.singleton import state_machine_manager
-from awesome_tool.mvc.singleton import state_machine_manager_model
-from awesome_tool.statemachine.config import global_config
 
 
 def setup_logger(logging_view):
@@ -44,9 +41,10 @@ def create_models():
 
     return logger, global_var_manager_model
 
+
 def create_turtle_statemachine():
 
-    basic_turtle_demo_state = HierarchyState("BasicTurtleDemo", path="../../test_scripts/basic_turtle_demo",
+    basic_turtle_demo_state = HierarchyState("BasicTurtleDemo", path="../../test_scripts/tutorials/basic_turtle_demo",
                                              filename="root_state.py")
     basic_turtle_demo_state.add_outcome("Success", 0)
 
@@ -60,7 +58,7 @@ def create_turtle_statemachine():
     ########################################################
 
     preemptive_concurrency_state = PreemptiveConcurrencyState("Turtle Concurrency State",
-                                                        path="../../test_scripts/basic_turtle_demo",
+                                                        path="../../test_scripts/tutorials/basic_turtle_demo",
                                                         filename="root_state.py")
     preemptive_concurrency_state.add_outcome("Success", 0)
     basic_turtle_demo_state.add_state(preemptive_concurrency_state)
@@ -72,7 +70,7 @@ def create_turtle_statemachine():
     ########################################################
 
     subscribe_to_turtle_position_hierarchy_state = HierarchyState("Turtle Position Subscriber Hierarchy State",
-                                                     path="../../test_scripts/basic_turtle_demo",
+                                                     path="../../test_scripts/tutorials/basic_turtle_demo",
                                                      filename="root_state.py")
 
     preemptive_concurrency_state.add_state(subscribe_to_turtle_position_hierarchy_state)
@@ -86,7 +84,7 @@ def create_turtle_statemachine():
     # Move Turtle Hierarchy State
     ########################################################
     move_turtle_hierarchy_state = HierarchyState("Move Turtle Hierarchy State",
-                                                 path="../../test_scripts/basic_turtle_demo",
+                                                 path="../../test_scripts/tutorials/basic_turtle_demo",
                                                  filename="root_state.py")
     move_turtle_hierarchy_state.add_outcome("Success", 0)
     preemptive_concurrency_state.add_state(move_turtle_hierarchy_state)
@@ -96,7 +94,7 @@ def create_turtle_statemachine():
     move_turtle_hierarchy_state.add_state(spawn_turtle)
     move_turtle_hierarchy_state.set_start_state(spawn_turtle.state_id)
 
-    wait1 = ExecutionState("Wait1", path="../../test_scripts/basic_turtle_demo", filename="wait.py")
+    wait1 = ExecutionState("Wait1", path="../../test_scripts/tutorials/basic_turtle_demo", filename="wait.py")
     wait1.add_outcome("Success", 0)
     move_turtle_hierarchy_state.add_state(wait1)
     move_turtle_hierarchy_state.add_transition(spawn_turtle.state_id, 0, wait1.state_id, None)
@@ -105,7 +103,7 @@ def create_turtle_statemachine():
     move_turtle_hierarchy_state.add_state(teleport_turtle)
     move_turtle_hierarchy_state.add_transition(wait1.state_id, 0, teleport_turtle.state_id, None)
 
-    wait2 = ExecutionState("Wait2", path="../../test_scripts/basic_turtle_demo", filename="wait.py")
+    wait2 = ExecutionState("Wait2", path="../../test_scripts/tutorials/basic_turtle_demo", filename="wait.py")
     wait2.add_outcome("Success", 0)
     move_turtle_hierarchy_state.add_state(wait2)
     move_turtle_hierarchy_state.add_transition(teleport_turtle.state_id, 0, wait2.state_id, None)
@@ -114,7 +112,7 @@ def create_turtle_statemachine():
     move_turtle_hierarchy_state.add_state(clear_field)
     move_turtle_hierarchy_state.add_transition(wait2.state_id, 0, clear_field.state_id, None)
 
-    wait3 = ExecutionState("Wait3", path="../../test_scripts/basic_turtle_demo", filename="wait.py")
+    wait3 = ExecutionState("Wait3", path="../../test_scripts/tutorials/basic_turtle_demo", filename="wait.py")
     wait3.add_outcome("Success", 0)
     move_turtle_hierarchy_state.add_state(wait3)
     move_turtle_hierarchy_state.add_transition(clear_field.state_id, 0, wait3.state_id, None)
@@ -123,13 +121,13 @@ def create_turtle_statemachine():
     move_turtle_hierarchy_state.add_state(set_velocity1)
     move_turtle_hierarchy_state.add_transition(wait3.state_id, 0, set_velocity1.state_id, None)
 
-    wait4 = ExecutionState("Wait4", path="../../test_scripts/basic_turtle_demo", filename="wait_medium.py")
+    wait4 = ExecutionState("Wait4", path="../../test_scripts/tutorials/basic_turtle_demo", filename="wait_medium.py")
     wait4.add_outcome("Success", 0)
     move_turtle_hierarchy_state.add_state(wait4)
     move_turtle_hierarchy_state.add_transition(set_velocity1.state_id, 0, wait4.state_id, None)
 
     # read_turtle_position = ExecutionState("Read turtle position",
-    #                                       path="../../test_scripts/basic_turtle_demo",
+    #                                       path="../../test_scripts/tutorials/basic_turtle_demo",
     #                                       filename="read_turtle_position.py")
     # turtle_name_input = read_turtle_position.add_input_data_port("turtle_name", "str", "new_turtle")
     # move_turtle_hierarchy_state.add_state(read_turtle_position)
@@ -162,24 +160,34 @@ def run_turtle_demo():
     # basic_turtle_demo_state = create_turtle_statemachine()
 
     # set base path of global storage
-    awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/basic_turtle_demo_sm"
+    awesome_tool.statemachine.singleton.global_storage.base_path = "../../tutorials/99_bottles_of_beer" # test_scripts/tutorials/basic_turtle_demo_sm"
 
     # load the state machine
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/basic_turtle_demo_sm")
+
     [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-       global_storage.load_statemachine_from_yaml("../../test_scripts/basic_turtle_demo_sm")
+        global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/99_bottles_of_beer")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/99 bottles of beer")
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
+
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_preemption_test")
+
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_hierarchy_test")
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
-    state_machine_manager.add_state_machine(state_machine)
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
-    state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(state_machine_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
                                                   editor_type="LogicDataGrouped")
     #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 

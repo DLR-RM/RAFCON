@@ -9,7 +9,7 @@ from awesome_tool.mvc.views.main_window import MainWindowView
 from awesome_tool.mvc.views import LoggingView
 from awesome_tool.mvc.models import GlobalVariableManagerModel
 import awesome_tool.statemachine.singleton
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+import awesome_tool.mvc.singleton
 
 import gobject
 
@@ -82,7 +82,7 @@ def run_turtle_demo():
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = StateMachineManagerModel(awesome_tool.statemachine.singleton.state_machine_manager)
+    sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()

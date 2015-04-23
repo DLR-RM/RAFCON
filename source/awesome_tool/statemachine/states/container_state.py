@@ -911,8 +911,9 @@ class ContainerState(State):
                     output_data_port_key = o_key
                     break
             if output_data_port_key is None:
-                logger.warning("Output variable %s was written during state execution, "
-                               "that has no data port connected to it.", str(key))
+                if not key == "error":
+                    logger.warning("Output variable %s was written during state execution, "
+                                   "that has no data port connected to it.", str(key))
             for data_flow_key, data_flow in self.data_flows.iteritems():
                 if data_flow.from_key == output_data_port_key and data_flow.from_state == state.state_id:
                     if data_flow.to_state == self.state_id:  # is target of data flow own state id?
