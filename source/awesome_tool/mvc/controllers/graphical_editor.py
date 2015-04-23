@@ -936,22 +936,23 @@ class GraphicalEditorController(ExtendedController):
         """
         state_temp = state_m.temp['gui']['editor']
         state_meta = state_m.meta['gui']['editor']
+
+        new_width = new_corner_pos[0] - state_temp['pos'][0]
+        new_height = abs(new_corner_pos[1] - state_temp['pos'][1])
+
         # Keep size ratio?
-        if int(modifier_keys & SHIFT_MASK) > 0 and False:
+        if int(modifier_keys & SHIFT_MASK) > 0:
             state_size_ratio = state_meta['size'][0] / state_meta['size'][1]
-            if d_width / state_size_ratio < d_height:
-                mouse_resize_coords = (mouse_resize_coords[0],
-                                       self.mouse_move_start_coords[1] - d_width / state_size_ratio)
+            new_state_size_ratio = new_width / new_height
+
+            if new_state_size_ratio < state_size_ratio:
+                new_height = new_width / state_size_ratio
             else:
-                mouse_resize_coords = (self.mouse_move_start_coords[0] - d_height * state_size_ratio,
-                                       mouse_resize_coords[1])
+                new_width = new_height * state_size_ratio
+
         # User wants to resize content by holding the ctrl keys pressed
         resize_content = int(modifier_keys & CONTROL_MASK) > 0
 
-        new_size = substract_pos(new_corner_pos, state_temp['pos'])
-        new_size = (new_size[0], abs(new_size[1]))
-        new_width = new_corner_pos[0] - state_temp['pos'][0]
-        new_height = abs(new_corner_pos[1] - state_temp['pos'][1])
         print new_corner_pos[1], state_temp['pos'][1], new_height
         # width = mouse_resize_coords[0] - state_temp['pos'][0]
         # height_diff = state_temp['pos'][1] - mouse_resize_coords[1]
