@@ -526,17 +526,17 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         port_m.temp['gui']['editor'][prefix + 'connector_pos'] = arrow_pos
         port_m.temp['gui']['editor'][prefix + 'connector_radius'] = radius
         if arrow_position == Direction.right:
-            actual_width = (arrow_pos[0] - left)
+            actual_width = arrow_pos[0] - left
             actual_height = height
         elif arrow_position == Direction.left:
             actual_width = right - arrow_pos[0]
             actual_height = height
         elif arrow_position == Direction.top:
             actual_width = right - left
-            actual_height = arrow_pos[1] - pos[1]
+            actual_height = abs(arrow_pos[1] - pos[1])
         elif arrow_position == Direction.bottom:
             actual_width = right - left
-            actual_height = (pos[1] + height) - arrow_pos[1]
+            actual_height = abs(arrow_pos[1] - pos[1])
 
         port_m.temp['gui']['editor']['size'] = (actual_width, actual_height)
         port_m.temp['gui']['editor']['size_rect'] = (width, height)

@@ -28,9 +28,9 @@ from awesome_tool.mvc.models.data_port import DataPortModel
 
 def check_pos(pos):
     if not isinstance(pos, tuple):
-        ValueError("Position must be of type tuple")
+        raise ValueError("Position must be of type tuple")
     if len(pos) != 2:
-        ValueError("Position must have exactly two entries (x and y)")
+        raise ValueError("Position must have exactly two entries (x and y)")
 
 def add_pos(pos1, pos2):
     check_pos(pos1)
@@ -64,7 +64,6 @@ class GraphicalEditorController(ExtendedController):
         self.timer_id = None
 
         self.selection = None
-        self.selection_start_pos = (0, 0)
         self.mouse_move_start_coords = (0, 0)
         self.last_button_pressed = -1
         self.drag_origin_offset = None
@@ -313,10 +312,6 @@ class GraphicalEditorController(ExtendedController):
                         # self.model.selection.clear()
                         # self.selection = None
 
-            # If a state was clicked on, store the original position of the selected state for a drag and drop movement
-            if self.selection is not None and isinstance(self.selection, StateModel):
-                self.selection_start_pos = self.selection.temp['gui']['editor']['pos']
-
             # Check, whether an outcome was clicked on
             outcome_state, outcome_key = self._check_for_outcome_selection(new_selection, self.mouse_move_start_coords)
             if outcome_state is not None:
@@ -431,28 +426,31 @@ class GraphicalEditorController(ExtendedController):
             self.mouse_move_last_coords = mouse_current_coord
             return
 
-        rel_motion = substract_pos(mouse_current_coord, self.mouse_move_start_coords)
-
-        # Translate the mouse movement to OpenGL coordinates
-        new_pos = add_pos(self.selection_start_pos, rel_motion)
-
         # Move the selected state (if there is an appropriate one)
         if isinstance(self.selection, StateModel) and \
                         self.selection != self.root_state_m and \
                         self.last_button_pressed == 1 and \
                         self.selected_outcome is None and \
                         self.selected_resizer is None:
+            if self.drag_origin_offset is None:
+                self.drag_origin_offset = substract_pos(self.mouse_move_start_coords,
+                                                        self.selection.temp['gui']['editor']['pos'])
+            new_pos = substract_pos(mouse_current_coord, self.drag_origin_offset)
             self._move_state(self.selection, new_pos)
 
         # Move the selected waypoint (if there is one)
         if self.selected_waypoint is not None:
             # Move selected waypoint within its container state
-            self._move_waypoint(new_pos, event.state)
+            self._move_waypoint(mouse_current_coord, event.state)
 
         # Move data port
         if isinstance(self.selection, (DataPortModel, ScopedVariableModel)) and not self.selected_port_connector and \
                         self.last_button_pressed == 1:
-            self._move_data_port(self.selection, mouse_current_coord)
+            if self.drag_origin_offset is None:
+                self.drag_origin_offset = substract_pos(self.mouse_move_start_coords,
+                                                        self.selection.temp['gui']['editor']['inner_pos'])
+            new_pos = substract_pos(mouse_current_coord, self.drag_origin_offset)
+            self._move_data_port(self.selection, new_pos)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
         if self.selected_outcome is not None or self.selected_port_connector:
@@ -511,7 +509,6 @@ class GraphicalEditorController(ExtendedController):
                     if dist(waypoint, coords) < close_threshold:
                         # As tuples cannot be changed, we have to store the whole list plus the index
                         self.selected_waypoint = (selection, i)
-                        self.selection_start_pos = (waypoint[0], waypoint[1])
                         break
 
     @staticmethod
@@ -776,14 +773,20 @@ class GraphicalEditorController(ExtendedController):
         :param awesome_tool.mvc.models.StateModel state_m: The model of the state to be moved
         :param new_pos: The desired new position (x, y)
         """
-        old_pos = state_m.temp['gui']['editor']['pos']
+
+        if state_m.parent is None:
+            return
 
         cur_size = state_m.meta['gui']['editor']['size']
 
         # Keep the state within its container state
         new_pos = self._limit_position_to_state(state_m.parent, new_pos, cur_size)
 
-        state_m.meta['gui']['editor']['pos'] = new_pos
+        parent_pos = state_m.parent.temp['gui']['editor']['pos']
+        new_rel_pos = substract_pos(new_pos, parent_pos)
+
+        state_m.meta['gui']['editor']['rel_pos'] = new_rel_pos
+        # state_m.meta['gui']['editor']['pos'] = new_pos
 
         def move_child_states(state_m, move_x, move_y):
             # Move waypoints
@@ -798,9 +801,9 @@ class GraphicalEditorController(ExtendedController):
                         data_flow.meta['gui']['editor']['waypoints'][i] = new_pos
                 for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                               state_m.scoped_variables):
-                    old_pos = port_m.temp['gui']['editor']['inner_pos']
+                    old_pos = port_m.meta['gui']['editor']['inner_pos']
                     try:  # If data connections are not shown, not all position may be calculated
-                        port_m.temp['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
+                        port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
                     except TypeError:
                         pass
             # Move child states
@@ -821,7 +824,7 @@ class GraphicalEditorController(ExtendedController):
         self._publish_changes(state_m, "Move state", affects_children=True)
         self._redraw()
 
-    def _move_data_port(self, port_m, coords):
+    def _move_data_port(self, port_m, new_pos):
         """Move the port to the given position
 
         This method moves the given port to the given coordinates, with respect to the mouse offset to the origin od
@@ -830,23 +833,24 @@ class GraphicalEditorController(ExtendedController):
         :param port_m: The port model to be moved
         :param coords: The target position
         """
-        port_info = port_m.temp['gui']['editor']
-        if self.drag_origin_offset is None:
-            self.drag_origin_offset = (coords[0] - port_info['inner_pos'][0], coords[1] - port_info['inner_pos'][1])
 
-        new_pos = (coords[0] - self.drag_origin_offset[0], coords[1] - self.drag_origin_offset[1])
+        left, right, bottom, top = self.get_boundaries(port_m)
+        size = (right - left, top - bottom)
+
+        # Keep the state within its container state
         if port_m in port_m.parent.output_data_ports:
-            new_pos = (new_pos[0] - port_info['size'][0], new_pos[1])
-            new_pos = self._limit_position_to_state(port_m.parent, new_pos, port_info['size'])
-            new_pos = (new_pos[0] + port_info['size'][0], new_pos[1])
-        elif port_m in port_m.parent.input_data_ports:
-            new_pos = self._limit_position_to_state(port_m.parent, new_pos, port_info['size'])
-        else:  # Scope variable
-            arrow_height = port_info['size'][1] - port_info['size_rect'][1]
-            new_pos = (new_pos[0], new_pos[1] - arrow_height)
-            new_pos = self._limit_position_to_state(port_m.parent, new_pos, port_info['size'])
-            new_pos = (new_pos[0], new_pos[1] + arrow_height)
-        port_info['inner_pos'] = new_pos
+            # Origin of output data ports is top right corner
+            new_pos = (new_pos[0] - right + left, new_pos[1])
+            new_pos = self._limit_position_to_state(port_m.parent, new_pos, size)
+            new_pos = (new_pos[0] + right - left, new_pos[1])
+        else:
+            new_pos = self._limit_position_to_state(port_m.parent, new_pos, size)
+
+        parent_pos = port_m.parent.temp['gui']['editor']['pos']
+        new_rel_pos = substract_pos(new_pos, parent_pos)
+
+        port_m.meta['gui']['editor']['inner_rel_pos'] = new_rel_pos
+
         self._publish_changes(port_m.parent, "Move data port", affects_children=False)
         self._redraw()
 
@@ -1053,10 +1057,10 @@ class GraphicalEditorController(ExtendedController):
                     for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                                   state_m.scoped_variables):
                         new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                                                 port_m.temp['gui']['editor']['inner_pos'][0], width_factor)
+                                                 port_m.meta['gui']['editor']['inner_pos'][0], width_factor)
                         new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
-                                                 port_m.temp['gui']['editor']['inner_pos'][1], height_factor)
-                        port_m.temp['gui']['editor']['inner_pos'] = (new_pos_x, new_pos_y)
+                                                 port_m.meta['gui']['editor']['inner_pos'][1], height_factor)
+                        port_m.meta['gui']['editor']['inner_pos'] = (new_pos_x, new_pos_y)
 
                     # Resize all child states
                     for child_state_m in state_m.states.itervalues():
@@ -1168,16 +1172,11 @@ class GraphicalEditorController(ExtendedController):
         """
         assert isinstance(state_m, StateModel)
 
-        width = size[0]
-        height = size[1]
-
         # Use default values if no size information is stored
         if not isinstance(state_m.meta['gui']['editor']['size'], tuple):
-            state_m.meta['gui']['editor']['size'] = (width, height)
+            state_m.meta['gui']['editor']['size'] = size
 
         size = state_m.meta['gui']['editor']['size']
-        width = size[0]
-        height = size[1]
 
         # Root state is always in the origin
         if state_m.parent is None:
@@ -1186,7 +1185,7 @@ class GraphicalEditorController(ExtendedController):
             # Use default values if no size information is stored
             # Here the possible case of pos_x and posy_y == 0 must be handled
             if not isinstance(state_m.meta['gui']['editor']['rel_pos'], tuple):
-                state_m.meta['gui']['editor']['rel_pos'] = (rel_pos[0], rel_pos[1])  # copy
+                state_m.meta['gui']['editor']['rel_pos'] = rel_pos
 
             parent_pos = state_m.parent.temp['gui']['editor']['pos']
             rel_pos = state_m.meta['gui']['editor']['rel_pos']
@@ -1224,13 +1223,13 @@ class GraphicalEditorController(ExtendedController):
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
         if self.has_content(state_m):
-            state_ctr = 0
-
             num_child_state = 0
+            width = size[0]
+            height = size[1]
+
             for child_state in state_m.states.itervalues():
                 # Calculate default positions for the child states
                 # Make the inset from the top left corner
-                state_ctr += 1
 
                 child_width = width / 5.
                 child_height = height / 5.
@@ -1279,12 +1278,12 @@ class GraphicalEditorController(ExtendedController):
         num_input_ports = 1
         for port_m in parent_state_m.input_data_ports:
             port = port_m.data_port
-            if not isinstance(port_m.temp['gui']['editor']['inner_pos'], tuple):
+            if not isinstance(port_m.meta['gui']['editor']['inner_rel_pos'], tuple):
                 # Put input ports by default in the lower left corner
-                pos_x = parent_temp['pos'][0]
-                pos_y = parent_temp['pos'][1] - parent_meta['size'][1] + num_input_ports * port_height
-                port_m.temp['gui']['editor']['inner_pos'] = (pos_x, pos_y)
-            pos = port_m.temp['gui']['editor']['inner_pos']
+                rel_pos = (0, -parent_meta['size'][1] + num_input_ports * port_height)
+                port_m.meta['gui']['editor']['inner_rel_pos'] = rel_pos
+            pos = add_pos(parent_temp['pos'], port_m.meta['gui']['editor']['inner_rel_pos'])
+            port_m.temp['gui']['editor']['inner_pos'] = pos
 
             selected = port_m in self.model.selection.get_all()
             opengl_id = self.view.editor.draw_inner_input_data_port(port.name, port_m, pos, size, selected,
@@ -1296,12 +1295,12 @@ class GraphicalEditorController(ExtendedController):
         num_output_ports = 1
         for port_m in parent_state_m.output_data_ports:
             port = port_m.data_port
-            if not isinstance(port_m.temp['gui']['editor']['inner_pos'], tuple):
+            if not isinstance(port_m.meta['gui']['editor']['inner_rel_pos'], tuple):
                 # Put output ports by default in the lower right corner
-                pos_x = parent_temp['pos'][0] + parent_meta['size'][0]
-                pos_y = parent_temp['pos'][1] - parent_meta['size'][1] + num_output_ports * port_height
-                port_m.temp['gui']['editor']['inner_pos'] = (pos_x, pos_y)
-            pos = port_m.temp['gui']['editor']['inner_pos']
+                rel_pos = (parent_meta['size'][0], -parent_meta['size'][1] + num_output_ports * port_height)
+                port_m.meta['gui']['editor']['inner_rel_pos'] = rel_pos
+            pos = add_pos(parent_temp['pos'], port_m.meta['gui']['editor']['inner_rel_pos'])
+            port_m.temp['gui']['editor']['inner_pos'] = pos
 
             selected = port_m in self.model.selection.get_all()
             opengl_id = self.view.editor.draw_inner_output_data_port(port.name, port_m, pos, size, selected,
@@ -1310,23 +1309,23 @@ class GraphicalEditorController(ExtendedController):
             num_output_ports += 1
 
         # Scoped variables
-        if self.has_content(parent_state_m):
-            num_scoped_variables = 0
-            for port_m in parent_state_m.scoped_variables:
-                port = port_m.scoped_variable
-                if not isinstance(port_m.temp['gui']['editor']['inner_pos'], tuple):
-                    max_cols = parent_meta['size'][0] // max_port_width
-                    (row, col) = divmod(num_scoped_variables, max_cols)
-                    pos_x = parent_temp['pos'][0] + col * max_port_width
-                    pos_y = parent_temp['pos'][1] - port_height * (2 * row + 1)
-                    port_m.temp['gui']['editor']['inner_pos'] = (pos_x, pos_y)
-                pos = port_m.temp['gui']['editor']['inner_pos']
+        num_scoped_variables = 0
+        for port_m in parent_state_m.scoped_variables:
+            port = port_m.scoped_variable
+            if not isinstance(port_m.meta['gui']['editor']['inner_rel_pos'], tuple):
+                # Put scoped variables by default row-wise in at the top
+                max_cols = parent_meta['size'][0] // max_port_width
+                (row, col) = divmod(num_scoped_variables, max_cols)
+                rel_pos = (col * max_port_width, -port_height * (2 * row + 1))
+                port_m.meta['gui']['editor']['inner_rel_pos'] = rel_pos
+            pos = add_pos(parent_temp['pos'], port_m.meta['gui']['editor']['inner_rel_pos'])
+            port_m.temp['gui']['editor']['inner_pos'] = pos
 
-                selected = port_m in self.model.selection.get_all()
-                opengl_id = self.view.editor.draw_scoped_data_port(port.name, port_m, pos, size, selected,
-                                                                   parent_depth + 0.5)
-                port_m.temp['gui']['editor']['id'] = opengl_id
-                num_scoped_variables += 1
+            selected = port_m in self.model.selection.get_all()
+            opengl_id = self.view.editor.draw_scoped_data_port(port.name, port_m, pos, size, selected,
+                                                               parent_depth + 0.5)
+            port_m.temp['gui']['editor']['id'] = opengl_id
+            num_scoped_variables += 1
 
     def draw_transitions(self, parent_state_m, parent_depth):
         """Draws the transitions belonging to a state
