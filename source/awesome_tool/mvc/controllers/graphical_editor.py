@@ -457,8 +457,15 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
         if self.selected_resizer is not None:
+            if self.drag_origin_offset is None:
+                lower_right_corner = (self.selection.temp['gui']['editor']['pos'][0] +
+                                      self.selection.meta['gui']['editor']['size'][0],
+                                      self.selection.temp['gui']['editor']['pos'][1] -
+                                      self.selection.meta['gui']['editor']['size'][1])
+                self.drag_origin_offset = substract_pos(self.mouse_move_start_coords, lower_right_corner)
+            new_pos = substract_pos(mouse_current_coord, self.drag_origin_offset)
             modifier = event.state
-            self._resize_state(self.selection, mouse_current_coord, rel_motion, modifier)
+            self._resize_state(self.selection, new_pos, modifier)
 
         self.mouse_move_last_pos = (event.x, event.y)
         self.mouse_move_last_coords = mouse_current_coord
@@ -914,7 +921,7 @@ class GraphicalEditorController(ExtendedController):
         self._publish_changes(selected_model, "Move waypoint", affects_children=False)
         self._redraw()
 
-    def _resize_state(self, state_m, mouse_resize_coords, d_width, d_height, modifier_keys):
+    def _resize_state(self, state_m, new_corner_pos, modifier_keys):
         """Resize the state by the given delta width and height
 
         The resize function checks the child states and keeps the state around the children, thus limiting the minimum
@@ -930,7 +937,7 @@ class GraphicalEditorController(ExtendedController):
         state_temp = state_m.temp['gui']['editor']
         state_meta = state_m.meta['gui']['editor']
         # Keep size ratio?
-        if int(modifier_keys & SHIFT_MASK) > 0:
+        if int(modifier_keys & SHIFT_MASK) > 0 and False:
             state_size_ratio = state_meta['size'][0] / state_meta['size'][1]
             if d_width / state_size_ratio < d_height:
                 mouse_resize_coords = (mouse_resize_coords[0],
@@ -940,11 +947,17 @@ class GraphicalEditorController(ExtendedController):
                                        mouse_resize_coords[1])
         # User wants to resize content by holding the ctrl keys pressed
         resize_content = int(modifier_keys & CONTROL_MASK) > 0
-        width = mouse_resize_coords[0] - state_temp['pos'][0]
-        height_diff = state_temp['pos'][1] - mouse_resize_coords[1]
-        height = state_meta['size'][1] + height_diff
+
+        new_size = substract_pos(new_corner_pos, state_temp['pos'])
+        new_size = (new_size[0], abs(new_size[1]))
+        new_width = new_corner_pos[0] - state_temp['pos'][0]
+        new_height = abs(new_corner_pos[1] - state_temp['pos'][1])
+        print new_corner_pos[1], state_temp['pos'][1], new_height
+        # width = mouse_resize_coords[0] - state_temp['pos'][0]
+        # height_diff = state_temp['pos'][1] - mouse_resize_coords[1]
+        # height = state_meta['size'][1] + height_diff
         min_right_edge = state_temp['pos'][0]
-        max_bottom_edge = state_temp['pos'][1] + state_meta['size'][1]
+        max_bottom_edge = state_temp['pos'][1]
 
         # If the content is not supposed to be resized, with have to calculate the inner edges, which define the
         # minimum size of our state
@@ -979,34 +992,30 @@ class GraphicalEditorController(ExtendedController):
         if state_m.parent is not None:
             max_right_edge = state_m.parent.temp['gui']['editor']['pos'][0] + \
                              state_m.parent.meta['gui']['editor']['size'][0]
-            min_bottom_edge = state_m.parent.temp['gui']['editor']['pos'][1]
+            min_bottom_edge = state_m.parent.temp['gui']['editor']['pos'][1] - \
+                             state_m.parent.meta['gui']['editor']['size'][1]
 
         # Desired new edges
-        desired_right_edge = state_temp['pos'][0] + width
-        desired_bottom_edge = state_temp['pos'][1] - height_diff
+        desired_right_edge = state_temp['pos'][0] + new_width
+        desired_bottom_edge = state_temp['pos'][1] - new_height
 
         # Old values
         old_size = state_meta['size']
         old_pos = state_temp['pos']
 
         # Check for all restrictions
-        if width > 0:  # Minimum width
+        if new_width > 0:  # Minimum width
             if desired_right_edge > max_right_edge:  # Keep state in its parent
-                state_meta['size'][0] = max_right_edge - state_temp['pos'][0]
+                new_width = max_right_edge - state_temp['pos'][0]
             elif desired_right_edge < min_right_edge:  # Surround all children
-                state_meta['size'][0] = min_right_edge - state_temp['pos'][0]
-            else:
-                state_meta['size'][0] = width
-        if height > 0:  # Minimum height
+                new_width = min_right_edge - state_temp['pos'][0]
+        if new_height > 0:  # Minimum height
             if desired_bottom_edge > max_bottom_edge:  # Keep state in its parent
-                state_meta['size'][1] += state_temp['pos'][1] - max_bottom_edge
-                state_temp['pos'][1] = max_bottom_edge
+                new_height = state_temp['pos'][1] - max_bottom_edge
             elif desired_bottom_edge < min_bottom_edge:  # Surround all children
-                state_meta['size'][1] += state_temp['pos'][1] - min_bottom_edge
-                state_temp['pos'][1] = min_bottom_edge
-            else:
-                state_meta['size'][1] = height
-                state_temp['pos'][1] -= height_diff
+                new_height = state_temp['pos'][1] - min_bottom_edge
+
+        state_meta['size'] = (new_width, new_height)
 
         # Resize factor for width and height
         width_factor = state_meta['size'][0] / old_size[0]
