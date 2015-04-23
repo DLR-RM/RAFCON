@@ -32,16 +32,22 @@ def check_pos(pos):
     if len(pos) != 2:
         raise ValueError("Position must have exactly two entries (x and y)")
 
+
 def add_pos(pos1, pos2):
     check_pos(pos1)
     check_pos(pos2)
     return pos1[0] + pos2[0], pos1[1] + pos2[1]
 
 
-def substract_pos(pos1, pos2):
+def subtract_pos(pos1, pos2):
     check_pos(pos1)
     check_pos(pos2)
     return pos1[0] - pos2[0], pos1[1] - pos2[1]
+
+
+def scale_pos(pos, factor):
+    check_pos(pos)
+    return (pos[0] * factor, pos[1] * factor)
 
 
 class GraphicalEditorController(ExtendedController):
@@ -415,7 +421,7 @@ class GraphicalEditorController(ExtendedController):
 
         # Move while middle button is clicked moves the view
         if self.last_button_pressed == 2 or (self.space_bar and event.state & BUTTON1_MASK > 0):
-            delta_pos = substract_pos((event.x, event.y), self.mouse_move_last_pos)
+            delta_pos = subtract_pos((event.x, event.y), self.mouse_move_last_pos)
             self._move_view(delta_pos)
 
         mouse_current_coord = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
@@ -433,9 +439,9 @@ class GraphicalEditorController(ExtendedController):
                         self.selected_outcome is None and \
                         self.selected_resizer is None:
             if self.drag_origin_offset is None:
-                self.drag_origin_offset = substract_pos(self.mouse_move_start_coords,
-                                                        self.selection.temp['gui']['editor']['pos'])
-            new_pos = substract_pos(mouse_current_coord, self.drag_origin_offset)
+                self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
+                                                       self.selection.temp['gui']['editor']['pos'])
+            new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             self._move_state(self.selection, new_pos)
 
         # Move the selected waypoint (if there is one)
@@ -447,9 +453,9 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(self.selection, (DataPortModel, ScopedVariableModel)) and not self.selected_port_connector and \
                         self.last_button_pressed == 1:
             if self.drag_origin_offset is None:
-                self.drag_origin_offset = substract_pos(self.mouse_move_start_coords,
-                                                        self.selection.temp['gui']['editor']['inner_pos'])
-            new_pos = substract_pos(mouse_current_coord, self.drag_origin_offset)
+                self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
+                                                       self.selection.temp['gui']['editor']['inner_pos'])
+            new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             self._move_data_port(self.selection, new_pos)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
@@ -462,8 +468,8 @@ class GraphicalEditorController(ExtendedController):
                                       self.selection.meta['gui']['editor']['size'][0],
                                       self.selection.temp['gui']['editor']['pos'][1] -
                                       self.selection.meta['gui']['editor']['size'][1])
-                self.drag_origin_offset = substract_pos(self.mouse_move_start_coords, lower_right_corner)
-            new_pos = substract_pos(mouse_current_coord, self.drag_origin_offset)
+                self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords, lower_right_corner)
+            new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             modifier = event.state
             self._resize_state(self.selection, new_pos, modifier)
 
@@ -790,7 +796,7 @@ class GraphicalEditorController(ExtendedController):
         new_pos = self._limit_position_to_state(state_m.parent, new_pos, cur_size)
 
         parent_pos = state_m.parent.temp['gui']['editor']['pos']
-        new_rel_pos = substract_pos(new_pos, parent_pos)
+        new_rel_pos = subtract_pos(new_pos, parent_pos)
 
         state_m.meta['gui']['editor']['rel_pos'] = new_rel_pos
         # state_m.meta['gui']['editor']['pos'] = new_pos
@@ -854,7 +860,7 @@ class GraphicalEditorController(ExtendedController):
             new_pos = self._limit_position_to_state(port_m.parent, new_pos, size)
 
         parent_pos = port_m.parent.temp['gui']['editor']['pos']
-        new_rel_pos = substract_pos(new_pos, parent_pos)
+        new_rel_pos = subtract_pos(new_pos, parent_pos)
 
         port_m.meta['gui']['editor']['inner_rel_pos'] = new_rel_pos
 
@@ -953,10 +959,6 @@ class GraphicalEditorController(ExtendedController):
         # User wants to resize content by holding the ctrl keys pressed
         resize_content = int(modifier_keys & CONTROL_MASK) > 0
 
-        print new_corner_pos[1], state_temp['pos'][1], new_height
-        # width = mouse_resize_coords[0] - state_temp['pos'][0]
-        # height_diff = state_temp['pos'][1] - mouse_resize_coords[1]
-        # height = state_meta['size'][1] + height_diff
         min_right_edge = state_temp['pos'][0]
         max_bottom_edge = state_temp['pos'][1]
 
@@ -994,7 +996,7 @@ class GraphicalEditorController(ExtendedController):
             max_right_edge = state_m.parent.temp['gui']['editor']['pos'][0] + \
                              state_m.parent.meta['gui']['editor']['size'][0]
             min_bottom_edge = state_m.parent.temp['gui']['editor']['pos'][1] - \
-                             state_m.parent.meta['gui']['editor']['size'][1]
+                              state_m.parent.meta['gui']['editor']['size'][1]
 
         # Desired new edges
         desired_right_edge = state_temp['pos'][0] + new_width
@@ -1018,81 +1020,79 @@ class GraphicalEditorController(ExtendedController):
 
         state_meta['size'] = (new_width, new_height)
 
-        # Resize factor for width and height
-        width_factor = state_meta['size'][0] / old_size[0]
-        height_factor = state_meta['size'][1] / old_size[1]
-
         # Resize content if the state was resized and the modifier key is pressed
-        if (width_factor != 1 or height_factor != 1) and resize_content and False:
+        if resize_content and (state_meta['size'][0] != old_size[0] or state_meta['size'][1] != old_size[1]):
 
             # Recursive call
-            def resize_children(state_m, width_factor, height_factor, old_pos_x, old_pos_y):
+            def resize_children(state_m, old_size, new_size):
+                width_factor = new_size[0] / old_size[0]
+                height_factor = new_size[1] / old_size[1]
 
-                def calc_new_pos(old_parent_pos, new_parent_pos, old_self_pos, factor):
-                    """Calculate new position of an object
+                # def calc_new_pos(old_parent_pos, new_parent_pos, old_self_pos, factor):
+                # """Calculate new position of an object
+                #
+                #     The new position is based on the old a new position of the parent, the stretch factor and the old
+                #     position of the object
+                #     :param old_parent_pos: Old position (x or y) of the parent
+                #     :param new_parent_pos: New position (x or y) of the parent
+                #     :param old_self_pos: Old position (x or y) of the object
+                #     :param factor: Resize factor of x or y
+                #     :return: New position of the object (x or y)
+                #     """
+                #     diff_pos = old_self_pos - old_parent_pos
+                #     diff_pos *= factor
+                #     return new_parent_pos + diff_pos
 
-                    The new position is based on the old a new position of the parent, the stretch factor and the old
-                    position of the object
-                    :param old_parent_pos: Old position (x or y) of the parent
-                    :param new_parent_pos: New position (x or y) of the parent
-                    :param old_self_pos: Old position (x or y) of the object
-                    :param factor: Resize factor of x or y
-                    :return: New position of the object (x or y)
-                    """
-                    diff_pos = old_self_pos - old_parent_pos
-                    diff_pos *= factor
-                    return new_parent_pos + diff_pos
+                def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
+                    old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
+                    old_rel_pos_y_rel = old_rel_pos[1] / old_parent_size[1]
+                    new_rel_pos_x = new_parent_size[0] * old_rel_pos_x_rel
+                    new_rel_pos_y = new_parent_size[1] * old_rel_pos_y_rel
+                    return new_rel_pos_x, new_rel_pos_y
+
 
                 # Only container states have content
                 if self.has_content(state_m):
                     # Resize all transitions
-                    for transition_m in state_m.transitions:
-                        # By repositioning all waypoints
-                        for i, waypoint in enumerate(transition_m.meta['gui']['editor']['waypoints']):
-                            new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                                                     waypoint[0], width_factor)
-                            new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
-                                                     waypoint[1], height_factor)
-                            transition_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
-                    # Resize all data flows
-                    for data_flow_m in state_m.data_flows:
-                        # By repositioning all waypoints
-                        for i, waypoint in enumerate(data_flow_m.meta['gui']['editor']['waypoints']):
-                            new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                                                     waypoint[0], width_factor)
-                            new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
-                                                     waypoint[1], height_factor)
-                            data_flow_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
-
+                    # for transition_m in state_m.transitions:
+                    #     # By repositioning all waypoints
+                    #     for i, waypoint in enumerate(transition_m.meta['gui']['editor']['waypoints']):
+                    #         new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                    #                                  waypoint[0], width_factor)
+                    #         new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                    #                                  waypoint[1], height_factor)
+                    #         transition_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
+                    # # Resize all data flows
+                    # for data_flow_m in state_m.data_flows:
+                    #     # By repositioning all waypoints
+                    #     for i, waypoint in enumerate(data_flow_m.meta['gui']['editor']['waypoints']):
+                    #         new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
+                    #                                  waypoint[0], width_factor)
+                    #         new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
+                    #                                  waypoint[1], height_factor)
+                    #         data_flow_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
+                    #
                     for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                                   state_m.scoped_variables):
-                        new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                                                 port_m.meta['gui']['editor']['inner_pos'][0], width_factor)
-                        new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
-                                                 port_m.meta['gui']['editor']['inner_pos'][1], height_factor)
-                        port_m.meta['gui']['editor']['inner_pos'] = (new_pos_x, new_pos_y)
+                        old_rel_pos = port_m.meta['gui']['editor']['inner_rel_pos']
+                        port_m.meta['gui']['editor']['inner_rel_pos'] = calc_new_rel_pos(old_rel_pos, old_size,
+                                                                                         new_size)
 
                     # Resize all child states
                     for child_state_m in state_m.states.itervalues():
-                        child_state_m.meta['gui']['editor']['width'] *= width_factor
-                        child_state_m.meta['gui']['editor']['height'] *= height_factor
+                        old_rel_pos = child_state_m.meta['gui']['editor']['rel_pos']
+                        child_state_m.meta['gui']['editor']['rel_pos'] = calc_new_rel_pos(old_rel_pos, old_size,
+                                                                                          new_size)
 
-                        child_old_pos_x = child_state_m.meta['gui']['editor']['pos_x']
-                        new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                                                 child_state_m.meta['gui']['editor']['pos_x'], width_factor)
-                        child_state_m.meta['gui']['editor']['pos_x'] = new_pos_x
-
-                        child_old_pos_y = child_state_m.meta['gui']['editor']['pos_y']
-                        new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
-                                                 child_state_m.meta['gui']['editor']['pos_y'], height_factor)
-                        child_state_m.meta['gui']['editor']['pos_y'] = new_pos_y
+                        old_size = child_state_m.meta['gui']['editor']['size']
+                        new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
+                        child_state_m.meta['gui']['editor']['size'] = new_size
 
                         if self.has_content(child_state_m):
-                            resize_children(child_state_m, width_factor, height_factor,
-                                            child_old_pos_x, child_old_pos_y)
+                            resize_children(child_state_m, old_size, new_size)
 
             # Start recursive call of the content resize
-            resize_children(state_m, width_factor, height_factor, old_pos[0], old_pos[1])
+            resize_children(state_m, old_size, state_meta['size'])
 
         affects_children = self.has_content(self.selection) and resize_content
         self._publish_changes(state_m, "Resize state", affects_children)
@@ -1148,7 +1148,7 @@ class GraphicalEditorController(ExtendedController):
             # Determine mouse offset to previous position
             aspect = self.view.editor.allocation.width / float(self.view.editor.allocation.height)
             new_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
-            diff = substract_pos(new_mouse_pos, old_mouse_pos)
+            diff = subtract_pos(new_mouse_pos, old_mouse_pos)
             if aspect < 1:
                 diff = (diff[0], diff[1] * aspect)
             else:
@@ -1228,7 +1228,6 @@ class GraphicalEditorController(ExtendedController):
         state_m.temp['gui']['editor']['outcome_pos'] = outcome_pos
         state_m.temp['gui']['editor']['outcome_radius'] = outcome_radius
         state_m.temp['gui']['editor']['resize_length'] = resize_length
-        # print "draw state", state_m.state.name
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
@@ -1346,7 +1345,6 @@ class GraphicalEditorController(ExtendedController):
         :param parent_state_m: The model of the container state
         :param parent_depth: The depth of the container state
         """
-        # print "draw transition for", parent_state_m.state.name
         for transition_m in parent_state_m.transitions:
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
@@ -1402,7 +1400,6 @@ class GraphicalEditorController(ExtendedController):
         :param parent_state_m: The model of the container state
         :param parent_depth: The depth pf the container state
         """
-        # print "draw data flows for", parent_state_m.state.name
         for data_flow_m in parent_state_m.data_flows:
             # Get id and references to the from and to state
             from_state_id = data_flow_m.data_flow.from_state
