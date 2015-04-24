@@ -1726,24 +1726,30 @@ class GraphicalEditorController(ExtendedController):
                 return
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
-            target_state_model = current_selection.get_states()[0]
-            target_state = target_state_model.state
+            target_state_m = current_selection.get_states()[0]
+            target_state = target_state_m.state
 
             # copy core state
             state_copy = StateHelper.get_state_copy(global_clipboard.state_core_object_copies[0])
-            state_copy.change_state_id()
+            state_orig_m = global_clipboard.state_model_copies[0]
             target_state.add_state(state_copy)
 
             # copy meta data
-            state_copy_model = target_state_model.states[state_copy.state_id]
-            state_copy_model.copy_meta_data_from_state_model(global_clipboard.state_model_copies[0])
-            new_x_pos = target_state_model.temp["gui"]["editor"]["pos"][0] + \
-                        target_state_model.meta["gui"]["editor"]["size"][0] * 3 / 100
-            new_y_pos = target_state_model.temp["gui"]["editor"]["pos"][1] + \
-                        target_state_model.meta["gui"]["editor"]["size"][1] * 97 / 100 - \
-                        state_copy_model.meta["gui"]["editor"]["size"][1]
-
-            self._move_state(state_copy_model, new_x_pos, new_y_pos)
+            state_copy_m = target_state_m.states[state_copy.state_id]
+            old_size = state_orig_m.meta['gui']['editor']['size']
+            target_size = target_state_m.meta['gui']['editor']['size']
+            if old_size[0] < target_size[0] and old_size[1] < target_size[1]:
+                new_size = old_size
+            else:
+                new_size = (target_size[0] / 3., target_size[1] / 3.)
+                old_size_ratio = old_size[0] / old_size[1]
+                if old_size_ratio < new_size[0] / new_size[1]:
+                    new_size = (new_size[1] * old_size_ratio, new_size[1])
+                else:
+                    new_size = (new_size[0], new_size[0] / old_size_ratio)
+            state_copy_m.meta['gui']['editor']['size'] = new_size
+            state_copy_m.parent = target_state_m
+            state_copy.parent = target_state
             self._redraw()
 
             if global_clipboard.clipboard_type is ClipboardType.COPY:
