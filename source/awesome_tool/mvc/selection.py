@@ -67,9 +67,6 @@ class Selection(Observable):
     def is_selected(self, item):
         return item in self.__selected
 
-    def get_number_of_selected_items(self):
-        return len(self.__selected)
-
     def get_all(self):
         return [s for s in self.__selected]
 

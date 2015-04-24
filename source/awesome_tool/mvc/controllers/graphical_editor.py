@@ -1,6 +1,6 @@
-from awesome_tool.utils import log
-from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 
+from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import sys
 import time
@@ -1704,42 +1704,32 @@ class GraphicalEditorController(ExtendedController):
         :return:
         """
         if self.view.editor.has_focus():
-            logger.debug("paste selection")
-            current_selection = self.model.selection
-            # check if the current selection is valid
-            if current_selection.get_number_of_selected_items() > 1 or len(current_selection.get_states()) < 1:
-                logger.error("Cannot paste clipboard into selection as the selection does not consist of a single "
-                             "container state!")
-                return
-            if len(current_selection.get_states()) == 1 and \
-                    not isinstance(current_selection.get_states()[0], ContainerStateModel):
-                logger.error("Cannot paste clipboard into selection as the selected state model is not "
-                             "a container state model")
-                return
+            logger.debug("Paste")
 
-            # check if the clipboard is valid
-            if global_clipboard.get_number_selected_items() > 1:
-                logger.error("Only one single item is allowed to be copied yet!")
+            current_selection = self.model.selection
+
+            if len(current_selection) != 1 or len(current_selection.get_states()) < 1:
+                logger.error("Please select a single state for pasting the clipboard")
                 return
-            if not len(global_clipboard.get_states()) == 1:
-                logger.error("Only states are allowed to be copied yet!")
+            if not isinstance(current_selection.get_states()[0], ContainerStateModel):
+                logger.error("Please select a container state (e. g. a Hierarchy state) for pasting the clipboard.")
                 return
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
             target_state_m = current_selection.get_states()[0]
-            target_state = target_state_m.state
+            state_copy_m, state_orig_m = global_clipboard.paste(target_state_m)
 
-            # copy core state
-            state_copy = StateHelper.get_state_copy(global_clipboard.state_core_object_copies[0])
-            state_orig_m = global_clipboard.state_model_copies[0]
-            target_state.add_state(state_copy)
+            if state_copy_m is None:  # An error occurred while pasting
+                return
 
-            # copy meta data
-            state_copy_m = target_state_m.states[state_copy.state_id]
+            # Adjust size of new state
             old_size = state_orig_m.meta['gui']['editor']['size']
             target_size = target_state_m.meta['gui']['editor']['size']
+
+            # Use the old size, if it is smaller than the target state
             if old_size[0] < target_size[0] and old_size[1] < target_size[1]:
                 new_size = old_size
+            # Resize to 1/3 of the target state, but keep the size ratio
             else:
                 new_size = (target_size[0] / 3., target_size[1] / 3.)
                 old_size_ratio = old_size[0] / old_size[1]
@@ -1748,17 +1738,5 @@ class GraphicalEditorController(ExtendedController):
                 else:
                     new_size = (new_size[0], new_size[0] / old_size_ratio)
             state_copy_m.meta['gui']['editor']['size'] = new_size
-            state_copy_m.parent = target_state_m
-            state_copy.parent = target_state
-            self._redraw()
 
-            if global_clipboard.clipboard_type is ClipboardType.COPY:
-                pass
-            elif global_clipboard.clipboard_type is ClipboardType.CUT:
-                # delete the original state
-                # Note: change this when implementing multi selection
-                if len(global_clipboard.selected_state_models) == 1:
-                    source_state_id = global_clipboard.selected_state_models[0].state.state_id
-                    parent_of_source_state = global_clipboard.selected_state_models[0].state.parent
-                    parent_of_source_state.remove_state(source_state_id)
-                    global_clipboard.selected_state_models.remove(global_clipboard.selected_state_models[0])
+            self._redraw()
