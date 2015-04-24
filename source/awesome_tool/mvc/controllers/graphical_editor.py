@@ -9,6 +9,7 @@ from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MA
 from gtk.gdk import keyval_name
 import gobject
 import itertools
+from copy import copy
 
 from math import sin, cos, atan2
 from awesome_tool.mvc.config import global_gui_config
@@ -417,10 +418,14 @@ class GraphicalEditorController(ExtendedController):
                 self.drag_origin_offset = []
                 for model in self.model.selection:
                     offset = None
+                    original_position = None
                     if isinstance(model, StateModel):
                         offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
+                        model.temp['gui']['editor']['original_rel_pos'] = copy(model.meta['gui']['editor']['rel_pos'])
                     elif isinstance(model, (DataPortModel, ScopedVariableModel)):
                         offset = subtract_pos(self.mouse_move_start_coords, model.temp['gui']['editor']['inner_pos'])
+                        model.temp['gui']['editor']['original_inner_rel_pos'] = \
+                            copy(model.meta['gui']['editor']['inner_rel_pos'])
                     self.drag_origin_offset.append(offset)
             for i, model in enumerate(self.model.selection):
                 if self.drag_origin_offset[i] is not None:
@@ -437,6 +442,8 @@ class GraphicalEditorController(ExtendedController):
             if self.drag_origin_offset is None:
                 offset = self._get_position_relative_to_state(self.single_selection, self.mouse_move_start_coords)
                 self.drag_origin_offset = offset
+                self.single_selection.temp['gui']['editor']['original_rel_pos'] = \
+                    copy(self.single_selection.meta['gui']['editor']['rel_pos'])
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             self._move_state(self.single_selection, new_pos)
 
@@ -446,6 +453,8 @@ class GraphicalEditorController(ExtendedController):
             if self.drag_origin_offset is None:
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
                                                        self.single_selection.temp['gui']['editor']['inner_pos'])
+                self.single_selection.temp['gui']['editor']['original_inner_rel_pos'] = \
+                    copy(self.single_selection.meta['gui']['editor']['inner_rel_pos'])
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             self._move_data_port(self.single_selection, new_pos)
 
@@ -1688,6 +1697,26 @@ class GraphicalEditorController(ExtendedController):
                     self.selected_port_connector = False
                 self.mouse_move_redraw = False
                 self.temporary_waypoints = []
+                self._redraw()
+
+            elif self.drag_origin_offset is not None:
+                # Multi-selection move
+                if isinstance(self.drag_origin_offset, list):
+                    for model in self.model.selection:
+                        model_meta = model.meta['gui']['editor']
+                        model_temp = model.temp['gui']['editor']
+                        if isinstance(model, StateModel):
+                            model_meta['rel_pos'] = model_temp['original_rel_pos']
+                        elif isinstance(model, (DataPortModel, ScopedVariableModel)):
+                            model_meta['inner_rel_pos'] = model_temp['original_inner_rel_pos']
+                elif isinstance(self.single_selection, StateModel):
+                    self.single_selection.meta['gui']['editor']['rel_pos'] = \
+                        self.single_selection.temp['gui']['editor']['original_rel_pos']
+                elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
+                    self.single_selection.meta['gui']['editor']['inner_rel_pos'] = \
+                        self.single_selection.temp['gui']['editor']['original_inner_rel_pos']
+
+                self.last_button_pressed = None  # prevents further movements
                 self._redraw()
 
     def _copy_selection(self, *args):
