@@ -368,11 +368,8 @@ class GraphicalEditorController(ExtendedController):
                         # Add new_selection to selection
                         else:
                             self.model.selection.add(new_selection)
-                        # Store the last selection locally
-                        if self.single_selection is None:
-                            self.single_selection = new_selection
                 # Only do something, if the user didn't click the second time on a specific model
-                if not self.model.selection.is_selected(new_selection):
+                elif not self.model.selection.is_selected(new_selection):
                     self.model.selection.clear()
                     self.model.selection.set(new_selection)
 
@@ -412,18 +409,27 @@ class GraphicalEditorController(ExtendedController):
             self.mouse_move_last_coords = mouse_current_coord
             return
 
-        # Move the selected states
-        if len(self.model.selection) == len(self.model.selection.get_states()) > 1 and \
+        # Move the selected states and data ports
+        if len(self.model.selection) > 1 and \
                 self.last_button_pressed == 1 and \
                 self.selected_outcome is None and self.selected_resizer is None:
             if self.drag_origin_offset is None:
                 self.drag_origin_offset = []
-                for state_m in self.model.selection.get_states():
-                    offset = self._get_position_relative_to_state(state_m, self.mouse_move_start_coords)
+                for model in self.model.selection:
+                    offset = None
+                    if isinstance(model, StateModel):
+                        offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
+                    elif isinstance(model, (DataPortModel, ScopedVariableModel)):
+                        offset = subtract_pos(self.mouse_move_start_coords, model.temp['gui']['editor']['inner_pos'])
                     self.drag_origin_offset.append(offset)
-            for i, state_m in enumerate(self.model.selection.get_states()):
-                new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
-                self._move_state(state_m, new_pos)
+            for i, model in enumerate(self.model.selection):
+                if self.drag_origin_offset[i] is not None:
+                    new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
+                    if isinstance(model, StateModel):
+                        self._move_state(model, new_pos)
+                    elif isinstance(model, (DataPortModel, ScopedVariableModel)):
+                        self._move_data_port(model, new_pos)
+
         # Move the current state
         elif isinstance(self.single_selection, StateModel) and \
                 self.last_button_pressed == 1 and \
@@ -434,21 +440,19 @@ class GraphicalEditorController(ExtendedController):
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             self._move_state(self.single_selection, new_pos)
 
-
-        # Move the selected waypoint (if there is one)
-        if self.selected_waypoint is not None:
-            # Move selected waypoint within its container state
-            self._move_waypoint(mouse_current_coord, event.state)
-
-        # Move data port
-        if isinstance(self.single_selection,
-                      (DataPortModel, ScopedVariableModel)) and not self.selected_port_connector and \
-                        self.last_button_pressed == 1:
+        # Move current data port
+        elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)) and \
+                not self.selected_port_connector and self.last_button_pressed == 1:
             if self.drag_origin_offset is None:
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
                                                        self.single_selection.temp['gui']['editor']['inner_pos'])
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             self._move_data_port(self.single_selection, new_pos)
+
+        # Move the selected waypoint (if there is one)
+        if self.selected_waypoint is not None:
+            # Move selected waypoint within its container state
+            self._move_waypoint(mouse_current_coord, event.state)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
         if self.selected_outcome is not None or self.selected_port_connector:
