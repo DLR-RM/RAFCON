@@ -45,9 +45,10 @@ def subtract_pos(pos1, pos2):
     return pos1[0] - pos2[0], pos1[1] - pos2[1]
 
 
-def scale_pos(pos, factor):
-    check_pos(pos)
-    return (pos[0] * factor, pos[1] * factor)
+def pos_equal(pos1, pos2):
+    check_pos(pos1)
+    check_pos(pos2)
+    return pos1[0] == pos2[0] and pos1[1] == pos2[1]
 
 
 class GraphicalEditorController(ExtendedController):
@@ -511,18 +512,18 @@ class GraphicalEditorController(ExtendedController):
 
         :param coords: Coordinates to search for waypoints
         """
-        if selection is not None and \
-                (isinstance(selection, TransitionModel) or isinstance(selection, DataFlowModel)):
-            close_threshold = min(selection.parent.meta['gui']['editor']['size']) / 50.
-
+        if isinstance(selection, (TransitionModel, DataFlowModel)):
+            connection_m = selection
+            parent_state_m = connection_m.parent
+            close_threshold = min(parent_state_m.meta['gui']['editor']['size']) / 50.
             # Check distance between all waypoints of the selected transition/data flows and the given coordinates
-            for i, waypoint in enumerate(selection.meta['gui']['editor']['waypoints']):
+            for i, waypoint in enumerate(connection_m.meta['gui']['editor']['waypoints']):
+                waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
                 # Only if coordinates are stored for the waypoints (always should be the case)
-                if waypoint[0] is not None and waypoint[1] is not None:
-                    if dist(waypoint, coords) < close_threshold:
-                        # As tuples cannot be changed, we have to store the whole list plus the index
-                        self.selected_waypoint = (selection, i)
-                        break
+                if dist(waypoint_pos, coords) < close_threshold:
+                    # As tuples cannot be changed, we have to store the whole list plus the index
+                    self.selected_waypoint = (connection_m, i)
+                    break
 
     @staticmethod
     def _check_for_outcome_selection(selection, coords):
@@ -661,12 +662,12 @@ class GraphicalEditorController(ExtendedController):
         close_threshold = min(connection_model.parent.meta['gui']['editor']['size']) / 70.
         # Check distance between all waypoints of the connection to the given coordinates
         for waypoint in connection_model.meta['gui']['editor']['waypoints']:
-            if waypoint[0] is not None and waypoint[1] is not None:
-                if dist(waypoint, coords) < close_threshold:
-                    connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
-                    logger.debug('Connection waypoint removed')
-                    self._redraw()
-                    return True
+            waypoint_pos = self._get_absolute_position(connection_model.parent, waypoint)
+            if dist(waypoint_pos, coords) < close_threshold:
+                connection_model.meta['gui']['editor']['waypoints'].remove(waypoint)
+                logger.debug('Connection waypoint removed')
+                self._redraw()
+                return True
         return False
 
     def _draw_multi_selection_frame(self):
@@ -676,31 +677,41 @@ class GraphicalEditorController(ExtendedController):
         self._redraw()
 
 
-    def _add_waypoint(self, connection_model, coords):
+    def _add_waypoint(self, connection_m, coords):
         """Adds a waypoint to the given connection
 
         The methods adds a waypoint at the given coordinates to the given connection (transition or data flow). If
         the connection also has waypoints, it puts the new one between the correct existing ones.
 
-        :param connection_model: The model of the connection to add a waypoint to
+        :param connection_m: The model of the connection to add a waypoint to
         :param coords: The coordinates of the new waypoint
         """
 
+        connection_temp = connection_m.temp['gui']['editor']
+        parent_state_m = connection_m.parent
         # The waypoints should exist as dictionary. If not (for any reason), we have to convert it to one
-        if isinstance(connection_model.meta['gui']['editor']['waypoints'], dict):
-            logger.warn("Connection waypoints was of type dict, expected list")
-            connection_model.meta['gui']['editor']['waypoints'] = connection_model.meta['waypoints'].items()
+        if isinstance(connection_m.meta['gui']['editor']['waypoints'], dict):
+            # logger.warn("Connection waypoints was of type dict, expected list")
+            # connection_m.meta['gui']['editor']['waypoints'] = connection_m.meta['waypoints'].items()
+            connection_m.meta['gui']['editor']['waypoints'] = []
+        waypoint_list = connection_m.meta['gui']['editor']['waypoints']
 
         # Create a list of all connection points, consisting of start, waypoints and end
-        points = [connection_model.temp['gui']['editor']['from_pos']]
-        points.extend(connection_model.meta['gui']['editor']['waypoints'])
-        points.append(connection_model.temp['gui']['editor']['to_pos'])
+        points = [self._get_position_relative_to_state(parent_state_m, connection_temp['from_pos'])]
+        points.extend(waypoint_list)
+        points.append(self._get_position_relative_to_state(parent_state_m, connection_temp['to_pos']))
+
+        rel_coords = self._get_position_relative_to_state(parent_state_m, coords)
+
+        # size = self.view.editor.get_size()
+        # max_tolerance = max(size) / 50.
 
         # Insert the waypoint at the correct position
         for i in range(len(points) - 1):
-            if point_on_line(coords, points[i], points[i + 1]):
-                connection_model.meta['gui']['editor']['waypoints'].insert(i, (coords[0], coords[1]))
-        logger.debug('Connection waypoint added at {0:.1f} - {1:.1f}'.format(coords[0], coords[1]))
+            if point_on_line(rel_coords, points[i], points[i + 1]):
+                waypoint_list.insert(i, rel_coords)
+        logger.debug('Connection waypoint added at rel pos {0:.1f} | {1:.1f} (abs pos {0:.1f} | {1:.1f})'.format(
+            rel_coords[0], rel_coords[1], coords[0], coords[1]))
         self._redraw()
 
     def _create_new_transition(self, to_state_m, to_outcome_id=None):
@@ -868,10 +879,12 @@ class GraphicalEditorController(ExtendedController):
         self._redraw()
 
     def _move_waypoint(self, new_pos, modifier_keys):
-        new_pos = self._limit_position_to_state(self.selection.parent, new_pos)
-        selected_model = self.selected_waypoint[0]
-        waypoints = selected_model.meta['gui']['editor']['waypoints']
+        connection_m = self.selected_waypoint[0]
+        connection_temp = connection_m.temp['gui']['editor']
+        waypoints = connection_m.meta['gui']['editor']['waypoints']
         waypoint_id = self.selected_waypoint[1]
+        new_pos = self._limit_position_to_state(self.selection.parent, new_pos)
+        new_rel_pos = self._get_position_relative_to_state(connection_m.parent, new_pos)
 
         # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
         if modifier_keys & SHIFT_MASK != 0:
@@ -914,17 +927,16 @@ class GraphicalEditorController(ExtendedController):
             if waypoint_id > 0:
                 prev_point = waypoints[waypoint_id - 1]
             else:
-                prev_point = selected_model.temp['gui']['editor']['from_pos']
+                prev_point = self._get_position_relative_to_state(connection_m.parent, connection_temp['from_pos'])
             if waypoint_id < len(waypoints) - 1:
                 next_point = waypoints[waypoint_id + 1]
             else:
-                next_point = selected_model.temp['gui']['editor']['to_pos']
+                next_point = self._get_position_relative_to_state(connection_m.parent, connection_temp['to_pos'])
 
-            point = new_pos
-            new_pos = calculate_snap_point(prev_point, point, next_point)
+            new_rel_pos = calculate_snap_point(prev_point, new_rel_pos, next_point)
 
-        waypoints[waypoint_id] = new_pos
-        self._publish_changes(selected_model, "Move waypoint", affects_children=False)
+        waypoints[waypoint_id] = new_rel_pos
+        self._publish_changes(connection_m, "Move waypoint", affects_children=False)
         self._redraw()
 
     def _resize_state(self, state_m, new_corner_pos, modifier_keys):
@@ -935,9 +947,8 @@ class GraphicalEditorController(ExtendedController):
          - Ctrl also causes the child states to be resized
          - Shift caused the resized states to keep their width to height ratio
 
-        :param mouse_resize_coords: The coordinates of the mouse
-        :param d_width: The desired change in width
-        :param d_height: The desired change in height
+        :param state_m: The model of the state to be resized
+        :param new_corner_pos: The absolute coordinates of the new desired lower right corner
         :param modifier_keys: The current pressed modifier keys (mask)
         """
         state_temp = state_m.temp['gui']['editor']
@@ -1004,7 +1015,6 @@ class GraphicalEditorController(ExtendedController):
 
         # Old values
         old_size = state_meta['size']
-        old_pos = state_temp['pos']
 
         # Check for all restrictions
         if new_width > 0:  # Minimum width
@@ -1028,21 +1038,6 @@ class GraphicalEditorController(ExtendedController):
                 width_factor = new_size[0] / old_size[0]
                 height_factor = new_size[1] / old_size[1]
 
-                # def calc_new_pos(old_parent_pos, new_parent_pos, old_self_pos, factor):
-                # """Calculate new position of an object
-                #
-                #     The new position is based on the old a new position of the parent, the stretch factor and the old
-                #     position of the object
-                #     :param old_parent_pos: Old position (x or y) of the parent
-                #     :param new_parent_pos: New position (x or y) of the parent
-                #     :param old_self_pos: Old position (x or y) of the object
-                #     :param factor: Resize factor of x or y
-                #     :return: New position of the object (x or y)
-                #     """
-                #     diff_pos = old_self_pos - old_parent_pos
-                #     diff_pos *= factor
-                #     return new_parent_pos + diff_pos
-
                 def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
                     old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
                     old_rel_pos_y_rel = old_rel_pos[1] / old_parent_size[1]
@@ -1050,28 +1045,21 @@ class GraphicalEditorController(ExtendedController):
                     new_rel_pos_y = new_parent_size[1] * old_rel_pos_y_rel
                     return new_rel_pos_x, new_rel_pos_y
 
-
                 # Only container states have content
                 if self.has_content(state_m):
                     # Resize all transitions
-                    # for transition_m in state_m.transitions:
-                    #     # By repositioning all waypoints
-                    #     for i, waypoint in enumerate(transition_m.meta['gui']['editor']['waypoints']):
-                    #         new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                    #                                  waypoint[0], width_factor)
-                    #         new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
-                    #                                  waypoint[1], height_factor)
-                    #         transition_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
-                    # # Resize all data flows
-                    # for data_flow_m in state_m.data_flows:
-                    #     # By repositioning all waypoints
-                    #     for i, waypoint in enumerate(data_flow_m.meta['gui']['editor']['waypoints']):
-                    #         new_pos_x = calc_new_pos(old_pos_x, state_m.meta['gui']['editor']['pos_x'],
-                    #                                  waypoint[0], width_factor)
-                    #         new_pos_y = calc_new_pos(old_pos_y, state_m.meta['gui']['editor']['pos_y'],
-                    #                                  waypoint[1], height_factor)
-                    #         data_flow_m.meta['gui']['editor']['waypoints'][i] = (new_pos_x, new_pos_y)
-                    #
+                    for transition_m in state_m.transitions:
+                        # By repositioning all waypoints
+                        for i, waypoint in enumerate(transition_m.meta['gui']['editor']['waypoints']):
+                            new_rel_pos = calc_new_rel_pos(waypoint, old_size, new_size)
+                            transition_m.meta['gui']['editor']['waypoints'][i] = new_rel_pos
+                    # Resize all data flows
+                    for data_flow_m in state_m.data_flows:
+                        # By repositioning all waypoints
+                        for i, waypoint in enumerate(data_flow_m.meta['gui']['editor']['waypoints']):
+                            new_rel_pos = calc_new_rel_pos(waypoint, old_size, new_size)
+                            data_flow_m.meta['gui']['editor']['waypoints'][i] = new_rel_pos
+
                     for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                                   state_m.scoped_variables):
                         old_rel_pos = port_m.meta['gui']['editor']['inner_rel_pos']
@@ -1377,8 +1365,10 @@ class GraphicalEditorController(ExtendedController):
                 to_pos = to_state.temp['gui']['editor']['income_pos']
 
             waypoints = []
+            state_pos = parent_state_m.temp['gui']['editor']['pos']
             for waypoint in transition_m.meta['gui']['editor']['waypoints']:
-                waypoints.append(waypoint)
+                waypoint_pos = add_pos(state_pos, waypoint)
+                waypoints.append(waypoint_pos)
 
             # Let the view draw the transition and store the returned OpenGL object id
             selected = False
@@ -1437,8 +1427,10 @@ class GraphicalEditorController(ExtendedController):
                 to_pos = to_port.temp['gui']['editor']['outer_connector_pos']
 
             waypoints = []
+            state_pos = parent_state_m.temp['gui']['editor']['pos']
             for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
-                waypoints.append((waypoint[0], waypoint[1]))
+                waypoint_pos = add_pos(state_pos, waypoint)
+                waypoints.append(waypoint_pos)
 
             selected = False
             if data_flow_m in self.model.selection.get_data_flows():
@@ -1469,9 +1461,9 @@ class GraphicalEditorController(ExtendedController):
             return
         restricted_click = self._limit_position_to_state(parent_state_m, self.mouse_move_last_coords)
         # If the user clicked with the parent state of the selected outcome state
-        if restricted_click[0] == self.mouse_move_last_coords[0] and \
-                        restricted_click[1] == self.mouse_move_last_coords[1]:
-            self.temporary_waypoints.append(restricted_click)
+        if pos_equal(restricted_click, self.mouse_move_last_coords):
+            rel_pos = self._get_position_relative_to_state(parent_state_m, restricted_click)
+            self.temporary_waypoints.append(rel_pos)
 
     def _handle_new_transition(self, parent_state_m, parent_depth):
         """Responsible for drawing new transition the user creates
@@ -1693,6 +1685,16 @@ class GraphicalEditorController(ExtendedController):
                 return None, None, None, None
 
         return None, None, None, None
+
+    def _get_position_relative_to_state(self, state_m, abs_pos):
+        state_pos = state_m.temp['gui']['editor']['pos']
+        rel_pos = subtract_pos(abs_pos, state_pos)
+        return rel_pos
+
+    def _get_absolute_position(self, state_m, rel_pos):
+        state_pos = state_m.temp['gui']['editor']['pos']
+        abs_pos = add_pos(rel_pos, state_pos)
+        return abs_pos
 
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
         self.model.state_machine.marked_dirty = True

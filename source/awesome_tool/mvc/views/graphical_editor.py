@@ -245,7 +245,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Screen to window coordinates
         window = (pos[0], viewport[3] - pos[1] + viewport[1])
 
-        left, _, bottom, _ = self._get_view_coordinates()
+        left, _, bottom, _ = self.get_view_coordinates()
 
         # Window to OpenGL coordinates
         opengl = (window[0] / conversion + left, window[1] / conversion + bottom)
@@ -259,7 +259,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         :return: pixel/size ratio
         """
-        left, right, _, _ = self._get_view_coordinates()
+        left, right, _, _ = self.get_view_coordinates()
         width = right - left
         display_width = self.allocation.width
         return display_width / float(width)
@@ -933,14 +933,14 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         return string
 
     def point_outside_view(self, p):
-        left, right, bottom, top = self._get_view_coordinates()
+        left, right, bottom, top = self.get_view_coordinates()
         if p[0] < left or p[0] > right:
             return True
         elif p[1] < bottom or p[1] > top:
             return True
         return False
 
-    def _get_view_coordinates(self):
+    def get_view_coordinates(self):
         left = self.left
         right = self.right
         top = self.top
@@ -957,8 +957,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return left, right, bottom, top
 
+    def get_size(self):
+        left, right, bottom, top = self.get_view_coordinates()
+        return right - left, top - bottom
+
     def _apply_orthogonal_view(self):
         """Orthogonal view with respect to current aspect ratio
         """
-        left, right, bottom, top = self._get_view_coordinates()
+        left, right, bottom, top = self.get_view_coordinates()
         glOrtho(left, right, bottom, top, -10, 0)
