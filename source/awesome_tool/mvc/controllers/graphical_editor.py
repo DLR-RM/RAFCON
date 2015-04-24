@@ -59,7 +59,6 @@ class GraphicalEditorController(ExtendedController):
     :param awesome_tool.mvc.views.graphical_editor.GraphicalEditorView view: The GTK view having an OpenGL rendering
         element
     """
-    __observables__ = ('state_machine', 'root_state')
 
     def __init__(self, model, view):
         """Constructor
@@ -136,15 +135,6 @@ class GraphicalEditorController(ExtendedController):
         :param info: Information about the change
         """
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
-            if 'method_name' in info['kwargs']['info']:
-                cause = info['kwargs']['info']['method_name']
-                root_cause_is_state = False
-            else:
-                cause = info['kwargs']['method_name']
-                root_cause_is_state = True
-
-            # logger.debug("Change in SM, cause: " + cause + " (root cause was state: " + str(root_cause_is_state) + ")")
-
             self._redraw()
 
     @ExtendedController.observe("root_state", assign=True)
@@ -208,7 +198,7 @@ class GraphicalEditorController(ExtendedController):
         # and whether the last redraw was more than redraw_after ago
 
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
-                        self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id:
+                   self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id:
             # Remove any existing timer id
             self.timer_id = None
             self.view.editor.emit("configure_event", None)
@@ -259,9 +249,6 @@ class GraphicalEditorController(ExtendedController):
 
         self.last_button_pressed = event.button
         self.selected_waypoint = None  # reset
-        # self.selected_outcome = None  # reset
-        # self.selected_port_type = None  # reset
-        # self.selected_port_connector = False  # reset
         self.selected_resizer = None  # reset
         self.multi_selection_started = False  # reset
 
@@ -565,9 +552,7 @@ class GraphicalEditorController(ExtendedController):
             if dist(connector_pos, coords) < connector_radius:
                 selected_port_type = "inner" if isinstance(model, DataPortModel) else "scope"
                 return model, selected_port_type, True
-                # self.model.selection.set(model)
-                # self.selected_port_type = "inner" if isinstance(model, DataPortModel) else "scope"
-                # self.selected_port_connector = True
+
         elif isinstance(model, StateModel):
             state_m = model
 
@@ -575,11 +560,7 @@ class GraphicalEditorController(ExtendedController):
                 connector_pos = port_m.temp['gui']['editor']['outer_connector_pos']
                 connector_radius = port_m.temp['gui']['editor']['outer_connector_radius']
                 if dist(connector_pos, coords) < connector_radius:
-                    # self.model.selection.set(port_m)
-                    # self.selected_port_type = "outer"
-                    # self.selected_port_connector = True
                     return port_m, "outer", True
-                    # break
         return None, None, False
 
     def _check_for_resizer_selection(self, selection, coords):
@@ -810,40 +791,6 @@ class GraphicalEditorController(ExtendedController):
         new_rel_pos = subtract_pos(new_pos, parent_pos)
 
         state_m.meta['gui']['editor']['rel_pos'] = new_rel_pos
-        # state_m.meta['gui']['editor']['pos'] = new_pos
-
-        def move_child_states(state_m, move_x, move_y):
-            # Move waypoints
-            if self.has_content(state_m):
-                for transition in state_m.transitions:
-                    for i, waypoint in enumerate(transition.meta['gui']['editor']['waypoints']):
-                        new_pos = (waypoint[0] + move_x, waypoint[1] + move_y)
-                        transition.meta['gui']['editor']['waypoints'][i] = new_pos
-                for data_flow in state_m.data_flows:
-                    for i, waypoint in enumerate(data_flow.meta['gui']['editor']['waypoints']):
-                        new_pos = (waypoint[0] + move_x, waypoint[1] + move_y)
-                        data_flow.meta['gui']['editor']['waypoints'][i] = new_pos
-                for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
-                                              state_m.scoped_variables):
-                    old_pos = port_m.meta['gui']['editor']['inner_pos']
-                    try:  # If data connections are not shown, not all position may be calculated
-                        port_m.meta['gui']['editor']['inner_pos'] = (old_pos[0] + move_x, old_pos[1] + move_y)
-                    except TypeError:
-                        pass
-            # Move child states
-            for child_state in state_m.states.itervalues():
-                child_state.meta['gui']['editor']['pos_x'] += move_x
-                child_state.meta['gui']['editor']['pos_y'] += move_y
-
-                if self.has_content(child_state):
-                    move_child_states(child_state, move_x, move_y)
-
-        # Move all child states in accordance with the state, to keep their relative position
-        if self.has_content(state_m):
-            pass
-            # diff_x = new_pos_x - old_pos_x
-            # diff_y = new_pos_y - old_pos_y
-            # move_child_states(state_m, diff_x, diff_y)
 
         self._publish_changes(state_m, "Move state", affects_children=True)
         self._redraw()
@@ -1185,9 +1132,8 @@ class GraphicalEditorController(ExtendedController):
             if not isinstance(state_m.meta['gui']['editor']['rel_pos'], tuple):
                 state_m.meta['gui']['editor']['rel_pos'] = rel_pos
 
-            parent_pos = state_m.parent.temp['gui']['editor']['pos']
             rel_pos = state_m.meta['gui']['editor']['rel_pos']
-            pos = add_pos(parent_pos, rel_pos)
+            pos = self._get_absolute_position(state_m.parent, rel_pos)
 
         state_m.temp['gui']['editor']['pos'] = pos
 
@@ -1279,7 +1225,7 @@ class GraphicalEditorController(ExtendedController):
                 # Put input ports by default in the lower left corner
                 rel_pos = (0, -parent_meta['size'][1] + num_input_ports * port_height)
                 port_m.meta['gui']['editor']['inner_rel_pos'] = rel_pos
-            pos = add_pos(parent_temp['pos'], port_m.meta['gui']['editor']['inner_rel_pos'])
+            pos = self._get_absolute_position(parent_state_m, port_m.meta['gui']['editor']['inner_rel_pos'])
             port_m.temp['gui']['editor']['inner_pos'] = pos
 
             selected = port_m in self.model.selection.get_all()
@@ -1296,7 +1242,7 @@ class GraphicalEditorController(ExtendedController):
                 # Put output ports by default in the lower right corner
                 rel_pos = (parent_meta['size'][0], -parent_meta['size'][1] + num_output_ports * port_height)
                 port_m.meta['gui']['editor']['inner_rel_pos'] = rel_pos
-            pos = add_pos(parent_temp['pos'], port_m.meta['gui']['editor']['inner_rel_pos'])
+            pos = self._get_absolute_position(parent_state_m, port_m.meta['gui']['editor']['inner_rel_pos'])
             port_m.temp['gui']['editor']['inner_pos'] = pos
 
             selected = port_m in self.model.selection.get_all()
@@ -1315,7 +1261,7 @@ class GraphicalEditorController(ExtendedController):
                 (row, col) = divmod(num_scoped_variables, max_cols)
                 rel_pos = (col * max_port_width, -port_height * (2 * row + 1))
                 port_m.meta['gui']['editor']['inner_rel_pos'] = rel_pos
-            pos = add_pos(parent_temp['pos'], port_m.meta['gui']['editor']['inner_rel_pos'])
+            pos = self._get_absolute_position(parent_state_m, port_m.meta['gui']['editor']['inner_rel_pos'])
             port_m.temp['gui']['editor']['inner_pos'] = pos
 
             selected = port_m in self.model.selection.get_all()
@@ -1365,9 +1311,8 @@ class GraphicalEditorController(ExtendedController):
                 to_pos = to_state.temp['gui']['editor']['income_pos']
 
             waypoints = []
-            state_pos = parent_state_m.temp['gui']['editor']['pos']
             for waypoint in transition_m.meta['gui']['editor']['waypoints']:
-                waypoint_pos = add_pos(state_pos, waypoint)
+                waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
                 waypoints.append(waypoint_pos)
 
             # Let the view draw the transition and store the returned OpenGL object id
@@ -1427,9 +1372,8 @@ class GraphicalEditorController(ExtendedController):
                 to_pos = to_port.temp['gui']['editor']['outer_connector_pos']
 
             waypoints = []
-            state_pos = parent_state_m.temp['gui']['editor']['pos']
             for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
-                waypoint_pos = add_pos(state_pos, waypoint)
+                waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
                 waypoints.append(waypoint_pos)
 
             selected = False
