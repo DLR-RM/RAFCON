@@ -267,7 +267,8 @@ class GraphicalEditorController(ExtendedController):
 
             # Check if something was selected
             new_selection = self._find_selection(event.x, event.y)
-            self.single_selection = new_selection
+            if not self.mouse_move_redraw:
+                self.single_selection = new_selection
 
             # Check, whether a resizer was clicked on
             self._check_for_resizer_selection(new_selection, self.mouse_move_start_coords)
@@ -317,7 +318,7 @@ class GraphicalEditorController(ExtendedController):
                     else:
                         self._create_new_data_flow(port_model)
                 # Allow the user to create waypoints while creating a new data flow
-                elif isinstance(new_selection, (DataPortModel, ScopedVariableModel)):
+                elif self.selected_port_connector and isinstance(new_selection, StateModel):
                     self._handle_new_waypoint()
 
             self._redraw()
@@ -896,8 +897,6 @@ class GraphicalEditorController(ExtendedController):
                 move_state(self.single_selection)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
                 move_port(self.single_selection)
-        else:
-            print "no focus"
 
     def _move_waypoint(self, new_pos, modifier_keys):
         connection_m = self.selected_waypoint[0]
@@ -1507,8 +1506,12 @@ class GraphicalEditorController(ExtendedController):
                 cur = self.mouse_move_last_coords
                 target = self._limit_position_to_state(responsible_parent_m, cur)
                 line_width = self.view.editor.transition_stroke_width(responsible_parent_m)
+                waypoints = []
+                for waypoint in self.temporary_waypoints:
+                    waypoint_pos = self._get_absolute_position(responsible_parent_m, waypoint)
+                    waypoints.append(waypoint_pos)
                 self.view.editor.draw_transition(origin, target, line_width,
-                                                 self.temporary_waypoints, True, parent_depth + 0.6)
+                                                 waypoints, True, parent_depth + 0.6)
 
     def _handle_new_data_flow(self, parent_state_m, parent_depth):
         """Responsible for drawing new data flows the user creates
@@ -1521,6 +1524,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if self.selected_port_connector:  # and self.last_button_pressed == 1:
             port_m = self.single_selection
+            assert isinstance(self.single_selection, (DataPortModel, ScopedVariableModel))
             if (port_m.parent == parent_state_m and self.selected_port_type in ("inner", "scope")) or \
                     (port_m.parent.parent == parent_state_m and self.selected_port_type == "outer"):
                 if self.selected_port_type == "inner":
@@ -1532,8 +1536,12 @@ class GraphicalEditorController(ExtendedController):
                 cur = self.mouse_move_last_coords
                 target = self._limit_position_to_state(parent_state_m, cur)
                 line_width = self.view.editor.data_flow_stroke_width(parent_state_m)
+                waypoints = []
+                for waypoint in self.temporary_waypoints:
+                    waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
+                    waypoints.append(waypoint_pos)
                 self.view.editor.draw_data_flow(connector, target, line_width,
-                                                self.temporary_waypoints, True, parent_depth + 0.6)
+                                                waypoints, True, parent_depth + 0.6)
 
     def _find_selection(self, pos_x, pos_y, width=6, height=6, all=False,
                         find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
