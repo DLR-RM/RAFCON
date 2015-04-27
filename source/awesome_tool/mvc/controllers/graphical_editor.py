@@ -1,7 +1,7 @@
 from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 from awesome_tool.utils import log
-
 logger = log.get_logger(__name__)
+
 import sys
 import time
 
@@ -10,6 +10,7 @@ from gtk.gdk import keyval_name
 import gobject
 import itertools
 from copy import copy
+from functools import partial
 
 from math import sin, cos, atan2
 from awesome_tool.mvc.config import global_gui_config
@@ -21,6 +22,7 @@ from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionM
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.views.graphical_editor import Direction
 
 
 def check_pos(pos):
@@ -119,6 +121,11 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("copy", self._copy_selection)
         shortcut_manager.add_callback_for_action("paste", self._paste_clipboard)
         shortcut_manager.add_callback_for_action("cut", self._cut_selection)
+
+        shortcut_manager.add_callback_for_action("left", partial(self._move_in_direction, Direction.left))
+        shortcut_manager.add_callback_for_action("right", partial(self._move_in_direction, Direction.right))
+        shortcut_manager.add_callback_for_action("up", partial(self._move_in_direction, Direction.top))
+        shortcut_manager.add_callback_for_action("down", partial(self._move_in_direction, Direction.bottom))
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
@@ -841,6 +848,56 @@ class GraphicalEditorController(ExtendedController):
 
         self._publish_changes(port_m.parent, "Move data port", affects_children=False)
         self._redraw()
+
+    def _move_in_direction(self, direction, key, modifier):
+        """Move the current selection into the given direction
+
+        The method is the callback handler for arrow key presses. It moves the current selection into the direction
+        of the pressed arrow key.
+
+        :param awesome_tool.mvc.views.graphical_editor.Direction direction: direction into which to move
+        :param key: Pressed key
+        :param modifier: Pressed modifier key
+        """
+        def move_pos(pos, parent_size):
+            scale_dist = 0.025
+            if modifier & SHIFT_MASK:
+                scale_dist = 0.125
+            if direction == Direction.left:
+                return pos[0] - parent_size[0] * scale_dist, pos[1]
+            elif direction == Direction.right:
+                return pos[0] + parent_size[0] * scale_dist, pos[1]
+            elif direction == Direction.top:
+                return pos[0], pos[1] + parent_size[1] * scale_dist
+            elif direction == Direction.bottom:
+                return pos[0], pos[1] - parent_size[1] * scale_dist
+            return pos
+
+        def move_state(state_m):
+            if state_m.parent is None:
+                return
+            cur_pos = state_m.temp['gui']['editor']['pos']
+            new_pos = move_pos(cur_pos, state_m.parent.meta['gui']['editor']['size'])
+            self._move_state(state_m, new_pos)
+
+        def move_port(port_m):
+            cur_pos = port_m.temp['gui']['editor']['inner_pos']
+            new_pos = move_pos(cur_pos, port_m.parent.meta['gui']['editor']['size'])
+            self._move_data_port(port_m, new_pos)
+
+        if self.view.editor.has_focus():
+            if len(self.model.selection) > 0:
+                for model in self.model.selection:
+                    if isinstance(model, StateModel):
+                        move_state(model)
+                    elif isinstance(model, (DataPortModel, ScopedVariableModel)):
+                        move_port(model)
+            elif isinstance(self.single_selection, StateModel):
+                move_state(self.single_selection)
+            elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
+                move_port(self.single_selection)
+        else:
+            print "no focus"
 
     def _move_waypoint(self, new_pos, modifier_keys):
         connection_m = self.selected_waypoint[0]
