@@ -262,19 +262,19 @@ class GraphicalEditorController(ExtendedController):
         self.mouse_move_start_coords = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
         self.mouse_move_last_coords = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
 
+        # Check if something was selected
+        new_selection = self._find_selection(event.x, event.y)
+
+        # Check, whether a resizer was clicked on
+        self._check_for_resizer_selection(new_selection, self.mouse_move_start_coords)
+
+        # Check, whether a waypoint was clicked on
+        self._check_for_waypoint_selection(new_selection, self.mouse_move_start_coords)
+
         # Left mouse button was clicked and no multi selection intended
         if event.button == 1 and event.state & SHIFT_MASK == 0:
-
-            # Check if something was selected
-            new_selection = self._find_selection(event.x, event.y)
             if not self.mouse_move_redraw:
                 self.single_selection = new_selection
-
-            # Check, whether a resizer was clicked on
-            self._check_for_resizer_selection(new_selection, self.mouse_move_start_coords)
-
-            # Check, whether a waypoint was clicked on
-            self._check_for_waypoint_selection(new_selection, self.mouse_move_start_coords)
 
             # Check, whether an outcome was clicked on
             outcome_state, outcome_key = self._check_for_outcome_selection(new_selection, self.mouse_move_start_coords)
@@ -476,15 +476,16 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
         if self.selected_resizer is not None:
+            state_m = self.selected_resizer
             if self.drag_origin_offset is None:
-                lower_right_corner = (self.single_selection.temp['gui']['editor']['pos'][0] +
-                                      self.single_selection.meta['gui']['editor']['size'][0],
-                                      self.single_selection.temp['gui']['editor']['pos'][1] -
-                                      self.single_selection.meta['gui']['editor']['size'][1])
+                lower_right_corner = (state_m.temp['gui']['editor']['pos'][0] +
+                                      state_m.meta['gui']['editor']['size'][0],
+                                      state_m.temp['gui']['editor']['pos'][1] -
+                                      state_m.meta['gui']['editor']['size'][1])
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords, lower_right_corner)
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             modifier = event.state
-            self._resize_state(self.single_selection, new_pos, modifier)
+            self._resize_state(state_m, new_pos, modifier)
 
         self.mouse_move_last_pos = (event.x, event.y)
         self.mouse_move_last_coords = mouse_current_coord
@@ -903,8 +904,9 @@ class GraphicalEditorController(ExtendedController):
         connection_temp = connection_m.temp['gui']['editor']
         waypoints = connection_m.meta['gui']['editor']['waypoints']
         waypoint_id = self.selected_waypoint[1]
-        new_pos = self._limit_position_to_state(self.single_selection.parent, new_pos)
-        new_rel_pos = self._get_position_relative_to_state(connection_m.parent, new_pos)
+        parent_state_m = connection_m.parent
+        new_pos = self._limit_position_to_state(parent_state_m, new_pos)
+        new_rel_pos = self._get_position_relative_to_state(parent_state_m, new_pos)
 
         # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
         if modifier_keys & SHIFT_MASK != 0:
@@ -995,7 +997,7 @@ class GraphicalEditorController(ExtendedController):
 
         # If the content is not supposed to be resized, with have to calculate the inner edges, which define the
         # minimum size of our state
-        if not resize_content and self.has_content(self.single_selection):
+        if not resize_content and self.has_content(state_m):
             # Check lower right corner of all child states
             for child_state_m in state_m.states.itervalues():
                 _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
