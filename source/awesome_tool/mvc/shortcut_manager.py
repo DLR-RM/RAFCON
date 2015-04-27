@@ -26,6 +26,11 @@ class ShortcutManager():
 
     def __init_shortcuts(self):
         self.__action_to_shortcuts = {
+            'save': '<Control>S',
+            'save_as': '<Control><Shift>S',
+            'open': '<Control>O',
+            'new': '<Control>N',
+            'quit': '<Control>Q',
             'abort': 'Escape',
             'copy': '<Control>C',
             'paste': '<Control>V',
@@ -42,8 +47,8 @@ class ShortcutManager():
             'pause': 'F7',
             'stop': 'F8',
             'step': 'F4',
-            'backward_step_mode': 'F9',
-            'reload': 'F5',
+            'backward_step': 'F9',
+            'reload': '<Shift>F5',
             'undo': '<Control>Z',
             'redo': ['<Control>Y', '<Control><Shift>Z']
         }
