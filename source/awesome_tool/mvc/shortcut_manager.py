@@ -50,7 +50,11 @@ class ShortcutManager():
             'backward_step': 'F9',
             'reload': '<Shift>F5',
             'undo': '<Control>Z',
-            'redo': ['<Control>Y', '<Control><Shift>Z']
+            'redo': ['<Control>Y', '<Control><Shift>Z'],
+            'left': ['<Control>Left','<Control><Shift>Left'],
+            'right': ['<Control>Right', '<Control><Shift>Right'],
+            'up': ['<Control>Up', '<Control><Shift>Up'],
+            'down': ['<Control>Down', '<Control><Shift>Down']
         }
 
     def __register_shortcuts(self):
@@ -70,7 +74,10 @@ class ShortcutManager():
                 self.accel_group.connect_group(keyval, modifier_mask, gtk.ACCEL_VISIBLE, callback)
 
     def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
-        self.trigger_action(action, key_value, modifier_mask)
+        ctr = self.trigger_action(action, key_value, modifier_mask)
+        if ctr > 0:
+            return True
+        return False
 
     def __get_action_for_shortcut(self, lookup_shortcut):
         for action in self.__action_to_shortcuts:
@@ -117,11 +124,15 @@ class ShortcutManager():
         :param action: The name of the action that was triggered
         :param key_value: The key value of the shortcut that caused the trigger
         :param modifier_mask: The modifier mask of the shortcut that caused the trigger
+        :return: The number of callback functions called
         """
+        ctr = 0
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
+                ctr += 1
                 try:
                     callback_function(key_value, modifier_mask)
                 except Exception as e:
                     logger.error('Exception while calling callback methods for action "{0}": {1} {2}'.format(
                         action, e.message, traceback.format_exc()))
+        return ctr
