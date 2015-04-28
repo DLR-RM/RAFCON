@@ -33,7 +33,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables, v_checker, path,
-                                  filename, state_type = StateType.BARRIER_CONCURRENCY, check_path=check_path)
+                                  filename, check_path=check_path)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the barrier concurrency state is executed
@@ -161,12 +161,13 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 # This is the case if execution was stopped
                 if state.final_outcome is None:
                     quit()
-                if state.final_outcome.outcome_id == -1:
-                    self.final_outcome = Outcome(-1, "preempted")
+                if state.final_outcome.outcome_id == -2:
+                    self.final_outcome = Outcome(-2, "preempted")
                     self.active = False
                     return
-                if state.final_outcome.outcome_id == -2:
-                    self.final_outcome = Outcome(-2, "aborted")
+                if state.final_outcome.outcome_id == -1:
+                    self.final_outcome = Outcome(-1, "aborted")
+                    self.output_data["error"] = state.output_data["error"]
                     self.active = False
                     return
 
@@ -182,6 +183,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         except Exception, e:
             logger.error("Runtime error %s %s" % (e, str(traceback.format_exc())))
             self.final_outcome = Outcome(-1, "aborted")
+            self.output_data["error"] = e
             self.active = False
             self.child_execution = False
             return

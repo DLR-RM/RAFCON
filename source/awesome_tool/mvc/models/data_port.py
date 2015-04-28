@@ -32,6 +32,8 @@ class DataPortModel(ModelMT):
         else:
             self.meta = Vividict()
 
+        self.temp = Vividict()
+
     @ModelMT.observe("data_port", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         if self.parent is not None:

@@ -38,7 +38,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
                                   transitions, data_flows, start_state_id, scoped_variables, v_checker, path, filename,
-                                  state_type=StateType.PREEMPTION_CONCURRENCY, check_path=check_path)
+                                  check_path=check_path)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the preemptive concurrency state is executed
@@ -150,8 +150,9 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             self.update_scoped_variables_with_output_dictionary(self.states[finished_thread_id].output_data,
                                                                 self.states[finished_thread_id])
 
-            for key, state in self.states.iteritems():
-                self.recursively_preempt_states(state)
+            # preempt all child states
+            for state_id, state in self.states.iteritems():
+                state.recursively_preempt_states()
 
             for key, state in self.states.iteritems():
                 state.join()
@@ -178,11 +179,11 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             # check the outcomes of the finished state for aborted or preempted
             # the output data has to be set before this check can be done
-            if self.states[finished_thread_id].final_outcome.outcome_id == -1:
+            if self.states[finished_thread_id].final_outcome.outcome_id == -2:
                 self.final_outcome = Outcome(-2, "preempted")
                 self.active = False
                 return
-            if self.states[finished_thread_id].final_outcome.outcome_id == -2:
+            if self.states[finished_thread_id].final_outcome.outcome_id == -1:
                 self.final_outcome = Outcome(-1, "aborted")
                 self.active = False
                 return
@@ -208,10 +209,10 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         except Exception, e:
             logger.error("Runtime error %s %s" % (e, str(traceback.format_exc())))
             self.final_outcome = Outcome(-1, "aborted")
+            self.output_data["error"] = e
             self.active = False
             self.child_execution = False
             return
-
 
     @classmethod
     def to_yaml(cls, dumper, data):

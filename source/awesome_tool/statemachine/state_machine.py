@@ -9,9 +9,8 @@
 """
 
 from gtkmvc import Observable
+import threading
 
-# from awesome_tool.statemachine.states.container_state import ContainerState
-# from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.id_generator import generate_state_machine_id
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -54,6 +53,21 @@ class StateMachine(Observable):
         self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
         self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
         self._root_state.start(self.execution_history)
+
+        wait_for_finishing_thread = threading.Thread(target=self.wait_for_finishing, args=(self._root_state,))
+        wait_for_finishing_thread.start()
+
+    @staticmethod
+    def wait_for_finishing(state):
+        """ This method waits until a specific states finished its execution and stops the execution engine afterwards.
+
+        :param state: the state to wait for its execution to finish
+        :return:
+        """
+        state.join()
+        # deferred import to avoid cyclic import at the beginning of the script
+        from awesome_tool.statemachine.singleton import state_machine_execution_engine
+        state_machine_execution_engine.stop()
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

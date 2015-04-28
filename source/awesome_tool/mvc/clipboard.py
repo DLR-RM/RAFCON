@@ -1,9 +1,12 @@
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
+
 from enum import Enum
 from gtkmvc import Observable
 from awesome_tool.mvc.selection import Selection
-from awesome_tool.statemachine.states.state_helper import StateHelper
 from awesome_tool.mvc.models.container_state import ContainerStateModel
 from awesome_tool.mvc.models.state import StateModel
+from awesome_tool.statemachine.states.state_helper import StateHelper
 
 ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
 
@@ -107,7 +110,7 @@ class Clipboard(Observable):
         """
         self.reset_clipboard()
         self.clipboard_type = ClipboardType.COPY
-        self.create_core_object_copies(selection)
+        self.__create_core_object_copies(selection)
 
     def cut(self, selection):
         """
@@ -118,7 +121,39 @@ class Clipboard(Observable):
         """
         self.reset_clipboard()
         self.clipboard_type = ClipboardType.CUT
-        self.create_core_object_copies(selection)
+        self.__create_core_object_copies(selection)
+
+    def paste(self, target_state_m):
+        assert isinstance(target_state_m, ContainerStateModel)
+
+        # check if the clipboard is valid
+        if self.get_number_selected_items() > 1:
+            logger.error("Only one single item is allowed to be copied yet!")
+            return None, None
+        if not len(self.get_states()) == 1:
+            logger.error("Only states are allowed to be copied yet!")
+            return None, None
+
+        target_state = target_state_m.state
+
+        state_copy = StateHelper.get_state_copy(self.state_core_object_copies[0])
+        state_orig_m = self.state_model_copies[0]
+
+        target_state.add_state(state_copy)
+        state_copy.parent = target_state
+
+        state_copy_m = target_state_m.states[state_copy.state_id]
+
+        if self.clipboard_type is ClipboardType.CUT:
+            # delete the original state
+            # Note: change this when implementing multi selection
+            if len(self.selected_state_models) == 1:
+                source_state_id = self.selected_state_models[0].state.state_id
+                parent_of_source_state = self.selected_state_models[0].state.parent
+                parent_of_source_state.remove_state(source_state_id)
+                self.selected_state_models.remove(self.selected_state_models[0])
+
+        return state_copy_m, state_orig_m
 
     def reset_clipboard(self):
         """
@@ -140,7 +175,7 @@ class Clipboard(Observable):
         self.data_flow_core_object_copies = []
         self.data_flow_model_copies = []
 
-    def create_core_object_copies(self, selection):
+    def __create_core_object_copies(self, selection):
         """
         Copies all elements of a selection.
         Note: Only states are supported right now.

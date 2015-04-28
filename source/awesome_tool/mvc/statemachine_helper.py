@@ -224,8 +224,10 @@ class StateMachineHelper():
         state = state_m.state
 
         root_state_m = StateMachineHelper.get_root_state_model(state_m)
-        for state_machine_m in state_machine_manager_model.state_machines.itervalues():
-            if state_machine_m.root_state is root_state_m:
+        state_machine_m = None
+        for sm_m in state_machine_manager_model.state_machines.itervalues():
+            if sm_m.root_state is root_state_m:
+                state_machine_m = sm_m
                 break
 
         if not is_root_state:
@@ -282,6 +284,9 @@ class StateMachineHelper():
                                         path=script.path, filename=script.filename,
                                         check_path=False)
         else:
+            if hasattr(state, "states"):
+                for child_state_id in state.states.keys():
+                    state.remove_state(child_state_id)
             new_state = new_state_class(name=name, state_id=state_id,
                                         input_data_ports=inputs, output_data_ports=outputs,
                                         outcomes=outcomes, path=script.path, filename=script.filename,
@@ -309,7 +314,7 @@ class StateMachineHelper():
         else:
             parent_m.state_machine.root_state = new_state
             new_state_m = parent_m.root_state
-            #parent_m.selection.set(state_m)
+            state_machine_manager_model.selected_state_machine_id = state_machine_m.state_machine.state_machine_id
 
         for prop_name, value in model_properties.iteritems():
             new_state_m.__setattr__(prop_name, value)

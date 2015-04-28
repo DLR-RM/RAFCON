@@ -30,6 +30,9 @@ class StateMachineTreeController(ExtendedController):
         self.path_store = {}
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
+
+        self.__buffered_root_state = None  # needed to handle exchange of root_state
+
         self.register()
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
@@ -44,7 +47,7 @@ class StateMachineTreeController(ExtendedController):
         # print "state_machine_tree register state_machine"
         # relieve old models
         if self.__my_selected_sm_id is not None:  # no old models available
-            self.relieve_model(self._selected_sm_model.root_state)
+            self.relieve_model(self.__buffered_root_state)
             self.relieve_model(self._selected_sm_model)
         # set own selected state machine id
         self.__my_selected_sm_id = self.model.selected_state_machine_id
@@ -52,11 +55,15 @@ class StateMachineTreeController(ExtendedController):
             # observe new models
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
             logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
+            self.__buffered_root_state = self._selected_sm_model.root_state
             self.observe_model(self._selected_sm_model.root_state)
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
         else:
             self.tree_store.clear()
+
+    def notification_assign_new_root_state(self):
+        pass
 
     @ExtendedController.observe("states", after=True)
     def states_update(self, model, property, info):
@@ -97,7 +104,7 @@ class StateMachineTreeController(ExtendedController):
             parent_iter = self.tree_store.insert_before(parent_iter, None,
                                                         (self._selected_sm_model.root_state.state.name,
                                                          self._selected_sm_model.root_state.state.state_id,
-                                                         self._selected_sm_model.root_state.state.state_type,
+                                                         type(self._selected_sm_model.root_state.state),
                                                          self._selected_sm_model.root_state))
             #self.tree_store.row_inserted(path=self.tree_store.get_path(parent_iter), iter=parent_iter)
             self.path_store[self._selected_sm_model.root_state.state.get_path()] = parent_iter
@@ -125,7 +132,7 @@ class StateMachineTreeController(ExtendedController):
             parent_iter = self.tree_store.insert_before(parent_iter, None,
                                                         (state_model.state.name,
                                                          state_model.state.state_id,
-                                                         state_model.state.state_type,
+                                                         type(state_model.state),
                                                          state_model))
             #self.tree_store.row_inserted(path=self.tree_store.get_path(parent_iter), iter=parent_iter)
             self.path_store[state_model.state.get_path()] = parent_iter
@@ -133,9 +140,9 @@ class StateMachineTreeController(ExtendedController):
             parent_iter = self.path_store[state_model.state.get_path()]
             path = self.tree_store.get_path(parent_iter)
             model = self.view.get_model()
-            if not state_model.state.state_type == model[path][2] or not state_model.state.name == model[path][0]:
+            if not type(state_model.state) == model[path][2] or not state_model.state.name == model[path][0]:
                 model[path][0] = state_model.state.name
-                model[path][2] = state_model.state.state_type
+                model[path][2] = type(state_model.state)
                 model[path][3] = state_model
 
         # check if child are all in
@@ -181,7 +188,7 @@ class StateMachineTreeController(ExtendedController):
                 actual_path = self.tree_store.get_path(actual_iter)
             # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_path, selected_path))
             if not selected_path == actual_path:
-                logger.info("reselect state machine tree-selection")
+                logger.debug("reselect state machine tree-selection")
                 # if single selection-mode is set no unselect is needed
                 #self.view.get_selection().unselect_path(actual_path)
                 self.view.expand_to_path(selected_path)

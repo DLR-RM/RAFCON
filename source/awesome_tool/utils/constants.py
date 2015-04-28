@@ -1,8 +1,8 @@
 FONT_NAMES = ["DIN Next LT Pro", "FontAwesome"]
 STYLE_NAMES = ["awesome_style.xml"]
-FONT_STYLE_PATHS = {"DIN Next LT Pro":    "./themes/black/fonts/DIN\\ Next\\ LT\\ Pro",
-                    "FontAwesome":        "./themes/black/fonts/FontAwesome.otf",
-                    "awesome_style.xml":  "./themes/black/gtksw-styles/awesome_style.xml"}
+FONT_STYLE_PATHS = {"DIN Next LT Pro":    "/themes/black/fonts/DIN\\ Next\\ LT\\ Pro",
+                    "FontAwesome":        "/themes/black/fonts/FontAwesome.otf",
+                    "awesome_style.xml":  "/themes/black/gtksw-styles/awesome_style.xml"}
 
 ICON_FONT = "FontAwesome"
 FONT_SIZE_SMALL = "10"

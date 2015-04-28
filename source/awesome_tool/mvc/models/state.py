@@ -5,14 +5,12 @@ import os
 import copy
 
 from awesome_tool.statemachine.states.state import State
-from table import TableDescriptor, ColumnDescriptor, AttributesRowDescriptor
 from awesome_tool.utils.vividict import Vividict
 from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.models.outcome import OutcomeModel
 import awesome_tool.statemachine.singleton
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.utils import log
-from awesome_tool.statemachine.enums import StateType
 
 from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.data_port import DataPort
@@ -36,14 +34,6 @@ class StateModel(ModelMT):
 
     __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start")
 
-    _table = TableDescriptor()
-    _table.add_column(ColumnDescriptor(0, 'key', str))
-    _table.add_column(ColumnDescriptor(1, 'value', str))
-    _table.add_column(ColumnDescriptor(2, 'name', str))
-    _table.add_column(ColumnDescriptor(3, 'editable', bool))
-    _table.add_row(AttributesRowDescriptor(0, 'state_id', 'ID', editable=True))
-    _table.add_row(AttributesRowDescriptor(1, 'name', 'Name'))
-
     def __init__(self, state, parent=None, meta=None):
         """Constructor
         """
@@ -60,13 +50,12 @@ class StateModel(ModelMT):
         else:
             self.meta = Vividict()
 
+        self.temp = Vividict()
+
         if isinstance(parent, StateModel):
             self.parent = parent
         else:
             self.parent = None
-
-        self.list_store = ListStore(*self._table.get_column_types())
-        self.update_attributes()
 
         self.register_observer(self)
         self.input_data_ports = []
@@ -75,35 +64,6 @@ class StateModel(ModelMT):
         self.reload_input_data_port_models()
         self.reload_output_data_port_models()
         self.reload_outcome_models()
-
-    def update_attributes(self):
-        """Update table model with state model
-
-        Clears all table rows from the model. Then add them back again by iterating over the state attributes and
-        adding all items to the table model.
-        """
-        self.list_store.clear()
-        for row in self._table.rows:
-            key = row.key
-            self.list_store.append([key, self.state.__getattribute__(key), row.name, row.editable])
-
-    def update_row(self, row, value):
-        """Update the list store row with the new model
-
-        This method is being called by the controller, when the value within a TreeView has been changed by the user.
-        The methods tries to update the state model with the new value and returns the exception object if the valid
-        is not valid.
-
-        :param row: The row/path within the ListStore
-        :param value: The value set by the user
-        :return: True when successful, the exception otherwise
-        """
-        attr = self.list_store[row][0]
-        try:
-            self.state.__setattr__(attr, value)
-        except ValueError as error:
-            return error
-        return True
 
     def is_element_of_self(self, instance):
 

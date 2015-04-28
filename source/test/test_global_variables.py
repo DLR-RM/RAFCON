@@ -29,11 +29,10 @@ def create_state_machine():
 
 def test_concurrency_barrier_state_execution():
 
+    variables_for_pytest.test_multithrading_lock.acquire()
     sm = create_state_machine()
-
     root_state = sm.root_state
     state_machine = StateMachine(root_state)
-    variables_for_pytest.test_multithrading_lock.acquire()
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
@@ -43,6 +42,7 @@ def test_concurrency_barrier_state_execution():
     variables_for_pytest.test_multithrading_lock.release()
 
     assert root_state.output_data["output_data_port1"] == 42
+    print root_state.output_data
 
 
 if __name__ == '__main__':

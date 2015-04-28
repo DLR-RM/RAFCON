@@ -143,7 +143,13 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 self._status.execution_condition_variable.wait()
             finally:
                 self._status.execution_condition_variable.release()
-                return_value = "paused"
+
+            if self._status.execution_mode is ExecutionMode.RUNNING:
+                return_value = "run"
+            elif self._forward_step:
+                return_value = "step"
+            else:
+                return_value = "backward_step"
 
         elif self._status.execution_mode is ExecutionMode.STEPPING:
             logger.debug("Stepping mode: wait for next step")

@@ -5,8 +5,7 @@ from pylint import epylint as lint
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.enums import StateType
-
+from awesome_tool.statemachine.states.library_state import LibraryState
 
 #TODO: comment
 
@@ -19,12 +18,15 @@ class SourceEditorController(ExtendedController):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
+        self.not_pylint_compatible_modules = ["links_and_nodes"]
 
     def register_view(self, view):
         view.get_buffer().connect('changed', self.code_changed)
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
         view.set_text(self.model.state.script.script)
+        if isinstance(self.model.state, LibraryState):
+            view.textview.set_sensitive(False)
 
     def register_adapters(self):
         pass
@@ -53,11 +55,10 @@ class SourceEditorController(ExtendedController):
         #print "The text in the text_buffer changed"
         self.view.apply_tag('default')
 
-    #===============================================================
     def apply_clicked(self, button):
 
-        if self.model.state.state_type is StateType.LIBRARY:
-            logger.warn("It is not allowed to change the library script file!")
+        if isinstance(self.model.state, LibraryState):
+            logger.warn("It is not allowed to modify libraries.")
             self.view.set_text(self.model.state.script.script)
             return
 
@@ -68,7 +69,12 @@ class SourceEditorController(ExtendedController):
         text_file.write(current_text)
         text_file.close()
 
-        (pylint_stdout, pylint_stderr) = lint.py_run('/tmp/file_to_get_pylinted.py', True)
+        (pylint_stdout, pylint_stderr) = lint.py_run(
+            "/tmp/file_to_get_pylinted.py --errors-only --disable=print-statement ",
+            True, script="epylint")
+        # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
+
+        # (pylint_stdout, pylint_stderr) = lint.py_run("/tmp/file_to_get_pylinted.py", True)
         pylint_stdout_data = pylint_stdout.readlines()
         pylint_stderr_data = pylint_stderr.readlines()
 
@@ -78,14 +84,16 @@ class SourceEditorController(ExtendedController):
         invalid_sytax = False
         for elem in pylint_stdout_data:
             if "error" in elem:
-                invalid_sytax = True
+                if self.filter_out_not_compatible_modules(elem):
+                    invalid_sytax = True
 
         if invalid_sytax:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-            message_string = "Are you sure you want the save this file \nThe following errors were found:"
+            message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
             for elem in pylint_stdout_data:
                 if "error" in elem:
-                    message_string = "%s \n %s " % (message_string, str(elem))
+                    if self.filter_out_not_compatible_modules(elem):
+                        message_string = "%s\n\n%s " % (message_string, str(elem))
             message.set_markup(message_string)
             message.add_button("Yes", 42)
             message.add_button("No", 43)
@@ -97,7 +105,18 @@ class SourceEditorController(ExtendedController):
                 awesome_tool.statemachine.singleton.global_storage.save_script_file(self.model.state)
             self.view.set_text(self.model.state.script.script)
 
-    #===============================================================
+    def filter_out_not_compatible_modules(self, pylint_msg):
+        """
+        This method filters out every pylint message that addresses an error of a module that is explicitly ignored
+        and added to  self.not_pylint_compatible_modules
+        :param pylint_msg: the pylint message to be filtered
+        :return:
+        """
+        for elem in self.not_pylint_compatible_modules:
+            if elem in pylint_msg:
+                return False
+        return True
+
     def cancel_clicked(self, button):
         self.view.set_text(self.model.state.script.script)
 

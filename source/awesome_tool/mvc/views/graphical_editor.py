@@ -172,8 +172,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # default outer coordinate values which will later be overwritten by the controller
         self.left = -10
         self.right = 110
-        self.top = 110
-        self.bottom = -10
+        self.top = 10
+        self.bottom = -110
 
         # Used to generate unique ids for drawn objects
         self.name_counter = 0
@@ -245,7 +245,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Screen to window coordinates
         window = (pos[0], viewport[3] - pos[1] + viewport[1])
 
-        left, _, bottom, _ = self._get_view_coordinates()
+        left, _, bottom, _ = self.get_view_coordinates()
 
         # Window to OpenGL coordinates
         opengl = (window[0] / conversion + left, window[1] / conversion + bottom)
@@ -259,7 +259,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         :return: pixel/size ratio
         """
-        left, right, _, _ = self._get_view_coordinates()
+        left, right, _, _ = self.get_view_coordinates()
         width = right - left
         display_width = self.allocation.width
         return display_width / float(width)
@@ -314,18 +314,15 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                         border_color=self.frame_border_color)
 
 
-    def draw_state(self, name, pos_x, pos_y, width, height, outcomes=0,
-                   input_ports_m=[], output_ports_m=[],
+    def draw_state(self, name, pos, size, outcomes=0, input_ports_m=[], output_ports_m=[],
                    selected=False, active=False, depth=0):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified (container) state.
 
         :param name: Name of the state
-        :param pos_x: x position of the state
-        :param pos_y: y position of the state
-        :param width: width of the state
-        :param height: height of the state
+        :param pos: position (x, y) of the state
+        :param size: size (width, height) of the state
         :param outcomes: outcomes of the state (list with outcome objects)
         :param input_ports_m: input ports of the state
         :param output_ports_m: output ports of the state
@@ -340,34 +337,35 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glPushName(opengl_id)
         self._set_closest_stroke_width(1.5)
 
+        width = size[0]
+        height = size[1]
+
         # First draw the face of the rectangular, then the outline
         fill_color = self.state_color
         border_color = self.border_color
 
-        border_width = min(width, height) / 10.
+        border_width = min(size) / 10.
         if active == 1:
             fill_color = self.state_active_color
         elif active == 0.5:
             fill_color = self.state_child_active_color
-            #border_color = self.border_active_color
 
         if selected:
             border_width *= 2
-            #fill_color = self.state_selected_color
             border_color = self.border_selected_color
 
-        self._draw_rect(pos_x, pos_x + width, pos_y, pos_y + height, depth, border_width,
+        self._draw_rect(pos[0], pos[0] + width, pos[1] - height, pos[1], depth, border_width,
                         fill_color, border_color)
 
         # Put the name of the state in the upper left corner of the state
-        margin = min(width, height) / 12.
-        font_size = min(width, height) / 8.
+        margin = min(size) / 12.
+        font_size = min(size) / 8.
         name = self._shorten_string(name, font_size, width - 2 * margin)
-        self._write_string(name, pos_x + margin, pos_y + height - margin, font_size, self.state_name_color, True,
+        self._write_string(name, pos[0] + margin, pos[1] - margin, font_size, self.state_name_color, True,
                            False, depth=depth + 0.01)
 
         resize_length = min(width, height) / 8.
-        p1 = (pos_x + width, pos_y)
+        p1 = (pos[0] + width, pos[1] - height)
         p2 = (p1[0] - resize_length, p1[1])
         p3 = (p1[0], p1[1] + resize_length)
         self._draw_triangle(p1, p2, p3, depth + 0.01, border_width, fill_color, border_color)
@@ -381,20 +379,19 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             num_outcomes -= 2
         i = 0
         outcome_pos = {}
-        outcome_radius = min(3, height / 20., height / (2. * num_outcomes + 3))
+        outcome_radius = min(min(height, width) / 23., min(height, width) / (2. * num_outcomes + 3))
         for key in outcomes:
             # Color of outcome is defined by its type, "aborted", "preempted" or else
             outcome_name = outcomes[key].name
             color = self.outcome_plain_color
 
             # Distribute outcomes (as circles) on the right edge of the state
-            outcome_x = pos_x + width
-            outcome_y = pos_y + height / (num_outcomes + 1) * (i + 1)
+            outcome_x = pos[0] + width
+            outcome_y = pos[1] - height / (num_outcomes + 1) * (i + 1)
 
             if outcome_name in ["aborted", "preempted"]:
-                size = min(width, height)
-                step = size / 10.
-                outcome_y = pos_y + height
+                step = min(size) / 10.
+                outcome_y = pos[1]
                 if outcome_name == "aborted":
                     outcome_x -= step
                     color = self.outcome_aborted_color
@@ -414,12 +411,11 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             color.set()
             outcome_pos[key] = (outcome_x, outcome_y)
 
-            # TODO: Show name of the outcome
-
             self._draw_circle(outcome_x, outcome_y, outcome_radius, depth + 0.1, fill_color=color)
 
         # Draw "income" as a half circle of the left center
-        self._draw_circle(pos_x, pos_y + height / 2, outcome_radius, depth + 0.1, fill_color=self.income_color,
+        income_pos = (pos[0], pos[1] - height / 2)
+        self._draw_circle(income_pos[0], income_pos[1], outcome_radius, depth + 0.1, fill_color=self.income_color,
                           from_angle=1.5 * pi, to_angle=0.5 * pi)
 
         # Draw input and output data ports
@@ -427,7 +423,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         num_ports = len(input_ports_m) + len(output_ports_m)
         if num_ports > 0:
             max_name_width = 0
-            margin = min(width, height) / 10.0
+            margin = min(size) / 10.0
             max_allowed_name_width = 0.7 * width - margin
             str_height = height / 12.0
 
@@ -441,10 +437,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             #fill_color = self.port_color if not selected else self.state_selected_color
 
             port_width = min(max_name_width, max_allowed_name_width)
-            port_pos_left_x = pos_x + (width - port_width - margin) / 2
+            port_pos_left_x = pos[0] + (width - port_width - margin) / 2
             port_pos_right_x = port_pos_left_x + port_width + margin
-            port_pos_bottom_y = pos_y - num_ports * (str_height + margin)
-            self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos_y, depth, border_width,
+            port_pos_bottom_y = pos[1] - height - num_ports * (str_height + margin)
+            self._draw_rect(port_pos_left_x, port_pos_right_x, port_pos_bottom_y, pos[1] - height, depth, border_width,
                             fill_color, border_color)
 
             def draw_port(port_m, num, is_input):
@@ -454,7 +450,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                 string_pos_x = port_pos_left_x + margin / 2.
                 if not is_input:
                     string_pos_x += port_width
-                string_pos_y = pos_y - margin / 2. - num * (str_height + margin)
+                string_pos_y = pos[1] - height - margin / 2. - num * (str_height + margin)
                 self._write_string(port_name, string_pos_x, string_pos_y,
                                    str_height, self.port_name_color, False, not is_input, depth + 0.01)
 
@@ -467,37 +463,37 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             output_num = 0
             for port_m in input_ports_m:
                 con_pos_x, con_pos_y = draw_port(port_m, output_num, True)
-                port_m.meta['gui']['editor']['outer_connector_radius'] = port_radius
-                port_m.meta['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
+                port_m.temp['gui']['editor']['outer_connector_radius'] = port_radius
+                port_m.temp['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
             for port_m in output_ports_m:
                 con_pos_x, con_pos_y = draw_port(port_m, output_num, False)
-                port_m.meta['gui']['editor']['outer_connector_radius'] = port_radius
-                port_m.meta['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
+                port_m.temp['gui']['editor']['outer_connector_radius'] = port_radius
+                port_m.temp['gui']['editor']['outer_connector_pos'] = (con_pos_x, con_pos_y)
                 output_num += 1
 
         glPopName()
-        return opengl_id, outcome_pos, outcome_radius, resize_length
+        return opengl_id, income_pos, outcome_pos, outcome_radius, resize_length
 
-    def draw_inner_input_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
-        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.right, selected,
-                                          True, depth)
+    def draw_inner_input_data_port(self, port_name, port_m, pos, size, selected, depth):
+        return self._draw_inner_data_port(port_name, port_m, pos, size, Direction.right, selected, True, depth)
 
-    def draw_inner_output_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
-        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.left, selected,
-                                          True, depth)
+    def draw_inner_output_data_port(self, port_name, port_m, pos, size, selected, depth):
+        return self._draw_inner_data_port(port_name, port_m, pos, size, Direction.left, selected, True, depth)
 
-    def draw_scoped_data_port(self, port_name, port_m, pos_x, pos_y, width, height, selected, depth):
-        return self._draw_inner_data_port(port_name, port_m, pos_x, pos_y, width, height, Direction.bottom, selected,
-                                          False, depth)
+    def draw_scoped_data_port(self, port_name, port_m, pos, size, selected, depth):
+        return self._draw_inner_data_port(port_name, port_m, pos, size, Direction.bottom, selected, False, depth)
 
-    def _draw_inner_data_port(self, port_name, port_m, pos_x, pos_y, width, height, arrow_position, selected,
+    def _draw_inner_data_port(self, port_name, port_m, pos, size, arrow_position, selected,
                               inner, depth):
         id = self.name_counter
         self.name_counter += 1
 
         glPushName(id)
+
+        width = size[0]
+        height = size[1]
 
         margin = height / 5.
         name_height = height - 2 * margin
@@ -508,50 +504,48 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         width = name_width + 2 * margin
 
         if arrow_position == Direction.right or arrow_position == Direction.bottom:
-            left = pos_x
-            right = pos_x + width
+            left = pos[0]
+            right = pos[0] + width
         else:
-            left = pos_x - width
-            right = pos_x
+            left = pos[0] - width
+            right = pos[0]
 
         fill_color = self.port_color  # if not selected else self.state_selected_color
         border_color = self.border_color if not selected else self.border_selected_color
         border_width = margin * 2 if not selected else margin * 4
-        arrow_pos, visible = self._draw_rect_arrow(left, right, pos_y, pos_y + height, arrow_position, depth,
+        arrow_pos, visible = self._draw_rect_arrow(left, right, pos[1] - height, pos[1], arrow_position, depth,
                                                    border_width=border_width,
                                                    border_color=border_color, fill_color=fill_color)
         radius = margin / 1.5
         self._draw_circle(arrow_pos[0], arrow_pos[1], radius, depth + 0.02, stroke_width=margin,
                           border_color=self.port_name_color, fill_color=self.port_connector_fill_color)
-        self._write_string(port_name, left + margin, pos_y + height - margin / 2, name_height,
+        self._write_string(port_name, left + margin, pos[1] - margin / 2, name_height,
                            color=self.port_name_color,
                            depth=depth + 0.1)
         prefix = 'inner_' if inner else ''
-        port_m.meta['gui']['editor'][prefix + 'connector_pos'] = arrow_pos
-        port_m.meta['gui']['editor'][prefix + 'connector_radius'] = radius
+        port_m.temp['gui']['editor'][prefix + 'connector_pos'] = arrow_pos
+        port_m.temp['gui']['editor'][prefix + 'connector_radius'] = radius
         if arrow_position == Direction.right:
-            actual_width = (arrow_pos[0] - left)
+            actual_width = arrow_pos[0] - left
             actual_height = height
         elif arrow_position == Direction.left:
             actual_width = right - arrow_pos[0]
             actual_height = height
         elif arrow_position == Direction.top:
             actual_width = right - left
-            actual_height = arrow_pos[1] - pos_y
+            actual_height = abs(arrow_pos[1] - pos[1])
         elif arrow_position == Direction.bottom:
             actual_width = right - left
-            actual_height = (pos_y + height) - arrow_pos[1]
+            actual_height = abs(arrow_pos[1] - pos[1])
 
-        port_m.meta['gui']['editor']['width'] = actual_width
-        port_m.meta['gui']['editor']['height'] = actual_height
-        port_m.meta['gui']['editor']['rect_width'] = width
-        port_m.meta['gui']['editor']['rect_height'] = height
+        port_m.temp['gui']['editor']['size'] = (actual_width, actual_height)
+        port_m.temp['gui']['editor']['size_rect'] = (width, height)
 
         glPopName()
 
         return id
 
-    def draw_transition(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False,
+    def draw_transition(self, from_pos, to_pos, width, waypoints=[], selected=False,
                         depth=0):
         """Draw a state with the given properties
 
@@ -577,30 +571,17 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         color = self.transition_color if not selected else self.transition_selected_color
         color.set()
 
-        points = [(from_pos_x, from_pos_y)]
+        points = [from_pos]
         points.extend(waypoints)
 
-        last_p = (to_pos_x, to_pos_y)  # Transition endpoint
+        last_p = to_pos  # Transition endpoint
         sec_last_p = points[len(points) - 1]  # Point before endpoint
-        # Arrow direction (vector)
-        vec = (last_p[0] - sec_last_p[0], last_p[1] - sec_last_p[1])
-        # Arrow direction (angle)
-        angle = atan2(vec[1], vec[0])
-        angle -= pi  # backwards
         # Calculate max possible arrow length
-        length = min(width, dist((from_pos_x, from_pos_y), last_p) / 2)
-        # Middle point of back end of arrow
-        m_x = last_p[0] + cos(angle) * length
-        m_y = last_p[1] + sin(angle) * length
-        angle += pi / 2
-        dx = cos(angle) * length / 2
-        dy = sin(angle) * length / 2
-        # Corner points
-        p2 = (m_x + dx, m_y + dy)
-        p3 = (m_x - dx, m_y - dy)
+        length = min(width, dist(sec_last_p, last_p) / 2.)
+        mid, p2, p3 = self._calculate_arrow_points(last_p, sec_last_p, length)
         self._draw_triangle(last_p, p2, p3, depth, fill_color=color)
 
-        points.append((m_x, m_y))
+        points.append(mid)
 
         # Draw the transitions as simple straight line connecting start- way- and endpoints
         glBegin(GL_LINE_STRIP)
@@ -616,7 +597,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return id
 
-    def draw_data_flow(self, from_pos_x, from_pos_y, to_pos_x, to_pos_y, width, waypoints=[], selected=False, depth=0):
+    def draw_data_flow(self, from_pos, to_pos, width, waypoints=[], selected=False, depth=0):
         """Draw a data flow connection between two ports
 
         The ports can be input, output or scoped ports and are only specified by their position. Optional waypoints
@@ -642,9 +623,17 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         color = self.data_flow_color if not selected else self.data_flow_selected_color
         color.set()
 
-        points = [(from_pos_x, from_pos_y)]
+        points = [from_pos]
         points.extend(waypoints)
-        points.append((to_pos_x, to_pos_y))
+
+        last_p = to_pos  # Transition endpoint
+        sec_last_p = points[len(points) - 1]  # Point before endpoint
+        # Calculate max possible arrow length
+        length = min(width / 1.2, dist(sec_last_p, last_p) / 2.)
+        mid, p2, p3 = self._calculate_arrow_points(last_p, sec_last_p, length)
+        self._draw_triangle(last_p, p2, p3, depth, fill_color=color)
+
+        points.append(mid)
 
         # Draw the transitions as simple straight line connecting start- way- and endpoints
         glBegin(GL_LINE_STRIP)
@@ -750,6 +739,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return hits
 
+    def transition_stroke_width(self, parent_state_m):
+        return min(parent_state_m.meta['gui']['editor']['size']) / 25.0
+
+    def data_flow_stroke_width(self, parent_state_m):
+        return min(parent_state_m.meta['gui']['editor']['size']) / 25.0
+
     def _set_closest_stroke_width(self, width):
         """Sets the line width to the closest supported one
 
@@ -771,6 +766,24 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glLineWidth(stroke_width_range[1])
             return
         glLineWidth(round(width / stroke_width_granularity) * stroke_width_granularity)
+
+    @staticmethod
+    def _calculate_arrow_points(end_point, base_point, max_length):
+        # Arrow direction (vector)
+        vec = (end_point[0] - base_point[0], end_point[1] - base_point[1])
+        # Arrow direction (angle)
+        angle = atan2(vec[1], vec[0])
+        angle -= pi  # backwards
+        # Middle point of back end of arrow
+        m_x = end_point[0] + cos(angle) * max_length
+        m_y = end_point[1] + sin(angle) * max_length
+        angle += pi / 2
+        dx = cos(angle) * max_length / 2
+        dy = sin(angle) * max_length / 2
+        # Corner points
+        p2 = (m_x + dx, m_y + dy)
+        p3 = (m_x - dx, m_y - dy)
+        return (m_x, m_y), p2, p3
 
     def _draw_polygon(self, points, depth, border_width=1, fill_color=None, border_color=None):
         # TODO: Think of method to check for visibility
@@ -920,14 +933,14 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         return string
 
     def point_outside_view(self, p):
-        left, right, bottom, top = self._get_view_coordinates()
+        left, right, bottom, top = self.get_view_coordinates()
         if p[0] < left or p[0] > right:
             return True
         elif p[1] < bottom or p[1] > top:
             return True
         return False
 
-    def _get_view_coordinates(self):
+    def get_view_coordinates(self):
         left = self.left
         right = self.right
         top = self.top
@@ -944,8 +957,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return left, right, bottom, top
 
+    def get_size(self):
+        left, right, bottom, top = self.get_view_coordinates()
+        return right - left, top - bottom
+
     def _apply_orthogonal_view(self):
         """Orthogonal view with respect to current aspect ratio
         """
-        left, right, bottom, top = self._get_view_coordinates()
+        left, right, bottom, top = self.get_view_coordinates()
         glOrtho(left, right, bottom, top, -10, 0)

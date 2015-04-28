@@ -1,19 +1,18 @@
 import pytest
 from pytest import raises
+# from awesome_tool.mvc.controllers import MainWindowController
 
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.state_machine import StateMachine
-import awesome_tool.statemachine.singleton
 
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.enums import StateType
 
 from gtkmvc.observer import Observer
 
-import awesome_tool.mvc.singleton
-
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.statemachine.singleton import state_machine_manager
+from awesome_tool.mvc.singleton import state_machine_manager_model
 
 import logging as logger
 
@@ -345,9 +344,9 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    state_machine_manager.add_state_machine(sm)
 
-    sm_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return ctr_state, sm_m, state_dict
 
@@ -1288,15 +1287,6 @@ def test_state_property_modify_notification(with_print=False):
     state_dict['Nested'].script = Script(script_type=ScriptType.EXECUTION, state=state_dict['Nested'])
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
-
-    # state_type(self, state_type) StateType
-    state_dict['Nested'].state_type = StateType.PREEMPTION_CONCURRENCY
-    forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
-
-    # -> avoid in consistent changes
-    state_dict['Nested'].state_type = StateType.HIERARCHY
-    forecast += 1
 
     # description(self, description) str
     state_dict['Nested'].description = "awesome"

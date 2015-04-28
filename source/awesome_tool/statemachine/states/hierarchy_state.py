@@ -35,7 +35,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
         ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
                                 transitions, data_flows, start_state_id, scoped_variables, v_checker, path, filename,
-                                state_type=StateType.HIERARCHY, check_path=check_path)
+                                check_path=check_path)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the hierarchy state is executed
@@ -83,6 +83,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             ########################################################
             # children execution loop
             ########################################################
+            last_error = None
             self.child_execution = True
             # depending on the execution mode pause execution
             logger.debug("Handling execution mode")
@@ -123,16 +124,21 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         self.concurrency_queue.put(self.state_id)
                     return  # outcome is not important as it is a backward execution
                 else:  # forward step
-                    logger.debug("Executing next state with id \"%s\", type \"%s\" and name \"%s\" (backward: %s)" %
-                                 (state.state_id, str(state.state_type), state.name, self.backward_execution))
+                    logger.debug("Executing next state '{0}' (id {1}, type {2}, backwards: {3}".format(
+                        state.name, state.state_id, type(state), self.backward_execution))
                     if not self.backward_execution:  # only add history item if it is not a backward execution
                         self.execution_history.add_call_history_item(state, MethodName.EXECUTE, self)
                     state.input_data = self.get_inputs_for_state(state)
                     state.output_data = self.create_output_dictionary_for_state(state)
+                    if last_error is not None:
+                        state.input_data["error"] = last_error
+                    last_error = None
                     # execute the state
                     state.start(self.execution_history, backward_execution=self.backward_execution)
                     state.join()
                     state.active = False
+                    if state.final_outcome.outcome_id == -1:  # if the state aborted save the error
+                        last_error = state.output_data["error"]
                     if state.backward_execution:
                         # the item popped now from the history will be a CallItem and will contain the scoped data,
                         # that was valid before executing the state
@@ -206,6 +212,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             if self.concurrency_queue:
                 self.concurrency_queue.put(self.state_id)
             self.final_outcome = Outcome(-1, "aborted")
+            self.output_data["error"] = e
             self.active = False
             self.child_execution = False
             return

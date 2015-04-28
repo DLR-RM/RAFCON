@@ -54,6 +54,8 @@ class StateMachineModel(ModelMT):
         else:
             self.meta = Vividict()
 
+        self.temp = Vividict()
+
     @ModelMT.observe("state_machine", after=True)
     def root_state_changed(self, model, prop_name, info):
         if info['method_name'] == 'root_state':
@@ -63,7 +65,6 @@ class StateMachineModel(ModelMT):
                     self.root_state = ContainerStateModel(new_root_state)
                 else:
                     self.root_state = StateModel(new_root_state)
-                print "created new root state model", self.root_state
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
