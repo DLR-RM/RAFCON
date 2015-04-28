@@ -1426,10 +1426,11 @@ class GraphicalEditorController(ExtendedController):
             to_port = StateMachineHelper.get_data_port_model(to_state, to_key)
 
             if from_port is None:
-                logger.warn('Cannot find model of the from data port {0}'.format(from_key))
+                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                                                                                        data_flow_m.data_flow))
                 continue
             if to_port is None:
-                logger.warn('Cannot find model of the to data port {0}'.format(to_key))
+                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
                 continue
 
             # For scoped variables, there is no inner and outer connector
