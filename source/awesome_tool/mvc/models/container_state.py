@@ -45,10 +45,6 @@ class ContainerStateModel(StateModel):
         self.transitions = []
         self.data_flows = []
         self.scoped_variables = []
-        # Actually Transition, but this is not supported by GTK
-        self.transition_list_store = ListStore(gobject.TYPE_PYOBJECT)
-        # Actually DataFlow, but this is not supported by
-        self.data_flow_list_store = ListStore(gobject.TYPE_PYOBJECT)
 
         # Create model for each child class
         states = container_state.states
@@ -57,35 +53,21 @@ class ContainerStateModel(StateModel):
             model_class = self.state_to_state_model(state)
             if model_class is not None:
                 self.states[state.state_id] = model_class(state, parent=self)
-            # if isinstance(state, ContainerState):
-            # self.states[state.state_id] = ContainerStateModel(state, parent=self)
-            # # elif isinstance(state, HierarchyState):
-            # #     self.states.append(ContainerState(state))
-            # elif isinstance(state, State):
-            #     self.states[state.state_id] = StateModel(state, parent=self)
             else:
                 logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
                 logger.error(state)
 
         for transition in container_state.transitions.itervalues():
             self.transitions.append(TransitionModel(transition, self))
-            self.transition_list_store.append([transition])
 
         for data_flow in container_state.data_flows.itervalues():
             self.data_flows.append(DataFlowModel(data_flow, self))
-            self.data_flow_list_store.append([data_flow])
 
-        # this class is an observer of its own properties:
-        self.register_observer(self)
-        self.reload_scoped_variables_models()
-
-    def reload_scoped_variables_models(self):
-        """Reloads the scoped variable models directly from the the state
-        """
-        self.scoped_variables = []
         for scoped_variable in self.state.scoped_variables.itervalues():
             self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
 
+        # this class is an observer of its own properties:
+        self.register_observer(self)
 
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, prop_name, info):

@@ -1,3 +1,5 @@
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
 from awesome_tool.mvc.shortcut_manager import ShortcutManager
@@ -51,7 +53,8 @@ class ExtendedController(Controller):
             if controller not in self.__action_registered_controllers:
                 try:
                     controller.register_actions(shortcut_manager)
-                except Exception:
+                except Exception as e:
+                    logger.error("Error while registering action for {0}: {1}".format(controller.__name__, e))
                     pass
                 self.__action_registered_controllers.append(controller)
 

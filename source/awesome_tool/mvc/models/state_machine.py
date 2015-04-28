@@ -54,6 +54,8 @@ class StateMachineModel(ModelMT):
         else:
             self.meta = Vividict()
 
+        self.temp = Vividict()
+
     @ModelMT.observe("state_machine", after=True)
     def root_state_changed(self, model, prop_name, info):
         if info['method_name'] == 'root_state':

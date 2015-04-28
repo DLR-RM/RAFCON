@@ -35,6 +35,7 @@ class GuiConfig(DefaultConfig):
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
+        self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
         self.configure_fonts()
         self.configure_source_view_styles()
 
@@ -57,7 +58,7 @@ class GuiConfig(DefaultConfig):
                 logger.info("Copy font %s to %s" % (font_name, font_path))
                 if not os.path.isdir(font_path):
                     os.system("mkdir -p %s" % font_path)
-                os.system("cp -r %s %s" % (constants.FONT_STYLE_PATHS[font_name], font_path))
+                os.system("cp -r %s %s" % (self.path_to_tool + constants.FONT_STYLE_PATHS[font_name], font_path))
                 font_copied = True
 
         if font_copied:
@@ -74,12 +75,12 @@ class GuiConfig(DefaultConfig):
         for style in constants.STYLE_NAMES:
             if not os.path.isfile(os.path.join(path, style)):
                 logger.info("Copy style %s to %s" % (style, path))
-                os.system("cp %s %s " % (constants.FONT_STYLE_PATHS[style], path))
+                os.system("cp %s %s " % (self.path_to_tool + constants.FONT_STYLE_PATHS[style], path))
             else:
                 logger.info("Found %s" % style)
 
                 logger.warning("REMOVE THE FOLLOWING TWO LINES AFTER COMPLETION OF %s" % style)
                 os.system("rm " + path + "/%s" % style)
-                os.system("cp %s %s " % (constants.FONT_STYLE_PATHS[style], path))
+                os.system("cp %s %s " % (self.path_to_tool + constants.FONT_STYLE_PATHS[style], path))
 
 global_gui_config = GuiConfig()

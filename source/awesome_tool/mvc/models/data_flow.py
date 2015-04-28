@@ -32,6 +32,8 @@ class DataFlowModel(ModelMT):
         else:
             self.meta = Vividict()
 
+        self.temp = Vividict()
+
         # this class is an observer of its own properties:
         self.register_observer(self)
 

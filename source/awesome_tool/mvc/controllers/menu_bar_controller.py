@@ -40,17 +40,31 @@ class MenuBarController(ExtendedController):
 
         :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
+        shortcut_manager.add_callback_for_action('save', self.on_save_activate)
+        shortcut_manager.add_callback_for_action('save_as', self.on_save_as_activate)
+        shortcut_manager.add_callback_for_action('open', self.on_open_activate)
+        shortcut_manager.add_callback_for_action('new', self.on_new_activate)
+        shortcut_manager.add_callback_for_action('quit', self.on_quit_activate)
+
+        shortcut_manager.add_callback_for_action('start', self.on_start_activate)
+        shortcut_manager.add_callback_for_action('stop', self.on_stop_activate)
+        shortcut_manager.add_callback_for_action('pause', self.on_pause_activate)
+        shortcut_manager.add_callback_for_action('step_mode', self.on_step_mode_activate)
+        shortcut_manager.add_callback_for_action('step', self.on_step_activate)
+        shortcut_manager.add_callback_for_action('backward_step', self.on_backward_step_activate)
+
+        shortcut_manager.add_callback_for_action('reload', self.on_refresh_all_activate)
 
     ######################################################
     # menu bar functionality - File
     ######################################################
-    def on_new_activate(self, widget, data=None):
+    def on_new_activate(self, widget=None, data=None):
         logger.debug("Creating new statemachine ...")
         root_state = HierarchyState("new_root_state")
         sm = StateMachine(root_state)
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
-    def on_open_activate(self, widget, data=None, path=None):
+    def on_open_activate(self, widget=None, data=None, path=None):
         if path is None:
             dialog = gtk.FileChooserDialog("Please choose a folder",
                                    None,
@@ -88,7 +102,7 @@ class MenuBarController(ExtendedController):
         self.model.get_selected_state_machine_model().root_state.store_meta_data_for_state()
         logger.debug("Successfully saved graphics meta data.")
 
-    def on_save_as_activate(self, widget, data=None, path=None):
+    def on_save_as_activate(self, widget=None, data=None, path=None):
         if path is None:
             dialog = gtk.FileChooserDialog("Please choose a file",
                                            None,
