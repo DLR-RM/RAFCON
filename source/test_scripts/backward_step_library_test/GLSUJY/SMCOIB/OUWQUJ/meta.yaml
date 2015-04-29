@@ -11,4 +11,3 @@ output_data_ports:
     3: !DataPort {data_port_id: 3, data_type: int, default_value: null, name: bottles}
 path: ../../test_scripts/backward_step_library_test/GLSUJY/SMCOIB/OUWQUJ
 state_id: OUWQUJ
-state_type: STATE_TYPE.EXECUTION

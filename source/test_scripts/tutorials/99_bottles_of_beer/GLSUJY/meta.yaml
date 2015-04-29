@@ -16,11 +16,10 @@ outcomes:
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: the end, outcome_id: 0}
 output_data_ports: {}
-path: /home_local/brun_sb/develop/taskcontrol/source/test_scripts/99 bottles of beer/GLSUJY
+path: ../../test_scripts/tutorials/99_bottles_of_beer/GLSUJY
 scoped_variables:
     29: !ScopedVariable {data_type: int, default_value: 99, name: bottles, scoped_variable_id: 29}
 state_id: GLSUJY
-state_type: STATE_TYPE.HIERARCHY
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: PXTKIH,
         transition_id: 1}

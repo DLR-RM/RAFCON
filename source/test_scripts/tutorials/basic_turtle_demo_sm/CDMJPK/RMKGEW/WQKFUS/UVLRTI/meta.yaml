@@ -14,7 +14,6 @@ output_data_ports:
     16: !DataPort {data_port_id: 16, data_type: float, default_value: null, name: x_pos}
     17: !DataPort {data_port_id: 17, data_type: float, default_value: null, name: y_pos}
     18: !DataPort {data_port_id: 18, data_type: float, default_value: null, name: phi}
-path: ../../test_scripts/basic_turtle_demo_sm/CDMJPK/RMKGEW/WQKFUS/UVLRTI
+path: ../../test_scripts/tutorials/basic_turtle_demo_sm/CDMJPK/RMKGEW/WQKFUS/UVLRTI
 state_id: UVLRTI
-state_type: STATE_TYPE.LIBRARY
 version: '0.1'

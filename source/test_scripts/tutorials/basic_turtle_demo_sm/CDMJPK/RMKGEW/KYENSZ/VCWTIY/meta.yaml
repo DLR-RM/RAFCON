@@ -9,7 +9,6 @@ outcomes:
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports: {}
-path: ../../test_scripts/basic_turtle_demo_sm/CDMJPK/RMKGEW/KYENSZ/VCWTIY
+path: ../../test_scripts/tutorials/basic_turtle_demo_sm/CDMJPK/RMKGEW/KYENSZ/VCWTIY
 state_id: VCWTIY
-state_type: STATE_TYPE.LIBRARY
 version: '0.1'

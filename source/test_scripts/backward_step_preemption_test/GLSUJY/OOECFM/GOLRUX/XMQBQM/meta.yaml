@@ -11,4 +11,3 @@ outcomes:
 output_data_ports: {}
 path: ../../test_scripts/backward_step_preemption_test/GLSUJY/OOECFM/GOLRUX/XMQBQM
 state_id: XMQBQM
-state_type: STATE_TYPE.EXECUTION

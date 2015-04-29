@@ -11,4 +11,3 @@ output_data_ports:
     3: !DataPort {data_port_id: 3, data_type: int, default_value: null, name: number}
 path: ../../test_scripts/backward_step_barrier_test/GLSUJY/UVQBYP
 state_id: UVQBYP
-state_type: STATE_TYPE.EXECUTION

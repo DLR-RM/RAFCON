@@ -11,4 +11,3 @@ output_data_ports:
     3: !DataPort {data_port_id: 3, data_type: int, default_value: null, name: number}
 path: ../../test_scripts/backward_step_preemption_test/GLSUJY/OOECFM/GOLRUX/DIDVOV
 state_id: DIDVOV
-state_type: STATE_TYPE.EXECUTION

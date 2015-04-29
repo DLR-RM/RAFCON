@@ -1,0 +1,9 @@
+!Vividict
+gui: !Vividict
+    editor: !Vividict
+        rel_pos: !!python/tuple [59.46193702127654, -50.66786042553189]
+        size: !!python/tuple [126.91489361702106, 63.08510638297866]
+transition3: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: !Vividict {}

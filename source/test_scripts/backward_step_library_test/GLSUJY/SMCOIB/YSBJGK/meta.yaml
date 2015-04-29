@@ -10,4 +10,3 @@ outcomes:
 output_data_ports: {}
 path: ../../test_scripts/backward_step_library_test/GLSUJY/SMCOIB/YSBJGK
 state_id: YSBJGK
-state_type: STATE_TYPE.EXECUTION
