@@ -1,5 +1,6 @@
 from awesome_tool.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 from awesome_tool.utils import log
+
 logger = log.get_logger(__name__)
 
 import sys
@@ -271,6 +272,12 @@ class GraphicalEditorController(ExtendedController):
         # Check, whether a waypoint was clicked on
         self._check_for_waypoint_selection(new_selection, self.mouse_move_start_coords)
 
+        # Multi-selection is started when the user hold the shift key pressed while clicking the left mouse button,
+        # and does this _not_ on a resize handler or waypoint
+        if event.button == 1 and event.state & SHIFT_MASK == 1 and \
+                        self.selected_resizer is None and self.selected_waypoint is None:
+            self.multi_selection_started = True
+
         # Left mouse button was clicked and no multi selection intended
         if event.button == 1 and event.state & SHIFT_MASK == 0:
             if not self.mouse_move_redraw:
@@ -324,8 +331,7 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
         # Right mouse button was clicked on
-        if event.button == 3:
-
+        elif event.button == 3:
             # Check if something was selected
             click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
             clicked_model = self._find_selection(event.x, event.y)
@@ -360,13 +366,6 @@ class GraphicalEditorController(ExtendedController):
         if event.button == 1:
             # We do not want to change the current selection while creating a new transition or data flow
             if not self.mouse_move_redraw:
-                # Multi selection with shift+click
-                if event.state & SHIFT_MASK != 0:
-                    # With shift+click, also states are resized and waypoints snapped. Thus we only want to draw a
-                    # selection frame, when the user didn't clicked on a resizer or waypoint
-                    if self.selected_resizer is None and self.selected_waypoint is None:
-                        self.multi_selection_started = True
-
                 # In the case of multi selection, the user can add/remove elements to/from the selection
                 # The selection can consist of more than one model
                 if self.multi_selection_started:
@@ -418,53 +417,60 @@ class GraphicalEditorController(ExtendedController):
             self.mouse_move_last_coords = mouse_current_coord
             return
 
-        # Move the selected states and data ports
-        if len(self.model.selection) > 1 and \
-                self.last_button_pressed == 1 and \
-                self.selected_outcome is None and self.selected_resizer is None:
-            if self.drag_origin_offset is None:
-                self.drag_origin_offset = []
-                for model in self.model.selection:
-                    offset = None
-                    original_position = None
-                    if isinstance(model, StateModel):
-                        offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
-                        model.temp['gui']['editor']['original_rel_pos'] = copy(model.meta['gui']['editor']['rel_pos'])
-                    elif isinstance(model, (DataPortModel, ScopedVariableModel)):
-                        offset = subtract_pos(self.mouse_move_start_coords, model.temp['gui']['editor']['inner_pos'])
-                        model.temp['gui']['editor']['original_inner_rel_pos'] = \
-                            copy(model.meta['gui']['editor']['inner_rel_pos'])
-                    self.drag_origin_offset.append(offset)
-            for i, model in enumerate(self.model.selection):
-                if self.drag_origin_offset[i] is not None:
-                    new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
-                    if isinstance(model, StateModel):
-                        self._move_state(model, new_pos)
-                    elif isinstance(model, (DataPortModel, ScopedVariableModel)):
-                        self._move_data_port(model, new_pos)
+        # States and ports shell only be moved with the left mouse button clicked and the shift key not hold
+        if event.state & SHIFT_MASK == 0 and self.last_button_pressed == 1:
+            # Move all selected states and data ports of thr multi-selection
+            if len(self.model.selection) > 1 and self.selected_outcome is None and self.selected_resizer is None:
+                # When starting a move, two information are stored:
+                # - the starting position, in case the user aborts a movement
+                # - the offset of the mouse to the origin, which is kept throughout the movement to prevent jumps
+                if self.drag_origin_offset is None:
+                    self.drag_origin_offset = []
+                    for model in self.model.selection:
+                        offset = None
+                        model_meta = model.meta['gui']['editor']
+                        model_temp = model.meta['gui']['editor']
+                        if isinstance(model, StateModel):
+                            offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
+                            model_temp['original_rel_pos'] = copy(model_meta['rel_pos'])
+                        elif isinstance(model, (DataPortModel, ScopedVariableModel)):
+                            offset = subtract_pos(self.mouse_move_start_coords, model_temp['inner_pos'])
+                            model_temp['original_inner_rel_pos'] = copy(model_meta['inner_rel_pos'])
+                        self.drag_origin_offset.append(offset)
+                for i, model in enumerate(self.model.selection):
+                    if self.drag_origin_offset[i] is not None:
+                        new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
+                        if isinstance(model, StateModel):
+                            self._move_state(model, new_pos, redraw=False, publish_changes=False)
+                        elif isinstance(model, (DataPortModel, ScopedVariableModel)):
+                            self._move_data_port(model, new_pos, redraw=False, publish_changes=False)
+                self._publish_changes(self.root_state_m, "Move multi-selection", affects_children=True)
+                self._redraw()
 
-        # Move the current state
-        elif isinstance(self.single_selection, StateModel) and \
-                self.last_button_pressed == 1 and \
-                self.selected_outcome is None and self.selected_resizer is None:
-            if self.drag_origin_offset is None:
-                offset = self._get_position_relative_to_state(self.single_selection, self.mouse_move_start_coords)
-                self.drag_origin_offset = offset
-                self.single_selection.temp['gui']['editor']['original_rel_pos'] = \
-                    copy(self.single_selection.meta['gui']['editor']['rel_pos'])
-            new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-            self._move_state(self.single_selection, new_pos)
+            # Move the current state, if the user didn't click on an outcome (wants to create a transition) or a
+            # resize handler (wants to resize the state)
+            elif isinstance(self.single_selection, StateModel) and \
+                            self.selected_outcome is None and self.selected_resizer is None:
+                # Initially store starting position and offset (see comment above)
+                if self.drag_origin_offset is None:
+                    offset = self._get_position_relative_to_state(self.single_selection, self.mouse_move_start_coords)
+                    self.drag_origin_offset = offset
+                    self.single_selection.temp['gui']['editor']['original_rel_pos'] = \
+                        copy(self.single_selection.meta['gui']['editor']['rel_pos'])
+                new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
+                self._move_state(self.single_selection, new_pos)
 
-        # Move current data port
-        elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)) and \
-                not self.selected_port_connector and self.last_button_pressed == 1:
-            if self.drag_origin_offset is None:
-                self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
-                                                       self.single_selection.temp['gui']['editor']['inner_pos'])
-                self.single_selection.temp['gui']['editor']['original_inner_rel_pos'] = \
-                    copy(self.single_selection.meta['gui']['editor']['inner_rel_pos'])
-            new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-            self._move_data_port(self.single_selection, new_pos)
+            # Move current data port, if the user didn't click on the connector (i. e. wants to create a data flow)
+            elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)) and \
+                    not self.selected_port_connector:
+                # Initially store starting position and offset (see comment above)
+                if self.drag_origin_offset is None:
+                    self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
+                                                           self.single_selection.temp['gui']['editor']['inner_pos'])
+                    self.single_selection.temp['gui']['editor']['original_inner_rel_pos'] = \
+                        copy(self.single_selection.meta['gui']['editor']['inner_rel_pos'])
+                new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
+                self._move_data_port(self.single_selection, new_pos)
 
         # Move the selected waypoint (if there is one)
         if self.selected_waypoint is not None:
@@ -795,14 +801,16 @@ class GraphicalEditorController(ExtendedController):
 
         self._abort()
 
-    def _move_state(self, state_m, new_pos):
+    def _move_state(self, state_m, new_pos, redraw=True, publish_changes=True):
         """Move the state to the given position
 
         The method moves the state and all its child states with their transitions, data flows and waypoints. The
         state is kept within its parent, thus restricting the movement.
 
-        :param awesome_tool.mvc.models.StateModel state_m: The model of the state to be moved
-        :param new_pos: The desired new position (x, y)
+        :param awesome_tool.mvc.models.state.StateModel state_m: The model of the state to be moved
+        :param tuple new_pos: The desired new position (x, y)
+        :param bool redraw: Flag whether to redraw state-machine after moving
+        :param bool redraw: Flag whether to publish the changes after moving
         """
 
         if state_m.parent is None:
@@ -818,17 +826,21 @@ class GraphicalEditorController(ExtendedController):
 
         state_m.meta['gui']['editor']['rel_pos'] = new_rel_pos
 
-        self._publish_changes(state_m, "Move state", affects_children=True)
-        self._redraw()
+        if publish_changes:
+            self._publish_changes(state_m, "Move state", affects_children=True)
+        if redraw:
+            self._redraw()
 
-    def _move_data_port(self, port_m, new_pos):
+    def _move_data_port(self, port_m, new_pos, redraw=True, publish_changes=True):
         """Move the port to the given position
 
         This method moves the given port to the given coordinates, with respect to the mouse offset to the origin od
         the port and with respect to the size of the container state.
 
-        :param port_m: The port model to be moved
-        :param coords: The target position
+        :param awesome_tool.mvc.models.data_port.DataPortModel port_m: The port model to be moved
+        :param tuple new_pos: The desired new position (x, y)
+        :param bool redraw: Flag whether to redraw state-machine after moving
+        :param bool redraw: Flag whether to publish the changes after moving
         """
 
         left, right, bottom, top = self.get_boundaries(port_m)
@@ -848,8 +860,10 @@ class GraphicalEditorController(ExtendedController):
 
         port_m.meta['gui']['editor']['inner_rel_pos'] = new_rel_pos
 
-        self._publish_changes(port_m.parent, "Move data port", affects_children=False)
-        self._redraw()
+        if publish_changes:
+            self._publish_changes(port_m.parent, "Move data port", affects_children=False)
+        if redraw:
+            self._redraw()
 
     def _move_in_direction(self, direction, key, modifier):
         """Move the current selection into the given direction
@@ -861,6 +875,7 @@ class GraphicalEditorController(ExtendedController):
         :param key: Pressed key
         :param modifier: Pressed modifier key
         """
+
         def move_pos(pos, parent_size):
             scale_dist = 0.025
             if modifier & SHIFT_MASK:
@@ -875,25 +890,27 @@ class GraphicalEditorController(ExtendedController):
                 return pos[0], pos[1] - parent_size[1] * scale_dist
             return pos
 
-        def move_state(state_m):
+        def move_state(state_m, redraw=True, publish_changes=True):
             if state_m.parent is None:
                 return
             cur_pos = state_m.temp['gui']['editor']['pos']
             new_pos = move_pos(cur_pos, state_m.parent.meta['gui']['editor']['size'])
-            self._move_state(state_m, new_pos)
+            self._move_state(state_m, new_pos, redraw, publish_changes)
 
-        def move_port(port_m):
+        def move_port(port_m, redraw=True, publish_changes=True):
             cur_pos = port_m.temp['gui']['editor']['inner_pos']
             new_pos = move_pos(cur_pos, port_m.parent.meta['gui']['editor']['size'])
-            self._move_data_port(port_m, new_pos)
+            self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
         if self.view.editor.has_focus():
             if len(self.model.selection) > 0:
                 for model in self.model.selection:
                     if isinstance(model, StateModel):
-                        move_state(model)
+                        move_state(model, redraw=False, publish_changes=False)
                     elif isinstance(model, (DataPortModel, ScopedVariableModel)):
-                        move_port(model)
+                        move_port(model, redraw=False, publish_changes=False)
+                self._publish_changes(self.root_state_m, "Move multi-selection", affects_children=True)
+                self._redraw()
             elif isinstance(self.single_selection, StateModel):
                 move_state(self.single_selection)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
