@@ -1,7 +1,7 @@
 from enum import Enum
 
-from awesome_server.mvc.controller.connections.tcp_connection import TCPFactory
-from awesome_server.mvc.controller.connections.udp_connection import UDPConnection
+from awesome_server.connections.tcp_connection import TCPFactory
+from awesome_server.connections.udp_connection import UDPConnection
 
 
 # --------------------------------------------

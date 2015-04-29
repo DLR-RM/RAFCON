@@ -1,6 +1,6 @@
-from awesome_server.mvc.controller.connections.udp_connection import UDPConnection
-
 from gtkmvc import Model, Observable
+
+from awesome_server.connections.udp_connection import UDPConnection
 
 
 class UDPConnectionModel(Model, Observable):
