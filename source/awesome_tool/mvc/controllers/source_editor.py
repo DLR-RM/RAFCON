@@ -1,8 +1,7 @@
 import gtk
-from pylint import epylint as lint
-import traceback
-
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from pylint import epylint as lint
+
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 import awesome_tool.statemachine.singleton
@@ -26,8 +25,11 @@ class SourceEditorController(ExtendedController):
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
         view.set_text(self.model.state.script.script)
+
         if isinstance(self.model.state, LibraryState):
             view.textview.set_sensitive(False)
+            view['apply_button'].set_sensitive(False)
+            view['cancel_button'].set_sensitive(False)
 
     def register_adapters(self):
         pass
@@ -70,14 +72,10 @@ class SourceEditorController(ExtendedController):
         text_file.write(current_text)
         text_file.close()
 
-        try:
-            (pylint_stdout, pylint_stderr) = lint.py_run(
-                "/tmp/file_to_get_pylinted.py --errors-only --disable=print-statement ",
-                True, script="epylint")
-            # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
-        except Exception, e:
-            logger.error("Error during pylintint the source file occured: %s %s" %
-                         (str(e), str(traceback.format_exc())))
+        (pylint_stdout, pylint_stderr) = lint.py_run(
+            "/tmp/file_to_get_pylinted.py --errors-only --disable=print-statement ",
+            True, script="epylint")
+        # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
 
         # (pylint_stdout, pylint_stderr) = lint.py_run("/tmp/file_to_get_pylinted.py", True)
         pylint_stdout_data = pylint_stdout.readlines()
