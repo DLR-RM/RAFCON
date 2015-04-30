@@ -59,7 +59,7 @@ class NetworkController:
         :return: True if port was added, no if port already existing
         """
         if port not in self.udp_connections.keys():
-            udp_con = UDPConnection(self.view)
+            udp_con = UDPConnection()
             self.udp_connections[port] = udp_con
             try:
                 reactor.listenUDP(port, udp_con)
@@ -79,7 +79,7 @@ class NetworkController:
         :return: True if port was added, no if port already existing
         """
         if port not in self.tcp_connections.keys():
-            tcp_fac = TCPFactory(self.view)
+            tcp_fac = TCPFactory()
             self.tcp_connections[port] = tcp_fac
             try:
                 reactor.listenTCP(port, tcp_fac)

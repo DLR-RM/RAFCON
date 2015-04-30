@@ -2,31 +2,39 @@ from twisted.internet.protocol import DatagramProtocol
 
 from gtkmvc import Observable
 
+import gobject
+from awesome_server.utils import messaging
 
-class UDPConnection(DatagramProtocol, Observable):
 
-    def __init__(self, view):
+class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
+
+    def __init__(self):
+        self.__gobject_init__()
         Observable.__init__(self)
 
-        self.view = view
         self.clients = []
 
     def datagramReceived(self, data, addr):
         if addr not in self.clients:
             self.append_client(addr)
 
-        self.print_message("SERVER: %s from %s\n" % (data, repr(addr)))
-        self.transport.write(data, addr)
+        ip, port = addr
+        self.emit("data_received", data, ip, port)
 
     @Observable.observed
     def append_client(self, addr):
         self.clients.append(addr)
-        self.print_message("SERVER: New connection to %s\n" % repr(addr))
 
     def send_message(self, message, addr):
+        encr_msg = messaging.create_send_message(message)
         for i in range(0, 10):
-            self.transport.write(message + "#%d" % i, addr)
+            self.transport.write(encr_msg, addr)
 
-    def print_message(self, message):
-        buffer = self.view["textview"].get_buffer()
-        buffer.insert(buffer.get_end_iter(), message)
+    def send_acknowledge(self, message, addr):
+        self.send_message(message + "ACK", addr)
+
+
+gobject.type_register(UDPConnection)
+gobject.signal_new("data_received", UDPConnection, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_STRING,
+                                                                                    gobject.TYPE_STRING,
+                                                                                    gobject.TYPE_INT))

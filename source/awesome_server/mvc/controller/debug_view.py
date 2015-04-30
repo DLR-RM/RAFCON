@@ -48,10 +48,22 @@ class DebugViewController(ExtendedController):
             con.send_message(self.view["entry"].get_text(), (ip, port))
 
     @ExtendedController.observe("_udp_clients", after=True)
-    def test(self, model, prop_name, info):
+    def add_udp_client(self, model, prop_name, info):
         clients = info.instance[info.args[0]]
         if self.view:
             last_index = len(clients) - 1
             ip, port = clients[last_index]
             self.view["liststore"].append(["%s:%d" % (ip, port), ip, port])
             self.view["combobox"].set_active(last_index)
+
+    @ExtendedController.observe("_tcp_messages_received", after=True)
+    def handle_tcp_message_received(self, model, prop_name, info):
+        self.print_msg(str(info["args"]))
+
+    @ExtendedController.observe("_udp_messages_received", after=True)
+    def handle_udp_message_received(self, mode, prop_name, info):
+        self.print_msg(str(info["args"]))
+
+    def print_msg(self, msg):
+        buffer = self.view["textview"].get_buffer()
+        buffer.insert(buffer.get_end_iter(), msg + "\n")

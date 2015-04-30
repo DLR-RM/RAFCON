@@ -2,6 +2,7 @@ from twisted.internet import reactor, protocol
 from twisted.internet.protocol import DatagramProtocol
 
 from awesome_server.mvc.controller.network_controller import NetworkMode
+from awesome_server.utils import messaging
 
 
 class ClientController:
@@ -45,9 +46,16 @@ class UDPClient(DatagramProtocol):
         self.my_port = my_port
         self.view = view
 
+        self._rcvd_udp_messages_tmp = ""
+
     def startProtocol(self):
-        self.transport.write("Message from client using UDP", (self.ip, self.port))
+        encr_msg = messaging.create_send_message("Message from client using UDP")
+        for i in range(0, 10):
+            self.transport.write(encr_msg, (self.ip, self.port))
 
     def datagramReceived(self, data, addr):
-        buffer = self.view["textview"].get_buffer()
-        buffer.insert(buffer.get_end_iter(), "UDP-CLIENT on port %d: %s from %s\n" % (self.my_port, data, repr(addr)))
+        checksum = data[:39]
+        if messaging.check_checksum(data) and checksum != self._rcvd_udp_messages_tmp:
+            self._rcvd_udp_messages_tmp = checksum
+            buffer = self.view["textview"].get_buffer()
+            buffer.insert(buffer.get_end_iter(), "UDP-CLIENT on port %d: %s from %s\n" % (self.my_port, data[39:], repr(addr)))

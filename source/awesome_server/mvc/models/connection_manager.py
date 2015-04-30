@@ -7,9 +7,11 @@ from awesome_server.mvc.models.udp_connection import UDPConnectionModel
 class ConnectionManagerModel(Model, Observable):
 
     _udp_clients = {}
+    _tcp_messages_received = {}
+    _udp_messages_received = {}
     connection_manager = None
 
-    __observables__ = ("_udp_clients", "connection_manager")
+    __observables__ = ("_udp_clients", "_tcp_messages_received", "_udp_messages_received", "connection_manager")
 
     def __init__(self, connection_manager):
         Model.__init__(self)
@@ -25,15 +27,26 @@ class ConnectionManagerModel(Model, Observable):
                 return client
 
     @Model.observe("connection_manager", after=True)
-    def test(self, model, prop_name, info):
+    def connection_manager_method_call(self, model, prop_name, info):
         if info["method_name"] == "add_udp_connection":
             self.udp_clients[info.result] = []
             self.observe_model(UDPConnectionModel(info.result))
+        elif info["method_name"] == "new_udp_message_detected":
+            message, ip, port = info["args"][2:]
+            self._udp_messages_received[message[:39]] = (message[39:], (ip, port))
+        elif info["method_name"] == "tcp_data_received":
+            # TODO: connection to be replaced with unique sm_id
+            connection, message = info["args"][2:]
+            self._tcp_messages_received[connection] = message
 
     @Model.observe("_udp_clients_list", after=True)
-    def test2(self, model, prop_name, info):
+    def new_udp_client_added(self, model, prop_name, info):
         self.udp_clients[info.model.udp_connection] = info.instance
 
     @property
     def udp_clients(self):
         return self._udp_clients
+
+    @property
+    def tcp_messages_received(self):
+        return self._tcp_messages_received
