@@ -68,7 +68,7 @@ class UDPClient(DatagramProtocol):
             if self.check_acknowledge(data[constants.HEADER_LENGTH:]):
                 self.transport.write("0"+messaging.create_send_message(checksum + "ACK"), addr)
             buffer = self.view["textview"].get_buffer()
-            buffer.insert(buffer.get_end_iter(), "UDP-CLIENT on port %d: %s from %s\n" % (self.my_port, data[39:], repr(addr)))
+            buffer.insert(buffer.get_end_iter(), "UDP-CLIENT on port %d: %s from %s\n" % (self.my_port, data[40:], repr(addr)))
 
     def check_acknowledge(self, message):
         if message[:1] == "1":

@@ -18,9 +18,8 @@ NetworkMode = Enum('NETWORK_MODE', 'TCP UDP')
 
 class NetworkController:
     """
-    This class is responsible to coordinate all network connections via TCP and UDP.
+    This class is responsible to coordinate all network connections via TCP or UDP.
     :param network_mode: The used network mode the current instance handles: TCP or UDP
-    :param view: For debug purpose: a view containing a textview to print received data
     """
 
     def __init__(self, network_mode):

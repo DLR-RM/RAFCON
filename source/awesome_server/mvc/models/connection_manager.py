@@ -8,6 +8,10 @@ from awesome_server.utils.messaging import Message
 
 
 class ConnectionManagerModel(Model, Observable):
+    """
+    Holds data related to connection manager. Stores all UDP clients connected to the UDPConnection.
+    :param connection_manager: ConnectionManager to observe.
+    """
 
     _udp_clients = {}
     _tcp_messages_received = {}
@@ -25,12 +29,22 @@ class ConnectionManagerModel(Model, Observable):
         self.connection_manager = connection_manager
 
     def get_udp_connection_for_address(self, addr):
-        for client, addresses in self.udp_clients.iteritems():
+        """
+        Looks for the UDPConnection holding the specified address (ip, port)
+        :param addr: Address to find in UDPConnection
+        :return: UDPConnection containing address, None if no connection found
+        """
+        for connection, addresses in self.udp_clients.iteritems():
             if addr in addresses:
-                return client
+                return connection
+        return None
 
     @Model.observe("connection_manager", after=True)
     def connection_manager_method_call(self, model, prop_name, info):
+        """
+        Observes the connection_manager and its UDPConnections.
+        Stores all received messages over UDP and TCP
+        """
         if info["method_name"] == "add_udp_connection":
             self.udp_clients[info.result] = []
             self.observe_model(UDPConnectionModel(info.result))
@@ -45,6 +59,9 @@ class ConnectionManagerModel(Model, Observable):
 
     @Model.observe("_udp_clients_list", after=True)
     def new_udp_client_added(self, model, prop_name, info):
+        """
+        Keeps track of addresses of clients connected to all UDPConnections
+        """
         self.udp_clients[info.model.udp_connection] = info.instance
 
     @property

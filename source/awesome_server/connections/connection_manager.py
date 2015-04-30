@@ -55,17 +55,21 @@ class ConnectionManager(Observable):
     def new_udp_message_detected(self, connection, data, ip, port):
         """
         Method called by 'udp_data_received'. It processes the received data of the filtered message and sends an
-        acknowledge to the sender.
+        acknowledge to the sender, if specified.
         :param connection: UDP connection receiving the data
         :param data: Received data
         :param ip: Sender IP
         :param port: Sender Port
         """
         msg = Message.parse_from_string(data)
-        if self.check_acknowledge(msg):
+        if msg.akg_msg == 1:
             connection.send_acknowledge(msg.message_id, (ip, port))
 
     def add_tcp_connection(self, port):
+        """
+        Adds new TCP Factory to manager
+        :param port: Port to listen for incoming TCP connections
+        """
         tcp_con = self.server_tcp.start(port)
         if tcp_con:
             tcp_con.connect("data_received", self.tcp_data_received)
@@ -73,6 +77,11 @@ class ConnectionManager(Observable):
 
     @Observable.observed
     def add_udp_connection(self, port):
+        """
+        Adds new UDP Connection to manager
+        :param port: Port to listen for incoming UDP connections
+        :return: New UDP connection if successfully created, None otherwise
+        """
         udp_con = self.server_udp.start(port)
         if udp_con:
             udp_con.connect("data_received", self.udp_data_received)
@@ -87,8 +96,3 @@ class ConnectionManager(Observable):
     @property
     def tcp_connections(self):
         return self._tcp_connections
-
-    def check_acknowledge(self, message):
-        if message.akg_msg == 1:
-            return True
-        return False

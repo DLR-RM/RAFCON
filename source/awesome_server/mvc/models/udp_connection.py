@@ -4,6 +4,9 @@ from awesome_server.connections.udp_connection import UDPConnection
 
 
 class UDPConnectionModel(Model, Observable):
+    """
+    Keeps track of connected clients and informs ConnectionManager
+    """
 
     _udp_clients_list = []
     udp_connection = None

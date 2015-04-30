@@ -27,7 +27,6 @@ class TCPFactory(protocol.Factory, gobject.GObject):
     """
     This class is used to manage the TCP connections. It also keeps track of how many connections are currently
     available.
-    :param view: For debug purpose: a view containing a textview to print debug information
     """
 
     def __init__(self):
