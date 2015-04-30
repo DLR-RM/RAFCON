@@ -185,7 +185,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 transition = self.handle_no_transition(self.states[finished_thread_id])
             # it the transition is still None, then the state was preempted or aborted, in this case return
             if transition is None:
-                if self.final_outcome.outcom_id == -1:
+                if self.final_outcome.outcome_id == -1:
                     self.output_data["error"] = RuntimeError("state aborted")
                 return
 
