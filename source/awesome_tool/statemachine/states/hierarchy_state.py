@@ -188,20 +188,20 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             self.write_output_data()
             self.check_output_data_type()
 
+            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+
             # notify other threads that wait for this thread to finish
             if self.concurrency_queue:
                 self.concurrency_queue.put(self.state_id)
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
-                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 return
 
             # At least one child state was executed (if no child state was executed, the income is connected to an
             # outcome and the final_outcome is set by the get_start_state method)
             if transition is not None:
                 self.final_outcome = self.outcomes[transition.to_outcome]
-            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             logger.debug("Return from hierarchy state %s", self.name)
             return
 

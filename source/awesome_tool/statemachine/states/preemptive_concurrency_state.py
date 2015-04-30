@@ -145,11 +145,6 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             else:
                 self.backward_execution = False
 
-            self.add_state_execution_output_to_scoped_data(self.states[finished_thread_id].output_data,
-                                                           self.states[finished_thread_id])
-            self.update_scoped_variables_with_output_dictionary(self.states[finished_thread_id].output_data,
-                                                                self.states[finished_thread_id])
-
             # preempt all child states
             for state_id, state in self.states.iteritems():
                 state.recursively_preempt_states()
@@ -157,6 +152,9 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             for key, state in self.states.iteritems():
                 state.join()
                 state.concurrency_queue = None
+                # add the data of all child states to the scoped data and the scoped variables
+                self.add_state_execution_output_to_scoped_data(state.output_data, state)
+                self.update_scoped_variables_with_output_dictionary(state.output_data, state)
                 state.state_execution_status = StateExecutionState.INACTIVE
 
             # handle data for the exit script
@@ -176,15 +174,6 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             if self.concurrency_queue:
                 self.concurrency_queue.put(self.state_id)
 
-            # check the outcomes of the finished state for aborted or preempted
-            # the output data has to be set before this check can be done
-            if self.states[finished_thread_id].final_outcome.outcome_id == -2:
-                self.final_outcome = Outcome(-2, "preempted")
-                return
-            if self.states[finished_thread_id].final_outcome.outcome_id == -1:
-                self.final_outcome = Outcome(-1, "aborted")
-                return
-
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
                 return
@@ -196,6 +185,8 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 transition = self.handle_no_transition(self.states[finished_thread_id])
             # it the transition is still None, then the state was preempted or aborted, in this case return
             if transition is None:
+                if self.final_outcome.outcom_id == -1:
+                    self.output_data["error"] = RuntimeError("state aborted")
                 return
 
             self.final_outcome = self.outcomes[transition.to_outcome]

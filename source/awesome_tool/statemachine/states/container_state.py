@@ -966,7 +966,6 @@ class ContainerState(State):
                 return True
         return False
 
-
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
 
@@ -975,7 +974,7 @@ class ContainerState(State):
         """
         if not isinstance(transition, Transition):
             raise TypeError("transition must be of type Transition")
-        #the to_state is None when the transition connects an outcome of a child state to the outcome of a parent state
+        # the to_state is None when the transition connects an outcome of a child state to the outcome of a parent state
         if transition.to_state is None:
             return self
         else:
@@ -1003,8 +1002,13 @@ class ContainerState(State):
             for data_flow_id, data_flow in self.data_flows.iteritems():
                 if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
-                        self.output_data[output_name] = \
-                            copy.deepcopy(self.scoped_data[str(data_flow.from_key)+data_flow.from_state].value)
+                        scoped_data_key = str(data_flow.from_key)+data_flow.from_state
+                        if scoped_data_key in self.scoped_data.iterkeys():
+                            self.output_data[output_name] = \
+                                copy.deepcopy(self.scoped_data[scoped_data_key].value)
+                        else:
+                            logger.error("Output data with name %s was not found in the scoped data. "
+                                         "This normally means a statemachine design error", output_name)
 
     def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
         """ Copy the data of the enter/exit scripts to the scoped data
@@ -1216,12 +1220,15 @@ class ContainerState(State):
         """Property for the _child_execution field
 
         """
-        return self._child_execution
+        if self.state_execution_status is StateExecutionState.EXECUTE_CHILDREN:
+            return True
+        else:
+            return False
 
-    @child_execution.setter
-    @Observable.observed
-    def child_execution(self, child_execution):
-        if child_execution is not None:
-            if not isinstance(child_execution, bool):
-                raise TypeError("child_execution must be of type str")
-        self._child_execution = child_execution
+    # @child_execution.setter
+    # @Observable.observed
+    # def child_execution(self, child_execution):
+    #     if child_execution is not None:
+    #         if not isinstance(child_execution, bool):
+    #             raise TypeError("child_execution must be of type str")
+    #     self._child_execution = child_execution
