@@ -3,6 +3,9 @@ from gtkmvc import Model, Observable
 from awesome_server.connections.connection_manager import ConnectionManager
 from awesome_server.mvc.models.udp_connection import UDPConnectionModel
 
+from awesome_server.utils import constants
+from awesome_server.utils.messaging import Message
+
 
 class ConnectionManagerModel(Model, Observable):
 
@@ -33,7 +36,8 @@ class ConnectionManagerModel(Model, Observable):
             self.observe_model(UDPConnectionModel(info.result))
         elif info["method_name"] == "new_udp_message_detected":
             message, ip, port = info["args"][2:]
-            self._udp_messages_received[message[:39]] = (message[39:], (ip, port))
+            msg = Message.parse_from_string(message)
+            self._udp_messages_received[msg.message_id] = (msg.message, (ip, port))
         elif info["method_name"] == "tcp_data_received":
             # TODO: connection to be replaced with unique sm_id
             connection, message = info["args"][2:]

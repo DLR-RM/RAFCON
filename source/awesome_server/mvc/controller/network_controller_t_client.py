@@ -2,7 +2,10 @@ from twisted.internet import reactor, protocol
 from twisted.internet.protocol import DatagramProtocol
 
 from awesome_server.mvc.controller.network_controller import NetworkMode
-from awesome_server.utils import messaging
+from awesome_server.utils import messaging, constants
+from awesome_server.utils.messaging import Message
+
+from awesome_server.utils.config import global_server_config
 
 
 class ClientController:
@@ -46,16 +49,28 @@ class UDPClient(DatagramProtocol):
         self.my_port = my_port
         self.view = view
 
-        self._rcvd_udp_messages_tmp = ""
+        self._rcvd_udp_messages_tmp = [""] * global_server_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY")
+        self._current_rcvd_index = 0
 
     def startProtocol(self):
         encr_msg = messaging.create_send_message("Message from client using UDP")
         for i in range(0, 10):
-            self.transport.write(encr_msg, (self.ip, self.port))
+            self.transport.write("1"+encr_msg, (self.ip, self.port))
 
     def datagramReceived(self, data, addr):
-        checksum = data[:39]
-        if messaging.check_checksum(data) and checksum != self._rcvd_udp_messages_tmp:
-            self._rcvd_udp_messages_tmp = checksum
+        msg = Message.parse_from_string(data)
+        checksum = data[1:constants.HEADER_LENGTH]
+        if messaging.check_checksum(data) and msg.message_id not in self._rcvd_udp_messages_tmp:
+            self._rcvd_udp_messages_tmp[self._current_rcvd_index] = checksum
+            self._current_rcvd_index += 1
+            if self._current_rcvd_index >= global_server_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY"):
+                self._current_rcvd_index = 0
+            if self.check_acknowledge(data[constants.HEADER_LENGTH:]):
+                self.transport.write("0"+messaging.create_send_message(checksum + "ACK"), addr)
             buffer = self.view["textview"].get_buffer()
             buffer.insert(buffer.get_end_iter(), "UDP-CLIENT on port %d: %s from %s\n" % (self.my_port, data[39:], repr(addr)))
+
+    def check_acknowledge(self, message):
+        if message[:1] == "1":
+            return True
+        return False

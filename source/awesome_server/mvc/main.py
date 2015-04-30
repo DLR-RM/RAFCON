@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     debug_view = DebugView()
 
-    connection_manager = ConnectionManager(debug_view)
+    connection_manager = ConnectionManager()
     connection_manager_model = ConnectionManagerModel(connection_manager)
 
     debug_view_ctrl = DebugViewController(connection_manager_model, debug_view)
