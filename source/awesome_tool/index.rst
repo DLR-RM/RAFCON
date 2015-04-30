@@ -9,7 +9,7 @@ Welcome to Awesome Tool's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 6
 
    documentation/raw/awesome_tool.rst
 
