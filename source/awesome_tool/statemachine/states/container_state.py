@@ -14,7 +14,7 @@ import os
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from awesome_tool.statemachine.enums import StateType, DataPortType
+from awesome_tool.statemachine.enums import DataPortType, StateExecutionState
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.transition import Transition
@@ -25,7 +25,6 @@ from awesome_tool.statemachine.id_generator import *
 from awesome_tool.statemachine.config import *
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
 import awesome_tool.statemachine.singleton
-
 
 
 class ContainerState(State):
@@ -108,6 +107,7 @@ class ContainerState(State):
 
         :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
+        self.state_execution_status = StateExecutionState.ENTER
         logger.debug("Calling enter() script of container state with name %s (backward: %s)",
                      self.name, backward_execution)
         self.script.load_and_build_module()
@@ -120,6 +120,7 @@ class ContainerState(State):
         provided by a python script.
         :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
+        self.state_execution_status = StateExecutionState.EXIT
         logger.debug("Calling exit() script of container state with name %s (backward: %s)",
                      self.name, backward_execution)
         self.script.load_and_build_module()
@@ -140,7 +141,7 @@ class ContainerState(State):
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-1, "aborted")
-                self.active = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 logger.debug("Exit hierarchy state %s with outcome aborted, as the child state returned "
                              "aborted and no transition was added to the aborted outcome!" % self.name)
                 return None
@@ -150,7 +151,7 @@ class ContainerState(State):
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 logger.debug("Exit hierarchy state %s with outcome preempted, as the child state returned "
                              "preempted and no transition was added to the preempted outcome!" % self.name)
                 return None
@@ -160,7 +161,7 @@ class ContainerState(State):
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
                              "was preempted!" % self.name)
                 return None

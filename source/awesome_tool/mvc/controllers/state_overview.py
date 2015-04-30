@@ -2,7 +2,7 @@ import gtk
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 
-from awesome_tool.statemachine.states.state import StateType
+from awesome_tool.statemachine.enums import StateType
 
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState

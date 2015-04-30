@@ -10,7 +10,7 @@
 from gtkmvc import Observable
 import yaml
 
-from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.enums import StateExecutionState
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
 import awesome_tool.statemachine.singleton
@@ -100,7 +100,7 @@ class LibraryState(State, yaml.YAMLObject):
         It basically just calls the run method of the container state
         :return:
         """
-        self.active = True
+        self.state_execution_status = StateExecutionState.ACTIVE
         logger.debug("Entering library state %s" % self.library_name)
         self.state_copy.parent = self.parent
         self.state_copy.input_data = self.input_data
@@ -110,7 +110,7 @@ class LibraryState(State, yaml.YAMLObject):
         self.state_copy.run()
         self.final_outcome = self.state_copy.final_outcome
         logger.debug("Exiting library state %s" % self.library_name)
-        self.active = False
+        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
     def recursively_preempt_states(self):
         """ Preempt the state and all of it child states.

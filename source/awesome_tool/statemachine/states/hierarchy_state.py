@@ -14,7 +14,7 @@ from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.outcome import Outcome
-from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.enums import StateExecutionState
 import awesome_tool.statemachine.singleton as singleton
 from awesome_tool.statemachine.enums import MethodName
 from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem
@@ -84,7 +84,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             # children execution loop
             ########################################################
             last_error = None
-            self.child_execution = True
+            self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             # depending on the execution mode pause execution
             logger.debug("Handling execution mode")
             execution_signal = singleton.state_machine_execution_engine.handle_execution_mode(self)
@@ -92,6 +92,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
                 self.backward_execution = False
                 if self.preempted:
+                    state.state_execution_status = StateExecutionState.INACTIVE
                     break
 
                 last_history_item = None
@@ -118,8 +119,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     assert isinstance(last_history_item, CallItem)
                     # copy the scoped_data of the history from the point before the state was executed
                     self.scoped_data = last_history_item.scoped_data
-                    self.active = False
-                    self.child_execution = False
+                    self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                     if self.concurrency_queue:
                         self.concurrency_queue.put(self.state_id)
                     return  # outcome is not important as it is a backward execution
@@ -136,9 +136,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     # execute the state
                     state.start(self.execution_history, backward_execution=self.backward_execution)
                     state.join()
-                    state.active = False
-                    if state.final_outcome.outcome_id == -1:  # if the state aborted save the error
-                        last_error = state.output_data["error"]
+                    if state.final_outcome is not None:
+                        if state.final_outcome.outcome_id == -1:  # if the state aborted save the error
+                            last_error = state.output_data["error"]
                     if state.backward_execution:
                         # the item popped now from the history will be a CallItem and will contain the scoped data,
                         # that was valid before executing the state
@@ -147,6 +147,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                         # copy the scoped_data of the history from the point before the state was executed
                         self.scoped_data = last_history_item.scoped_data
                         # go to the next state as it was a backward execution
+                        state.state_execution_status = StateExecutionState.INACTIVE
                     else:
                         self.add_state_execution_output_to_scoped_data(state.output_data, state)
                         # print "---------------------- scoped data -----------------------"
@@ -161,9 +162,11 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                             transition = self.handle_no_transition(state)
                         # it the transition is still None, then the state was preempted or aborted, in this case return
                         if transition is None:
+                            state.state_execution_status = StateExecutionState.INACTIVE
                             # concurrency flag and active flag is set in self.handle_no_transition()
                             break
 
+                        state.state_execution_status = StateExecutionState.INACTIVE
                         state = self.get_state_for_transition(transition)
 
                     # depending on the execution mode pause execution
@@ -174,7 +177,6 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
             # children execution loop end
             ########################################################
 
-            self.child_execution = False
             # handle data for the exit script
             scoped_variables_as_dict = {}
             self.execution_history.add_call_history_item(self, MethodName.EXIT, self)
@@ -192,14 +194,14 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 return
 
             # At least one child state was executed (if no child state was executed, the income is connected to an
             # outcome and the final_outcome is set by the get_start_state method)
             if transition is not None:
                 self.final_outcome = self.outcomes[transition.to_outcome]
-            self.active = False
+            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             logger.debug("Return from hierarchy state %s", self.name)
             return
 
@@ -213,8 +215,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 self.concurrency_queue.put(self.state_id)
             self.final_outcome = Outcome(-1, "aborted")
             self.output_data["error"] = e
-            self.active = False
-            self.child_execution = False
+            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return
 
     @classmethod
