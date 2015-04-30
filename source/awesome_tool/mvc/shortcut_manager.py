@@ -51,7 +51,7 @@ class ShortcutManager():
             'reload': '<Shift>F5',
             'undo': '<Control>Z',
             'redo': ['<Control>Y', '<Control><Shift>Z'],
-            'left': ['<Control>Left','<Control><Shift>Left'],
+            'left': ['<Control>Left', '<Control><Shift>Left'],
             'right': ['<Control>Right', '<Control><Shift>Right'],
             'up': ['<Control>Up', '<Control><Shift>Up'],
             'down': ['<Control>Down', '<Control><Shift>Down']
@@ -74,8 +74,9 @@ class ShortcutManager():
                 self.accel_group.connect_group(keyval, modifier_mask, gtk.ACCEL_VISIBLE, callback)
 
     def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
-        ctr = self.trigger_action(action, key_value, modifier_mask)
-        if ctr > 0:
+        self.trigger_action(action, key_value, modifier_mask)
+        if action in ['up', 'down', 'left', 'right']:
+            # TODO: return True, if the controller implementing the action is focused
             return True
         return False
 
