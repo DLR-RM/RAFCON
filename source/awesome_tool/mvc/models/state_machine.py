@@ -61,10 +61,12 @@ class StateMachineModel(ModelMT):
         if info['method_name'] == 'root_state':
             if self.state_machine.root_state != self.root_state.state:
                 new_root_state = self.state_machine.root_state
+                self.root_state.unregister_observer(self)
                 if isinstance(new_root_state, ContainerState):
                     self.root_state = ContainerStateModel(new_root_state)
                 else:
                     self.root_state = StateModel(new_root_state)
+                self.root_state.register_observer(self)
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
