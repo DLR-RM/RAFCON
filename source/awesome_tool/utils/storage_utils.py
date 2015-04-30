@@ -67,7 +67,7 @@ class StorageUtils(object):
         state = yaml.load(stream)
         return state
 
-    def write_dict_to_yaml(self, dict_to_write, path):
+    def write_dict_to_yaml(self, dict_to_write, path, **kwords):
         """
         Writes a dictionary to a yaml file
         :param dict_to_write:  the dictionary to be writte
@@ -75,7 +75,7 @@ class StorageUtils(object):
         :return:
         """
         f = open(path, 'w')
-        yaml.dump(dict_to_write, f, indent=4)
+        yaml.dump(dict_to_write, f, indent=4, **kwords)
         f.close()
 
     def load_dict_from_yaml(self, path):
