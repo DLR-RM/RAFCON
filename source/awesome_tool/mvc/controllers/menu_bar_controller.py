@@ -74,9 +74,9 @@ class MenuBarController(ExtendedController):
 
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
-                logger.debug("Folder selected: " + dialog.get_filename())
-            elif response == gtk.RESPONSE_CANCEL:
-                logger.debug("No folder selected")
+                logger.debug("Folder selected: {0}".format(dialog.get_filename()))
+            else:  # response == gtk.RESPONSE_CANCEL, but also reaction to "Esc" key
+                logger.debug("Aborting 'Open'")
                 dialog.destroy()
                 return
             load_path = dialog.get_filename()
@@ -90,7 +90,7 @@ class MenuBarController(ExtendedController):
 
     def on_save_activate(self, widget, data=None):
         save_path = self.model.get_selected_state_machine_model().state_machine.base_path
-        logger.debug("Saving state machine in %s" % save_path)
+        logger.debug("Saving state machine to {0}".format(save_path))
         if save_path is None:
             self.on_save_as_activate(widget, data=None)
         else:
@@ -111,16 +111,16 @@ class MenuBarController(ExtendedController):
                                             gtk.STOCK_SAVE, gtk.RESPONSE_OK))
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
-                logger.debug("File selected: " + dialog.get_filename())
-            elif response == gtk.RESPONSE_CANCEL:
-                logger.debug("No file selected")
-                dialog.destroy()
-                return
-            self.model.get_selected_state_machine_model().state_machine.base_path = dialog.get_filename()
+                logger.debug("File selected: {0}".format(dialog.get_filename()))
+                self.model.get_selected_state_machine_model().state_machine.base_path = dialog.get_filename()
+                self.on_save_activate(widget, data)
+            else:  # e. g. response == gtk.RESPONSE_CANCEL, but also reaction to "Esc" key
+                logger.debug("Aborting 'Save as'")
             dialog.destroy()
+            return
         else:
             self.model.get_selected_state_machine_model().state_machine.base_path = path
-        self.on_save_activate(widget, data)
+            self.on_save_activate(widget, data)
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement
