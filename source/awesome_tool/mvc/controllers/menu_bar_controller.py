@@ -84,9 +84,12 @@ class MenuBarController(ExtendedController):
         else:
             load_path = path
 
-        [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-            global_storage.load_statemachine_from_yaml(load_path)
-        awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+        try:
+            [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+                global_storage.load_statemachine_from_yaml(load_path)
+            awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+        except AttributeError as e:
+            logger.error('Error while trying to open state-machine: {0}'.format(e))
 
     def on_save_activate(self, widget, data=None):
         save_path = self.model.get_selected_state_machine_model().state_machine.base_path
