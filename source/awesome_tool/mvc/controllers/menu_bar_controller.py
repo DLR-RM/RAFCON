@@ -6,16 +6,17 @@ import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.utils import log
 from awesome_tool.mvc.views.about_dialog import MyAboutDialog
+
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.utils import helper
-
 
 
 class MenuBarController(ExtendedController):
     """
     The class to trigger all the action, available in the menu bar.
     """
+
     def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view,
                  top_level_window, shortcut_manager):
         ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
@@ -66,11 +67,11 @@ class MenuBarController(ExtendedController):
 
     def on_open_activate(self, widget=None, data=None, path=None):
         if path is None:
-            dialog = gtk.FileChooserDialog("Please choose a folder",
-                                   None,
-                                   gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+            dialog = gtk.FileChooserDialog("Please choose the folder of the state-machine",
+                                           None,
+                                           gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                           (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                            gtk.STOCK_OPEN, gtk.RESPONSE_OK))
 
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
@@ -85,7 +86,7 @@ class MenuBarController(ExtendedController):
             load_path = path
 
         try:
-            [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+            [state_machine, version, creation_time] = awesome_tool.statemachine.singleton. \
                 global_storage.load_statemachine_from_yaml(load_path)
             awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
         except AttributeError as e:
@@ -110,7 +111,7 @@ class MenuBarController(ExtendedController):
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
         if path is None:
-            dialog = gtk.FileChooserDialog("Please choose a file",
+            dialog = gtk.FileChooserDialog("Please choose a root folder a name for the state-machine",
                                            None,
                                            gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
                                            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
@@ -191,12 +192,12 @@ class MenuBarController(ExtendedController):
         for sm_id, sm in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
             if sm.base_path is not None:
-                #print sm.root_state.script.path
+                # print sm.root_state.script.path
                 # cut the last directory from the path
                 path_items = sm.root_state.script.path.split("/")
                 new_path = path_items[0]
                 for i in range(len(path_items) - 2):
-                    new_path = "%s/%s" % (new_path, path_items[i+1])
+                    new_path = "%s/%s" % (new_path, path_items[i + 1])
                 #print new_path
                 state_machine_id_to_path[sm_id] = new_path
                 sm_keys.append(sm_id)
@@ -205,7 +206,8 @@ class MenuBarController(ExtendedController):
         self.state_machines_editor_ctrl.close_all_tabs()
 
         # reload state machines from file system
-        awesome_tool.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
+        awesome_tool.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys,
+                                                                                         state_machine_id_to_path)
 
     def on_quit_activate(self, widget, data=None):
         avoid_shutdown = self.on_delete_event(self, widget, None)
@@ -285,6 +287,7 @@ class MenuBarController(ExtendedController):
     def destroy(self, widget, data=None):
         logger.debug("Closing main window!")
         import glib
+
         glib.idle_add(awesome_tool.statemachine.config.global_config.save_configuration)
         glib.idle_add(log.debug_filter.set_logging_test_view, None)
         glib.idle_add(log.error_filter.set_logging_test_view, None)
