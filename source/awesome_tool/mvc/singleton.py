@@ -33,6 +33,7 @@ def open_folder(query):
 
 interface.open_folder_func = open_folder
 
+
 def create_folder(query):
     import gtk
     dialog = gtk.FileChooserDialog(query,
