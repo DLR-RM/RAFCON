@@ -1,9 +1,9 @@
 """
 .. module:: singleton
    :platform: Unix, Windows
-   :synopsis: A module to hold all singletons of the GTk GUI
+   :synopsis: A module to hold all singletons of the GTK GUI
 
-.. moduleauthor:: TODO
+.. moduleauthor:: Rico Belder, Franz Steinmetz
 
 
 """
@@ -12,6 +12,7 @@ from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerMod
 from awesome_tool.statemachine import interface
 
 global_focus = None
+
 
 def open_folder(query):
     import gtk
