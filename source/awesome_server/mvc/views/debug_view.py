@@ -1,5 +1,6 @@
 from gtkmvc import View
 import gtk
+import glib
 
 from twisted.internet import reactor
 
@@ -71,9 +72,40 @@ class DebugView(View):
 
         window.show()
 
+        self.textview = textview
         self["window"] = window
         self["textview"] = textview
+
+        self.quit_flag = False
 
     def delete_event(self, widget, event=None):
         reactor.stop()
         gtk.main_quit()
+
+    def apply_tag(self, name):
+        self.textview.get_buffer().apply_tag_by_name(name,
+                                                     self.textview.get_buffer().get_start_iter(),
+                                                     self.textview.get_buffer().get_end_iter())
+
+    # LOOK OUT: This will be called from several threads => make it thread safe
+    def print_debug(self, text):
+        glib.idle_add(self.print_add, text, self.textview.get_buffer())
+
+    def print_error(self, text):
+        glib.idle_add(self.print_add, text, self.textview.get_buffer())
+
+    def print_info(self, text):
+        glib.idle_add(self.print_add, text, self.textview.get_buffer())
+
+    def print_warning(self, text):
+        glib.idle_add(self.print_add, text, self.textview.get_buffer())
+
+    def print_add(self, text_to_add, text_buf):
+        text_to_add += "\n"
+        self.print_push(text_to_add, text_buf)
+
+    def print_push(self, text_to_push, text_buf):
+        text_buf.insert(text_buf.get_end_iter(), text_to_push)
+
+        if not self.quit_flag:
+            self.textview.scroll_mark_onscreen(self.textview.get_buffer().get_insert())

@@ -9,12 +9,17 @@ from awesome_server.mvc.controller.debug_view import DebugViewController
 from awesome_server.connections.connection_manager import ConnectionManager
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
+from awesome_server.utils import log
+
 import gtk
 
 
 if __name__ == '__main__':
 
     debug_view = DebugView()
+
+    log.debug_filter.set_logging_test_view(debug_view)
+    log.error_filter.set_logging_test_view(debug_view)
 
     connection_manager = ConnectionManager()
     connection_manager_model = ConnectionManagerModel(connection_manager)

@@ -49,7 +49,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         """
         self.clients.append(addr)
 
-    def send_message(self, message, addr, log_extra=""):
+    def send_message(self, message, addr):
         """
         This method sends the specified message to the given address as many times as specified in configuration.
         It does not expect an acknowledge and does not send the data again.
@@ -58,7 +58,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         :return:
         """
         assert isinstance(message, Message)
-        logger.debug("Send %s message %s" % (log_extra, message.message_id))
+        logger.info("Send message %s" % message.message_id)
         for i in range(0, global_server_config.get_config_value("NUMBER_UDP_MESSAGES_SENT")):
             self.transport.write(str(message), addr)
 
@@ -69,7 +69,9 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         :param addr: Address of sender
         """
         msg = Message(message_id + "ACK", 0)
-        self.send_message(msg, addr, "acknowledge")
+        logger.info("Send acknowledge message for received message: %s with acknowledge id: %s" % (message_id,
+                                                                                                    msg.message_id))
+        self.send_message(msg, addr)
 
     def send_acknowledged_message(self, message, addr):
         """
