@@ -10,7 +10,7 @@
 from gtkmvc import Observable
 import yaml
 
-from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.enums import StateExecutionState
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
 import awesome_tool.statemachine.singleton
@@ -69,8 +69,21 @@ class LibraryState(State, yaml.YAMLObject):
 
         #copy all ports and outcomes of self.state_copy to let the library state appear like the container state
         self._used_data_port_ids = set([])
+
         self.input_data_ports = self.state_copy.input_data_ports
+        # copy input_port default values
+        if input_data_ports is not None:
+            for i_key, i_data_port in input_data_ports.iteritems():
+                if i_key in self.input_data_ports.iterkeys():
+                    self.input_data_ports[i_key].default_value = i_data_port.default_value
         self.output_data_ports = self.state_copy.output_data_ports
+
+        # copy output_port default values
+        if output_data_ports is not None:
+            for o_key, o_data_port in output_data_ports.iteritems():
+                if o_key in self.output_data_ports.iterkeys():
+                    self.output_data_ports[o_key].default_value = o_data_port.default_value
+
         self.outcomes = self.state_copy.outcomes
 
         logger.debug("Initialized library state with name %s" % name)
@@ -87,7 +100,7 @@ class LibraryState(State, yaml.YAMLObject):
         It basically just calls the run method of the container state
         :return:
         """
-        self.active = True
+        self.state_execution_status = StateExecutionState.ACTIVE
         logger.debug("Entering library state %s" % self.library_name)
         self.state_copy.parent = self.parent
         self.state_copy.input_data = self.input_data
@@ -97,7 +110,7 @@ class LibraryState(State, yaml.YAMLObject):
         self.state_copy.run()
         self.final_outcome = self.state_copy.final_outcome
         logger.debug("Exiting library state %s" % self.library_name)
-        self.active = False
+        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
     def recursively_preempt_states(self):
         """ Preempt the state and all of it child states.

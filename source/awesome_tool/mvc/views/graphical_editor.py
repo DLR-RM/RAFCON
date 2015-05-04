@@ -130,10 +130,6 @@ class GraphicalEditorView(View):
 
         self['main_frame'] = self.v_box
 
-        # Query the OpenGL extension version.
-        major, minor = gtk.gdkgl.query_version()
-        logger.debug("OpenGL version: {0}.{1}".format(major, minor))
-
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     # background_color = Color.from_hex(0x17242f)
@@ -195,16 +191,17 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # gldrawable = self.get_gl_drawable()
         # glcontext = self.get_gl_context()
 
+        # Query the GLX and OpenGL extension version.
+        opengl_version = glGetString(GL_VERSION)
+        major, minor = gtk.gdkgl.query_version()
+        logger.info("OpenGL version: {0}".format(opengl_version))
+        logger.info("GLX version: {0}.{1}".format(major, minor))
+
         glEnable(GL_DEPTH_TEST)  # Draw with respect to the z coordinate (hide objects beneath others)
         glEnable(GL_BLEND)  # Make use of alpha channel for colors
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)  # Configure alpha blending
         glEnable(GL_LINE_SMOOTH)  # Smooth lines
         glClearColor(self.background_color.r, self.background_color.g, self.background_color.b, 1)  # Background color
-        #glClearColor(17. / 255, 61. / 255, 108. / 255, 1)
-
-        logger.debug("realize")
-
-        # self.configure()
 
     def _configure(self, *args):
         """Configure viewport

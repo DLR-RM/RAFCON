@@ -102,7 +102,8 @@ class StateModel(ModelMT):
             self.update_models(model, prop_name, info)
 
         # mark the state machine this state belongs to as dirty
-        active_flag_responsible = info["method_name"] == "active" or info["method_name"] == "child_execution"
+        active_flag_responsible = info["method_name"] == "active" or info["method_name"] == "child_execution" or \
+                                  info["method_name"] == "state_execution_status"
         if isinstance(model, StateModel) and prop_name == "state" and active_flag_responsible:
             # do not track the active flag when marking the sm dirty
             pass

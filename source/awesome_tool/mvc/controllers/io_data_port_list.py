@@ -4,6 +4,7 @@ import copy
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+from awesome_tool.statemachine.states.library_state import LibraryState
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models.state import StateModel
@@ -39,9 +40,11 @@ class DataPortListController(ExtendedController):
         view.get_top_widget().set_cursor(0)
 
         view['name_col'].add_attribute(view['name_text'], 'text', 0)
-        view['name_text'].set_property("editable", True)
+        if not isinstance(self.model.state, LibraryState):
+            view['name_text'].set_property("editable", True)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', 1)
-        view['data_type_text'].set_property("editable", True)
+        if not isinstance(self.model.state, LibraryState):
+            view['data_type_text'].set_property("editable", True)
         if view['default_value_col'] and view['default_value_text']:
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', 2)
             view['default_value_text'].set_property("editable", True)

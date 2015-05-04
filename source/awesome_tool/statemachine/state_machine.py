@@ -15,6 +15,7 @@ from awesome_tool.statemachine.id_generator import generate_state_machine_id
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.execution.execution_history import ExecutionHistory
+from awesome_tool.statemachine.enums import StateExecutionState
 
 
 class StateMachine(Observable):
@@ -65,6 +66,7 @@ class StateMachine(Observable):
         :return:
         """
         state.join()
+        state.state_execution_status = StateExecutionState.INACTIVE
         # deferred import to avoid cyclic import at the beginning of the script
         from awesome_tool.statemachine.singleton import state_machine_execution_engine
         state_machine_execution_engine.stop()

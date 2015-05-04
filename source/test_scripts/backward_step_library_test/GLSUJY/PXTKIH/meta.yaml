@@ -10,4 +10,3 @@ outcomes:
 output_data_ports: {}
 path: ../../test_scripts/backward_step_library_test/GLSUJY/PXTKIH
 state_id: PXTKIH
-state_type: STATE_TYPE.EXECUTION

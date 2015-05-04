@@ -43,12 +43,14 @@ class StateOutcomesListController(ExtendedController):
             if column.get_title() == 'ID':
                 if int(outcome.outcome_id) < 0:
                     cell_renderer.set_alignment(0.9, 0.5)
+                    # this is False per default thus in the else case "editable" will be False as well
                     cell_renderer.set_property('editable', False)
             elif column.get_title() == 'Name':
                 if int(outcome.outcome_id) < 0:
                     cell_renderer.set_property('editable', False)
                 else:
-                    cell_renderer.set_property('editable', True)
+                    if not isinstance(self.model.state, LibraryState):
+                        cell_renderer.set_property('editable', True)
             elif column.get_title() == 'To-State':
                 cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)

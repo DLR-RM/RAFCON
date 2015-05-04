@@ -2,6 +2,7 @@ import gtk
 from gtk import ListStore
 import gobject
 
+from awesome_tool.statemachine.states.library_state import LibraryState
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
@@ -25,12 +26,15 @@ class ScopedVariableListController(ExtendedController):
         view.get_top_widget().set_model(self.scoped_variables_list_store)
 
         view['name_col'].add_attribute(view['name_text'], 'text', 0)
-        view['name_text'].set_property("editable", True)
+        if not isinstance(self.model.state, LibraryState):
+            view['name_text'].set_property("editable", True)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', 1)
-        view['data_type_text'].set_property("editable", True)
+        if not isinstance(self.model.state, LibraryState):
+            view['data_type_text'].set_property("editable", True)
         if view['default_value_col'] and view['default_value_text']:
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', 2)
-            view['default_value_text'].set_property("editable", True)
+            if not isinstance(self.model.state, LibraryState):
+                view['default_value_text'].set_property("editable", True)
             view['default_value_text'].connect("edited", self.on_default_value_changed)
 
         view['name_text'].connect("edited", self.on_name_changed)

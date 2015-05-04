@@ -28,7 +28,6 @@ path: ../../test_scripts/backward_step_library_test/GLSUJY
 scoped_variables:
     29: !ScopedVariable {data_type: int, default_value: 99, name: bottles, scoped_variable_id: 29}
 state_id: GLSUJY
-state_type: STATE_TYPE.HIERARCHY
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: PXTKIH,
         transition_id: 1}

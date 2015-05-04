@@ -20,7 +20,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 from awesome_tool.statemachine.data_port import DataPort
-from awesome_tool.statemachine.enums import StateType, DataPortType
+from awesome_tool.statemachine.enums import DataPortType, StateExecutionState
 from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.id_generator import *
@@ -87,8 +87,9 @@ class State(Observable, yaml.YAMLObject, object):
         # the final outcome of a state, when it finished execution
         self._final_outcome = None
         self._description = None
-        # a flag that shows if the state is currently running
-        self._active = None
+        # detailed execution status of the state
+        self._state_execution_status = None
+        self.state_execution_status = StateExecutionState.INACTIVE
 
         self.edited_since_last_execution = False
         self.execution_history = None
@@ -129,7 +130,7 @@ class State(Observable, yaml.YAMLObject, object):
 
         :return:
         """
-        self.active = True
+        self.state_execution_status = StateExecutionState.ACTIVE
         self.preempted = False
         if not isinstance(self.input_data, dict):
             raise TypeError("states must be of type dict")
@@ -138,7 +139,7 @@ class State(Observable, yaml.YAMLObject, object):
         self.check_input_data_type(self.input_data)
 
     def setup_backward_run(self):
-        self.active = True
+        self.state_execution_status = StateExecutionState.ACTIVE
         self.preempted = False
 
     def run(self, *args, **kwargs):
@@ -734,15 +735,33 @@ class State(Observable, yaml.YAMLObject, object):
         """Property for the _active field
 
         """
-        return self._active
+        if self.state_execution_status is StateExecutionState.INACTIVE:
+            return False
+        else:
+            return True
 
-    @active.setter
+    # @active.setter
+    # @Observable.observed
+    # def active(self, active):
+    #     if not isinstance(active, bool):
+    #         raise TypeError("active must be of type bool")
+    #
+    #     self._active = active
+
+    @property
+    def state_execution_status(self):
+        """Property for the _state_execution_status field
+
+        """
+        return self._state_execution_status
+
+    @state_execution_status.setter
     @Observable.observed
-    def active(self, active):
-        if not isinstance(active, bool):
-            raise TypeError("active must be of type bool")
+    def state_execution_status(self, state_execution_status):
+        if not isinstance(state_execution_status, StateExecutionState):
+            raise TypeError("state_execution_status must be of type StateExecutionState")
 
-        self._active = active
+        self._state_execution_status = state_execution_status
 
     def preemptive_wait(self, time=None):
         """Waiting method which can be preempted

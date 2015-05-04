@@ -126,7 +126,7 @@ def trigger_gui_signals(*args):
     wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
 
-    glib.idle_add(menubar_ctrl.on_open_activate, None, None, "../../test_scripts/basic_turtle_demo_sm")
+    glib.idle_add(menubar_ctrl.on_open_activate, None, None, "../../test_scripts/tutorials/basic_turtle_demo_sm")
     wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
     assert len(sm_manager_model.state_machines) == current_sm_length+2
 

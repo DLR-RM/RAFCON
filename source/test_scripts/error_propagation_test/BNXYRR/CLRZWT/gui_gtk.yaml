@@ -1,0 +1,21 @@
+!Vividict
+gui: !Vividict
+    editor: !Vividict
+        outcome_pos:
+            -2: !!python/tuple [179.77281590758008, -8.419075797872424]
+            -1: !!python/tuple [202.0942824966758, -8.419075797872424]
+            0: !!python/tuple [213.25501579122363, -64.22274227061166]
+        rel_pos: !!python/tuple [16.418723404255314, -44.91574468085106]
+        size: !!python/tuple [20.0, 20.0]
+transition3: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: []
+transition4: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: []
+transition5: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: []

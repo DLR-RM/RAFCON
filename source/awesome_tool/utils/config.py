@@ -59,7 +59,8 @@ class DefaultConfig(object):
         self.__config_dict[key] = value
 
     def save_configuration(self):
-        self.storage.write_dict_to_yaml(self.__config_dict, os.path.join(CONFIG_PATH, self.CONFIG_FILE))
+        self.storage.write_dict_to_yaml(self.__config_dict, os.path.join(CONFIG_PATH, self.CONFIG_FILE),
+                                        width=80, default_flow_style=False)
         logger.info("Saved configuration to filesystem (path: %s)" % str(os.path.join(CONFIG_PATH, self.CONFIG_FILE)))
 
 

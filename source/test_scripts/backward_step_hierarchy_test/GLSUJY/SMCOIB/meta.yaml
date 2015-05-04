@@ -17,7 +17,6 @@ path: ../../test_scripts/backward_step_hierarchy_test/GLSUJY/SMCOIB
 scoped_variables:
     5: !ScopedVariable {data_type: int, default_value: 100, name: bottles, scoped_variable_id: 5}
 state_id: SMCOIB
-state_type: STATE_TYPE.HIERARCHY
 transitions:
     1: !Transition {from_outcome: 0, from_state: YSBJGK, to_outcome: null, to_state: OUWQUJ,
         transition_id: 1}

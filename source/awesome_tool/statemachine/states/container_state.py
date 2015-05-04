@@ -14,7 +14,7 @@ import os
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from awesome_tool.statemachine.enums import StateType, DataPortType
+from awesome_tool.statemachine.enums import DataPortType, StateExecutionState
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.transition import Transition
@@ -25,7 +25,6 @@ from awesome_tool.statemachine.id_generator import *
 from awesome_tool.statemachine.config import *
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
 import awesome_tool.statemachine.singleton
-
 
 
 class ContainerState(State):
@@ -108,6 +107,7 @@ class ContainerState(State):
 
         :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
+        self.state_execution_status = StateExecutionState.ENTER
         logger.debug("Calling enter() script of container state with name %s (backward: %s)",
                      self.name, backward_execution)
         self.script.load_and_build_module()
@@ -120,6 +120,7 @@ class ContainerState(State):
         provided by a python script.
         :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
         """
+        self.state_execution_status = StateExecutionState.EXIT
         logger.debug("Calling exit() script of container state with name %s (backward: %s)",
                      self.name, backward_execution)
         self.script.load_and_build_module()
@@ -140,7 +141,7 @@ class ContainerState(State):
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-1, "aborted")
-                self.active = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 logger.debug("Exit hierarchy state %s with outcome aborted, as the child state returned "
                              "aborted and no transition was added to the aborted outcome!" % self.name)
                 return None
@@ -150,7 +151,7 @@ class ContainerState(State):
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 logger.debug("Exit hierarchy state %s with outcome preempted, as the child state returned "
                              "preempted and no transition was added to the preempted outcome!" % self.name)
                 return None
@@ -160,7 +161,7 @@ class ContainerState(State):
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
                 self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
                              "was preempted!" % self.name)
                 return None
@@ -965,7 +966,6 @@ class ContainerState(State):
                 return True
         return False
 
-
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
 
@@ -974,7 +974,7 @@ class ContainerState(State):
         """
         if not isinstance(transition, Transition):
             raise TypeError("transition must be of type Transition")
-        #the to_state is None when the transition connects an outcome of a child state to the outcome of a parent state
+        # the to_state is None when the transition connects an outcome of a child state to the outcome of a parent state
         if transition.to_state is None:
             return self
         else:
@@ -1002,8 +1002,13 @@ class ContainerState(State):
             for data_flow_id, data_flow in self.data_flows.iteritems():
                 if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
-                        self.output_data[output_name] = \
-                            copy.deepcopy(self.scoped_data[str(data_flow.from_key)+data_flow.from_state].value)
+                        scoped_data_key = str(data_flow.from_key)+data_flow.from_state
+                        if scoped_data_key in self.scoped_data.iterkeys():
+                            self.output_data[output_name] = \
+                                copy.deepcopy(self.scoped_data[scoped_data_key].value)
+                        else:
+                            logger.error("Output data with name %s was not found in the scoped data. "
+                                         "This normally means a statemachine design error", output_name)
 
     def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
         """ Copy the data of the enter/exit scripts to the scoped data
@@ -1215,12 +1220,15 @@ class ContainerState(State):
         """Property for the _child_execution field
 
         """
-        return self._child_execution
+        if self.state_execution_status is StateExecutionState.EXECUTE_CHILDREN:
+            return True
+        else:
+            return False
 
-    @child_execution.setter
-    @Observable.observed
-    def child_execution(self, child_execution):
-        if child_execution is not None:
-            if not isinstance(child_execution, bool):
-                raise TypeError("child_execution must be of type str")
-        self._child_execution = child_execution
+    # @child_execution.setter
+    # @Observable.observed
+    # def child_execution(self, child_execution):
+    #     if child_execution is not None:
+    #         if not isinstance(child_execution, bool):
+    #             raise TypeError("child_execution must be of type str")
+    #     self._child_execution = child_execution

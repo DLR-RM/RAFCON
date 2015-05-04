@@ -33,7 +33,6 @@ scoped_variables:
     31: !ScopedVariable {data_type: int, default_value: 20, name: whiskey_number,
         scoped_variable_id: 31}
 state_id: GLSUJY
-state_type: STATE_TYPE.HIERARCHY
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: OOECFM,
         transition_id: 1}

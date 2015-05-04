@@ -22,7 +22,6 @@ output_data_ports:
 path: ../../test_scripts/backward_step_barrier_test/GLSUJY/OOECFM/GOLRUX
 scoped_variables: {}
 state_id: GOLRUX
-state_type: STATE_TYPE.HIERARCHY
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: FOEGDK,
         transition_id: 1}

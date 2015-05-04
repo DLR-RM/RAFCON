@@ -160,23 +160,14 @@ def run_turtle_demo():
     # basic_turtle_demo_state = create_turtle_statemachine()
 
     # set base path of global storage
-    awesome_tool.statemachine.singleton.global_storage.base_path = "../../tutorials/99_bottles_of_beer" # test_scripts/tutorials/basic_turtle_demo_sm"
+    awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/99_bottles_of_beer"
 
     # load the state machine
-    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/basic_turtle_demo_sm")
-
     [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/99_bottles_of_beer")
+        global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/basic_turtle_demo_sm")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
-
-    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_preemption_test")
-
-    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_hierarchy_test")
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/99_bottles_of_beer")
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()

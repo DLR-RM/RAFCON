@@ -25,8 +25,11 @@ class SourceEditorController(ExtendedController):
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
         view.set_text(self.model.state.script.script)
+
         if isinstance(self.model.state, LibraryState):
             view.textview.set_sensitive(False)
+            view['apply_button'].set_sensitive(False)
+            view['cancel_button'].set_sensitive(False)
 
     def register_adapters(self):
         pass

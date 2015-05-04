@@ -25,5 +25,4 @@ output_data_ports:
 path: ../../test_scripts/backward_step_barrier_test/GLSUJY/OOECFM
 scoped_variables: {}
 state_id: OOECFM
-state_type: STATE_TYPE.BARRIER_CONCURRENCY
 transitions: {}

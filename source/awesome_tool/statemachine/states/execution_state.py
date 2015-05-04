@@ -17,6 +17,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.script import Script, ScriptType
+from awesome_tool.statemachine.enums import StateExecutionState
 
 
 class ExecutionState(State, yaml.YAMLObject):
@@ -79,7 +80,7 @@ class ExecutionState(State, yaml.YAMLObject):
                 logger.debug("Backward executing state with id %s and name %s" % (self._state_id, self.name))
                 outcome = self._execute(self.input_data, self.output_data, backward_execution=True)
                 # outcome handling is not required as we are in backward mode and the execution order is fixed
-                self.active = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 logger.debug("Finished backward executing state with id %s and name %s" % (self._state_id, self.name))
                 return
 
@@ -87,6 +88,7 @@ class ExecutionState(State, yaml.YAMLObject):
                 logger.debug("Executing state with id %s and name %s" % (self._state_id, self.name))
                 outcome = self._execute(self.input_data, self.output_data)
 
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 # check output data
                 self.check_output_data_type()
 
@@ -95,11 +97,9 @@ class ExecutionState(State, yaml.YAMLObject):
 
                 if self.preempted:
                     self.final_outcome = Outcome(-2, "preempted")
-                    self.active = False
                     return
 
                 self.final_outcome = outcome
-                self.active = False
                 return
 
         except Exception, e:
@@ -108,7 +108,7 @@ class ExecutionState(State, yaml.YAMLObject):
             # write error to the output_data of the state
             self.output_data["error"] = e
             self.final_outcome = Outcome(-1, "aborted")
-            self.active = False
+            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return
 
     @classmethod
@@ -138,9 +138,3 @@ class ExecutionState(State, yaml.YAMLObject):
         filename = dict_representation['filename']
         return ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                               check_path=False)
-
-    @staticmethod
-    def copy_state(source_state):
-        state_copy = ExecutionState()
-        # TODO: copy fields from source_state into the state_copy
-        return state_copy

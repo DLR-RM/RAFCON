@@ -18,7 +18,7 @@ logger = log.get_logger(__name__)
 from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.statemachine.states.container_state import ContainerState
-from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.enums import StateExecutionState
 from awesome_tool.statemachine.enums import MethodName
 from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
 
@@ -83,9 +83,9 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
                 self.execution_history.add_return_history_item(self, MethodName.ENTRY, self)
 
-                self.child_execution = True
                 history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
 
+            self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
             queue_ids = 0
             history_index = 0
@@ -113,6 +113,7 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 # wait until all states finished their jobs in the backward execution case
                 for key, state in self.states.iteritems():
                     state.join()
+                    state.state_execution_status = StateExecutionState.INACTIVE
 
                 # backward_execution needs to be True to signal the parent container state the backward execution
                 self.backward_execution = True
@@ -136,19 +137,13 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
                 # do not write the output of the entry script
                 # final outcome is not important as the execution order is fixed during backward stepping
-                self.active = False
-                self.child_execution = False
+                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
                 return
 
             else:
                 self.backward_execution = False
-
-            self.add_state_execution_output_to_scoped_data(self.states[finished_thread_id].output_data,
-                                                           self.states[finished_thread_id])
-            self.update_scoped_variables_with_output_dictionary(self.states[finished_thread_id].output_data,
-                                                                self.states[finished_thread_id])
 
             # preempt all child states
             for state_id, state in self.states.iteritems():
@@ -157,8 +152,10 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
             for key, state in self.states.iteritems():
                 state.join()
                 state.concurrency_queue = None
-
-            self.child_execution = False
+                # add the data of all child states to the scoped data and the scoped variables
+                self.add_state_execution_output_to_scoped_data(state.output_data, state)
+                self.update_scoped_variables_with_output_dictionary(state.output_data, state)
+                state.state_execution_status = StateExecutionState.INACTIVE
 
             # handle data for the exit script
             scoped_variables_as_dict = {}
@@ -172,25 +169,13 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             self.check_output_data_type()
 
-            print self.output_data
+            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
             if self.concurrency_queue:
                 self.concurrency_queue.put(self.state_id)
 
-            # check the outcomes of the finished state for aborted or preempted
-            # the output data has to be set before this check can be done
-            if self.states[finished_thread_id].final_outcome.outcome_id == -2:
-                self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
-                return
-            if self.states[finished_thread_id].final_outcome.outcome_id == -1:
-                self.final_outcome = Outcome(-1, "aborted")
-                self.active = False
-                return
-
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
-                self.active = False
                 return
 
             transition = self.get_transition_for_outcome(self.states[finished_thread_id],
@@ -200,18 +185,18 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 transition = self.handle_no_transition(self.states[finished_thread_id])
             # it the transition is still None, then the state was preempted or aborted, in this case return
             if transition is None:
+                if self.final_outcome.outcome_id == -1:
+                    self.output_data["error"] = RuntimeError("state aborted")
                 return
 
             self.final_outcome = self.outcomes[transition.to_outcome]
-            self.active = False
             return
 
         except Exception, e:
             logger.error("Runtime error %s %s" % (e, str(traceback.format_exc())))
             self.final_outcome = Outcome(-1, "aborted")
             self.output_data["error"] = e
-            self.active = False
-            self.child_execution = False
+            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return
 
     @classmethod
@@ -236,9 +221,3 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                               path=dict_representation['path'],
                               filename=dict_representation['filename'],
                               check_path=False)
-
-    @staticmethod
-    def copy_state(source_state):
-        state_copy = PreemptiveConcurrencyState()
-        # TODO: copy fields from source_state into the state_copy
-        return state_copy

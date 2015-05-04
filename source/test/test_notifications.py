@@ -1294,9 +1294,10 @@ def test_state_property_modify_notification(with_print=False):
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
 
     # active(self, active) bool
-    state_dict['Nested'].active = True
-    forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    # IMPORTANT: active flag is not used any more
+    # state_dict['Nested'].active = True
+    # forecast += 1
+    # check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
 
     ############################################
     ###### Properties of ContainerState ########
@@ -1362,9 +1363,10 @@ def test_state_property_modify_notification(with_print=False):
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
 
     # child_execution(self, child_execution) bool
-    state_dict['Nested'].child_execution = True
-    forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    # IMPORTANT: child_execution flag is not used any more
+    # state_dict['Nested'].child_execution = True
+    # forecast += 1
+    # check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
 
 if __name__ == '__main__':
     # pytest.main()
