@@ -1028,6 +1028,7 @@ class ContainerState(State):
         dict_representation = {
             'name': data.name,
             'state_id': data.state_id,
+            'description': data.description,
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,

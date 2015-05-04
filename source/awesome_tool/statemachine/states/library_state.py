@@ -204,7 +204,7 @@ class LibraryState(State, yaml.YAMLObject):
             'path': data.script.path,
             'filename': data.script.filename
         }
-        node = dumper.represent_mapping(u'!LibraryState', dict_representation)
+        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
         return node
 
     @classmethod

@@ -221,22 +221,27 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = ContainerState.get_container_state_yaml_dict(data)
-        node = dumper.represent_mapping(u'!HierarchyState', dict_representation)
+        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
         return node
 
     @classmethod
     def from_yaml(cls, loader, node):
         dict_representation = loader.construct_mapping(node, deep=True)
-        return HierarchyState(name=dict_representation['name'],
-                              state_id=dict_representation['state_id'],
-                              input_data_ports=dict_representation['input_data_ports'],
-                              output_data_ports=dict_representation['output_data_ports'],
-                              outcomes=dict_representation['outcomes'],
-                              states=None,
-                              transitions=dict_representation['transitions'],
-                              data_flows=dict_representation['data_flows'],
-                              scoped_variables=dict_representation['scoped_variables'],
-                              v_checker=None,
-                              path=dict_representation['path'],
-                              filename=dict_representation['filename'],
-                              check_path=False)
+        state = HierarchyState(name=dict_representation['name'],
+                               state_id=dict_representation['state_id'],
+                               input_data_ports=dict_representation['input_data_ports'],
+                               output_data_ports=dict_representation['output_data_ports'],
+                               outcomes=dict_representation['outcomes'],
+                               states=None,
+                               transitions=dict_representation['transitions'],
+                               data_flows=dict_representation['data_flows'],
+                               scoped_variables=dict_representation['scoped_variables'],
+                               v_checker=None,
+                               path=dict_representation['path'],
+                               filename=dict_representation['filename'],
+                               check_path=False)
+        try:
+            state.description = dict_representation['description']
+        except (ValueError, TypeError, KeyError):
+            pass
+        return state

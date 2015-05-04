@@ -117,8 +117,11 @@ class StateEditorController(ExtendedController):
             view['new_scoped_variable_button'].set_sensitive(False)
             view['delete_scoped_variable_button'].set_sensitive(False)
 
-        if self.model.state.description is not None:
-            view['description_text_view'].get_buffer().set_text(self.model.state.description)
+        state = self.model.state
+        if isinstance(state, LibraryState):
+            state = self.model.state.state_copy
+        if state.description is not None:
+            view['description_text_view'].get_buffer().set_text(state.description)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -138,7 +141,6 @@ class StateEditorController(ExtendedController):
         entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
 
         if len(entry_text) > 0:
-            logger.debug("State %s changed description from '%s' to: '%s'\n" % (self.model.state.state_id,
-                                                                                self.model.state.description, entry_text))
+            logger.debug("Changed description of state {0}".format(self.model.state.name))
             self.model.state.description = entry_text
             self.view['description_text_view'].get_buffer().set_text(self.model.state.description)
