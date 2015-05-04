@@ -120,6 +120,7 @@ class StateEditorController(ExtendedController):
         state = self.model.state
         if isinstance(state, LibraryState):
             state = self.model.state.state_copy
+            view['description_text_view'].set_sensitive(False)
         if state.description is not None:
             view['description_text_view'].get_buffer().set_text(state.description)
 
@@ -137,6 +138,8 @@ class StateEditorController(ExtendedController):
         adj.set_value(adj.get_upper() - adj.get_page_size())
 
     def change_description(self, textview, otherwidget):
+        if isinstance(self.model.state, LibraryState):
+            return
         tbuffer = textview.get_buffer()
         entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
 
