@@ -10,6 +10,7 @@ from awesome_tool.mvc.views.about_dialog import MyAboutDialog
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.utils import helper
+from awesome_tool.statemachine import interface
 
 
 class MenuBarController(ExtendedController):
@@ -67,21 +68,12 @@ class MenuBarController(ExtendedController):
 
     def on_open_activate(self, widget=None, data=None, path=None):
         if path is None:
-            dialog = gtk.FileChooserDialog("Please choose the folder of the state-machine",
-                                           None,
-                                           gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                                           (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                            gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-
-            response = dialog.run()
-            if response == gtk.RESPONSE_OK:
-                logger.debug("Folder selected: {0}".format(dialog.get_filename()))
-            else:  # response == gtk.RESPONSE_CANCEL, but also reaction to "Esc" key
-                logger.debug("Aborting 'Open'")
-                dialog.destroy()
+            if interface.open_folder_func is None:
+                logger.error("No function defined for opening a folder")
                 return
-            load_path = dialog.get_filename()
-            dialog.destroy()
+            load_path = interface.open_folder_func("Please choose the folder of the state-machine")
+            if load_path is None:
+                return
         else:
             load_path = path
 
@@ -97,37 +89,29 @@ class MenuBarController(ExtendedController):
         if state_machine_m is None:
             return
         save_path = state_machine_m.state_machine.base_path
-        logger.debug("Saving state machine to {0}".format(save_path))
         if save_path is None:
-            self.on_save_as_activate(widget, data=None)
-        else:
-            awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
-                self.model.get_selected_state_machine_model().state_machine,
-                self.model.get_selected_state_machine_model().state_machine.base_path,
-                delete_old_state_machine=False)
+            if not self.on_save_as_activate(widget, data=None):
+                return
+
+        logger.debug("Saving state machine to {0}".format(save_path))
+        awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+            self.model.get_selected_state_machine_model().state_machine,
+            self.model.get_selected_state_machine_model().state_machine.base_path,
+            delete_old_state_machine=False)
 
         self.model.get_selected_state_machine_model().root_state.store_meta_data_for_state()
         logger.debug("Successfully saved graphics meta data.")
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
+        if interface.create_folder_func is None:
+            logger.error("No function defined for creating a folder")
+            return False
+        path = interface.create_folder_func("Please choose a root folder a name for the state-machine")
         if path is None:
-            dialog = gtk.FileChooserDialog("Please choose a root folder a name for the state-machine",
-                                           None,
-                                           gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
-                                           (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                            gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-            response = dialog.run()
-            if response == gtk.RESPONSE_OK:
-                logger.debug("File selected: {0}".format(dialog.get_filename()))
-                self.model.get_selected_state_machine_model().state_machine.base_path = dialog.get_filename()
-                self.on_save_activate(widget, data)
-            else:  # e. g. response == gtk.RESPONSE_CANCEL, but also reaction to "Esc" key
-                logger.debug("Aborting 'Save as'")
-            dialog.destroy()
-            return
-        else:
-            self.model.get_selected_state_machine_model().state_machine.base_path = path
-            self.on_save_activate(widget, data)
+            return False
+        self.model.get_selected_state_machine_model().state_machine.base_path = path
+        self.on_save_activate(widget, data)
+        return True
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement
