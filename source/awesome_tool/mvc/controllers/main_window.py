@@ -19,6 +19,7 @@ import awesome_tool.statemachine.config
 from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
 from awesome_tool.mvc.controllers.top_tool_bar_controller import TopToolBarController
+from awesome_tool.mvc.controllers.network_connections import NetworkConnections
 from awesome_tool.utils import constants
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.mvc.controllers.execution_history import ExecutionHistoryTreeController
@@ -123,6 +124,12 @@ class MainWindowController(ExtendedController):
                                                                         view.state_machines_editor,
                                                                         states_editor_ctrl)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
+
+        ######################################################
+        # network controller
+        ######################################################
+        network_connections_ctrl = NetworkConnections(state_machine_manager_model, view.network_connections_view)
+        self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
         ######################################################
         # global variable editor

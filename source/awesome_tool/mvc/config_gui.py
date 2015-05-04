@@ -30,7 +30,7 @@ class GuiConfig(DefaultConfig):
     """
 
     def __init__(self):
-        sm_path, gui_path = helper.get_opt_paths()
+        sm_path, gui_path, net_path = helper.get_opt_paths()
         DefaultConfig.__init__(self, CONFIG_FILE, DEFAULT_CONFIG, gui_path)
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "

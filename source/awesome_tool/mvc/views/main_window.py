@@ -6,6 +6,7 @@ from awesome_tool.mvc.views import StatePropertiesView, ContainerStateView, Grap
      LoggingView, StateMachineTreeView, LibraryTreeView, MenuBarView, ToolBarView, TopToolBarView, ExecutionHistoryView
 from awesome_tool.mvc.views.states_editor import StatesEditorView
 from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
+from awesome_tool.mvc.views.network_connections import NetworkConnectionsView
 from awesome_tool.utils import constants
 
 
@@ -97,6 +98,14 @@ class MainWindowView(View):
 
         # insert status-bar
         #self['vbox1'].reparent(self['lower_statusbar'])
+
+        # --------------------------------------------------------------------------
+        # Network Connections View
+        # --------------------------------------------------------------------------
+
+        self.network_connections_view = NetworkConnectionsView()
+        self.network_connections_view.show()
+        self["network_controller_viewport"].add(self.network_connections_view.get_top_widget())
 
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts

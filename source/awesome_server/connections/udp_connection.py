@@ -25,6 +25,9 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         self.clients = []
         self.messages_to_be_acknowledged = {}
 
+        self._rcvd_udp_messages_history = [""] * global_server_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY")
+        self._current_rcvd_index = 0
+
     def datagramReceived(self, data, addr):
         """
         Handles received data and registers clients if they are not already known.
@@ -35,11 +38,20 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         if addr not in self.clients:
             self.append_client(addr)
 
-        if messaging.check_checksum(data):
-            self.check_acknowledge_and_stop_sending(data[constants.HEADER_LENGTH:])
+        msg = Message.parse_from_string(data)
+        if msg.check_checksum() and not self.check_for_message_in_history(msg):
+            self.check_acknowledge_and_stop_sending(msg)
 
-        ip, port = addr
-        self.emit("data_received", data, ip, port)
+            ip, port = addr
+            self.emit("data_received", msg, ip, port)
+
+    def check_for_message_in_history(self, msg):
+        msg_already_received = msg.message_id in self._rcvd_udp_messages_history
+        self._rcvd_udp_messages_history[self._current_rcvd_index] = msg.message_id
+        self._current_rcvd_index += 1
+        if self._current_rcvd_index >= global_server_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY"):
+            self._current_rcvd_index = 0
+        return msg_already_received
 
     @Observable.observed
     def append_client(self, addr):
@@ -68,7 +80,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         :param message_id: Message_ID of message to be acknowledged
         :param addr: Address of sender
         """
-        msg = Message(message_id + "ACK", 0)
+        msg = Message(message_id, 0, "ACK")
         logger.info("Send acknowledge message for received message: %s with acknowledge id: %s" % (message_id,
                                                                                                     msg.message_id))
         self.send_message(msg, addr)
@@ -105,20 +117,18 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
             self.send_message(message, addr)
             stop_event.wait(global_server_config.get_config_value("SECONDS_BETWEEN_UDP_RESEND"))
 
-    def check_acknowledge_and_stop_sending(self, message):
+    def check_acknowledge_and_stop_sending(self, msg):
         """
         This method checks if the incoming received data is an acknowledge to one of the registered messages. If the
         message is registered and active the sending will be stopped and the acknowledge flag is set to True
         :param message: Received message to scan for acknowledge
-        :return:
         """
-        message_id = message[:constants.CHECKSUM_LENGTH]
-        ack_flag = message[-3:]
-        if ack_flag == "ACK" and message_id in self.messages_to_be_acknowledged.iterkeys():
-            logger.debug("Message %s acknowledged" % message_id)
-            stop_event = self.messages_to_be_acknowledged[message_id][0]
+        ack_flag = msg.flag
+        if ack_flag == "ACK" and msg.message in self.messages_to_be_acknowledged.iterkeys():
+            logger.debug("Message %s acknowledged" % msg.message)
+            stop_event = self.messages_to_be_acknowledged[msg.message][0]
             stop_event.set()
-            self.messages_to_be_acknowledged[message_id] = (stop_event, True)
+            self.messages_to_be_acknowledged[msg.message] = (stop_event, True)
 
 
 gobject.type_register(UDPConnection)

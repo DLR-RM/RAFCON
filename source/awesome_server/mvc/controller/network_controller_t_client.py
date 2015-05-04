@@ -60,12 +60,12 @@ class UDPClient(DatagramProtocol):
     def datagramReceived(self, data, addr):
         msg = Message.parse_from_string(data)
         checksum = data[1:constants.HEADER_LENGTH]
-        if messaging.check_checksum(data) and msg.message_id not in self._rcvd_udp_messages_tmp:
+        if msg.check_checksum() and msg.message_id not in self._rcvd_udp_messages_tmp:
             self._rcvd_udp_messages_tmp[self._current_rcvd_index] = checksum
             self._current_rcvd_index += 1
             if self._current_rcvd_index >= global_server_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY"):
                 self._current_rcvd_index = 0
-            if self.check_acknowledge(data[constants.HEADER_LENGTH:]):
+            if self.check_acknowledge(data):
                 self.transport.write("0"+messaging.create_send_message(checksum + "ACK"), addr)
             buffer = self.view["textview"].get_buffer()
             buffer.insert(buffer.get_end_iter(), "UDP-CLIENT on port %d: %s from %s\n" % (self.my_port, data[40:], repr(addr)))

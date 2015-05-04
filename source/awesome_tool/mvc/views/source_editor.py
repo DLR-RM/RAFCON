@@ -5,7 +5,7 @@ except:
     print "NO python-module gtksourceview2 found!"
 from gtkmvc import View
 
-from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.mvc.config_gui import global_gui_config
 from awesome_tool.utils import constants
 
 # TODO: comment

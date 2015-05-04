@@ -18,9 +18,10 @@ def set_button_children_size_request(widget):
 def get_opt_paths():
         sm_path = None
         gui_path = None
+        net_path = None
 
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hs:g:", ["sm=", "gui="])
+            opts, args = getopt.getopt(sys.argv[1:], "hs:g:n:", ["sm=", "gui=", "net="])
         except getopt.GetoptError:
             print '%s -s <path/to/statemachine_config> -g <path/to/gui_config>' % sys.executable
             sys.exit(2)
@@ -32,5 +33,7 @@ def get_opt_paths():
                 sm_path = arg
             elif opt in ("-g", "--gui"):
                 gui_path = arg
+            elif opt in ("-n", "--net"):
+                net_path = arg
 
-        return sm_path, gui_path
+        return sm_path, gui_path, net_path

@@ -1,5 +1,7 @@
 import gtk
 
+from twisted.internet import reactor
+
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 import awesome_tool.statemachine.singleton
@@ -283,6 +285,8 @@ class MenuBarController(ExtendedController):
         glib.idle_add(log.debug_filter.set_logging_test_view, None)
         glib.idle_add(log.error_filter.set_logging_test_view, None)
         self.main_window_view.hide()
+        if reactor.running:
+            glib.idle_add(reactor.stop)
         glib.idle_add(gtk.main_quit)
 
     ######################################################

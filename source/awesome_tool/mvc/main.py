@@ -1,3 +1,8 @@
+from twisted.internet import gtk2reactor
+gtk2reactor.install()
+
+from twisted.internet import reactor
+
 import sys
 import logging
 import signal
@@ -174,5 +179,6 @@ if __name__ == '__main__':
     # graphical_editor_view = SingleWidgetWindowView(GraphicalEditorView, title="Graphical Editor", pos=1)
     # graphical_editor_ctrl = SingleWidgetWindowController(ctr_model, graphical_editor_view, GraphicalEditorController)
 
+    reactor.run()
     gtk.main()
     logger.debug("after gtk main")

@@ -1,3 +1,8 @@
+from twisted.internet import gtk2reactor
+gtk2reactor.install()
+
+from twisted.internet import reactor
+
 import logging
 import sys
 import os
@@ -182,6 +187,7 @@ def run_turtle_demo():
                                                   editor_type="LogicDataGrouped")
     #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
+    reactor.run()
     gtk.main()
     logger.debug("Gtk main loop exited!")
 
