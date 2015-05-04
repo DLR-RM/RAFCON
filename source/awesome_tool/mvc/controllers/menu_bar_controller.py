@@ -92,7 +92,10 @@ class MenuBarController(ExtendedController):
             logger.error('Error while trying to open state-machine: {0}'.format(e))
 
     def on_save_activate(self, widget, data=None):
-        save_path = self.model.get_selected_state_machine_model().state_machine.base_path
+        state_machine_m = self.model.get_selected_state_machine_model()
+        if state_machine_m is None:
+            return
+        save_path = state_machine_m.state_machine.base_path
         logger.debug("Saving state machine to {0}".format(save_path))
         if save_path is None:
             self.on_save_as_activate(widget, data=None)
