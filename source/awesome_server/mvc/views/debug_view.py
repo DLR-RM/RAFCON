@@ -36,7 +36,7 @@ class DebugView(View):
         add_udp_button.show()
         hbox.pack_start(add_tcp_button, True, True, 0)
         hbox.pack_start(add_udp_button, True, True, 0)
-        hbox.show()
+        # hbox.show()
 
         send_box = gtk.HBox()
         liststore = gtk.ListStore(str, str, int)

@@ -4,7 +4,6 @@ from gtkmvc import Observable
 from threading import Thread, Event
 
 import gobject
-from awesome_server.utils import messaging, constants
 from awesome_server.utils.messaging import Message
 from awesome_server.utils.config import global_server_config
 
