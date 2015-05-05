@@ -1,10 +1,17 @@
 from awesome_server.mvc.controller.extended_controller import ExtendedController
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
+from awesome_server.connections.protobuf import yaml_transmission_pb2
+from awesome_server.utils.storage_utils import StorageUtils
+
 import gtk
 from twisted.internet import reactor
 
 from awesome_server.utils.config import global_server_config
+import os
+
+
+TEMP_FOLDER = os.getenv("HOME") + "/.awesome_server/tmp"
 
 
 class DebugViewController(ExtendedController):
@@ -18,7 +25,10 @@ class DebugViewController(ExtendedController):
 
         view["send_button"].connect("clicked", self.send_button_clicked)
         view["send_ack_button"].connect("clicked", self.send_ack_button_clicked)
-        # view["send_exe_button"].connect("clicked", self.send_exe_button_clicked)
+
+        self.storage = StorageUtils("~/")
+        if not self.storage.exists_path(TEMP_FOLDER):
+            self.storage.create_path(TEMP_FOLDER)
 
     def send_button_clicked(self, widget, event=None):
         self.send_message_to_selected_connection(self.view["entry"].get_text(), False, False)
@@ -45,6 +55,7 @@ class DebugViewController(ExtendedController):
         self.send_message_to_selected_connection("STEPB")
 
     def on_window_destroy(self, widget, event=None):
+        self.storage.remove_path(TEMP_FOLDER)
         reactor.stop()
         gtk.main_quit()
 
@@ -75,12 +86,25 @@ class DebugViewController(ExtendedController):
 
     @ExtendedController.observe("_tcp_messages_received", after=True)
     def handle_tcp_message_received(self, model, prop_name, info):
-        self.print_msg(str(info["args"]))
+        msg = info["args"][1]
+        files = yaml_transmission_pb2.Files()
+        files.ParseFromString(msg)
+        self.process_yaml_files(files.files)
 
     @ExtendedController.observe("_udp_messages_received", after=True)
     def handle_udp_message_received(self, mode, prop_name, info):
         message = info["args"][1]
         self.print_msg(message)
+
+    def process_yaml_files(self, files):
+        for f in files:
+            dirname = os.path.dirname(TEMP_FOLDER + f.file_path)
+            if not self.storage.exists_path(dirname):
+                self.storage.create_path(dirname)
+            if not self.storage.exists_path(TEMP_FOLDER + f.file_path):
+                new_file = open(TEMP_FOLDER + f.file_path, 'wb')
+                new_file.write(f.file_content)
+                new_file.close()
 
     def print_msg(self, msg):
         buf = self.view["messages"].get_buffer()

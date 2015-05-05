@@ -5,8 +5,13 @@ from awesome_tool.mvc.models.container_state import ContainerStateModel
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.mvc.models.state import StateModel
+
 from awesome_tool.mvc.views.network_connections import NetworkConnectionsView
-from awesome_tool.utils.messaging import Message
+
+from awesome_tool.statemachine.storage.network_storage import NetworkStorageReader
+from awesome_tool.statemachine.storage.protobuf import yaml_transmission_pb2
+
+from awesome_tool.utils.network_messaging import Message
 
 from awesome_tool.mvc.config_network import global_net_config
 
@@ -44,6 +49,8 @@ class NetworkConnections(ExtendedController):
 
         self.menu_bar_controller = None
 
+        self.net_storage_reader = NetworkStorageReader(base_path=model.get_selected_state_machine_model().state_machine.base_path)
+
     def register_statemachine_model(self, sm_model):
         assert isinstance(sm_model, StateMachineModel)
         self.observe_model(sm_model)
@@ -63,6 +70,9 @@ class NetworkConnections(ExtendedController):
                 self.udp_registered = True
 
     def on_tcp_connect_button_clicked(self, widget, event=None):
+        if global_net_config.get_config_value("SPACEBOARD_CUP_MODE"):
+            logger.error("No TCP connection possible in Spaceboard Cup Mode")
+            return
         if not self.tcp_connected and self.tcp_connector is None:
             self.tcp_connector = reactor.connectTCP(global_net_config.get_config_value("SERVER_IP"),
                                                     global_net_config.get_config_value("SERVER_TCP_PORT"),
@@ -143,6 +153,12 @@ class TCPClient(protocol.Protocol):
         self.factory.view["tcp_connection_connected_label"].set_text("YES")
         self.factory.network_connection.tcp_connected = True
         self.factory.network_connection.view["tcp_connect_button"].set_label("Disconnect TCP")
+        files = yaml_transmission_pb2.Files()
+        for path, content in self.factory.network_connection.net_storage_reader.file_storage.iteritems():
+            my_file = files.files.add()
+            my_file.file_path = str(path)
+            my_file.file_content = content
+        self.transport.write(files.SerializeToString())
 
     def dataReceived(self, data):
         # TODO: implement data handling for TCP connection

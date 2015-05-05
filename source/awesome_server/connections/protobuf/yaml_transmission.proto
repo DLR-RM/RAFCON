@@ -1,0 +1,11 @@
+package awesome_tool;
+
+message Files {
+
+	message File {
+		required string file_path = 1;
+		required string file_content = 2;
+	}
+
+	repeated File files = 1;
+}

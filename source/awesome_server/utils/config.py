@@ -24,6 +24,7 @@ SECONDS_FOR_UDP_TIMEOUT: 60
 """
 CONFIG_FILE = "server_config.yaml"
 
+
 class ServerConfig(object):
     """
     Class to hold and load the global configurations.

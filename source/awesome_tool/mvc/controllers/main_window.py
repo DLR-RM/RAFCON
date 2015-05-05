@@ -121,16 +121,16 @@ class MainWindowController(ExtendedController):
         # state editor
         ######################################################
         states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
-                                                         view.states_editor,
-                                                         editor_type)
+                                                    view.states_editor,
+                                                    editor_type)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
         ######################################################
         # state machines editor
         ######################################################
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
-                                                                        view.state_machines_editor,
-                                                                        states_editor_ctrl,
-                                                                        network_connections_ctrl)
+                                                                   view.state_machines_editor,
+                                                                   states_editor_ctrl,
+                                                                   network_connections_ctrl)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
         ######################################################
