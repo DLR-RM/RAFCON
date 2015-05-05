@@ -81,6 +81,10 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
                                                                                                     msg.message_id))
         self.send_message(msg, addr)
 
+    def send_non_acknowledged_message(self, message, addr, flag="   "):
+        msg = Message(message, 0, flag)
+        self.send_message(msg, addr)
+
     def send_acknowledged_message(self, message, addr, flag="   "):
         """
         Sends the message repeatedly until it is acknowledged or timeout occurred.
