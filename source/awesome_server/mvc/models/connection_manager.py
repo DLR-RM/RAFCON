@@ -49,9 +49,8 @@ class ConnectionManagerModel(Model, Observable):
             self.udp_clients[info.result] = []
             self.observe_model(UDPConnectionModel(info.result))
         elif info["method_name"] == "new_udp_message_detected":
-            message, ip, port = info["args"][2:]
-            msg = Message.parse_from_string(message)
-            self._udp_messages_received[msg.message_id] = (msg.message, (ip, port))
+            msg = info["args"][1]
+            self._udp_messages_received[msg.message_id] = msg.message
         elif info["method_name"] == "tcp_data_received":
             # TODO: connection to be replaced with unique sm_id
             connection, message = info["args"][2:]

@@ -2,6 +2,8 @@ from awesome_server.mvc.controller.extended_controller import ExtendedController
 from awesome_server.mvc.controller.network_controller import NetworkMode
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
+from awesome_server.utils.messaging import Message
+
 from awesome_server.utils.config import global_server_config
 
 # ------------------------JUST FOR DEBUG------------------------todo: remove
@@ -23,6 +25,8 @@ class DebugViewController(ExtendedController):
         model.connection_manager.add_udp_connection(global_server_config.get_config_value("UDP_PORT"))
 
         view["send_button"].connect("clicked", self.send_button_clicked)
+        view["send_ack_button"].connect("clicked", self.send_ack_button_clicked)
+        view["send_exe_button"].connect("clicked", self.send_exe_button_clicked)
 
 # ------------------------JUST FOR DEBUG------------------------todo: remove
         view["add_tcp_button"].connect("clicked", self.add_tcp)
@@ -45,7 +49,28 @@ class DebugViewController(ExtendedController):
             name, ip, port = model[tree_iter]
 
             con = self.model.get_udp_connection_for_address((ip, port))
+            msg = Message(self.view["entry"].get_text(), 0, "   ")
+            con.send_message(msg, (ip, port))
+
+    def send_ack_button_clicked(self, widget, event=None):
+        combo = self.view["combobox"]
+        tree_iter = combo.get_active_iter()
+        if tree_iter is not None:
+            model = combo.get_model()
+            name, ip, port = model[tree_iter]
+
+            con = self.model.get_udp_connection_for_address((ip, port))
             con.send_acknowledged_message(self.view["entry"].get_text(), (ip, port))
+
+    def send_exe_button_clicked(self, widget, event=None):
+        combo = self.view["combobox"]
+        tree_iter = combo.get_active_iter()
+        if tree_iter is not None:
+            model = combo.get_model()
+            name, ip, port = model[tree_iter]
+
+            con = self.model.get_udp_connection_for_address((ip, port))
+            con.send_acknowledged_message(self.view["entry"].get_text(), (ip, port), "EXE")
 
     @ExtendedController.observe("_udp_clients", after=True)
     def add_udp_client(self, model, prop_name, info):
@@ -58,14 +83,14 @@ class DebugViewController(ExtendedController):
 
     @ExtendedController.observe("_tcp_messages_received", after=True)
     def handle_tcp_message_received(self, model, prop_name, info):
-        # self.print_msg(str(info["args"]))
-        pass
+        self.print_msg(str(info["args"]))
 
     @ExtendedController.observe("_udp_messages_received", after=True)
     def handle_udp_message_received(self, mode, prop_name, info):
-        # self.print_msg(str(info["args"]))
-        pass
+        message = info["args"][1]
+        self.print_msg(message)
 
     def print_msg(self, msg):
-        buffer = self.view["textview"].get_buffer()
-        buffer.insert(buffer.get_end_iter(), msg + "\n")
+        buf = self.view["messages"].get_buffer()
+        buf.insert(buf.get_end_iter(), msg + "\n")
+        self.view["messages"].scroll_mark_onscreen(buf.get_insert())

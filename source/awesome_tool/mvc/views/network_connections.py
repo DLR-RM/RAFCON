@@ -1,4 +1,5 @@
 from gtkmvc import View
+from awesome_tool.utils import constants
 
 
 class NetworkConnectionsView(View):
@@ -7,3 +8,10 @@ class NetworkConnectionsView(View):
 
     def __init__(self):
         View.__init__(self)
+
+        self["udp_register_button"].set_border_width = constants.BORDER_WIDTH
+        self["udp_register_button"].set_size_request(constants.BUTTON_MIN_WIDTH * 4 / 3,
+                                                     constants.BUTTON_MIN_HEIGHT * 4 / 3)
+        self["tcp_connect_button"].set_border_width = constants.BORDER_WIDTH
+        self["tcp_connect_button"].set_size_request(constants.BUTTON_MIN_WIDTH * 4 / 3,
+                                                    constants.BUTTON_MIN_HEIGHT * 4 / 3)

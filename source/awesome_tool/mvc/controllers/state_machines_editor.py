@@ -49,11 +49,12 @@ def create_tab_header(title, close_callback, *additional_parameters):
 
 class StateMachinesEditorController(ExtendedController):
 
-    def __init__(self, sm_manager_model, view, states_editor_ctrl):
+    def __init__(self, sm_manager_model, view, states_editor_ctrl, network_connections_ctrl):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
+        self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
         self.tabs = {}
         self.act_model = None
@@ -98,6 +99,8 @@ class StateMachinesEditorController(ExtendedController):
     def add_graphical_state_machine_editor(self, state_machine_model):
 
         assert isinstance(state_machine_model, StateMachineModel)
+
+        self.get_controller('network_connections_ctrl').register_statemachine_model(state_machine_model)
 
         sm_identifier = state_machine_model.state_machine.state_machine_id
         logger.debug("Create new graphical editor for state machine model with sm id %s" % str(sm_identifier))

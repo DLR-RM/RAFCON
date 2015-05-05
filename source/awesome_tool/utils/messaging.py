@@ -25,9 +25,13 @@ def check_checksum(message_id, message):
 
 class Message:
 
-    def __init__(self, message, ack_msg, flag="   "):
+    def __init__(self, message, ack_msg, flag):
         self._message = message
+        if ack_msg != 0 and ack_msg != 1:
+            raise AttributeError("Acknowledge flag has to be either 0 or 1")
         self._akg_msg = ack_msg
+        if len(flag) != 3:
+            raise AttributeError("Message flag has to be exact 3 chars")
         self._flag = flag
         self._message_id = create_unique_checksum(self)
 

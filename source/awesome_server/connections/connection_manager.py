@@ -17,9 +17,6 @@ class ConnectionManager(Observable):
         self._udp_connections = []
         self._tcp_connections = []
 
-        self._rcvd_udp_messages_tmp = [""] * global_server_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY")
-        self._current_rcvd_index = 0
-
         self.server_udp = NetworkController(NetworkMode.UDP)
         self.server_tcp = NetworkController(NetworkMode.TCP)
 
@@ -33,38 +30,17 @@ class ConnectionManager(Observable):
         """
         pass
 
-    # def udp_data_received(self, connection, data, ip, port):
-    #     """
-    #     Receives all data coming from UDP connections. Checks for transmission errors by checking the checksum.
-    #     It keeps sorts out every duplicate message that is received due to multiple sending. Only stores each message
-    #     and processes its data once.
-    #     :param connection: UDP connection receiving the data
-    #     :param data: Received data
-    #     :param ip: Sender IP
-    #     :param port: Sender Port
-    #     """
-    #     msg = Message.parse_from_string(data)
-    #     checksum = msg.message_id
-    #     if msg.check_checksum() and checksum not in self._rcvd_udp_messages_tmp:
-    #         self._rcvd_udp_messages_tmp[self._current_rcvd_index] = checksum
-    #         self._current_rcvd_index += 1
-    #         if self._current_rcvd_index >= global_server_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY"):
-    #             self._current_rcvd_index = 0
-    #         self.new_udp_message_detected(connection, data, ip, port)
+    def udp_data_received(self, connection, message):
+        msg = Message.parse_from_string(message)
+        if msg.flag != "ACK":
+            self.new_udp_message_detected(msg)
 
     @Observable.observed
-    def new_udp_message_detected(self, connection, msg, ip, port):
+    def new_udp_message_detected(self, msg):
         """
-        Method called by 'udp_data_received'. It processes the received data of the filtered message and sends an
-        acknowledge to the sender, if specified.
-        :param connection: UDP connection receiving the data
+        Method called by 'udp_data_received'. It processes the received data of the filtered message.
         :param msg: Received message
-        :param ip: Sender IP
-        :param port: Sender Port
         """
-        msg = Message.parse_from_string(msg)
-        if msg.akg_msg == 1:
-            connection.send_acknowledge(msg.message_id, (ip, port))
 
     def add_tcp_connection(self, port):
         """
@@ -85,7 +61,7 @@ class ConnectionManager(Observable):
         """
         udp_con = self.server_udp.start(port)
         if udp_con:
-            udp_con.connect("data_received", self.new_udp_message_detected)
+            udp_con.connect("data_received", self.udp_data_received)
             self._udp_connections.append(udp_con)
             return udp_con
         return None

@@ -111,6 +111,13 @@ class MainWindowController(ExtendedController):
         view["tree_notebook_1"].insert_page(state_machine_notebook_widget, state_machine_tab_label, page_num)
 
         ######################################################
+        # network controller
+        ######################################################
+        network_connections_ctrl = NetworkConnections(state_machine_manager_model,
+                                                      view.network_connections_view)
+        self.add_controller('network_connections_ctrl', network_connections_ctrl)
+
+        ######################################################
         # state editor
         ######################################################
         states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
@@ -122,14 +129,9 @@ class MainWindowController(ExtendedController):
         ######################################################
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
                                                                         view.state_machines_editor,
-                                                                        states_editor_ctrl)
+                                                                        states_editor_ctrl,
+                                                                        network_connections_ctrl)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
-
-        ######################################################
-        # network controller
-        ######################################################
-        network_connections_ctrl = NetworkConnections(state_machine_manager_model, view.network_connections_view)
-        self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
         ######################################################
         # global variable editor
@@ -210,6 +212,7 @@ class MainWindowController(ExtendedController):
                                                 view.get_top_widget(),
                                                 self.shortcut_manager)
         self.add_controller("menu_bar_controller", menu_bar_controller)
+        network_connections_ctrl.register_menu_bar_controller(menu_bar_controller)
 
         ######################################################
         # tool bar

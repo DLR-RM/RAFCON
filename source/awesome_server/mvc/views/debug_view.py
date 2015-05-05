@@ -15,6 +15,17 @@ class DebugView(View):
 
         window.set_size_request(800, 600)
 
+        debug_textview = gtk.TextView()
+        debug_textview.set_wrap_mode(gtk.WRAP_WORD)
+        debug_textview.set_editable(False)
+        debug_textview.set_cursor_visible(False)
+        debug_textview.show()
+
+        debug_scroller = gtk.ScrolledWindow()
+        debug_scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        debug_scroller.add(debug_textview)
+        debug_scroller.show()
+
         textview = gtk.TextView()
         textview.set_wrap_mode(gtk.WRAP_WORD)
         textview.set_editable(False)
@@ -36,7 +47,7 @@ class DebugView(View):
         add_udp_button.show()
         hbox.pack_start(add_tcp_button, True, True, 0)
         hbox.pack_start(add_udp_button, True, True, 0)
-        # hbox.show()
+        hbox.show()
 
         send_box = gtk.HBox()
         liststore = gtk.ListStore(str, str, int)
@@ -54,16 +65,25 @@ class DebugView(View):
         entry.show()
         send_button = gtk.Button("Send")
         self["send_button"] = send_button
+        send_ack_button = gtk.Button("Send with ack")
+        self["send_ack_button"] = send_ack_button
+        send_exe_button = gtk.Button("Send execution")
+        self["send_exe_button"] = send_exe_button
         send_button.show()
+        send_ack_button.show()
+        send_exe_button.show()
         send_box.pack_start(combobox, False, True, 0)
         send_box.pack_start(message_label, False, True, 0)
         send_box.pack_start(entry, True, True, 0)
         send_box.pack_start(send_button, False, True, 0)
+        send_box.pack_start(send_ack_button, False, True, 0)
+        send_box.pack_start(send_exe_button, False, True, 0)
         send_box.show()
 
+        # vbox.pack_start(hbox, False, True, 0)
         vbox.pack_start(scroller, True, True, 0)
-        vbox.pack_start(hbox, False, True, 0)
         vbox.pack_start(send_box, False, True, 0)
+        vbox.pack_start(debug_scroller, True, True, 0)
         vbox.show()
 
         window.add(vbox)
@@ -72,9 +92,10 @@ class DebugView(View):
 
         window.show()
 
-        self.textview = textview
+        self.textview = debug_textview
         self["window"] = window
-        self["textview"] = textview
+        self["messages"] = textview
+        self["textview"] = debug_textview
 
         self.quit_flag = False
 

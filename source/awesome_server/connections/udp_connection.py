@@ -29,20 +29,17 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
 
     def datagramReceived(self, data, addr):
         """
-        Handles received data and registers clients if they are not already known.
+        Handles received data.
         Emits "data_received" signal to process data in different class.
         :param data: Data received
         :param addr: Sender address
         """
-        if addr not in self.clients:
-            self.append_client(addr)
-
         msg = Message.parse_from_string(data)
         if msg.check_checksum() and not self.check_for_message_in_history(msg):
-            self.check_acknowledge_and_stop_sending(msg)
+            self.check_and_execute_flag(msg, addr)
+            self.check_send_acknowledge(msg, addr)
 
-            ip, port = addr
-            self.emit("data_received", msg, ip, port)
+            self.emit("data_received", msg)
 
     def check_for_message_in_history(self, msg):
         msg_already_received = msg.message_id in self._rcvd_udp_messages_history
@@ -84,7 +81,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
                                                                                                     msg.message_id))
         self.send_message(msg, addr)
 
-    def send_acknowledged_message(self, message, addr):
+    def send_acknowledged_message(self, message, addr, flag="   "):
         """
         Sends the message repeatedly until it is acknowledged or timeout occurred.
         In list "messages_to_be_acknowledged" the Event 'stop_event' stops the sending when set() (see
@@ -93,7 +90,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         :param message: Message to be sent
         :param addr: Receiver address
         """
-        msg = Message(message, 1)
+        msg = Message(message, 1, flag)
         stop_event = Event()
 
         self.messages_to_be_acknowledged[msg.message_id] = (stop_event, False)
@@ -116,21 +113,29 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
             self.send_message(message, addr)
             stop_event.wait(global_server_config.get_config_value("SECONDS_BETWEEN_UDP_RESEND"))
 
-    def check_acknowledge_and_stop_sending(self, msg):
+    def check_and_execute_flag(self, msg, addr):
         """
-        This method checks if the incoming received data is an acknowledge to one of the registered messages. If the
-        message is registered and active the sending will be stopped and the acknowledge flag is set to True
-        :param message: Received message to scan for acknowledge
+        This method checks the flag of the incoming received data and executes the corresponding code.
+        :param msg: Received message to execute
         """
-        ack_flag = msg.flag
-        if ack_flag == "ACK" and msg.message in self.messages_to_be_acknowledged.iterkeys():
+        if msg.flag == "REG" and addr not in self.clients:
+            logger.debug("Register new statemachine at address: %s" % repr(addr))
+            self.append_client(addr)
+        elif msg.flag == "ACK" and msg.message in self.messages_to_be_acknowledged.iterkeys():
             logger.debug("Message %s acknowledged" % msg.message)
             stop_event = self.messages_to_be_acknowledged[msg.message][0]
             stop_event.set()
             self.messages_to_be_acknowledged[msg.message] = (stop_event, True)
 
+    def check_send_acknowledge(self, msg, addr):
+        """
+        Sends an acknowledge message to the sender for the given message, if the message needs to be acknowledged
+        :param msg: Message to check
+        :param addr: Address of sender
+        """
+        if msg.akg_msg == 1:
+            self.send_acknowledge(msg.message_id, addr)
+
 
 gobject.type_register(UDPConnection)
-gobject.signal_new("data_received", UDPConnection, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_STRING,
-                                                                                    gobject.TYPE_STRING,
-                                                                                    gobject.TYPE_INT))
+gobject.signal_new("data_received", UDPConnection, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_STRING, ))
