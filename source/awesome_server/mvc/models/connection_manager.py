@@ -3,9 +3,6 @@ from gtkmvc import Model, Observable
 from awesome_server.connections.connection_manager import ConnectionManager
 from awesome_server.mvc.models.udp_connection import UDPConnectionModel
 
-from awesome_server.utils import constants
-from awesome_server.utils.messaging import Message
-
 
 class ConnectionManagerModel(Model, Observable):
     """

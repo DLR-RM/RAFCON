@@ -38,16 +38,6 @@ class DebugView(View):
         scroller.show()
 
         vbox = gtk.VBox()
-        hbox = gtk.HBox()
-        add_tcp_button = gtk.Button("Add TCP client")
-        self["add_tcp_button"] = add_tcp_button
-        add_tcp_button.show()
-        add_udp_button = gtk.Button("Add UDP client")
-        self["add_udp_button"] = add_udp_button
-        add_udp_button.show()
-        hbox.pack_start(add_tcp_button, True, True, 0)
-        hbox.pack_start(add_udp_button, True, True, 0)
-        hbox.show()
 
         send_box = gtk.HBox()
         liststore = gtk.ListStore(str, str, int)
@@ -80,7 +70,6 @@ class DebugView(View):
         send_box.pack_start(send_exe_button, False, True, 0)
         send_box.show()
 
-        # vbox.pack_start(hbox, False, True, 0)
         vbox.pack_start(scroller, True, True, 0)
         vbox.pack_start(send_box, False, True, 0)
         vbox.pack_start(debug_scroller, True, True, 0)

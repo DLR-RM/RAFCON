@@ -2,8 +2,6 @@ from gtkmvc import Observable
 
 from awesome_server.mvc.controller.network_controller import NetworkController, NetworkMode
 
-from awesome_server.utils import messaging, constants
-from awesome_server.utils.config import global_server_config
 from awesome_server.utils.messaging import Message
 
 

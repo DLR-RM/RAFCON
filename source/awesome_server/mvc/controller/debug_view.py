@@ -1,21 +1,12 @@
 from awesome_server.mvc.controller.extended_controller import ExtendedController
-from awesome_server.mvc.controller.network_controller import NetworkMode
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
 from awesome_server.utils.messaging import Message
 
 from awesome_server.utils.config import global_server_config
 
-# ------------------------JUST FOR DEBUG------------------------todo: remove
-from awesome_server.mvc.controller.network_controller_t_client import ClientController
-# --------------------------------------------------------------
-
 
 class DebugViewController(ExtendedController):
-
-    # ------------------------JUST FOR DEBUG------------------------todo: remove
-    port = 7777
-    # --------------------------------------------------------------
 
     def __init__(self, model, view):
         assert isinstance(model, ConnectionManagerModel)
@@ -27,19 +18,6 @@ class DebugViewController(ExtendedController):
         view["send_button"].connect("clicked", self.send_button_clicked)
         view["send_ack_button"].connect("clicked", self.send_ack_button_clicked)
         view["send_exe_button"].connect("clicked", self.send_exe_button_clicked)
-
-# ------------------------JUST FOR DEBUG------------------------todo: remove
-        view["add_tcp_button"].connect("clicked", self.add_tcp)
-        view["add_udp_button"].connect("clicked", self.add_udp)
-
-    def add_tcp(self, widget, event=None):
-        ClientController(self.view, 8888, NetworkMode.TCP)
-        # print self.server_tcp.get_connections()
-
-    def add_udp(self, widget, event=None):
-        ClientController(self.view, self.port, NetworkMode.UDP)
-        self.port += 1
-# --------------------------------------------------------------
 
     def send_button_clicked(self, widget, event=None):
         combo = self.view["combobox"]
