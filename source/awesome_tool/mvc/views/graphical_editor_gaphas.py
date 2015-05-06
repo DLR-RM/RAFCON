@@ -8,15 +8,16 @@ from gtkmvc import View
 from weakref import ref
 
 from gaphas import GtkView
-from gaphas.item import Element, Item, NW, NE,SW, SE
-from gaphas.constraint import LessThanConstraint, Constraint, Projection, LineAlignConstraint
+from gaphas.item import Element, Line, NW, NE,SW, SE
+from gaphas.constraint import Constraint
 from gaphas.connector import PointPort, Handle
 from gaphas.geometry import distance_point_point
 from gaphas.util import path_ellipse
-
-from awesome_tool.utils import constants
+from gaphas.aspect import Connector
 
 from awesome_tool.mvc.models.outcome import OutcomeModel
+from awesome_tool.mvc.models.transition import TransitionModel
+from awesome_tool.mvc.models.state import StateModel
 
 
 class GraphicalEditorView(View):
@@ -141,22 +142,23 @@ class StateView(Element):
 
     def __init__(self, state_m, size):
         super(StateView, self).__init__(size[0], size[1])
+        assert isinstance(state_m, StateModel)
 
-        self.state_m = ref(state_m)
+        self._state_m = ref(state_m)
 
         self.min_width = 0.0001
         self.min_height = 0.0001
         self.width = size[0]
         self.height = size[1]
 
-        self._income = Income()
+        self._income = IncomeView()
         self.constraint(line=(self._income.pos, (self._handles[NW].pos, self._handles[SW].pos)), align=0.5)
 
         self._outcomes = []
         self._outcomes_distribution = EqualDistributionConstraint((self._handles[NE].pos, self._handles[SE].pos))
 
     def setup_canvas(self):
-
+        print "setup canvas of state"
         canvas = self.canvas
         parent = canvas.get_parent(self)
 
@@ -174,6 +176,10 @@ class StateView(Element):
 
         # Registers local constraints
         super(StateView, self).setup_canvas()
+
+    @property
+    def state_m(self):
+        return self._state_m()
 
     def draw(self, context):
         c = context.cairo
@@ -193,6 +199,25 @@ class StateView(Element):
         for outcome in self._outcomes:
             outcome.draw(context, self)
 
+    def connect_to_income(self, item, handle):
+        c = self._income.port.constraint(self.canvas, item, handle, self)
+        self.canvas.connect_item(item, handle, self, self._income.port, c)
+
+    def connect_to_outcome(self, outcome_id, item, handle):
+        outcome_v = self.outcome_port(outcome_id)
+        outcome_port = outcome_v.port
+        c = outcome_port.constraint(self.canvas, item, handle, self)
+        self.canvas.connect_item(item, handle, self, outcome_port, c)
+
+    def income_port(self):
+        return self._income
+
+    def outcome_port(self, outcome_id):
+        for outcome in self._outcomes:
+            if outcome.outcome_id == outcome_id:
+                return outcome
+        raise AttributeError("Outcome with id '{0}' not found in state".format(outcome_id, self.state_m.state.name))
+
     def nw_pos(self):
         return self._handles[NW].pos
 
@@ -200,28 +225,31 @@ class StateView(Element):
         return self._handles[SE].pos
 
     def add_outcome(self, outcome_m):
-        outcome = Outcome(outcome_m)
-        self._outcomes.append(outcome)
-        self._ports.append(outcome.port)
-        self._handles.append(outcome.handle)
-        self._outcomes_distribution.add_point(outcome.pos, outcome.sort)
+        outcome_v = OutcomeView(outcome_m)
+        self._outcomes.append(outcome_v)
+        self._ports.append(outcome_v.port)
+        self._handles.append(outcome_v.handle)
+        self._outcomes_distribution.add_point(outcome_v.pos, outcome_v.sort)
 
 
-class Port(object):
+class PortView(object):
 
     def __init__(self):
         self.handle = Handle(connectable=True, movable=False)
-        self.pos = self.handle.pos
-        self.port = PointPort(self.pos)
+        self.port = PointPort(self.handle.pos)
+
+    @property
+    def pos(self):
+        return self.handle.pos
 
     def draw(self, context, state):
         raise NotImplementedError
 
 
-class Income(Port):
+class IncomeView(PortView):
 
     def __init__(self):
-        super(Income, self).__init__()
+        super(IncomeView, self).__init__()
 
     def draw(self, context, state):
         c = context.cairo
@@ -230,14 +258,22 @@ class Income(Port):
         path_ellipse(c, self.pos.x, self.pos.y, outcome_side, outcome_side)
 
 
-class Outcome(Port):
+class OutcomeView(PortView):
 
     def __init__(self, outcome_m):
-        super(Outcome, self).__init__()
+        super(OutcomeView, self).__init__()
 
         assert isinstance(outcome_m, OutcomeModel)
-        self.outcome_m = ref(outcome_m)
+        self._outcome_m = ref(outcome_m)
         self.sort = outcome_m.outcome.outcome_id
+
+    @property
+    def outcome_m(self):
+        return self._outcome_m()
+
+    @property
+    def outcome_id(self):
+        return self.outcome_m.outcome.outcome_id
 
     def draw(self, context, state):
         c = context.cairo
@@ -246,3 +282,37 @@ class Outcome(Port):
         c.set_line_width(0.25)
         # c.rectangle(self.pos.x - outcome_side / 2, self.pos.y - outcome_side / 2, outcome_side, outcome_side)
         path_ellipse(c, self.pos.x, self.pos.y, outcome_side, outcome_side)
+
+
+class ConnectionView(Line):
+
+    def __init__(self):
+        super(ConnectionView, self).__init__()
+        # self.orthogonal = True
+
+    def from_handle(self):
+        return self.handles()[0]
+
+    def to_handle(self):
+        return self.handles()[1]
+
+    def draw_head(self, context):
+        cr = context.cairo
+        cr.move_to(0, 0)
+        cr.line_to(10, 10)
+        cr.stroke()
+        # Start point for the line to the next handle
+        cr.move_to(0, 0)
+
+    def draw_tail(self, context):
+        cr = context.cairo
+        cr.line_to(0, 0)
+        cr.line_to(10, 10)
+        cr.stroke()
+
+
+class TransitionView(ConnectionView):
+
+    def __init__(self):
+        super(TransitionView, self).__init__()
+        self.line_width = 0.5
