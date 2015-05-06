@@ -54,30 +54,32 @@ class KeepWithinConstraint(Constraint):
         self.child_se = child_se
 
         self.margin = margin
-        if margin is None or margin < (parent_se[0].value - parent_nw[0].value) / 1000.:
-            self.margin = (parent_se[0].value - parent_nw[0].value) / 1000.
-            print self.margin
+        min_margin = 0  # (parent_se[0].value - parent_nw[0].value) / 1000.
+        if margin is None or margin < min_margin:
+            self.margin = min_margin
 
     def solve_for(self, var=None):
         """
         Ensure that the children is within its parent
         """
+        child_width = self.child_se[0].value - self.child_nw[0].value
+        child_height = self.child_se[1].value - self.child_nw[1].value
         # Left edge (west)
         if self.parent_nw[0].value > self.child_nw[0].value - self.margin:
-            print "left too far west"
             self.child_nw[0].value = self.parent_nw[0].value + self.margin
+            self.child_se[0].value = self.child_nw[0].value + child_width
         # Right edge (east)
         if self.parent_se[0].value < self.child_se[0].value + self.margin:
-            print "too far east"
             self.child_se[0].value = self.parent_se[0].value - self.margin
+            self.child_nw[0].value = self.child_se[0].value - child_width
         # Upper edge (north)
         if self.parent_nw[1].value > self.child_nw[1].value - self.margin:
-            print "too far north"
             self.child_nw[1].value = self.parent_nw[1].value + self.margin
+            self.child_se[1].value = self.child_nw[1].value + child_height
         # Lower edge (south)
         if self.parent_se[1].value < self.child_se[1].value + self.margin:
-            print "too far south"
             self.child_se[1].value = self.parent_se[1].value - self.margin
+            self.child_nw[1].value = self.child_se[1].value - child_height
 
 
 class StateView(Element):
