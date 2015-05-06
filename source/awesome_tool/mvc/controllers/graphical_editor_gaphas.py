@@ -41,21 +41,6 @@ class GraphicalEditorController(ExtendedController):
         assert self.view == view
         self.setup_canvas()
         self.view.setup_canvas(self.canvas, self.zoom)
-        # print self.view.editor.matrix
-        # # self.view.editor.matrix = self.translation_matrix((10, 10))
-        # hadjustment = self.view.editor.hadjustment
-        # vadjustment = self.view.editor.vadjustment
-        # print hadjustment.get_value(), hadjustment.get_lower(), hadjustment.get_upper()
-        # hadjustment.set_lower(-10)
-        # hadjustment.set_value(0)
-        # hadjustment.set_upper()
-        # print hadjustment.get_value()
-        #
-        # vadjustment.set_value(hadjustment.get_value() + 100)
-        # self.view.editor.on_adjustment_changed(hadjustment)
-        # self.view.editor.on_adjustment_changed(vadjustment)
-        # # self.view.editor.do_set_scroll_adjustments(hadjustment, vadjustment)
-        # print self.view.editor.matrix
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -154,8 +139,11 @@ class GraphicalEditorController(ExtendedController):
             else:
                 active = 1
 
-        state_v = StateView(size)
+        state_v = StateView(state_m, size)
         state_v.matrix.translate(*rel_pos)
+
+        for outcome_m in state_m.outcomes:
+            state_v.add_outcome(outcome_m)
 
         self.canvas.add(state_v, parent)
 
