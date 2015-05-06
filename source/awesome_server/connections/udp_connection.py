@@ -21,7 +21,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         self.__gobject_init__()
         Observable.__init__(self)
 
-        self.clients = []
+        self._clients = {}
         self.messages_to_be_acknowledged = {}
 
         self._rcvd_udp_messages_history = [""] * global_server_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY")
@@ -50,12 +50,12 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         return msg_already_received
 
     @Observable.observed
-    def append_client(self, addr):
+    def append_client(self, name, addr):
         """
         Appends ("registers") a new client to the clients managed by the UDPConnection
         :param addr: Address to be appended ("registered")
         """
-        self.clients.append(addr)
+        self.clients[name] = addr
 
     def send_message(self, message, addr):
         """
@@ -109,8 +109,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         :param addr: Receiver address
         :param stop_event: Event to stop thread/sending
         """
-        number_of_repetitions = int(global_server_config.get_config_value("SECONDS_FOR_UDP_TIMEOUT") /
-                                    global_server_config.get_config_value("SECONDS_BETWEEN_UDP_RESEND"))
+        number_of_repetitions = int(global_server_config.get_config_value("NUMBER_OF_UDP_PACKAGES_UNTIL_TIMEOUT"))
         current_repetition = 0
         while not stop_event.is_set() and current_repetition < number_of_repetitions:
             current_repetition += 1
@@ -124,7 +123,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         """
         if msg.flag == "REG" and addr not in self.clients:
             logger.debug("Register new statemachine at address: %s" % repr(addr))
-            self.append_client(addr)
+            self.append_client(msg.message, addr)
         elif msg.flag == "ACK" and msg.message in self.messages_to_be_acknowledged.iterkeys():
             logger.debug("Message %s acknowledged" % msg.message)
             stop_event = self.messages_to_be_acknowledged[msg.message][0]
@@ -139,6 +138,10 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         """
         if msg.akg_msg == 1:
             self.send_acknowledge(msg.message_id, addr)
+
+    @property
+    def clients(self):
+        return self._clients
 
 
 gobject.type_register(UDPConnection)

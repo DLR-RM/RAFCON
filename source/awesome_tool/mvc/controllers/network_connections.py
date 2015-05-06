@@ -10,10 +10,13 @@ from awesome_tool.mvc.views.network_connections import NetworkConnectionsView
 
 from awesome_tool.statemachine.storage.network_storage import NetworkStorageReader
 from awesome_tool.statemachine.storage.protobuf import yaml_transmission_pb2
+from awesome_tool.statemachine.enums import StateExecutionState
 
 from awesome_tool.utils.network_messaging import Message
 
 from awesome_tool.mvc.config_network import global_net_config
+
+import awesome_tool.statemachine.singleton
 
 from twisted.internet import reactor, protocol
 from twisted.internet.protocol import DatagramProtocol
@@ -51,6 +54,16 @@ class NetworkConnections(ExtendedController):
 
         self.net_storage_reader = NetworkStorageReader(base_path=model.get_selected_state_machine_model().state_machine.base_path)
 
+        # execution engine
+        self.state_machine_execution_engine = awesome_tool.statemachine.singleton.state_machine_execution_engine
+        self.observe_model(self.state_machine_execution_engine)
+        self.state_machine_execution_engine.register_observer(self)
+
+        if global_net_config.get_config_value("AUTOCONNECT_UDP_TO_SERVER"):
+            self.on_udp_register_button_clicked(None)
+        if global_net_config.get_config_value("AUTOCONNECT_TCP_TO_SERVER"):
+            self.on_tcp_connect_button_clicked(None)
+
     def register_statemachine_model(self, sm_model):
         assert isinstance(sm_model, StateMachineModel)
         self.observe_model(sm_model)
@@ -74,8 +87,8 @@ class NetworkConnections(ExtendedController):
             logger.error("No TCP connection possible in Spaceboard Cup Mode")
             return
         if not self.tcp_connected and self.tcp_connector is None:
-            self.tcp_connector = reactor.connectTCP(global_net_config.get_config_value("SERVER_IP"),
-                                                    global_net_config.get_config_value("SERVER_TCP_PORT"),
+            self.tcp_connector = reactor.connectTCP(global_net_config.get_server_ip(),
+                                                    global_net_config.get_server_port(),
                                                     self.tcp_connection_factory)
         elif not self.tcp_connected:
             self.tcp_connector.connect()
@@ -116,7 +129,24 @@ class NetworkConnections(ExtendedController):
         :param info: Information about the change
         """
         if 'method_name' in info and info['method_name'] == 'root_state_after_change' and self.udp_registered:
-            self.send_current_active_states(model.root_state)
+            kw_info = info['kwargs']['info']
+            if 'method_name' in kw_info and kw_info['method_name'] == 'state_execution_status':
+                kw_info_args = kw_info['args']
+                if kw_info_args[1] == StateExecutionState.ACTIVE:
+                    self.send_current_active_states(model.root_state)
+                    self.udp_connection.send_non_acknowledged_message("------------------------------------",
+                                                                      (global_net_config.get_server_ip(),
+                                                                       global_net_config.get_server_port()),
+                                                                      "NAM")  # NAM = non acknowledged message
+
+    @ExtendedController.observe("execution_engine", after=True)
+    def execution_mode_changed(self, model, prop_name, info):
+        execution_mode = str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
+        execution_mode = execution_mode.replace("EXECUTION_MODE.", "")
+        self.udp_connection.send_acknowledged_message(execution_mode,
+                                                      (global_net_config.get_server_ip(),
+                                                       global_net_config.get_server_port()),
+                                                      "EXE")
 
     @staticmethod
     def state_has_content(state_m):
@@ -132,12 +162,12 @@ class NetworkConnections(ExtendedController):
         """
         assert isinstance(state_m, StateModel)
 
-        if state_m.state.active:
+        if state_m.state.state_execution_status == StateExecutionState.ACTIVE:
             if not self.state_has_content(state_m):
                 self.udp_connection.send_non_acknowledged_message(state_m.state.get_path(),
-                                                                  (global_net_config.get_config_value("SERVER_IP"),
-                                                                   global_net_config.get_config_value("SERVER_UDP_PORT")),
-                                                                  "NAS")
+                                                                  (global_net_config.get_server_ip(),
+                                                                   global_net_config.get_server_port()),
+                                                                  "NAM")  # NAM = non acknowledged message
 
         if self.state_has_content(state_m):
             for child_state in state_m.states.itervalues():
@@ -159,10 +189,6 @@ class TCPClient(protocol.Protocol):
             my_file.file_path = str(path)
             my_file.file_content = content
         self.transport.write(files.SerializeToString())
-
-    def dataReceived(self, data):
-        # TODO: implement data handling for TCP connection
-        pass
 
     def connectionLost(self, reason):
         self.factory.view["tcp_connection_connected_label"].set_text("NO")
@@ -198,11 +224,19 @@ class UDPConnection(DatagramProtocol):
         """
         Starts the UDP connection with the server and sends an initial "Register Statemachine" message
         """
-        # TODO: add some information about statemachine to be able to handle more than one statemachine on server
-        self.send_acknowledged_message("Register Statemachine",
-                                       (global_net_config.get_config_value("SERVER_IP"),
-                                        global_net_config.get_config_value("SERVER_UDP_PORT")),
-                                       "REG")
+        sm_name = self.network_connection.model.get_selected_state_machine_model().root_state.state.name
+        if global_net_config.get_config_value("SPACEBOARD_CUP_MODE"):
+            logger.warning("Register UDP connection without acknowledge - Spaceboard Cup Mode")
+            self.send_non_acknowledged_message(sm_name,
+                                               (global_net_config.get_server_ip(),
+                                                global_net_config.get_server_port()),
+                                               "REG")
+            self.view["udp_connection_registered_label"].set_text("YES")
+        else:
+            self.send_acknowledged_message(sm_name,
+                                           (global_net_config.get_server_ip(),
+                                            global_net_config.get_server_port()),
+                                           "REG")
 
     def datagramReceived(self, data, addr):
         """
@@ -283,8 +317,7 @@ class UDPConnection(DatagramProtocol):
         :param addr: Receiver address
         :param stop_event: Event to stop thread/sending
         """
-        number_of_repetitions = int(global_net_config.get_config_value("SECONDS_FOR_UDP_TIMEOUT") /
-                                    global_net_config.get_config_value("SECONDS_BETWEEN_UDP_RESEND"))
+        number_of_repetitions = int(global_net_config.get_config_value("NUMBER_OF_UDP_PACKAGES_UNTIL_TIMEOUT"))
         current_repetition = 0
         while not stop_event.is_set() and current_repetition < number_of_repetitions:
             current_repetition += 1

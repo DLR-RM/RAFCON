@@ -32,7 +32,7 @@ class ConnectionManagerModel(Model, Observable):
         :return: UDPConnection containing address, None if no connection found
         """
         for connection, addresses in self.udp_clients.iteritems():
-            if addr in addresses:
+            if addr in addresses.itervalues():
                 return connection
         return None
 

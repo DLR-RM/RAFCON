@@ -34,32 +34,32 @@ class DebugViewController(ExtendedController):
         self.send_message_to_selected_connection(self.view["entry"].get_text(), False, False)
 
     def send_ack_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection(self.view["entry"].get_text(), exe=False)
+        self.send_message_to_selected_connection(self.view["entry"].get_text(), True, False)
 
     def on_start_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("RUN")
+        self.send_message_to_selected_connection("RUN", False, True)
 
     def on_pause_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("PAUSE")
+        self.send_message_to_selected_connection("PAUSE", False, True)
 
     def on_stop_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("STOP")
+        self.send_message_to_selected_connection("STOP", False, True)
 
     def on_stepm_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("STEPM")
+        self.send_message_to_selected_connection("STEPM", False, True)
 
     def on_stepf_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("STEPF")
+        self.send_message_to_selected_connection("STEPF", False, True)
 
     def on_stepb_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("STEPB")
+        self.send_message_to_selected_connection("STEPB", False, True)
 
     def on_window_destroy(self, widget, event=None):
         self.storage.remove_path(TEMP_FOLDER)
         reactor.stop()
         gtk.main_quit()
 
-    def send_message_to_selected_connection(self, message, ack=True, exe=True):
+    def send_message_to_selected_connection(self, message, ack, exe):
         combo = self.view["combobox"]
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
@@ -68,8 +68,8 @@ class DebugViewController(ExtendedController):
 
             con = self.model.get_udp_connection_for_address((ip, port))
             if con:
-                if ack and exe:
-                    con.send_acknowledged_message(message, (ip, port), "EXE")
+                if exe:
+                    con.send_non_acknowledged_message(message, (ip, port), "EXE")
                 elif ack:
                     con.send_acknowledged_message(message, (ip, port))
                 else:
@@ -77,12 +77,13 @@ class DebugViewController(ExtendedController):
 
     @ExtendedController.observe("_udp_clients", after=True)
     def add_udp_client(self, model, prop_name, info):
-        clients = info.instance[info.args[0]]
-        if self.view:
-            last_index = len(clients) - 1
-            ip, port = clients[last_index]
-            self.view["liststore"].append(["%s:%d" % (ip, port), ip, port])
-            self.view["combobox"].set_active(last_index)
+        if isinstance(info.args[1], dict):
+            new_entry = info.args[1].iterkeys().next()
+            clients = info.instance[info.args[0]]
+            if self.view:
+                ip, port = clients[new_entry]
+                self.view["liststore"].append(["%s:%s" % (new_entry, ip), ip, port])
+                self.view["combobox"].set_active(len(self.view["liststore"]) - 1)
 
     @ExtendedController.observe("_tcp_messages_received", after=True)
     def handle_tcp_message_received(self, model, prop_name, info):

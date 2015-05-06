@@ -7,7 +7,6 @@ import sys, getopt
 def set_button_children_size_request(widget):
     try:
         for child in widget.get_children():
-            print child
             if isinstance(child, Button):
                 child.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
             else:

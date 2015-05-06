@@ -6,6 +6,7 @@
     <property name="width_request">800</property>
     <property name="height_request">600</property>
     <property name="visible">True</property>
+    <property name="title" translatable="yes">Awesome Server</property>
     <signal name="destroy" handler="on_window_destroy"/>
     <child>
       <object class="GtkVBox" id="vbox1">

@@ -8,7 +8,7 @@ class UDPConnectionModel(Model, Observable):
     Keeps track of connected clients and informs ConnectionManager
     """
 
-    _udp_clients_list = []
+    _udp_clients_list = {}
     udp_connection = None
 
     __observables__ = ("_udp_clients_list", "udp_connection")
@@ -24,7 +24,7 @@ class UDPConnectionModel(Model, Observable):
     @Model.observe("udp_connection", after=True)
     def model_changed(self, model, prop_name, info):
         if info["method_name"] == "append_client":
-            self._udp_clients_list.append(info["args"][1])
+            self._udp_clients_list[info["args"][1]] = (info["args"][2])
 
     @property
     def udp_client_list(self):

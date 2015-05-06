@@ -15,10 +15,12 @@ SELF_UDP_PORT: 7777
 NUMBER_UDP_MESSAGES_SENT: 10
 NUMBER_UDP_MESSAGES_HISTORY: 100
 
-SECONDS_FOR_UDP_TIMEOUT: 60
-SECONDS_BETWEEN_UDP_RESEND: 5
+NUMBER_OF_UDP_PACKAGES_UNTIL_TIMEOUT: 15
+SECONDS_BETWEEN_UDP_RESEND: 2
 
 SPACEBOARD_CUP_MODE: False
+AUTOCONNECT_UDP_TO_SERVER: True
+AUTOCONNECT_TCP_TO_SERVER: False
 """
 
 CONFIG_FILE = "net_config.yaml"
@@ -35,5 +37,11 @@ class NetworkConfig(DefaultConfig):
         if self.get_config_value("TYPE") != "NETWORK_CONFIG":
             raise ConfigError("Type should be NETWORK_CONFIG for Network configuration. "
                               "Please add \"TYPE: NETWORK_CONFIG\" to your net_config.yaml file.")
+
+    def get_server_ip(self):
+        return self.get_config_value("SERVER_IP")
+
+    def get_server_port(self):
+        return self.get_config_value("SERVER_UDP_PORT")
 
 global_net_config = NetworkConfig()
