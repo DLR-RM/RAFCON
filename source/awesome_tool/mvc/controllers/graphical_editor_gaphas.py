@@ -6,7 +6,7 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 
-from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView, StateView
+from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView, StateView, TransitionView
 
 from gaphas import Canvas
 from gaphas.matrix import Matrix
@@ -146,6 +146,7 @@ class GraphicalEditorController(ExtendedController):
             state_v.add_outcome(outcome_m)
 
         self.canvas.add(state_v, parent)
+        state_temp['view'] = state_v
 
         if parent is not None:
             # Keep state within parent
@@ -177,7 +178,7 @@ class GraphicalEditorController(ExtendedController):
             # if global_gui_config.get_config_value('show_data_flows', True):
             #     self.draw_inner_data_ports(state_m, depth)
             #
-            # self.draw_transitions(state_m, depth)
+            self.draw_transitions(state_m)
             #
             # if global_gui_config.get_config_value('show_data_flows', True):
             #     self.draw_data_flows(state_m, depth)
@@ -186,6 +187,61 @@ class GraphicalEditorController(ExtendedController):
         #
         # if global_gui_config.get_config_value('show_data_flows', True):
         #     self._handle_new_data_flow(state_m, depth)
+
+    def draw_transitions(self, parent_state_m):
+        print "draw transitions"
+        parent_state_v = parent_state_m.temp['gui']['editor']['view']
+        assert isinstance(parent_state_v, StateView)
+        for transition_m in parent_state_m.transitions:
+
+            transition_v = TransitionView()
+            self.canvas.add(transition_v)
+
+            try:
+                # Get id and references to the from and to state
+                from_state_id = transition_m.transition.from_state
+                if from_state_id is None:
+                    parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
+                else:
+                    from_state_m = parent_state_m.states[from_state_id]
+                    from_state_v = from_state_m.temp['gui']['editor']['view']
+                    from_outcome_id = transition_m.transition.from_outcome
+                    from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
+
+                to_state_id = transition_m.transition.to_state
+                to_state_m = None if to_state_id is None else parent_state_m.states[to_state_id]
+
+                if to_state_m is None:  # Transition goes back to parent
+                    # Set the to coordinates to the outcome coordinates received earlier
+                    to_outcome_id = transition_m.transition.to_outcome
+                    parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
+                else:
+                    # Set the to coordinates to the center of the next state
+                    to_state_v = to_state_m.temp['gui']['editor']['view']
+                    to_state_v.connect_to_income(transition_v, transition_v.to_handle())
+                #
+                # waypoints = []
+                # for waypoint in transition_m.meta['gui']['editor']['waypoints']:
+                #     waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
+                #     waypoints.append(waypoint_pos)
+
+                # # Let the view draw the transition and store the returned OpenGL object id
+                # selected = False
+                # if transition_m in self.model.selection.get_transitions():
+                #     selected = True
+                # line_width = self.view.editor.transition_stroke_width(parent_state_m)
+                # opengl_id = self.view.editor.draw_transition(from_pos, to_pos, line_width, waypoints,
+                #                                              selected, parent_depth + 0.5)
+                # transition_m.temp['gui']['editor']['id'] = opengl_id
+                # transition_m.temp['gui']['editor']['from_pos'] = from_pos
+                # transition_m.temp['gui']['editor']['to_pos'] = to_pos
+
+            except AttributeError as e:
+                logger.error("Cannot connect transition: {0}".format(e))
+                try:
+                    self.canvas.remove(transition_v)
+                except KeyError:
+                    pass
 
     @staticmethod
     def translation_matrix(translation):
