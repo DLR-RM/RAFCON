@@ -1,12 +1,22 @@
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
+
 import gtk
 
 from gtkmvc import View
 
+from weakref import ref
+
 from gaphas import GtkView
 from gaphas.item import Element, Item, NW, NE,SW, SE
-from gaphas.constraint import LessThanConstraint, Constraint, Projection
+from gaphas.constraint import LessThanConstraint, Constraint, Projection, LineAlignConstraint
+from gaphas.connector import PointPort, Handle
+from gaphas.geometry import distance_point_point
+from gaphas.util import path_ellipse
 
 from awesome_tool.utils import constants
+
+from awesome_tool.mvc.models.outcome import OutcomeModel
 
 
 class GraphicalEditorView(View):
@@ -82,32 +92,85 @@ class KeepWithinConstraint(Constraint):
             self.child_nw[1].value = self.child_se[1].value - child_height
 
 
+class EqualDistributionConstraint(Constraint):
+
+    def __init__(self, line):
+        super(EqualDistributionConstraint, self).__init__(line[0][0], line[0][1], line[1][0], line[1][1])
+        self._line = line
+        self._points = []
+
+    def add_point(self, p, sort=None):
+        if sort is None:
+            sort = len(self._points)
+        self._points.append((p, sort))
+        self._variables.append(p[0])
+        self._variables.append(p[1])
+        self.create_weakest_list()
+        self._sort_points()
+
+    def _sort_points(self):
+        self._points.sort(lambda p1, p2: cmp(p1[1], p2[1]))
+
+    def remove_point(self, p):
+        try:
+            self._variables.remove(p[0])
+            self._variables.remove(p[1])
+            self.create_weakest_list()
+            for point_entry in self._points:
+                if point_entry[0] is p:
+                    break
+            self._points.remove(point_entry)
+        except ValueError:
+            logger.error("Cannot remove point '{0}' of constraint".format(p))
+
+    def solve_for(self, var=None):
+        length = distance_point_point(self._line[0], self._line[1])
+        dx = length / (len(self._points) + 1)
+
+        for index, p in enumerate(self._points):
+            pos = p[0]
+            pos.x = self._line[0][0]
+            pos.y = self._line[0][1] + (index + 1) * dx
+
+
 class StateView(Element):
     """ A State has 4 handles (for a start):
      NW +---+ NE
      SW +---+ SE
     """
 
-    def __init__(self, size):
+    def __init__(self, state_m, size):
         super(StateView, self).__init__(size[0], size[1])
+
+        self.state_m = ref(state_m)
+
         self.min_width = 0.0001
         self.min_height = 0.0001
         self.width = size[0]
         self.height = size[1]
 
+        self._income = Income()
+        self.constraint(line=(self._income.pos, (self._handles[NW].pos, self._handles[SW].pos)), align=0.5)
+
+        self._outcomes = []
+        self._outcomes_distribution = EqualDistributionConstraint((self._handles[NE].pos, self._handles[SE].pos))
+
     def setup_canvas(self):
 
         canvas = self.canvas
         parent = canvas.get_parent(self)
+
+        solver = canvas.solver
+        solver.add_constraint(self._outcomes_distribution)
+
         if parent is not None:
             assert isinstance(parent, StateView)
-            solver = canvas.solver
             self_nw_abs = canvas.project(self, self.nw_pos())
             self_se_abs = canvas.project(self, self.se_pos())
             parent_nw_abs = canvas.project(parent, parent.nw_pos())
             parent_se_abs = canvas.project(parent, parent.se_pos())
             less_than = KeepWithinConstraint(parent_nw_abs, parent_se_abs, self_nw_abs, self_se_abs)
-            self.c = solver.add_constraint(less_than)
+            solver.add_constraint(less_than)
 
         # Registers local constraints
         super(StateView, self).setup_canvas()
@@ -125,31 +188,61 @@ class StateView(Element):
         c.set_source_rgb(0, 0, 0.8)
         c.stroke()
 
+        self._income.draw(context, self)
+
+        for outcome in self._outcomes:
+            outcome.draw(context, self)
+
     def nw_pos(self):
         return self._handles[NW].pos
 
     def se_pos(self):
         return self._handles[SE].pos
 
-    def pre_update(self, context):
-        super(StateView, self).pre_update(context)
-        # parent = self.canvas.get_parent(self)
-        # if parent is None:
-        #     return
-        # for v in self.c.variables():
-        #     self.c.mark_dirty(v)
-        # self.canvas.solver.request_resolve_constraint(self.c)
-
-    def post_update(self, context):
-        super(StateView, self).post_update(context)
-        # parent = self.canvas.get_parent(self)
-        # if parent is None:
-        #     return
-        # print "post", self.parent_nw_abs[0].value, "<", self.self_nw_abs[0].value
-        # print self.canvas.solver.constraints
+    def add_outcome(self, outcome_m):
+        outcome = Outcome(outcome_m)
+        self._outcomes.append(outcome)
+        self._ports.append(outcome.port)
+        self._handles.append(outcome.handle)
+        self._outcomes_distribution.add_point(outcome.pos, outcome.sort)
 
 
+class Port(object):
 
-# class GraphicalEditor(GtkView):
-#
-#     pass
+    def __init__(self):
+        self.handle = Handle(connectable=True, movable=False)
+        self.pos = self.handle.pos
+        self.port = PointPort(self.pos)
+
+    def draw(self, context, state):
+        raise NotImplementedError
+
+
+class Income(Port):
+
+    def __init__(self):
+        super(Income, self).__init__()
+
+    def draw(self, context, state):
+        c = context.cairo
+        min_state_side = min(state.width, state.height)
+        outcome_side = min_state_side / 20.
+        path_ellipse(c, self.pos.x, self.pos.y, outcome_side, outcome_side)
+
+
+class Outcome(Port):
+
+    def __init__(self, outcome_m):
+        super(Outcome, self).__init__()
+
+        assert isinstance(outcome_m, OutcomeModel)
+        self.outcome_m = ref(outcome_m)
+        self.sort = outcome_m.outcome.outcome_id
+
+    def draw(self, context, state):
+        c = context.cairo
+        min_state_side = min(state.width, state.height)
+        outcome_side = min_state_side / 20.
+        c.set_line_width(0.25)
+        # c.rectangle(self.pos.x - outcome_side / 2, self.pos.y - outcome_side / 2, outcome_side, outcome_side)
+        path_ellipse(c, self.pos.x, self.pos.y, outcome_side, outcome_side)
