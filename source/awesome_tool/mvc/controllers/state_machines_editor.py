@@ -3,8 +3,8 @@ import pango
 import gtk
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
-from awesome_tool.mvc.views.graphical_editor import GraphicalEditorView
-from awesome_tool.mvc.controllers.graphical_editor import GraphicalEditorController
+from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView
+from awesome_tool.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel, StateMachine
 from awesome_tool.utils import log
