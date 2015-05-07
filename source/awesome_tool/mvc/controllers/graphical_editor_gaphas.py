@@ -1,12 +1,15 @@
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
+from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
-from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView, StateView, TransitionView
+from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView, StateView, TransitionView, DataFlowView
 
 from gaphas import Canvas
 from gaphas.matrix import Matrix
@@ -141,13 +144,18 @@ class GraphicalEditorController(ExtendedController):
                 active = 1
 
         state_v = StateView(state_m, size)
+        self.canvas.add(state_v, parent)
+        state_temp['view'] = state_v
         state_v.matrix.translate(*rel_pos)
 
         for outcome_m in state_m.outcomes:
             state_v.add_outcome(outcome_m)
 
-        self.canvas.add(state_v, parent)
-        state_temp['view'] = state_v
+        for input_port_m in state_m.input_data_ports:
+            state_v.add_input_port(input_port_m)
+
+        for output_port_m in state_m.output_data_ports:
+            state_v.add_output_port(output_port_m)
 
         if parent is not None:
             # Keep state within parent
@@ -155,19 +163,48 @@ class GraphicalEditorController(ExtendedController):
 
         if isinstance(state_m, ContainerStateModel):
             num_child_state = 0
-            width = size[0]
-            height = size[1]
+            state_width = size[0]
+            state_height = size[1]
+
+            num_scoped_variables = 0
+            for scoped_variable_m in state_m.scoped_variables:
+                if not isinstance(scoped_variable_m.meta['gui']['editor']['size'], tuple):
+                    port_height = min(state_meta['size']) / 15.
+                    port_width = min(state_meta['size']) / 5.
+                    scoped_variable_m.meta['gui']['editor']['size'] = (port_width, port_height)
+                port_size = scoped_variable_m.meta['gui']['editor']['size']
+
+                if isinstance(scoped_variable_m.meta['gui']['editor']['rel_pos'], tuple):
+                    rel_pos = scoped_variable_m.meta['gui']['editor']['rel_pos']
+                elif isinstance(scoped_variable_m.meta['gui']['editor']['inner_rel_pos'], tuple):
+                    rel_pos = scoped_variable_m.meta['gui']['editor']['inner_rel_pos']
+                else:
+                    # Put scoped variables by default row-wise in at the top
+                    port_height = port_size[1]
+                    port_width = port_size[0]
+                    max_cols = state_width // port_width
+                    (row, col) = divmod(num_scoped_variables, max_cols)
+                    rel_pos = (col * port_width, -port_height * (2 * row + 1))
+                    scoped_variable_m.meta['gui']['editor']['rel_pos'] = rel_pos
+
+                if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
+                        self.model.meta['gui']['editor']['invert_y']:
+                    rel_pos = (rel_pos[0], -rel_pos[1])
+
+                scoped_variable_v = state_v.add_scoped_variable(scoped_variable_m, port_size)
+                scoped_variable_v.matrix.translate(*rel_pos)
+                num_scoped_variables += 1
 
             for child_state in state_m.states.itervalues():
                 # Calculate default positions for the child states
                 # Make the inset from the top left corner
 
-                child_width = width / 5.
-                child_height = height / 5.
+                child_width = state_width / 5.
+                child_height = state_height / 5.
                 child_size = (child_width, child_height)
                 child_spacing = max(child_size) * 1.2
 
-                max_cols = width // child_spacing
+                max_cols = state_width // child_spacing
                 (row, col) = divmod(num_child_state, max_cols)
                 child_rel_pos_x = col * child_spacing + child_spacing - child_width
                 child_rel_pos_y = child_spacing * (1.5 * row + 1)
@@ -180,21 +217,29 @@ class GraphicalEditorController(ExtendedController):
             #     self.draw_inner_data_ports(state_m, depth)
             #
             self.draw_transitions(state_m)
-            #
-            # if global_gui_config.get_config_value('show_data_flows', True):
-            #     self.draw_data_flows(state_m, depth)
 
-        # self._handle_new_transition(state_m, depth)
-        #
-        # if global_gui_config.get_config_value('show_data_flows', True):
-        #     self._handle_new_data_flow(state_m, depth)
+            if global_gui_config.get_config_value('show_data_flows', True):
+                self.draw_data_flows(state_m)
+
+                # self._handle_new_transition(state_m, depth)
+                #
+                # if global_gui_config.get_config_value('show_data_flows', True):
+                #     self._handle_new_data_flow(state_m, depth)
 
     def draw_transitions(self, parent_state_m):
+        """Draws the transitions belonging to a state
+
+        The method takes all transitions from the given state and calculates their start and end point positions.
+        Those are passed together with the waypoints to the view of the graphical editor.
+
+        :param awesome_tool.mvc.models.container_state.ContainerStateModel parent_state_m: The model of the container
+            state, of which the transitions shall be drawn
+        """
         parent_state_v = parent_state_m.temp['gui']['editor']['view']
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
 
-            transition_v = TransitionView()
+            transition_v = TransitionView(transition_m)
             self.canvas.add(transition_v, parent_state_v)
 
             try:
@@ -220,24 +265,16 @@ class GraphicalEditorController(ExtendedController):
                     to_state_v = to_state_m.temp['gui']['editor']['view']
                     to_state_v.connect_to_income(transition_v, transition_v.to_handle())
 
-                # waypoints = []
                 for waypoint in transition_m.meta['gui']['editor']['waypoints']:
                     if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
                             self.model.meta['gui']['editor']['invert_y']:
                         waypoint = (waypoint[0], -waypoint[1])
                     transition_v.add_waypoint(waypoint)
-                    # waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
-                    # waypoints.append(waypoint_pos)
 
                 # Let the view draw the transition and store the returned OpenGL object id
                 # if transition_m in self.model.selection.get_transitions():
                 #     transition_v.selected = True
                 # line_width = self.view.editor.transition_stroke_width(parent_state_m)
-                # opengl_id = self.view.editor.draw_transition(from_pos, to_pos, line_width, waypoints,
-                #                                              selected, parent_depth + 0.5)
-                # transition_m.temp['gui']['editor']['id'] = opengl_id
-                # transition_m.temp['gui']['editor']['from_pos'] = from_pos
-                # transition_m.temp['gui']['editor']['to_pos'] = to_pos
 
             except AttributeError as e:
                 logger.error("Cannot connect transition: {0}".format(e))
@@ -245,6 +282,87 @@ class GraphicalEditorController(ExtendedController):
                     self.canvas.remove(transition_v)
                 except KeyError:
                     pass
+
+    def draw_data_flows(self, parent_state_m):
+        """Draw all data flows contained in the given container state
+
+        The method takes all data flows from the given state and calculates their start and end point positions.
+        Those are passed together with the waypoints to the view of the graphical editor.
+
+        :param awesome_tool.mvc.models.container_state.ContainerStateModel parent_state_m: The model of the container
+            state, of which the data flows shall be drawn
+        """
+        parent_state_v = parent_state_m.temp['gui']['editor']['view']
+        assert isinstance(parent_state_v, StateView)
+        for data_flow_m in parent_state_m.data_flows:
+
+            data_flow_v = DataFlowView(data_flow_m)
+            self.canvas.add(data_flow_v, parent_state_v)
+
+            # Get id and references to the from and to state
+            from_state_id = data_flow_m.data_flow.from_state
+            from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
+                from_state_id]
+            from_state_v = from_state_m.temp['gui']['editor']['view']
+
+            to_state_id = data_flow_m.data_flow.to_state
+            to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
+                to_state_id]
+            to_state_v = to_state_m.temp['gui']['editor']['view']
+
+            from_key = data_flow_m.data_flow.from_key
+            to_key = data_flow_m.data_flow.to_key
+
+            from_port_m = StateMachineHelper.get_data_port_model(from_state_m, from_key)
+            to_port_m = StateMachineHelper.get_data_port_model(to_state_m, to_key)
+
+            if from_port_m is None:
+                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                                                                                        data_flow_m.data_flow))
+                continue
+            if to_port_m is None:
+                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
+                continue
+
+            # For scoped variables, there is no inner and outer connector
+            if isinstance(from_port_m, ScopedVariableModel):
+                # from_pos = from_port.temp['gui']['editor']['connector_pos']
+                from_state_v.connect_to_scoped_variable_output(from_key, data_flow_v, data_flow_v.from_handle())
+            elif from_port_m in from_state_m.input_data_ports:
+            # elif from_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents input
+                # from_pos = from_port.temp['gui']['editor']['inner_connector_pos']
+                from_state_v.connect_to_input_port(from_key, data_flow_v, data_flow_v.from_handle())
+            elif from_port_m in from_state_m.output_data_ports:
+            # else:
+                # from_pos = from_port.temp['gui']['editor']['outer_connector_pos']
+                from_state_v.connect_to_output_port(from_key, data_flow_v, data_flow_v.from_handle())
+
+            if isinstance(to_port_m, ScopedVariableModel):
+                # to_pos = to_port.temp['gui']['editor']['connector_pos']
+                to_state_v.connect_to_scoped_variable_input(to_key, data_flow_v, data_flow_v.to_handle())
+            elif to_port_m in to_state_m.output_data_ports:
+            # elif to_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents output
+                # to_pos = to_port.temp['gui']['editor']['inner_connector_pos']
+                to_state_v.connect_to_output_port(to_key, data_flow_v, data_flow_v.to_handle())
+            elif to_port_m in to_state_m.input_data_ports:
+            # else:
+                # to_pos = to_port.temp['gui']['editor']['outer_connector_pos']
+                to_state_v.connect_to_input_port(to_key, data_flow_v, data_flow_v.to_handle())
+            else:
+                logger.error("to port m unknown")
+
+            for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
+                if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
+                        self.model.meta['gui']['editor']['invert_y']:
+                    waypoint = (waypoint[0], -waypoint[1])
+                data_flow_v.add_waypoint(waypoint)
+
+            # selected = False
+            # if data_flow_m in self.model.selection.get_data_flows():
+            #     selected = True
+            # line_width = self.view.editor.data_flow_stroke_width(parent_state_m)
+            # opengl_id = self.view.editor.draw_data_flow(from_pos, to_pos, line_width, waypoints,
+            #                                             selected, parent_depth + 0.5)
 
     @staticmethod
     def translation_matrix(translation):
