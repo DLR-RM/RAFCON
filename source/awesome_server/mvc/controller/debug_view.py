@@ -22,6 +22,7 @@ class DebugViewController(ExtendedController):
 
         model.connection_manager.add_tcp_connection(global_server_config.get_config_value("TCP_PORT"))
         model.connection_manager.add_udp_connection(global_server_config.get_config_value("UDP_PORT"))
+        model.connection_manager.server_html.connect("command_received", self.handle_command)
 
         view["send_button"].connect("clicked", self.send_button_clicked)
         view["send_ack_button"].connect("clicked", self.send_ack_button_clicked)
@@ -29,6 +30,20 @@ class DebugViewController(ExtendedController):
         self.storage = StorageUtils("~/")
         if not self.storage.exists_path(TEMP_FOLDER):
             self.storage.create_path(TEMP_FOLDER)
+
+    def handle_command(self, server_html, command):
+        if command == 'run':
+            self.on_start_button_clicked(None)
+        elif command == 'pause':
+            self.on_pause_button_clicked(None)
+        elif command == 'stop':
+            self.on_stop_button_clicked(None)
+        elif command == 'step_mode':
+            self.on_stepm_button_clicked(None)
+        elif command == 'step_forward':
+            self.on_stepf_button_clicked(None)
+        elif command == 'step_backward':
+            self.on_stepb_button_clicked(None)
 
     def send_button_clicked(self, widget, event=None):
         self.send_message_to_selected_connection(self.view["entry"].get_text(), False, False)

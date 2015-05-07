@@ -1,0 +1,56 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Awesome Browser</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+    <script src="js/sse.js"></script>
+    <script src="js/sm_control.js"></script>
+</head>
+
+<body>
+<header>
+    <h1>Received messages</h1>
+</header>
+
+<main>
+    <article>
+        <h1>Message list:</h1>
+
+        <table border="0">
+            <tr>
+                <td>
+                    <button value="run" onclick="send_command(this.value)">Run</button>
+                </td>
+                <td>
+                    <button value="pause" onclick="send_command(this.value)">Pause</button>
+                </td>
+                <td>
+                    <button value="stop" onclick="send_command(this.value)">Stop</button>
+                </td>
+                <td>
+                    <button value="step_mode" onclick="send_command(this.value)">Step Mode</button>
+                </td>
+                <td>
+                    <button value="step_forward" onclick="send_command(this.value)">Step Forward</button>
+                </td>
+                <td>
+                    <button value="step_backward" onclick="send_command(this.value)">Step Backward</button>
+                </td>
+            </tr>
+        </table>
+        <ol id="eventlist">No content.</ol>
+        <script>sse();</script>
+
+        <noscript>
+            <h1>In Ihrem Browser ist JavaScript deaktiviert.</h1>
+            <p>Bitte aktivieren Sie JavaScript um diese Website nutzen zu können.</p>
+        </noscript>
+    </article>
+</main>
+
+<footer>
+    <p> This is a debug view...</p>
+</footer>
+</body>
+

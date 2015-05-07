@@ -1,6 +1,7 @@
 from gtkmvc import Observable
 
-from awesome_server.mvc.controller.network_controller import NetworkController, NetworkMode
+from awesome_server.mvc.controller.sm_network_controller import SmNetworkController, NetworkMode
+from awesome_server.mvc.controller.html_network_controller import HtmlNetworkController
 
 from awesome_server.utils.messaging import Message
 
@@ -15,8 +16,11 @@ class ConnectionManager(Observable):
         self._udp_connections = []
         self._tcp_connections = []
 
-        self.server_udp = NetworkController(NetworkMode.UDP)
-        self.server_tcp = NetworkController(NetworkMode.TCP)
+        self.server_udp = SmNetworkController(NetworkMode.UDP)
+        self.server_tcp = SmNetworkController(NetworkMode.TCP)
+
+        self.server_html = HtmlNetworkController()
+        self.server_html.start_html_server()
 
     @Observable.observed
     def tcp_data_received(self, factory, connection, data):
@@ -39,6 +43,7 @@ class ConnectionManager(Observable):
         Method called by 'udp_data_received'. It processes the received data of the filtered message.
         :param msg: Received message
         """
+        self.server_html.send_data(msg.message)
 
     def add_tcp_connection(self, port):
         """

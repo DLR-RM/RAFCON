@@ -16,7 +16,7 @@ from twisted.internet.error import CannotListenError
 NetworkMode = Enum('NETWORK_MODE', 'TCP UDP')
 
 
-class NetworkController:
+class SmNetworkController:
     """
     This class is responsible to coordinate all network connections via TCP or UDP.
     :param network_mode: The used network mode the current instance handles: TCP or UDP
