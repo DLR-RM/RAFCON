@@ -43,7 +43,7 @@ class ConnectionManager(Observable):
         Method called by 'udp_data_received'. It processes the received data of the filtered message.
         :param msg: Received message
         """
-        self.server_html.send_data(msg.message)
+        self.server_html.send_data(msg.message, msg.flag)
 
     def add_tcp_connection(self, port):
         """

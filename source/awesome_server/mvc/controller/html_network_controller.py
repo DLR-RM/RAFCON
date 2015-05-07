@@ -27,8 +27,10 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         self.sse_conns.add(request)
         return server.NOT_DONE_YET
 
-    def send_data(self, data):
+    def send_data(self, data, data_flag):
         for conn in self.sse_conns:
+            if data_flag == "REG":
+                conn.write("event: registration\n")
             event_line = "data: {}\n\n".format(data)
             conn.write(event_line)
 
@@ -37,15 +39,15 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         logger.debug("Starting HTML server at port %d" % port)
 
         root = resource.Resource()
-        # root.putChild('', static.File(os.path.join(self.path_to_static_files, "index.html")))
-        root.putChild('', FirstPage(self))
+        root.putChild('', DebugPage(self))
+        root.putChild('debug', DebugPage(self))
         root.putChild('js', static.File(self.path_to_static_files + "/js"))
         root.putChild('my_event_source', self)
 
         reactor.listenTCP(port, server.Site(root))
 
 
-class FirstPage(resource.Resource):
+class DebugPage(resource.Resource):
 
     def __init__(self, controller):
         self.path_to_static_files = os.path.dirname(os.path.realpath(__file__)) + "/html_files/static"

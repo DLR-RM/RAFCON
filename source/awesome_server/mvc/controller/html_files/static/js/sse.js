@@ -8,6 +8,13 @@ function sse() {
             newElement.innerHTML = "message: " + e.data;
             eventList.appendChild(newElement);
         }
+        source.addEventListener("registration", function(e) {
+            var newElement = document.createElement("li");
+
+            newElement.innerHTML = "New Statemachine registered: " + e.data;
+            eventList.appendChild(newElement);
+            alert("New Statemachine registered: " + e.data);
+        }, false);
         source.onerror = function(e) {
             alert("Server closed connection.");
             source.close();
