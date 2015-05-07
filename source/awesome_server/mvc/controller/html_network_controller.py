@@ -18,11 +18,9 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         self.isLeaf = True
         self.sse_conns = weakref.WeakSet()
 
-        self.path_to_static_files = os.path.dirname(os.path.realpath(__file__)) + "/html_files/static"
+        self.path_to_static_files = os.path.dirname(os.path.realpath(__file__)) + "/../../html_files"
 
     def render_GET(self, request):
-        ip = request.getClientIP()
-        print "SSE GET: " + ip
         request.setHeader('Content-Type', 'text/event-stream')
         self.sse_conns.add(request)
         return server.NOT_DONE_YET
@@ -50,13 +48,11 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
 class DebugPage(resource.Resource):
 
     def __init__(self, controller):
-        self.path_to_static_files = os.path.dirname(os.path.realpath(__file__)) + "/html_files/static"
+        self.path_to_static_files = os.path.dirname(os.path.realpath(__file__)) + "/../../html_files"
 
         self.controller = controller
 
     def render_GET(self, request):
-        ip = request.getClientIP()
-        print "FP GET: " + ip
         f = open(os.path.join(self.path_to_static_files, "index.html"))
         index = f.read()
         f.close()
