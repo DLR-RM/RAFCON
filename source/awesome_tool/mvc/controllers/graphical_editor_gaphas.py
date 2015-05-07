@@ -6,14 +6,16 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 from awesome_tool.mvc.models.state_machine import StateMachineModel
-from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from awesome_tool.mvc.models import ContainerStateModel, StateModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
-from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView, StateView, TransitionView, DataFlowView
+from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView
+from awesome_tool.mvc.views.gap.state import StateView
+from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView
 
 from gaphas import Canvas
-from gaphas.matrix import Matrix
 import gaphas.guide
+
 
 class GraphicalEditorController(ExtendedController):
     """Controller handling the graphical editor
@@ -131,17 +133,17 @@ class GraphicalEditorController(ExtendedController):
                     self.model.meta['gui']['editor']['invert_y']:
                 rel_pos = (rel_pos[0], -rel_pos[1])
 
-        # Was the state selected?
-        selected_states = self.model.selection.get_states()
-        selected = False if state_m not in selected_states else True
-
-        # Is the state active (executing)?
-        active = 0
-        if state_m.state.active:
-            if self.has_content(state_m) and state_m.state.child_execution:
-                active = 0.5
-            else:
-                active = 1
+        # # Was the state selected?
+        # selected_states = self.model.selection.get_states()
+        # selected = False if state_m not in selected_states else True
+        #
+        # # Is the state active (executing)?
+        # active = 0
+        # if state_m.state.active:
+        #     if self.has_content(state_m) and state_m.state.child_execution:
+        #         active = 0.5
+        #     else:
+        #         active = 1
 
         state_v = StateView(state_m, size)
         self.canvas.add(state_v, parent)
@@ -326,30 +328,18 @@ class GraphicalEditorController(ExtendedController):
 
             # For scoped variables, there is no inner and outer connector
             if isinstance(from_port_m, ScopedVariableModel):
-                # from_pos = from_port.temp['gui']['editor']['connector_pos']
                 from_state_v.connect_to_scoped_variable_output(from_key, data_flow_v, data_flow_v.from_handle())
             elif from_port_m in from_state_m.input_data_ports:
-            # elif from_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents input
-                # from_pos = from_port.temp['gui']['editor']['inner_connector_pos']
                 from_state_v.connect_to_input_port(from_key, data_flow_v, data_flow_v.from_handle())
             elif from_port_m in from_state_m.output_data_ports:
-            # else:
-                # from_pos = from_port.temp['gui']['editor']['outer_connector_pos']
                 from_state_v.connect_to_output_port(from_key, data_flow_v, data_flow_v.from_handle())
 
             if isinstance(to_port_m, ScopedVariableModel):
-                # to_pos = to_port.temp['gui']['editor']['connector_pos']
                 to_state_v.connect_to_scoped_variable_input(to_key, data_flow_v, data_flow_v.to_handle())
             elif to_port_m in to_state_m.output_data_ports:
-            # elif to_state_id == parent_state_m.state.state_id:  # The data flow is connected to the parents output
-                # to_pos = to_port.temp['gui']['editor']['inner_connector_pos']
                 to_state_v.connect_to_output_port(to_key, data_flow_v, data_flow_v.to_handle())
             elif to_port_m in to_state_m.input_data_ports:
-            # else:
-                # to_pos = to_port.temp['gui']['editor']['outer_connector_pos']
                 to_state_v.connect_to_input_port(to_key, data_flow_v, data_flow_v.to_handle())
-            else:
-                logger.error("to port m unknown")
 
             for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
                 if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
@@ -363,9 +353,3 @@ class GraphicalEditorController(ExtendedController):
             # line_width = self.view.editor.data_flow_stroke_width(parent_state_m)
             # opengl_id = self.view.editor.draw_data_flow(from_pos, to_pos, line_width, waypoints,
             #                                             selected, parent_depth + 0.5)
-
-    @staticmethod
-    def translation_matrix(translation):
-        matrix = Matrix()
-        matrix.translate(translation[0], translation[1])
-        return matrix
