@@ -14,11 +14,13 @@ TYPE: GUI_CONFIG
 
 SOURCE_EDITOR_STYLE: awesome-style
 
+GAPHAS_EDITOR: False
+
 WAYPOINT_SNAP_ANGLE: 45
 WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
 WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
 
-show_data_flows: true
+show_data_flows: True
 """
 
 CONFIG_FILE = "gui_config.yaml"

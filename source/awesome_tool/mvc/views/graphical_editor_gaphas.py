@@ -14,6 +14,7 @@ from gaphas.connector import PointPort, Handle
 from gaphas.geometry import distance_point_point
 from gaphas.util import path_ellipse
 from gaphas.aspect import Connector
+from gaphas.segment import Segment, HandleSelection, SegmentHandleSelection
 
 from awesome_tool.mvc.models.outcome import OutcomeModel
 from awesome_tool.mvc.models.transition import TransitionModel
@@ -46,7 +47,7 @@ class GraphicalEditorView(View):
         self.editor.set_size_request(500, 500)
 
 
-class KeepWithinConstraint(Constraint):
+class KeepRectangleWithinConstraint(Constraint):
     """Ensure that the children is within its parent
 
     Attributes:
@@ -57,8 +58,8 @@ class KeepWithinConstraint(Constraint):
     """
 
     def __init__(self, parent_nw, parent_se, child_nw, child_se, margin=None):
-        super(KeepWithinConstraint, self).__init__(parent_nw[0], parent_nw[1], parent_se[0], parent_se[1],
-                                                   child_nw[0], child_nw[1], child_se[0], child_se[1])
+        super(KeepRectangleWithinConstraint, self).__init__(parent_nw[0], parent_nw[1], parent_se[0], parent_se[1],
+                                                            child_nw[0], child_nw[1], child_se[0], child_se[1])
         self.parent_nw = parent_nw
         self.parent_se = parent_se
         self.child_nw = child_nw
@@ -91,6 +92,19 @@ class KeepWithinConstraint(Constraint):
         if self.parent_se[1].value < self.child_se[1].value + self.margin:
             self.child_se[1].value = self.parent_se[1].value - self.margin
             self.child_nw[1].value = self.child_se[1].value - child_height
+
+
+class KeepPointWithinConstraint(KeepRectangleWithinConstraint):
+    """Ensure that the children is within its parent
+
+    Attributes:
+     - parent_nw: NW coordinates of parent
+     - parent_se: SE coordinates of parent
+     - child_pos: coordinates of child
+    """
+
+    def __init__(self, parent_nw, parent_se, child_pos, margin=None):
+        super(KeepPointWithinConstraint, self).__init__(parent_nw, parent_se, child_pos, child_pos)
 
 
 class EqualDistributionConstraint(Constraint):
@@ -158,7 +172,6 @@ class StateView(Element):
         self._outcomes_distribution = EqualDistributionConstraint((self._handles[NE].pos, self._handles[SE].pos))
 
     def setup_canvas(self):
-        print "setup canvas of state"
         canvas = self.canvas
         parent = canvas.get_parent(self)
 
@@ -171,7 +184,7 @@ class StateView(Element):
             self_se_abs = canvas.project(self, self.se_pos())
             parent_nw_abs = canvas.project(parent, parent.nw_pos())
             parent_se_abs = canvas.project(parent, parent.se_pos())
-            less_than = KeepWithinConstraint(parent_nw_abs, parent_se_abs, self_nw_abs, self_se_abs)
+            less_than = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, self_nw_abs, self_se_abs)
             solver.add_constraint(less_than)
 
         # Registers local constraints
@@ -288,13 +301,42 @@ class ConnectionView(Line):
 
     def __init__(self):
         super(ConnectionView, self).__init__()
+        self._from_handle = self.handles()[0]
+        self._to_handle = self.handles()[1]
+        self._segment = Segment(self, view=self.canvas)
         # self.orthogonal = True
 
+    # def setup_canvas(self):
+    #     super(ConnectionView, self).setup_canvas()
+
+    def _keep_handle_in_parent_state(self, handle):
+        canvas = self.canvas
+        parent = canvas.get_parent(self)
+        solver = canvas.solver
+        if parent is None:
+            return
+        assert isinstance(parent, StateView)
+        handle_pos_abs = canvas.project(self, handle.pos)
+        parent_nw_abs = canvas.project(parent, parent.nw_pos())
+        parent_se_abs = canvas.project(parent, parent.se_pos())
+        constraint = KeepPointWithinConstraint(parent_nw_abs, parent_se_abs, handle_pos_abs)
+        solver.add_constraint(constraint)
+
     def from_handle(self):
-        return self.handles()[0]
+        return self._from_handle
 
     def to_handle(self):
-        return self.handles()[1]
+        return self._to_handle
+
+    def add_waypoint(self, pos):
+        handle = self._create_handle(pos)
+        self._handles.insert(-1, handle)
+        self._keep_handle_in_parent_state(handle)
+        self._update_ports()
+
+    def _reversible_insert_handle(self, index, handle):
+        super(ConnectionView, self)._reversible_insert_handle(index, handle)
+        self._keep_handle_in_parent_state(handle)
 
     def draw_head(self, context):
         cr = context.cairo
@@ -315,3 +357,11 @@ class TransitionView(ConnectionView):
     def __init__(self):
         super(TransitionView, self).__init__()
         self.line_width = 0.5
+
+
+@HandleSelection.when_type(ConnectionView)
+class ConnectionSegmentHandleSelection(SegmentHandleSelection):
+
+    def unselect(self):
+        self.view.canvas.solver.solve()
+        super(ConnectionSegmentHandleSelection, self).unselect()
