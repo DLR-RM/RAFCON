@@ -124,7 +124,8 @@ class GraphicalEditorController(ExtendedController):
 
         if isinstance(state_meta['rel_pos'], tuple):
             rel_pos = state_meta['rel_pos']
-            if not isinstance(state_meta['invert_y'], bool) or state_meta['invert_y']:
+            if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
+                    self.model.meta['gui']['editor']['invert_y']:
                 rel_pos = (rel_pos[0], -rel_pos[1])
 
         # Was the state selected?
@@ -189,13 +190,12 @@ class GraphicalEditorController(ExtendedController):
         #     self._handle_new_data_flow(state_m, depth)
 
     def draw_transitions(self, parent_state_m):
-        print "draw transitions"
         parent_state_v = parent_state_m.temp['gui']['editor']['view']
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
 
             transition_v = TransitionView()
-            self.canvas.add(transition_v)
+            self.canvas.add(transition_v, parent_state_v)
 
             try:
                 # Get id and references to the from and to state
@@ -219,16 +219,19 @@ class GraphicalEditorController(ExtendedController):
                     # Set the to coordinates to the center of the next state
                     to_state_v = to_state_m.temp['gui']['editor']['view']
                     to_state_v.connect_to_income(transition_v, transition_v.to_handle())
-                #
-                # waypoints = []
-                # for waypoint in transition_m.meta['gui']['editor']['waypoints']:
-                #     waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
-                #     waypoints.append(waypoint_pos)
 
-                # # Let the view draw the transition and store the returned OpenGL object id
-                # selected = False
+                # waypoints = []
+                for waypoint in transition_m.meta['gui']['editor']['waypoints']:
+                    if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
+                            self.model.meta['gui']['editor']['invert_y']:
+                        waypoint = (waypoint[0], -waypoint[1])
+                    transition_v.add_waypoint(waypoint)
+                    # waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
+                    # waypoints.append(waypoint_pos)
+
+                # Let the view draw the transition and store the returned OpenGL object id
                 # if transition_m in self.model.selection.get_transitions():
-                #     selected = True
+                #     transition_v.selected = True
                 # line_width = self.view.editor.transition_stroke_width(parent_state_m)
                 # opengl_id = self.view.editor.draw_transition(from_pos, to_pos, line_width, waypoints,
                 #                                              selected, parent_depth + 0.5)
