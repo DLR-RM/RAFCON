@@ -177,6 +177,9 @@ style "label_event_box" = "my_default"
 	bg[NORMAL]	= @widget_active_background
 }
 widget_class "*Viewport.GtkVBox.GtkEventBox"		style "label_event_box"
+widget_class "*VBox.GtkEventBox.GtkEventBox"		style "label_event_box"
+widget_class "*VPaned.GtkEventBox.GtkVBox.GtkEventBox"	style "label_event_box"
+widget_class "*Notebook.GtkEventBox.GtkVPaned.GtkEventBox"	style "label_event_box"
 
 
 
@@ -258,13 +261,7 @@ style "notebook_blue" = "my_default"
 widget_class "*VPaned.GtkNotebook"			style "notebook_blue"
 widget_class "*VBox.GtkNotebook"				style "notebook_blue"
 
-
-
-style "right_notebook_event_box" = "my_default"
-{
-    
-}
-widget_class "*Notebook.GtkVBox.GtkEventBox"		style "right_notebook_event_box"
+widget_class "*Notebook.GtkVBox.GtkEventBox"		style "my_default"
 #----------------------------
 
 
@@ -384,9 +381,9 @@ style "top_bar" = "my_default"
 
     fg[PRELIGHT]	= @white
 }
-widget_class "*EventBox.GtkVBox.GtkEventBox"		style "top_bar"
-widget_class "*EventBox.GtkVBox.GtkEventBox*Menu*"		style "top_bar"
-widget_class "*EventBox.GtkVBox.GtkEventBox*Toolbar"	style "top_bar"
+widget_class "GtkWindow.GtkEventBox.GtkVBox.GtkEventBox"		style "top_bar"
+widget_class "GtkWindow.GtkEventBox.GtkVBox.GtkEventBox*Menu*"	style "top_bar"
+widget_class "GtkWindow.GtkEventBox.GtkVBox.GtkEventBox*Toolbar"	style "top_bar"
 
 
 
