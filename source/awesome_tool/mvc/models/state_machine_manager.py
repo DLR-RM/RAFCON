@@ -90,6 +90,9 @@ class StateMachineManagerModel(ModelMT, Observable):
                 del self.state_machines[sm_id_to_delete]
 
     def get_selected_state_machine_model(self):
+        if self.selected_state_machine_id is None:
+            return None
+
         return self.state_machines[self.selected_state_machine_id]
 
     @property

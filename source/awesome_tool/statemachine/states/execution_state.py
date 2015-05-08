@@ -116,13 +116,14 @@ class ExecutionState(State, yaml.YAMLObject):
         dict_representation = {
             'name': data.name,
             'state_id': data.state_id,
+            'description': data.description,
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,
             'path': data.script.path,
             'filename': data.script.filename
         }
-        node = dumper.represent_mapping(u'!ExecutionState', dict_representation)
+        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
         return node
 
 
@@ -136,5 +137,10 @@ class ExecutionState(State, yaml.YAMLObject):
         outcomes = dict_representation['outcomes']
         path = dict_representation['path']
         filename = dict_representation['filename']
-        return ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
+        state = ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
                               check_path=False)
+        try:
+            state.description = dict_representation['description']
+        except (ValueError, TypeError, KeyError):
+            pass
+        return state

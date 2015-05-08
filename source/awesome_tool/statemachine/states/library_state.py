@@ -52,17 +52,18 @@ class LibraryState(State, yaml.YAMLObject):
         self.version = version
 
         self._state_copy = None
+        lib_os_path, new_library_path, new_library_name = \
+            awesome_tool.statemachine.singleton.library_manager.get_os_path_to_library(library_path, library_name)
 
-        path_list = library_path.split("/")
-        target_lib_dict = awesome_tool.statemachine.singleton.library_manager.libraries
-        # go down the path to the correct library
-        # TODO: make this more robust
-        for element in path_list:
-            target_lib_dict = target_lib_dict[element]
-        # get a fresh copy of the library state from disk
-        logger.debug("Load state to which this library state links")
-        state_machine, lib_version, creationtime = awesome_tool.statemachine.singleton.library_manager.storage.\
-            load_statemachine_from_yaml(target_lib_dict[library_name])
+        if library_path != new_library_path or library_name != new_library_name:
+            self.library_name = new_library_name
+            self.library_path = new_library_path
+            logger.info("Changing information about location of library")
+            logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
+            logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
+
+        state_machine, lib_version, creation_time = awesome_tool.statemachine.singleton.library_manager.storage.\
+            load_statemachine_from_yaml(lib_os_path)
         self.state_copy = state_machine.root_state
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
@@ -204,7 +205,7 @@ class LibraryState(State, yaml.YAMLObject):
             'path': data.script.path,
             'filename': data.script.filename
         }
-        node = dumper.represent_mapping(u'!LibraryState', dict_representation)
+        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
         return node
 
     @classmethod

@@ -48,8 +48,8 @@ class StateEditorView(View):
         self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
         self['linkage_overview_viewport'].add(self['linkage_overview'].get_top_widget())
 
-        self['data_vpaned'].set_position(125)
-        self['logic_vpaned'].set_position(125)
+        self['data_vpaned'].set_position(175)
+        self['logic_vpaned'].set_position(175)
 
         self['main_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)

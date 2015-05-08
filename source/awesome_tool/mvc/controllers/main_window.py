@@ -180,7 +180,8 @@ class MainWindowController(ExtendedController):
 
         execution_history_tab_label = gtk.Label('Execution History')
         execution_history_notebook_widget = self.create_notebook_widget('EXECUTION HISTORY',
-                                                                        view.execution_history_view.get_top_widget())
+                                                                        view.execution_history_view.get_top_widget(),
+                                                                        use_scroller=False)
         view["tree_notebook_2"].insert_page(execution_history_notebook_widget, execution_history_tab_label, page_num)
 
         ######################################################
@@ -344,12 +345,18 @@ class MainWindowController(ExtendedController):
         self.view['left_v_pane_2'].remove(self.console_child)
         self.view['console_return_button'].show()
 
-    def create_notebook_widget(self, title, widget):
+    def create_notebook_widget(self, title, widget, use_scroller=True):
         title_label = self.create_label_box(title)
         event_box = gtk.EventBox()
         vbox = gtk.VBox()
         vbox.pack_start(title_label, False, True, 0)
-        vbox.pack_start(widget, True, True, 0)
+        if use_scroller:
+            scroller = gtk.ScrolledWindow()
+            scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+            scroller.add_with_viewport(widget)
+            vbox.pack_start(scroller, True, True, 0)
+        else:
+            vbox.pack_start(widget, True, True, 0)
         event_box.add(vbox)
         event_box.show_all()
         return event_box
