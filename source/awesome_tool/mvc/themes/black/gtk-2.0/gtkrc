@@ -172,6 +172,14 @@ widget_class "*Notebook.GtkEventBox"			style "event_box"
 
 
 
+style "label_event_box" = "my_default"
+{
+	bg[NORMAL]	= @widget_active_background
+}
+widget_class "*Viewport.GtkVBox.GtkEventBox"		style "label_event_box"
+
+
+
 #----------BUTTONS-----------
 style "button" = "my_default"
 {

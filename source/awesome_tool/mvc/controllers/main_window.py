@@ -343,7 +343,7 @@ class MainWindowController(ExtendedController):
         if use_scroller:
             scroller = gtk.ScrolledWindow()
             scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            scroller.add(widget)
+            scroller.add_with_viewport(widget)
             vbox.pack_start(scroller, True, True, 0)
         else:
             vbox.pack_start(widget, True, True, 0)
