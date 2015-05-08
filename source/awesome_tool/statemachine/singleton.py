@@ -14,6 +14,7 @@ from awesome_tool.statemachine.execution.statemachine_execution_engine import St
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.state_machine_manager import StateMachineManager
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
+from awesome_tool.utils import helper
 
 import sys
 
@@ -41,3 +42,6 @@ state_machine_execution_engine = StatemachineExecutionEngine(state_machine_manag
 
 # This variable holds a global storage object
 global_storage = StateMachineStorage("")
+
+# This variable holds the colors used in the GtkRC-Theme
+global_color_pool = helper.global_color_pool()

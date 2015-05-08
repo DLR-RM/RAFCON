@@ -48,8 +48,8 @@ class StateEditorView(View):
         self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
         self['linkage_overview_viewport'].add(self['linkage_overview'].get_top_widget())
 
-        self['data_vpaned'].set_position(125)
-        self['logic_vpaned'].set_position(125)
+        self['data_vpaned'].set_position(175)
+        self['logic_vpaned'].set_position(175)
 
         self['main_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
@@ -76,6 +76,13 @@ class StateEditorView(View):
         self['description_text_view'] = textview
 
         vbox = gtk.VBox()
+        description_label = gtk.Label("Description")
+        description_label.set_alignment(0.0, 0.5)
+        description_box = gtk.EventBox()
+        description_box.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        description_box.add(description_label)
+        description_box.show_all()
+        vbox.pack_start(description_box, False, True, 0)
         vbox.pack_start(textview, True, True, constants.BORDER_WIDTH_TEXTVIEW)
         vbox.show()
 
