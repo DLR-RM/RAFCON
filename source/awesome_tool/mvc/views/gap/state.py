@@ -1,7 +1,14 @@
 from weakref import ref
 
+import cairo
+import pango
+import pangocairo
+
+from gtk.gdk import CairoContext
+
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
+from gaphas.painter import CairoBoundingBoxContext
 
 from gaphas.util import text_align, text_set_font, text_extents
 
@@ -10,6 +17,8 @@ from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortV
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.models.state import StateModel
+
+from awesome_tool.utils import constants
 
 class StateView(Element):
     """ A State has 4 handles (for a start):
@@ -74,6 +83,13 @@ class StateView(Element):
 
     def draw(self, context):
         c = context.cairo
+
+        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
+        if isinstance(c, CairoContext):
+            cc = c
+        else:
+            cc = c._cairo
+
         c.set_line_width(0.5)
         nw = self._handles[NW].pos
         c.rectangle(nw.x, nw.y, self.width, self.height)
@@ -86,16 +102,28 @@ class StateView(Element):
         c.stroke()
 
         name = self.state_m.state.name
-        c.set_source_rgba(0, 0, 0, 1)
-        padding = min(self.width / 30, self.height / 30, 2)
-        font_name = 'DIN Next LT Pro'
-        size = 12
-        def font_string():
-            return font_name + " " + str(size)
-        while text_extents(c, name, font_string(), padding)[0] > (self.width * 0.7) - 2 * padding:
-            size -= 0.25
-        text_set_font(c, font_string())
-        text_align(c, nw.x, nw.y, name, 1, 1, padding, padding)
+
+        pcc = pangocairo.CairoContext(cc)
+        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        layout = pcc.create_layout()
+        layout.set_text(name)
+
+        font_name = constants.FONT_NAMES[0]
+        font_size = 20
+
+        def set_font_description():
+            font = pango.FontDescription(font_name + " " + str(font_size))
+            layout.set_font_description(font)
+
+        set_font_description()
+        while layout.get_size()[0] / 1024. > self.width:
+            font_size *= 0.9
+            set_font_description()
+
+        cc.set_source_rgb(0, 0, 0)
+        pcc.update_layout(layout)
+        pcc.show_layout(layout)
 
         self._income.draw(context, self)
 
