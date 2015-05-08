@@ -29,7 +29,15 @@ class SourceEditorView(View):
         hbox.pack_end(apply_button, False, True, constants.PADDING)
         hbox.set_border_width(constants.BORDER_WIDTH)
 
+        source_label = gtk.Label("Source Editor")
+        source_label.set_alignment(0.0, 0.5)
+        source_box = gtk.EventBox()
+        source_box.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        source_box.add(source_label)
+        source_box.show_all()
+
         editor_frame = gtk.Frame()
+        vbox.pack_start(source_box, False, True, 0)
         vbox.pack_start(editor_frame, expand=True, fill=True)
         vbox.pack_start(hbox, expand=False, fill=True)
         #l = gtk.Label()

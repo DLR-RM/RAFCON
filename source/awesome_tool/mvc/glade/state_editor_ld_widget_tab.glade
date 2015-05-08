@@ -100,235 +100,266 @@
                               <object class="GtkEventBox" id="eventbox3">
                                 <property name="visible">True</property>
                                 <child>
-                                  <object class="GtkNotebook" id="notebook">
+                                  <object class="GtkVBox" id="vbox3">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="show_border">False</property>
-                                    <property name="tab_border">5</property>
-                                    <property name="tab_hborder">10</property>
-                                    <property name="tab_vborder">10</property>
+                                    <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkVBox" id="input_port_vbox">
+                                      <object class="GtkEventBox" id="eventbox4">
                                         <property name="visible">True</property>
-                                        <property name="orientation">vertical</property>
+                                        <property name="border_width">10</property>
                                         <child>
-                                          <object class="GtkScrolledWindow" id="input_ports_scroller">
+                                          <object class="GtkLabel" id="data_ports_label">
                                             <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="hscrollbar_policy">automatic</property>
-                                            <property name="vscrollbar_policy">automatic</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
+                                            <property name="xalign">0</property>
+                                            <property name="label" translatable="yes">Data Ports</property>
                                           </object>
-                                          <packing>
-                                            <property name="position">0</property>
-                                          </packing>
                                         </child>
-                                        <child>
-                                          <object class="GtkHBox" id="hbox">
-                                            <property name="visible">True</property>
-                                            <child>
-                                              <object class="GtkButton" id="new_input_port_button">
-                                                <property name="label" translatable="yes">New</property>
-                                                <property name="width_request">90</property>
-                                                <property name="height_request">40</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">True</property>
-                                                <property name="border_width">5</property>
-                                                <property name="focus_on_click">False</property>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="pack_type">end</property>
-                                                <property name="position">1</property>
-                                              </packing>
-                                            </child>
-                                            <child>
-                                              <object class="GtkButton" id="delete_input_port_button">
-                                                <property name="label" translatable="yes">Delete</property>
-                                                <property name="width_request">90</property>
-                                                <property name="height_request">40</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">True</property>
-                                                <property name="border_width">5</property>
-                                                <property name="focus_on_click">False</property>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="pack_type">end</property>
-                                                <property name="position">0</property>
-                                              </packing>
-                                            </child>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="position">1</property>
-                                          </packing>
-                                        </child>
-                                      </object>
-                                    </child>
-                                    <child type="tab">
-                                      <object class="GtkLabel" id="label4">
-                                        <property name="visible">True</property>
-                                        <property name="label" translatable="yes">Input Ports</property>
                                       </object>
                                       <packing>
-                                        <property name="tab_fill">False</property>
+                                        <property name="expand">False</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkVBox" id="output_port_vbox">
+                                      <object class="GtkEventBox" id="eventbox6">
                                         <property name="visible">True</property>
-                                        <property name="orientation">vertical</property>
                                         <child>
-                                          <object class="GtkScrolledWindow" id="output_ports_scroller">
+                                          <object class="GtkNotebook" id="notebook">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
-                                            <property name="hscrollbar_policy">automatic</property>
-                                            <property name="vscrollbar_policy">automatic</property>
+                                            <property name="show_border">False</property>
+                                            <property name="tab_border">5</property>
+                                            <property name="tab_hborder">10</property>
+                                            <property name="tab_vborder">10</property>
                                             <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                          <packing>
-                                            <property name="position">0</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkHBox" id="hbox2">
-                                            <property name="visible">True</property>
-                                            <child>
-                                              <object class="GtkButton" id="new_output_port_button">
-                                                <property name="label" translatable="yes">New</property>
-                                                <property name="width_request">90</property>
-                                                <property name="height_request">40</property>
+                                              <object class="GtkVBox" id="input_port_vbox">
                                                 <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">True</property>
-                                                <property name="border_width">5</property>
-                                                <property name="focus_on_click">False</property>
+                                                <property name="orientation">vertical</property>
+                                                <child>
+                                                  <object class="GtkScrolledWindow" id="input_ports_scroller">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="hscrollbar_policy">automatic</property>
+                                                    <property name="vscrollbar_policy">automatic</property>
+                                                    <child>
+                                                      <placeholder/>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="position">0</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkHBox" id="hbox">
+                                                    <property name="visible">True</property>
+                                                    <child>
+                                                      <object class="GtkButton" id="new_input_port_button">
+                                                        <property name="label" translatable="yes">New</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="height_request">40</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">True</property>
+                                                        <property name="receives_default">True</property>
+                                                        <property name="border_width">5</property>
+                                                        <property name="focus_on_click">False</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="pack_type">end</property>
+                                                        <property name="position">1</property>
+                                                      </packing>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkButton" id="delete_input_port_button">
+                                                        <property name="label" translatable="yes">Delete</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="height_request">40</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">True</property>
+                                                        <property name="receives_default">True</property>
+                                                        <property name="border_width">5</property>
+                                                        <property name="focus_on_click">False</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="pack_type">end</property>
+                                                        <property name="position">0</property>
+                                                      </packing>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="expand">False</property>
+                                                    <property name="position">1</property>
+                                                  </packing>
+                                                </child>
+                                              </object>
+                                            </child>
+                                            <child type="tab">
+                                              <object class="GtkLabel" id="label4">
+                                                <property name="visible">True</property>
+                                                <property name="label" translatable="yes">Input Ports</property>
                                               </object>
                                               <packing>
-                                                <property name="expand">False</property>
-                                                <property name="pack_type">end</property>
+                                                <property name="tab_fill">False</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkVBox" id="output_port_vbox">
+                                                <property name="visible">True</property>
+                                                <property name="orientation">vertical</property>
+                                                <child>
+                                                  <object class="GtkScrolledWindow" id="output_ports_scroller">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="hscrollbar_policy">automatic</property>
+                                                    <property name="vscrollbar_policy">automatic</property>
+                                                    <child>
+                                                      <placeholder/>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="position">0</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkHBox" id="hbox2">
+                                                    <property name="visible">True</property>
+                                                    <child>
+                                                      <object class="GtkButton" id="new_output_port_button">
+                                                        <property name="label" translatable="yes">New</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="height_request">40</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">True</property>
+                                                        <property name="receives_default">True</property>
+                                                        <property name="border_width">5</property>
+                                                        <property name="focus_on_click">False</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="pack_type">end</property>
+                                                        <property name="position">1</property>
+                                                      </packing>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkButton" id="delete_output_port_button">
+                                                        <property name="label" translatable="yes">Delete</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="height_request">40</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">True</property>
+                                                        <property name="receives_default">True</property>
+                                                        <property name="border_width">5</property>
+                                                        <property name="focus_on_click">False</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="pack_type">end</property>
+                                                        <property name="position">0</property>
+                                                      </packing>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="expand">False</property>
+                                                    <property name="position">1</property>
+                                                  </packing>
+                                                </child>
+                                              </object>
+                                              <packing>
                                                 <property name="position">1</property>
                                               </packing>
                                             </child>
-                                            <child>
-                                              <object class="GtkButton" id="delete_output_port_button">
-                                                <property name="label" translatable="yes">Delete</property>
-                                                <property name="width_request">90</property>
-                                                <property name="height_request">40</property>
+                                            <child type="tab">
+                                              <object class="GtkLabel" id="label5">
                                                 <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">True</property>
-                                                <property name="border_width">5</property>
-                                                <property name="focus_on_click">False</property>
+                                                <property name="label" translatable="yes">Output Ports</property>
                                               </object>
                                               <packing>
-                                                <property name="expand">False</property>
-                                                <property name="pack_type">end</property>
-                                                <property name="position">0</property>
+                                                <property name="position">1</property>
+                                                <property name="tab_fill">False</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkVBox" id="scoped_variable_vbox">
+                                                <property name="visible">True</property>
+                                                <property name="orientation">vertical</property>
+                                                <child>
+                                                  <object class="GtkScrolledWindow" id="scoped_variables_scroller">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="hscrollbar_policy">automatic</property>
+                                                    <property name="vscrollbar_policy">automatic</property>
+                                                    <child>
+                                                      <placeholder/>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="position">0</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkHBox" id="hbox3">
+                                                    <property name="visible">True</property>
+                                                    <child>
+                                                      <object class="GtkButton" id="new_scoped_variable_button">
+                                                        <property name="label" translatable="yes">New</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="height_request">40</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">True</property>
+                                                        <property name="receives_default">True</property>
+                                                        <property name="border_width">5</property>
+                                                        <property name="focus_on_click">False</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="pack_type">end</property>
+                                                        <property name="position">1</property>
+                                                      </packing>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkButton" id="delete_scoped_variable_button">
+                                                        <property name="label" translatable="yes">Delete</property>
+                                                        <property name="width_request">90</property>
+                                                        <property name="height_request">40</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">True</property>
+                                                        <property name="receives_default">True</property>
+                                                        <property name="border_width">5</property>
+                                                        <property name="focus_on_click">False</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="pack_type">end</property>
+                                                        <property name="position">0</property>
+                                                      </packing>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="expand">False</property>
+                                                    <property name="position">1</property>
+                                                  </packing>
+                                                </child>
+                                              </object>
+                                              <packing>
+                                                <property name="position">2</property>
+                                              </packing>
+                                            </child>
+                                            <child type="tab">
+                                              <object class="GtkLabel" id="label7">
+                                                <property name="visible">True</property>
+                                                <property name="label" translatable="yes">Scoped Variables</property>
+                                              </object>
+                                              <packing>
+                                                <property name="position">2</property>
+                                                <property name="tab_fill">False</property>
                                               </packing>
                                             </child>
                                           </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="position">1</property>
-                                          </packing>
                                         </child>
                                       </object>
                                       <packing>
                                         <property name="position">1</property>
-                                      </packing>
-                                    </child>
-                                    <child type="tab">
-                                      <object class="GtkLabel" id="label5">
-                                        <property name="visible">True</property>
-                                        <property name="label" translatable="yes">Output Ports</property>
-                                      </object>
-                                      <packing>
-                                        <property name="position">1</property>
-                                        <property name="tab_fill">False</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkVBox" id="scoped_variable_vbox">
-                                        <property name="visible">True</property>
-                                        <property name="orientation">vertical</property>
-                                        <child>
-                                          <object class="GtkScrolledWindow" id="scoped_variables_scroller">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="hscrollbar_policy">automatic</property>
-                                            <property name="vscrollbar_policy">automatic</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                          <packing>
-                                            <property name="position">0</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkHBox" id="hbox3">
-                                            <property name="visible">True</property>
-                                            <child>
-                                              <object class="GtkButton" id="new_scoped_variable_button">
-                                                <property name="label" translatable="yes">New</property>
-                                                <property name="width_request">90</property>
-                                                <property name="height_request">40</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">True</property>
-                                                <property name="border_width">5</property>
-                                                <property name="focus_on_click">False</property>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="pack_type">end</property>
-                                                <property name="position">1</property>
-                                              </packing>
-                                            </child>
-                                            <child>
-                                              <object class="GtkButton" id="delete_scoped_variable_button">
-                                                <property name="label" translatable="yes">Delete</property>
-                                                <property name="width_request">90</property>
-                                                <property name="height_request">40</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">True</property>
-                                                <property name="border_width">5</property>
-                                                <property name="focus_on_click">False</property>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="pack_type">end</property>
-                                                <property name="position">0</property>
-                                              </packing>
-                                            </child>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="position">1</property>
-                                          </packing>
-                                        </child>
-                                      </object>
-                                      <packing>
-                                        <property name="position">2</property>
-                                      </packing>
-                                    </child>
-                                    <child type="tab">
-                                      <object class="GtkLabel" id="label7">
-                                        <property name="visible">True</property>
-                                        <property name="label" translatable="yes">Scoped Variables</property>
-                                      </object>
-                                      <packing>
-                                        <property name="position">2</property>
-                                        <property name="tab_fill">False</property>
                                       </packing>
                                     </child>
                                   </object>
@@ -336,7 +367,7 @@
                               </object>
                               <packing>
                                 <property name="resize">False</property>
-                                <property name="shrink">False</property>
+                                <property name="shrink">True</property>
                               </packing>
                             </child>
                             <child>

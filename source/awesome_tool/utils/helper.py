@@ -1,7 +1,20 @@
 from gtk import Button
+from gtk.gdk import color_parse
 from awesome_tool.utils import constants
 
-import sys, getopt
+import sys, getopt, re
+
+
+def global_color_pool():
+    f = open("./themes/black/gtk-2.0/gtkrc")
+    lines = f.readlines()
+    f.close()
+    color_dict = {}
+    for line in lines:
+        if re.match("\s*color", line):
+            color = re.findall(r'"(.*?)"', line)
+            color_dict[color[0]] = color_parse(color[1])
+    return color_dict
 
 
 def set_button_children_size_request(widget):
