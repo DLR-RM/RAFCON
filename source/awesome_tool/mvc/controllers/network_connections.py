@@ -88,7 +88,7 @@ class NetworkConnections(ExtendedController):
             return
         if not self.tcp_connected and self.tcp_connector is None:
             self.tcp_connector = reactor.connectTCP(global_net_config.get_server_ip(),
-                                                    global_net_config.get_server_port(),
+                                                    global_net_config.get_server_tcp_port(),
                                                     self.tcp_connection_factory)
         elif not self.tcp_connected:
             self.tcp_connector.connect()
@@ -136,7 +136,7 @@ class NetworkConnections(ExtendedController):
                     self.send_current_active_states(model.root_state)
                     self.udp_connection.send_non_acknowledged_message("------------------------------------",
                                                                       (global_net_config.get_server_ip(),
-                                                                       global_net_config.get_server_port()),
+                                                                       global_net_config.get_server_udp_port()),
                                                                       "NAM")  # NAM = non acknowledged message
 
     @ExtendedController.observe("execution_engine", after=True)
@@ -145,7 +145,7 @@ class NetworkConnections(ExtendedController):
         execution_mode = execution_mode.replace("EXECUTION_MODE.", "")
         self.udp_connection.send_acknowledged_message(execution_mode,
                                                       (global_net_config.get_server_ip(),
-                                                       global_net_config.get_server_port()),
+                                                       global_net_config.get_server_udp_port()),
                                                       "EXE")
 
     @staticmethod
@@ -166,7 +166,7 @@ class NetworkConnections(ExtendedController):
             if not self.state_has_content(state_m):
                 self.udp_connection.send_non_acknowledged_message(state_m.state.get_path(),
                                                                   (global_net_config.get_server_ip(),
-                                                                   global_net_config.get_server_port()),
+                                                                   global_net_config.get_server_udp_port()),
                                                                   "NAM")  # NAM = non acknowledged message
 
         if self.state_has_content(state_m):
@@ -184,6 +184,8 @@ class TCPClient(protocol.Protocol):
         self.factory.network_connection.tcp_connected = True
         self.factory.network_connection.view["tcp_connect_button"].set_label("Disconnect TCP")
         files = yaml_transmission_pb2.Files()
+        sm_name = self.factory.network_connection.model.get_selected_state_machine_model().root_state.state.name
+        files.sm_name = sm_name
         for path, content in self.factory.network_connection.net_storage_reader.file_storage.iteritems():
             my_file = files.files.add()
             my_file.file_path = str(path)
@@ -229,13 +231,13 @@ class UDPConnection(DatagramProtocol):
             logger.warning("Register UDP connection without acknowledge - Spaceboard Cup Mode")
             self.send_non_acknowledged_message(sm_name,
                                                (global_net_config.get_server_ip(),
-                                                global_net_config.get_server_port()),
+                                                global_net_config.get_server_udp_port()),
                                                "REG")
             self.view["udp_connection_registered_label"].set_text("YES")
         else:
             self.send_acknowledged_message(sm_name,
                                            (global_net_config.get_server_ip(),
-                                            global_net_config.get_server_port()),
+                                            global_net_config.get_server_udp_port()),
                                            "REG")
 
     def datagramReceived(self, data, addr):

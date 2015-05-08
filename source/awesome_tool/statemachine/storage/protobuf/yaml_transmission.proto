@@ -1,6 +1,8 @@
 package awesome_tool;
 
 message Files {
+	
+	required string sm_name = 2;
 
 	message File {
 		required string file_path = 1;

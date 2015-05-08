@@ -20,7 +20,7 @@ class ConnectionManager(Observable):
         self.server_tcp = SmNetworkController(NetworkMode.TCP)
 
         self.server_html = HtmlNetworkController()
-        self.server_html.start_html_server()
+        #self.server_html.start_html_server()
 
     @Observable.observed
     def tcp_data_received(self, factory, connection, data):

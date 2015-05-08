@@ -4,10 +4,15 @@ from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 from awesome_server.connections.protobuf import yaml_transmission_pb2
 from awesome_server.utils.storage_utils import StorageUtils
 
+from awesome_server.statemachine.states.hierarchy_state import HierarchyState
+from awesome_server.statemachine.states.execution_state import ExecutionState
+from awesome_server.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+
 import gtk
 from twisted.internet import reactor
 
 from awesome_server.utils.config import global_server_config
+from awesome_server.statemachine.singleton import global_storage
 import os
 
 
@@ -106,6 +111,9 @@ class DebugViewController(ExtendedController):
         files = yaml_transmission_pb2.Files()
         files.ParseFromString(msg)
         self.process_yaml_files(files.files)
+        tmp_sm_path = str(TEMP_FOLDER + "/" + files.files[0].file_path.rsplit('/')[1])
+        [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(tmp_sm_path)
+        print state_machine
 
     @ExtendedController.observe("_udp_messages_received", after=True)
     def handle_udp_message_received(self, mode, prop_name, info):

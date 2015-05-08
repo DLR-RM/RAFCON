@@ -41,7 +41,10 @@ class NetworkConfig(DefaultConfig):
     def get_server_ip(self):
         return self.get_config_value("SERVER_IP")
 
-    def get_server_port(self):
+    def get_server_udp_port(self):
         return self.get_config_value("SERVER_UDP_PORT")
+
+    def get_server_tcp_port(self):
+        return self.get_config_value("SERVER_TCP_PORT")
 
 global_net_config = NetworkConfig()

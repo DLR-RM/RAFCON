@@ -18,7 +18,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='yaml_transmission.proto',
   package='awesome_tool',
-  serialized_pb=_b('\n\x17yaml_transmission.proto\x12\x0c\x61wesome_tool\"a\n\x05\x46iles\x12\'\n\x05\x66iles\x18\x01 \x03(\x0b\x32\x18.awesome_tool.Files.File\x1a/\n\x04\x46ile\x12\x11\n\tfile_path\x18\x01 \x02(\t\x12\x14\n\x0c\x66ile_content\x18\x02 \x02(\t')
+  serialized_pb=_b('\n\x17yaml_transmission.proto\x12\x0c\x61wesome_tool\"r\n\x05\x46iles\x12\x0f\n\x07sm_name\x18\x02 \x02(\t\x12\'\n\x05\x66iles\x18\x01 \x03(\x0b\x32\x18.awesome_tool.Files.File\x1a/\n\x04\x46ile\x12\x11\n\tfile_path\x18\x01 \x02(\t\x12\x14\n\x0c\x66ile_content\x18\x02 \x02(\t')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -57,8 +57,8 @@ _FILES_FILE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=91,
-  serialized_end=138,
+  serialized_start=108,
+  serialized_end=155,
 )
 
 _FILES = _descriptor.Descriptor(
@@ -69,7 +69,14 @@ _FILES = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='files', full_name='awesome_tool.Files.files', index=0,
+      name='sm_name', full_name='awesome_tool.Files.sm_name', index=0,
+      number=2, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='files', full_name='awesome_tool.Files.files', index=1,
       number=1, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -87,7 +94,7 @@ _FILES = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=41,
-  serialized_end=138,
+  serialized_end=155,
 )
 
 _FILES_FILE.containing_type = _FILES
