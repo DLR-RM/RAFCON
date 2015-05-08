@@ -30,7 +30,6 @@ class GraphicalEditorController(ExtendedController):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
-        print "view", type(view), GraphicalEditorView
         assert type(view) == GraphicalEditorView
         assert isinstance(self.model, StateMachineModel)
         # assert isinstance(self.view, GraphicalEditorView)

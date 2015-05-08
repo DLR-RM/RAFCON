@@ -1,8 +1,9 @@
 from weakref import ref
 
 import cairo
-import pango
-import pangocairo
+# import pango
+from pangocairo import CairoContext
+from pango import SCALE, FontDescription
 
 from gtk.gdk import CairoContext
 
@@ -103,7 +104,7 @@ class StateView(Element):
 
         name = self.state_m.state.name
 
-        pcc = pangocairo.CairoContext(cc)
+        pcc = CairoContext(cc)
         pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
         layout = pcc.create_layout()
@@ -113,11 +114,11 @@ class StateView(Element):
         font_size = 20
 
         def set_font_description():
-            font = pango.FontDescription(font_name + " " + str(font_size))
+            font = FontDescription(font_name + " " + str(font_size))
             layout.set_font_description(font)
 
         set_font_description()
-        while layout.get_size()[0] / 1024. > self.width:
+        while layout.get_size()[0] / float(SCALE) > self.width:
             font_size *= 0.9
             set_font_description()
 
