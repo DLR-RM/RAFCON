@@ -1,6 +1,7 @@
 import gtk
 import os
 import sys
+import shutil
 
 from awesome_tool.utils.config import DefaultConfig, ConfigError
 from awesome_tool.utils import constants
@@ -44,7 +45,7 @@ class GuiConfig(DefaultConfig):
         context = tv.get_pango_context()
         fonts = context.list_families()
 
-        font_path = os.getenv("HOME") + "/.fonts"
+        font_path = os.path.join(os.getenv("HOME"), ".fonts")
 
         font_copied = False
 
@@ -52,13 +53,20 @@ class GuiConfig(DefaultConfig):
             found = False
             for font in fonts:
                 if font.get_name() == font_name:
-                    logger.info("Font %s found" % font_name)
+                    logger.debug("Font '{0}' found".format(font_name))
                     found = True
             if not found:
-                logger.info("Copy font %s to %s" % (font_name, font_path))
+                logger.debug("Copy font '{0}' to '{1}'".format(font_name, font_path))
                 if not os.path.isdir(font_path):
-                    os.system("mkdir -p %s" % font_path)
-                os.system("cp -r %s %s" % (self.path_to_tool + constants.FONT_STYLE_PATHS[font_name], font_path))
+                    os.makedirs(font_path)
+                font_origin = os.path.join(self.path_to_tool, constants.FONT_STYLE_PATHS[font_name])
+
+                if os.path.isdir(font_origin):
+                    font_names = os.listdir(font_origin)
+                    for font_filename in font_names:
+                        shutil.copy(os.path.join(font_origin, font_filename), font_path)
+                else:
+                    shutil.copy(font_origin, font_path)
                 font_copied = True
 
         if font_copied:
@@ -67,20 +75,20 @@ class GuiConfig(DefaultConfig):
             os.execl(python, python, * sys.argv)
 
     def configure_source_view_styles(self):
-        path = os.getenv("HOME") + "/.local/share/gtksourceview-2.0/styles"
+        path = os.path.join(os.getenv("HOME"), ".local/share/gtksourceview-2.0/styles")
 
         if not os.path.isdir(path):
-            os.system("mkdir -p %s" % path)
+            os.makedirs(path)
 
         for style in constants.STYLE_NAMES:
-            if not os.path.isfile(os.path.join(path, style)):
-                logger.info("Copy style %s to %s" % (style, path))
-                os.system("cp %s %s " % (self.path_to_tool + constants.FONT_STYLE_PATHS[style], path))
-            else:
-                logger.info("Found %s" % style)
+            font_style_origin = os.path.join(self.path_to_tool, constants.FONT_STYLE_PATHS[style])
+            font_style_target = os.path.join(path, style)
 
-                logger.warning("REMOVE THE FOLLOWING TWO LINES AFTER COMPLETION OF %s" % style)
-                os.system("rm " + path + "/%s" % style)
-                os.system("cp %s %s " % (self.path_to_tool + constants.FONT_STYLE_PATHS[style], path))
+            # Remove old versions
+            if os.path.isfile(font_style_target):
+                os.remove(os.path.join(path, style))
+
+            # Copy current version
+            shutil.copy(font_style_origin, path)
 
 global_gui_config = GuiConfig()
