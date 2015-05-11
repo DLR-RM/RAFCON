@@ -9,12 +9,14 @@ function sse() {
 
             newElement.innerHTML = "message: " + data_lines[0];
             eventList.appendChild(newElement);
+            eventList.scrollTop = eventList.scrollTop + 50;
         }
         source.addEventListener("registration", function(e) {
             data_lines = e.data.split("\n")
             var newElement = document.createElement("li");
             newElement.innerHTML = "New Statemachine registered: " + data_lines[0];
             eventList.appendChild(newElement);
+            eventList.scrollTop = eventList.scrollTop + 50;
 
             var newOption = document.createElement("option");
 
@@ -32,7 +34,7 @@ function sse() {
                 sm_selector.removeChild(sm_selector[0]);
             }
 
-            alert("New Statemachine registered: " + e.data);
+            alert("New Statemachine registered: " + data_lines[0]);
         }, false);
         source.onerror = function(e) {
             alert("Server closed connection.");

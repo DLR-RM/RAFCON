@@ -42,6 +42,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         root.putChild('', DebugPage(self))
         root.putChild('debug', DebugPage(self))
         root.putChild('js', static.File(self.path_to_static_files + "/js"))
+        root.putChild('css', static.File(self.path_to_static_files + "/css"))
         root.putChild('my_event_source', self)
 
         reactor.listenTCP(port, server.Site(root))

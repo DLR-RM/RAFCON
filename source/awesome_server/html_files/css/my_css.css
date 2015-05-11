@@ -1,0 +1,22 @@
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 95%;
+}
+
+footer {
+	position: absolute;
+	bottom: 0;
+}
+
+.height-limiter {
+	width: 95%;
+	height: 150px;
+	overflow: auto;
+}
+
+.placeholder {
+	color: white;
+	background: red;
+}
