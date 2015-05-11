@@ -41,7 +41,7 @@ class Script(Observable, yaml.YAMLObject):
     DEFAULT_SCRIPT_EXECUTION = """
 
 def execute(self, inputs, outputs, gvm):
-    print "Hello world"
+    self.logger.debug("Hello world")
     return 0
 
 """
