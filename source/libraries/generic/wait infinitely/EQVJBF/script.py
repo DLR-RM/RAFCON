@@ -1,6 +1,6 @@
 
 
 def execute(self, inputs, outputs, gvm):
-    self.preemtive_wait()
+    self.preemptive_wait()
     return 0
 
