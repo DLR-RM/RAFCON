@@ -39,7 +39,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
             self.check_and_execute_flag(msg, addr)
             self.check_send_acknowledge(msg, addr)
 
-            self.emit("data_received", msg)
+            self.emit("data_received", msg, addr[0], addr[1])
 
     def check_for_message_in_history(self, msg):
         msg_already_received = msg.message_id in self._rcvd_udp_messages_history
@@ -145,4 +145,6 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
 
 
 gobject.type_register(UDPConnection)
-gobject.signal_new("data_received", UDPConnection, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_STRING, ))
+gobject.signal_new("data_received", UDPConnection, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_STRING,
+                                                                                    gobject.TYPE_STRING,
+                                                                                    gobject.TYPE_INT))

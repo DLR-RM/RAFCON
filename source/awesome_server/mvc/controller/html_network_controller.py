@@ -25,12 +25,14 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         self.sse_conns.add(request)
         return server.NOT_DONE_YET
 
-    def send_data(self, data, data_flag):
+    def send_data(self, data, ip, port, data_flag):
         for conn in self.sse_conns:
             if data_flag == "REG":
                 conn.write("event: registration\n")
-            event_line = "data: {}\n\n".format(data)
-            conn.write(event_line)
+            #event_line = #, \"ip\": \"%s\", \"port\": \"%d\"}\n\n" % (data, ip, port)
+            conn.write("data: %s\n" % data)
+            conn.write("data: %s\n" % ip)
+            conn.write("data: %d\n\n" % port)
 
     def start_html_server(self):
         port = global_server_config.get_config_value("HTML_SERVER_PORT")
@@ -60,11 +62,14 @@ class DebugPage(resource.Resource):
 
     def render_POST(self, request):
         command = request.args["command"][0]
-        if command:
+        ip, port = request.args["addr"][0].split(":")
+        if command and ip and port:
             logger.debug("Received command: \'%s\'" % command)
-            self.controller.emit("command_received", command)
+            self.controller.emit("command_received", command, ip, int(port))
         return "Success"
 
 
 gobject.type_register(HtmlNetworkController)
-gobject.signal_new("command_received", HtmlNetworkController, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_STRING, ))
+gobject.signal_new("command_received", HtmlNetworkController, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_STRING,
+                                                                                               gobject.TYPE_STRING,
+                                                                                               gobject.TYPE_INT))

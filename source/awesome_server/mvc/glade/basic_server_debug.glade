@@ -106,7 +106,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <signal name="clicked" handler="on_start_button_clicked"/>
+                    <signal name="clicked" handler="on_command_button_clicked" object="start_button"/>
                   </object>
                   <packing>
                     <property name="position">0</property>
@@ -119,7 +119,7 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="xalign">0.55000001192092896</property>
-                    <signal name="clicked" handler="on_pause_button_clicked"/>
+                    <signal name="clicked" handler="on_command_button_clicked" object="pause_button"/>
                   </object>
                   <packing>
                     <property name="position">1</property>
@@ -131,7 +131,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <signal name="clicked" handler="on_stop_button_clicked"/>
+                    <signal name="clicked" handler="on_command_button_clicked" object="stop_button"/>
                   </object>
                   <packing>
                     <property name="position">2</property>
@@ -144,7 +144,7 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="yalign">0.46000000834465027</property>
-                    <signal name="clicked" handler="on_stepm_button_clicked"/>
+                    <signal name="clicked" handler="on_command_button_clicked" object="stepm_button"/>
                   </object>
                   <packing>
                     <property name="position">3</property>
@@ -156,7 +156,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <signal name="clicked" handler="on_stepf_button_clicked"/>
+                    <signal name="clicked" handler="on_command_button_clicked" object="stepf_button"/>
                   </object>
                   <packing>
                     <property name="position">4</property>
@@ -168,7 +168,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <signal name="clicked" handler="on_stepb_button_clicked"/>
+                    <signal name="clicked" handler="on_command_button_clicked" object="stepb_button"/>
                   </object>
                   <packing>
                     <property name="position">5</property>

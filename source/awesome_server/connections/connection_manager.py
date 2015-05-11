@@ -20,7 +20,7 @@ class ConnectionManager(Observable):
         self.server_tcp = SmNetworkController(NetworkMode.TCP)
 
         self.server_html = HtmlNetworkController()
-        #self.server_html.start_html_server()
+        self.server_html.start_html_server()
 
     @Observable.observed
     def tcp_data_received(self, factory, connection, data):
@@ -32,18 +32,18 @@ class ConnectionManager(Observable):
         """
         pass
 
-    def udp_data_received(self, connection, message):
+    def udp_data_received(self, connection, message, ip, port):
         msg = Message.parse_from_string(message)
         if msg.flag != "ACK":
-            self.new_udp_message_detected(msg)
+            self.new_udp_message_detected(msg, ip, port)
 
     @Observable.observed
-    def new_udp_message_detected(self, msg):
+    def new_udp_message_detected(self, msg, ip, port):
         """
         Method called by 'udp_data_received'. It processes the received data of the filtered message.
         :param msg: Received message
         """
-        self.server_html.send_data(msg.message, msg.flag)
+        self.server_html.send_data(msg.message, ip, port, msg.flag)
 
     def add_tcp_connection(self, port):
         """

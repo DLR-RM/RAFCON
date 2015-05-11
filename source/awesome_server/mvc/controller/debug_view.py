@@ -18,6 +18,15 @@ import os
 
 TEMP_FOLDER = os.getenv("HOME") + "/.awesome_server/tmp"
 
+command_mapping = {
+    'Start': 'run',
+    'Pause': 'pause',
+    'Stop': 'stop',
+    'Step Mode': 'step_mode',
+    'Step ->': 'step_forward',
+    'Step <-': 'step_backward'
+}
+
 
 class DebugViewController(ExtendedController):
 
@@ -36,50 +45,37 @@ class DebugViewController(ExtendedController):
         if not self.storage.exists_path(TEMP_FOLDER):
             self.storage.create_path(TEMP_FOLDER)
 
-    def handle_command(self, server_html, command):
-        if command == 'run':
-            self.on_start_button_clicked(None)
-        elif command == 'pause':
-            self.on_pause_button_clicked(None)
-        elif command == 'stop':
-            self.on_stop_button_clicked(None)
-        elif command == 'step_mode':
-            self.on_stepm_button_clicked(None)
-        elif command == 'step_forward':
-            self.on_stepf_button_clicked(None)
-        elif command == 'step_backward':
-            self.on_stepb_button_clicked(None)
+    def handle_command(self, server_html, command, ip, port):
+        if command in ('run', 'pause', 'stop', 'step_mode', 'step_forward', 'step_backward'):
+            self.send_command(command, (ip, port))
+
+    def on_command_button_clicked(self, widget, data=None):
+        command = command_mapping[widget.get_label()]
+        combo = self.view["combobox"]
+        tree_iter = combo.get_active_iter()
+        if tree_iter is not None and command:
+            model = combo.get_model()
+            name, ip, port = model[tree_iter]
+
+            self.send_command(command, (ip, port))
+
+    def send_command(self, command, addr):
+        con = self.model.get_udp_connection_for_address(addr)
+        if con:
+            con.send_non_acknowledged_message(command, addr, "EXE")
 
     def send_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection(self.view["entry"].get_text(), False, False)
+        self.send_message_to_selected_connection(self.view["entry"].get_text(), False)
 
     def send_ack_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection(self.view["entry"].get_text(), True, False)
-
-    def on_start_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("RUN", False, True)
-
-    def on_pause_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("PAUSE", False, True)
-
-    def on_stop_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("STOP", False, True)
-
-    def on_stepm_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("STEPM", False, True)
-
-    def on_stepf_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("STEPF", False, True)
-
-    def on_stepb_button_clicked(self, widget, event=None):
-        self.send_message_to_selected_connection("STEPB", False, True)
+        self.send_message_to_selected_connection(self.view["entry"].get_text(), True)
 
     def on_window_destroy(self, widget, event=None):
         self.storage.remove_path(TEMP_FOLDER)
         reactor.stop()
         gtk.main_quit()
 
-    def send_message_to_selected_connection(self, message, ack, exe):
+    def send_message_to_selected_connection(self, message, ack):
         combo = self.view["combobox"]
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
@@ -88,9 +84,7 @@ class DebugViewController(ExtendedController):
 
             con = self.model.get_udp_connection_for_address((ip, port))
             if con:
-                if exe:
-                    con.send_non_acknowledged_message(message, (ip, port), "EXE")
-                elif ack:
+                if ack:
                     con.send_acknowledged_message(message, (ip, port))
                 else:
                     con.send_non_acknowledged_message(message, (ip, port))

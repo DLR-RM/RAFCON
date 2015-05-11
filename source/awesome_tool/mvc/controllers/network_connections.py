@@ -102,17 +102,17 @@ class NetworkConnections(ExtendedController):
         :return:
         """
         if self.menu_bar_controller:
-            if new_mode == "RUN":
+            if new_mode == 'run':
                 self.menu_bar_controller.on_start_activate(None)
-            elif new_mode == "STOP":
+            elif new_mode == 'stop':
                 self.menu_bar_controller.on_stop_activate(None)
-            elif new_mode == "PAUSE":
+            elif new_mode == 'pause':
                 self.menu_bar_controller.on_pause_activate(None)
-            elif new_mode == "STEPM":
+            elif new_mode == 'step_mode':
                 self.menu_bar_controller.on_step_mode_activate(None)
-            elif new_mode == "STEPF":
+            elif new_mode == 'step_forward':
                 self.menu_bar_controller.on_step_activate(None)
-            elif new_mode == "STEPB":
+            elif new_mode == 'step_backward':
                 self.menu_bar_controller.on_backward_step_activate(None)
             else:
                 logger.warning("Unrecognized mode detected.")
