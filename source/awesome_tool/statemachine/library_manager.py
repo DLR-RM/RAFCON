@@ -138,7 +138,7 @@ class LibraryManager(Observable):
                     else:
                         break
                 if library_key is None:
-                    logger.error("Specified path not within in library path list")
+                    logger.error("Specified path not within library path list or your config file")
                     continue  # Allow the user to change the directory
 
                 path_list = rel_path.split('/')
