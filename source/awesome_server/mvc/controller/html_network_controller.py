@@ -18,7 +18,10 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         self.isLeaf = True
         self.sse_conns = weakref.WeakSet()
 
-        self.path_to_static_files = os.path.dirname(os.path.realpath(__file__)) + "/../../html_files"
+        self.path_to_static_files = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                                 os.pardir,
+                                                 os.pardir,
+                                                 "html_files")
 
     def render_GET(self, request):
         request.setHeader('Content-Type', 'text/event-stream')
@@ -29,7 +32,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         for conn in self.sse_conns:
             if data_flag == "REG":
                 conn.write("event: registration\n")
-            #event_line = #, \"ip\": \"%s\", \"port\": \"%d\"}\n\n" % (data, ip, port)
+
             conn.write("data: %s\n" % data)
             conn.write("data: %s\n" % ip)
             conn.write("data: %d\n\n" % port)
@@ -39,7 +42,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         logger.debug("Starting HTML server at port %d" % port)
 
         root = resource.Resource()
-        root.putChild('', DebugPage(self))
+        root.putChild('', IndexPage(self))
         root.putChild('debug', DebugPage(self))
         root.putChild('js', static.File(self.path_to_static_files + "/js"))
         root.putChild('css', static.File(self.path_to_static_files + "/css"))
@@ -48,18 +51,22 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         reactor.listenTCP(port, server.Site(root))
 
 
-class DebugPage(resource.Resource):
+class DefaultPage(resource.Resource):
 
-    def __init__(self, controller):
-        self.path_to_static_files = os.path.dirname(os.path.realpath(__file__)) + "/../../html_files"
+    def __init__(self, controller, page_name):
+        self.path_to_static_files = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                                 os.pardir,
+                                                 os.pardir,
+                                                 "html_files")
 
         self.controller = controller
+        self.page_name = page_name
 
     def render_GET(self, request):
-        f = open(os.path.join(self.path_to_static_files, "index.html"))
-        index = f.read()
+        f = open(os.path.join(self.path_to_static_files, self.page_name))
+        page = f.read()
         f.close()
-        return index
+        return page
 
     def render_POST(self, request):
         command = request.args["command"][0]
@@ -68,6 +75,18 @@ class DebugPage(resource.Resource):
             logger.debug("Received command: \'%s\'" % command)
             self.controller.emit("command_received", command, ip, int(port))
         return "Success"
+
+
+class IndexPage(DefaultPage):
+
+    def __init__(self, controller):
+        DefaultPage.__init__(self, controller, "index.html")
+
+
+class DebugPage(DefaultPage):
+
+    def __init__(self, controller):
+        DefaultPage.__init__(self, controller, "debug.html")
 
 
 gobject.type_register(HtmlNetworkController)

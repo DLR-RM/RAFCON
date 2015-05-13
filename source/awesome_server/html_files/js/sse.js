@@ -4,15 +4,15 @@ function sse() {
         var sm_selector = document.getElementById("sm_selector");
         var source = new EventSource('/my_event_source');
         source.onmessage = function(e) {
-            data_lines = e.data.split("\n")
+            data_lines = e.data.split("\n");
             var newElement = document.createElement("li");
 
             newElement.innerHTML = "message: " + data_lines[0];
             eventList.appendChild(newElement);
             eventList.scrollTop = eventList.scrollTop + 50;
-        }
+        };
         source.addEventListener("registration", function(e) {
-            data_lines = e.data.split("\n")
+            data_lines = e.data.split("\n");
             var newElement = document.createElement("li");
             newElement.innerHTML = "New Statemachine registered: " + data_lines[0];
             eventList.appendChild(newElement);

@@ -2,7 +2,11 @@ html,
 body {
 	margin: 0;
 	padding: 0;
-	height: 95%;
+	height: 100%;
+	width: 100%;
+	border: 0;
+	overflow: hidden;
+	display: block;
 }
 
 footer {
@@ -19,4 +23,10 @@ footer {
 .placeholder {
 	color: white;
 	background: red;
+}
+
+canvas {
+	position: absolute; 
+	left: 0px; 
+	top: 60px;
 }

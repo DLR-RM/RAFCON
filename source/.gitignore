@@ -97,4 +97,10 @@ test_scripts/basic_turtle_demo_sm
 
 **/gui_gtk.yaml
 
+#
+# Do not commit metafiles from AptanaStudio3 (for HTML)
+#
+/awesome_server/.metadata/*
+/awesome_server/html_files/.metadata/*
+/awesome_server/html_files/.project
 

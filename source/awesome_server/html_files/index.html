@@ -1,53 +1,47 @@
-<!doctype html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Awesome Browser</title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
-    <script src="js/sse.js"></script>
-    <script src="js/sm_control.js"></script>
-    <link rel="stylesheet" href="css/my_css.css" type="text/css">
-</head>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-<body>
-<header>
-    <h1>Received messages</h1>
-</header>
+		<title>Awesome Browser</title>
 
-<article>
-    <h1>Message list:</h1>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+	    <script src="js/sse.js"></script>
+	    <script src="js/sm_control.js"></script>
+	    <script src="js/graphical_viewer.js"></script>
+	    <link rel="stylesheet" href="css/my_css.css" type="text/css">
+	    <link rel="stylesheet" href="css/sm_css.css" type="text/css">
+	    
+	    <!--JointJS imports-->
+	    <script src="js/joint.js"></script>
+	    <script src="js/joint.shape.devs.js"></script>
+	    <link rel="stylesheet" href="css/joint.css" />
+	    
+	</head>
 
-    <table border="0">
-        <tr>
-            <td>
-                <select id="sm_selector">
-                    <option value="none">No statemachine.</option>
-                </select>
-            </td>
-            <td><button value="run" onclick="send_command(this.value)">Run</button></td>
-            <td><button value="pause" onclick="send_command(this.value)">Pause</button></td>
-            <td><button value="stop" onclick="send_command(this.value)">Stop</button></td>
-            <td><button value="step_mode" onclick="send_command(this.value)">Step Mode</button></td>
-            <td><button value="step_forward" onclick="send_command(this.value)">Step Forward</button></td>
-            <td><button value="step_backward" onclick="send_command(this.value)">Step Backward</button></td>
-        </tr>
-    </table>
-    
-    <div class="placeholder">
-        Graphical view comes here!
-    </div>
-
-    <noscript>
-        <h1>In Ihrem Browser ist JavaScript deaktiviert.</h1>
-        <p>Bitte aktivieren Sie JavaScript um diese Website nutzen zu können.</p>
-    </noscript>
-</article>
-
-<footer>
-    <h3>Debug console:</h3>
-    <ol id="eventlist" class="height-limiter">
-        
-    </ol>
-    <script>sse();</script>
-</footer>
-</body>
+	<body>
+		<div>
+			<header>
+				<h1>Awesome Tool Visualisation</h1>
+			</header>
+			
+			<div id="graphical_viewer">
+			</div>
+			<script>setup_paper();</script>
+			<script>
+				cont_id = add_new_state({ x: 100, y: 20}, { width: 250, height: 250 });
+				state_id = add_new_state_to_container_state(cont_id, { x: 75, y: 60 }, { width: 100, height: 100});
+				activate_state(state_id);
+			</script>
+			
+			<footer>
+				Hierher kommen die ganzen Knöppe
+			</footer>
+		</div>
+	</body>
+</html>

@@ -1,5 +1,5 @@
 function send_command(cmd) {
-    host = "http://" + document.location.host
+    host = "http://" + document.location.host;
 
     var sm_selector = document.getElementById("sm_selector");
     addr = sm_selector[sm_selector.selectedIndex].value;
