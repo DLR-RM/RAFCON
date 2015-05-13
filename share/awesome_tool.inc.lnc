@@ -1,15 +1,13 @@
 
 defines
-DFC_SRC_PATH: /volume/USERSTORE/brun_sb/public/DFC/source/
-DFC_PYTHONPATH_ADD: %(shell echo $HOME)/.local/lib/python2.7/site-packages/ 
+DFC_SRC_PATH: %(ifndef "DFC_SRC_PATH", "/volume/USERSTORE/brun_sb/public/DFC/source")
+DFC_PYTHONPATH_ADD: %(ifndef "DFC_PYTHONPATH_ADD", "")
 
-# i686 for 32bit, x86_64 for 64bit
-MACHINE: %(shell uname -m)
+# $(ARCH) is i686 for 32bit, x86_64 for 64bit
 # x86 for 32bit, x86_64 for 64bit
-X_CODE: %(subst "i686", "x86", "%(MACHINE)")
-BIT_CNT_TMP: %(subst "i686", "32", "%(MACHINE)")
+X_CODE: %(subst "i686", "x86", "$(ARCH)")
 # 32 for 32bit, 64 for 64bit
-BIT_CNT: %(subst "x86_64", "64", "%(BIT_CNT_TMP)")
+BIT_CNT: %(subst "x86_64", "64", "%(subst "i686", "32", "$(ARCH)")")
 # empty for 32bit, 64 for 64bit
 BIT_64: %(subst "32", "", "%(BIT_CNT)")
 
@@ -24,11 +22,11 @@ process Awesome tool
 node: localhost 
 change_directory: %(DFC_SRC_PATH)/awesome_tool/mvc/
 environment: [
-    PYTHONPATH=%(LN_PYTHONPATH):%(DFC_SRC_PATH):%(DFC_SRC_PATH)test_scripts:%(DFC_PYTHONPATH_ADD):%(DFC_PYTHONPATH), 
+    PYTHONPATH=%(LN_PYTHONPATH):%(DFC_SRC_PATH):%(DFC_SRC_PATH)/test_scripts:%(DFC_PYTHONPATH_ADD):%(DFC_PYTHONPATH), 
     PATH=%(DFC_PATH), 
     LD_LIBRARY_PATH=%(DFC_LD_LIBRARY_PATH)
 ]
-pass_environment: HOME, USER, DISPLAY
+pass_environment: HOME, DISPLAY
 command: /opt/python/python2.7/bin/python %(DFC_SRC_PATH)/awesome_tool/mvc/empty_statemachine.py
 # warning_regex: WARNING
 flags: no_error_on_stop
