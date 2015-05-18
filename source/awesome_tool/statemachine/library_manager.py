@@ -48,6 +48,7 @@ class LibraryManager(Observable):
         for lib_key, lib_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
             if os.path.exists(lib_path):
                 lib_path = os.path.realpath(lib_path)
+                logger.debug('Adding libraries from {0}'.format(lib_path))
                 self._library_paths[lib_key] = lib_path
                 self._libraries[lib_key] = {}
                 self.add_libraries_from_path(lib_path, self._libraries[lib_key])
