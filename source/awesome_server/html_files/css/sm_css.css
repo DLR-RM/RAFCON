@@ -1,5 +1,4 @@
 .devs text {
-    text-transform: uppercase;
     font-weight: 800;
 }
 
@@ -54,12 +53,18 @@
 
 .devs.active-state .body {
     stroke: #00ff00;
-    transition: stroke 1s;
 }
 
 .devs.active-state .label {
     fill: #00ff00;
-    transition: fill 1s;
     text-decoration: underline;
 }
 
+.devs.active-parent-state .body {
+	stroke: #009900;
+}
+
+.devs.active-parent-state .label {
+	fill: #009900;
+	text-decoration: underline;
+}

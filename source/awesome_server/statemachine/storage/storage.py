@@ -155,6 +155,33 @@ class StateMachineStorage(Observable):
             for key, state in state.states.iteritems():
                 self.save_state_recursively(state, state_path)
 
+    def load_graphical_meta_data_from_yaml(self, base_path=None):
+        if base_path is not None:
+            self.base_path = base_path
+        logger.debug("Load graphical meta data from path %s" % str(base_path))
+        try:
+            stream = file(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'r')
+        except IOError:
+            import sys
+            exc = AttributeError("Provided path doesn't contain a valid state-machine: {0}".format(base_path))
+            raise AttributeError, exc, sys.exc_info()[2]
+        tmp_dict = yaml.load(stream)
+        root_state_id = tmp_dict['root_state']
+        tmp_base_path = os.path.join(self.base_path, root_state_id)
+        gui_meta = {}
+        self.load_graphical_meta_data_recursively("none", tmp_base_path, root_state_id, gui_meta)
+        return gui_meta
+
+    def load_graphical_meta_data_recursively(self, parent_state_id, state_path, state_id, gui_meta):
+        state_gui_meta = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.GRAPHICS_FILE))
+        state_meta = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
+        gui_meta[state_id] = [parent_state_id, state_meta, state_gui_meta]
+        for p in os.listdir(state_path):
+            if os.path.isdir(os.path.join(state_path, p)):
+                elem = os.path.join(state_path, p)
+                self.load_graphical_meta_data_recursively(state_id, elem, p, gui_meta)
+
+
     def load_statemachine_from_yaml(self, base_path=None):
         """
         Loads a state machine from a given path. If no path is specified the state machine is tried to be loaded

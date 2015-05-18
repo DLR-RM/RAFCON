@@ -6,3 +6,9 @@ function send_command(cmd) {
 
     $.ajax({type:"POST", url: host, data: {"command": cmd, "addr": addr}, success: function() {}});
 }
+
+function send_state_id(sm_state_id, viewer_state_id) {
+	host = "http://" + document.location.host;
+	
+	$.ajax({type:"POST", url: host, data: {"sm_state_id": sm_state_id, "viewer_state_id": viewer_state_id}, success: function() {}});
+}

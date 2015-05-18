@@ -164,6 +164,7 @@ class NetworkConnections(ExtendedController):
 
         if state_m.state.state_execution_status == StateExecutionState.ACTIVE:
             if not self.state_has_content(state_m):
+                print state_m.state.get_path()
                 self.udp_connection.send_non_acknowledged_message(state_m.state.get_path(),
                                                                   (global_net_config.get_server_ip(),
                                                                    global_net_config.get_server_udp_port()),

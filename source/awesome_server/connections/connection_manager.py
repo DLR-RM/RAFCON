@@ -19,7 +19,7 @@ class ConnectionManager(Observable):
         self.server_udp = SmNetworkController(NetworkMode.UDP)
         self.server_tcp = SmNetworkController(NetworkMode.TCP)
 
-        self.server_html = HtmlNetworkController()
+        self.server_html = HtmlNetworkController(self)
         self.server_html.start_html_server()
 
     @Observable.observed

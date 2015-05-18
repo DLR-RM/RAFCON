@@ -92,44 +92,46 @@ function setup_paper() {
 	}
 }
 
-function create_state(position, size) {
+function create_state(position, size, name, hierarchy_level, outcomes) {
 	var state = new joint.shapes.devs.Model({
 		position: { x: position.x, y: position.y},
 		size: { width: size.width, height: size.height },
-		inPorts: ['in1', 'in2'],
-		outPorts: ['out'],
+		inPorts: [''],
+		outPorts: outcomes,
 		attrs: {
-			'.label': { text: 'Model', 'ref-x': .5, 'ref-y': .1 }
+			'.label': { text: name, 'ref-x': .5, 'ref-y': .1, style: {'font-size': 72.0 / hierarchy_level} },
+			'.port-label': { style: {'font-size': 72.0 / hierarchy_level} },
+			'.port-body': { r: 30 / hierarchy_level }
 		}
 	});
 	
 	return state;
 }
 
-function add_new_state(position, size) {
-	var state = create_state(position, size);
+function add_new_state(position, size, name, hierarchy_level, outcomes) {
+	var state = create_state(position, size, name, hierarchy_level, outcomes);
 	graph.addCell(state);
 	return state.id;
 }
 
-function add_new_state_to_container_state(container_id, position, size) {
+function add_new_state_to_container_state(container_id, position, size, name, hierarchy_level, outcomes) {
 	container_cell = graph.getCell(container_id);
 	abs_position = { x: 0, y: 0};
 	abs_position.x = position.x + container_cell.get('position').x;
 	abs_position.y = position.y + container_cell.get('position').y;
-	state = create_state(abs_position, size);
+	state = create_state(abs_position, size, name, hierarchy_level, outcomes);
 	container_cell.embed(state);
 	graph.addCell(state);
 	return state.id;
 }
 
-function connect(source_id, source_port, target_id, target_port) {
+function connect(source_id, source_port, target_id, target_port, waypoints) {
 	source = graph.getCell(source_id);
 	target = graph.getCell(target_id);
 	var link = new joint.dia.Link({
 		source: { id: source_id, selector: source.getPortSelector(source_port) },
 		target: { id: target_id, selector: target.getPortSelector(target_port) },
-		router: { name: 'metro' },
+		vertices: waypoints,
 		attrs: {
         '.marker-target': {
             fill: '#333333',
@@ -146,8 +148,24 @@ function activate_state(state_id) {
 	V(state.el).addClass('active-state');
 }
 
+function activate_parent_state(state_id) {
+	state = graph.getCell(state_id);
+	state = paper.findViewByModel(state);
+	V(state.el).addClass('active-parent-state');
+}
+
 function deactivate_state(state_id) {
 	state = graph.getCell(state_id);
 	state = paper.findViewByModel(state);
-	V(state.el).removeClass('active-state');
+	if (V(state.el).hasClass('active-state')) {
+		V(state.el).removeClass('active-state');
+	}
+}
+
+function deactivate_parent_state(state_id) {
+	state = graph.getCell(state_id);
+	state = paper.findViewByModel(state);
+	if (V(state.el).hasClass('active-parent-state')) {
+		V(state.el).removeClass('active-parent-state');
+	}
 }

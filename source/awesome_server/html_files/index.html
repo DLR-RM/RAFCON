@@ -33,14 +33,32 @@
 			<div id="graphical_viewer">
 			</div>
 			<script>setup_paper();</script>
-			<script>
-				cont_id = add_new_state({ x: 100, y: 20}, { width: 250, height: 250 });
-				state_id = add_new_state_to_container_state(cont_id, { x: 75, y: 60 }, { width: 100, height: 100});
+			<!--<script>
+				cont_id = add_new_state({ x: 100, y: 20}, { width: 250, height: 250 }, 'Container');
+				state_id = add_new_state_to_container_state(cont_id, { x: 75, y: 60 }, { width: 100, height: 100}, "State");
 				activate_state(state_id);
-			</script>
+			</script>-->
 			
 			<footer>
-				Hierher kommen die ganzen Knöppe
+				<table border="0">
+			        <tr>
+			            <td>
+			                <select id="sm_selector">
+			                    <option value="none">No statemachine.</option>
+			                </select>
+			            </td>
+			            <td><button value="run" onclick="send_command(this.value)">Run</button></td>
+			            <td><button value="pause" onclick="send_command(this.value)">Pause</button></td>
+			            <td><button value="stop" onclick="send_command(this.value)">Stop</button></td>
+			            <td><button value="step_mode" onclick="send_command(this.value)">Step Mode</button></td>
+			            <td><button value="step_forward" onclick="send_command(this.value)">Step Forward</button></td>
+			            <td><button value="step_backward" onclick="send_command(this.value)">Step Backward</button></td>
+			            <td><button value="reload_sm" onclick="send_command(this.value)">Reload State Machine</button></td>
+			        </tr>
+			    </table>
+			    <script>
+			    	sse();
+			    </script>
 			</footer>
 		</div>
 	</body>

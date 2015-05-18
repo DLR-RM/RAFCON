@@ -97,6 +97,38 @@
               </packing>
             </child>
             <child>
+              <object class="GtkHBox" id="hbox3">
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkButton" id="send_state_to_browser_button">
+                    <property name="label" translatable="yes">Send State to Browser</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <signal name="clicked" handler="on_send_state_to_browser_button_clicked"/>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="send_nested_state_to_browser_button">
+                    <property name="label" translatable="yes">Send nested State to Browser</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <signal name="clicked" handler="on_send_nested_state_to_browser_button_clicked"/>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkHBox" id="hbox2">
                 <property name="visible">True</property>
                 <property name="homogeneous">True</property>
@@ -177,7 +209,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
