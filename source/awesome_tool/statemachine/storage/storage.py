@@ -38,7 +38,7 @@ class StateMachineStorage(Observable):
     STATEMACHINE_FILE = 'statemachine.yaml'
     LIBRARY_FILE = 'library.yaml'
 
-    def __init__(self, base_path):
+    def __init__(self, base_path='/tmp'):
         Observable.__init__(self)
 
         self.storage_utils = StorageUtils(base_path)
