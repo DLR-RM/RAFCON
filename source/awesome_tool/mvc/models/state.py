@@ -255,10 +255,6 @@ class StateModel(ModelMT):
 
             # check the type implicitly by checking if the state has the states attribute
             if hasattr(self.state, 'states'):
-                # import inspect
-                # print self.state.__class__
-                # print inspect.getmro(self.state.__class__)
-                # add meta to transition and data flow
                 for transition_model in self.transitions:
                     t_id = transition_model.transition.transition_id
                     transition_model.meta = tmp_meta["transition" + str(t_id)]
@@ -273,8 +269,9 @@ class StateModel(ModelMT):
                     del tmp_meta["scoped_variable" + str(s_id)]
             # assign the meta data to the state
             self.meta = tmp_meta
-        else:
-            logger.warn("path to load meta data for state model of state %s does not exist" % self.state.name)
+        # Print warning only if the state has a location different from the tmp directory
+        elif meta_path[0:5] != '/tmp/':
+            logger.warn("path to load meta data for state model of state '{0}' does not exist".format(self.state.name))
 
     def copy_meta_data_from_state_model(self, source_state):
 

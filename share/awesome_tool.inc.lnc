@@ -1,0 +1,32 @@
+
+defines
+DFC_SRC_PATH: %(ifndef "DFC_SRC_PATH", "/volume/USERSTORE/brun_sb/public/DFC/source")
+DFC_PYTHONPATH_ADD: %(ifndef "DFC_PYTHONPATH_ADD", "")
+
+# $(ARCH) is i686 for 32bit, x86_64 for 64bit
+# x86 for 32bit, x86_64 for 64bit
+X_CODE: %(subst "i686", "x86", "$(ARCH)")
+# 32 for 32bit, 64 for 64bit
+BIT_CNT: %(subst "x86_64", "64", "%(subst "i686", "32", "$(ARCH)")")
+# empty for 32bit, 64 for 64bit
+BIT_64: %(subst "32", "", "%(BIT_CNT)")
+
+DFC_USERSTORE: /volume/USERSTORE/brun_sb/libraries/
+DFC_LD_PATH_64: %(subst "64", "%(DFC_USERSTORE)sys_libraries/64_bit/lib64:", "%(BIT_64)")
+
+DFC_PATH: %(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit/bin:/home/f_soft/bin/sled11-%(X_CODE)-gcc4.x:/usr/local/bin:/usr/bin:/bin:/usr/bin/X11:/usr/X11R6/bin
+DFC_LD_LIBRARY_PATH: %(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit/lib:%(DFC_USERSTORE)sys_libraries/%(BIT_CNT)_bit/lib:%(DFC_LD_PATH_64)/usr/lib/gcc/i586-suse-linux/4.7
+DFC_PYTHONPATH: %(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit:%(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit/lib/python2.7/site-packages:%(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit/lib/python2.7/site-packages/gtk-2.0
+
+process Awesome tool
+node: localhost 
+change_directory: %(DFC_SRC_PATH)/awesome_tool/mvc/
+environment: [
+    PYTHONPATH=%(LN_PYTHONPATH):%(DFC_SRC_PATH):%(DFC_SRC_PATH)/test_scripts:%(DFC_PYTHONPATH_ADD):%(DFC_PYTHONPATH), 
+    PATH=%(DFC_PATH), 
+    LD_LIBRARY_PATH=%(DFC_LD_LIBRARY_PATH)
+]
+pass_environment: HOME, DISPLAY
+command: /opt/python/python2.7/bin/python %(DFC_SRC_PATH)/awesome_tool/mvc/empty_statemachine.py
+# warning_regex: WARNING
+flags: no_error_on_stop

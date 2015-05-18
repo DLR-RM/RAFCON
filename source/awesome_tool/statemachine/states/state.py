@@ -116,14 +116,10 @@ class State(Observable, yaml.YAMLObject, object):
         """ Waits until the state finished execution.
 
         """
-        # import time
-        # while self.thread is None:
-        #     logger.debug("Thread is waiting for thread to be started")
-        #     time.sleep(0.1)
         if self.thread:
             self.thread.join()
         else:
-            logger.warn("State %s was not started yet, cannot join" % self.name)
+            logger.debug("State %s was not started yet, cannot join" % self.name)
 
     def setup_run(self):
         """ Executes a generic set of actions that has to be called in the run methods of each derived state class.

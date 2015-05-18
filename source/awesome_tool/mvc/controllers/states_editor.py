@@ -70,8 +70,9 @@ class StatesEditorController(ExtendedController):
         self._selected_state_machine_model = None
         self.editor_type = editor_type
 
-        logger.warning("Workaround used for tab-close on middle click")
-        logger.warning("Tab will close on button press!")
+        # TODO: Workaround used for tab-close on middle click
+        logger.debug("Workaround used for tab-close on middle click")
+        logger.debug("Tab will close on button press!")
         view.notebook.connect("close_state_tab", self.close_state_tab)
 
         self.tabs = {}
