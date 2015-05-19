@@ -5,7 +5,6 @@ import shutil
 
 from awesome_tool.utils.config import DefaultConfig, ConfigError
 from awesome_tool.utils import constants
-from awesome_tool.utils import helper
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -31,14 +30,23 @@ class GuiConfig(DefaultConfig):
     """
 
     def __init__(self):
-        sm_path, gui_path = helper.get_opt_paths()
-        DefaultConfig.__init__(self, CONFIG_FILE, DEFAULT_CONFIG, gui_path)
+        super(GuiConfig, self).__init__(DEFAULT_CONFIG)
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
         self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
+        self.configure_gtk()
         self.configure_fonts()
         self.configure_source_view_styles()
+
+    def load(self, path=None):
+        super(GuiConfig, self).load(CONFIG_FILE, path)
+
+    def configure_gtk(self):
+        import gtk
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        gtkrc_path = os.path.join(file_path, 'themes', 'black', 'gtk-2.0', 'gtkrc')
+        gtk.rc_parse(gtkrc_path)
 
     def configure_fonts(self):
         tv = gtk.TextView()

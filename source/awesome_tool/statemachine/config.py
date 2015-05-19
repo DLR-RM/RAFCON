@@ -32,11 +32,13 @@ class Config(DefaultConfig):
     """
 
     def __init__(self):
-        sm_path, gui_path = helper.get_opt_paths()
-        DefaultConfig.__init__(self, CONFIG_FILE, DEFAULT_CONFIG, sm_path)
+        super(Config, self).__init__(DEFAULT_CONFIG)
         if self.get_config_value("TYPE") != "SM_CONFIG":
             raise ConfigError("Type should be SM_CONFIG for statemachine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")
+
+    def load(self, path=None):
+        super(Config, self).load(CONFIG_FILE, path)
 
 # This variable holds the global configuration parameters for the statemachine
 global_config = Config()
