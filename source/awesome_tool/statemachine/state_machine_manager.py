@@ -122,12 +122,11 @@ class StateMachineManager(Observable):
                 self.active_state_machine_id = None
 
     def get_active_state_machine(self):
-        """Return a reference to the active statemachine
+        """Return a reference to the active state-machine
         """
         if self._active_state_machine_id in self._state_machines:
             return self._state_machines[self._active_state_machine_id]
         else:
-            logger.warn("No active state machine specified!")
             return None
 
 #########################################################################
