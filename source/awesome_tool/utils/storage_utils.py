@@ -70,7 +70,7 @@ class StorageUtils(object):
     def write_dict_to_yaml(self, dict_to_write, path, **kwords):
         """
         Writes a dictionary to a yaml file
-        :param dict_to_write:  the dictionary to be writte
+        :param dict_to_write:  the dictionary to be written
         :param path: the absolute path of the target yaml file
         :return:
         """

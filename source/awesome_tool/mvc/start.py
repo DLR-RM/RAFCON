@@ -83,11 +83,11 @@ if __name__ == '__main__':
                         help="specify directories of state-machines that shall be opened. Paths must contain a "
                              "statemachine.yaml file")
     parser.add_argument('-c', '--config', action='store', type=config_path, metavar='path', dest='config_path',
-                        default=home_path,
+                        default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
     parser.add_argument('-g', '--gui_config', action='store', type=config_path, metavar='path', dest='gui_config_path',
-                        default=home_path,
+                        default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
 
@@ -95,7 +95,6 @@ if __name__ == '__main__':
     setup_config = vars(result)
 
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
-
 
     global_config.load(setup_config['config_path'])
     global_gui_config.load(setup_config['gui_config_path'])
