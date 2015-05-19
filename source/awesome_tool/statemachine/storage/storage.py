@@ -128,7 +128,8 @@ class StateMachineStorage(Observable):
             script_file.write(state.script.script)
             script_file.close()
 
-    def save_script_file(self, state):
+    @staticmethod
+    def save_script_file(state):
         script_file_path = os.path.join(state.script.path, state.script.filename)
         script_file = open(script_file_path, 'w')
         script_file.write(state.script.script)
@@ -181,8 +182,6 @@ class StateMachineStorage(Observable):
         sm.root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
         sm.root_state.script.path = tmp_base_path
-        # load_and_build the module to load the correct content into root_state.script.script
-        sm.root_state.script.load_and_build_module()
         self.load_script_file(sm.root_state)
         for p in os.listdir(tmp_base_path):
             if os.path.isdir(os.path.join(tmp_base_path, p)):
@@ -206,7 +205,6 @@ class StateMachineStorage(Observable):
         # set path after loading the state, as the yaml parser did not know the path during state creation
         root_state.script.path = state_path
         # load_and_build the module to load the correct content into root_state.script.script
-        root_state.script.load_and_build_module()
         self.load_script_file(root_state)
         for p in os.listdir(state_path):
             if os.path.isdir(os.path.join(state_path, p)):
@@ -216,10 +214,10 @@ class StateMachineStorage(Observable):
                 logger.debug("Going up back to state %s" % str(state_path))
         return root_state
 
-    def load_state_recursively(self, root_state, state_path=None):
+    def load_state_recursively(self, parent_state, state_path=None):
         """
-        Recursively loads the state. It calls this method on each substate of a container state.
-        :param root_state:  the root state of the last load call to which the loaded state will be added
+        Recursively loads the state. It calls this method on each sub-state of a container state.
+        :param parent_state:  the root state of the last load call to which the loaded state will be added
         :param state_path: the path on the filesystem where to find eht meta file for the state
         :return:
         """
@@ -227,7 +225,7 @@ class StateMachineStorage(Observable):
         state.script.path = state_path
         # connect the missing function_handlers for setting the outcome names
         state.connect_all_outcome_function_handles()
-        root_state.add_state(state)
+        parent_state.add_state(state)
         # the library state sets his script file to the script file of the root state of its library, thus it should
         # not be overwritten in this case
         from awesome_tool.statemachine.states.library_state import LibraryState
