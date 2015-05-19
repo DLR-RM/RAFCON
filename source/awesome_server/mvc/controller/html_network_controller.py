@@ -41,41 +41,84 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         elif data_flag == "EXE":
             request.write("event: execution\n")
 
-        request.write("data: %s\n" % data)
-        request.write("data: %s\n" % ip)
-        request.write("data: %d\n\n" % port)
+        json_pkg = "data: {" \
+                   "\"msg\": \"%s\", " \
+                   "\"ip\": \"%s\", " \
+                   "\"port\": \"%d\"}\n\n" % (data, ip, port)
+
+        request.write(json_pkg)
 
     def send_state_data(self, parent_id, state_id, state_name, pos_x, pos_y, width, height, hierarchy_level, outcomes):
-        for conn in self.sse_conns:
-            conn.write("event: new_state\n")
+        json_pkg = "event: new_state\n" \
+                   "data: {" \
+                   "\"parent_id\": \"%s\"," \
+                   "\"state_id\": \"%s\"," \
+                   "\"state_name\": \"%s\"," \
+                   "\"pos_x\": \"%f\"," \
+                   "\"pos_y\": \"%f\"," \
+                   "\"width\": \"%f\"," \
+                   "\"height\": \"%f\"," \
+                   "\"hierarchy_level\": \"%d\"," \
+                   "\"outcomes\": [" % (parent_id,
+                                        state_id,
+                                        state_name,
+                                        pos_x,
+                                        pos_y,
+                                        width,
+                                        height,
+                                        hierarchy_level)
 
-            conn.write("data: %s\n" % parent_id)
-            conn.write("data: %s\n" % state_id)
-            conn.write("data: %s\n" % state_name)
-            conn.write("data: %d\n" % pos_x)
-            conn.write("data: %d\n" % pos_y)
-            conn.write("data: %d\n" % width)
-            conn.write("data: %d\n" % height)
-            conn.write("data: %d\n" % hierarchy_level)
-            for outcome_id, outcome in outcomes.iteritems():
-                if outcome_id >= 0:
-                    conn.write("data: %s\n" % outcome.name)
-            conn.write("\n")
+        for outcome_id, outcome in outcomes.iteritems():
+            if outcome_id >= 0:
+                json_pkg += "\"%s\"," % outcome.name
+
+        if len(outcomes) > 2:
+            json_pkg = "]}\n\n".join(json_pkg.rsplit(",", 1))
+        else:
+            json_pkg += "]}\n\n"
+
+        for conn in self.sse_conns:
+            conn.write(json_pkg)
 
     def send_connection_data(self, container_state_id, from_outcome, from_state, to_outcome, to_state, waypoints):
-        for conn in self.sse_conns:
-            conn.write("event: new_connection\n")
+        json_pkg = "event: new_connection\n" \
+                   "id: 1\n" \
+                   "data: {" \
+                   "\"container_state_id\": \"%s\"," \
+                   "\"from_outcome\": \"%s\"," \
+                   "\"from_state\": \"%s\"," \
+                   "\"to_outcome\": \"%s\"," \
+                   "\"to_state\": \"%s\"," \
+                   "\"waypoints\": [" % (container_state_id,
+                                         from_outcome,
+                                         from_state,
+                                         to_outcome,
+                                         to_state)
 
-            conn.write("data: %s\n" % container_state_id)
-            conn.write("data: %s\n" % from_outcome)
-            conn.write("data: %s\n" % from_state)
-            conn.write("data: %s\n" % to_outcome)
-            conn.write("data: %s\n" % to_state)
-            if waypoints:
-                for point in waypoints:
-                    conn.write("data: %f\n" % abs(point[0] * constants.BROWSER_SIZE_MULTIPLIER))
-                    conn.write("data: %f\n" % abs(point[1] * constants.BROWSER_SIZE_MULTIPLIER))
-            conn.write("\n")
+        if waypoints:
+            for point in waypoints:
+                json_pkg += "[%f, %f], " % (abs(point[0] * constants.BROWSER_SIZE_MULTIPLIER),
+                                            abs(point[1] * constants.BROWSER_SIZE_MULTIPLIER))
+            json_pkg = "]}\n\n".join(json_pkg.rsplit(",", 1))
+        else:
+            json_pkg += "]}\n\n"
+
+        for conn in self.sse_conns:
+            # conn.write("event: new_connection\n")
+
+            print json_pkg
+
+            conn.write(json_pkg)
+            # conn.write("data: %s\n" % container_state_id)
+            # conn.write("data: %s\n" % from_outcome)
+            # conn.write("data: %s\n" % from_state)
+            # conn.write("data: %s\n" % to_outcome)
+            # conn.write("data: %s\n" % to_state)
+            # if waypoints:
+            #     for point in waypoints:
+            #         conn.write("data: %f\n" % abs(point[0] * constants.BROWSER_SIZE_MULTIPLIER))
+            #         conn.write("data: %f\n" % abs(point[1] * constants.BROWSER_SIZE_MULTIPLIER))
+            # conn.write("\n")
 
     def start_html_server(self):
         port = global_server_config.get_config_value("HTML_SERVER_PORT")
@@ -86,7 +129,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         root.putChild('debug', DebugPage(self))
         root.putChild('js', static.File(self.path_to_static_files + "/js"))
         root.putChild('css', static.File(self.path_to_static_files + "/css"))
-        root.putChild('my_event_source', self)
+        root.putChild('state_machine_event_source', self)
 
         reactor.listenTCP(port, server.Site(root))
 

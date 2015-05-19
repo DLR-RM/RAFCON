@@ -59,6 +59,8 @@ class NetworkConnections(ExtendedController):
         self.observe_model(self.state_machine_execution_engine)
         self.state_machine_execution_engine.register_observer(self)
 
+        self.previous_execution_message = ""
+
         if global_net_config.get_config_value("AUTOCONNECT_UDP_TO_SERVER"):
             self.on_udp_register_button_clicked(None)
         if global_net_config.get_config_value("AUTOCONNECT_TCP_TO_SERVER"):
@@ -134,10 +136,12 @@ class NetworkConnections(ExtendedController):
                 kw_info_args = kw_info['args']
                 if kw_info_args[1] == StateExecutionState.ACTIVE:
                     self.send_current_active_states(model.root_state)
-                    self.udp_connection.send_non_acknowledged_message("------------------------------------",
-                                                                      (global_net_config.get_server_ip(),
-                                                                       global_net_config.get_server_udp_port()),
-                                                                      "NAM")  # NAM = non acknowledged message
+                    if not self.previous_execution_message.startswith("-"):
+                        self.udp_connection.send_non_acknowledged_message("------------------------------------",
+                                                                          (global_net_config.get_server_ip(),
+                                                                           global_net_config.get_server_udp_port()),
+                                                                          "NAM")  # NAM = non acknowledged message
+                        self.previous_execution_message = "------------------------------------"
 
     @ExtendedController.observe("execution_engine", after=True)
     def execution_mode_changed(self, model, prop_name, info):
@@ -169,6 +173,7 @@ class NetworkConnections(ExtendedController):
                                                                   (global_net_config.get_server_ip(),
                                                                    global_net_config.get_server_udp_port()),
                                                                   "NAM")  # NAM = non acknowledged message
+                self.previous_execution_message = state_m.state.get_path()
 
         if self.state_has_content(state_m):
             for child_state in state_m.states.itervalues():

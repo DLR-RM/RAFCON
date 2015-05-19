@@ -54,7 +54,7 @@ class DebugViewController(ExtendedController):
     def handle_command(self, server_html, command, ip, port):
         if command in ('run', 'pause', 'stop', 'step_mode', 'step_forward', 'step_backward'):
             self.send_command(command, (ip, port))
-        elif command == 'reload_sm':
+        elif command == 'reload_sm' and self.state_machine:
             root_state = self.state_machine.root_state
             root_state_id = root_state.state_id
             self.send_statemachine_to_browser(self.gui_meta, root_state_id, root_state, 1)

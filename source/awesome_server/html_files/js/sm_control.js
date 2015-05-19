@@ -3,6 +3,10 @@ function send_command(cmd) {
 
     var sm_selector = document.getElementById("sm_selector");
     addr = sm_selector[sm_selector.selectedIndex].value;
+    
+    if (addr == "none") {
+    	return;	
+    }
 
     $.ajax({type:"POST", url: host, data: {"command": cmd, "addr": addr}, success: function() {}});
 }

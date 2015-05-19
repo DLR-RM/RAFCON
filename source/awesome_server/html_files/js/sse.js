@@ -8,12 +8,20 @@ function sse() {
     if (!!window.EventSource) {
         var eventList = document.getElementById("eventlist");
         var sm_selector = document.getElementById("sm_selector");
-        var source = new EventSource('/my_event_source');
+        var source = new EventSource('/state_machine_event_source');
         source.onmessage = function(e) {
+        	
+        	if (e.lastEventId == 1) {
+        		new_connection_event(e);
+        		return;
+        	}
+        	
             data_lines = e.data.split("\n");
+            console.log(e);
+            console.log(data_lines);
             if (eventList) {
             	var newElement = document.createElement("li");
-
+				
             	newElement.innerHTML = "message: " + data_lines[0];
             	eventList.appendChild(newElement);
             	eventList.scrollTop = eventList.scrollTop + 50;
@@ -49,9 +57,9 @@ function sse() {
         	}
         }, false);
         source.addEventListener("registration", function(e) {
-            data_lines = e.data.split("\n");
+        	var data = JSON.parse(e.data); 
             var newElement = document.createElement("li");
-            newElement.innerHTML = "New Statemachine registered: " + data_lines[0];
+            newElement.innerHTML = "New Statemachine registered: " + data.msg;
             if (eventList) {
             	eventList.appendChild(newElement);
             	eventList.scrollTop = eventList.scrollTop + 50;	
@@ -59,13 +67,13 @@ function sse() {
 
             var newOption = document.createElement("option");
 
-            addr = data_lines[1] + ":" + data_lines[2];
+            var addr = data.ip + ":" + data.port; 
             newOption.value = addr;
 
-            if (check_selector_options(data_lines[0])) {
-                newOption.text = data_lines[0] + ":" + data_lines[2];
+            if (check_selector_options(data.msg)) {
+                newOption.text = data.msg + ":" + data.port;
             } else {
-                newOption.text = data_lines[0];
+                newOption.text = data.msg;
             }
             sm_selector.appendChild(newOption);
 
@@ -73,60 +81,86 @@ function sse() {
                 sm_selector.removeChild(sm_selector[0]);
             }
 
-            alert("New Statemachine registered: " + data_lines[0]);
+            alert("New Statemachine registered: " + data.msg);
         }, false);
         source.addEventListener("new_state", function(e) {
-        	data_lines = e.data.split("\n");
-        	if (data_lines.length >= 8) {
-        		position = { x: parseInt(data_lines[3]), y: parseInt(data_lines[4])};
-        		size = { width: parseInt(data_lines[5]), height: parseInt(data_lines[6])};
+        	var data = JSON.parse(e.data);
+        	
+        	var position = { x: parseFloat(data.pos_x), y: parseFloat(data.pos_y) };
+        	var size = { width: parseFloat(data.width), height: parseFloat(data.height) };
         		
-        		var outcomes = [];
+        	var outcomes = [];
         		
-        		if (data_lines.length > 8) {
-        			for (var i = 8; i < data_lines.length; i++) {
-        				outcomes.push(data_lines[i]);
-        			}
-        		}
-        		
-        		if (data_lines[0] == 'none') {
-        			viewer_state_id = add_new_state(position, size, data_lines[2], parseInt(data_lines[7]), outcomes);
-        			id_list[data_lines[1]] = viewer_state_id;
-        		} else {
-        			container_id = id_list[data_lines[0]];
-        			viewer_state_id = add_new_state_to_container_state(container_id, position, size, data_lines[2], parseInt(data_lines[7]), outcomes);
-        			id_list[data_lines[1]] = viewer_state_id;
-        		}
+        	for (i in data.outcomes) {
+        		outcomes.push(data.outcomes[i]);
         	}
+
+        	if (data.parent_id == 'none') {
+        		viewer_state_id = add_new_state(position, size, data.state_name, parseInt(data.hierarchy_level), outcomes);
+        		id_list[data.state_id] = viewer_state_id;
+        	} else {
+        		container_id = id_list[data.parent_id];
+        		viewer_state_id = add_new_state_to_container_state(container_id, position, size, data.state_name, parseInt(data.hierarchy_level), outcomes);
+        		id_list[data.state_id] = viewer_state_id;
+        	}
+        	
         	paper.scaleContentToFit();
         	graph_scale = V(paper.viewport).scale().sx;
         }, false);
         source.addEventListener("new_connection", function (e) {
-        	data_lines = e.data.split("\n");
-        	var waypoints = [];
+        	// data_lines = e.data.split("\n");
+        	// var waypoints = [];
+        	// 
+			// container_id = id_list[data_lines[0]];
+        	// source_id = id_list[data_lines[2]];
+        	// target_id = id_list[data_lines[4]];
+        	// 
+        	// container = graph.getCell(container_id);
+        	// cont_pos_x = container["attributes"]["position"].x;
+        	// cont_pos_y = container["attributes"]["position"].y;
+        	// 
+        	// if (data_lines.length > 5) {
+        	// 	for (var i = 5; i < data_lines.length; i += 2) {
+        	// 		wpx = parseFloat(data_lines[i]);
+        	// 		wpy = parseFloat(data_lines[i+1]);
+        	// 		waypoints.push({ x: wpx + cont_pos_x, y: wpy + cont_pos_y });
+        	// 	}
+        	// }
         	
-			container_id = id_list[data_lines[0]];
-        	source_id = id_list[data_lines[2]];
-        	target_id = id_list[data_lines[4]];
+        	new_connection_event(e);
         	
-        	container = graph.getCell(container_id);
-        	cont_pos_x = container["attributes"]["position"].x;
-        	cont_pos_y = container["attributes"]["position"].y;
         	
-        	if (data_lines.length > 5) {
-        		for (var i = 5; i < data_lines.length; i += 2) {
-        			wpx = parseFloat(data_lines[i]);
-        			wpy = parseFloat(data_lines[i+1]);
-        			waypoints.push({ x: wpx + cont_pos_x, y: wpy + cont_pos_y });
-        		}
-        	}
-        	connect(source_id, data_lines[1], target_id, data_lines[3], waypoints);
         }, false);
         source.onerror = function(e) {
             alert("Server closed connection.");
             source.close();
         };
+        source.onstoprequest = function(e) {
+        	console.log("test");
+        };
     }
+}
+
+function new_connection_event(e) {
+	var data = JSON.parse(e.data);
+	
+	var waypoints = [];
+	
+	container_id = id_list[data.container_state_id];
+	source_id = id_list[data.from_state];
+	target_id = id_list[data.to_state];
+	
+	container = graph.getCell(container_id);
+	cont_pos_x = container["attributes"]["position"].x;
+	cont_pos_y = container["attributes"]["position"].y;
+	
+	for (i in data.waypoints) {
+		wpx = data.waypoints[i][0];
+		wpy = data.waypoints[i][1];
+		waypoints.push({ x: wpx + cont_pos_x, y: wpy + cont_pos_y });
+	}
+	
+	connect(source_id, data.from_outcome, target_id, data.to_outcome, waypoints);
 }
 
 function check_selector_options(title) {
