@@ -772,7 +772,7 @@ class GraphicalEditorController(ExtendedController):
             transition_m = StateMachineHelper.get_transition_model(responsible_parent_m, transition_id)
             transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
         except AttributeError as e:
-            logger.debug("Transition couldn't be added: {0}".format(e))
+            logger.warn("Transition couldn't be added: {0}".format(e))
         except Exception as e:
             logger.error("Unexpected exception while creating transition: {0}".format(e))
 
@@ -806,7 +806,7 @@ class GraphicalEditorController(ExtendedController):
                 data_flow_m = StateMachineHelper.get_data_flow_model(responsible_parent, data_flow_id)
                 data_flow_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
             except AttributeError as e:
-                logger.debug("Data flow couldn't be added: {0}".format(e))
+                logger.warn("Data flow couldn't be added: {0}".format(e))
             except Exception as e:
                 logger.error("Unexpected exception while creating data flow: {0}".format(e))
 

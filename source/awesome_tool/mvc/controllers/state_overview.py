@@ -99,12 +99,15 @@ class StateOverviewController(ExtendedController, Model):
 
         if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
             if self.model.parent is not None:
-                if self.view['is_start_state_checkbutton'].get_active():
-                    logger.debug("set start_state_id %s" % self.model.state.state_id)
-                    self.model.parent.state.start_state_id = self.model.state.state_id
-                else:
-                    logger.debug("set start_state_id %s" % str(None))
-                    self.model.parent.state.start_state_id = None
+                try:
+                    if self.view['is_start_state_checkbutton'].get_active():
+                        self.model.parent.state.start_state_id = self.model.state.state_id
+                        logger.debug("New start state '{0}'".format(self.model.state.name))
+                    else:
+                        self.model.parent.state.start_state_id = None
+                        logger.debug("Start state unset, no start state defined")
+                except AttributeError as e:
+                    logger.warn("Could no change start state: {0}".format(e))
 
     @Model.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):
@@ -113,10 +116,12 @@ class StateOverviewController(ExtendedController, Model):
 
     def change_name(self, entry, otherwidget):
         entry_text = entry.get_text()
-        if len(entry_text) > 0 and not self.model.state.name == entry_text:
-            logger.debug("State %s changed name from '%s' to: '%s'\n" % (self.model.state.state_id,
-                                                                         self.model.state.name, entry_text))
-            self.model.state.name = entry_text
+        if self.model.state.name != entry_text:
+            try:
+                self.model.state.name = entry_text
+                logger.debug("State '{0}' changed name to '{1}'".format(self.model.state.name, entry_text))
+            except (TypeError, ValueError) as e:
+                logger.warn("Could not change state name: {0}".format(e))
             self.view['entry_name'].set_text(self.model.state.name)
 
     def change_type(self, widget, model=None, info=None):
