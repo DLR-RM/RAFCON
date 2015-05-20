@@ -11,6 +11,11 @@ function send_command(cmd) {
     $.ajax({type:"POST", url: host, data: {"command": cmd, "addr": addr}, success: function() {}});
 }
 
+function send_reload_command() {
+	send_command("reload_sm");
+	send_command("resend_active_states");
+}
+
 function send_state_id(sm_state_id, viewer_state_id) {
 	host = "http://" + document.location.host;
 	

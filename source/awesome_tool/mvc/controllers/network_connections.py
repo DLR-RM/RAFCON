@@ -140,7 +140,7 @@ class NetworkConnections(ExtendedController):
                         self.udp_connection.send_non_acknowledged_message("------------------------------------",
                                                                           (global_net_config.get_server_ip(),
                                                                            global_net_config.get_server_udp_port()),
-                                                                          "NAM")  # NAM = non acknowledged message
+                                                                          "ASC")  # ASC = Active State Changed
                         self.previous_execution_message = "------------------------------------"
 
     @ExtendedController.observe("execution_engine", after=True)
@@ -172,7 +172,7 @@ class NetworkConnections(ExtendedController):
                 self.udp_connection.send_non_acknowledged_message(state_m.state.get_path(),
                                                                   (global_net_config.get_server_ip(),
                                                                    global_net_config.get_server_udp_port()),
-                                                                  "NAM")  # NAM = non acknowledged message
+                                                                  "ASC")  # ASC = Active State Changed
                 self.previous_execution_message = state_m.state.get_path()
 
         if self.state_has_content(state_m):

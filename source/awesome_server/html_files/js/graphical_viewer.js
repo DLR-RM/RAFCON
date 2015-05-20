@@ -8,7 +8,7 @@ function setup_paper() {
 	paper = new joint.dia.Paper({
 		el: $('#graphical_viewer'),
 		width: window.innerWidth,
-		height: window.innerHeight - 100,
+		height: window.innerHeight - 150,
 		gridSize: 1,
 		model: graph,
 		defaultLink: new joint.dia.Link({

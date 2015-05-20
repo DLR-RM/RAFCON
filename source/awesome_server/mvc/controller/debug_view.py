@@ -16,7 +16,8 @@ import gtk
 from twisted.internet import reactor
 
 from awesome_server.utils.config import global_server_config
-from awesome_server.statemachine.singleton import global_storage
+from awesome_server.statemachine.singleton import global_storage, state_machine_execution_engine
+from awesome_server.statemachine.execution.statemachine_status import ExecutionMode, StateMachineStatus
 import os
 
 
@@ -47,6 +48,7 @@ class DebugViewController(ExtendedController):
 
         self.state_machine = None
         self.gui_meta = None
+        self.last_active_state_message = ""
         self.storage = StorageUtils("~/")
         if not self.storage.exists_path(TEMP_FOLDER):
             self.storage.create_path(TEMP_FOLDER)
@@ -59,6 +61,11 @@ class DebugViewController(ExtendedController):
             root_state_id = root_state.state_id
             self.send_statemachine_to_browser(self.gui_meta, root_state_id, root_state, 1)
             self.send_statemachine_connections_to_browser(self.gui_meta, root_state_id, root_state, 1)
+        elif command == 'resend_active_states' and \
+                        state_machine_execution_engine.status.execution_mode != ExecutionMode.RUNNING and \
+                        state_machine_execution_engine.status.execution_mode != ExecutionMode.STOPPED:
+            self.model.connection_manager.server_html.send_data(self.last_active_state_message, "none", 0, "ASC")
+            self.model.connection_manager.server_html.send_data("-", "none", 0, "ASC")
 
     def on_command_button_clicked(self, widget, data=None):
         command = command_mapping[widget.get_label()]
@@ -182,10 +189,19 @@ class DebugViewController(ExtendedController):
             for child_id, child in state.states.iteritems():
                 self.send_statemachine_connections_to_browser(gui_meta, child_id, child, hierarchy_level + 1)
 
-
     @ExtendedController.observe("_udp_messages_received", after=True)
     def handle_udp_message_received(self, mode, prop_name, info):
         message = info["args"][1]
+        if message == 'RUNNING':
+            state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.RUNNING)
+        elif message == 'PAUSED':
+            state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.PAUSED)
+        elif message == 'STOPPED':
+            state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.STOPPED)
+        elif message == 'STEPPING':
+            state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.STEPPING)
+        elif not message.startswith('-'):
+            self.last_active_state_message = message
         self.print_msg(message)
 
     def process_yaml_files(self, files):

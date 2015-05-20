@@ -37,11 +37,16 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
 
     def send_data_to_request(self, request, data, ip, port, data_flag):
         if data_flag == "REG":
-            request.write("event: registration\n")
+            json_pkg = "event: registration\n" \
+                       "id: 1\n"
         elif data_flag == "EXE":
-            request.write("event: execution\n")
+            json_pkg = "event: execution\n" \
+                       "id: 2\n"
+        elif data_flag == "ASC":
+            json_pkg = "event: active_state_changed\n" \
+                       "id: 3\n"
 
-        json_pkg = "data: {" \
+        json_pkg += "data: {" \
                    "\"msg\": \"%s\", " \
                    "\"ip\": \"%s\", " \
                    "\"port\": \"%d\"}\n\n" % (data, ip, port)
@@ -50,6 +55,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
 
     def send_state_data(self, parent_id, state_id, state_name, pos_x, pos_y, width, height, hierarchy_level, outcomes):
         json_pkg = "event: new_state\n" \
+                   "id: 4\n" \
                    "data: {" \
                    "\"parent_id\": \"%s\"," \
                    "\"state_id\": \"%s\"," \
@@ -82,7 +88,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
 
     def send_connection_data(self, container_state_id, from_outcome, from_state, to_outcome, to_state, waypoints):
         json_pkg = "event: new_connection\n" \
-                   "id: 1\n" \
+                   "id: 5\n" \
                    "data: {" \
                    "\"container_state_id\": \"%s\"," \
                    "\"from_outcome\": \"%s\"," \
@@ -104,21 +110,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
             json_pkg += "]}\n\n"
 
         for conn in self.sse_conns:
-            # conn.write("event: new_connection\n")
-
-            print json_pkg
-
             conn.write(json_pkg)
-            # conn.write("data: %s\n" % container_state_id)
-            # conn.write("data: %s\n" % from_outcome)
-            # conn.write("data: %s\n" % from_state)
-            # conn.write("data: %s\n" % to_outcome)
-            # conn.write("data: %s\n" % to_state)
-            # if waypoints:
-            #     for point in waypoints:
-            #         conn.write("data: %f\n" % abs(point[0] * constants.BROWSER_SIZE_MULTIPLIER))
-            #         conn.write("data: %f\n" % abs(point[1] * constants.BROWSER_SIZE_MULTIPLIER))
-            # conn.write("\n")
 
     def start_html_server(self):
         port = global_server_config.get_config_value("HTML_SERVER_PORT")
