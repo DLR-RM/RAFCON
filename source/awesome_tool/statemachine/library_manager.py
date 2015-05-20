@@ -30,6 +30,7 @@ class LibraryManager(Observable):
     def __init__(self):
         Observable.__init__(self)
         self._libraries = {}
+        self._library_paths = {}
         logger.debug("Initializing Storage object ...")
         self.storage = StateMachineStorage("../")
 
@@ -46,6 +47,7 @@ class LibraryManager(Observable):
         self._libraries = {}
         self._library_paths = {}
         for lib_key, lib_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
+            lib_path = os.path.expanduser(lib_path)
             if os.path.exists(lib_path):
                 lib_path = os.path.realpath(lib_path)
                 logger.debug('Adding libraries from {0}'.format(lib_path))

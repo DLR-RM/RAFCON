@@ -71,7 +71,7 @@ if __name__ == '__main__':
     logger = log.get_logger("start")
     logger.info("Awesome tool launcher")
 
-    home_path = os.getenv("HOME")
+    home_path = os.path.expanduser('~')
     if home_path:
         home_path = os.path.join(home_path, ".awesome_tool")
     else:
