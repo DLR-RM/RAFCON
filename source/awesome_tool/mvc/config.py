@@ -55,7 +55,7 @@ class GuiConfig(DefaultConfig):
         context = tv.get_pango_context()
         fonts = context.list_families()
 
-        font_path = os.path.join(os.getenv("HOME"), ".fonts")
+        font_path = os.path.join(os.path.expanduser('~'), '.fonts')
 
         font_copied = False
 
@@ -85,7 +85,7 @@ class GuiConfig(DefaultConfig):
             os.execl(python, python, * sys.argv)
 
     def configure_source_view_styles(self):
-        path = os.path.join(os.getenv("HOME"), ".local/share/gtksourceview-2.0/styles")
+        path = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0', 'styles')
 
         if not os.path.isdir(path):
             os.makedirs(path)
