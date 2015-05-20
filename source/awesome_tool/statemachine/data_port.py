@@ -180,6 +180,8 @@ class DataPort(Observable, yaml.YAMLObject):
         if default_value is not None:
             # If the default value is passes as string, we have to convert it to the data type
             if isinstance(default_value, basestring):
+                if default_value[0] == '$':
+                    return default_value
                 default_value = self.convert_string_to_type(default_value, data_type)
                 if default_value is None:
                     raise AttributeError("Could not convert default value '{0}' to data type '{1}'".format(

@@ -56,11 +56,10 @@ class GlobalVariableManager(Observable):
     def get_variable(self, key):
         """Fetches the value of a global variable
 
-        :param key: the key of the global variable to be fechted
-
+        :param key: the key of the global variable to be fetched
+        :return: The value stored at in the global variable key
         """
         if key in self.__global_variable_dictionary:
-            return_value = None
             access_key = self.lock_variable(key)
             return_value = copy.deepcopy(self.__global_variable_dictionary[key])
             self.unlock_variable(key, access_key)

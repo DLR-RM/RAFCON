@@ -162,8 +162,20 @@ class State(Observable, yaml.YAMLObject, object):
         """
         result_dict = {}
         for input_port_key, value in state.input_data_ports.iteritems():
-            # at first load all default values
-            result_dict[value.name] = copy.copy(value.default_value)
+            default = value.default_value
+            # if the user sets the default value to a string starting with $, try to retrieve the value
+            # from the global variable manager
+            if isinstance(default, str) and default[0] == '$':
+                from awesome_tool.statemachine.singleton import global_variable_manager as gvm
+                try:
+                    global_value = gvm.get_variable(default[1:])
+                    result_dict[value.name] = global_value
+                    continue
+                # Use the $value as value if it is not existing as key in the gvm
+                except AttributeError:
+                    pass
+            # set input to its default value
+            result_dict[value.name] = copy.copy(default)
         return result_dict
 
     def create_output_dictionary_for_state(self, state):
