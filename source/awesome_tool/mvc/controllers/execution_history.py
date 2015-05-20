@@ -73,7 +73,10 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
     def update(self):
         self.history_tree_store.clear()
-        execution_history_items = self.state_machine_manager.get_active_state_machine().execution_history.history_items
+        active_sm = self.state_machine_manager.get_active_state_machine()
+        if not active_sm:
+            return
+        execution_history_items = active_sm.execution_history.history_items
         for item in execution_history_items:
             if isinstance(item, ConcurrencyItem):
                 self.insert_rec(None, item.state_reference.name, item.execution_histories, None)

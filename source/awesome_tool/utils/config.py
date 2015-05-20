@@ -6,38 +6,46 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
-CONFIG_PATH = os.getenv("HOME") + "/.awesome_tool"
-
-
 class DefaultConfig(object):
     """
     Class to hold and load the global configurations.
     """
 
-    DEFAULT_CONFIG = None
-    CONFIG_FILE = None
-
-    def __init__(self, config_file, default_config, opt_path=None):
-        assert isinstance(config_file, str)
+    def __init__(self, default_config):
         assert isinstance(default_config, str)
-        self.CONFIG_FILE = config_file
-        self.DEFAULT_CONFIG = default_config
+        self.config_file = None
+        self.default_config = default_config
+        self.storage = StorageUtils()
 
-        self.storage = StorageUtils("~/")
-        if opt_path and self.storage.exists_path(opt_path):
-            self.__config_dict = self.storage.load_dict_from_yaml(opt_path)
-            logger.info("Config initialized ... loaded configuration from %s" % str(opt_path))
+        self.__config_dict = yaml.load(self.default_config)
+
+    def load(self, config_file, opt_path=None):
+        assert isinstance(config_file, str)
+
+        if not opt_path or not os.path.exists(opt_path):
+            logger.warn('No configuration found, using temporary default config')
             return
-        elif opt_path:
-            logger.info("Config file at path %s not found. Using default config instead" % str(opt_path))
 
-        if not self.storage.exists_path(os.path.join(CONFIG_PATH, self.CONFIG_FILE)):
-            self.storage.create_path(CONFIG_PATH)
-            open(os.path.join(CONFIG_PATH, self.CONFIG_FILE), "a").close()
-            yaml_dict = yaml.load(self.DEFAULT_CONFIG)
-            self.storage.write_dict_to_yaml(yaml_dict, os.path.join(CONFIG_PATH, self.CONFIG_FILE))
-        self.__config_dict = self.storage.load_dict_from_yaml(os.path.join(CONFIG_PATH, self.CONFIG_FILE))
-        logger.info("Config initialized ... loaded configuration from %s" % str(os.path.join(CONFIG_PATH, self.CONFIG_FILE)))
+        config_file_path = os.path.join(opt_path, config_file)
+
+        if not os.path.isfile(config_file_path):
+            try:
+                if not os.path.exists(opt_path):
+                    os.makedirs(opt_path)
+                self.storage.write_dict_to_yaml(self.__config_dict, config_file_path, width=80, default_flow_style=False)
+                self.config_file = config_file_path
+                logger.debug("Created config file {0}".format(config_file_path))
+            except Exception as e:
+                logger.error('Could not write to config {0}, using temporary default configuration. '
+                             'Error: {1}'.format(config_file_path, e))
+        else:
+            try:
+                self.__config_dict = self.storage.load_dict_from_yaml(config_file_path)
+                self.config_file = config_file_path
+                logger.debug("Configuration loaded from {0}".format(config_file_path))
+            except Exception as e:
+                logger.error('Could not read from config {0}, using temporary default configuration. '
+                             'Error: {1}'.format(config_file_path, e))
 
     def get_config_value(self, key, default=None):
         """
@@ -59,9 +67,9 @@ class DefaultConfig(object):
         self.__config_dict[key] = value
 
     def save_configuration(self):
-        self.storage.write_dict_to_yaml(self.__config_dict, os.path.join(CONFIG_PATH, self.CONFIG_FILE),
-                                        width=80, default_flow_style=False)
-        logger.info("Saved configuration to filesystem (path: %s)" % str(os.path.join(CONFIG_PATH, self.CONFIG_FILE)))
+        if self.config_file:
+            self.storage.write_dict_to_yaml(self.__config_dict, self.config_file, width=80, default_flow_style=False)
+            logger.debug("Saved configuration to {0}".format(self.config_file))
 
 
 class ConfigError(Exception):
