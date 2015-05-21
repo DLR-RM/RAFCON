@@ -8,7 +8,8 @@ from awesome_tool.utils import log
 from awesome_tool.mvc.controllers import MainWindowController
 from awesome_tool.mvc.views.logging import LoggingView
 from awesome_tool.mvc.views.main_window import MainWindowView
-from awesome_tool.mvc.models import GlobalVariableManagerModel
+from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.statemachine.config import global_config
 import awesome_tool.statemachine.singleton
 import awesome_tool.mvc.singleton
 
@@ -43,6 +44,10 @@ def run_empty_statemachine():
     setup_logger(logging_view)
     setup_logger(logging_view)
     logger = log.get_logger("turtle demo")
+
+    home_path = os.path.join(os.path.expanduser('~'), '.awesome_tool')
+    global_config.load(home_path)
+    global_gui_config.load(home_path)
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
 
