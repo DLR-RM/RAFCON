@@ -133,3 +133,12 @@ class StateMachineModel(ModelMT):
                                        "__delitem__", "__setitem__"]:
                 return True
         return False
+
+    def get_state_model_by_path(self, path):
+        print "\n\n\nsearch state: ", path, "\n\n\n"
+        path_elems = path.split('/')
+        path_elems.pop(0)
+        current_state_model = self.root_state
+        for element in path_elems:
+            current_state_model = current_state_model.states[element]
+        return current_state_model
