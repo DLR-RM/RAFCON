@@ -109,7 +109,7 @@ def test_backward_stepping():
     # load the meta data for the state machine
     variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view,
                                                   editor_type="LogicDataGrouped")
     thread = threading.Thread(target=trigger_gui_signals,
                               args=[variables_for_pytest.sm_manager_model, main_window_controller])

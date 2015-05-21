@@ -159,7 +159,7 @@ def test_gui():
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     variables_for_pytest.sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
     thread = threading.Thread(target=trigger_gui_signals, args=[variables_for_pytest.sm_manager_model,
