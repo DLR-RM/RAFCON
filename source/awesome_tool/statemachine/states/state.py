@@ -167,13 +167,13 @@ class State(Observable, yaml.YAMLObject, object):
             # from the global variable manager
             if isinstance(default, str) and default[0] == '$':
                 from awesome_tool.statemachine.singleton import global_variable_manager as gvm
-                try:
-                    global_value = gvm.get_variable(default[1:])
-                    result_dict[value.name] = global_value
-                    continue
-                # Use the $value as value if it is not existing as key in the gvm
-                except AttributeError:
-                    pass
+                var_name = default[1:]
+                if not gvm.variable_exist(var_name):
+                    logger.error("The global variable '{0}' does not exist".format(var_name))
+                    global_value = None
+                else:
+                    global_value = gvm.get_variable(var_name)
+                result_dict[value.name] = global_value
             # set input to its default value
             result_dict[value.name] = copy.copy(default)
         return result_dict
