@@ -5,7 +5,7 @@ import cairo
 from pangocairo import CairoContext
 from pango import SCALE, FontDescription
 
-from gtk.gdk import CairoContext
+from gtk.gdk import CairoContext, Color
 
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
@@ -13,8 +13,8 @@ from gaphas.painter import CairoBoundingBoxContext
 
 from gaphas.util import text_align, text_set_font, text_extents
 
-from awesome_tool.mvc.views.gap.constraint import EqualDistributionConstraint, KeepRectangleWithinConstraint
-from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView
+from awesome_tool.mvc.views.gap.constraint import EqualDistributionConstraint, KeepRectangleWithinConstraint, EqualDistributionDoublePortConstraint
+from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, OutcomeDoublePortView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.models.state import StateModel
@@ -47,13 +47,16 @@ class StateView(Element):
         self.constraint(line=(self._income.pos, (self._handles[NW].pos, self._left_center)), align=0.5)
 
         self._outcomes = []
-        self._outcomes_distribution = EqualDistributionConstraint((self._handles[NE].pos, self._right_center))
+        self._outcomes_distribution = EqualDistributionConstraint((self._handles[NE].pos, self._right_center), self.width)
+
+        self._double_port_outcomes = []
+        self._outcomes_distribution_double = EqualDistributionDoublePortConstraint((self._handles[NE].pos, self._right_center), self)
 
         self._inputs = []
-        self._inputs_distribution = EqualDistributionConstraint((self._handles[SW].pos, self._left_center))
+        self._inputs_distribution = EqualDistributionConstraint((self._handles[SW].pos, self._left_center), -self.width)
 
         self._outputs = []
-        self._outputs_distribution = EqualDistributionConstraint((self._handles[SE].pos, self._right_center))
+        self._outputs_distribution = EqualDistributionConstraint((self._handles[SE].pos, self._right_center), self.width)
 
         self._scoped_variables = []
 
@@ -65,6 +68,7 @@ class StateView(Element):
         solver.add_constraint(self._outcomes_distribution)
         solver.add_constraint(self._inputs_distribution)
         solver.add_constraint(self._outputs_distribution)
+        solver.add_constraint(self._outcomes_distribution_double)
 
         if parent is not None:
             assert isinstance(parent, StateView)
@@ -91,15 +95,15 @@ class StateView(Element):
         else:
             cc = c._cairo
 
-        c.set_line_width(0.5)
+        c.set_line_width(0.1)
         nw = self._handles[NW].pos
         c.rectangle(nw.x, nw.y, self.width, self.height)
-        if context.hovered:
-            c.set_source_rgba(.8, .8, 1, .8)
-        else:
-            c.set_source_rgba(1, 1, 1, .8)
+        # if context.hovered:
+        #     c.set_source_rgba(.8, .8, 1, .8)
+        # else:
+        c.set_source_color(Color('#383D47'))
         c.fill_preserve()
-        c.set_source_rgb(0, 0, 0.8)
+        c.set_source_color(Color('#050505'))
         c.stroke()
 
         name = self.state_m.state.name
@@ -122,13 +126,16 @@ class StateView(Element):
             font_size *= 0.9
             set_font_description()
 
-        cc.set_source_rgb(0, 0, 0)
+        cc.set_source_color(Color('#ededee'))
         pcc.update_layout(layout)
         pcc.show_layout(layout)
 
         self._income.draw(context, self)
 
         for outcome in self._outcomes:
+            outcome.draw(context, self)
+
+        for outcome in self._double_port_outcomes:
             outcome.draw(context, self)
 
         for input in self._inputs:
@@ -143,6 +150,13 @@ class StateView(Element):
     def connect_to_outcome(self, outcome_id, item, handle):
         outcome_v = self.outcome_port(outcome_id)
         self._connect_to_port(outcome_v.port, item, handle)
+
+    def connect_to_double_port_outcome(self, outcome_id, item, handle, incoming):
+        outcome_v = self.double_outcome_port(outcome_id)
+        if incoming:
+            self._connect_to_port(outcome_v.left_port, item, handle)
+        else:
+            self._connect_to_port(outcome_v.right_port, item, handle)
 
     def connect_to_input_port(self, port_id, item, handle):
         port_v = self.input_port(port_id)
@@ -175,6 +189,12 @@ class StateView(Element):
                 return outcome
         raise AttributeError("Outcome with id '{0}' not found in state".format(outcome_id, self.state_m.state.name))
 
+    def double_outcome_port(self, outcome_id):
+        for outcome in self._double_port_outcomes:
+            if outcome.outcome_id == outcome_id:
+                return outcome
+        raise AttributeError("Outcome with id '{0}' not found in state".format(outcome_id, self.state_m.state.name))
+
     def input_port(self, port_id):
         return self._data_port(self._inputs, port_id)
 
@@ -195,7 +215,21 @@ class StateView(Element):
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
-        self._outcomes_distribution.add_point(outcome_v.pos, outcome_v.sort)
+        # self._outcomes_distribution.add_point(outcome_v.pos, outcome_v.sort)
+        self._outcomes_distribution.add_outcome_points(outcome_v.handle_pos, outcome_v.port_pos, outcome_v.sort)
+
+    def add_double_port_outcome(self, outcome_m):
+        double_outcome_v = OutcomeDoublePortView(outcome_m)
+        self._double_port_outcomes.append(double_outcome_v)
+        self._ports.append(double_outcome_v.right_port)
+        self._ports.append(double_outcome_v.left_port)
+        self._handles.append(double_outcome_v.right_handle)
+        self._handles.append(double_outcome_v.left_handle)
+        self._outcomes_distribution_double.add_double_port_points(double_outcome_v.right_handle_pos,
+                                                                  double_outcome_v.right_port_pos,
+                                                                  double_outcome_v.left_handle_pos,
+                                                                  double_outcome_v.left_port_pos,
+                                                                  double_outcome_v.sort)
 
     def add_input_port(self, port_m):
         input_port_v = InputPortView(port_m)
