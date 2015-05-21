@@ -67,10 +67,11 @@ class KeepPointWithinConstraint(KeepRectangleWithinConstraint):
 
 class EqualDistributionConstraint(Constraint):
 
-    def __init__(self, line):
+    def __init__(self, line, parent_width):
         super(EqualDistributionConstraint, self).__init__(line[0][0], line[0][1], line[1][0], line[1][1])
         self._line = line
         self._points = []
+        self._parent_width = parent_width
 
     def add_point(self, p, sort=None):
         if sort is None:
@@ -78,6 +79,17 @@ class EqualDistributionConstraint(Constraint):
         self._points.append((p, sort))
         self._variables.append(p[0])
         self._variables.append(p[1])
+        self.create_weakest_list()
+        self._sort_points()
+
+    def add_outcome_points(self, handle_p, port_p, sort=None):
+        if sort is None:
+            sort = len(self._points)
+        self._points.append((handle_p, port_p, sort))
+        self._variables.append(handle_p[0])
+        self._variables.append(handle_p[1])
+        self._variables.append(port_p[0])
+        self._variables.append(port_p[1])
         self.create_weakest_list()
         self._sort_points()
 
@@ -96,6 +108,21 @@ class EqualDistributionConstraint(Constraint):
         except ValueError:
             logger.error("Cannot remove point '{0}' of constraint".format(p))
 
+    def remove_outcome_points(self, handle_p):
+        try:
+            self._variables.remove(handle_p[0])
+            self._variables.remove(handle_p[1])
+            self.create_weakest_list()
+            for point_entry in self._points:
+                if point_entry[0] is handle_p:
+                    self._variables.remove(point_entry[1][0])
+                    self._variables.remove(point_entry[1][1])
+                    self.create_weakest_list()
+                    break
+            self._points.remove(point_entry)
+        except ValueError:
+            logger.error("Cannot remove point '{0} of constraint".format(handle_p))
+
     def solve_for(self, var=None):
         from math import atan2, sin, cos
         alpha = atan2(self._line[1][1] - self._line[0][1], self._line[1][0] - self._line[0][0])
@@ -105,7 +132,88 @@ class EqualDistributionConstraint(Constraint):
         dy = ds * sin(alpha)
 
         for index, p in enumerate(self._points):
-            pos = p[0]
-            pos.x = self._line[0][0] + (index + 1) * dx
-            pos.y = self._line[0][1] + (index + 1) * dy
+            if len(p) == 2:
+                pos = p[0]
+                pos.x = self._line[0][0] + (index + 1) * dx - min(5, self._parent_width * 0.05)
+                pos.y = self._line[0][1] + (index + 1) * dy
+            elif len(p) == 3:
+                h_pos = p[0]
+                p_pos = p[1]
+                h_pos.x = self._line[0][0] + (index + 1) * dx - min(5, self._parent_width * 0.05)
+                h_pos.y = self._line[0][1] + (index + 1) * dy
+                p_pos.x = self._line[0][0] + (index + 1) * dx - min(5, self._parent_width * 0.05) - length / 20.
+                p_pos.y = self._line[0][1] + (index + 1) * dy
 
+
+class EqualDistributionDoublePortConstraint(Constraint):
+
+    def __init__(self, line, parent_state):
+        super(EqualDistributionDoublePortConstraint, self).__init__(line[0][0], line[0][1], line[1][0], line[1][1])
+        self._line = line
+        self._points = []
+        self._parent_width = parent_state.width
+        self._parent_state = parent_state
+
+    def add_double_port_points(self, rh_pos, rp_pos, lh_pos, lp_pos, sort=None):
+        if sort is None:
+            sort = len(self._points)
+        self._points.append((rh_pos, rp_pos, lh_pos, lp_pos, sort))
+        self._variables.append(rh_pos[0])
+        self._variables.append(rh_pos[1])
+        self._variables.append(rp_pos[0])
+        self._variables.append(rp_pos[1])
+        self._variables.append(lh_pos[0])
+        self._variables.append(lh_pos[1])
+        self._variables.append(lp_pos[0])
+        self._variables.append(lp_pos[1])
+        self.create_weakest_list()
+        self._sort_points()
+
+    def _sort_points(self):
+        self._points.sort(lambda p1, p2: cmp(p1[4], p2[4]))
+
+    def remove_outcome_points(self, rh_pos):
+        try:
+            self._variables.remove(rh_pos[0])
+            self._variables.remove(rh_pos[1])
+            self.create_weakest_list()
+            for point_entry in self._points:
+                if point_entry[0] is rh_pos:
+                    self._variables.remove(point_entry[1][0])
+                    self._variables.remove(point_entry[1][1])
+                    self._variables.remove(point_entry[2][0])
+                    self._variables.remove(point_entry[2][1])
+                    self._variables.remove(point_entry[3][0])
+                    self._variables.remove(point_entry[3][1])
+                    self.create_weakest_list()
+                    break
+            self._points.remove(point_entry)
+        except ValueError:
+            logger.error("Cannot remove point '{0} of constraint".format(rh_pos))
+
+    def solve_for(self, var=None):
+        from math import atan2, sin, cos
+        alpha = atan2(self._line[1][1] - self._line[0][1], self._line[1][0] - self._line[0][0])
+        length = distance_point_point(self._line[0], self._line[1])
+        ds = length / (len(self._points) + 1)
+        dx = ds * cos(alpha)
+        dy = ds * sin(alpha)
+
+        min_state_side = min(self._parent_state.width, self._parent_state.height)
+        port_side_size = min_state_side / 20.
+
+        for index, p in enumerate(self._points):
+            rh_pos = p[0]
+            rp_pos = p[1]
+            lh_pos = p[2]
+            lp_pos = p[3]
+
+            rh_pos.x = self._line[0][0] - port_side_size / 2
+            rh_pos.y = self._line[0][1] + port_side_size / 2 + index * port_side_size
+            rp_pos.x = self._line[0][0]
+            rp_pos.y = self._line[0][1] + port_side_size / 2 + index * port_side_size
+
+            lh_pos.x = self._line[0][0] - port_side_size / 2 - self._parent_width * 0.1
+            lh_pos.y = self._line[0][1] + port_side_size / 2 + index * port_side_size
+            lp_pos.x = self._line[0][0] - port_side_size - self._parent_width * 0.1
+            lp_pos.y = self._line[0][1] + port_side_size / 2 + index * port_side_size

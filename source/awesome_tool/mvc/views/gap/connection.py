@@ -8,6 +8,9 @@ from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint
 from awesome_tool.mvc.models.transition import TransitionModel
 from awesome_tool.mvc.models.data_flow import DataFlowModel
 
+from gtk.gdk import Color
+
+
 class ConnectionView(Line):
 
     def __init__(self):
@@ -49,16 +52,29 @@ class ConnectionView(Line):
         self._keep_handle_in_parent_state(handle)
 
     def draw_head(self, context):
+        # self.add_waypoint((2.5, 0))
+
         cr = context.cairo
+        cr.set_source_color(Color('#ffffff'))
+        cr.rectangle(0, -.25, .5, .5)
+        cr.fill_preserve()
         cr.move_to(0, 0)
+        cr.line_to(2.5, 0)
+        cr.stroke()
+        cr.move_to(2.5, 0)
         return
 
     def draw_tail(self, context):
         cr = context.cairo
+        cr.set_source_color(Color('#81848b'))
+        cr.line_to(2.5, 0)
+        cr.stroke()
+        cr.set_source_color(Color('#ffffff'))
+        cr.move_to(2.5, 0)
         cr.line_to(0, 0)
-        cr.line_to(2, 2)
-        cr.line_to(2, -2)
+        cr.line_to(1, 1)
         cr.line_to(0, 0)
+        cr.line_to(1, -1)
         cr.stroke()
 
 
