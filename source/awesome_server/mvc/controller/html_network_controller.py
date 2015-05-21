@@ -121,6 +121,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         root.putChild('debug', DebugPage(self))
         root.putChild('js', static.File(self.path_to_static_files + "/js"))
         root.putChild('css', static.File(self.path_to_static_files + "/css"))
+        root.putChild('jointjs_test', JointJSTestPage(self))
         root.putChild('state_machine_event_source', self)
 
         reactor.listenTCP(port, server.Site(root))
@@ -161,6 +162,12 @@ class DefaultPage(resource.Resource):
             logger.debug("Received command: \'%s\'" % command)
             self.controller.emit("command_received", command, ip, int(port))
         return "Success"
+
+
+class JointJSTestPage(DefaultPage):
+
+    def __init__(self, controller):
+        DefaultPage.__init__(self, controller, "jointjs_test.html")
 
 
 class IndexPage(DefaultPage):

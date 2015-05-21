@@ -30,3 +30,7 @@ canvas {
 	left: 0px; 
 	top: 60px;
 }
+
+.my_test .port-body {
+	stroke-width: 3px;
+}
