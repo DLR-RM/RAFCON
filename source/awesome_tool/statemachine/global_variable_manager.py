@@ -146,10 +146,7 @@ class GlobalVariableManager(Observable):
         :param key: the name of the global variable
 
         """
-        if key in self.__global_variable_dictionary:
-            return True
-        else:
-            return False
+        return key in self.__global_variable_dictionary
 
     def locked_status_for_variable(self, key):
         """
@@ -170,4 +167,18 @@ class GlobalVariableManager(Observable):
 
         """
         return copy.deepcopy(self.__global_variable_dictionary)
-        #return self.__global_variable_dictionary
+
+    def is_locked(self, key):
+        """Check whether a variable is currently locked
+
+        :param str key: The name of the variable
+        :return: True if locked, False else
+        """
+        if key in self.__variable_locks:
+            # Try to acquire non-blocking, returns True if successful
+            if self.__variable_locks[key].acquire(False):
+                self.__variable_locks[key].release()
+                return False
+            return True
+        return False
+
