@@ -9,7 +9,6 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from awesome_tool.statemachine.states.library_state import LibraryState
-from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 
 from awesome_tool.utils import log

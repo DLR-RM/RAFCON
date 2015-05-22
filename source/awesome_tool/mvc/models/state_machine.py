@@ -10,6 +10,8 @@ from awesome_tool.utils.vividict import Vividict
 
 from awesome_tool.mvc.history import History
 
+from awesome_tool.statemachine.states.container_state import ContainerState
+
 
 class StateMachineModel(ModelMT):
     """This model class manages a :class:`awesome_tool.statemachine.state_machine.StateMachine`

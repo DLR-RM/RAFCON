@@ -364,7 +364,6 @@ class ContainerState(State):
                     raise AttributeError("outcome %s of state %s is already connected" %
                                          (str(from_outcome), str(from_state_id)))
 
-
         from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
         # check if state is a concurrency state, in concurrency states only transitions to the parents are allowed
         if isinstance(self, ConcurrencyState):
@@ -387,7 +386,7 @@ class ContainerState(State):
                 raise AttributeError("from_state does not have outcome %s", from_state)
         else:
             self.transitions[transition_id] =\
-                        Transition(None, None, to_state_id, to_outcome, transition_id)
+                Transition(None, None, to_state_id, to_outcome, transition_id)
 
         # notify all states waiting for transition to be connected
         self._transitions_cv.acquire()
