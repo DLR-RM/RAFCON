@@ -79,6 +79,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
                 self.execution_history.add_return_history_item(self, MethodName.ENTRY, self)
                 state = self.get_start_state(set_final_outcome=True)
+                if state is None:
+                    state = self.handle_no_start_state()
 
             ########################################################
             # children execution loop

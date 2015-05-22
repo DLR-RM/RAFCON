@@ -180,6 +180,18 @@ class ContainerState(State):
 
         return transition
 
+    def handle_no_start_state(self):
+        """Handles the situation, when no start state exists during execution
+
+        The method waits, until a transition is created. It then checks again for an existing start state and waits
+        again, if this is not the case.
+        """
+        while self.get_start_state(set_final_outcome=True) is None:
+            self._transitions_cv.acquire()
+            self._transitions_cv.wait(3.0)
+            self._transitions_cv.release()
+        return self.get_start_state()
+
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- state functions --------------------------------------
     # ---------------------------------------------------------------------------------------------
