@@ -79,6 +79,8 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 self.add_enter_exit_script_output_dict_to_scoped_data(scoped_variables_as_dict)
                 self.execution_history.add_return_history_item(self, MethodName.ENTRY, self)
                 state = self.get_start_state(set_final_outcome=True)
+                if state is None:
+                    state = self.handle_no_start_state()
 
             ########################################################
             # children execution loop
@@ -138,7 +140,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     state.join()
                     if state.final_outcome is not None:
                         if state.final_outcome.outcome_id == -1:  # if the state aborted save the error
-                            last_error = state.output_data["error"]
+                            last_error = ""
+                            if hasattr(state.output_data, 'error'):
+                                last_error = state.output_data['error']
                     if state.backward_execution:
                         # the item popped now from the history will be a CallItem and will contain the scoped data,
                         # that was valid before executing the state
