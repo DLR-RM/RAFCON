@@ -140,7 +140,9 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                     state.join()
                     if state.final_outcome is not None:
                         if state.final_outcome.outcome_id == -1:  # if the state aborted save the error
-                            last_error = state.output_data["error"]
+                            last_error = ""
+                            if hasattr(state.output_data, 'error'):
+                                last_error = state.output_data['error']
                     if state.backward_execution:
                         # the item popped now from the history will be a CallItem and will contain the scoped data,
                         # that was valid before executing the state
