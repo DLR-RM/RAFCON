@@ -311,7 +311,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     if 'ports' in check_list:
         # collect input_data_ports
         for p_id, p in state.input_data_ports.iteritems():
-            print p_id, stored_state_elements['input_data_ports']
+            # print p_id, stored_state_elements['input_data_ports']
             assert p_id in stored_state_elements['input_data_ports']
         # - check if the right models are there and only those
         model_id_store = []
@@ -340,7 +340,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     if 'outcomes' in check_list:
         # collect outcomes
         for oc_id, oc, in state.outcomes.iteritems():
-            print oc_id, stored_state_elements['outcomes']
+            # print oc_id, stored_state_elements['outcomes']
             assert oc_id in stored_state_elements['outcomes']
         # - check if the right models are there and only those
         model_id_store = []
@@ -372,7 +372,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             assert s_id in model_id_store
     else:
         assert not hasattr(state, 'states')
-    exit(0)
+    # exit(0)
 
     # check scoped_variables
     if 'scoped_variables' in check_list:
@@ -473,6 +473,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     else:
         assert state.parent is None
 
+    print "\n check state type"
     # check state type and check source script
     if isinstance(state, ExecutionState):
         print "\n\nEXECUTION_STATE\n\n"
@@ -487,9 +488,19 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         exit(0)
 
 
+def list_store_id_dict(store):
+    id = 0
+    list_store_id = {}
+    for row in store:
+        # Print values of all columns
+        list_store_id[row[0]] = id
+        id += 1
+    return list_store_id
+
+
 def trigger_state_type_change_tests(*args):
     print "Wait for the gui to initialize"
-    time.sleep(2.0)
+    time.sleep(1.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     sm_m = args[2]
@@ -519,48 +530,153 @@ def trigger_state_type_change_tests(*args):
 
     # simple type change of non root_state
 
-    # check_dict = {'ports': True, 'outcomes': True, 'states': True, 'scoped_variables': True,
-    #           'transitions_internal': True, 'transitions_external': True,
-    #           'data_flows_internal': True, 'data_flows_external': True}
     check_list = ['ports', 'outcomes', 'states', 'scoped_variables',
                   'transitions_internal', 'transitions_external',
                   'data_flows_internal', 'data_flows_external']
 
-    # HS -> ES
-    # state_m = sm_m.get_state_model_by_path(state_dict['Nested'].get_path())
-    state_m = sm_m.get_state_model_by_path(state_dict['State3'].get_path())
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict['State3'], state_m)
-    print "\n\n %s \n\n" % state_m.state.name
-    time.sleep(sleep_time)
-    # state_dict['Container'].change_state_type(state_m, ExecutionState)
-    state_dict['Container'].change_state_type(state_m, PreemptiveConcurrencyState)
-
-    check_list_root_HS = ['ports', 'outcomes', 'states', 'scoped_variables',
-                          'transitions_internal', 'data_flows_internal']
     check_list_ES = ['ports', 'outcomes', 'transitions_external', 'data_flows_external']
+    check_list_HS = ['ports', 'outcomes', 'states', 'scoped_variables',
+                      'transitions_internal', 'transitions_external',
+                      'data_flows_internal', 'data_flows_external']
     check_list_PCS = ['ports', 'outcomes', 'states', 'scoped_variables',
                       'transitions_internal', 'transitions_external',
                       'data_flows_internal', 'data_flows_external']
-    new_state = sm_m.state_machine.get_state_by_path(state_dict['State3'].get_path())
-    new_state_m = sm_m.get_state_model_by_path(state_dict['State3'].get_path())
-    # check_state_elements(check_list_ES, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
-    check_state_elements(check_list_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    check_list_BCS = ['ports', 'outcomes', 'states', 'scoped_variables',
+                      'transitions_internal', 'transitions_external',
+                      'data_flows_internal', 'data_flows_external']
 
-    # time.sleep(sleep_time)
-    #
-    # sm_m.history.undo()
-    #
-    # time.sleep(sleep_time)
-    #
-    # sm_m.history.redo()
+    check_list_root_ES = ['ports', 'outcomes']
+    check_list_root_HS = ['ports', 'outcomes', 'states', 'scoped_variables',
+                          'transitions_internal',
+                          'data_flows_internal']
+    check_list_root_PCS = ['ports', 'outcomes', 'states', 'scoped_variables',
+                           'transitions_internal',
+                           'data_flows_internal']
+    check_list_root_BCS = ['ports', 'outcomes', 'states', 'scoped_variables',
+                           'transitions_internal',
+                           'data_flows_internal']
 
-    # ES -> HS
+    ####### General Type Change inside of a state machine (NO ROOT STATE) ############
+    state_of_type_change = 'State3'
 
-    # HS -> PCS
+    # HS -> ES
+    # state_m = sm_m.get_state_model_by_path(state_dict['Nested'].get_path())
+    state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
+    print "\n\n %s \n\n" % state_m.state.name
+    sm_m.selection.set([state_m])
+    time.sleep(sleep_time)
+    # state_dict['Container'].change_state_type(state_m, ExecutionState)
+    # state_dict['Container'].change_state_type(state_m, PreemptiveConcurrencyState)
 
-    # PCS -> ES
+    # do state_type_change with gui
+    tab_key = '1|' + state_dict[state_of_type_change].get_path()
+    print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]
+    print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+    state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+    print state_editor_ctrl.get_controller('properties_ctrl')
+    print state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
+
+    # - find right row in combo box
+    store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
+    list_store_id_from_state_type_dict = list_store_id_dict(store)
 
     # HS -> BCS
+    state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
+    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    time.sleep(sleep_time)
+
+    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    check_state_elements(check_list_BCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+
+    # BCS -> HS
+    state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
+    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    time.sleep(sleep_time)
+
+    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+
+    # HS -> PCS
+    state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
+    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    time.sleep(sleep_time)
+
+    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    check_state_elements(check_list_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+
+    # PCS -> ES
+    state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
+    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    time.sleep(sleep_time)
+
+    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    check_state_elements(check_list_ES, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+
+    ####### General Type Change as ROOT STATE ############
+    state_of_type_change = 'Container'
+
+    # HS -> ES
+    # state_m = sm_m.get_state_model_by_path(state_dict['Nested'].get_path())
+    state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
+    print "\n\n %s \n\n" % state_m.state.name
+    sm_m.selection.set([state_m])
+    time.sleep(sleep_time)
+    # state_dict['Container'].change_state_type(state_m, ExecutionState)
+    # state_dict['Container'].change_state_type(state_m, PreemptiveConcurrencyState)
+
+    # do state_type_change with gui
+    tab_key = '1|' + state_dict[state_of_type_change].get_path()
+    print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]
+    print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+    state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+    print state_editor_ctrl.get_controller('properties_ctrl')
+    print state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
+
+    # - find right row in combo box
+    store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
+    list_store_id_from_state_type_dict = list_store_id_dict(store)
+
+    # HS -> BCS
+    state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
+    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    time.sleep(sleep_time)
+
+    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    check_state_elements(check_list_root_BCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+
+    # BCS -> HS
+    state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
+    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    time.sleep(sleep_time)
+
+    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    check_state_elements(check_list_root_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+
+    # HS -> PCS
+    state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
+    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    time.sleep(sleep_time)
+
+    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+
+    # PCS -> ES
+    state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
+    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    time.sleep(sleep_time)
+
+    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    check_state_elements(check_list_root_ES, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # simple type change of root_state
 
@@ -576,7 +692,8 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         glib.idle_add(menubar_ctrl.on_stop_activate, None)
-        glib.idle_add(menubar_ctrl.on_quit_activate, None)
+        #glib.idle_add(menubar_ctrl.on_quit_activate, None)
+        glib.idle_add(gtk.main_quit)
 
 
 def test_state_type_change_with_gui():

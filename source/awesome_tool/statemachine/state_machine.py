@@ -89,6 +89,11 @@ class StateMachine(Observable):
         #     raise AttributeError("root_state has to be of type State")
         self._root_state = root_state
 
+    @Observable.observed
+    def change_root_state_type(self, state_m, new_state_class):
+        from awesome_tool.mvc.statemachine_helper import StateMachineHelper
+        return StateMachineHelper.change_state_type(state_m, new_state_class)
+
     @property
     def marked_dirty(self):
         """Property for the _marked_dirty field

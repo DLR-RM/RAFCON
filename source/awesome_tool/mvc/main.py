@@ -97,7 +97,7 @@ def create_models(*args, **kargs):
     #ctr_state.add_data_flow(ctr_state.state_id, scoped_variable2_ctr_state, ctr_state.state_id, output_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    global_var_manager_model = GlobalVariableManagerModel()
+    global_var_manager_model = awesome_tool.mvc.singleton.global_variable_manager_model
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
     # ctr_model = ContainerStateModel(ctr_state)

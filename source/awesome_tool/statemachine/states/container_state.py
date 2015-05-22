@@ -269,6 +269,11 @@ class ContainerState(State):
         # final delete the state it self
         del self.states[state_id]
 
+    @Observable.observed
+    def change_state_type(self, state_m, new_state_class):
+        from awesome_tool.mvc.statemachine_helper import StateMachineHelper
+        return StateMachineHelper.change_state_type(state_m, new_state_class)
+
     # @Observable.observed
     def set_start_state(self, state):
         """Sets the start state of a container state
