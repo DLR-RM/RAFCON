@@ -926,6 +926,8 @@ class GraphicalEditorController(ExtendedController):
                 move_state(self.single_selection)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
                 move_port(self.single_selection)
+            return True # Prevent shortcut from being passed to GTK
+        return False # Allow passing of shortcut
 
     def _move_waypoint(self, new_pos, modifier_keys):
         """Moves the currently selected waypoint to the given position
