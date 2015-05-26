@@ -104,7 +104,7 @@ class GraphicalEditorController(ExtendedController):
 
         self.setup_state(self.root_state_m)
 
-    def setup_state(self, state_m, parent=None, rel_pos=(10, 10), size=(100, 100)):
+    def setup_state(self, state_m, parent=None, rel_pos=(10, 10), size=(100, 100), hierarchy_level=1):
 
         """Draws a (container) state with all its content
 
@@ -213,12 +213,12 @@ class GraphicalEditorController(ExtendedController):
                 child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
                 num_child_state += 1
 
-                self.setup_state(child_state, state_v, child_rel_pos, child_size)
+                self.setup_state(child_state, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
             # if global_gui_config.get_config_value('show_data_flows', True):
             #     self.draw_inner_data_ports(state_m, depth)
             #
-            self.draw_transitions(state_m)
+            self.draw_transitions(state_m, hierarchy_level)
 
             if global_gui_config.get_config_value('show_data_flows', True):
                 self.draw_data_flows(state_m)
@@ -228,7 +228,7 @@ class GraphicalEditorController(ExtendedController):
                 # if global_gui_config.get_config_value('show_data_flows', True):
                 #     self._handle_new_data_flow(state_m, depth)
 
-    def draw_transitions(self, parent_state_m):
+    def draw_transitions(self, parent_state_m, hierarchy_level):
         """Draws the transitions belonging to a state
 
         The method takes all transitions from the given state and calculates their start and end point positions.
@@ -241,7 +241,7 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
 
-            transition_v = TransitionView(transition_m)
+            transition_v = TransitionView(transition_m, hierarchy_level)
             self.canvas.add(transition_v, parent_state_v)
 
             try:

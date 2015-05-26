@@ -13,11 +13,12 @@ from gtk.gdk import Color
 
 class ConnectionView(Line):
 
-    def __init__(self):
+    def __init__(self, hierarchy_level):
         super(ConnectionView, self).__init__()
         self._from_handle = self.handles()[0]
         self._to_handle = self.handles()[1]
         self._segment = Segment(self, view=self.canvas)
+        self.hierarchy_level = hierarchy_level
         # self.orthogonal = True
 
     # def setup_canvas(self):
@@ -52,39 +53,37 @@ class ConnectionView(Line):
         self._keep_handle_in_parent_state(handle)
 
     def draw_head(self, context):
-        # self.add_waypoint((2.5, 0))
-
         cr = context.cairo
         cr.set_source_color(Color('#ffffff'))
-        cr.rectangle(0, -.25, .5, .5)
+        cr.rectangle(0, -.5 / 4 / self.hierarchy_level, .5 / 2 / self.hierarchy_level, .5/ 2 / self.hierarchy_level)
         cr.fill_preserve()
         cr.move_to(0, 0)
-        cr.line_to(2.5, 0)
+        cr.line_to(2.5 / self.hierarchy_level, 0)
         cr.stroke()
-        cr.move_to(2.5, 0)
+        cr.move_to(2.5 / self.hierarchy_level, 0)
         return
 
     def draw_tail(self, context):
         cr = context.cairo
         cr.set_source_color(Color('#81848b'))
-        cr.line_to(2.5, 0)
+        cr.line_to(2.5 / self.hierarchy_level, 0)
         cr.stroke()
         cr.set_source_color(Color('#ffffff'))
-        cr.move_to(2.5, 0)
+        cr.move_to(2.5 / self.hierarchy_level, 0)
         cr.line_to(0, 0)
-        cr.line_to(1, 1)
-        cr.line_to(0, 0)
-        cr.line_to(1, -1)
+        cr.line_to(1.0 / self.hierarchy_level, 1.0 / self.hierarchy_level)
+        cr.move_to(0, 0)
+        cr.line_to(1.0 / self.hierarchy_level, -1.0 / self.hierarchy_level)
         cr.stroke()
 
 
 class TransitionView(ConnectionView):
 
-    def __init__(self, transition_m):
-        super(TransitionView, self).__init__()
+    def __init__(self, transition_m, hierarchy_level):
+        super(TransitionView, self).__init__(hierarchy_level)
         assert isinstance(transition_m, TransitionModel)
         self._transition_m = ref(transition_m)
-        self.line_width = 0.5
+        self.line_width = .5 / hierarchy_level
 
 
 class DataFlowView(ConnectionView):
