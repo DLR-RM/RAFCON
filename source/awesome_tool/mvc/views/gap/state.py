@@ -122,7 +122,7 @@ class StateView(Element):
             layout.set_font_description(font)
 
         set_font_description()
-        while layout.get_size()[0] / float(SCALE) > self.width:
+        while layout.get_size()[0] / float(SCALE) > self.width - self.width * 0.1:
             font_size *= 0.9
             set_font_description()
 
