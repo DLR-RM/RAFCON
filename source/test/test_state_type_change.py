@@ -506,29 +506,9 @@ def trigger_state_type_change_tests(*args):
     sm_m = args[2]
     state_dict = args[3]
     with_gui = args[4]
-    sleep_time = 2
-
-    # menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    # glib.idle_add(menubar_ctrl.on_step_mode_activate, None, None)
-
-    # number_of_steps = 9
-
-    # time.sleep(sleep_time)
-    # for i in range(number_of_steps):
-    #     glib.idle_add(menubar_ctrl.on_step_activate, None, None)
-    #     time.sleep(sleep_time)
-    #
-    # for i in range(number_of_steps):
-    #     glib.idle_add(menubar_ctrl.on_backward_step_activate, None, None)
-    #     time.sleep(sleep_time)
-    #
-    # for i in range(number_of_steps):
-    #     glib.idle_add(menubar_ctrl.on_step_activate, None, None)
-    #     time.sleep(sleep_time)
+    sleep_time = 0.5
 
     time.sleep(sleep_time)
-
-    # simple type change of non root_state
 
     check_list = ['ports', 'outcomes', 'states', 'scoped_variables',
                   'transitions_internal', 'transitions_external',
@@ -570,30 +550,43 @@ def trigger_state_type_change_tests(*args):
     # state_dict['Container'].change_state_type(state_m, PreemptiveConcurrencyState)
 
     # do state_type_change with gui
-    tab_key = '1|' + state_dict[state_of_type_change].get_path()
-    print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]
-    print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
-    state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
-    print state_editor_ctrl.get_controller('properties_ctrl')
-    print state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
+    # - find state machine id
 
-    # - find right row in combo box
-    store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-    list_store_id_from_state_type_dict = list_store_id_dict(store)
+    my_sm_id = None
+    for sm_id, state_machine in sm_manager_model.state_machine_manager.state_machines.iteritems():
+        if state_machine is sm_m.state_machine:
+            my_sm_id = sm_id
+    assert my_sm_id is not None
+
+    list_store_id_from_state_type_dict = {}
+    state_editor_ctrl = None
+    if with_gui:
+        # - get states-editor controller
+        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
+        assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+
+
+        # - find right row in combo box
+        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
+        list_store_id_from_state_type_dict = list_store_id_dict(store)
 
     # HS -> BCS
-    state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
-    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    time.sleep(sleep_time)
+        state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
+        glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+        time.sleep(sleep_time)
+    else:
+        state_dict[state_of_type_change].change_state_type(state_m, BarrierConcurrencyState)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_BCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
-    state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
-    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    time.sleep(sleep_time)
+    if with_gui:
+        state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
+        glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+        time.sleep(sleep_time)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -627,11 +620,9 @@ def trigger_state_type_change_tests(*args):
     print "\n\n %s \n\n" % state_m.state.name
     sm_m.selection.set([state_m])
     time.sleep(sleep_time)
-    # state_dict['Container'].change_state_type(state_m, ExecutionState)
-    # state_dict['Container'].change_state_type(state_m, PreemptiveConcurrencyState)
 
     # do state_type_change with gui
-    tab_key = '1|' + state_dict[state_of_type_change].get_path()
+    tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
     print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]
     print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
     state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
@@ -692,16 +683,17 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         glib.idle_add(menubar_ctrl.on_stop_activate, None)
-        #glib.idle_add(menubar_ctrl.on_quit_activate, None)
-        glib.idle_add(gtk.main_quit)
+        menubar_ctrl.model.get_selected_state_machine_model().state_machine.base_path = '/tmp/dfc_test_state_type_change'
+        glib.idle_add(menubar_ctrl.on_save_activate, None)
+        glib.idle_add(menubar_ctrl.on_quit_activate, None)
 
 
 def test_state_type_change_with_gui():
     state_type_change_test(with_gui=True)
 
 
-def test_state_type_change_without_gui():
-    state_type_change_test(with_gui=False)
+# def _test_state_type_change_without_gui():
+#     state_type_change_test(with_gui=False)
 
 
 def state_type_change_test(with_gui=False):
