@@ -11,6 +11,11 @@ from awesome_tool.statemachine.state_machine import StateMachine
 import variables_for_pytest
 import awesome_tool.statemachine.config
 
+def setup_module(module=None):
+    # set the test_libraries path temporarily to the correct value
+    library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths["test_libraries"] = "../test_scripts/test_libraries"
+
 
 def test_save_libraries():
     s = StateMachineStorage("../test_scripts/test_libraries")
@@ -162,10 +167,15 @@ def test_nested_library_state_machine():
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
-if __name__ == '__main__':
-    # set the test_libraries path temporarily to the correct value
+
+def teardown_module(module=None):
     library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = "../test_scripts/test_libraries"
+    library_paths["test_libraries"] = "../../test_scripts/test_libraries"
+    awesome_tool.statemachine.config.global_config.save_configuration()
+
+
+if __name__ == '__main__':
+    setup_module()
     test_save_libraries()
     # print "\n################### next function #########################\n"
     test_save_nested_library_state()
@@ -175,6 +185,4 @@ if __name__ == '__main__':
     test_execution_state_library()
     # print "\n################### next function #########################\n"
     test_nested_library_state_machine()
-    library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = "../../test_scripts/test_libraries"
-    awesome_tool.statemachine.config.global_config.save_configuration()
+    teardown_module()
