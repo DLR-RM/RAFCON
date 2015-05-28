@@ -150,6 +150,13 @@ class State(Observable, yaml.YAMLObject, object):
         """
         self.preempted = True
 
+    def get_previously_executed_state(self):
+        """
+        Calculates the state that was executed before this state
+        :return: The last state in the execution history
+        """
+        return self.execution_history.get_last_history_item().prev.state_reference
+
     # ---------------------------------------------------------------------------------------------
     # ------------------------------- input/output data handling ----------------------------------
     # ---------------------------------------------------------------------------------------------
