@@ -99,33 +99,6 @@ class ContainerState(State):
         self.add_default_values_of_scoped_variables_to_scoped_data()
         self.add_input_data_to_scoped_data(self.input_data)
 
-    def enter(self, scoped_variables_dict, backward_execution=False):
-        """Called on entering the container state
-
-        Here initializations of scoped variables and modules that are supposed to be used by the children take place.
-        This method calls the custom entry function provided by a python script.
-
-        :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
-        """
-        self.state_execution_status = StateExecutionState.ENTER
-        logger.debug("Calling enter() script of container state with name %s (backward: %s)",
-                     self.name, backward_execution)
-        self.script.load_and_build_module()
-        self.script.enter(self, scoped_variables_dict, backward_execution)
-
-    def exit(self, scoped_variables_dict, backward_execution=False):
-        """Called on exiting the container state
-
-        Clean up code for the state and its variables is executed here. This method calls the custom exit function
-        provided by a python script.
-        :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
-        """
-        self.state_execution_status = StateExecutionState.EXIT
-        logger.debug("Calling exit() script of container state with name %s (backward: %s)",
-                     self.name, backward_execution)
-        self.script.load_and_build_module()
-        self.script.exit(self, scoped_variables_dict, backward_execution)
-
     def handle_no_transition(self, state):
         """
         This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
@@ -1023,21 +996,9 @@ class ContainerState(State):
                             self.output_data[output_name] = \
                                 copy.deepcopy(self.scoped_data[scoped_data_key].value)
                         else:
-                            logger.error("Output data with name %s was not found in the scoped data. "
-                                         "This normally means a statemachine design error", output_name)
-
-    def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
-        """ Copy the data of the enter/exit scripts to the scoped data
-
-        :param output_dict: the output dictionary of the scripts
-        :return:
-        """
-        for output_name, output_data in output_dict.iteritems():
-            for key_sdata, sdata in self.scoped_data.iteritems():
-                if sdata.data_port_type is DataPortType.SCOPED and output_name == sdata.name:
-                    scoped_variable_key = self.get_scoped_variable_from_name(output_name)
-                    tmp = ScopedData(output_name, output_data, type(output_data).__name__, self.state_id, DataPortType.SCOPED)
-                    self.scoped_data[str(scoped_variable_key)+self.state_id] = tmp
+                            if not self.backward_execution:
+                                logger.error("Output data with name %s was not found in the scoped data. "
+                                             "This normally means a statemachine design error", output_name)
 
     # yaml part
     def get_container_state_yaml_dict(data):

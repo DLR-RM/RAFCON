@@ -65,20 +65,16 @@ def trigger_gui_signals(*args):
         glib.idle_add(menubar_ctrl.on_backward_step_activate, None, None)
         time.sleep(sleep_time)
 
-    for i in range(number_of_steps):
-        glib.idle_add(menubar_ctrl.on_step_activate, None, None)
-        time.sleep(sleep_time)
-
     sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
     time.sleep(sleep_time)
 
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
-            assert sd.value == 97
+            assert sd.value == 100
         elif sd.name == "wine_number":
-            assert sd.value == 37
+            assert sd.value == 40
         elif sd.name == "whiskey_number":
-            assert sd.value == 17
+            assert sd.value == 20
 
     glib.idle_add(menubar_ctrl.on_stop_activate, None)
     glib.idle_add(menubar_ctrl.on_quit_activate, None)

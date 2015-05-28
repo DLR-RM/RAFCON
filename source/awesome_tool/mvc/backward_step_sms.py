@@ -50,14 +50,14 @@ def run_turtle_demo():
     # set base path of global storage
     awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/basic_turtle_demo_sm"
 
-    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/error_propagation_test")
+    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+        global_storage.load_statemachine_from_yaml("../../test_scripts/error_propagation_test")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
 
-    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_preemption_test")
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_preemption_test")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_hierarchy_test")
@@ -65,7 +65,6 @@ def run_turtle_demo():
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_library_test")
 
-    awesome_tool.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView(logging_view)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -74,8 +73,7 @@ def run_turtle_demo():
     # load the meta data for the state machine
     sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
-                                                  editor_type="LogicDataGrouped")
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model)
 
     gtk.main()
     logger.debug("Gtk main loop exited!")

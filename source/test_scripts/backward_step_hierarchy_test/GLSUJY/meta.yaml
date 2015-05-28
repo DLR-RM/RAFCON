@@ -13,9 +13,10 @@ data_flows:
         to_state: NDIVLD}
     38: !DataFlow {data_flow_id: 38, from_key: 29, from_state: GLSUJY, to_key: 37,
         to_state: PXTKIH}
+description: null
 filename: script.py
 input_data_ports:
-    1: !DataPort {data_port_id: 1, data_type: int, default_value: 0, name: bottles_input}
+    1: !DataPort {data_port_id: 1, data_type: int, default_value: 99, name: bottles_input}
 name: backward_test
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}
@@ -25,7 +26,7 @@ output_data_ports:
     2: !DataPort {data_port_id: 2, data_type: int, default_value: 0, name: bottles_output}
 path: ../../test_scripts/backward_step_hierarchy_test/GLSUJY
 scoped_variables:
-    29: !ScopedVariable {data_type: int, default_value: 99, name: bottles, scoped_variable_id: 29}
+    29: !ScopedVariable {data_type: int, default_value: 0, name: bottles, scoped_variable_id: 29}
 state_id: GLSUJY
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: PXTKIH,

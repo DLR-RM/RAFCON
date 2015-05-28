@@ -23,7 +23,7 @@ def create_statemachine():
     state2.add_transition(state1.state_id, 1, state1.state_id, None)
     input_state2 = state2.add_input_data_port("input_data_port1", "float", 10.0)
     output_state2 = state2.add_output_data_port("output_data_port1", "float")
-    scoped_variable_state2 = state2.add_scoped_variable("scoped_variable1", "float", 5.0)
+    scoped_variable_state2 = state2.add_scoped_variable("scoped_variable1", "float", 12.0)
 
     state2.add_data_flow(state2.state_id,
                          state2.get_scoped_variable_from_name("scoped_variable1"),
