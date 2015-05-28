@@ -13,13 +13,15 @@ from gaphas.painter import CairoBoundingBoxContext
 
 from gaphas.util import text_align, text_set_font, text_extents
 
-from awesome_tool.mvc.views.gap.constraint import EqualDistributionConstraint, KeepRectangleWithinConstraint, EqualDistributionDoublePortConstraint
+from awesome_tool.mvc.views.gap.constraint import EqualDistributionConstraint, KeepRectangleWithinConstraint,\
+    EqualDistributionDoublePortConstraint, RectConstraint
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, OutcomeDoublePortView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.models.state import StateModel
 
 from awesome_tool.utils import constants
+
 
 class StateView(Element):
     """ A State has 4 handles (for a start):
@@ -47,7 +49,7 @@ class StateView(Element):
         self.constraint(line=(self._income.pos, (self._handles[NW].pos, self._left_center)), align=0.5)
 
         self._outcomes = []
-        self._outcomes_distribution = EqualDistributionConstraint((self._handles[NE].pos, self._right_center), self.width)
+        # self._outcomes_distribution = EqualDistributionConstraint((self._handles[NE].pos, self._right_center), self.width)
 
         self._double_port_outcomes = []
         self._outcomes_distribution_double = EqualDistributionDoublePortConstraint((self._handles[NE].pos, self._right_center), self)
@@ -65,7 +67,7 @@ class StateView(Element):
         parent = canvas.get_parent(self)
 
         solver = canvas.solver
-        solver.add_constraint(self._outcomes_distribution)
+        # solver.add_constraint(self._outcomes_distribution)
         solver.add_constraint(self._inputs_distribution)
         solver.add_constraint(self._outputs_distribution)
         solver.add_constraint(self._outcomes_distribution_double)
@@ -215,8 +217,19 @@ class StateView(Element):
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
+
+        outcome_x_val = outcome_v.pos.x.value
+        outcome_y_val = outcome_v.pos.y.value
+
+        rect_nw = Position((0, 0))
+        rect_se = Position((outcome_x_val + self.width, outcome_y_val + self.height))
+
+        outcome_v.handle.pos = self.width, self.height / 2.
+
+        rect_constraint = RectConstraint((rect_nw, rect_se), outcome_v.pos)
+        self.add_constraint(rect_constraint)
         # self._outcomes_distribution.add_point(outcome_v.pos, outcome_v.sort)
-        self._outcomes_distribution.add_outcome_points(outcome_v.handle_pos, outcome_v.port_pos, outcome_v.sort)
+        # self._outcomes_distribution.add_outcome_points(outcome_v.handle_pos, outcome_v.port_pos, outcome_v.sort)
 
     def add_double_port_outcome(self, outcome_m):
         double_outcome_v = OutcomeDoublePortView(outcome_m)
@@ -261,3 +274,7 @@ class StateView(Element):
         solver.add_constraint(constraint)
 
         return scoped_variable_v
+
+    def add_constraint(self, constraint):
+        solver = self.canvas.solver
+        solver.add_constraint(constraint)

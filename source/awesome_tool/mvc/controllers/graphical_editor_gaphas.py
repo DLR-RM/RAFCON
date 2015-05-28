@@ -150,8 +150,8 @@ class GraphicalEditorController(ExtendedController):
         state_v.matrix.translate(*rel_pos)
 
         for outcome_m in state_m.outcomes:
-            # state_v.add_outcome(outcome_m)
-            state_v.add_double_port_outcome(outcome_m)
+            state_v.add_outcome(outcome_m)
+            # state_v.add_double_port_outcome(outcome_m)
 
         for input_port_m in state_m.input_data_ports:
             state_v.add_input_port(input_port_m)
@@ -253,8 +253,8 @@ class GraphicalEditorController(ExtendedController):
                     from_state_m = parent_state_m.states[from_state_id]
                     from_state_v = from_state_m.temp['gui']['editor']['view']
                     from_outcome_id = transition_m.transition.from_outcome
-                    # from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
-                    from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v, transition_v.from_handle(), False)
+                    from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
+                    # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v, transition_v.from_handle(), False)
 
                 to_state_id = transition_m.transition.to_state
                 to_state_m = None if to_state_id is None else parent_state_m.states[to_state_id]
@@ -262,8 +262,8 @@ class GraphicalEditorController(ExtendedController):
                 if to_state_m is None:  # Transition goes back to parent
                     # Set the to coordinates to the outcome coordinates received earlier
                     to_outcome_id = transition_m.transition.to_outcome
-                    # parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
-                    parent_state_v.connect_to_double_port_outcome(to_outcome_id, transition_v, transition_v.to_handle(), True)
+                    parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
+                    # parent_state_v.connect_to_double_port_outcome(to_outcome_id, transition_v, transition_v.to_handle(), True)
                 else:
                     # Set the to coordinates to the center of the next state
                     to_state_v = to_state_m.temp['gui']['editor']['view']

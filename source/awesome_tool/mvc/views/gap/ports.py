@@ -18,7 +18,7 @@ import copy
 class PortView(object):
 
     def __init__(self):
-        self.handle = Handle(connectable=True, movable=False)
+        self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
 
     @property
@@ -208,9 +208,6 @@ class OutcomeView(PortView):
         assert isinstance(outcome_m, OutcomeModel)
         self._outcome_m = ref(outcome_m)
         self.sort = outcome_m.outcome.outcome_id
-
-        port_pos = copy.deepcopy(self.handle.pos)
-        self.port.point = port_pos
 
     @property
     def outcome_m(self):

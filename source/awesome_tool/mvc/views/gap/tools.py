@@ -3,6 +3,8 @@ from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelecti
 from gaphas.item import NW
 from simplegeneric import generic
 
+from awesome_tool.mvc.views.gap.connection import ConnectionView
+
 import gtk
 
 from awesome_tool.mvc.views.gap.state import StateView
@@ -208,10 +210,12 @@ class MyHandleTool(Tool):
             if not self.motion_handle:
                 self.motion_handle = MyHandleInMotion(item, handle, self.view)
                 self.motion_handle.start_move(pos)
-            if item.from_handle() is handle:
+            if isinstance(item, ConnectionView) and item.from_handle() is handle:
                 self.motion_handle.move(pos, 5.0 / ((item.hierarchy_level + 1) * 2))
-            else:
+            elif isinstance(item, ConnectionView) and item.to_handle() is handle:
                 self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2))
+            else:
+                self.motion_handle.move(pos, 5.0)
 
             return True
 

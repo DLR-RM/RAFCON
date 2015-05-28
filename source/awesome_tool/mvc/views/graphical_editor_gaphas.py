@@ -26,7 +26,6 @@ class GraphicalEditorView(View):
         self.editor = GtkView()
         self.editor.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#272c36'))
         self.editor.tool = tool.ToolChain(self.editor).\
-            append(MyHoverTool()).\
             append(tool.HoverTool()).\
             append(MyConnectHandleTool()).\
             append(tool.PanTool()).\
