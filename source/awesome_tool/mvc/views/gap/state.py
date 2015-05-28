@@ -45,7 +45,7 @@ class StateView(Element):
         self.constraint(line=(self._left_center, (self._handles[NW].pos, self._handles[SW].pos)), align=0.5)
         self.constraint(line=(self._right_center, (self._handles[NE].pos, self._handles[SE].pos)), align=0.5)
 
-        self._income = IncomeView()
+        self._income = IncomeView(self)
         self.constraint(line=(self._income.pos, (self._handles[NW].pos, self._left_center)), align=0.5)
 
         self._outcomes = []
@@ -213,7 +213,7 @@ class StateView(Element):
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.state_m.state.name))
 
     def add_outcome(self, outcome_m):
-        outcome_v = OutcomeView(outcome_m)
+        outcome_v = OutcomeView(outcome_m, self)
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
@@ -222,9 +222,9 @@ class StateView(Element):
         outcome_y_val = outcome_v.pos.y.value
 
         rect_nw = Position((0, 0))
-        rect_se = Position((outcome_x_val + self.width, outcome_y_val + self.height))
+        rect_se = Position((self.width, self.height))
 
-        outcome_v.handle.pos = self.width, self.height / 2.
+        outcome_v.handle.pos = self.width, self.height * .05 + (len(self._outcomes) - 1) * 2 * outcome_v.outcome_side_size
 
         rect_constraint = RectConstraint((rect_nw, rect_se), outcome_v.pos)
         self.add_constraint(rect_constraint)
@@ -245,14 +245,14 @@ class StateView(Element):
                                                                   double_outcome_v.sort)
 
     def add_input_port(self, port_m):
-        input_port_v = InputPortView(port_m)
+        input_port_v = InputPortView(port_m, self)
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
         self._inputs_distribution.add_point(input_port_v.pos, input_port_v.sort)
 
     def add_output_port(self, port_m):
-        output_port_v = OutputPortView(port_m)
+        output_port_v = OutputPortView(port_m, self)
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)

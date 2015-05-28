@@ -17,9 +17,13 @@ import copy
 
 class PortView(object):
 
-    def __init__(self):
+    def __init__(self, parent=None):
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
+        if parent:
+            self.outcome_side_size = min(parent.width, parent.height) / 20.
+        else:
+            self.outcome_side_size = 5.
 
     @property
     def pos(self):
@@ -38,8 +42,7 @@ class PortView(object):
 
     def draw_port(self, context, state, fill_color):
         c = context.cairo
-        min_state_side = min(state.width, state.height)
-        outcome_side = min_state_side / 20.
+        outcome_side = self.outcome_side_size
         c.set_line_width(outcome_side * 0.03)
 
         # Outer part
@@ -161,8 +164,8 @@ class DoublePortView(object):
 
 class IncomeView(PortView):
 
-    def __init__(self):
-        super(IncomeView, self).__init__()
+    def __init__(self, parent):
+        super(IncomeView, self).__init__(parent)
 
     def draw(self, context, state):
         self.draw_port(context, state, "#ffffff")
@@ -202,8 +205,8 @@ class OutcomeDoublePortView(DoublePortView):
 
 class OutcomeView(PortView):
 
-    def __init__(self, outcome_m):
-        super(OutcomeView, self).__init__()
+    def __init__(self, outcome_m, parent):
+        super(OutcomeView, self).__init__(parent)
 
         assert isinstance(outcome_m, OutcomeModel)
         self._outcome_m = ref(outcome_m)
@@ -230,8 +233,8 @@ class OutcomeView(PortView):
 
 class DataPortView(PortView):
 
-    def __init__(self, port_m):
-        super(DataPortView, self).__init__()
+    def __init__(self, port_m, parent):
+        super(DataPortView, self).__init__(parent)
 
         assert isinstance(port_m, DataPortModel)
         self._port_m = ref(port_m)
