@@ -3,6 +3,7 @@ logger = log.get_logger(__name__)
 
 from gaphas.geometry import distance_point_point
 from gaphas.constraint import Constraint
+from awesome_tool.mvc.views.gap.ports import SnappedSide
 
 from copy import deepcopy, copy
 
@@ -293,14 +294,18 @@ class TopBottomConstraint(Constraint):
             right_port_pos.y = common_y_pos
 
 
-class RectConstraint(Constraint):
+class PortRectConstraint(Constraint):
 
-    def __init__(self, rect, point):
-        super(RectConstraint, self).__init__(rect[0][0], rect[0][1], rect[1][0], rect[1][1], point[0], point[1])
+    def __init__(self, rect, point, port):
+        super(PortRectConstraint, self).__init__(rect[0][0], rect[0][1], rect[1][0], rect[1][1], point[0], point[1])
 
         self._rect = rect
         self._point = point
         self._initial_pos = deepcopy(point)
+        from gaphas.connector import Position
+        self._initial_nw_pos = Position((rect[0][0].value, rect[0][1].value))
+        self._initial_se_pos = Position((rect[1][0].value, rect[1][1].value))
+        self._port = port
 
     def solve_for(self, var=None):
         self._solve()
@@ -319,15 +324,21 @@ class RectConstraint(Constraint):
         elif self._initial_pos.x == nw_x:
             _update(px, nw_x)
             self.set_pos(py, se_y, nw_y)
+            self._port.side = SnappedSide.LEFT
         elif self._initial_pos.y == nw_y:
             _update(py, nw_y)
             self.set_pos(px, se_x, nw_x)
+            self._port.side = SnappedSide.TOP
         elif self._initial_pos.x == se_x:
             _update(px, se_x)
             self.set_pos(py, se_y, nw_y)
+            self._port.side = SnappedSide.RIGHT
         elif self._initial_pos.y == se_y:
             _update(py, se_y)
             self.set_pos(px, se_x, nw_x)
+            self._port.side = SnappedSide.BOTTOM
+        else:
+            self.set_nearest_border(px, py)
 
         _update(self._initial_pos.x, deepcopy(px.value))
         _update(self._initial_pos.y, deepcopy(py.value))
@@ -338,3 +349,16 @@ class RectConstraint(Constraint):
             _update(p, se_pos)
         elif p < nw_pos:
             _update(p, nw_pos)
+
+    def set_nearest_border(self, px, py):
+        nw_x, nw_y = self._rect[0]
+        se_x, se_y = self._rect[1]
+
+        if self._port.side == SnappedSide.RIGHT:
+            _update(px, se_x)
+        elif self._port.side == SnappedSide.BOTTOM:
+            _update(py, se_y)
+        elif self._port.side == SnappedSide.LEFT:
+            _update(px, nw_x)
+        elif self._port.side == SnappedSide.TOP:
+            _update(py, nw_y)

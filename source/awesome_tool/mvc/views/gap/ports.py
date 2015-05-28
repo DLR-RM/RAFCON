@@ -14,12 +14,17 @@ from awesome_tool.utils import constants
 
 import copy
 
+from enum import Enum
+
+SnappedSide = Enum('SIDE', 'LEFT TOP RIGHT BOTTOM')
+
 
 class PortView(object):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, side=SnappedSide.RIGHT):
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
+        self.side = side
         if parent:
             self.outcome_side_size = min(parent.width, parent.height) / 20.
         else:

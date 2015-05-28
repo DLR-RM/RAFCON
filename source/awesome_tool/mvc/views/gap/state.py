@@ -14,7 +14,7 @@ from gaphas.painter import CairoBoundingBoxContext
 from gaphas.util import text_align, text_set_font, text_extents
 
 from awesome_tool.mvc.views.gap.constraint import EqualDistributionConstraint, KeepRectangleWithinConstraint,\
-    EqualDistributionDoublePortConstraint, RectConstraint
+    EqualDistributionDoublePortConstraint, PortRectConstraint
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, OutcomeDoublePortView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
@@ -226,7 +226,7 @@ class StateView(Element):
 
         outcome_v.handle.pos = self.width, self.height * .05 + (len(self._outcomes) - 1) * 2 * outcome_v.outcome_side_size
 
-        rect_constraint = RectConstraint((rect_nw, rect_se), outcome_v.pos)
+        rect_constraint = PortRectConstraint((self.handles()[NW].pos, self.handles()[SE].pos), outcome_v.pos, outcome_v)
         self.add_constraint(rect_constraint)
         # self._outcomes_distribution.add_point(outcome_v.pos, outcome_v.sort)
         # self._outcomes_distribution.add_outcome_points(outcome_v.handle_pos, outcome_v.port_pos, outcome_v.sort)
