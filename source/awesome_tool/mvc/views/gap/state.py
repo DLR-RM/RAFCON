@@ -46,82 +46,78 @@ class StateView(Element):
         self.constraint(line=(self._right_center, (self._handles[NE].pos, self._handles[SE].pos)), align=0.5)
 
         self._income = None
-
         self._outcomes = []
-
         self._inputs = []
-
         self._outputs = []
-
         self._scoped_variables = []
+
+        self._name_view = NameView(state_m.state.name, (self.width * 0.9, self.height * 0.2))
 
     def setup_canvas(self):
         self._income = self.add_income()
 
         canvas = self.canvas
         parent = canvas.get_parent(self)
+        canvas.add(self._name_view, self)
 
-        solver = canvas.solver
+        self.add_keep_rect_within_constraint(canvas, self, self._name_view)
 
         if parent is not None:
             assert isinstance(parent, StateView)
-            self_nw_abs = canvas.project(self, self.handles()[NW].pos)
-            self_se_abs = canvas.project(self, self.handles()[SE].pos)
-            parent_nw_abs = canvas.project(parent, parent.handles()[NW].pos)
-            parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
-            constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, self_nw_abs, self_se_abs)
-            solver.add_constraint(constraint)
+            self.add_keep_rect_within_constraint(canvas, parent, self)
 
         # Registers local constraints
         super(StateView, self).setup_canvas()
+
+    def add_keep_rect_within_constraint(self, canvas, parent, child):
+        solver = canvas.solver
+        parent_nw_pos, parent_se_pos = self.get_state_drawing_area(parent)
+
+        child_nw_abs = canvas.project(child, child.handles()[NW].pos)
+        child_se_abs = canvas.project(child, child.handles()[SE].pos)
+        parent_nw_abs = canvas.project(parent, parent_nw_pos)
+        parent_se_abs = canvas.project(parent, parent_se_pos)
+        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, child_nw_abs, child_se_abs)
+        solver.add_constraint(constraint)
 
     @property
     def state_m(self):
         return self._state_m()
 
+    @staticmethod
+    def get_state_drawing_area(state):
+        assert isinstance(state, StateView)
+        port_side_size = min(state.width, state.height) / 20.
+
+        state_nw_pos_x = state.handles()[NW].pos.x + port_side_size
+        state_nw_pos_y = state.handles()[NW].pos.y + port_side_size
+        state_nw_pos = Position((state_nw_pos_x, state_nw_pos_y))
+        state_se_pos_x = state.handles()[SE].pos.x - port_side_size
+        state_se_pos_y = state.handles()[SE].pos.y - port_side_size
+        state_se_pos = Position((state_se_pos_x, state_se_pos_y))
+
+        return state_nw_pos, state_se_pos
+
     def draw(self, context):
         c = context.cairo
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
-
-        c.set_line_width(0.1)
+        c.set_line_width(0.1 / self.hierarchy_level)
         nw = self._handles[NW].pos
         c.rectangle(nw.x, nw.y, self.width, self.height)
         # if context.hovered:
         #     c.set_source_rgba(.8, .8, 1, .8)
         # else:
-        c.set_source_color(Color('#383D47'))
+        c.set_source_color(Color('#50555F'))
         c.fill_preserve()
         c.set_source_color(Color('#050505'))
         c.stroke()
 
-        name = self.state_m.state.name
-
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        layout = pcc.create_layout()
-        layout.set_text(name)
-
-        font_name = constants.FONT_NAMES[0]
-        font_size = 20
-
-        def set_font_description():
-            font = FontDescription(font_name + " " + str(font_size))
-            layout.set_font_description(font)
-
-        set_font_description()
-        while layout.get_size()[0] / float(SCALE) > self.width - self.width * 0.1:
-            font_size *= 0.9
-            set_font_description()
-
-        cc.set_source_color(Color('#ededee'))
-        pcc.update_layout(layout)
-        pcc.show_layout(layout)
+        inner_nw, inner_se = self.get_state_drawing_area(self)
+        c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
+        c.set_source_color(Color('#383D47'))
+        c.fill_preserve()
+        c.set_source_color(Color('#050505'))
+        c.stroke()
 
         self._income.draw(context, self)
 
@@ -244,3 +240,53 @@ class StateView(Element):
         constraint = PortRectConstraint((self.handles()[NW].pos, self.handles()[SE].pos), port.pos, port)
         solver = self.canvas.solver
         solver.add_constraint(constraint)
+
+
+class NameView(Element):
+
+    def __init__(self, name, size):
+        super(NameView, self).__init__(size[0], size[1])
+
+        self._name = name
+
+        self.min_width = 0.0001
+        self.min_height = 0.0001
+        self.width = size[0]
+        self.height = size[1]
+
+    @property
+    def name(self):
+        return self._name
+
+    def draw(self, context):
+        c = context.cairo
+
+        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
+        if isinstance(c, CairoContext):
+            cc = c
+        else:
+            cc = c._cairo
+
+        # c.move_to(*self.position)
+
+        pcc = CairoContext(cc)
+        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        layout = pcc.create_layout()
+        layout.set_text(self.name)
+
+        font_name = constants.FONT_NAMES[0]
+        font_size = 20
+
+        def set_font_description():
+            font = FontDescription(font_name + " " + str(font_size))
+            layout.set_font_description(font)
+
+        set_font_description()
+        while layout.get_size()[0] / float(SCALE) > self.width:
+            font_size *= 0.9
+            set_font_description()
+
+        cc.set_source_color(Color('#ededee'))
+        pcc.update_layout(layout)
+        pcc.show_layout(layout)
