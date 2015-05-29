@@ -5,7 +5,7 @@ from gaphas.geometry import distance_point_point
 from gaphas.constraint import Constraint
 from awesome_tool.mvc.views.gap.ports import SnappedSide
 
-from copy import deepcopy, copy
+from copy import deepcopy
 
 EPSILON = 1e-6
 

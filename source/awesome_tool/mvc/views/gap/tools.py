@@ -1,6 +1,5 @@
 from gaphas.tool import Tool
 from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ConnectionSink
-from gaphas.item import NW
 from simplegeneric import generic
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView
@@ -8,27 +7,6 @@ from awesome_tool.mvc.views.gap.connection import ConnectionView
 import gtk
 
 from awesome_tool.mvc.views.gap.state import StateView
-
-
-class MyHoverTool(Tool):
-
-    def __init__(self, view=None):
-        super(MyHoverTool, self).__init__(view)
-
-    def on_motion_notify(self, event):
-        # if self.view.hovered_item:
-        #     canvas = self.view.hovered_item.canvas
-        #     parent = canvas.get_parent(self.view.hovered_item)
-        #     if parent is not None:
-        #         assert isinstance(parent, StateView)
-        #         self_nw_abs = canvas.project(self.view.hovered_item, self.view.hovered_item.handles()[NW].pos)
-        #         print event.x - self.view.hovered_item.handles()[NW].pos.x
-        #         print event.y - self.view.hovered_item.handles()[NW].pos.y
-        #     print self.view.hovered_item.handles()[NW].pos
-        # print event.x
-        # print event.y
-        pass
-
 
 # ------------------------------------------------------------------
 # -----------------------------SNAPPING-----------------------------

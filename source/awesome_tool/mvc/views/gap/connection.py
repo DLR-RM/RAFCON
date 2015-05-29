@@ -1,7 +1,7 @@
 from weakref import ref
 
 from gaphas.segment import Segment, HandleSelection, SegmentHandleSelection
-from gaphas.item import Line, NW, NE, SW, SE
+from gaphas.item import Line, NW, SE
 
 from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint
 
