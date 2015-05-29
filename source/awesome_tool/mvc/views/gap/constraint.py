@@ -259,13 +259,7 @@ class PortRectConstraint(Constraint):
 
     def _solve(self):
         px, py = self._point
-        nw_x, nw_y = self._rect[0]
-        se_x, se_y = self._rect[1]
-
-        nw_x += self._distance_to_border
-        nw_y += self._distance_to_border
-        se_x -= self._distance_to_border
-        se_y -= self._distance_to_border
+        nw_x, nw_y, se_x, se_y = self.get_adjusted_border_positions()
 
         if ((self._initial_pos.x == nw_x and self._initial_pos.y == nw_y) or
                 (self._initial_pos.x == se_x and self._initial_pos.y == nw_y) or
@@ -302,9 +296,19 @@ class PortRectConstraint(Constraint):
         elif p < nw_pos:
             _update(p, nw_pos)
 
-    def set_nearest_border(self, px, py):
+    def get_adjusted_border_positions(self):
         nw_x, nw_y = self._rect[0]
         se_x, se_y = self._rect[1]
+
+        nw_x += self._distance_to_border
+        nw_y += self._distance_to_border
+        se_x -= self._distance_to_border
+        se_y -= self._distance_to_border
+
+        return nw_x, nw_y, se_x, se_y
+
+    def set_nearest_border(self, px, py):
+        nw_x, nw_y, se_x, se_y = self.get_adjusted_border_positions()
 
         if self._port.side == SnappedSide.RIGHT:
             _update(px, se_x)
