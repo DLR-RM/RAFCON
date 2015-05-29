@@ -21,10 +21,10 @@ class PortView(object):
         self.port = PointPort(self.handle.pos)
         self.side = side
         self.connected = False
-        if parent:
-            self.port_side_size = min(parent.width, parent.height) / 20.
-        else:
-            self.port_side_size = 5.
+        self._parent = parent
+
+        self.port_side_size = 0.
+        self.update_port_side_size()
 
     @property
     def pos(self):
@@ -42,6 +42,7 @@ class PortView(object):
         raise NotImplementedError
 
     def draw_port(self, context, state, fill_color):
+        self.update_port_side_size()
         c = context.cairo
         outcome_side = self.port_side_size
         c.set_line_width(outcome_side * 0.03)
@@ -62,6 +63,12 @@ class PortView(object):
         c.fill_preserve()
         c.set_source_color(Color('#000'))
         c.stroke()
+
+    def update_port_side_size(self):
+        if self._parent:
+            self.port_side_size = min(self._parent.width, self._parent.height) / 20.
+        else:
+            self.port_side_size = 5.
 
 
 class IncomeView(PortView):

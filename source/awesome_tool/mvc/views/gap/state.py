@@ -51,7 +51,8 @@ class StateView(Element):
         self._outputs = []
         self._scoped_variables = []
 
-        self._name_view = NameView(state_m.state.name, (self.width * 0.9, self.height * 0.2))
+        name_width = self.width - min(self.width, self.height) / 10.
+        self._name_view = NameView(state_m.state.name, (name_width, self.height * 0.2))
 
     def setup_canvas(self):
         self._income = self.add_income()

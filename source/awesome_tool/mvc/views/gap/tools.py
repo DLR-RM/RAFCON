@@ -77,7 +77,7 @@ class MyItemHandleInMotion(object):
         if not self._start_port:
             self._start_port = port
 
-        if isinstance(connectable, StateView) and port in self.is_port_connected(connectable):
+        if isinstance(connectable, StateView) and port in self.get_connected_ports_list(connectable):
             return None
 
         # check if item and found item can be connected on closest port
@@ -96,7 +96,7 @@ class MyItemHandleInMotion(object):
                 return sink
         return None
 
-    def is_port_connected(self, state):
+    def get_connected_ports_list(self, state):
         already_connected_ports = []
         ports_list = [[state.income, ], state.outcomes, state.inputs, state.outputs]
         for ports in ports_list:
