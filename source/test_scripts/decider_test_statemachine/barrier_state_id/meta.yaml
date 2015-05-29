@@ -1,0 +1,41 @@
+!BarrierConcurrencyState
+data_flows:
+    32: !DataFlow {data_flow_id: 32, from_key: 30, from_state: barrier_state_id, to_key: 26,
+        to_state: id_of_state_1}
+    33: !DataFlow {data_flow_id: 33, from_key: 31, from_state: barrier_state_id, to_key: 28,
+        to_state: id_of_state_2}
+description: null
+filename: script.py
+input_data_ports:
+    30: !DataPort {data_port_id: 30, data_type: float, default_value: 0.1, name: input_data_port1}
+    31: !DataPort {data_port_id: 31, data_type: float, default_value: 0.1, name: input_data_port2}
+name: FirstConcurrencyState
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+    3: !Outcome {name: success_outcome, outcome_id: 3}
+    4: !Outcome {name: error_outcome, outcome_id: 4}
+output_data_ports:
+    34: !DataPort {data_port_id: 34, data_type: str, default_value: default_output_value,
+        name: output_data_port1}
+path: barrier_state_id
+scoped_variables: {}
+state_id: barrier_state_id
+transitions:
+    13: !Transition {from_outcome: 0, from_state: id_of_state_1, to_outcome: null,
+        to_state: unique_decider_sate_id, transition_id: 13}
+    14: !Transition {from_outcome: 3, from_state: id_of_state_1, to_outcome: null,
+        to_state: unique_decider_sate_id, transition_id: 14}
+    15: !Transition {from_outcome: 4, from_state: id_of_state_1, to_outcome: null,
+        to_state: unique_decider_sate_id, transition_id: 15}
+    16: !Transition {from_outcome: 0, from_state: id_of_state_2, to_outcome: null,
+        to_state: unique_decider_sate_id, transition_id: 16}
+    17: !Transition {from_outcome: 3, from_state: id_of_state_2, to_outcome: null,
+        to_state: unique_decider_sate_id, transition_id: 17}
+    18: !Transition {from_outcome: 4, from_state: id_of_state_2, to_outcome: null,
+        to_state: unique_decider_sate_id, transition_id: 18}
+    19: !Transition {from_outcome: 3, from_state: unique_decider_sate_id, to_outcome: 3,
+        to_state: null, transition_id: 19}
+    20: !Transition {from_outcome: 4, from_state: unique_decider_sate_id, to_outcome: 4,
+        to_state: null, transition_id: 20}

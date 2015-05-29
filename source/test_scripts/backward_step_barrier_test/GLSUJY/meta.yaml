@@ -18,6 +18,7 @@ data_flows:
         to_state: GLSUJY}
     40: !DataFlow {data_flow_id: 40, from_key: 3, from_state: PBVWXD, to_key: 29,
         to_state: GLSUJY}
+description: null
 filename: script.py
 input_data_ports: {}
 name: backward_test

@@ -8,6 +8,7 @@ data_flows:
     10: !DataFlow {data_flow_id: 10, from_key: 3, from_state: WLYRHK, to_key: 2, to_state: DIDVOV}
     13: !DataFlow {data_flow_id: 13, from_key: 3, from_state: DIDVOV, to_key: 12,
         to_state: YVNWJU}
+description: null
 filename: script.py
 input_data_ports:
     1: !DataPort {data_port_id: 1, data_type: int, default_value: 10, name: number_in}

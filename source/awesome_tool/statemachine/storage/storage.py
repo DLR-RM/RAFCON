@@ -19,6 +19,8 @@ from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.utils.storage_utils import StorageUtils
+from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+
 
 class StateMachineStorage(Observable):
 
@@ -225,7 +227,7 @@ class StateMachineStorage(Observable):
         state.script.path = state_path
         # connect the missing function_handlers for setting the outcome names
         state.connect_all_outcome_function_handles()
-        parent_state.add_state(state)
+        parent_state.add_state(state, storage_load=True)
         # the library state sets his script file to the script file of the root state of its library, thus it should
         # not be overwritten in this case
         from awesome_tool.statemachine.states.library_state import LibraryState

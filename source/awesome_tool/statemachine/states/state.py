@@ -628,7 +628,7 @@ class State(Observable, yaml.YAMLObject, object):
                 if not isinstance(value, Outcome):
                     raise TypeError("element of outcomes must be of type Outcome")
             self._outcomes = outcomes
-            #aborted and preempted must always exist
+            # aborted and preempted must always exist
             if -1 not in outcomes:
                 self.add_outcome("aborted", -1)
             if -2 not in outcomes:

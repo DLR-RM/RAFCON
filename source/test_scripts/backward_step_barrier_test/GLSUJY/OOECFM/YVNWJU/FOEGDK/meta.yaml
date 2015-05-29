@@ -1,4 +1,5 @@
 !ExecutionState
+description: null
 filename: script.py
 input_data_ports:
     1: !DataPort {data_port_id: 1, data_type: int, default_value: null, name: number}

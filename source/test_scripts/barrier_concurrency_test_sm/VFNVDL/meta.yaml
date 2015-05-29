@@ -1,0 +1,22 @@
+!HierarchyState
+data_flows: {}
+description: null
+filename: script.py
+input_data_ports: {}
+name: Barrier_Concurrency_SM
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+    1: !Outcome {name: failure, outcome_id: 1}
+output_data_ports: {}
+path: /home_local/brun_sb/develop/taskcontrol/source/test_scripts/barrier_concurrency_test_sm/VFNVDL
+scoped_variables: {}
+state_id: VFNVDL
+transitions:
+    1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: AMWCJX,
+        transition_id: 1}
+    2: !Transition {from_outcome: 1, from_state: AMWCJX, to_outcome: 1, to_state: null,
+        transition_id: 2}
+    5: !Transition {from_outcome: 0, from_state: AMWCJX, to_outcome: 0, to_state: null,
+        transition_id: 5}

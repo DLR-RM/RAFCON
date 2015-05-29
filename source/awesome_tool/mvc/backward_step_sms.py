@@ -1,4 +1,5 @@
 import logging
+
 import sys
 import os
 import gtk
@@ -50,11 +51,14 @@ def run_turtle_demo():
     # set base path of global storage
     awesome_tool.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/basic_turtle_demo_sm"
 
-    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/error_propagation_test")
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/error_propagation_test")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/decider_test_statemachine")
+
+    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+        global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_preemption_test")
