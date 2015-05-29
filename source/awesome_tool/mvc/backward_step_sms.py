@@ -57,8 +57,11 @@ def run_turtle_demo():
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/decider_test_statemachine")
 
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
+
     [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
+        global_storage.load_statemachine_from_yaml("../../test_scripts/barrier_concurrency_test_sm")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_preemption_test")

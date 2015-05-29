@@ -193,7 +193,7 @@ class State(Observable, yaml.YAMLObject, object):
         """
         result_dict = {}
         for key, data_port in state.output_data_ports.iteritems():
-            result_dict[data_port.name] = None
+            result_dict[data_port.name] = data_port.default_value
         return result_dict
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data port functions -------------------------------------
