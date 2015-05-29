@@ -144,7 +144,7 @@ class GraphicalEditorController(ExtendedController):
         #     else:
         #         active = 1
 
-        state_v = StateView(state_m, size)
+        state_v = StateView(state_m, size, hierarchy_level)
         self.canvas.add(state_v, parent)
         state_temp['view'] = state_v
         state_v.matrix.translate(*rel_pos)
