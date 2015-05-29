@@ -12,6 +12,7 @@ from awesome_tool.mvc.views.gap.state import StateView
 # -----------------------------SNAPPING-----------------------------
 # ------------------------------------------------------------------
 
+
 class MyItemHandleInMotion(object):
     """
     Move a handle (role is applied to the handle)

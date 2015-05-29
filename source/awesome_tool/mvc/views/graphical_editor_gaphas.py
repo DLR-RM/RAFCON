@@ -7,7 +7,7 @@ from gtkmvc import View
 
 from gaphas import GtkView
 from gaphas import tool
-from awesome_tool.mvc.views.gap.tools import MyHoverTool, MyConnectHandleTool
+from awesome_tool.mvc.views.gap.tools import MyConnectHandleTool
 
 
 class GraphicalEditorView(View):
