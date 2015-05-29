@@ -1,5 +1,5 @@
 from gaphas.tool import Tool
-from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ConnectionSink
+from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ConnectionSink, ItemConnectionSink
 from simplegeneric import generic
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView
@@ -25,6 +25,8 @@ class MyItemHandleInMotion(object):
         self.handle = handle
         self.view = view
         self.last_x, self.last_y = None, None
+        self._start_port = None
+        self._current_port = None
 
     def start_move(self, pos):
         self.last_x, self.last_y = pos
@@ -72,6 +74,12 @@ class MyItemHandleInMotion(object):
         connectable, port, glue_pos = \
                 view.get_port_at_point(pos, distance=distance, exclude=(item,))
 
+        if not self._start_port:
+            self._start_port = port
+
+        if isinstance(connectable, StateView) and port in self.is_port_connected(connectable):
+            return None
+
         # check if item and found item can be connected on closest port
         if port is not None:
             assert connectable is not None
@@ -84,8 +92,18 @@ class MyItemHandleInMotion(object):
                 # update position of item's handle
                 v2i = view.get_matrix_v2i(item).transform_point
                 handle.pos = v2i(*glue_pos)
+                self._current_port = port
                 return sink
         return None
+
+    def is_port_connected(self, state):
+        already_connected_ports = []
+        ports_list = [[state.income, ], state.outcomes, state.inputs, state.outputs]
+        for ports in ports_list:
+            for port in ports:
+                if port.connected and port.port is not self._start_port and port.port is not self._current_port:
+                    already_connected_ports.append(port.port)
+        return already_connected_ports
 
 
 MyHandleInMotion = generic(MyItemHandleInMotion)
@@ -104,6 +122,7 @@ class MyHandleTool(Tool):
         self.grabbed_handle = None
         self.grabbed_item = None
         self.motion_handle = None
+        self._last_active_port = None
 
     def grab_handle(self, item, handle):
         """
@@ -163,6 +182,8 @@ class MyHandleTool(Tool):
         # queue extra redraw to make sure the item is drawn properly
         grabbed_handle, grabbed_item = self.grabbed_handle, self.grabbed_item
 
+        self._last_active_port = None
+
         if self.motion_handle:
             self.motion_handle.stop_move()
             self.motion_handle = None
@@ -190,15 +211,44 @@ class MyHandleTool(Tool):
                 self.motion_handle = MyHandleInMotion(item, handle, self.view)
                 self.motion_handle.start_move(pos)
             if isinstance(item, ConnectionView) and item.from_handle() is handle:
-                self.motion_handle.move(pos, 5.0 / ((item.hierarchy_level + 1) * 2))
+                self.check_sink_item(self.motion_handle.move(pos, 5.0 / ((item.hierarchy_level + 1) * 2)))
             elif isinstance(item, ConnectionView) and item.to_handle() is handle:
-                self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2))
+                self.check_sink_item(self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2)))
             elif isinstance(item, StateView):
                 self.motion_handle.move(pos, 0.)
             else:
                 self.motion_handle.move(pos, 5.0)
 
             return True
+
+    def check_sink_item(self, item):
+        if isinstance(item, ItemConnectionSink):
+            state = item.item
+            if isinstance(state, StateView):
+                if self.set_matching_port(state, [state.income, ], item.port):
+                    return
+                elif self.set_matching_port(state, state.outcomes, item.port):
+                    return
+                elif self.set_matching_port(state, state.outputs, item.port):
+                    return
+                elif self.set_matching_port(state, state.inputs, item.port):
+                    return
+        self.disconnect_last_active_port()
+
+    def disconnect_last_active_port(self):
+        if self._last_active_port:
+            self._last_active_port.connected = False
+            self._last_active_port = None
+
+    def set_matching_port(self, state, port_list, matching_port):
+        for port in port_list:
+            if port.port is matching_port:
+                if self._last_active_port is not port:
+                    self.disconnect_last_active_port()
+                port.connected = True
+                self._last_active_port = port
+                return True
+        return False
 
 
 class MyConnectHandleTool(MyHandleTool):

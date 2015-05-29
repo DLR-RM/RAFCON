@@ -84,6 +84,22 @@ class StateView(Element):
     def state_m(self):
         return self._state_m()
 
+    @property
+    def income(self):
+        return self._income
+
+    @property
+    def outcomes(self):
+        return self._outcomes
+
+    @property
+    def outputs(self):
+        return self._outputs
+
+    @property
+    def inputs(self):
+        return self._inputs
+
     @staticmethod
     def get_state_drawing_area(state):
         assert isinstance(state, StateView)
@@ -131,18 +147,22 @@ class StateView(Element):
             output.draw(context, self)
 
     def connect_to_income(self, item, handle):
+        self._income.connected = True
         self._connect_to_port(self._income.port, item, handle)
 
     def connect_to_outcome(self, outcome_id, item, handle):
         outcome_v = self.outcome_port(outcome_id)
+        outcome_v.connected = True
         self._connect_to_port(outcome_v.port, item, handle)
 
     def connect_to_input_port(self, port_id, item, handle):
         port_v = self.input_port(port_id)
+        port_v.connected = True
         self._connect_to_port(port_v.port, item, handle)
 
     def connect_to_output_port(self, port_id, item, handle):
         port_v = self.output_port(port_id)
+        port_v.connected = True
         self._connect_to_port(port_v.port, item, handle)
 
     def connect_to_scoped_variable_input(self, scoped_variable_id, item, handle):

@@ -20,6 +20,7 @@ class PortView(object):
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
         self.side = side
+        self.connected = False
         if parent:
             self.port_side_size = min(parent.width, parent.height) / 20.
         else:
@@ -54,9 +55,12 @@ class PortView(object):
 
         # Inner part
         c.rectangle(self.pos.x - outcome_side * 0.85 / 2, self.pos.y - outcome_side * 0.85 / 2, outcome_side * 0.85, outcome_side * 0.85)
-        c.set_source_color(Color(fill_color))
+        if self.connected:
+            c.set_source_color(Color(fill_color))
+        else:
+            c.set_source_color(Color('#000'))
         c.fill_preserve()
-        c.set_source_color(Color('#000000'))
+        c.set_source_color(Color('#000'))
         c.stroke()
 
 
