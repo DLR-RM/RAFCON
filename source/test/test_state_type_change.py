@@ -24,7 +24,7 @@ from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-
+from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 def create_models(*args, **kargs):
 
@@ -355,21 +355,24 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     # check states
     if 'states' in check_list:
         for s_id, s in state.states.iteritems():
-            assert s_id in stored_state_elements['states']
+            if not s_id == UNIQUE_DECIDER_STATE_ID:
+                assert s_id in stored_state_elements['states']
         # - check if the right models are there and only those
         model_id_store = []
         for s_m_id, s_m in state_m.states.iteritems():
             if not hasattr(s_m, "state"):
                 print s_m
             assert s_m_id == s_m.state.state_id
-            assert s_m_id in stored_state_elements['states']
+            if not s_m_id == UNIQUE_DECIDER_STATE_ID:
+                assert s_m_id in stored_state_elements['states']
             assert s_m.state.state_id in stored_state_elements['states']
             model_id_store.append(s_m.state.state_id)
             # - check if meta data is still the same
             print stored_state_m_elements['states_meta'][s_m.state.state_id], s_m.meta
             assert stored_state_m_elements['states_meta'][s_m.state.state_id] == s_m.meta
         for s_id in stored_state_elements['states']:
-            assert s_id in model_id_store
+            if not s_id == UNIQUE_DECIDER_STATE_ID:
+                assert s_id in model_id_store
     else:
         assert not hasattr(state, 'states')
     # exit(0)

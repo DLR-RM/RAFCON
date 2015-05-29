@@ -10,7 +10,7 @@
 
 from gtkmvc import Observable
 from threading import Lock
-from id_generator import *
+from awesome_tool.statemachine.id_generator import *
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)

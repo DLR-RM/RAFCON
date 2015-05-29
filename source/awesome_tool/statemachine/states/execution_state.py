@@ -111,8 +111,7 @@ class ExecutionState(State, yaml.YAMLObject):
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return
 
-    @classmethod
-    def to_yaml(cls, dumper, data):
+    def get_execution_state_yaml_dict(data):
         dict_representation = {
             'name': data.name,
             'state_id': data.state_id,
@@ -123,9 +122,13 @@ class ExecutionState(State, yaml.YAMLObject):
             'path': data.script.path,
             'filename': data.script.filename
         }
+        return dict_representation
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = ExecutionState.get_execution_state_yaml_dict(data)
         node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
         return node
-
 
     @classmethod
     def from_yaml(cls, loader, node):

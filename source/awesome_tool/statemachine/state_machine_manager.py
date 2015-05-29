@@ -112,9 +112,8 @@ class StateMachineManager(Observable):
         if state_machine_id in self._state_machines:
             del self._state_machines[state_machine_id]
         else:
-            logger.error("there is no valid argument state_machine_id: %s" % state_machine_id)
+            logger.error("There is no state_machine with state_machine_id: %s" % state_machine_id)
 
-        print self._state_machines
         if state_machine_id is self.active_state_machine_id:
             if len(self._state_machines) > 0:
                 self.active_state_machine_id = self._state_machines[self._state_machines.keys()[0]].state_machine_id

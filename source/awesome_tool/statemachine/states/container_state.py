@@ -10,10 +10,7 @@
 from threading import Condition
 import copy
 from gtkmvc import Observable
-import os
 
-from awesome_tool.utils import log
-logger = log.get_logger(__name__)
 from awesome_tool.statemachine.enums import DataPortType, StateExecutionState
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
@@ -22,9 +19,11 @@ from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.data_flow import DataFlow
 from awesome_tool.statemachine.scope import ScopedData, ScopedVariable
 from awesome_tool.statemachine.id_generator import *
-from awesome_tool.statemachine.config import *
+from awesome_tool.statemachine.config import Config, CONFIG_FILE, global_config
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
 import awesome_tool.statemachine.singleton
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
 
 
 class ContainerState(State):
@@ -185,7 +184,7 @@ class ContainerState(State):
         return state_id
 
     @Observable.observed
-    def add_state(self, state):
+    def add_state(self, state, storage_load=False):
         """Adds a state to the container state.
 
         :param state: the state that is going to be added
@@ -209,6 +208,7 @@ class ContainerState(State):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
+        :param recursive_deletion: a flag to indicate a recursive deletion of all substates
 
         """
         if state_id not in self.states:
@@ -296,18 +296,11 @@ class ContainerState(State):
     # ---------------------------------- transition functions -------------------------------------
     # ---------------------------------------------------------------------------------------------
 
-    @Observable.observed
-    #Primary key is transition_id
-    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
-        """Adds a transition to the container state
+    def check_transition_id(self, transition_id):
+        """ Check the transition id and calculate a new one if its None
 
-        Note: Either the toState or the toOutcome needs to be "None"
-
-        :param from_state_id: The source state of the transition
-        :param from_outcome: The outcome of the source state to connect the transition to
-        :param to_state_id: The target state of the transition
-        :param to_outcome: The target outcome of a container state
-        :param transition_id: An optional transition id for the new transition
+        :param transition_id: The transition-id to check
+        :return: The new transition id
         """
         if transition_id is not None:
             if transition_id in self._transitions.iterkeys():
@@ -316,8 +309,19 @@ class ContainerState(State):
             transition_id = generate_transition_id()
             while transition_id in self._transitions.iterkeys():
                 transition_id = generate_transition_id()
+        return transition_id
 
-        # Check if transition is starting transition and the start state is already defined
+    def basic_transition_checks(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id):
+        """ Check if transition is starting transition and the start state is already defined
+
+        :param from_state_id: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :param to_state_id: The target state of the transition
+        :param to_outcome: The target outcome of a container state
+        :param transition_id: An optional transition id for the new transition
+        :return:
+        """
+
         if from_state_id is None and self.start_state_id is not None:
             raise AttributeError("The start state is already defined: {0}".format(self.get_start_state().name))
 
@@ -332,28 +336,41 @@ class ContainerState(State):
         if to_state_id is None and to_outcome is None:
             raise AttributeError("Either the to_state_id or the to_outcome must be None")
 
+        if to_state_id is None and to_outcome is None:
+            raise AttributeError("Either to_state_id or to_outcome must not be None")
+
+    def check_if_outcome_already_connected(self, from_state_id, from_outcome):
+        """ check if outcome of from state is not already connected
+
+        :param from_state_id: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :return:
+        """
+        for trans_key, transition in self.transitions.iteritems():
+            if transition.from_state == from_state_id:
+                if transition.from_outcome == from_outcome:
+                    raise AttributeError("Outcome %s of state %s is already connected" %
+                                         (str(from_outcome), str(from_state_id)))
+
+    def create_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id):
+        """ Creates a new transition.
+
+        Lookout: Check the parameters first before creating a new transition
+
+        :param from_state_id: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :param to_state_id: The target state of the transition
+        :param to_outcome: The target outcome of a container state
+        :param transition_id: An optional transition id for the new transition
+        :return:
+        """
+
         # get correct states
         if from_state_id is not None:
             if from_state_id == self.state_id:
                 from_state = self
             else:
                 from_state = self.states[from_state_id]
-
-        if to_state_id is None and to_outcome is None:
-            raise AttributeError("Either to_state_id or to_outcome must not be None")
-
-        # check if outcome of from state is not already connected
-        for trans_key, transition in self.transitions.iteritems():
-            if transition.from_state == from_state_id:
-                if transition.from_outcome == from_outcome:
-                    raise AttributeError("outcome %s of state %s is already connected" %
-                                         (str(from_outcome), str(from_state_id)))
-
-        from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
-        # check if state is a concurrency state, in concurrency states only transitions to the parents are allowed
-        if isinstance(self, ConcurrencyState):
-            if to_state_id is not None:  # None means that the target state is the containing state
-                raise AttributeError("In concurrency states the to_state must be the container state itself")
 
         # finally add transition
         if from_outcome is not None:
@@ -377,6 +394,29 @@ class ContainerState(State):
         self._transitions_cv.acquire()
         self._transitions_cv.notify_all()
         self._transitions_cv.release()
+
+        return transition_id
+
+    @Observable.observed
+    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
+        """Adds a transition to the container state
+
+        Note: Either the toState or the toOutcome needs to be "None"
+
+        :param from_state_id: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :param to_state_id: The target state of the transition
+        :param to_outcome: The target outcome of a container state
+        :param transition_id: An optional transition id for the new transition
+        """
+
+        transition_id = self.check_transition_id(transition_id)
+
+        self.basic_transition_checks(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+
+        self.check_if_outcome_already_connected(from_state_id, from_outcome)
+
+        self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
 
         return transition_id
 
