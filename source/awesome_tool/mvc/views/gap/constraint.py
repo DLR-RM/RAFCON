@@ -239,6 +239,21 @@ class PortRectConstraint(Constraint):
         self._initial_pos = deepcopy(point)
         self._port = port
 
+        self._port_side_size = port.port_side_size
+
+        self._distance_to_border = self._port_side_size / 2.
+        self.update_initial_pos()
+
+    def update_initial_pos(self):
+        if self._port.side == SnappedSide.LEFT:
+            _update(self._initial_pos.x, self._initial_pos.x + self._distance_to_border)
+        elif self._port.side == SnappedSide.TOP:
+            _update(self._initial_pos.y, self._initial_pos.y + self._distance_to_border)
+        elif self._port.side == SnappedSide.RIGHT:
+            _update(self._initial_pos.x, self._initial_pos.x - self._distance_to_border)
+        elif self._port.side == SnappedSide.BOTTOM:
+            _update(self._initial_pos.y, self._initial_pos.y - self._distance_to_border)
+
     def solve_for(self, var=None):
         self._solve()
 
@@ -246,6 +261,11 @@ class PortRectConstraint(Constraint):
         px, py = self._point
         nw_x, nw_y = self._rect[0]
         se_x, se_y = self._rect[1]
+
+        nw_x += self._distance_to_border
+        nw_y += self._distance_to_border
+        se_x -= self._distance_to_border
+        se_y -= self._distance_to_border
 
         if ((self._initial_pos.x == nw_x and self._initial_pos.y == nw_y) or
                 (self._initial_pos.x == se_x and self._initial_pos.y == nw_y) or
