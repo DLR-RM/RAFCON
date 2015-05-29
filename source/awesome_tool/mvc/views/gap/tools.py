@@ -191,8 +191,10 @@ class MyHandleTool(Tool):
                 self.motion_handle.start_move(pos)
             if isinstance(item, ConnectionView) and item.from_handle() is handle:
                 self.motion_handle.move(pos, 5.0 / ((item.hierarchy_level + 1) * 2))
-            elif (isinstance(item, ConnectionView) and item.to_handle() is handle) or isinstance(item, StateView):
+            elif isinstance(item, ConnectionView) and item.to_handle() is handle:
                 self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2))
+            elif isinstance(item, StateView):
+                self.motion_handle.move(pos, 0.)
             else:
                 self.motion_handle.move(pos, 5.0)
 
