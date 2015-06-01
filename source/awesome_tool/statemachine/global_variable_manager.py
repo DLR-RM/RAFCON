@@ -206,7 +206,27 @@ class GlobalVariableManager(Observable):
         """Property for the _global_variable_dictionary field
 
         """
-        return copy.deepcopy(self.__global_variable_dictionary)
+        dict_copy = {}
+        for key, value in self.__global_variable_dictionary:
+            if key in self.__variable_references and self.__variable_references[key]:
+                dict_copy[key] = value
+            else:
+                dict_copy[key] = copy.deepcopy(value)
+
+        return dict_copy
+
+    def get_all_keys(self):
+        """Returns all variable names in the GVM
+
+        :return: Keys of all variables
+        """
+        return self.__global_variable_dictionary.keys()
+
+
+    def get_representation(self, key):
+        if not self.variable_exist(key):
+            return ''
+        return str(self.__global_variable_dictionary[key])
 
     def is_locked(self, key):
         """Check whether a variable is currently locked

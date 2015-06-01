@@ -29,8 +29,9 @@ class GlobalVariableManagerModel(ModelMT):
 
     def update_global_variables_list_store(self):
         tmp = ListStore(gobject.TYPE_PYOBJECT)
-        for key, value in self.global_variable_manager.global_variable_dictionary.iteritems():
-            tmp.append([[key, value]])
+        keys = self.global_variable_manager.get_all_keys()
+        for key in keys:
+            tmp.append([[key, self.global_variable_manager.get_representation(key)]])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
         tms.set_sort_func(0, self.compare_global_variables)
