@@ -1,5 +1,5 @@
 from gaphas.tool import Tool
-from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ConnectionSink, ItemConnectionSink
+from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ConnectionSink, ItemConnectionSink, Finder
 from simplegeneric import generic
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView
@@ -7,6 +7,23 @@ from awesome_tool.mvc.views.gap.connection import ConnectionView
 import gtk
 
 from awesome_tool.mvc.views.gap.state import StateView
+
+
+class MyHoverTool(Tool):
+
+    def __init__(self, view=None):
+        super(MyHoverTool, self).__init__(view)
+        self._prev_hovered_item = None
+
+    def on_motion_notify(self, event):
+        view = self.view
+        pos = event.x, event.y
+        view.hovered_item = Finder(view).get_item_at_point(pos)
+        if self._prev_hovered_item and view.hovered_item is not self._prev_hovered_item:
+            self._prev_hovered_item.hovered = False
+        if isinstance(view.hovered_item, StateView):
+            view.hovered_item.hovered = True
+            self._prev_hovered_item = view.hovered_item
 
 # ------------------------------------------------------------------
 # -----------------------------SNAPPING-----------------------------

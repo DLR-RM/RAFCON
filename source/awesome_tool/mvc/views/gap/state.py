@@ -51,6 +51,8 @@ class StateView(Element):
         self._outputs = []
         self._scoped_variables = []
 
+        self.hovered = False
+
         name_width = self.width - min(self.width, self.height) / 10.
         self._name_view = NameView(state_m.state.name, (name_width, self.height * 0.2))
 
@@ -78,7 +80,7 @@ class StateView(Element):
         child_se_abs = canvas.project(child, child.handles()[SE].pos)
         parent_nw_abs = canvas.project(parent, parent_nw_pos)
         parent_se_abs = canvas.project(parent, parent_se_pos)
-        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, child_nw_abs, child_se_abs)
+        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, child_nw_abs, child_se_abs, child)
         solver.add_constraint(constraint)
 
     @property

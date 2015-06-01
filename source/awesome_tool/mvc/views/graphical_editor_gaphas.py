@@ -7,7 +7,7 @@ from gtkmvc import View
 
 from gaphas import GtkView
 from gaphas import tool
-from awesome_tool.mvc.views.gap.tools import MyConnectHandleTool
+from awesome_tool.mvc.views.gap.tools import MyConnectHandleTool, MyHoverTool
 
 
 class GraphicalEditorView(View):
@@ -26,7 +26,7 @@ class GraphicalEditorView(View):
         self.editor = GtkView()
         self.editor.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#272c36'))
         self.editor.tool = tool.ToolChain(self.editor).\
-            append(tool.HoverTool()).\
+            append(MyHoverTool()).\
             append(MyConnectHandleTool()).\
             append(tool.PanTool()).\
             append(tool.ZoomTool()).\

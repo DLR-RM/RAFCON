@@ -25,13 +25,14 @@ class KeepRectangleWithinConstraint(Constraint):
      - child_se: SE coordinates of child
     """
 
-    def __init__(self, parent_nw, parent_se, child_nw, child_se, margin=None):
+    def __init__(self, parent_nw, parent_se, child_nw, child_se, child=None, margin=None):
         super(KeepRectangleWithinConstraint, self).__init__(parent_nw[0], parent_nw[1], parent_se[0], parent_se[1],
                                                             child_nw[0], child_nw[1], child_se[0], child_se[1])
         self.parent_nw = parent_nw
         self.parent_se = parent_se
         self.child_nw = child_nw
         self.child_se = child_se
+        self.child = child
 
         self.margin = margin
         min_margin = 0  # (parent_se[0].value - parent_nw[0].value) / 1000.
@@ -42,6 +43,13 @@ class KeepRectangleWithinConstraint(Constraint):
         """
         Ensure that the children is within its parent
         """
+        from awesome_tool.mvc.views.gap.state import StateView, NameView
+        if isinstance(self.child, StateView) and self.child.hovered:
+            self.move()
+        elif isinstance(self.child, NameView):
+            self.move()
+
+    def move(self):
         child_width = self.child_se[0].value - self.child_nw[0].value
         child_height = self.child_se[1].value - self.child_nw[1].value
         # Left edge (west)
