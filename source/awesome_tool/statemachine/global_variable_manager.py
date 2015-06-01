@@ -112,7 +112,7 @@ class GlobalVariableManager(Observable):
         return key in self.__variable_references and self.__variable_references[key]
 
     @Observable.observed
-    def delete_global_variable(self, key):
+    def delete_variable(self, key):
         """Deletes a global variable
 
         :param key: the key of the global variable to be deleted
