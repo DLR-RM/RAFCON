@@ -34,7 +34,7 @@ class GlobalVariableManagerController(ExtendedController):
         tree_view = self.view["global_variable_tree_view"]
         path = tree_view.get_cursor()[0]
         if path is not None:
-            key = self.model.global_variables_list_store[int(path[0])][0][0]
+            key = self.global_variables_list_store[int(path[0])][0][0]
             self.model.global_variable_manager.delete_variable(key)
 
     @ExtendedController.observe("global_variable_manager", after=True)
