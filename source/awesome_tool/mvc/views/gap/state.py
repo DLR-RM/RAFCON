@@ -74,13 +74,13 @@ class StateView(Element):
 
     def add_keep_rect_within_constraint(self, canvas, parent, child):
         solver = canvas.solver
-        parent_nw_pos, parent_se_pos = self.get_state_drawing_area(parent)
+        port_side_size = min(parent.width, parent.height) / 20.
 
         child_nw_abs = canvas.project(child, child.handles()[NW].pos)
         child_se_abs = canvas.project(child, child.handles()[SE].pos)
-        parent_nw_abs = canvas.project(parent, parent_nw_pos)
-        parent_se_abs = canvas.project(parent, parent_se_pos)
-        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, child_nw_abs, child_se_abs, child)
+        parent_nw_abs = canvas.project(parent, parent.handles()[NW].pos)
+        parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
+        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, child_nw_abs, child_se_abs, child, port_side_size)
         solver.add_constraint(constraint)
 
     @property
