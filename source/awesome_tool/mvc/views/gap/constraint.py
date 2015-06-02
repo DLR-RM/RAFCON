@@ -44,12 +44,12 @@ class KeepRectangleWithinConstraint(Constraint):
         Ensure that the children is within its parent
         """
 
-        from gaphas.solver import Projection
-        while isinstance(var, Projection):
-            var = var.variable()
-
-        print var.__dict__
-        print var
+        # from gaphas.solver import Projection
+        # while isinstance(var, Projection):
+        #     var = var.variable()
+        #
+        # print var.__dict__
+        # print var
 
         self.move()
         # from awesome_tool.mvc.views.gap.state import StateView, NameView
@@ -61,6 +61,12 @@ class KeepRectangleWithinConstraint(Constraint):
     def move(self):
         child_width = self.child_se[0].value - self.child_nw[0].value
         child_height = self.child_se[1].value - self.child_nw[1].value
+        parent_width = self.parent_se[0].value - self.parent_nw[0].value
+        parent_height = self.parent_se[1].value - self.parent_nw[1].value
+        if child_width > parent_width - 2 * self.margin:
+            child_width = parent_width - 2 * self.margin
+        if child_height > parent_height - 2 * self.margin:
+            child_height = parent_height - 2 * self.margin
         # Left edge (west)
         if self.parent_nw[0].value > self.child_nw[0].value - self.margin:
             self.child_nw[0].value = self.parent_nw[0].value + self.margin

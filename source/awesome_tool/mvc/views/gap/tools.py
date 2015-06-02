@@ -9,6 +9,16 @@ import gtk
 from awesome_tool.mvc.views.gap.state import StateView
 
 
+class MyDeleteTool(Tool):
+
+    def on_key_release(self, event):
+        if gtk.gdk.keyval_name(event.keyval) == "Delete":
+            if isinstance(self.view.focused_item, ConnectionView):
+                # TODO: Remove transition from state machine (model)
+                self.view.focused_item.remove_connection_from_ports()
+                self.view.canvas.remove(self.view.focused_item)
+
+
 class MyHoverTool(Tool):
 
     def __init__(self, view=None):
@@ -140,6 +150,7 @@ class MyHandleTool(Tool):
         self.grabbed_item = None
         self.motion_handle = None
         self._last_active_port = None
+        self._new_transition = None
 
     def grab_handle(self, item, handle):
         """
@@ -199,7 +210,15 @@ class MyHandleTool(Tool):
         # queue extra redraw to make sure the item is drawn properly
         grabbed_handle, grabbed_item = self.grabbed_handle, self.grabbed_item
 
+        if self._new_transition and self._new_transition.from_port and self._new_transition.to_port:
+            # TODO: create correct transition and apply it to transition_v model
+            pass
+        else:
+            self._new_transition.remove_connection_from_ports()
+            self.view.canvas.remove(self._new_transition)
+
         self._last_active_port = None
+        self._new_transition = None
 
         if self.motion_handle:
             self.motion_handle.stop_move()
@@ -218,8 +237,49 @@ class MyHandleTool(Tool):
         hovered-item.
         """
         view = self.view
-        if self.grabbed_handle and event.state & gtk.gdk.BUTTON_PRESS_MASK:
+
+        if (not self._new_transition and self.grabbed_handle and event.state & gtk.gdk.BUTTON_PRESS_MASK and
+                isinstance(self.grabbed_item, StateView) and not event.state & gtk.gdk.CONTROL_MASK):
             canvas = view.canvas
+            start_state = self.grabbed_item
+            start_state_parent = canvas.get_parent(start_state)
+
+            if start_state_parent is not None:
+                assert isinstance(start_state_parent, StateView)
+                handle = self.grabbed_handle
+                start_port = self.get_port_for_handle(handle, start_state)
+                if start_port:
+                    from awesome_tool.statemachine.transition import Transition
+                    from awesome_tool.mvc.models.transition import TransitionModel
+                    from awesome_tool.mvc.views.gap.connection import TransitionView
+                    from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView
+
+                    placeholder_transition = Transition()
+                    placeholder_transition_model = TransitionModel(placeholder_transition, None)
+
+                    transition_v = TransitionView(placeholder_transition_model, start_state.hierarchy_level - 1)
+                    self._new_transition = transition_v
+
+                    canvas.add(transition_v, start_state_parent)
+
+                    if isinstance(start_port, IncomeView):
+                        start_state.connect_to_income(transition_v, transition_v.from_handle())
+                    elif isinstance(start_port, OutcomeView):
+                        start_state.connect_to_outcome(start_port.outcome_id, transition_v, transition_v.from_handle())
+                    self.ungrab_handle()
+                    self.grab_handle(transition_v, transition_v.to_handle())
+
+        if self.grabbed_handle and event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.CONTROL_MASK:
+            item = self.grabbed_item
+            handle = self.grabbed_handle
+            pos = event.x, event.y
+
+            if not self.motion_handle:
+                self.motion_handle = MyHandleInMotion(item, handle, self.view)
+                self.motion_handle.start_move(pos)
+            if isinstance(item, StateView):
+                self.motion_handle.move(pos, 0.)
+        elif self.grabbed_handle and event.state & gtk.gdk.BUTTON_PRESS_MASK:  # and event.state & gtk.gdk.CONTROL_MASK:
             item = self.grabbed_item
             handle = self.grabbed_handle
             pos = event.x, event.y
@@ -228,41 +288,56 @@ class MyHandleTool(Tool):
                 self.motion_handle = MyHandleInMotion(item, handle, self.view)
                 self.motion_handle.start_move(pos)
             if isinstance(item, ConnectionView) and item.from_handle() is handle:
-                self.check_sink_item(self.motion_handle.move(pos, 5.0 / ((item.hierarchy_level + 1) * 2)))
+                self.check_sink_item(self.motion_handle.move(pos, 5.0 / ((item.hierarchy_level + 1) * 2)), handle, item)
             elif isinstance(item, ConnectionView) and item.to_handle() is handle:
-                self.check_sink_item(self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2)))
-            elif isinstance(item, StateView):
-                self.motion_handle.move(pos, 0.)
+                self.check_sink_item(self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2)), handle, item)
             else:
                 self.motion_handle.move(pos, 5.0)
 
             return True
 
-    def check_sink_item(self, item):
+    @staticmethod
+    def get_port_for_handle(handle, state):
+        if state.income.handle == handle:
+            return state.income
+        else:
+            for outcome in state.outcomes:
+                if outcome.handle == handle:
+                    return outcome
+            for input in state.inputs:
+                if input.handle == handle:
+                    return input
+            for output in state.outputs:
+                if output.handle == handle:
+                    return output
+
+    def check_sink_item(self, item, handle, connection):
         if isinstance(item, ItemConnectionSink):
             state = item.item
             if isinstance(state, StateView):
-                if self.set_matching_port(state, [state.income, ], item.port):
+                if self.set_matching_port([state.income, ], item.port, handle, connection):
                     return
-                elif self.set_matching_port(state, state.outcomes, item.port):
+                elif self.set_matching_port(state.outcomes, item.port, handle, connection):
                     return
-                elif self.set_matching_port(state, state.outputs, item.port):
+                elif self.set_matching_port(state.outputs, item.port, handle, connection):
                     return
-                elif self.set_matching_port(state, state.inputs, item.port):
+                elif self.set_matching_port(state.inputs, item.port, handle, connection):
                     return
-        self.disconnect_last_active_port()
+        self.disconnect_last_active_port(handle, connection)
 
-    def disconnect_last_active_port(self):
+    def disconnect_last_active_port(self, handle, connection):
         if self._last_active_port:
-            self._last_active_port.connected = False
+            self._last_active_port.remove_connected_handle(handle)
+            connection.reset_port_for_handle(handle)
             self._last_active_port = None
 
-    def set_matching_port(self, state, port_list, matching_port):
+    def set_matching_port(self, port_list, matching_port, handle, connection):
         for port in port_list:
             if port.port is matching_port:
                 if self._last_active_port is not port:
-                    self.disconnect_last_active_port()
-                port.connected = True
+                    self.disconnect_last_active_port(handle, connection)
+                port.add_connected_handle(handle)
+                connection.set_port_for_handle(port, handle)
                 self._last_active_port = port
                 return True
         return False

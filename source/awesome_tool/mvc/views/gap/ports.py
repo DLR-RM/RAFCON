@@ -20,8 +20,9 @@ class PortView(object):
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
         self.side = side
-        self.connected = False
         self._parent = parent
+
+        self._connected_handles = []
 
         self.port_side_size = 0.
         self.update_port_side_size()
@@ -37,6 +38,20 @@ class PortView(object):
     @property
     def port_pos(self):
         return self.port.point
+
+    def add_connected_handle(self, handle):
+        assert isinstance(handle, Handle)
+        if handle not in self._connected_handles:
+            self._connected_handles.append(handle)
+
+    def remove_connected_handle(self, handle):
+        assert isinstance(handle, Handle)
+        if handle in self._connected_handles:
+            self._connected_handles.remove(handle)
+
+    @property
+    def connected(self):
+        return len(self._connected_handles) > 0
 
     def draw(self, context, state):
         raise NotImplementedError

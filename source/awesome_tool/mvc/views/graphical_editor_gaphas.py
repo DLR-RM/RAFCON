@@ -7,7 +7,7 @@ from gtkmvc import View
 
 from gaphas import GtkView
 from gaphas import tool
-from awesome_tool.mvc.views.gap.tools import MyConnectHandleTool, MyHoverTool
+from awesome_tool.mvc.views.gap.tools import MyConnectHandleTool, MyHoverTool, MyDeleteTool
 
 
 class GraphicalEditorView(View):
@@ -32,7 +32,8 @@ class GraphicalEditorView(View):
             append(tool.ZoomTool()).\
             append(tool.ItemTool()).\
             append(tool.TextEditTool()).\
-            append(tool.RubberbandTool())
+            append(tool.RubberbandTool()).\
+            append(MyDeleteTool())
         self.scroller.add(self.editor)
         self.v_box.pack_end(self.scroller)
 

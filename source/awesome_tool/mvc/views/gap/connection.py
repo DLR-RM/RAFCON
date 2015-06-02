@@ -8,6 +8,8 @@ from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint
 from awesome_tool.mvc.models.transition import TransitionModel
 from awesome_tool.mvc.models.data_flow import DataFlowModel
 
+from awesome_tool.mvc.views.gap.ports import PortView
+
 from gtk.gdk import Color
 
 
@@ -19,10 +21,56 @@ class ConnectionView(Line):
         self._to_handle = self.handles()[1]
         self._segment = Segment(self, view=self.canvas)
         self.hierarchy_level = hierarchy_level
+
+        self._from_port = None
+        self._to_port = None
+
         # self.orthogonal = True
 
     # def setup_canvas(self):
     #     super(ConnectionView, self).setup_canvas()
+
+    @property
+    def from_port(self):
+        return self._from_port
+
+    @property
+    def to_port(self):
+        return self._to_port
+
+    @from_port.setter
+    def from_port(self, port):
+        assert isinstance(port, PortView)
+        self._from_port = port
+
+    @to_port.setter
+    def to_port(self, port):
+        assert isinstance(port, PortView)
+        self._to_port = port
+
+    def reset_from_port(self):
+        self._from_port = None
+
+    def reset_to_port(self):
+        self._to_port = None
+
+    def set_port_for_handle(self, port, handle):
+        if handle is self.from_handle():
+            self.from_port = port
+        elif handle is self.to_handle():
+            self.to_port = port
+
+    def reset_port_for_handle(self, handle):
+        if handle is self.from_handle():
+            self.reset_from_port()
+        elif handle is self.to_handle():
+            self.reset_to_port()
+
+    def remove_connection_from_ports(self):
+        if self._from_port:
+            self._from_port.remove_connected_handle(self._from_handle)
+        if self._to_port:
+            self._to_port.remove_connected_handle(self._to_handle)
 
     def _keep_handle_in_parent_state(self, handle):
         canvas = self.canvas
@@ -84,6 +132,15 @@ class TransitionView(ConnectionView):
         assert isinstance(transition_m, TransitionModel)
         self._transition_m = ref(transition_m)
         self.line_width = .5 / hierarchy_level
+
+    @property
+    def transition_m(self):
+        return self._transition_m()
+
+    @transition_m.setter
+    def transition_m(self, transition_model):
+        assert isinstance(transition_model, TransitionModel)
+        self._transition_m = transition_model
 
 
 class DataFlowView(ConnectionView):
