@@ -1857,8 +1857,10 @@ class GraphicalEditorController(ExtendedController):
                 logger.error("Please select a single state for pasting the clipboard")
                 return
             if not isinstance(current_selection.get_states()[0], ContainerStateModel):
-                logger.error("Please select a container state (e. g. a Hierarchy state) for pasting the clipboard.")
-                return
+                # the default behaviour of the copy paste is that the state is copied into the parent state
+                parent_of_old_state = current_selection.get_states()[0].parent
+                current_selection.clear()
+                current_selection.add(parent_of_old_state)
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
             target_state_m = current_selection.get_states()[0]

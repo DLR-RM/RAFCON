@@ -82,8 +82,7 @@ class StatesEditorController(ExtendedController):
 
     def close_state_tab(self, widget, page_num):
         page_to_close = widget.get_nth_page(page_num)
-
-        self.close_page(page_to_close)
+        self.close_page(page_to_close, self.get_state_identifier_for_page(page_to_close))
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, property, info):
@@ -161,13 +160,14 @@ class StatesEditorController(ExtendedController):
                                        'view': state_editor_view, 'is_sticky': False, 'event_box': evtbox}
         return idx
 
-    def close_page(self, page_to_close):
+    def close_page(self, page_to_close, state_identifier):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
 
-        #page_to_close = self.tabs[state_identifier]['page']
         if page_to_close:
             current_idx = self.view.notebook.page_num(page_to_close)
             self.view.notebook.remove_page(current_idx)
+        if state_identifier in self.tabs:
+            del self.tabs[state_identifier]
 
     def find_page_of_state_model(self, state_model):
         #print event, state_model, result
@@ -185,23 +185,10 @@ class StatesEditorController(ExtendedController):
 
         return searched_page, state_identifier
 
-    def destroy_state_editor_page(self, state_identifier):
-        """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
-        # del self.tabs[state_identifier]['ctrl']
-        # del self.tabs[state_identifier]['view']
-        state_model = self.tabs[state_identifier]['state_model']
-        del self.tabs[state_identifier]
-        self.remove_controller(state_identifier)
-
     def on_destroy_clicked(self, event, state_model, result):
         [page, state_identifier] = self.find_page_of_state_model(state_model)
         if page:
-            self.close_page(page)
-            # print "----------- close_page %s" % state_model
-        if state_identifier:
-            self.destroy_state_editor_page(state_identifier)
-            # print "----------- destroy_state_editor_page%s" % state_model
-            # print "left over tabs ", self.tabs
+            self.close_page(page, state_identifier)
 
     def on_toogle_sticky_clicked(self, event, state_model, result):
         """ Callback for the "toogle-sticky-check-button" emitted by custom TabLabel widget. """
@@ -249,7 +236,7 @@ class StatesEditorController(ExtendedController):
             # logger.debug("State %s is SELECTED" % selected_model.state.name)
 
             # print "state_identifier: %s" % state_identifier
-            if not state_identifier in self.tabs:
+            if state_identifier not in self.tabs:
                 # print "--------- add state editor %s" % selected_model
                 idx = self.add_state_editor(selected_model, self.editor_type)
                 self.view.notebook.set_current_page(idx)
@@ -343,3 +330,8 @@ class StatesEditorController(ExtendedController):
                 fontdesc = pango.FontDescription("Serif Bold 12")
                 page_dict['page'].title_label.modify_font(fontdesc)
                 page_dict['page'].title_label.set_tooltip_text(tab_label)
+
+    def get_state_identifier_for_page(self, page):
+        for identifier, tab in self.tabs.iteritems():
+            if tab["page"] is page:  # reference comparison on purpose
+                return identifier
