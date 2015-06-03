@@ -34,6 +34,7 @@ class MyHoverTool(Tool):
         view = self.view
         pos = event.x, event.y
         view.hovered_item = Finder(view).get_item_at_point(pos)
+
         if self._prev_hovered_item and view.hovered_item is not self._prev_hovered_item:
             self._prev_hovered_item.hovered = False
         if isinstance(view.hovered_item, StateView):
@@ -106,8 +107,8 @@ class MyItemHandleInMotion(object):
         connectable, port, glue_pos = \
                 view.get_port_at_point(pos, distance=distance, exclude=(item,))
 
-        if not self._start_port:
-            self._start_port = port
+        # if not self._start_port:
+        #     self._start_port = port
 
         # check if item and found item can be connected on closest port
         if port is not None:
@@ -125,14 +126,14 @@ class MyItemHandleInMotion(object):
                 return sink
         return None
 
-    def get_connected_ports_list(self, state):
-        already_connected_ports = []
-        ports_list = [[state.income, ], state.outcomes, state.inputs, state.outputs]
-        for ports in ports_list:
-            for port in ports:
-                if port.connected and port.port is not self._start_port and port.port is not self._current_port:
-                    already_connected_ports.append(port.port)
-        return already_connected_ports
+    # def get_connected_ports_list(self, state):
+    #     already_connected_ports = []
+    #     ports_list = [[state.income, ], state.outcomes, state.inputs, state.outputs]
+    #     for ports in ports_list:
+    #         for port in ports:
+    #             if port.connected and port.port is not self._start_port and port.port is not self._current_port:
+    #                 already_connected_ports.append(port.port)
+    #     return already_connected_ports
 
 
 MyHandleInMotion = generic(MyItemHandleInMotion)
@@ -299,12 +300,12 @@ class MyHandleTool(Tool):
         nt_from_port = self._new_transition.from_port
         nt_to_port = self._new_transition.to_port
 
-        if (nt_from_port.parent is nt_to_port.parent and isinstance(nt_from_port, OutcomeView) and
-                isinstance(nt_to_port, OutcomeView)):
-            logger.warn("Cannot connect to outcomes of the same state")
-            return 
-
         if isinstance(nt_from_port, OutcomeView) and nt_from_port and nt_to_port and nt_from_port is not nt_to_port:
+            if (nt_from_port.parent is nt_to_port.parent and isinstance(nt_from_port, OutcomeView) and
+                    isinstance(nt_to_port, OutcomeView)):
+                logger.warn("Cannot connect to outcomes of the same state")
+                return
+
             canvas = self.view.canvas
             to_state_v = nt_to_port.parent
 
