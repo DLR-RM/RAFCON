@@ -45,6 +45,7 @@ class GraphicalEditorController(ExtendedController):
         assert self.view == view
         self.setup_canvas()
         self.view.setup_canvas(self.canvas, self.zoom)
+        self.view.connect('new_state_selection', self._select_new_state)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -57,6 +58,13 @@ class GraphicalEditorController(ExtendedController):
         :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
         pass
+
+    def _select_new_state(self, view, state):
+        if state and isinstance(state, StateView):
+            state_m = state.state_m
+            if not self.model.selection.is_selected(state_m):
+                self.model.selection.clear()
+                self.model.selection.set(state_m)
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):

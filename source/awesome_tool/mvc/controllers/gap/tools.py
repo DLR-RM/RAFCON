@@ -1,10 +1,12 @@
 from gaphas.tool import Tool
-from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ConnectionSink, ItemConnectionSink, Finder
-from simplegeneric import generic
+from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ItemConnectionSink, Finder
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView
 from awesome_tool.mvc.views.gap.state import StateView
+
+from gaphas.aspect import InMotion, Selection
+from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
 
 import gtk
 
@@ -26,6 +28,91 @@ class MyDeleteTool(Tool):
                 StateMachineHelper.delete_model(self.view.focused_item.transition_m)
                 self.view.focused_item.remove_connection_from_ports()
                 self.view.canvas.remove(self.view.focused_item)
+
+
+class MyItemTool(Tool):
+    """
+    ItemTool does selection and dragging of items. On a button click,
+    the currently "hovered item" is selected. If CTRL or SHIFT are pressed,
+    already selected items remain selected. The last selected item gets the
+    focus (e.g. receives key press events).
+
+    The roles used are Selection (select, unselect) and InMotion (move).
+    """
+
+    def __init__(self, graphical_editor_view, view=None, buttons=(1,)):
+        super(MyItemTool, self).__init__(view)
+        self._buttons = buttons
+        self._movable_items = set()
+        self._graphical_editor_view = graphical_editor_view
+
+    def get_item(self):
+        return self.view.hovered_item
+
+    def movable_items(self):
+        """
+        Filter the items that should eventually be moved.
+
+        Returns InMotion aspects for the items.
+        """
+        view = self.view
+        get_ancestors = view.canvas.get_ancestors
+        selected_items = set(view.selected_items)
+        for item in selected_items:
+            # Do not move subitems of selected items
+            if not set(get_ancestors(item)).intersection(selected_items):
+                yield InMotion(item, view)
+
+    def on_button_press(self, event):
+        view = self.view
+        item = self.get_item()
+
+        if event.button not in self._buttons:
+            return False
+
+        # Deselect all items unless CTRL or SHIFT is pressed
+        # or the item is already selected.
+        if not (event.state & (gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
+                or item in view.selected_items):
+            del view.selected_items
+
+        if item:
+            if view.hovered_item in view.selected_items and \
+                    event.state & gtk.gdk.CONTROL_MASK:
+                selection = Selection(item, view)
+                selection.unselect()
+            else:
+                selection = Selection(item, view)
+                selection.select()
+                self._movable_items.clear()
+
+            self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
+            return True
+
+    def on_button_release(self, event):
+        if event.button not in self._buttons:
+            return False
+        for inmotion in self._movable_items:
+            inmotion.stop_move()
+        self._movable_items.clear()
+        return True
+
+    def on_motion_notify(self, event):
+        """
+        Normally do nothing.
+        If a button is pressed move the items around.
+        """
+        if event.state & gtk.gdk.BUTTON_PRESS_MASK:
+
+            if not self._movable_items:
+                self._movable_items = set(self.movable_items())
+                for inmotion in self._movable_items:
+                    inmotion.start_move((event.x, event.y))
+
+            for inmotion in self._movable_items:
+                inmotion.move((event.x, event.y))
+
+            return True
 
 
 class MyHoverTool(Tool):
@@ -51,99 +138,6 @@ class MyHoverTool(Tool):
 # ------------------------------------------------------------------
 # -----------------------------SNAPPING-----------------------------
 # ------------------------------------------------------------------
-
-
-class MyItemHandleInMotion(object):
-    """
-    Move a handle (role is applied to the handle)
-    """
-
-    GLUE_DISTANCE = 5.0
-
-    def __init__(self, item, handle, view):
-        self.item = item
-        self.handle = handle
-        self.view = view
-        self.last_x, self.last_y = None, None
-        self._start_port = None
-        self._current_port = None
-
-    def start_move(self, pos):
-        self.last_x, self.last_y = pos
-        canvas = self.item.canvas
-
-        cinfo = canvas.get_connection(self.handle)
-        if cinfo:
-            canvas.solver.remove_constraint(cinfo.constraint)
-
-    def move(self, pos, distance):
-        item = self.item
-        handle = self.handle
-        view = self.view
-
-        v2i = view.get_matrix_v2i(item)
-
-        x, y = v2i.transform_point(*pos)
-
-        self.handle.pos = (x, y)
-
-        sink = self.glue(pos, distance)
-
-        # do not request matrix update as matrix recalculation will be
-        # performed due to item normalization if required
-        item.request_update(matrix=False)
-
-        return sink
-
-    def stop_move(self):
-        pass
-
-    def glue(self, pos, distance=GLUE_DISTANCE):
-        """
-        Glue to an item near a specific point.
-
-        Returns a ConnectionSink or None.
-        """
-        item = self.item
-        handle = self.handle
-        view = self.view
-
-        if not handle.connectable:
-            return None
-
-        connectable, port, glue_pos = \
-                view.get_port_at_point(pos, distance=distance, exclude=(item,))
-
-        # if not self._start_port:
-        #     self._start_port = port
-
-        # check if item and found item can be connected on closest port
-        if port is not None:
-            assert connectable is not None
-
-            connector = Connector(self.item, self.handle)
-            sink = ConnectionSink(connectable, port)
-
-            if connector.allow(sink):
-                # transform coordinates from view space to the item space and
-                # update position of item's handle
-                v2i = view.get_matrix_v2i(item).transform_point
-                handle.pos = v2i(*glue_pos)
-                self._current_port = port
-                return sink
-        return None
-
-    # def get_connected_ports_list(self, state):
-    #     already_connected_ports = []
-    #     ports_list = [[state.income, ], state.outcomes, state.inputs, state.outputs]
-    #     for ports in ports_list:
-    #         for port in ports:
-    #             if port.connected and port.port is not self._start_port and port.port is not self._current_port:
-    #                 already_connected_ports.append(port.port)
-    #     return already_connected_ports
-
-
-MyHandleInMotion = generic(MyItemHandleInMotion)
 
 
 class MyHandleTool(Tool):
@@ -369,12 +363,13 @@ class MyHandleTool(Tool):
                     transition_m = StateMachineHelper.get_transition_model(responsible_parent_m, transition_id)
 
                     # Create actual transition view to replace placeholder view
-                    transition_v = TransitionView(transition_m, self._start_state.hierarchy_level)
+                    transition_v = TransitionView(transition_m, self._start_state.hierarchy_level - 1)
                     canvas.add(transition_v, canvas.get_parent(self._start_state))
 
                     # Connect new transition view to ports of placeholder
                     self._start_state.connect_to_outcome(nt_from_port.outcome_id, transition_v, transition_v.from_handle())
                     if isinstance(nt_to_port, IncomeView):
+                        transition_v.hierarchy_level = self._start_state.hierarchy_level
                         to_state_v.connect_to_income(transition_v, transition_v.to_handle())
                     elif isinstance(nt_to_port, OutcomeView):
                         to_state_v.connect_to_outcome(nt_to_port.outcome_id, transition_v, transition_v.to_handle())
