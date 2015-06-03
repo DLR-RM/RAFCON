@@ -1,4 +1,4 @@
-from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool
+from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ItemConnectionSink, Finder
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView
@@ -57,6 +57,22 @@ class MyHoverTool(HoverTool):
             self.view.hovered_item.hovered = True
             self._prev_hovered_item = self.view.hovered_item
 
+
+class MyRubberbandTool(RubberbandTool):
+
+    def on_button_press(self, event):
+        if event.state & gtk.gdk.SHIFT_MASK:
+            return super(MyRubberbandTool, self).on_button_press(event)
+        return False
+
+    def on_motion_notify(self, event):
+        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.SHIFT_MASK:
+            view = self.view
+            self.queue_draw(view)
+            self.x1, self.y1 = event.x, event.y
+            self.queue_draw(view)
+            return True
+
 # ------------------------------------------------------------------
 # -----------------------------SNAPPING-----------------------------
 # ------------------------------------------------------------------
@@ -72,8 +88,6 @@ class MyHandleTool(HandleTool):
         self._start_state = None
 
     def on_button_press(self, event):
-        super(MyHandleTool, self).on_button_press(event)
-
         view = self.view
         item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
 
@@ -81,9 +95,9 @@ class MyHandleTool(HandleTool):
         if isinstance(item, StateView):
             self._start_state = item
 
-    def on_button_release(self, event):
-        super(MyHandleTool, self).on_button_release(event)
+        super(MyHandleTool, self).on_button_press(event)
 
+    def on_button_release(self, event):
         # Create new transition if pull beginning at port occurred
         if self._new_transition:
             self._create_new_transition()
@@ -97,6 +111,8 @@ class MyHandleTool(HandleTool):
         self._new_transition = None
         self._start_state = None
 
+        super(MyHandleTool, self).on_button_release(event)
+
     def on_motion_notify(self, event):
         """
         Handle motion events. If a handle is grabbed: drag it around,
@@ -104,7 +120,6 @@ class MyHandleTool(HandleTool):
         hovered-item.
         """
         view = self.view
-
         # If no new transition exists and the grabbed handle is a port handle a new placeholder connection is
         # inserted into canvas
         # This is the default case if one starts to pull from a port handle
@@ -337,7 +352,7 @@ class MyConnectHandleTool(MyHandleTool):
         if self.motion_handle:
             return self.motion_handle.glue(vpos, glue_distance)
         else:
-            return HandleInMotion(item, handle, self.view).glue(vpos, glue_distance)
+            return MyHandleInMotion(item, handle, self.view).glue(vpos, glue_distance)
 
     def connect(self, item, handle, vpos):
         """
