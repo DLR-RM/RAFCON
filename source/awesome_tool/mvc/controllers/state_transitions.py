@@ -127,7 +127,7 @@ class StateTransitionsListController(ExtendedController):
             return
 
         from_outcome = None if free_outcomes[0] is None else free_outcomes[0].outcome_id
-        to_state_id = None
+        to_state_id = responsible_parent.state_id
         to_outcomes = responsible_parent.outcomes.values()
         if len(to_outcomes) == 0:
             logger.warning("No more options to add a transition")
@@ -451,7 +451,7 @@ class StateTransitionsListController(ExtendedController):
                     from_state_label = from_state.name
                     from_outcome_label = from_state.outcomes[t.from_outcome].name
 
-                if t.to_state is None:
+                if t.to_state == self.model.parent.state.state_id:
                     to_state_label = 'parent (' + self.model.parent.state.name + ")"
                     to_outcome_label = self.model.parent.state.outcomes[t.to_outcome].name
                 else:

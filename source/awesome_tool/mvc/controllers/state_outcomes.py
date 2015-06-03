@@ -193,7 +193,7 @@ class StateOutcomesListController(ExtendedController):
                 # check for "to other state" connections -> so from self-state and self-outcome "external" transitions
                 if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes.keys():
                     # check for "to other outcomes" connections -> so to parent-state and parent-outcome "ext" transitions
-                    if transition.to_state is None:
+                    if transition.to_state == model.parent.state.state_id:
                         to_state_name = model.parent.state.name
                         to_state_id = model.parent.state.state_id
                         self.dict_to_other_outcome[transition.from_outcome] = [to_state_name + '.' + str(transition.to_outcome),

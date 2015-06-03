@@ -32,5 +32,5 @@ transitions:
         transition_id: 3}
     4: !Transition {from_outcome: 0, from_state: XMQBQM, to_outcome: null, to_state: DIDVOV,
         transition_id: 4}
-    6: !Transition {from_outcome: 0, from_state: DIDVOV, to_outcome: 0, to_state: null,
+    6: !Transition {from_outcome: 0, from_state: DIDVOV, to_outcome: 0, to_state: GOLRUX,
         transition_id: 6}

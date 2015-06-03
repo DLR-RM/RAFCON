@@ -16,9 +16,9 @@ state_id: VZVYGX
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: ORZCVQ,
         transition_id: 1}
-    2: !Transition {from_outcome: 0, from_state: ORZCVQ, to_outcome: 1, to_state: null,
+    2: !Transition {from_outcome: 0, from_state: ORZCVQ, to_outcome: 1, to_state: VZVYGX,
         transition_id: 2}
     3: !Transition {from_outcome: -1, from_state: ORZCVQ, to_outcome: null, to_state: PRUDIX,
         transition_id: 3}
-    4: !Transition {from_outcome: 0, from_state: PRUDIX, to_outcome: 0, to_state: null,
+    4: !Transition {from_outcome: 0, from_state: PRUDIX, to_outcome: 0, to_state: VZVYGX,
         transition_id: 4}

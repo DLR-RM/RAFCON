@@ -763,7 +763,6 @@ class GraphicalEditorController(ExtendedController):
         if to_outcome_id is None:
             responsible_parent_m = to_state_m.parent
         else:
-            to_state_id = None
             responsible_parent_m = to_state_m
 
         try:
@@ -772,9 +771,13 @@ class GraphicalEditorController(ExtendedController):
             transition_m = responsible_parent_m.get_transition_model(transition_id)
             transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
         except AttributeError as e:
+            import traceback
             logger.warn("Transition couldn't be added: {0}".format(e))
+            logger.error("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
         except Exception as e:
+            import traceback
             logger.error("Unexpected exception while creating transition: {0}".format(e))
+            logger.error("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
 
         self._abort()
 
@@ -1418,14 +1421,16 @@ class GraphicalEditorController(ExtendedController):
                     continue
 
             to_state_id = transition_m.transition.to_state
-            to_state = None if to_state_id is None else parent_state_m.states[to_state_id]
 
-            if to_state is None:  # Transition goes back to parent
+            if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
                 # Set the to coordinates to the outcome coordinates received earlier
                 to_pos = parent_state_m.temp['gui']['editor']['outcome_pos'][
                     transition_m.transition.to_outcome]
             else:
                 # Set the to coordinates to the center of the next state
+                if to_state_id == "KYENSZ":
+                    print "test"
+                to_state = parent_state_m.states[to_state_id]
                 to_pos = to_state.temp['gui']['editor']['income_pos']
 
             waypoints = []

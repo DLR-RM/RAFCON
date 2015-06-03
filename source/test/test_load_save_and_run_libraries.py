@@ -34,7 +34,7 @@ def test_save_libraries():
     state3.set_start_state(state1.state_id)
 
     state3.add_transition(state1.state_id, 0, state2.state_id, None)
-    state3.add_transition(state2.state_id, 0, None, 0)
+    state3.add_transition(state2.state_id, 0, state3.state_id, 0)
     input_state3 = state3.add_input_data_port("data_input_port1", "float")
     output_state3 = state3.add_output_data_port("data_output_port1", "float")
     state3.add_data_flow(state3.state_id,
@@ -71,7 +71,7 @@ def create_hierarchy_state_library_state_machine():
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
 
-    library_container_state.add_transition(lib_state.state_id, 0, None, 0)
+    library_container_state.add_transition(lib_state.state_id, 0, library_container_state.state_id, 0)
     lib_container_input = library_container_state.add_input_data_port("data_input_port1", "float", 22.0)
     lib_container_output = library_container_state.add_output_data_port("data_output_port1", "float")
     library_container_state.add_data_flow(library_container_state.state_id,
@@ -95,7 +95,7 @@ def create_execution_state_library_state_machine():
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
 
-    library_container_state.add_transition(lib_state.state_id, 0, None, 0)
+    library_container_state.add_transition(lib_state.state_id, 0, library_container_state.state_id, 0)
     lib_container_input = library_container_state.add_input_data_port("data_input_port1", "float", 32.0)
     lib_container_output = library_container_state.add_output_data_port("data_output_port1", "float")
     library_container_state.add_data_flow(library_container_state.state_id,

@@ -157,6 +157,15 @@ class StateMachineStorage(Observable):
             for key, state in state.states.iteritems():
                 self.save_state_recursively(state, state_path)
 
+    def clean_transitions_of_sm(self, root_state):
+        if hasattr(root_state, "states"):
+            for t_id, transition in root_state.transitions.iteritems():
+                if transition.to_state is None:
+                    transition.to_state = root_state.state_id
+            for s_id, state in root_state.states.iteritems():
+                if hasattr(state, "states"):
+                    self.clean_transitions_of_sm(state)
+
     def load_statemachine_from_yaml(self, base_path=None):
         """
         Loads a state machine from a given path. If no path is specified the state machine is tried to be loaded
@@ -194,6 +203,11 @@ class StateMachineStorage(Observable):
 
         sm.base_path = self.base_path
         sm.marked_dirty = False
+
+        # this is a backward compatibility function to ensure that old libraries are still working
+        self.clean_transitions_of_sm(sm.root_state)
+        self.save_statemachine_as_yaml(sm, base_path)
+
         return [sm, version, creation_time]
 
     def load_state_from_yaml(self, state_path):

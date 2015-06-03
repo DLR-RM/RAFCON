@@ -39,7 +39,7 @@ def create_models():
     return logger, global_var_manager_model
 
 
-def run_turtle_demo():
+def run_sm():
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
     # setup logging view first
@@ -54,14 +54,14 @@ def run_turtle_demo():
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/error_propagation_test")
 
-    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/decider_test_statemachine")
+    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+        global_storage.load_statemachine_from_yaml("../../test_scripts/decider_test_statemachine")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
 
-    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/return_none_test_sm")
+    # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/return_none_test_sm")
 
     # [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_preemption_test")
@@ -95,4 +95,4 @@ if __name__ == '__main__':
     test_script_path = os.path.join(cur_path, os.pardir, os.pardir, 'test_scripts')
     sys.path.insert(1, test_script_path)
     #print sys.path
-    run_turtle_demo()
+    run_sm()

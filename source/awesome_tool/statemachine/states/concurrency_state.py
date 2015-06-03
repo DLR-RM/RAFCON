@@ -50,7 +50,7 @@ class ConcurrencyState(ContainerState):
         self.check_if_outcome_already_connected(from_state_id, from_outcome)
 
         # in concurrency states only transitions to the parents are allowed
-        if to_state_id is not None:  # None means that the target state is the containing state
+        if to_state_id is not None and to_state_id is not self.state_id:  # None means that the target state is the containing state
             raise AttributeError("In concurrency states the to_state must be the container state itself")
 
         self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)

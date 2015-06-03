@@ -220,7 +220,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         return transition_id
 
     @Observable.observed
-    def remove_transition(self, transition_id):
+    def remove_transition(self, transition_id, force=False):
         """ Overwrite the parent class remove_transition method by checking if the user tries to delete a transition of
         a non decider state and prevents the operation in this case.
 
@@ -231,7 +231,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         transition = self.transitions[transition_id]
         print transition
 
-        if not transition.from_state == UNIQUE_DECIDER_STATE_ID:
+        if not transition.from_state == UNIQUE_DECIDER_STATE_ID and not force:
             if not transition.from_outcome == -1 and not transition.from_outcome == -2:
                 raise AttributeError("You are not allowed to remove a transition from a non-decider state!")
             else:

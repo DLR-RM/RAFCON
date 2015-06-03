@@ -232,7 +232,7 @@ class ContainerState(State):
             if transition.from_state == state_id or transition.to_state == state_id:
                 keys_to_delete.append(key)
         for key in keys_to_delete:
-            self.remove_transition(key)
+            self.remove_transition(key, True)
 
         keys_to_delete = []
         for key, data_flow in self.data_flows.iteritems():
@@ -322,6 +322,9 @@ class ContainerState(State):
         :return:
         """
 
+        # from_state and from_outcome can be None in the start_transition case
+        # to_outcome is None in the normal state case
+
         if from_state_id is None and self.start_state_id is not None:
             raise AttributeError("The start state is already defined: {0}".format(self.get_start_state().name))
 
@@ -331,13 +334,15 @@ class ContainerState(State):
 
         if to_state_id is not None:
             if not (to_state_id in self.states or to_state_id == self.state_id):
-                raise AttributeError("To_state {0} does not exist in the container state".format(to_state_id))
+                raise AttributeError("To_state {0} does not exist in the container state with id {1}".format(
+                    to_state_id, self.state_id))
 
-        if to_state_id is None and to_outcome is None:
-            raise AttributeError("Either the to_state_id or the to_outcome must be None")
+        if to_state_id is None:
+            raise AttributeError("to_state_id must not be None")
 
-        if to_state_id is None and to_outcome is None:
-            raise AttributeError("Either to_state_id or to_outcome must not be None")
+        if from_state_id == to_state_id and to_outcome is not None:
+            raise AttributeError("Transitions are not allowed to go from one outcome to another "
+                                 "outcome of the same state!")
 
     def check_if_outcome_already_connected(self, from_state_id, from_outcome):
         """ check if outcome of from state is not already connected
@@ -441,7 +446,7 @@ class ContainerState(State):
         return result_transition
 
     @Observable.observed
-    def remove_transition(self, transition_id):
+    def remove_transition(self, transition_id, force=False):
         """Removes a transition from the container state
 
         :param transition_id: the id of the transition to remove
@@ -1004,7 +1009,7 @@ class ContainerState(State):
         if not isinstance(transition, Transition):
             raise TypeError("transition must be of type Transition")
         # the to_state is None when the transition connects an outcome of a child state to the outcome of a parent state
-        if transition.to_state is None:
+        if transition.to_state == self.state_id or transition.to_state is None:
             return self
         else:
             return self.states[transition.to_state]

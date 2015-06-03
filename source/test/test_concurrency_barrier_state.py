@@ -43,8 +43,8 @@ def create_concurrency_barrier_state():
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].add_outcome("FirstOutcomeDecider", 3)
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].add_outcome("SecondOutcomeDecider", 4)
 
-    barrier_state.add_transition(barrier_state.states[UNIQUE_DECIDER_STATE_ID].state_id, 3, None, 3)
-    barrier_state.add_transition(barrier_state.states[UNIQUE_DECIDER_STATE_ID].state_id, 4, None, 4)
+    barrier_state.add_transition(barrier_state.states[UNIQUE_DECIDER_STATE_ID].state_id, 3, barrier_state.state_id, 3)
+    barrier_state.add_transition(barrier_state.states[UNIQUE_DECIDER_STATE_ID].state_id, 4, barrier_state.state_id, 4)
 
     return barrier_state
 
@@ -79,9 +79,8 @@ def test_concurrency_barrier_save_load():
 
     state_machine = StateMachine(concurrency_barrier_state)
     test_storage = StateMachineStorage("../test_scripts/decider_test_statemachine")
+    test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
     test_storage.save_statemachine_as_yaml(state_machine, "/tmp/decider_test_statemachine")
-    # test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
-
     sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml()
 
     root_state = sm_loaded.root_state

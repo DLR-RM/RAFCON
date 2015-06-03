@@ -1,4 +1,5 @@
 !ExecutionState
+description: null
 filename: script.py
 input_data_ports:
     10: !DataPort {data_port_id: 10, data_type: str, default_value: new_turtle, name: turtle_name}
@@ -10,6 +11,5 @@ outcomes:
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports: {}
-path: SET_VELOCITY
+path: /home_local/brun_sb/develop/taskcontrol/source/test_scripts/turtle_libraries/set_velocity/SET_VELOCITY
 state_id: SET_VELOCITY
-state_type: STATE_TYPE.EXECUTION

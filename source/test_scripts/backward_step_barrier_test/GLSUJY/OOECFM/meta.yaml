@@ -34,4 +34,4 @@ transitions:
     3: !Transition {from_outcome: 0, from_state: TTJNXL, to_outcome: null, to_state: unique_decider_sate_id,
         transition_id: 3}
     4: !Transition {from_outcome: 0, from_state: unique_decider_sate_id, to_outcome: 0,
-        to_state: null, transition_id: 4}
+        to_state: OOECFM, transition_id: 4}
