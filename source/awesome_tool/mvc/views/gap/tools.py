@@ -109,9 +109,6 @@ class MyItemHandleInMotion(object):
         if not self._start_port:
             self._start_port = port
 
-        if isinstance(connectable, StateView) and port in self.get_connected_ports_list(connectable):
-            return None
-
         # check if item and found item can be connected on closest port
         if port is not None:
             assert connectable is not None
@@ -338,10 +335,8 @@ class MyHandleTool(Tool):
                         to_state_v.connect_to_outcome(nt_to_port.outcome_id, transition_v, transition_v.to_handle())
                 except AttributeError as e:
                     logger.warn("Transition couldn't be added: {0}".format(e))
-                    pass
                 except Exception as e:
                     logger.error("Unexpected exception while creating transition: {0}".format(e))
-                    pass
 
     @staticmethod
     def get_port_for_handle(handle, state):
