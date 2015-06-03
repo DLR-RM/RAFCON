@@ -28,6 +28,10 @@ class PortView(object):
         self.update_port_side_size()
 
     @property
+    def parent(self):
+        return self._parent
+
+    @property
     def pos(self):
         return self.handle.pos
 

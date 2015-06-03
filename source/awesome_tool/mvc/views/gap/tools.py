@@ -2,19 +2,24 @@ from gaphas.tool import Tool
 from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ConnectionSink, ItemConnectionSink, Finder
 from simplegeneric import generic
 
-from awesome_tool.mvc.views.gap.connection import ConnectionView
+from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView
+from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView
+from awesome_tool.mvc.views.gap.state import StateView
 
 import gtk
 
-from awesome_tool.mvc.views.gap.state import StateView
+from awesome_tool.mvc.statemachine_helper import StateMachineHelper
+
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
 
 
 class MyDeleteTool(Tool):
 
     def on_key_release(self, event):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
-            if isinstance(self.view.focused_item, ConnectionView):
-                # TODO: Remove transition from state machine (model)
+            if isinstance(self.view.focused_item, TransitionView):
+                StateMachineHelper.delete_model(self.view.focused_item.transition_m)
                 self.view.focused_item.remove_connection_from_ports()
                 self.view.canvas.remove(self.view.focused_item)
 
@@ -151,6 +156,7 @@ class MyHandleTool(Tool):
         self.motion_handle = None
         self._last_active_port = None
         self._new_transition = None
+        self._start_state = None
 
     def grab_handle(self, item, handle):
         """
@@ -185,6 +191,8 @@ class MyHandleTool(Tool):
         view = self.view
 
         item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+        if isinstance(item, StateView):
+            self._start_state = item
 
         if handle:
             # Deselect all items unless CTRL or SHIFT is pressed
@@ -210,15 +218,16 @@ class MyHandleTool(Tool):
         # queue extra redraw to make sure the item is drawn properly
         grabbed_handle, grabbed_item = self.grabbed_handle, self.grabbed_item
 
-        if self._new_transition and self._new_transition.from_port and self._new_transition.to_port:
-            # TODO: create correct transition and apply it to transition_v model
-            pass
-        else:
+        if self._new_transition:
+            self._create_new_transition()
+
+            # remove placeholder from canvas
             self._new_transition.remove_connection_from_ports()
             self.view.canvas.remove(self._new_transition)
 
         self._last_active_port = None
         self._new_transition = None
+        self._start_state = None
 
         if self.motion_handle:
             self.motion_handle.stop_move()
@@ -249,20 +258,13 @@ class MyHandleTool(Tool):
                 handle = self.grabbed_handle
                 start_port = self.get_port_for_handle(handle, start_state)
                 if start_port:
-                    from awesome_tool.statemachine.transition import Transition
-                    from awesome_tool.mvc.models.transition import TransitionModel
-                    from awesome_tool.mvc.views.gap.connection import TransitionView
-                    from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView
-
-                    placeholder_transition = Transition()
-                    placeholder_transition_model = TransitionModel(placeholder_transition, None)
-
-                    transition_v = TransitionView(placeholder_transition_model, start_state.hierarchy_level - 1)
+                    transition_v = ConnectionPlaceholderView(start_state.hierarchy_level - 1)
                     self._new_transition = transition_v
 
                     canvas.add(transition_v, start_state_parent)
 
                     if isinstance(start_port, IncomeView):
+                        transition_v.hierarchy_level = start_state.hierarchy_level
                         start_state.connect_to_income(transition_v, transition_v.from_handle())
                     elif isinstance(start_port, OutcomeView):
                         start_state.connect_to_outcome(start_port.outcome_id, transition_v, transition_v.from_handle())
@@ -295,6 +297,51 @@ class MyHandleTool(Tool):
                 self.motion_handle.move(pos, 5.0)
 
             return True
+
+    def _create_new_transition(self):
+        nt_from_port = self._new_transition.from_port
+        nt_to_port = self._new_transition.to_port
+
+        if isinstance(nt_from_port, OutcomeView) and nt_from_port and nt_to_port and nt_from_port is not nt_to_port:
+            canvas = self.view.canvas
+            to_state_v = nt_to_port.parent
+
+            from_state_id = self._start_state.state_m.state.state_id
+            from_outcome_id = nt_from_port.outcome_id
+            to_state_id = None
+            to_outcome_id = None
+
+            to_state_m = to_state_v.state_m
+            responsible_parent_m = None
+            if isinstance(nt_to_port, IncomeView):
+                to_state_id = to_state_m.state.state_id
+                responsible_parent_m = to_state_m.parent
+            elif isinstance(nt_to_port, OutcomeView):
+                to_outcome_id = nt_to_port.outcome_id
+                responsible_parent_m = to_state_m
+
+            if responsible_parent_m:
+                try:
+                    transition_id = responsible_parent_m.state.add_transition(from_state_id,
+                                                                              from_outcome_id,
+                                                                              to_state_id,
+                                                                              to_outcome_id)
+                    transition_m = StateMachineHelper.get_transition_model(responsible_parent_m, transition_id)
+
+                    transition_v = TransitionView(transition_m, self._start_state.hierarchy_level)
+                    canvas.add(transition_v, canvas.get_parent(self._start_state))
+
+                    self._start_state.connect_to_outcome(nt_from_port.outcome_id, transition_v, transition_v.from_handle())
+                    if isinstance(nt_to_port, IncomeView):
+                        to_state_v.connect_to_income(transition_v, transition_v.to_handle())
+                    elif isinstance(nt_to_port, OutcomeView):
+                        to_state_v.connect_to_outcome(nt_to_port.outcome_id, transition_v, transition_v.to_handle())
+                except AttributeError as e:
+                    logger.warn("Transition couldn't be added: {0}".format(e))
+                    pass
+                except Exception as e:
+                    logger.error("Unexpected exception while creating transition: {0}".format(e))
+                    pass
 
     @staticmethod
     def get_port_for_handle(handle, state):

@@ -125,12 +125,19 @@ class ConnectionView(Line):
         cr.stroke()
 
 
+class ConnectionPlaceholderView(ConnectionView):
+
+    def __init__(self, hierarchy_level):
+        super(ConnectionPlaceholderView, self).__init__(hierarchy_level)
+        self.line_width = .5 / hierarchy_level
+
+
 class TransitionView(ConnectionView):
 
     def __init__(self, transition_m, hierarchy_level):
         super(TransitionView, self).__init__(hierarchy_level)
-        assert isinstance(transition_m, TransitionModel)
-        self._transition_m = ref(transition_m)
+        self._transition_m = None
+        self.transition_m = transition_m
         self.line_width = .5 / hierarchy_level
 
     @property
@@ -140,7 +147,7 @@ class TransitionView(ConnectionView):
     @transition_m.setter
     def transition_m(self, transition_model):
         assert isinstance(transition_model, TransitionModel)
-        self._transition_m = transition_model
+        self._transition_m = ref(transition_model)
 
 
 class DataFlowView(ConnectionView):
