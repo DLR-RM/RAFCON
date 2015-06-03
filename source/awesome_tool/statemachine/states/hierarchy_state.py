@@ -112,7 +112,7 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
                 child_state.start(self.execution_history, backward_execution=self.backward_execution)
                 child_state.join()
 
-                if child_state.final_outcome is not None: # final outcome can be None if only one state in a
+                if child_state.final_outcome is not None:  # final outcome can be None if only one state in a
                     # hierarchy state is executed and immediately backward executed
                     if child_state.final_outcome.outcome_id == -1:  # if the child_state aborted save the error
                         last_error = ""
