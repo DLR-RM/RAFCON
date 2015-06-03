@@ -1,4 +1,4 @@
-from gaphas.tool import Tool
+from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool
 from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ItemConnectionSink, Finder
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView
@@ -30,193 +30,59 @@ class MyDeleteTool(Tool):
                 self.view.canvas.remove(self.view.focused_item)
 
 
-class MyItemTool(Tool):
-    """
-    ItemTool does selection and dragging of items. On a button click,
-    the currently "hovered item" is selected. If CTRL or SHIFT are pressed,
-    already selected items remain selected. The last selected item gets the
-    focus (e.g. receives key press events).
-
-    The roles used are Selection (select, unselect) and InMotion (move).
-    """
+class MyItemTool(ItemTool):
 
     def __init__(self, graphical_editor_view, view=None, buttons=(1,)):
-        super(MyItemTool, self).__init__(view)
-        self._buttons = buttons
-        self._movable_items = set()
+        super(MyItemTool, self).__init__(view, buttons)
         self._graphical_editor_view = graphical_editor_view
 
-    def get_item(self):
-        return self.view.hovered_item
-
-    def movable_items(self):
-        """
-        Filter the items that should eventually be moved.
-
-        Returns InMotion aspects for the items.
-        """
-        view = self.view
-        get_ancestors = view.canvas.get_ancestors
-        selected_items = set(view.selected_items)
-        for item in selected_items:
-            # Do not move subitems of selected items
-            if not set(get_ancestors(item)).intersection(selected_items):
-                yield InMotion(item, view)
-
     def on_button_press(self, event):
-        view = self.view
-        item = self.get_item()
+        super(MyItemTool, self).on_button_press(event)
 
-        if event.button not in self._buttons:
-            return False
-
-        # Deselect all items unless CTRL or SHIFT is pressed
-        # or the item is already selected.
-        if not (event.state & (gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
-                or item in view.selected_items):
-            del view.selected_items
-
-        if item:
-            if view.hovered_item in view.selected_items and \
-                    event.state & gtk.gdk.CONTROL_MASK:
-                selection = Selection(item, view)
-                selection.unselect()
-            else:
-                selection = Selection(item, view)
-                selection.select()
-                self._movable_items.clear()
-
-            self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
-            return True
-
-    def on_button_release(self, event):
-        if event.button not in self._buttons:
-            return False
-        for inmotion in self._movable_items:
-            inmotion.stop_move()
-        self._movable_items.clear()
-        return True
-
-    def on_motion_notify(self, event):
-        """
-        Normally do nothing.
-        If a button is pressed move the items around.
-        """
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK:
-
-            if not self._movable_items:
-                self._movable_items = set(self.movable_items())
-                for inmotion in self._movable_items:
-                    inmotion.start_move((event.x, event.y))
-
-            for inmotion in self._movable_items:
-                inmotion.move((event.x, event.y))
-
-            return True
+        self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
 
 
-class MyHoverTool(Tool):
-    """
-    This tool keeps track of the currently hovered item and sets the "hovered" flag if the item is a State
-    """
+class MyHoverTool(HoverTool):
 
     def __init__(self, view=None):
         super(MyHoverTool, self).__init__(view)
         self._prev_hovered_item = None
 
     def on_motion_notify(self, event):
-        view = self.view
-        pos = event.x, event.y
-        view.hovered_item = Finder(view).get_item_at_point(pos)
+        super(MyHoverTool, self).on_motion_notify(event)
 
-        if self._prev_hovered_item and view.hovered_item is not self._prev_hovered_item:
+        if self._prev_hovered_item and self.view.hovered_item is not self._prev_hovered_item:
             self._prev_hovered_item.hovered = False
-        if isinstance(view.hovered_item, StateView):
-            view.hovered_item.hovered = True
-            self._prev_hovered_item = view.hovered_item
+        if isinstance(self.view.hovered_item, StateView):
+            self.view.hovered_item.hovered = True
+            self._prev_hovered_item = self.view.hovered_item
 
 # ------------------------------------------------------------------
 # -----------------------------SNAPPING-----------------------------
 # ------------------------------------------------------------------
 
 
-class MyHandleTool(Tool):
-    """
-    Tool for moving handles around.
-
-    By default this tool does not provide connecting handles to another item
-    (see `ConnectHandleTool`).
-    """
+class MyHandleTool(HandleTool):
 
     def __init__(self, view=None):
         super(MyHandleTool, self).__init__(view)
-        self.grabbed_handle = None
-        self.grabbed_item = None
-        self.motion_handle = None
+
         self._last_active_port = None
         self._new_transition = None
         self._start_state = None
 
-    def grab_handle(self, item, handle):
-        """
-        Grab a specific handle. This can be used from the PlacementTool
-        to set the state of the handle tool.
-        """
-        assert item is None and handle is None or handle in item.handles()
-        self.grabbed_item = item
-        self.grabbed_handle = handle
-
-        selection = HandleSelection(item, handle, self.view)
-        selection.select()
-
-    def ungrab_handle(self):
-        """
-        Reset grabbed_handle and grabbed_item.
-        """
-        item = self.grabbed_item
-        handle = self.grabbed_handle
-        self.grabbed_handle = None
-        self.grabbed_item = None
-        if handle:
-            selection = HandleSelection(item, handle, self.view)
-            selection.unselect()
-
     def on_button_press(self, event):
-        """
-        Handle button press events. If the (mouse) button is pressed on
-        top of a Handle (item.Handle), that handle is grabbed and can be
-        dragged around.
-        """
-        view = self.view
+        super(MyHandleTool, self).on_button_press(event)
 
+        view = self.view
         item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+
         # Set start state
         if isinstance(item, StateView):
             self._start_state = item
 
-        if handle:
-            # Deselect all items unless CTRL or SHIFT is pressed
-            # or the item is already selected.
-
-            if not (event.state & (gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
-                    or view.hovered_item in view.selected_items):
-                del view.selected_items
-
-            view.hovered_item = item
-            view.focused_item = item
-
-            self.motion_handle = None
-
-            self.grab_handle(item, handle)
-
-            return True
-
     def on_button_release(self, event):
-        """
-        Release a grabbed handle.
-        """
-        # queue extra redraw to make sure the item is drawn properly
-        grabbed_handle, grabbed_item = self.grabbed_handle, self.grabbed_item
+        super(MyHandleTool, self).on_button_release(event)
 
         # Create new transition if pull beginning at port occurred
         if self._new_transition:
@@ -230,16 +96,6 @@ class MyHandleTool(Tool):
         self._last_active_port = None
         self._new_transition = None
         self._start_state = None
-
-        if self.motion_handle:
-            self.motion_handle.stop_move()
-            self.motion_handle = None
-
-        self.ungrab_handle()
-
-        if grabbed_handle:
-            grabbed_item.request_update()
-        return True
 
     def on_motion_notify(self, event):
         """

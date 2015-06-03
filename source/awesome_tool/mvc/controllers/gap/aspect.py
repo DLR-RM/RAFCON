@@ -2,6 +2,7 @@ from simplegeneric import generic
 
 from gaphas.aspect import ConnectionSink, Connector
 
+
 class MyItemHandleInMotion(object):
     """
     Move a handle (role is applied to the handle)
