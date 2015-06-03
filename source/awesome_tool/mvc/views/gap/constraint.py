@@ -179,6 +179,12 @@ class EqualDistributionConstraint(Constraint):
 
 
 class PortRectConstraint(Constraint):
+    """
+    Keeps ports on rectangular path along containing state
+    :param rect: Rect (NWpos, SEpos) specifying the path to bind port to
+    :param point: Port position
+    :param port: Port to bind
+    """
 
     def __init__(self, rect, point, port):
         super(PortRectConstraint, self).__init__(rect[0][0], rect[0][1], rect[1][0], rect[1][1], point[0], point[1])
@@ -192,6 +198,9 @@ class PortRectConstraint(Constraint):
         self.update_initial_pos()
 
     def update_initial_pos(self):
+        """
+        Updates the initial position of the port to maintain correct reference
+        """
         if self._port.side == SnappedSide.LEFT:
             _update(self._initial_pos.x, self._initial_pos.x + self._distance_to_border)
         elif self._port.side == SnappedSide.TOP:
@@ -205,35 +214,47 @@ class PortRectConstraint(Constraint):
         self._solve()
 
     def _solve(self):
+        """
+        Calculates the correct position of the port and keeps it aligned with the binding rect
+        """
+
+        # As the size of the containing state may has changed we need to update the distance to the border
         self.update_distance_to_border()
         px, py = self._point
         nw_x, nw_y, se_x, se_y = self.get_adjusted_border_positions()
 
+        # If the port is located in one of the corners it is possible to move in two directions
         if ((self._initial_pos.x == nw_x and self._initial_pos.y == nw_y) or
                 (self._initial_pos.x == se_x and self._initial_pos.y == nw_y) or
                 (self._initial_pos.x == se_x and self._initial_pos.y == se_y) or
                 (self._initial_pos.x == nw_x and self._initial_pos.y == se_y)):
-            self.set_pos(px, se_x, nw_x)
-            self.set_pos(py, se_y, nw_y)
+            self.limit_pos(px, se_x, nw_x)
+            self.limit_pos(py, se_y, nw_y)
+        # If port movement starts at LEFT position, keep X position at place and move Y
         elif self._initial_pos.x == nw_x:
             _update(px, nw_x)
-            self.set_pos(py, se_y, nw_y)
+            self.limit_pos(py, se_y, nw_y)
             self._port.side = SnappedSide.LEFT
+        # If port movement starts at TOP position, keep Y position at place and move X
         elif self._initial_pos.y == nw_y:
             _update(py, nw_y)
-            self.set_pos(px, se_x, nw_x)
+            self.limit_pos(px, se_x, nw_x)
             self._port.side = SnappedSide.TOP
+        # If port movement starts at RIGHT position, keep X position at place and move Y
         elif self._initial_pos.x == se_x:
             _update(px, se_x)
-            self.set_pos(py, se_y, nw_y)
+            self.limit_pos(py, se_y, nw_y)
             self._port.side = SnappedSide.RIGHT
+        # If port movement starts at BOTTOM position, keep Y position at place and move X
         elif self._initial_pos.y == se_y:
             _update(py, se_y)
-            self.set_pos(px, se_x, nw_x)
+            self.limit_pos(px, se_x, nw_x)
             self._port.side = SnappedSide.BOTTOM
+        # If containing state has been resized, snap ports accordingly to border
         else:
             self.set_nearest_border(px, py)
 
+        # Update initial position for next reference
         _update(self._initial_pos.x, deepcopy(px.value))
         _update(self._initial_pos.y, deepcopy(py.value))
 
@@ -241,13 +262,24 @@ class PortRectConstraint(Constraint):
         self._distance_to_border = self._port.port_side_size / 2.
 
     @staticmethod
-    def set_pos(p, se_pos, nw_pos):
+    def limit_pos(p, se_pos, nw_pos):
+        """
+        Limits position p to stay inside containing state
+        :param p: Position to limit
+        :param se_pos: Bottom/Right boundary
+        :param nw_pos: Top/Left boundary
+        :return:
+        """
         if p > se_pos:
             _update(p, se_pos)
         elif p < nw_pos:
             _update(p, nw_pos)
 
     def get_adjusted_border_positions(self):
+        """
+        Calculates the positions to limit the port movement to
+        :return: Adjusted positions nw_x, nw_y, se_x, se_y
+        """
         nw_x, nw_y = self._rect[0]
         se_x, se_y = self._rect[1]
 
@@ -259,6 +291,11 @@ class PortRectConstraint(Constraint):
         return nw_x, nw_y, se_x, se_y
 
     def set_nearest_border(self, px, py):
+        """
+        Snaps the port to the correct side upon state size change
+        :param px: X-Position of port
+        :param py: Y-Position of port
+        """
         nw_x, nw_y, se_x, se_y = self.get_adjusted_border_positions()
 
         if self._port.side == SnappedSide.RIGHT:
