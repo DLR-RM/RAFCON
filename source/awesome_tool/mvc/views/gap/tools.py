@@ -299,6 +299,11 @@ class MyHandleTool(Tool):
         nt_from_port = self._new_transition.from_port
         nt_to_port = self._new_transition.to_port
 
+        if (nt_from_port.parent is nt_to_port.parent and isinstance(nt_from_port, OutcomeView) and
+                isinstance(nt_to_port, OutcomeView)):
+            logger.warn("Cannot connect to outcomes of the same state")
+            return 
+
         if isinstance(nt_from_port, OutcomeView) and nt_from_port and nt_to_port and nt_from_port is not nt_to_port:
             canvas = self.view.canvas
             to_state_v = nt_to_port.parent
