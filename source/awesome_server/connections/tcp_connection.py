@@ -11,13 +11,20 @@ class TCPConnection(protocol.Protocol, gobject.GObject):
     def __init__(self, factory):
         self.__gobject_init__()
         self.factory = factory
+        self.incoming_data_buffer = ""
 
     def connectionMade(self):
         self.factory.num_connections += 1
 
     def dataReceived(self, data):
-        self.factory.forward_received_data(self, data)
-        self.transport.write(data)
+        self.incoming_data_buffer += data
+        if data.endswith("TRANSMISSION_END"):
+            f = open("/home/flow/tcp_received", "w")
+            f.write(self.incoming_data_buffer.split("TRANSMISSION_END")[0])
+            f.close()
+            self.factory.forward_received_data(self, self.incoming_data_buffer.split("TRANSMISSION_END")[0])
+            self.incoming_data_buffer = ""
+        # self.transport.write(data)
 
     def connectionLost(self, reason):
         self.factory.num_connections -= 1

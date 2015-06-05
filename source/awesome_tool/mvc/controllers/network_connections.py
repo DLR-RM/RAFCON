@@ -196,7 +196,10 @@ class TCPClient(protocol.Protocol):
             my_file = files.files.add()
             my_file.file_path = str(path)
             my_file.file_content = content
-        self.transport.write(files.SerializeToString())
+        f = open("/home/flow/tcp_sent", "w")
+        f.write(files.SerializeToString())
+        f.close()
+        self.transport.write(files.SerializeToString() + "TRANSMISSION_END")
 
     def connectionLost(self, reason):
         self.factory.view["tcp_connection_connected_label"].set_text("NO")
