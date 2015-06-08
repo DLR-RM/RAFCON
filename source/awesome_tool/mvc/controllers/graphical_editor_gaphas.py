@@ -91,6 +91,21 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The property that was changed
         :param dict info: Information about the change
         """
+        if 'method_name' in info and info['method_name'] == 'root_state_before_change':
+            kwargs = info['kwargs']
+            if kwargs['method_name'] == 'transition_change':
+                transition_m = kwargs['args'][0]
+                transition_change_kwargs = kwargs['kwargs']
+                transition_v = self.get_view_for_model(transition_m)
+                if (transition_change_kwargs['method_name'] == 'to_state' or
+                            transition_change_kwargs['method_name'] == 'to_outcome'):
+                    transition_v.remove_connection_from_port(transition_v.to_port)
+                    transition_v.reset_to_port()
+                elif (transition_change_kwargs['method_name'] == 'modify_origin' or
+                              transition_change_kwargs['method_name'] == 'from_outcome'):
+                    transition_v.remove_connection_from_port(transition_v.from_port)
+                    transition_v.reset_from_port()
+
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             information = info
             parent_state_m = information['kwargs']['model']
@@ -116,6 +131,41 @@ class GraphicalEditorController(ExtendedController):
                         self.add_transition_view_for_model(transition_m, parent_state_m)
             elif method_name == 'remove_transition':
                 self.remove_transition_view_from_parent_view(parent_state_m)
+            elif method_name == 'add_data_flow':
+                print method_name
+                pass
+            elif method_name == 'remove_data_flow':
+                self.remove_data_flow_view_from_parent_view(parent_state_m)
+            elif method_name == 'transition_change':
+                transition_m = arguments[0]
+                transition_change_kwargs = information['kwargs']['info']
+                transition_v = self.get_view_for_model(transition_m)
+                container_m = information['kwargs']['model']
+                if transition_change_kwargs['method_name'] == 'to_state':
+                    self.connect_handle_to_state(transition_v.to_handle(),
+                                                 transition_v,
+                                                 container_m,
+                                                 transition_change_kwargs['args'][1])
+                elif transition_change_kwargs['method_name'] == 'modify_origin':
+                    self.connect_handle_to_state(transition_v.from_handle(),
+                                                 transition_v,
+                                                 container_m,
+                                                 transition_change_kwargs['args'][1],
+                                                 transition_change_kwargs['args'][2])
+                elif transition_change_kwargs['method_name'] == 'from_outcome':
+                    self.connect_handle_to_state(transition_v.from_handle(),
+                                                 transition_v,
+                                                 container_m,
+                                                 transition_v.transition_m.transition.from_state,
+                                                 transition_change_kwargs['args'][1])
+                elif transition_change_kwargs['method_name'] == 'to_outcome':
+                    self.connect_handle_to_state(transition_v.to_handle(),
+                                                 transition_v,
+                                                 container_m,
+                                                 transition_v.transition_m.transition.to_state,
+                                                 transition_change_kwargs['args'][1])
+            else:
+                print method_name
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
@@ -144,8 +194,27 @@ class GraphicalEditorController(ExtendedController):
         """
         pass
 
+    def connect_handle_to_state(self, handle, transition_v, container_m, state_id, outcome_id=None):
+        state_m = self.get_state_model(container_m, state_id)
+        state_v = self.get_view_for_model(state_m)
+
+        self.canvas.disconnect_item(transition_v, handle)
+
+        if outcome_id is None:
+            state_v.connect_to_income(transition_v, handle)
+        else:
+            state_v.connect_to_outcome(outcome_id, transition_v, handle)
+
+        self.canvas.update()
+
+    @staticmethod
+    def get_state_model(container_m, state_id):
+        if state_id is None:
+            return container_m
+        return container_m.states[state_id]
+
     def add_transition_view_for_model(self, transition_m, parent_state_m):
-        parent_state_v = self.get_state_view_for_model(parent_state_m)
+        parent_state_v = self.get_view_for_model(parent_state_m)
 
         new_transition_hierarchy_level = parent_state_v.hierarchy_level
         new_transition_v = TransitionView(transition_m, new_transition_hierarchy_level)
@@ -154,26 +223,44 @@ class GraphicalEditorController(ExtendedController):
 
         self.draw_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
 
-    def remove_transition_view_from_parent_view(self, parent_state_m):
-        parent_state_v = self.get_state_view_for_model(parent_state_m)
-        available_transitions = parent_state_m.transitions
+    def _remove_connection_view(self, parent_state_m, transitions=True):
+        parent_state_v = self.get_view_for_model(parent_state_m)
+
+        if transitions:
+            available_connections = parent_state_m.transitions
+        else:
+            available_connections = parent_state_m.data_flows
 
         children = self.canvas.get_children(parent_state_v)
         for child in list(children):
-            if isinstance(child, TransitionView) and child.transition_m not in available_transitions:
+            if transitions and isinstance(child, TransitionView) and child.transition_m not in available_connections:
+                child.remove_connection_from_ports()
+                self.canvas.remove(child)
+            elif not transitions and isinstance(child, DataFlowView) and child.data_flow_m not in available_connections:
                 child.remove_connection_from_ports()
                 self.canvas.remove(child)
 
-    def get_state_view_for_model(self, state_m):
+    def remove_data_flow_view_from_parent_view(self, parent_state_m):
+        self._remove_connection_view(parent_state_m, False)
+
+    def remove_transition_view_from_parent_view(self, parent_state_m):
+        self._remove_connection_view(parent_state_m)
+
+    def get_view_for_model(self, model):
+        # TODO: change model name of each Element to "model" to reduce size of method
         for item in self.canvas.get_root_items():
-            if isinstance(item, StateView) and item.state_m is state_m:
+            if isinstance(item, StateView) and item.state_m is model:
+                return item
+            elif isinstance(item, TransitionView) and item.transition_m is model:
                 return item
             for child in list(self.canvas.get_all_children(item)):
-                if isinstance(child, StateView) and child.state_m is state_m:
+                if isinstance(child, StateView) and child.state_m is model:
+                    return child
+                elif isinstance(child, TransitionView) and child.transition_m is model:
                     return child
 
     def add_state_view_to_parent(self, state_m, parent_state_m):
-        parent_state_v = self.get_state_view_for_model(parent_state_m)
+        parent_state_v = self.get_view_for_model(parent_state_m)
 
         new_state_side_size = min(parent_state_v.width * 0.1, parent_state_v.height * 0.1)
         new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
@@ -309,7 +396,7 @@ class GraphicalEditorController(ExtendedController):
             self.draw_transitions(state_m, hierarchy_level)
 
             if global_gui_config.get_config_value('show_data_flows', True):
-                self.draw_data_flows(state_m)
+                self.draw_data_flows(state_m, hierarchy_level)
 
                 # self._handle_new_transition(state_m, depth)
                 #
@@ -378,7 +465,7 @@ class GraphicalEditorController(ExtendedController):
             except KeyError:
                 pass
 
-    def draw_data_flows(self, parent_state_m):
+    def draw_data_flows(self, parent_state_m, hierarchy_level):
         """Draw all data flows contained in the given container state
 
         The method takes all data flows from the given state and calculates their start and end point positions.
@@ -391,7 +478,7 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(parent_state_v, StateView)
         for data_flow_m in parent_state_m.data_flows:
 
-            data_flow_v = DataFlowView(data_flow_m)
+            data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
             self.canvas.add(data_flow_v, parent_state_v)
 
             # Get id and references to the from and to state

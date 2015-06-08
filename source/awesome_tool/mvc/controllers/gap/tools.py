@@ -1,7 +1,7 @@
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
 
-from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView
+from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView
 from awesome_tool.mvc.views.gap.state import StateView
 
@@ -29,6 +29,9 @@ class MyDeleteTool(Tool):
             # Delete Transition from state machine
             if isinstance(self.view.focused_item, TransitionView):
                 StateMachineHelper.delete_model(self.view.focused_item.transition_m)
+                return True
+            if isinstance(self.view.focused_item, DataFlowView):
+                StateMachineHelper.delete_model(self.view.focused_item.data_flow_m)
                 return True
             if isinstance(self.view.focused_item, StateView):
                 if self.view.has_focus():

@@ -25,6 +25,9 @@ class ConnectionView(Line):
         self._from_port = None
         self._to_port = None
 
+        self._line_color = ""
+        self._arrow_color = ""
+
         # self.orthogonal = True
 
     # def setup_canvas(self):
@@ -66,6 +69,12 @@ class ConnectionView(Line):
         elif handle is self.to_handle():
             self.reset_to_port()
 
+    def remove_connection_from_port(self, port):
+        if port is self._from_port:
+            self._from_port.remove_connected_handle(self._from_handle)
+        elif port is self._to_port:
+            self._to_port.remove_connected_handle(self._to_handle)
+
     def remove_connection_from_ports(self):
         if self._from_port:
             self._from_port.remove_connected_handle(self._from_handle)
@@ -102,7 +111,7 @@ class ConnectionView(Line):
 
     def draw_head(self, context):
         cr = context.cairo
-        cr.set_source_color(Color('#ffffff'))
+        cr.set_source_color(Color(self._arrow_color))
         cr.rectangle(0, -.5 / 4 / self.hierarchy_level, .5 / 2 / self.hierarchy_level, .5/ 2 / self.hierarchy_level)
         cr.fill_preserve()
         cr.move_to(0, 0)
@@ -113,10 +122,10 @@ class ConnectionView(Line):
 
     def draw_tail(self, context):
         cr = context.cairo
-        cr.set_source_color(Color('#81848b'))
+        cr.set_source_color(Color(self._line_color))
         cr.line_to(2.5 / self.hierarchy_level, 0)
         cr.stroke()
-        cr.set_source_color(Color('#ffffff'))
+        cr.set_source_color(Color(self._arrow_color))
         cr.move_to(2.5 / self.hierarchy_level, 0)
         cr.line_to(0, 0)
         cr.line_to(1.0 / self.hierarchy_level, 1.0 / self.hierarchy_level)
@@ -140,6 +149,9 @@ class TransitionView(ConnectionView):
         self.transition_m = transition_m
         self.line_width = .5 / hierarchy_level
 
+        self._line_color = '#81848b'
+        self._arrow_color = '#ffffff'
+
     @property
     def transition_m(self):
         return self._transition_m()
@@ -152,11 +164,23 @@ class TransitionView(ConnectionView):
 
 class DataFlowView(ConnectionView):
 
-    def __init__(self, data_flow_m):
-        super(DataFlowView, self).__init__()
+    def __init__(self, data_flow_m, hierarchy_level):
+        super(DataFlowView, self).__init__(hierarchy_level)
         assert isinstance(data_flow_m, DataFlowModel)
         self._data_flow_m = ref(data_flow_m)
         self.line_width = 0.5
+
+        self._line_color = '#6c5e3c'
+        self._arrow_color = '#ffC926'
+
+    @property
+    def data_flow_m(self):
+        return self._data_flow_m()
+
+    @data_flow_m.setter
+    def data_flow_m(self, data_flow_m):
+        assert isinstance(data_flow_m, DataFlowModel)
+        self._data_flow_m = data_flow_m
 
 
 @HandleSelection.when_type(ConnectionView)
