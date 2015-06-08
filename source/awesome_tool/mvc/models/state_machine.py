@@ -137,7 +137,6 @@ class StateMachineModel(ModelMT):
         return False
 
     def get_state_model_by_path(self, path):
-        print "\n\n\nsearch state: ", path, "\n\n\n"
         path_elems = path.split('/')
         path_elems.pop(0)
         current_state_model = self.root_state
