@@ -140,6 +140,9 @@ class ConnectionPlaceholderView(ConnectionView):
         super(ConnectionPlaceholderView, self).__init__(hierarchy_level)
         self.line_width = .5 / hierarchy_level
 
+        self._line_color = '#81848b'
+        self._arrow_color = '#ffffff'
+
 
 class TransitionView(ConnectionView):
 

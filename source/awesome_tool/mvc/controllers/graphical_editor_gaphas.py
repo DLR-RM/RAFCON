@@ -124,6 +124,7 @@ class GraphicalEditorController(ExtendedController):
                 new_state_m = parent_state_m.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, parent_state_m)
             elif method_name == 'add_transition':
+                print "add transition"
                 transitions_models = parent_state_m.transitions
                 transition_id = result
                 for transition_m in transitions_models:
@@ -276,12 +277,23 @@ class GraphicalEditorController(ExtendedController):
     def add_state_view_to_parent(self, state_m, parent_state_m):
         parent_state_v = self.get_view_for_model(parent_state_m)
 
-        new_state_side_size = min(parent_state_v.width * 0.1, parent_state_v.height * 0.1)
+        new_state_side_size = min(parent_state_v.width * 0.2, parent_state_v.height * 0.2)
         new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
 
         new_state_v = StateView(state_m, (new_state_side_size, new_state_side_size), new_state_hierarchy_level)
 
+        state_m.temp['gui']['editor']['view'] = new_state_v
+
         self.canvas.add(new_state_v, parent_state_v)
+
+        for outcome_m in state_m.outcomes:
+            new_state_v.add_outcome(outcome_m)
+
+        for input_port_m in state_m.input_data_ports:
+            new_state_v.add_input_port(input_port_m)
+
+        for output_port_m in state_m.output_data_ports:
+            new_state_v.add_output_port(output_port_m)
 
     def _remove_state_view(self, view):
         selection = self.model.selection.get_all()
@@ -445,6 +457,7 @@ class GraphicalEditorController(ExtendedController):
                 from_state_m = parent_state_m.states[from_state_id]
                 from_state_v = from_state_m.temp['gui']['editor']['view']
                 from_outcome_id = transition_m.transition.from_outcome
+                print from_state_v
                 from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
                 # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v, transition_v.from_handle(), False)
 

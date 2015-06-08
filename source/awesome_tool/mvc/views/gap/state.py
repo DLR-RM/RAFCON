@@ -56,7 +56,7 @@ class StateView(Element):
 
         self.hovered = False
 
-        name_width = self.width - min(self.width, self.height) / 10.
+        name_width = self.width - min(self.width, self.height) / 15.
         self._name_view = NameView(state_m.state.name, (name_width, self.height * 0.2))
 
     def setup_canvas(self):
