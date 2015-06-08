@@ -766,10 +766,13 @@ class GraphicalEditorController(ExtendedController):
             responsible_parent_m = to_state_m
 
         try:
-            transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
-                                                                      to_outcome_id)
-            transition_m = responsible_parent_m.get_transition_model(transition_id)
-            transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
+            if not isinstance(responsible_parent_m, ContainerStateModel):
+                logger.warn("Only container states can have inner transitions.")
+            else:
+                transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
+                                                                          to_outcome_id)
+                transition_m = responsible_parent_m.get_transition_model(transition_id)
+                transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
         except AttributeError as e:
             import traceback
             logger.warn("Transition couldn't be added: {0}".format(e))
