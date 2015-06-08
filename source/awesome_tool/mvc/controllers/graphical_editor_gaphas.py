@@ -92,36 +92,30 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
-            if info['kwargs']['method_name'] == 'add_state':
-                parent_state_m = info['kwargs']['model']
-                new_state = info['kwargs']['args'][1]
+            information = info
+            parent_state_m = information['kwargs']['model']
+            method_name = information['kwargs']['method_name']
+            arguments = information['kwargs']['args']
+            result = information['kwargs']['result']
+            if method_name == 'state_change':
+                information = info['kwargs']['info']
+                parent_state_m = information['model']
+                method_name = information['method_name']
+                arguments = information['args']
+                result = information['result']
+
+            if method_name == 'add_state':
+                new_state = arguments[1]
                 new_state_m = parent_state_m.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, parent_state_m)
-        pass
-
-    def get_state_view_for_model(self, state_m):
-        for item in self.canvas.get_root_items():
-            if isinstance(item, StateView) and item.state_m is state_m:
-                return item
-            for child in list(self.canvas.get_all_children(item)):
-                if isinstance(child, StateView) and child.state_m is state_m:
-                    return child
-
-    def add_state_view_to_parent(self, state_m, parent_state_m):
-        parent_state_v = self.get_state_view_for_model(parent_state_m)
-
-        new_state_side_size = min(parent_state_v.width * 0.1, parent_state_v.height * 0.1)
-        new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
-
-        new_state_v = StateView(state_m, (new_state_side_size, new_state_side_size), new_state_hierarchy_level)
-
-        self.canvas.add(new_state_v, parent_state_v)
-
-    def _remove_state_view(self, view):
-        selection = self.model.selection.get_all()
-        if len(selection) > 0:
-            StateMachineHelper.delete_models(selection)
-            self.model.selection.clear()
+            elif method_name == 'add_transition':
+                transitions_models = parent_state_m.transitions
+                transition_id = result
+                for transition_m in transitions_models:
+                    if transition_m.transition.transition_id == transition_id:
+                        self.add_transition_view_for_model(transition_m, parent_state_m)
+            elif method_name == 'remove_transition':
+                self.remove_transition_view_from_parent_view(parent_state_m)
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
@@ -149,6 +143,50 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         pass
+
+    def add_transition_view_for_model(self, transition_m, parent_state_m):
+        parent_state_v = self.get_state_view_for_model(parent_state_m)
+
+        new_transition_hierarchy_level = parent_state_v.hierarchy_level
+        new_transition_v = TransitionView(transition_m, new_transition_hierarchy_level)
+
+        self.canvas.add(new_transition_v, parent_state_v)
+
+        self.draw_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
+
+    def remove_transition_view_from_parent_view(self, parent_state_m):
+        parent_state_v = self.get_state_view_for_model(parent_state_m)
+        available_transitions = parent_state_m.transitions
+
+        children = self.canvas.get_children(parent_state_v)
+        for child in list(children):
+            if isinstance(child, TransitionView) and child.transition_m not in available_transitions:
+                child.remove_connection_from_ports()
+                self.canvas.remove(child)
+
+    def get_state_view_for_model(self, state_m):
+        for item in self.canvas.get_root_items():
+            if isinstance(item, StateView) and item.state_m is state_m:
+                return item
+            for child in list(self.canvas.get_all_children(item)):
+                if isinstance(child, StateView) and child.state_m is state_m:
+                    return child
+
+    def add_state_view_to_parent(self, state_m, parent_state_m):
+        parent_state_v = self.get_state_view_for_model(parent_state_m)
+
+        new_state_side_size = min(parent_state_v.width * 0.1, parent_state_v.height * 0.1)
+        new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
+
+        new_state_v = StateView(state_m, (new_state_side_size, new_state_side_size), new_state_hierarchy_level)
+
+        self.canvas.add(new_state_v, parent_state_v)
+
+    def _remove_state_view(self, view):
+        selection = self.model.selection.get_all()
+        if len(selection) > 0:
+            StateMachineHelper.delete_models(selection)
+            self.model.selection.clear()
 
     def setup_canvas(self):
 
@@ -294,48 +332,51 @@ class GraphicalEditorController(ExtendedController):
             transition_v = TransitionView(transition_m, hierarchy_level)
             self.canvas.add(transition_v, parent_state_v)
 
+            self.draw_transition(transition_m, transition_v, parent_state_m, parent_state_v)
+
+    def draw_transition(self, transition_m, transition_v, parent_state_m, parent_state_v):
+        try:
+            # Get id and references to the from and to state
+            from_state_id = transition_m.transition.from_state
+            if from_state_id is None:
+                parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
+            else:
+                from_state_m = parent_state_m.states[from_state_id]
+                from_state_v = from_state_m.temp['gui']['editor']['view']
+                from_outcome_id = transition_m.transition.from_outcome
+                from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
+                # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v, transition_v.from_handle(), False)
+
+            to_state_id = transition_m.transition.to_state
+            to_state_m = None if to_state_id is None else parent_state_m.states[to_state_id]
+
+            if to_state_m is None:  # Transition goes back to parent
+                # Set the to coordinates to the outcome coordinates received earlier
+                to_outcome_id = transition_m.transition.to_outcome
+                parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
+                # parent_state_v.connect_to_double_port_outcome(to_outcome_id, transition_v, transition_v.to_handle(), True)
+            else:
+                # Set the to coordinates to the center of the next state
+                to_state_v = to_state_m.temp['gui']['editor']['view']
+                to_state_v.connect_to_income(transition_v, transition_v.to_handle())
+
+            for waypoint in transition_m.meta['gui']['editor']['waypoints']:
+                if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
+                        self.model.meta['gui']['editor']['invert_y']:
+                    waypoint = (waypoint[0], -waypoint[1])
+                transition_v.add_waypoint(waypoint)
+
+            # Let the view draw the transition and store the returned OpenGL object id
+            # if transition_m in self.model.selection.get_transitions():
+            #     transition_v.selected = True
+            # line_width = self.view.editor.transition_stroke_width(parent_state_m)
+
+        except AttributeError as e:
+            logger.error("Cannot connect transition: {0}".format(e))
             try:
-                # Get id and references to the from and to state
-                from_state_id = transition_m.transition.from_state
-                if from_state_id is None:
-                    parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
-                else:
-                    from_state_m = parent_state_m.states[from_state_id]
-                    from_state_v = from_state_m.temp['gui']['editor']['view']
-                    from_outcome_id = transition_m.transition.from_outcome
-                    from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
-                    # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v, transition_v.from_handle(), False)
-
-                to_state_id = transition_m.transition.to_state
-                to_state_m = None if to_state_id is None else parent_state_m.states[to_state_id]
-
-                if to_state_m is None:  # Transition goes back to parent
-                    # Set the to coordinates to the outcome coordinates received earlier
-                    to_outcome_id = transition_m.transition.to_outcome
-                    parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
-                    # parent_state_v.connect_to_double_port_outcome(to_outcome_id, transition_v, transition_v.to_handle(), True)
-                else:
-                    # Set the to coordinates to the center of the next state
-                    to_state_v = to_state_m.temp['gui']['editor']['view']
-                    to_state_v.connect_to_income(transition_v, transition_v.to_handle())
-
-                for waypoint in transition_m.meta['gui']['editor']['waypoints']:
-                    if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
-                            self.model.meta['gui']['editor']['invert_y']:
-                        waypoint = (waypoint[0], -waypoint[1])
-                    transition_v.add_waypoint(waypoint)
-
-                # Let the view draw the transition and store the returned OpenGL object id
-                # if transition_m in self.model.selection.get_transitions():
-                #     transition_v.selected = True
-                # line_width = self.view.editor.transition_stroke_width(parent_state_m)
-
-            except AttributeError as e:
-                logger.error("Cannot connect transition: {0}".format(e))
-                try:
-                    self.canvas.remove(transition_v)
-                except KeyError:
-                    pass
+                self.canvas.remove(transition_v)
+            except KeyError:
+                pass
 
     def draw_data_flows(self, parent_state_m):
         """Draw all data flows contained in the given container state

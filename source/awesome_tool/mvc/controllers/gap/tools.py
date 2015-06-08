@@ -29,8 +29,6 @@ class MyDeleteTool(Tool):
             # Delete Transition from state machine
             if isinstance(self.view.focused_item, TransitionView):
                 StateMachineHelper.delete_model(self.view.focused_item.transition_m)
-                self.view.focused_item.remove_connection_from_ports()
-                self.view.canvas.remove(self.view.focused_item)
                 return True
             if isinstance(self.view.focused_item, StateView):
                 if self.view.has_focus():
@@ -155,14 +153,16 @@ class MyHandleTool(HandleTool):
             start_state = self._start_state
             start_state_parent = canvas.get_parent(start_state)
 
+            handle = self.grabbed_handle
+            start_port = self.get_port_for_handle(handle, start_state)
+
             # If the start state has a parent continue (ensure no transition is created from top level state)
-            if start_state_parent is not None:
-                assert isinstance(start_state_parent, StateView)
-                handle = self.grabbed_handle
-                start_port = self.get_port_for_handle(handle, start_state)
+            if (isinstance(start_state_parent, StateView) or
+                    (start_state_parent is None and isinstance(start_port, IncomeView))):
+
                 if start_port:
                     # Go up one hierarchy_level to match the transitions line width
-                    transition_v = ConnectionPlaceholderView(start_state.hierarchy_level - 1)
+                    transition_v = ConnectionPlaceholderView(max(start_state.hierarchy_level - 1, 1))
                     self._new_transition = transition_v
 
                     canvas.add(transition_v, start_state_parent)
@@ -225,54 +225,75 @@ class MyHandleTool(HandleTool):
         # Ensure from_port is an outcome and
         # from_port as well as to_port are connected to transition and
         # ports are not the same port
-        if isinstance(nt_from_port, OutcomeView) and nt_from_port and nt_to_port and nt_from_port is not nt_to_port:
+        if nt_from_port and nt_to_port and nt_from_port is not nt_to_port:
             # Make sure the ports are not connected to an outcome of the same state
             if (nt_from_port.parent is nt_to_port.parent and isinstance(nt_from_port, OutcomeView) and
                     isinstance(nt_to_port, OutcomeView)):
-                logger.warn("Cannot connect to outcomes of the same state")
+                logger.warn("Cannot connect outcome to outcome of the same state")
+                return
+            if (nt_from_port.parent is nt_to_port.parent and isinstance(nt_from_port, IncomeView) and
+                    isinstance(nt_to_port, OutcomeView)):
+                logger.warn("Cannot connect income to outcome of the same state")
                 return
 
-            canvas = self.view.canvas
-            to_state_v = nt_to_port.parent
+            self._add_transition(nt_to_port, nt_from_port)
 
-            # Gather necessary information to create transition
+    def _add_transition(self, nt_to_port, nt_from_port):
+        canvas = self.view.canvas
+        from_state_v = nt_from_port.parent
+        to_state_v = nt_to_port.parent
+
+        # Gather necessary information to create transition
+        from_state_id = None
+        from_outcome_id = None
+        to_state_id = None
+        to_outcome_id = None
+
+        from_state_m = from_state_v.state_m
+        to_state_m = to_state_v.state_m
+        responsible_parent_m = None
+
+        if isinstance(nt_from_port, OutcomeView):
             from_state_id = self._start_state.state_m.state.state_id
             from_outcome_id = nt_from_port.outcome_id
-            to_state_id = None
-            to_outcome_id = None
 
-            to_state_m = to_state_v.state_m
-            responsible_parent_m = None
-            if isinstance(nt_to_port, IncomeView):
-                to_state_id = to_state_m.state.state_id
-                responsible_parent_m = to_state_m.parent
-            elif isinstance(nt_to_port, OutcomeView):
-                to_outcome_id = nt_to_port.outcome_id
-                responsible_parent_m = to_state_m
+        if isinstance(nt_to_port, IncomeView) and isinstance(nt_from_port, IncomeView):
+            to_state_id = to_state_m.state.state_id
+            responsible_parent_m = from_state_m
+        elif isinstance(nt_to_port, IncomeView) and isinstance(nt_from_port, OutcomeView):
+            to_state_id = to_state_m.state.state_id
+            responsible_parent_m = from_state_m.parent
+        elif isinstance(nt_to_port, OutcomeView) and isinstance(nt_from_port, OutcomeView):
+            to_outcome_id = nt_to_port.outcome_id
+            responsible_parent_m = to_state_m
 
-            if responsible_parent_m:
-                try:
-                    transition_id = responsible_parent_m.state.add_transition(from_state_id,
-                                                                              from_outcome_id,
-                                                                              to_state_id,
-                                                                              to_outcome_id)
-                    transition_m = StateMachineHelper.get_transition_model(responsible_parent_m, transition_id)
+        if responsible_parent_m:
+            try:
+                transition_id = responsible_parent_m.state.add_transition(from_state_id,
+                                                                          from_outcome_id,
+                                                                          to_state_id,
+                                                                          to_outcome_id)
+                transition_m = StateMachineHelper.get_transition_model(responsible_parent_m, transition_id)
 
-                    # Create actual transition view to replace placeholder view
-                    transition_v = TransitionView(transition_m, self._start_state.hierarchy_level - 1)
+                # Create actual transition view to replace placeholder view
+                transition_v = TransitionView(transition_m, max(self._start_state.hierarchy_level - 1, 1))
+
+                # Connect new transition view to ports of placeholder
+                if isinstance(nt_from_port, IncomeView):
+                    canvas.add(transition_v, self._start_state)
+                    self._start_state.connect_to_income(transition_v, transition_v.from_handle())
+                elif isinstance(nt_from_port, OutcomeView):
                     canvas.add(transition_v, canvas.get_parent(self._start_state))
-
-                    # Connect new transition view to ports of placeholder
                     self._start_state.connect_to_outcome(nt_from_port.outcome_id, transition_v, transition_v.from_handle())
-                    if isinstance(nt_to_port, IncomeView):
-                        transition_v.hierarchy_level = self._start_state.hierarchy_level
-                        to_state_v.connect_to_income(transition_v, transition_v.to_handle())
-                    elif isinstance(nt_to_port, OutcomeView):
-                        to_state_v.connect_to_outcome(nt_to_port.outcome_id, transition_v, transition_v.to_handle())
-                except AttributeError as e:
-                    logger.warn("Transition couldn't be added: {0}".format(e))
-                except Exception as e:
-                    logger.error("Unexpected exception while creating transition: {0}".format(e))
+                if isinstance(nt_to_port, IncomeView):
+                    transition_v.hierarchy_level = self._start_state.hierarchy_level
+                    to_state_v.connect_to_income(transition_v, transition_v.to_handle())
+                elif isinstance(nt_to_port, OutcomeView):
+                    to_state_v.connect_to_outcome(nt_to_port.outcome_id, transition_v, transition_v.to_handle())
+            except AttributeError as e:
+                logger.warn("Transition couldn't be added: {0}".format(e))
+            except Exception as e:
+                logger.error("Unexpected exception while creating transition: {0}".format(e))
 
     @staticmethod
     def get_port_for_handle(handle, state):
