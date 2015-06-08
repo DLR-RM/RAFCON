@@ -52,6 +52,7 @@ class StateView(Element):
         self._scoped_variables = []
 
         self.keep_rect_constraints = {}
+        self.port_constraints = {}
 
         self.hovered = False
 
@@ -248,6 +249,13 @@ class StateView(Element):
         outcome_v.handle.pos = self.width, self.height * .05 + (len(self._outcomes) - 1) * 2 * outcome_v.port_side_size
         self.add_rect_constraint_for_port(outcome_v)
 
+    def remove_outcome(self, outcome_v):
+        self._outcomes.remove(outcome_v)
+        self._ports.remove(outcome_v.port)
+        self._handles.remove(outcome_v.handle)
+
+        self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
+
     def add_input_port(self, port_m):
         input_port_v = InputPortView(self, port_m)
         self._inputs.append(input_port_v)
@@ -287,6 +295,7 @@ class StateView(Element):
         constraint = PortRectConstraint((self.handles()[NW].pos, self.handles()[SE].pos), port.pos, port)
         solver = self.canvas.solver
         solver.add_constraint(constraint)
+        self.port_constraints[port] = constraint
 
 
 class NameView(Element):

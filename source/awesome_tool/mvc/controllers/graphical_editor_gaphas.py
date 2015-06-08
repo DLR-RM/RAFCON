@@ -164,6 +164,20 @@ class GraphicalEditorController(ExtendedController):
                                                  container_m,
                                                  transition_v.transition_m.transition.to_state,
                                                  transition_change_kwargs['args'][1])
+            elif method_name == 'add_outcome':
+                state_m = information['kwargs']['model']
+                state_v = self.get_view_for_model(state_m)
+                for outcome_m in state_m.outcomes:
+                    if outcome_m.outcome.outcome_id == result:
+                        state_v.add_outcome(outcome_m)
+                        self.canvas.request_update(state_v)
+            elif method_name == 'remove_outcome':
+                state_m = information['kwargs']['model']
+                state_v = self.get_view_for_model(state_m)
+                for outcome_v in state_v.outcomes:
+                    if outcome_v.outcome_id == arguments[1]:
+                        state_v.remove_outcome(outcome_v)
+                        self.canvas.request_update(state_v)
             else:
                 print method_name
 
