@@ -46,6 +46,7 @@ class GraphicalEditorController(ExtendedController):
         self.setup_canvas()
         self.view.setup_canvas(self.canvas, self.zoom)
         self.view.connect('new_state_selection', self._select_new_state)
+        self.view.connect('remove_state_from_state_machine', self._remove_state_view)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -57,7 +58,20 @@ class GraphicalEditorController(ExtendedController):
 
         :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        pass
+        shortcut_manager.add_callback_for_action("add", self._add_execution_state)
+
+    def _add_execution_state(self, *args):
+        from awesome_tool.statemachine.enums import StateType
+        from awesome_tool.mvc.models import StateModel, TransitionModel, DataFlowModel
+        if self.view.editor.has_focus():  # or singleton.global_focus is self:
+            selection = self.model.selection.get_all()
+            if len(selection) > 0:
+                model = selection[0]
+
+                if isinstance(model, StateModel):
+                    StateMachineHelper.add_state(model, StateType.EXECUTION)
+                if isinstance(model, TransitionModel) or isinstance(model, DataFlowModel):
+                    StateMachineHelper.add_state(model.parent, StateType.EXECUTION)
 
     def _select_new_state(self, view, state):
         if state and isinstance(state, StateView):
@@ -77,9 +91,37 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The property that was changed
         :param dict info: Information about the change
         """
-        # if 'method_name' in info and info['method_name'] == 'root_state_after_change':
-        #     self._redraw()
+        if 'method_name' in info and info['method_name'] == 'root_state_after_change':
+            if info['kwargs']['method_name'] == 'add_state':
+                parent_state_m = info['kwargs']['model']
+                new_state = info['kwargs']['args'][1]
+                new_state_m = parent_state_m.states[new_state.state_id]
+                self.add_state_view_to_parent(new_state_m, parent_state_m)
         pass
+
+    def get_state_view_for_model(self, state_m):
+        for item in self.canvas.get_root_items():
+            if isinstance(item, StateView) and item.state_m is state_m:
+                return item
+            for child in list(self.canvas.get_all_children(item)):
+                if isinstance(child, StateView) and child.state_m is state_m:
+                    return child
+
+    def add_state_view_to_parent(self, state_m, parent_state_m):
+        parent_state_v = self.get_state_view_for_model(parent_state_m)
+
+        new_state_side_size = min(parent_state_v.width * 0.1, parent_state_v.height * 0.1)
+        new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
+
+        new_state_v = StateView(state_m, (new_state_side_size, new_state_side_size), new_state_hierarchy_level)
+
+        self.canvas.add(new_state_v, parent_state_v)
+
+    def _remove_state_view(self, view):
+        selection = self.model.selection.get_all()
+        if len(selection) > 0:
+            StateMachineHelper.delete_models(selection)
+            self.model.selection.clear()
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):

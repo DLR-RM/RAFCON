@@ -1,11 +1,10 @@
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
-from gaphas.aspect import HandleInMotion, Connector, HandleFinder, HandleSelection, ItemConnectionSink, Finder
+from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView
 from awesome_tool.mvc.views.gap.state import StateView
 
-from gaphas.aspect import InMotion, Selection
 from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
 
 import gtk
@@ -21,6 +20,10 @@ class MyDeleteTool(Tool):
     This tool is responsible of deleting the selected item
     """
 
+    def __init__(self, graphical_editor_view, view=None):
+        super(MyDeleteTool, self).__init__(view)
+        self._graphical_editor_view = graphical_editor_view
+
     def on_key_release(self, event):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
             # Delete Transition from state machine
@@ -28,6 +31,26 @@ class MyDeleteTool(Tool):
                 StateMachineHelper.delete_model(self.view.focused_item.transition_m)
                 self.view.focused_item.remove_connection_from_ports()
                 self.view.canvas.remove(self.view.focused_item)
+                return True
+            if isinstance(self.view.focused_item, StateView):
+                if self.view.has_focus():
+                    self._graphical_editor_view.emit('remove_state_from_state_machine')
+                    self.remove_connections_from_state(self.view.focused_item)
+                    self.view.focused_item.remove_keept_rect_within_constraint_from_parent()
+                    self.view.canvas.remove(self.view.focused_item)
+                return True
+
+    def remove_connections_from_state(self, state_v):
+        parent_state_v = self.view.canvas.get_parent(state_v)
+        children = self.view.canvas.get_children(parent_state_v)
+
+        state_port_list = state_v.get_all_ports()
+        for port in state_port_list:
+            for connected_handle in port.connected_handles:
+                for child in children:
+                    if isinstance(child, ConnectionView) and connected_handle in child.handles():
+                        child.remove_connection_from_ports()
+                        self.view.canvas.remove(child)
 
 
 class MyItemTool(ItemTool):
@@ -39,6 +62,8 @@ class MyItemTool(ItemTool):
     def on_button_press(self, event):
         super(MyItemTool, self).on_button_press(event)
 
+        if not self.view.is_focus():
+            self.view.grab_focus()
         self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
 
 

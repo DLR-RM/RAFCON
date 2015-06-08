@@ -43,6 +43,10 @@ class PortView(object):
     def port_pos(self):
         return self.port.point
 
+    @property
+    def connected_handles(self):
+        return self._connected_handles
+
     def add_connected_handle(self, handle):
         assert isinstance(handle, Handle)
         if handle not in self._connected_handles:

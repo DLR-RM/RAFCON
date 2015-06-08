@@ -51,6 +51,8 @@ class StateView(Element):
         self._outputs = []
         self._scoped_variables = []
 
+        self.keep_rect_constraints = {}
+
         self.hovered = False
 
         name_width = self.width - min(self.width, self.height) / 10.
@@ -72,6 +74,13 @@ class StateView(Element):
         # Registers local constraints
         super(StateView, self).setup_canvas()
 
+    def get_all_ports(self):
+        port_list = [self.income]
+        port_list += self.outcomes
+        port_list += self.inputs
+        port_list += self.outputs
+        return port_list
+
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
@@ -83,6 +92,16 @@ class StateView(Element):
         parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
         constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, child_nw_abs, child_se_abs, child, port_side_size)
         solver.add_constraint(constraint)
+        parent.keep_rect_constraints[child] = constraint
+
+    def remove_keept_rect_within_constraint_from_parent(self):
+        canvas = self.canvas
+        parent = canvas.get_parent(self)
+
+        if parent is not None and isinstance(parent, StateView):
+            constraint = parent.keep_rect_constraints[self]
+            solver = canvas.solver
+            solver.remove_constraint(constraint)
 
     @property
     def state_m(self):
