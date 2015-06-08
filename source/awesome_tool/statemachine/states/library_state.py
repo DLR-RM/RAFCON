@@ -65,6 +65,7 @@ class LibraryState(State, yaml.YAMLObject):
         state_machine, lib_version, creation_time = awesome_tool.statemachine.singleton.library_manager.storage.\
             load_statemachine_from_yaml(lib_os_path)
         self.state_copy = state_machine.root_state
+        self.state_copy.parent = self
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
 
@@ -103,7 +104,7 @@ class LibraryState(State, yaml.YAMLObject):
         """
         self.state_execution_status = StateExecutionState.ACTIVE
         logger.debug("Entering library state %s" % self.library_name)
-        self.state_copy.parent = self.parent
+        # self.state_copy.parent = self.parent
         self.state_copy.input_data = self.input_data
         self.state_copy.output_data = self.output_data
         self.state_copy.execution_history = self.execution_history
