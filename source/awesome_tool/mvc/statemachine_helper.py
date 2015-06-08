@@ -4,6 +4,7 @@ logger = log.get_logger(__name__)
 
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.library_state import LibraryState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -366,11 +367,42 @@ class StateMachineHelper():
         return models
 
     @staticmethod
-    def get_root_state_model(state_m):
-        while state_m.parent is not None:
+    def get_root_state_model(state_m, library_root=False):
+        """Get the root state for a given state model
+
+        The method walks up the state tree from the given state model to find the root state model (which doesn't
+        have a parent state). If the flag library_root is set to True, the root is defined as root of the library and
+        not of the whole state machine.
+        :param state_m: The state model to start from
+        :param library_root: Flag to specify if the root of teh library is searched
+        :return: The model of the root state (either of the state machine or the library)
+        """
+        while state_m.parent is not None and (not library_root or not isinstance(state_m.state, LibraryState)):
             state_m = state_m.parent
         return state_m
 
+    @staticmethod
+    def get_state_model_for_state(state):
+        """Return the model for a given state
 
-
-
+        The function looks up the state machine id for the given state and walks the state tree up until it find the
+        model of the given state.
+        :param state: The state of which the state model is searched
+        :return: The model corresponding to state
+        """
+        assert isinstance(state, State)
+        from awesome_tool.statemachine.singleton import state_machine_manager
+        state_machine_id = state_machine_manager.get_sm_id_for_state(state)
+        state_machine_m = state_machine_manager_model.state_machines[state_machine_id]
+        state_m = state_machine_m.root_state
+        state_path = state.get_path()
+        path_item_list = state_path.split('/')
+        root_state_id = path_item_list.pop(0)
+        assert state_m.state.state_id == root_state_id
+        while len(path_item_list) > 0:
+            state_id = path_item_list.pop(0)
+            if isinstance(state_m.state, LibraryState):
+                return state_m  # There are no models for states within library states, yes
+            state_m = state_m.states[state_id]
+        assert state == state_m.state  # Final check
+        return state_m
