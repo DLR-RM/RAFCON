@@ -158,7 +158,9 @@ class DataPort(Observable, yaml.YAMLObject):
         if data_type is not None:
             if not isinstance(data_type, str):
                 raise TypeError("data_type must be of type str")
-            if data_type not in ("int", "float", "bool", "str", "dict", "tuple", "list"):
+            if data_type not in ('int', 'float', 'long', 'complex', 'bool', 'str', 'basestr', 'unicode', 'dict',
+                                 'tuple', 'list', 'bytearray', 'buffer', 'xrange', 'set', 'frozenset', \
+                                 'object', 'function'):
                 try:
                     getattr(sys.modules[__name__], data_type)
                 except AttributeError:
@@ -180,15 +182,26 @@ class DataPort(Observable, yaml.YAMLObject):
         if default_value is not None:
             # If the default value is passes as string, we have to convert it to the data type
             if isinstance(default_value, basestring):
-                if default_value[0] == '$':
+                if len(default_value) > 1 and default_value[0] == '$':
                     return default_value
+                if len(default_value) == 0 or default_value == "None":
+                    return None
                 default_value = self.convert_string_to_type(default_value, data_type)
                 if default_value is None:
                     raise AttributeError("Could not convert default value '{0}' to data type '{1}'".format(
                         default_value, data_type))
 
             # check for primitive data types
-            if not str(type(default_value).__name__) == data_type:
+            def is_derivative_of_data_type(object_type):
+                if object_type.__name__ == data_type:
+                    return True
+                else:
+                    proper = True
+                    for parent_type in object_type.__bases__:
+                        proper &= is_derivative_of_data_type(parent_type)
+                    return proper
+
+            if not is_derivative_of_data_type(type(default_value)):
                 # check for classes
                 if not isinstance(default_value, getattr(sys.modules[__name__], data_type)):
                     raise TypeError("Input of execute function must be of type %s" % str(data_type))
@@ -203,10 +216,11 @@ class DataPort(Observable, yaml.YAMLObject):
         :return: the converted value
         """
         import ast
+        from pydoc import locate
         converted_value = None
 
         try:
-            if data_type == "str":
+            if data_type in ("str", "basestr"):
                 converted_value = str(string_value)
             elif data_type == "int":
                 converted_value = int(string_value)
@@ -214,14 +228,16 @@ class DataPort(Observable, yaml.YAMLObject):
                 converted_value = float(string_value)
             elif data_type == "bool":
                 converted_value = bool(string_value)
-            elif data_type == "list":
+            elif data_type in ("list", "dict", "tuple"):
                 converted_value = ast.literal_eval(string_value)
-            elif data_type == "dict":
+                if type(converted_value).__name__ != data_type:
+                    raise ValueError("Invalid syntax")
+            elif data_type == "object":
                 converted_value = ast.literal_eval(string_value)
-            elif data_type == "tuple":
-                converted_value = ast.literal_eval(string_value)
+            elif isinstance(type(locate(data_type)), type):
+                converted_value = locate(data_type)(string_value)
             else:
                 logger.debug("No conversion from string to data type '{0}' defined".format(data_type))
-        except (ValueError, SyntaxError):
-            raise AttributeError("Can't convert '{0}' to type '{1}'".format(string_value, data_type))
+        except (ValueError, SyntaxError, TypeError) as e:
+            raise AttributeError("Can't convert '{0}' to type '{1}': {2}".format(string_value, data_type, e))
         return converted_value
