@@ -108,6 +108,8 @@ class MenuBarController(ExtendedController):
                 logger.error("No function defined for creating a folder")
                 return False
             path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
+            if path is None:
+                return False
         self.model.get_selected_state_machine_model().state_machine.base_path = path
         self.on_save_activate(widget, data)
         return True
