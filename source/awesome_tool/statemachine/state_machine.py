@@ -112,18 +112,21 @@ class StateMachine(Observable):
         self._marked_dirty = marked_dirty
 
     def get_state_by_path(self, path):
+        from awesome_tool.statemachine.states.library_state import LibraryState
         path_item_list = path.split('/')
 
-        state = None
-        if path_item_list.pop(0) == self.root_state.state_id:
-            state = self.root_state
-            for state_id in path_item_list:
+        assert path_item_list.pop(0) == self.root_state.state_id
+        state = self.root_state
+        for state_id in path_item_list:
+            if isinstance(state, LibraryState):
+                state = state.state_copy
+                assert state.state_id == state_id
+            else:
                 try:
                     state = state.states[state_id]
-                except:
-                    logger.warning("----- STATE MACHINE NOT FOUND ----- for path %s and state %s" % (path, state))
-                    state = None
-                    break
+                except KeyError:
+                    logger.warning("Invalid path '{0}' for state machine '{1}'".format(path, self))
+                    return None
         return state
 
     @Observable.observed
