@@ -9,6 +9,14 @@ input_data_ports:
         data_type: list
         default_value: [Blue pill, Red pill, Call Mum]
         name: options
+    5: !DataPort
+        data_port_id: 5
+        data_type: list
+        default_value:
+        - ['1', kp_1]
+        - ['2', kp_2]
+        - ['3', kp_3]
+        name: key_mapping
 library_name: Show dialog
 library_path: generic/dialog
 name: Show dialog

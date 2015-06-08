@@ -1,4 +1,20 @@
-def show_dialog(self, event, text, subtext, options, result):
+
+def on_dialog_key_press(dialog, event, key_mapping, buttons):
+    from gtk.gdk import keyval_name
+    key_name = str.lower(keyval_name(event.keyval))
+    for i, desired_key in enumerate(key_mapping):
+        if i >= len(buttons):
+            break
+        if isinstance(desired_key, list):
+            key_list = desired_key
+            for desired_key in key_list:
+                if str.lower(desired_key) == key_name:
+                    buttons[i].clicked()
+        elif str.lower(desired_key) == key_name:
+            buttons[i].clicked()
+    pass
+
+def show_dialog(self, event, text, subtext, options, key_mapping, result):
     import gtk
     dialog = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
     text = "<span size='50000'>" + text + "</span>"
@@ -8,6 +24,7 @@ def show_dialog(self, event, text, subtext, options, result):
         subtext = "<span size='20000'>" + subtext + "</span>"
         dialog.format_secondary_markup(subtext)
         
+    buttons = {}
     for i, option in enumerate(options):
         button = gtk.Button()
         label = gtk.Label("<span size='20000'>" + option + "</span>")
@@ -17,6 +34,10 @@ def show_dialog(self, event, text, subtext, options, result):
         button.set_size_request(300, 300)
         button.show()
         dialog.add_action_widget(button, i)
+        buttons[i] = button
+               
+    dialog.add_events(gtk.gdk.KEY_PRESS_MASK)
+    dialog.connect('key-press-event', on_dialog_key_press, key_mapping, buttons)
 
     res = dialog.run()
     dialog.destroy()
@@ -37,8 +58,9 @@ def execute(self, inputs, outputs, gvm):
     text = inputs['text']
     subtext = inputs['subtext']
     options = inputs['options']
+    key_mapping = inputs['key_mapping']
     
-    gobject.idle_add(show_dialog, self, event, text, subtext, options, result)
+    gobject.idle_add(show_dialog, self, event, text, subtext, options, key_mapping, result)
     event.wait()
     option = result[0]
     

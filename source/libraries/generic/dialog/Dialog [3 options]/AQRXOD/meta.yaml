@@ -9,7 +9,12 @@ data_flows:
         to_state: RFMJKJ}
     17: !DataFlow {data_flow_id: 17, from_key: 15, from_state: AQRXOD, to_key: 16,
         to_state: LFPQSW}
-description: null
+description: 'Message dialog with 3 options
+
+
+    A message dialog with headline "text" and subtext "subtext" is shown. "Option
+    1" defines the text for the first button, and so on. If the user clicks on the
+    first button, outcome "option 1" is used, and so on.'
 filename: script.py
 input_data_ports:
     1: !DataPort {data_port_id: 1, data_type: str, default_value: Please decide wisely,
@@ -38,11 +43,11 @@ transitions:
         transition_id: 1}
     2: !Transition {from_outcome: 0, from_state: LFPQSW, to_outcome: null, to_state: JFDYJZ,
         transition_id: 2}
-    3: !Transition {from_outcome: 0, from_state: RFMJKJ, to_outcome: 0, to_state: null,
+    3: !Transition {from_outcome: 0, from_state: RFMJKJ, to_outcome: 0, to_state: AQRXOD,
         transition_id: 3}
-    4: !Transition {from_outcome: 1, from_state: RFMJKJ, to_outcome: 1, to_state: null,
+    4: !Transition {from_outcome: 1, from_state: RFMJKJ, to_outcome: 1, to_state: AQRXOD,
         transition_id: 4}
     5: !Transition {from_outcome: 0, from_state: JFDYJZ, to_outcome: null, to_state: RFMJKJ,
         transition_id: 5}
-    6: !Transition {from_outcome: 2, from_state: RFMJKJ, to_outcome: 2, to_state: null,
+    6: !Transition {from_outcome: 2, from_state: RFMJKJ, to_outcome: 2, to_state: AQRXOD,
         transition_id: 6}
