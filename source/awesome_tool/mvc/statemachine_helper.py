@@ -406,3 +406,16 @@ class StateMachineHelper():
             state_m = state_m.states[state_id]
         assert state == state_m.state  # Final check
         return state_m
+
+    @staticmethod
+    def get_state_machine_model_for_state(state):
+        """Return the state machine model containing the given state
+
+        :param state: The state of which the state machine model is searched
+        :return: The state machine model containing the state
+        """
+        assert isinstance(state, State)
+        from awesome_tool.statemachine.singleton import state_machine_manager
+        state_machine_id = state_machine_manager.get_sm_id_for_state(state)
+        state_machine_m = state_machine_manager_model.state_machines[state_machine_id]
+        return state_machine_m
