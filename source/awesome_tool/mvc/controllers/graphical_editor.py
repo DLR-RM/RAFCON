@@ -490,8 +490,10 @@ class GraphicalEditorController(ExtendedController):
                                       state_m.meta['gui']['editor']['size'][1])
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords, lower_right_corner)
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-            modifier = event.state
-            self._resize_state(state_m, new_pos, modifier)
+            modifier_keys = event.state
+            keep_ratio = int(modifier_keys & SHIFT_MASK) > 0
+            resize_content = int(modifier_keys & CONTROL_MASK) > 0
+            self._resize_state(state_m, new_pos, keep_ratio=keep_ratio, resize_content=resize_content)
 
         self.mouse_move_last_pos = (event.x, event.y)
         self.mouse_move_last_coords = mouse_current_coord
@@ -1002,7 +1004,7 @@ class GraphicalEditorController(ExtendedController):
         self._publish_changes(connection_m, "Move waypoint", affects_children=False)
         self._redraw()
 
-    def _resize_state(self, state_m, new_corner_pos, modifier_keys):
+    def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False):
         """Resize the state by the given delta width and height
 
         The resize function checks the child states and keeps the state around the children, thus limiting the minimum
@@ -1012,7 +1014,8 @@ class GraphicalEditorController(ExtendedController):
 
         :param awesome_tool.mvc.models.state.StateModel state_m: The model of the state to be resized
         :param tuple new_corner_pos: The absolute coordinates of the new desired lower right corner
-        :param modifier_keys: The current pressed modifier keys (mask)
+        :param keep_ratio: Flag, if set, the size ratio is kept constant
+        :param resize_content: Flag, if set, the content of the state is also resized
         """
         state_temp = state_m.temp['gui']['editor']
         state_meta = state_m.meta['gui']['editor']
@@ -1021,7 +1024,7 @@ class GraphicalEditorController(ExtendedController):
         new_height = abs(new_corner_pos[1] - state_temp['pos'][1])
 
         # Keep size ratio?
-        if int(modifier_keys & SHIFT_MASK) > 0:
+        if keep_ratio:
             state_size_ratio = state_meta['size'][0] / state_meta['size'][1]
             new_state_size_ratio = new_width / new_height
 
@@ -1029,9 +1032,6 @@ class GraphicalEditorController(ExtendedController):
                 new_height = new_width / state_size_ratio
             else:
                 new_width = new_height * state_size_ratio
-
-        # User wants to resize content by holding the ctrl keys pressed
-        resize_content = int(modifier_keys & CONTROL_MASK) > 0
 
         min_right_edge = state_temp['pos'][0]
         max_bottom_edge = state_temp['pos'][1]
