@@ -98,8 +98,12 @@ class StateMachineStorage(Observable):
         if not self.storage_utils.exists_path(self.base_path):
             self.storage_utils.create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
-        statemachine_content = "root_state: %s\nversion: %s\ncreation_time: %s"\
-                               % (root_state.state_id, version, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+        last_update = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        creation_time = last_update
+        if hasattr(statemachine, 'creation_time'):
+            creation_time = statemachine.creation_time
+        statemachine_content = "root_state: %s\nversion: %s\ncreation_time: %s\nlast_update: %s"\
+                               % (root_state.state_id, version, creation_time, last_update)
         yaml.dump(yaml.load(statemachine_content), f, indent=4)
         f.close()
         # add root state recursively
@@ -186,9 +190,16 @@ class StateMachineStorage(Observable):
         root_state_id = tmp_dict['root_state']
         version = tmp_dict['version']
         creation_time = tmp_dict['creation_time']
+        if 'last_update' not in tmp_dict:
+            last_update = creation_time
+        else:
+            last_update = tmp_dict['last_update']
         tmp_base_path = os.path.join(self.base_path, root_state_id)
         logger.debug("Loading root state from path %s" % tmp_base_path)
         sm = StateMachine()
+        sm.version = version
+        sm.creation_time = creation_time
+        sm.last_update = last_update
         sm.base_path = base_path
         sm.root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
