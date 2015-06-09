@@ -377,6 +377,9 @@ class MyHandleTool(HandleTool):
 
     def _handle_reset_ports(self, item, handle, start_parent):
 
+        if handle is not item.from_handle() or handle is not item.to_handle():
+            return 
+
         start_outcome_id = None
         if isinstance(self._start_port, OutcomeView):
             start_outcome_id = self._start_port.outcome_id
