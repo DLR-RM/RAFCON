@@ -1234,9 +1234,24 @@ class GraphicalEditorController(ExtendedController):
         state_meta = state_m.meta['gui']['editor']
         state_temp = state_m.temp['gui']['editor']
 
+        if state_temp['recalc']:
+            state_temp['recalc'] = False
+            if isinstance(state_meta['size'], tuple):
+                size = state_meta['size']
+            if isinstance(state_meta['rel_pos'], tuple):
+                rel_pos = state_meta['rel_pos']
+            parent_size = state_m.parent.meta['gui']['editor']['size']
+            if size[0] > parent_size[0] / 3.:
+                size = (parent_size[0] / 3., parent_size[1] / 3.)
+            state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
+            state_m.temp['gui']['editor']['pos'] = state_abs_pos
+            new_corner_pos = add_pos(state_abs_pos, size)
+            self._resize_state(state_m, new_corner_pos, keep_ratio=True, resize_content=True)
+            self._redraw()
+
         # Use default values if no size information is stored
-        if not isinstance(state_m.meta['gui']['editor']['size'], tuple):
-            state_m.meta['gui']['editor']['size'] = size
+        if not isinstance(state_meta['size'], tuple):
+            state_meta['size'] = size
 
         size = state_meta['size']
 
@@ -1892,6 +1907,8 @@ class GraphicalEditorController(ExtendedController):
                     new_size = (new_size[1] * old_size_ratio, new_size[1])
                 else:
                     new_size = (new_size[0], new_size[0] / old_size_ratio)
-            state_copy_m.meta['gui']['editor']['size'] = new_size
+
+            new_corner_pos = add_pos(state_copy_m.temp['gui']['editor']['pos'], new_size)
+            self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True)
 
             self._redraw()

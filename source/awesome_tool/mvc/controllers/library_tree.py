@@ -141,7 +141,7 @@ class LibraryTreeController(ExtendedController):  # (Controller):
         current_state.add_state(state_machine.root_state)
         current_state_model = current_selection.get_states()[0]
         current_state_model.states[state_machine.root_state.state_id].load_meta_data_for_state()
-
+        current_state_model.states[state_machine.root_state.state_id].temp['gui']['editor']['recalc'] = True
 
 
 
