@@ -123,8 +123,10 @@ class GraphicalEditorController(ExtendedController):
                 new_state = arguments[1]
                 new_state_m = parent_state_m.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, parent_state_m)
+            # ----------------------------------
+            #           TRANSITIONS
+            # ----------------------------------
             elif method_name == 'add_transition':
-                print "add transition"
                 transitions_models = parent_state_m.transitions
                 transition_id = result
                 for transition_m in transitions_models:
@@ -132,39 +134,28 @@ class GraphicalEditorController(ExtendedController):
                         self.add_transition_view_for_model(transition_m, parent_state_m)
             elif method_name == 'remove_transition':
                 self.remove_transition_view_from_parent_view(parent_state_m)
-            elif method_name == 'add_data_flow':
-                print method_name
-                pass
-            elif method_name == 'remove_data_flow':
-                self.remove_data_flow_view_from_parent_view(parent_state_m)
             elif method_name == 'transition_change':
                 transition_m = arguments[0]
-                transition_change_kwargs = information['kwargs']['info']
                 transition_v = self.get_view_for_model(transition_m)
-                container_m = information['kwargs']['model']
-                if transition_change_kwargs['method_name'] == 'to_state':
-                    self.connect_handle_to_state(transition_v.to_handle(),
-                                                 transition_v,
-                                                 container_m,
-                                                 transition_change_kwargs['args'][1])
-                elif transition_change_kwargs['method_name'] == 'modify_origin':
-                    self.connect_handle_to_state(transition_v.from_handle(),
-                                                 transition_v,
-                                                 container_m,
-                                                 transition_change_kwargs['args'][1],
-                                                 transition_change_kwargs['args'][2])
-                elif transition_change_kwargs['method_name'] == 'from_outcome':
-                    self.connect_handle_to_state(transition_v.from_handle(),
-                                                 transition_v,
-                                                 container_m,
-                                                 transition_v.transition_m.transition.from_state,
-                                                 transition_change_kwargs['args'][1])
-                elif transition_change_kwargs['method_name'] == 'to_outcome':
-                    self.connect_handle_to_state(transition_v.to_handle(),
-                                                 transition_v,
-                                                 container_m,
-                                                 transition_v.transition_m.transition.to_state,
-                                                 transition_change_kwargs['args'][1])
+                self.connect_transition_handle_to_state(transition_v, transition_m, parent_state_m)
+            # ----------------------------------
+            #           DATA FLOW
+            # ----------------------------------
+            elif method_name == 'add_data_flow':
+                data_flow_models = parent_state_m.data_flows
+                data_flow_id = result
+                for data_flow_m in data_flow_models:
+                    if data_flow_m.data_flow.data_flow_id == data_flow_id:
+                        self.add_data_flow_view_for_model(data_flow_m, parent_state_m)
+            elif method_name == 'remove_data_flow':
+                self.remove_data_flow_view_from_parent_view(parent_state_m)
+            elif method_name == 'data_flow_change':
+                data_flow_m = arguments[0]
+                data_flow_v = self.get_view_for_model(data_flow_m)
+                self.connect_data_flow_handle_to_state(data_flow_v, data_flow_m, parent_state_m)
+            # ----------------------------------
+            #           OUTCOMES
+            # ----------------------------------
             elif method_name == 'add_outcome':
                 state_m = information['kwargs']['model']
                 state_v = self.get_view_for_model(state_m)
@@ -179,6 +170,9 @@ class GraphicalEditorController(ExtendedController):
                     if outcome_v.outcome_id == arguments[1]:
                         state_v.remove_outcome(outcome_v)
                         self.canvas.request_update(state_v)
+            # ----------------------------------
+            #           DATA PORTS
+            # ----------------------------------
             else:
                 print method_name
 
@@ -209,17 +203,16 @@ class GraphicalEditorController(ExtendedController):
         """
         pass
 
-    def connect_handle_to_state(self, handle, transition_v, container_m, state_id, outcome_id=None):
-        state_m = self.get_state_model(container_m, state_id)
-        state_v = self.get_view_for_model(state_m)
+    def connect_transition_handle_to_state(self, transition_v, transition_m, parent_state_m):
+        parent_state_v = self.get_view_for_model(parent_state_m)
 
-        self.canvas.disconnect_item(transition_v, handle)
+        self.canvas.disconnect_item(transition_v)
+        self.draw_transition(transition_m, transition_v, parent_state_m, parent_state_v, False)
+        self.canvas.update()
 
-        if outcome_id is None:
-            state_v.connect_to_income(transition_v, handle)
-        else:
-            state_v.connect_to_outcome(outcome_id, transition_v, handle)
-
+    def connect_data_flow_handle_to_state(self, data_flow_v, data_flow_m, parent_state_m):
+        self.canvas.disconnect_item(data_flow_v)
+        self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
         self.canvas.update()
 
     @staticmethod
@@ -237,6 +230,16 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.add(new_transition_v, parent_state_v)
 
         self.draw_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
+
+    def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
+        parent_state_v = self.get_view_for_model(parent_state_m)
+
+        new_data_flow_hierarchy_level = parent_state_v.hierarchy_level
+        new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
+
+        self.canvas.add(new_data_flow_v, parent_state_v)
+
+        self.draw_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
 
     def _remove_connection_view(self, parent_state_m, transitions=True):
         parent_state_v = self.get_view_for_model(parent_state_m)
@@ -268,10 +271,14 @@ class GraphicalEditorController(ExtendedController):
                 return item
             elif isinstance(item, TransitionView) and item.transition_m is model:
                 return item
+            elif isinstance(item, DataFlowView) and item.data_flow_m is model:
+                return item
             for child in list(self.canvas.get_all_children(item)):
                 if isinstance(child, StateView) and child.state_m is model:
                     return child
                 elif isinstance(child, TransitionView) and child.transition_m is model:
+                    return child
+                elif isinstance(child, DataFlowView) and child.data_flow_m is model:
                     return child
 
     def add_state_view_to_parent(self, state_m, parent_state_m):
@@ -447,7 +454,7 @@ class GraphicalEditorController(ExtendedController):
 
             self.draw_transition(transition_m, transition_v, parent_state_m, parent_state_v)
 
-    def draw_transition(self, transition_m, transition_v, parent_state_m, parent_state_v):
+    def draw_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
         try:
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
@@ -474,11 +481,12 @@ class GraphicalEditorController(ExtendedController):
                 to_state_v = to_state_m.temp['gui']['editor']['view']
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
 
-            for waypoint in transition_m.meta['gui']['editor']['waypoints']:
-                if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
-                        self.model.meta['gui']['editor']['invert_y']:
-                    waypoint = (waypoint[0], -waypoint[1])
-                transition_v.add_waypoint(waypoint)
+            if use_waypoints:
+                for waypoint in transition_m.meta['gui']['editor']['waypoints']:
+                    if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
+                            self.model.meta['gui']['editor']['invert_y']:
+                        waypoint = (waypoint[0], -waypoint[1])
+                    transition_v.add_waypoint(waypoint)
 
             # Let the view draw the transition and store the returned OpenGL object id
             # if transition_m in self.model.selection.get_transitions():
@@ -508,55 +516,45 @@ class GraphicalEditorController(ExtendedController):
             data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
             self.canvas.add(data_flow_v, parent_state_v)
 
-            # Get id and references to the from and to state
-            from_state_id = data_flow_m.data_flow.from_state
-            from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
-                from_state_id]
-            from_state_v = from_state_m.temp['gui']['editor']['view']
+            self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
-            to_state_id = data_flow_m.data_flow.to_state
-            to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
-                to_state_id]
-            to_state_v = to_state_m.temp['gui']['editor']['view']
+    def draw_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
+        # Get id and references to the from and to state
+        from_state_id = data_flow_m.data_flow.from_state
+        from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
+            from_state_id]
+        from_state_v = from_state_m.temp['gui']['editor']['view']
 
-            from_key = data_flow_m.data_flow.from_key
-            to_key = data_flow_m.data_flow.to_key
+        to_state_id = data_flow_m.data_flow.to_state
+        to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
+            to_state_id]
+        to_state_v = to_state_m.temp['gui']['editor']['view']
 
-            from_port_m = StateMachineHelper.get_data_port_model(from_state_m, from_key)
-            to_port_m = StateMachineHelper.get_data_port_model(to_state_m, to_key)
+        from_key = data_flow_m.data_flow.from_key
+        to_key = data_flow_m.data_flow.to_key
 
-            if from_port_m is None:
-                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
-                                                                                        data_flow_m.data_flow))
-                continue
-            if to_port_m is None:
-                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
-                continue
+        from_port_m = StateMachineHelper.get_data_port_model(from_state_m, from_key)
+        to_port_m = StateMachineHelper.get_data_port_model(to_state_m, to_key)
 
-            # For scoped variables, there is no inner and outer connector
-            if isinstance(from_port_m, ScopedVariableModel):
-                from_state_v.connect_to_scoped_variable_output(from_key, data_flow_v, data_flow_v.from_handle())
-            elif from_port_m in from_state_m.input_data_ports:
-                from_state_v.connect_to_input_port(from_key, data_flow_v, data_flow_v.from_handle())
-            elif from_port_m in from_state_m.output_data_ports:
-                from_state_v.connect_to_output_port(from_key, data_flow_v, data_flow_v.from_handle())
+        if from_port_m is None:
+            logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                                                                                    data_flow_m.data_flow))
+            return
+        if to_port_m is None:
+            logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
+            return
 
-            if isinstance(to_port_m, ScopedVariableModel):
-                to_state_v.connect_to_scoped_variable_input(to_key, data_flow_v, data_flow_v.to_handle())
-            elif to_port_m in to_state_m.output_data_ports:
-                to_state_v.connect_to_output_port(to_key, data_flow_v, data_flow_v.to_handle())
-            elif to_port_m in to_state_m.input_data_ports:
-                to_state_v.connect_to_input_port(to_key, data_flow_v, data_flow_v.to_handle())
+        # For scoped variables, there is no inner and outer connector
+        if isinstance(from_port_m, ScopedVariableModel):
+            from_state_v.connect_to_scoped_variable_output(from_key, data_flow_v, data_flow_v.from_handle())
+        elif from_port_m in from_state_m.input_data_ports:
+            from_state_v.connect_to_input_port(from_key, data_flow_v, data_flow_v.from_handle())
+        elif from_port_m in from_state_m.output_data_ports:
+            from_state_v.connect_to_output_port(from_key, data_flow_v, data_flow_v.from_handle())
 
-            for waypoint in data_flow_m.meta['gui']['editor']['waypoints']:
-                if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
-                        self.model.meta['gui']['editor']['invert_y']:
-                    waypoint = (waypoint[0], -waypoint[1])
-                data_flow_v.add_waypoint(waypoint)
-
-            # selected = False
-            # if data_flow_m in self.model.selection.get_data_flows():
-            #     selected = True
-            # line_width = self.view.editor.data_flow_stroke_width(parent_state_m)
-            # opengl_id = self.view.editor.draw_data_flow(from_pos, to_pos, line_width, waypoints,
-            #                                             selected, parent_depth + 0.5)
+        if isinstance(to_port_m, ScopedVariableModel):
+            to_state_v.connect_to_scoped_variable_input(to_key, data_flow_v, data_flow_v.to_handle())
+        elif to_port_m in to_state_m.output_data_ports:
+            to_state_v.connect_to_output_port(to_key, data_flow_v, data_flow_v.to_handle())
+        elif to_port_m in to_state_m.input_data_ports:
+            to_state_v.connect_to_input_port(to_key, data_flow_v, data_flow_v.to_handle())

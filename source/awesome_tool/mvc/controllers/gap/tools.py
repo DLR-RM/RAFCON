@@ -113,14 +113,12 @@ class MyHandleTool(HandleTool):
         self._new_transition = None
         self._start_state = None
 
-        self._start_port = None
-        self._check_port = None
+        self._start_port = None  # Port where connection view pull starts
+        self._check_port = None  # Port of connection view that is not pulled
 
     def on_button_press(self, event):
         view = self.view
         item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
-
-        # TODO: find start port to check if port has changed in order to set correct transition details
 
         if isinstance(item, ConnectionView):
             if handle is item.from_handle():
@@ -133,7 +131,6 @@ class MyHandleTool(HandleTool):
         # Set start state
         if isinstance(item, StateView):
             self._start_state = item
-            print self._start_state
 
         super(MyHandleTool, self).on_button_press(event)
 
@@ -378,7 +375,7 @@ class MyHandleTool(HandleTool):
     def _handle_reset_ports(self, item, handle, start_parent):
 
         if handle is not item.from_handle() or handle is not item.to_handle():
-            return 
+            return
 
         start_outcome_id = None
         if isinstance(self._start_port, OutcomeView):
@@ -464,31 +461,10 @@ class MyHandleTool(HandleTool):
 
         if responsible_parent_m:
             try:
-                # transition_id = responsible_parent_m.state.add_transition(from_state_id,
-                #                                                           from_outcome_id,
-                #                                                           to_state_id,
-                #                                                           to_outcome_id)
                 responsible_parent_m.state.add_transition(from_state_id,
                                                           from_outcome_id,
                                                           to_state_id,
                                                           to_outcome_id)
-                # transition_m = StateMachineHelper.get_transition_model(responsible_parent_m, transition_id)
-
-                # Create actual transition view to replace placeholder view
-                # transition_v = TransitionView(transition_m, max(self._start_state.hierarchy_level - 1, 1))
-                #
-                # # Connect new transition view to ports of placeholder
-                # if isinstance(nt_from_port, IncomeView):
-                #     canvas.add(transition_v, self._start_state)
-                #     self._start_state.connect_to_income(transition_v, transition_v.from_handle())
-                # elif isinstance(nt_from_port, OutcomeView):
-                #     canvas.add(transition_v, canvas.get_parent(self._start_state))
-                #     self._start_state.connect_to_outcome(nt_from_port.outcome_id, transition_v, transition_v.from_handle())
-                # if isinstance(nt_to_port, IncomeView):
-                #     transition_v.hierarchy_level = self._start_state.hierarchy_level
-                #     to_state_v.connect_to_income(transition_v, transition_v.to_handle())
-                # elif isinstance(nt_to_port, OutcomeView):
-                #     to_state_v.connect_to_outcome(nt_to_port.outcome_id, transition_v, transition_v.to_handle())
             except AttributeError as e:
                 logger.warn("Transition couldn't be added: {0}".format(e))
             except Exception as e:
@@ -627,7 +603,6 @@ class MyConnectHandleTool(MyHandleTool):
                 connector.disconnect()
 
     def on_button_release(self, event):
-        view = self.view
         item = self.grabbed_item
         handle = self.grabbed_handle
         try:
