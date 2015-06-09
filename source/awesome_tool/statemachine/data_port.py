@@ -233,7 +233,10 @@ class DataPort(Observable, yaml.YAMLObject):
                 if type(converted_value).__name__ != data_type:
                     raise ValueError("Invalid syntax")
             elif data_type == "object":
-                converted_value = ast.literal_eval(string_value)
+                try:
+                    converted_value = ast.literal_eval(string_value)
+                except ValueError:
+                    converted_value = ast.literal_eval('"'+string_value+'"')
             elif isinstance(type(locate(data_type)), type):
                 converted_value = locate(data_type)(string_value)
             else:
