@@ -95,10 +95,8 @@ class LibraryTreeController(ExtendedController):
                 self.insert_rec(tree_item, child_key, child_item, library_path)
 
     def on_cursor_changed(self, widget):
-        (model, row) = self.view.get_selection().get_selected()
-        library_key = model[row][0]
-        library = model[row][1]
-        #logger.debug("The library state should be inserted into the statemachine")
+        # The user clicked on an entry in the tree store
+        return
 
     def add_link_button_clicked(self, widget):
         smm_m = self.state_machine_manager_model
