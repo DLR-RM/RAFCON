@@ -172,7 +172,7 @@ class State(Observable, yaml.YAMLObject, object):
             default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
-            if isinstance(default, str) and default[0] == '$':
+            if isinstance(default, str) and len(default) > 0 and default[0] == '$':
                 from awesome_tool.statemachine.singleton import global_variable_manager as gvm
                 var_name = default[1:]
                 if not gvm.variable_exist(var_name):
@@ -181,8 +181,9 @@ class State(Observable, yaml.YAMLObject, object):
                 else:
                     global_value = gvm.get_variable(var_name)
                 result_dict[value.name] = global_value
-            # set input to its default value
-            result_dict[value.name] = copy.copy(default)
+            else:
+                # set input to its default value
+                result_dict[value.name] = copy.copy(default)
         return result_dict
 
     def create_output_dictionary_for_state(self, state):
