@@ -171,25 +171,25 @@ class StateView(Element):
             output.draw(context, self)
 
     def connect_to_income(self, item, handle):
-        self._income.add_connected_handle(handle)
+        self._income.add_connected_handle(handle, item)
         item.set_port_for_handle(self._income, handle)
         self._connect_to_port(self._income.port, item, handle)
 
     def connect_to_outcome(self, outcome_id, item, handle):
         outcome_v = self.outcome_port(outcome_id)
-        outcome_v.add_connected_handle(handle)
+        outcome_v.add_connected_handle(handle, item)
         item.set_port_for_handle(outcome_v, handle)
         self._connect_to_port(outcome_v.port, item, handle)
 
     def connect_to_input_port(self, port_id, item, handle):
         port_v = self.input_port(port_id)
-        port_v.add_connected_handle(handle)
+        port_v.add_connected_handle(handle, item)
         item.set_port_for_handle(port_v, handle)
         self._connect_to_port(port_v.port, item, handle)
 
     def connect_to_output_port(self, port_id, item, handle):
         port_v = self.output_port(port_id)
-        port_v.add_connected_handle(handle)
+        port_v.add_connected_handle(handle, item)
         item.set_port_for_handle(port_v, handle)
         self._connect_to_port(port_v.port, item, handle)
 

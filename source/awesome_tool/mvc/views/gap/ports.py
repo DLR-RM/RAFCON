@@ -22,7 +22,7 @@ class PortView(object):
         self.side = side
         self._parent = parent
 
-        self._connected_handles = []
+        self._connected_handles = {}
 
         self.port_side_size = 0.
         self.update_port_side_size()
@@ -45,17 +45,27 @@ class PortView(object):
 
     @property
     def connected_handles(self):
-        return self._connected_handles
+        return self._connected_handles.iterkeys()
 
-    def add_connected_handle(self, handle):
+    def has_outgoing_connection(self):
+        for outgoing_connection in self._connected_handles.itervalues():
+            if outgoing_connection:
+                return True
+        return False
+
+    def add_connected_handle(self, handle, connection_view, moving=False):
+        from awesome_tool.mvc.views.gap.connection import ConnectionView
         assert isinstance(handle, Handle)
-        if handle not in self._connected_handles:
-            self._connected_handles.append(handle)
+        assert isinstance(connection_view, ConnectionView)
+        if handle not in self._connected_handles.iterkeys():
+            if connection_view.from_handle() is handle and not moving:
+                self._connected_handles[handle] = True
+            else:
+                self._connected_handles[handle] = False
 
     def remove_connected_handle(self, handle):
         assert isinstance(handle, Handle)
-        if handle in self._connected_handles:
-            self._connected_handles.remove(handle)
+        self._connected_handles.pop(handle)
 
     @property
     def connected(self):
