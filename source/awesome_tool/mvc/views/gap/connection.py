@@ -136,12 +136,18 @@ class ConnectionView(Line):
 
 class ConnectionPlaceholderView(ConnectionView):
 
-    def __init__(self, hierarchy_level):
+    def __init__(self, hierarchy_level, transition_placeholder):
         super(ConnectionPlaceholderView, self).__init__(hierarchy_level)
         self.line_width = .5 / hierarchy_level
 
-        self._line_color = '#81848b'
-        self._arrow_color = '#ffffff'
+        self.transition_placeholder = transition_placeholder
+
+        if transition_placeholder:
+            self._line_color = '#81848b'
+            self._arrow_color = '#ffffff'
+        else:
+            self._line_color = '#6c5e3c'
+            self._arrow_color = '#ffC926'
 
 
 class TransitionView(ConnectionView):

@@ -2,10 +2,12 @@ from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
-from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView
+from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView
 from awesome_tool.mvc.views.gap.state import StateView
 
 from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
+
+from awesome_tool.statemachine.states.container_state import ContainerState
 
 import gtk
 
@@ -137,7 +139,7 @@ class MyHandleTool(HandleTool):
     def on_button_release(self, event):
         # Create new transition if pull beginning at port occurred
         if self._new_transition:
-            self._create_new_transition()
+            self._create_new_connection()
 
             # remove placeholder from canvas
             self._new_transition.remove_connection_from_ports()
@@ -146,34 +148,9 @@ class MyHandleTool(HandleTool):
         if self._last_active_port is not self._start_port:
             item, handle = HandleFinder(self.view.hovered_item, self.view).get_handle_at_point((event.x, event.y))
             if isinstance(item, TransitionView):
-
-                start_parent = self._start_port.parent
-                last_parent = None
-                if self._last_active_port:
-                    last_parent = self._last_active_port.parent
-
-                # Connection changed: outcome-to-outcome to outcome-to-outcome
-                if (isinstance(self._check_port, OutcomeView) and
-                        isinstance(self._start_port, OutcomeView) and
-                        isinstance(self._last_active_port, OutcomeView)):
-                    self._handle_oto_to_oto(item, start_parent, last_parent)
-                # Connection changed: outcome-to-outcome to outcome-to-income
-                elif (isinstance(self._check_port, OutcomeView) and
-                        isinstance(self._start_port, OutcomeView) and
-                        isinstance(self._last_active_port, IncomeView)):
-                    self._handle_oto_to_oti(item, last_parent)
-                # Connection changed: outcome-to-income to outcome-to-outcome
-                elif (isinstance(self._check_port, OutcomeView) and
-                        isinstance(self._start_port, IncomeView) and
-                        isinstance(self._last_active_port, OutcomeView)):
-                    self._handle_oti_to_oto(item, start_parent, last_parent)
-                # Connection changed: outcome-to-income to outcome-to-income
-                elif (isinstance(self._check_port, IncomeView) and
-                        isinstance(self._start_port, OutcomeView) and
-                        isinstance(self._last_active_port, OutcomeView)):
-                    self._handle_oti_to_oti(item, start_parent, last_parent)
-                else:
-                    self._handle_reset_ports(item, handle, start_parent)
+                self._handle_transition_view_change(item, handle)
+            elif isinstance(item, DataFlowView):
+                self._handle_data_flow_view_change(item, handle)
 
         # reset temp variables
         self._last_active_port = None
@@ -208,22 +185,28 @@ class MyHandleTool(HandleTool):
 
                 if start_port:
                     # Go up one hierarchy_level to match the transitions line width
-                    transition_v = ConnectionPlaceholderView(max(start_state.hierarchy_level - 1, 1))
-                    self._new_transition = transition_v
+                    transition_placeholder = isinstance(start_port, IncomeView) or isinstance(start_port, OutcomeView)
+                    placeholder_v = ConnectionPlaceholderView(max(start_state.hierarchy_level - 1, 1),
+                                                             transition_placeholder)
+                    self._new_transition = placeholder_v
 
-                    canvas.add(transition_v, start_state_parent)
+                    canvas.add(placeholder_v, start_state_parent)
 
                     # Check for start_port type and adjust hierarchy_level as well as connect the from handle to the
                     # start port of the state
                     if isinstance(start_port, IncomeView):
-                        transition_v.hierarchy_level = start_state.hierarchy_level
-                        start_state.connect_to_income(transition_v, transition_v.from_handle())
+                        placeholder_v.hierarchy_level = start_state.hierarchy_level
+                        start_state.connect_to_income(placeholder_v, placeholder_v.from_handle())
                     elif isinstance(start_port, OutcomeView):
-                        start_state.connect_to_outcome(start_port.outcome_id, transition_v, transition_v.from_handle())
+                        start_state.connect_to_outcome(start_port.outcome_id, placeholder_v, placeholder_v.from_handle())
+                    elif isinstance(start_port, InputPortView):
+                        start_state.connect_to_input_port(start_port.port_id, placeholder_v, placeholder_v.from_handle())
+                    elif isinstance(start_port, OutputPortView):
+                        start_state.connect_to_output_port(start_port.port_id, placeholder_v, placeholder_v.from_handle())
                     # Ungrab start port handle and grab new transition's to handle to move, also set motion handle
                     # to just grabbed handle
                     self.ungrab_handle()
-                    self.grab_handle(transition_v, transition_v.to_handle())
+                    self.grab_handle(placeholder_v, placeholder_v.to_handle())
                     self._set_motion_handle(event)
 
         # the grabbed handle is moved according to mouse movement
@@ -249,6 +232,51 @@ class MyHandleTool(HandleTool):
                 self.motion_handle.move(pos, 5.0)
 
             return True
+
+    def _handle_data_flow_view_change(self, item, handle):
+        print "handle data flow view change"
+        # Connection changed: input-to-input to input-to-input
+
+        # Connection changed: input-to-input to output-to-input
+
+        # Connection changed: output-to-input to input-to-input
+
+        # Connection changed: output-to-input to output-to-input
+
+        # Connection changed: output-to-input to output-to-output
+
+        # Connection changed: output-to-output to output-to-input
+
+        # Connection changed: output-to-output to output-to-output
+
+    def _handle_transition_view_change(self, item, handle):
+        start_parent = self._start_port.parent
+        last_parent = None
+        if self._last_active_port:
+            last_parent = self._last_active_port.parent
+
+        # Connection changed: outcome-to-outcome to outcome-to-outcome
+        if (isinstance(self._check_port, OutcomeView) and
+                isinstance(self._start_port, OutcomeView) and
+                isinstance(self._last_active_port, OutcomeView)):
+            self._handle_oto_to_oto(item, start_parent, last_parent)
+        # Connection changed: outcome-to-outcome to outcome-to-income
+        elif (isinstance(self._check_port, OutcomeView) and
+                isinstance(self._start_port, OutcomeView) and
+                isinstance(self._last_active_port, IncomeView)):
+            self._handle_oto_to_oti(item, last_parent)
+        # Connection changed: outcome-to-income to outcome-to-outcome
+        elif (isinstance(self._check_port, OutcomeView) and
+                isinstance(self._start_port, IncomeView) and
+                isinstance(self._last_active_port, OutcomeView)):
+            self._handle_oti_to_oto(item, start_parent, last_parent)
+        # Connection changed: outcome-to-income to outcome-to-income
+        elif (isinstance(self._check_port, IncomeView) and
+                isinstance(self._start_port, OutcomeView) and
+                isinstance(self._last_active_port, OutcomeView)):
+            self._handle_oti_to_oti(item, start_parent, last_parent)
+        else:
+            self._handle_reset_ports(item, handle, start_parent)
 
     def _handle_oto_to_oto(self, item, start_parent, last_parent):
         """
@@ -374,7 +402,7 @@ class MyHandleTool(HandleTool):
 
     def _handle_reset_ports(self, item, handle, start_parent):
 
-        if handle is not item.from_handle() or handle is not item.to_handle():
+        if handle not in item.handles():
             return
 
         start_outcome_id = None
@@ -406,9 +434,10 @@ class MyHandleTool(HandleTool):
         self.motion_handle = MyHandleInMotion(item, handle, self.view)
         self.motion_handle.start_move(pos)
 
-    def _create_new_transition(self):
+    def _create_new_connection(self):
         """
-        Creates a new transition and adds this transition to the state machine model.
+        Creates a new connection and adds this connection to the state machine model.
+        If the new connection is transition:
         Only transitions from outcomes are added (transitions from incomes are added via "start_state" checkbox
         """
         nt_from_port = self._new_transition.from_port
@@ -427,8 +456,54 @@ class MyHandleTool(HandleTool):
                     isinstance(nt_to_port, OutcomeView)):
                 logger.warn("Cannot connect income to outcome of the same state")
                 return
+            if isinstance(nt_from_port, InputPortView) and isinstance(nt_to_port, OutputPortView):
+                logger.warn("Cannot connect input to output")
+                return
 
-            self._add_transition(nt_to_port, nt_from_port)
+            if ((isinstance(nt_from_port, IncomeView) or isinstance(nt_from_port, OutcomeView)) and
+                    (isinstance(nt_to_port, IncomeView) or isinstance(nt_to_port, OutcomeView))):
+                self._add_transition(nt_to_port, nt_from_port)
+            elif ((isinstance(nt_from_port, InputPortView) or isinstance(nt_from_port, OutputPortView)) and
+                    (isinstance(nt_to_port, InputPortView) or isinstance(nt_to_port, OutputPortView))):
+                self._add_data_flow(nt_to_port, nt_from_port)
+
+    @staticmethod
+    def _add_data_flow(nt_to_port, nt_from_port):
+
+        from_state_v = nt_from_port.parent
+        to_state_v = nt_to_port.parent
+
+        from_state_m = from_state_v.state_m
+        to_state_m = to_state_v.state_m
+
+        if (isinstance(nt_from_port, InputPortView) and
+                isinstance(nt_to_port, InputPortView) and
+                from_state_m is to_state_m.parent):
+            responsible_parent_m = from_state_m
+            if nt_to_port.has_incoming_connection():
+                return
+        elif (isinstance(nt_from_port, OutputPortView) and
+                isinstance(nt_to_port, OutputPortView) and
+                to_state_m is from_state_m.parent):
+            responsible_parent_m = to_state_m
+            if nt_to_port.has_incoming_connection():
+                return
+        elif (isinstance(nt_from_port, OutputPortView) and
+                isinstance(nt_to_port, InputPortView) and
+                to_state_m.parent is from_state_m.parent):
+            responsible_parent_m = to_state_m.parent
+            if nt_to_port.has_incoming_connection():
+                return
+        else:
+            return
+
+        from_state_id = from_state_m.state.state_id
+        from_data_port_id = nt_from_port.port_id
+        to_state_id = to_state_m.state.state_id
+        to_data_port_id = nt_to_port.port_id
+
+        if isinstance(responsible_parent_m.state, ContainerState):
+            responsible_parent_m.state.add_data_flow(from_state_id, from_data_port_id, to_state_id, to_data_port_id)
 
     def _add_transition(self, nt_to_port, nt_from_port):
         # canvas = self.view.canvas
@@ -504,14 +579,18 @@ class MyHandleTool(HandleTool):
         if isinstance(item, ItemConnectionSink):
             state = item.item
             if isinstance(state, StateView):
-                if self.set_matching_port([state.income, ], item.port, handle, connection):
-                    return
-                elif self.set_matching_port(state.outcomes, item.port, handle, connection):
-                    return
-                elif self.set_matching_port(state.outputs, item.port, handle, connection):
-                    return
-                elif self.set_matching_port(state.inputs, item.port, handle, connection):
-                    return
+                if (isinstance(connection, TransitionView) or
+                        (isinstance(connection, ConnectionPlaceholderView) and connection.transition_placeholder)):
+                    if self.set_matching_port([state.income, ], item.port, handle, connection):
+                        return
+                    elif self.set_matching_port(state.outcomes, item.port, handle, connection):
+                        return
+                elif (isinstance(connection, DataFlowView) or
+                        (isinstance(connection, ConnectionPlaceholderView) and not connection.transition_placeholder)):
+                    if self.set_matching_port(state.outputs, item.port, handle, connection):
+                        return
+                    elif self.set_matching_port(state.inputs, item.port, handle, connection):
+                        return
         self.disconnect_last_active_port(handle, connection)
 
     def disconnect_last_active_port(self, handle, connection):

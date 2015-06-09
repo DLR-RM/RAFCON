@@ -167,8 +167,34 @@ class InputPortView(DataPortView):
     def __init__(self, parent, port_m):
         super(InputPortView, self).__init__(parent, port_m, SnappedSide.LEFT)
 
+    def add_connected_handle(self, handle, connection_view, moving=False):
+        from awesome_tool.mvc.views.gap.connection import ConnectionView
+        assert isinstance(handle, Handle)
+        assert isinstance(connection_view, ConnectionView)
+        if handle not in self._connected_handles.iterkeys():
+            if connection_view.to_handle() is handle and not moving:
+                self._connected_handles[handle] = True
+            else:
+                self._connected_handles[handle] = False
+
+    def has_incoming_connection(self):
+        return super(InputPortView, self).has_outgoing_connection()
+
 
 class OutputPortView(DataPortView):
 
     def __init__(self, parent, port_m):
         super(OutputPortView, self).__init__(parent, port_m, SnappedSide.RIGHT)
+
+    def add_connected_handle(self, handle, connection_view, moving=False):
+        from awesome_tool.mvc.views.gap.connection import ConnectionView
+        assert isinstance(handle, Handle)
+        assert isinstance(connection_view, ConnectionView)
+        if handle not in self._connected_handles.iterkeys():
+            if connection_view.to_handle() is handle and not moving:
+                self._connected_handles[handle] = True
+            else:
+                self._connected_handles[handle] = False
+
+    def has_incoming_connection(self):
+        return super(OutputPortView, self).has_outgoing_connection()

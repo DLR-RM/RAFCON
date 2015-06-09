@@ -518,7 +518,8 @@ class GraphicalEditorController(ExtendedController):
 
             self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
-    def draw_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
+    @staticmethod
+    def draw_data_flow(data_flow_m, data_flow_v, parent_state_m):
         # Get id and references to the from and to state
         from_state_id = data_flow_m.data_flow.from_state
         from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
