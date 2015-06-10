@@ -184,9 +184,8 @@ class MyHandleTool(HandleTool):
             start_port = self.get_port_for_handle(handle, start_state)
 
             # If the start state has a parent continue (ensure no transition is created from top level state)
-            if (isinstance(start_state_parent, StateView) or
-                    (start_state_parent is None and isinstance(start_port, IncomeView)) and
-                    start_port):
+            if ((isinstance(start_state_parent, StateView) or (start_state_parent is None and isinstance(start_port, IncomeView)) or
+                    (start_state_parent is None and isinstance(start_port, InputPortView))) and start_port):
 
                 # Go up one hierarchy_level to match the transitions line width
                 transition_placeholder = isinstance(start_port, IncomeView) or isinstance(start_port, OutcomeView)
@@ -542,9 +541,9 @@ class MyHandleTool(HandleTool):
             if isinstance(nt_to_port, ScopedDataInputPortView) and scoped_variable_v is nt_to_port.parent:
                 return
             elif isinstance(nt_to_port, InputPortView) and scoped_variable_v.parent_state is nt_to_port.parent:
-                return  # TODO: check
+                return
             elif isinstance(nt_to_port, OutputPortView) and scoped_variable_v.parent_state is not nt_to_port.parent:
-                return   # TODO: check
+                return
             responsible_parent_m = scoped_variable_v.parent_state.state_m
             from_state_id = scoped_variable_v.parent_state.state_m.state.state_id
             from_data_port_id = scoped_variable_v.port_id
@@ -556,7 +555,7 @@ class MyHandleTool(HandleTool):
                 to_data_port_id = nt_to_port.port_id
         elif isinstance(nt_from_port, InputPortView):
             if nt_from_port.parent is not nt_to_port.parent.parent_state:
-                return  # TODO: check
+                return
             responsible_parent_m = nt_from_port.parent.state_m
             from_state_id = nt_from_port.parent.state_m.state.state_id
             from_data_port_id = nt_from_port.port_id
@@ -564,8 +563,8 @@ class MyHandleTool(HandleTool):
             to_data_port_id = nt_to_port.parent.port_id
         elif isinstance(nt_from_port, OutputPortView):
             if nt_from_port.parent is nt_to_port.parent.parent_state:
-                return  # TODO: check
-            responsible_parent_m = nt_to_port.parent.parent_state
+                return
+            responsible_parent_m = nt_to_port.parent.parent_state.state_m
             from_state_id = nt_from_port.parent.state_m.state.state_id
             from_data_port_id = nt_from_port.port_id
             to_state_id = nt_to_port.parent.parent_state.state_m.state.state_id
