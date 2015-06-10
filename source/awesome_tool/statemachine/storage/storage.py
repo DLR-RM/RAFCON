@@ -162,13 +162,16 @@ class StateMachineStorage(Observable):
                 self.save_state_recursively(state, state_path)
 
     def clean_transitions_of_sm(self, root_state):
+        affected_sm = False
         if hasattr(root_state, "states"):
             for t_id, transition in root_state.transitions.iteritems():
                 if transition.to_state is None:
+                    affected_sm = True
                     transition.to_state = root_state.state_id
             for s_id, state in root_state.states.iteritems():
                 if hasattr(state, "states"):
-                    self.clean_transitions_of_sm(state)
+                    affected_sm |= self.clean_transitions_of_sm(state)
+        return affected_sm
 
     def load_statemachine_from_yaml(self, base_path=None):
         """
@@ -216,8 +219,8 @@ class StateMachineStorage(Observable):
         sm.marked_dirty = False
 
         # this is a backward compatibility function to ensure that old libraries are still working
-        self.clean_transitions_of_sm(sm.root_state)
-        self.save_statemachine_as_yaml(sm, base_path)
+        if self.clean_transitions_of_sm(sm.root_state):
+            self.save_statemachine_as_yaml(sm, base_path)
 
         return [sm, version, creation_time]
 
