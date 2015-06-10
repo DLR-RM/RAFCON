@@ -5,3 +5,6 @@
 .~*
 
 workspace.xml
+
+# LN Manager
+*.lnc_process_window_positions
