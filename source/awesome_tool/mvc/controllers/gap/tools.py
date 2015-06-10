@@ -242,20 +242,49 @@ class MyHandleTool(HandleTool):
             return True
 
     def _handle_data_flow_view_change(self, item, handle):
+        start_parent = self._start_port.parent
+        last_parent = None
+        if self._last_active_port:
+            last_parent = self._last_active_port.parent
+
         # Connection changed: input-to-input to input-to-input
+        if (isinstance(self._check_port, InputPortView) and
+                isinstance(self._start_port, InputPortView) and
+                isinstance(self._last_active_port, InputPortView)):
+            self._handle_data_flow_change(item, start_parent, last_parent, iti_to_iti=True)
         # Connection changed: input-to-input to output-to-input
-        if isinstance(self._check_port, InputPortView) and isinstance(self._start_port, InputPortView):
-            pass
-
+        elif (isinstance(self._check_port, InputPortView) and
+                isinstance(self._start_port, InputPortView) and
+                isinstance(self._last_active_port, OutputPortView)):
+            self._handle_data_flow_change(item, start_parent, last_parent, iti_to_oti=True)
         # Connection changed: output-to-input to input-to-input
+        elif (isinstance(self._check_port, InputPortView) and
+                isinstance(self._start_port, OutputPortView) and
+                isinstance(self._last_active_port, InputPortView)):
+            self._handle_data_flow_change(item, start_parent, last_parent, oti_to_iti=True)
         # Connection changed: output-to-input to output-to-input
+        elif ((isinstance(self._check_port, OutputPortView) and
+                    isinstance(self._start_port, InputPortView) and
+                    isinstance(self._last_active_port, InputPortView)) or
+                (isinstance(self._check_port, InputPortView) and
+                    isinstance(self._start_port, OutputPortView) and
+                    isinstance(self._last_active_port, OutputPortView))):
+            self._handle_data_flow_change(item, start_parent, last_parent, oti_to_oti=True)
         # Connection changed: output-to-input to output-to-output
-
+        elif (isinstance(self._check_port, OutputPortView) and
+                isinstance(self._start_port, InputPortView) and
+                isinstance(self._last_active_port, OutputPortView)):
+            self._handle_data_flow_change(item, start_parent, last_parent, oti_to_oto=True)
         # Connection changed: output-to-output to output-to-input
+        elif (isinstance(self._check_port, OutputPortView) and
+                isinstance(self._start_port, OutputPortView) and
+                isinstance(self._last_active_port, InputPortView)):
+            self._handle_data_flow_change(item, start_parent, last_parent, oto_to_oti=True)
         # Connection changed: output-to-output to output-to-output
-        elif isinstance(self._check_port, OutputPortView) and isinstance(self._start_port, OutputPortView):
-            pass
-
+        elif (isinstance(self._check_port, OutputPortView) and
+                isinstance(self._start_port, OutputPortView) and
+                isinstance(self._last_active_port, OutputPortView)):
+            self._handle_data_flow_change(item, start_parent, last_parent, oto_to_oto=True)
         # Everything else: Reset to original position
         else:
             pass
@@ -282,9 +311,12 @@ class MyHandleTool(HandleTool):
                 isinstance(self._last_active_port, OutcomeView)):
             self._handle_transition_change(item, start_parent, last_parent, oti_to_oto=True)
         # Connection changed: outcome-to-income to outcome-to-income
-        elif (isinstance(self._check_port, IncomeView) and
-                isinstance(self._start_port, OutcomeView) and
-                (isinstance(self._last_active_port, OutcomeView) or isinstance(self._last_active_port, IncomeView))):
+        elif ((isinstance(self._check_port, IncomeView) and
+                    isinstance(self._start_port, OutcomeView) and
+                    isinstance(self._last_active_port, OutcomeView)) or
+                (isinstance(self._check_port, OutcomeView) and
+                    isinstance(self._start_port, IncomeView) and
+                    isinstance(self._last_active_port, IncomeView))):
             self._handle_transition_change(item, start_parent, last_parent, oti_to_oti=True)
         # Connection changed: income-to-income to income-to-income (Start State changed)
         elif (isinstance(self._check_port, IncomeView) and
@@ -302,6 +334,17 @@ class MyHandleTool(HandleTool):
             if item:
                 counter += 1
         return counter == 1
+
+    def _handle_data_flow_change(self, item, start_parent, last_parent, iti_to_iti=False, iti_to_oti=False,
+                                 oti_to_iti=False, oti_to_oti=False, oti_to_oto=False, oto_to_oti=False,
+                                 oto_to_oto=False):
+        if last_parent is None:
+            return
+        if not self._assert_exactly_one_true([iti_to_iti, iti_to_oti, oti_to_iti, oti_to_oti, oti_to_oto, oto_to_oti,
+                                              oto_to_oto]):
+            return
+
+        print "fas"
 
     def _handle_transition_change(self, item, start_parent, last_parent, oto_to_oto=False, oto_to_oti=False,
                                   oti_to_oto=False, oti_to_oti=False, iti_to_iti=False):
