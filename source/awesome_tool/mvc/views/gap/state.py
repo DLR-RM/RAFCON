@@ -95,7 +95,7 @@ class StateView(Element):
         solver.add_constraint(constraint)
         parent.keep_rect_constraints[child] = constraint
 
-    def remove_keept_rect_within_constraint_from_parent(self):
+    def remove_keep_rect_within_constraint_from_parent(self):
         canvas = self.canvas
         parent = canvas.get_parent(self)
 
@@ -123,6 +123,10 @@ class StateView(Element):
     @property
     def inputs(self):
         return self._inputs
+
+    @property
+    def scoped_variables(self):
+        return self._scoped_variables
 
     @staticmethod
     def get_state_drawing_area(state):
@@ -195,13 +199,17 @@ class StateView(Element):
 
     def connect_to_scoped_variable_input(self, scoped_variable_id, item, handle):
         scoped_variable_v = self.scoped_variable(scoped_variable_id)
-        c = scoped_variable_v.input_port.constraint(self.canvas, item, handle, scoped_variable_v)
-        self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.input_port, c)
+        scoped_variable_v.input_port.add_connected_handle(handle, item)
+        item.set_port_for_handle(scoped_variable_v.input_port, handle)
+        c = scoped_variable_v.input_port_port.constraint(self.canvas, item, handle, scoped_variable_v)
+        self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.input_port_port, c)
 
     def connect_to_scoped_variable_output(self, scoped_variable_id, item, handle):
         scoped_variable_v = self.scoped_variable(scoped_variable_id)
-        c = scoped_variable_v.output_port.constraint(self.canvas, item, handle, scoped_variable_v)
-        self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.output_port, c)
+        scoped_variable_v.output_port.add_connected_handle(handle, item)
+        item.set_port_for_handle(scoped_variable_v.output_port, handle)
+        c = scoped_variable_v.output_port_port.constraint(self.canvas, item, handle, scoped_variable_v)
+        self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.output_port_port, c)
 
     def _connect_to_port(self, port, item, handle):
         c = port.constraint(self.canvas, item, handle, self)
@@ -265,6 +273,13 @@ class StateView(Element):
         input_port_v.handle.pos = 0, self.height * .95 - (len(self._inputs) - 1) * 2 * input_port_v.port_side_size
         self.add_rect_constraint_for_port(input_port_v)
 
+    def remove_input_port(self, input_port_v):
+        self._inputs.remove(input_port_v)
+        self._ports.remove(input_port_v.port)
+        self._handles.remove(input_port_v.handle)
+
+        self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
+
     def add_output_port(self, port_m):
         output_port_v = OutputPortView(self, port_m)
         self._outputs.append(output_port_v)
@@ -274,20 +289,21 @@ class StateView(Element):
         output_port_v.handle.pos = self.width, self.height * .95 - (len(self._outputs) - 1) * 2 * output_port_v.port_side_size
         self.add_rect_constraint_for_port(output_port_v)
 
+    def remove_output_port(self, output_port_v):
+        self._outputs.remove(output_port_v)
+        self._ports.remove(output_port_v.port)
+        self._handles.remove(output_port_v.handle)
+
+        self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
+
     def add_scoped_variable(self, scoped_variable_m, size):
-        scoped_variable_v = ScopedVariableView(scoped_variable_m, size)
+        scoped_variable_v = ScopedVariableView(scoped_variable_m, size, self)
         self._scoped_variables.append(scoped_variable_v)
 
         canvas = self.canvas
         canvas.add(scoped_variable_v, self)
 
-        self_nw_abs = canvas.project(self, self.handles()[NW].pos)
-        self_se_abs = canvas.project(self, self.handles()[SE].pos)
-        scoped_nw_abs = canvas.project(scoped_variable_v, scoped_variable_v.handles()[NW].pos)
-        scoped_se_abs = canvas.project(scoped_variable_v, scoped_variable_v.handles()[SE].pos)
-        constraint = KeepRectangleWithinConstraint(self_nw_abs, self_se_abs, scoped_nw_abs, scoped_se_abs)
-        solver = canvas.solver
-        solver.add_constraint(constraint)
+        self.add_keep_rect_within_constraint(canvas, self, scoped_variable_v)
 
         return scoped_variable_v
 

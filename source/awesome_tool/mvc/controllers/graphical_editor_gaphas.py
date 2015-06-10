@@ -13,6 +13,8 @@ from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView
 from awesome_tool.mvc.views.gap.state import StateView
 from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView
 
+from awesome_tool.statemachine.states.container_state import ContainerState
+
 from gaphas import Canvas
 import gaphas.guide
 
@@ -47,6 +49,7 @@ class GraphicalEditorController(ExtendedController):
         self.view.setup_canvas(self.canvas, self.zoom)
         self.view.connect('new_state_selection', self._select_new_state)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
+        self.view.connect('remove_scoped_variable_from_state', self._remove_scoped_variable_from_state)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -91,20 +94,20 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The property that was changed
         :param dict info: Information about the change
         """
-        if 'method_name' in info and info['method_name'] == 'root_state_before_change':
-            kwargs = info['kwargs']
-            if kwargs['method_name'] == 'transition_change':
-                transition_m = kwargs['args'][0]
-                transition_change_kwargs = kwargs['kwargs']
-                transition_v = self.get_view_for_model(transition_m)
-                if (transition_change_kwargs['method_name'] == 'to_state' or
-                            transition_change_kwargs['method_name'] == 'to_outcome'):
-                    transition_v.remove_connection_from_port(transition_v.to_port)
-                    transition_v.reset_to_port()
-                elif (transition_change_kwargs['method_name'] == 'modify_origin' or
-                              transition_change_kwargs['method_name'] == 'from_outcome'):
-                    transition_v.remove_connection_from_port(transition_v.from_port)
-                    transition_v.reset_from_port()
+        # if 'method_name' in info and info['method_name'] == 'root_state_before_change':
+        #     kwargs = info['kwargs']
+        #     if kwargs['method_name'] == 'transition_change':
+        #         transition_m = kwargs['args'][0]
+        #         transition_change_kwargs = kwargs['kwargs']
+        #         transition_v = self.get_view_for_model(transition_m)
+        #         if (transition_change_kwargs['method_name'] == 'to_state' or
+        #                     transition_change_kwargs['method_name'] == 'to_outcome'):
+        #             transition_v.remove_connection_from_port(transition_v.to_port)
+        #             transition_v.reset_to_port()
+        #         elif (transition_change_kwargs['method_name'] == 'modify_origin' or
+        #                       transition_change_kwargs['method_name'] == 'from_outcome'):
+        #             transition_v.remove_connection_from_port(transition_v.from_port)
+        #             transition_v.reset_from_port()
 
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             information = info
@@ -173,6 +176,54 @@ class GraphicalEditorController(ExtendedController):
             # ----------------------------------
             #           DATA PORTS
             # ----------------------------------
+            elif method_name == 'add_input_data_port':
+                state_m = information['kwargs']['model']
+                state_v = self.get_view_for_model(state_m)
+                for input_data_port_m in state_m.input_data_ports:
+                    if input_data_port_m.data_port.data_port_id == result:
+                        state_v.add_input_port(input_data_port_m)
+                        self.canvas.request_update(state_v)
+            elif method_name == 'add_output_data_port':
+                state_m = information['kwargs']['model']
+                state_v = self.get_view_for_model(state_m)
+                for output_data_port_m in state_m.output_data_ports:
+                    if output_data_port_m.data_port.data_port_id == result:
+                        state_v.add_output_port(output_data_port_m)
+                        self.canvas.request_update(state_v)
+            elif method_name == 'remove_input_data_port':
+                state_m = information['kwargs']['model']
+                state_v = self.get_view_for_model(state_m)
+                for input_port_v in state_v.inputs:
+                    if input_port_v.port_id == arguments[1]:
+                        state_v.remove_input_port(input_port_v)
+                        self.canvas.request_update(state_v)
+            elif method_name == 'remove_output_data_port':
+                state_m = information['kwargs']['model']
+                state_v = self.get_view_for_model(state_m)
+                for output_port_v in state_v.outputs:
+                    if output_port_v.port_id == arguments[1]:
+                        state_v.remove_output_port(output_port_v)
+                        self.canvas.request_update(state_v)
+            # ----------------------------------
+            #         SCOPED VARIABLES
+            # ----------------------------------
+            elif method_name == 'add_scoped_variable':
+                state_m = information['kwargs']['model']
+                state_v = self.get_view_for_model(state_m)
+                for scoped_variable_m in state_m.scoped_variables:
+                    if scoped_variable_m.scoped_variable.data_port_id == result:
+                        min_wh = min(state_v.width, state_v.height)
+                        width = min_wh / 5.
+                        height = min_wh / 15.
+                        state_v.add_scoped_variable(scoped_variable_m, (width, height))
+                        self.canvas.request_update(state_v)
+            elif method_name == 'remove_scoped_variable':
+                state_m = information['kwargs']['model']
+                state_v = self.get_view_for_model(state_m)
+                for scoped_variable_v in state_v.scoped_variables:
+                    if scoped_variable_v.port_id == arguments[1]:
+                        scoped_variable_v.remove_keep_rect_within_constraint_from_parent()
+                        self.canvas.remove(scoped_variable_v)
             else:
                 print method_name
 
@@ -307,6 +358,12 @@ class GraphicalEditorController(ExtendedController):
         if len(selection) > 0:
             StateMachineHelper.delete_models(selection)
             self.model.selection.clear()
+
+    @staticmethod
+    def _remove_scoped_variable_from_state(view, scoped_variable_v):
+        parent_state = scoped_variable_v.parent_state.state_m.state
+        if isinstance(parent_state, ContainerState):
+            parent_state.remove_scoped_variable(scoped_variable_v.port_id)
 
     def setup_canvas(self):
 

@@ -4,6 +4,7 @@ from gaphas.connector import PointPort, Handle
 
 from awesome_tool.mvc.models.outcome import OutcomeModel
 from awesome_tool.mvc.models.data_port import DataPortModel
+from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
 import cairo
 from pango import SCALE, FontDescription
@@ -139,6 +140,62 @@ class OutcomeView(PortView):
             fill_color = '#ffffff'
 
         self.draw_port(context, state, fill_color)
+
+
+class ScopedDataPortView(PortView):
+
+    def __init__(self, parent, scoped_variable_m, side):
+        super(ScopedDataPortView, self).__init__(parent, side)
+
+        assert isinstance(scoped_variable_m, ScopedVariableModel)
+        self._scoped_variable_m = ref(scoped_variable_m)
+
+    @property
+    def scoped_variable_m(self):
+        return self._scoped_variable_m()
+
+    def draw(self, context, state):
+        fill_color = "#ffc926"
+
+        self.update_port_side_size()
+        c = context.cairo
+        outcome_side = self.port_side_size
+        c.set_line_width(outcome_side * 0.03)
+
+        # Outer part
+        c.rectangle(self.pos.x - outcome_side / 2, self.pos.y - outcome_side / 2, outcome_side, outcome_side)
+        c.set_source_color(Color(fill_color))
+        c.fill_preserve()
+        c.set_source_rgba(0, 0, 0, 0)
+        c.stroke()
+
+        # Inner part
+        c.rectangle(self.pos.x - outcome_side * 0.85 / 2, self.pos.y - outcome_side * 0.85 / 2, outcome_side * 0.85, outcome_side * 0.85)
+        if self.connected:
+            c.set_source_color(Color(fill_color))
+        else:
+            c.set_source_color(Color('#000'))
+        c.fill_preserve()
+        c.set_source_color(Color('#000'))
+        c.stroke()
+
+    def update_port_side_size(self):
+        if self._parent:
+            self.port_side_size = min(self._parent.width, self._parent.height) / 5.
+        else:
+            self.port_side_size = 5.
+
+
+class ScopedDataInputPortView(ScopedDataPortView):
+
+    def __init__(self, parent, scoped_variable_m):
+        super(ScopedDataInputPortView, self).__init__(parent, scoped_variable_m, SnappedSide.LEFT)
+
+
+class ScopedDataOutputPortView(ScopedDataPortView):
+
+    def __init__(self, parent, scoped_variable_m):
+        super(ScopedDataOutputPortView, self).__init__(parent, scoped_variable_m, SnappedSide.RIGHT)
 
 
 class DataPortView(PortView):
