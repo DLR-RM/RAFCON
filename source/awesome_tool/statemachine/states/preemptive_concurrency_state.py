@@ -101,11 +101,8 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 assert isinstance(last_history_item, ConcurrencyItem)
 
                 # do not write the output of the entry script
-                # final outcome is not important as the execution order is fixed during backward stepping
                 self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                if self.concurrency_queue:
-                    self.concurrency_queue.put(self.state_id)
-                return
+                return self.finalize()
 
             else:
                 self.backward_execution = False
@@ -127,33 +124,29 @@ class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
-            if self.concurrency_queue:
-                self.concurrency_queue.put(self.state_id)
-
             if self.preempted:
-                self.final_outcome = Outcome(-2, "preempted")
-                return
+                outcome = Outcome(-2, "preempted")
 
-            transition = self.get_transition_for_outcome(self.states[finished_thread_id],
-                                                         self.states[finished_thread_id].final_outcome)
+            else:
+                transition = self.get_transition_for_outcome(self.states[finished_thread_id],
+                                                             self.states[finished_thread_id].final_outcome)
 
-            if transition is None:
-                transition = self.handle_no_transition(self.states[finished_thread_id])
-            # it the transition is still None, then the state was preempted or aborted, in this case return
-            if transition is None:
-                if self.final_outcome.outcome_id == -1:
+                if transition is None:
+                    transition = self.handle_no_transition(self.states[finished_thread_id])
+                # it the transition is still None, then the state was preempted or aborted, in this case return
+                if transition is None:
+                    outcome = Outcome(-1, "aborted")
                     self.output_data["error"] = RuntimeError("state aborted")
-                return
+                else:
+                    outcome = self.outcomes[transition.to_outcome]
 
-            self.final_outcome = self.outcomes[transition.to_outcome]
-            return
+            return self.finalize(outcome)
 
         except Exception, e:
-            logger.error("Runtime error %s %s" % (e, str(traceback.format_exc())))
-            self.final_outcome = Outcome(-1, "aborted")
+            logger.error("Runtime error: {0}\n{1}".format(e, str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-            return
+            return self.finalize(Outcome(-1, "aborted"))
 
     @classmethod
     def to_yaml(cls, dumper, data):

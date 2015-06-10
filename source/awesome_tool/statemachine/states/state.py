@@ -779,6 +779,26 @@ class State(Observable, yaml.YAMLObject, object):
 
         self._state_execution_status = state_execution_status
 
+    def finalize(self, outcome=None):
+        """Finalize state
+
+        This method is called when the run method finishes
+
+        :param awesome_tool.statemachine.outcome.Outcome outcome: final outcome of the state
+        :return: Nothing for the moment
+        """
+
+        # Set the final outcome of the state
+        # This is the outcome, the state is left on
+        if outcome is not None:
+            self.final_outcome = outcome
+
+        # If we are within a concurrency state, we have to notify it about our finalization
+        if self.concurrency_queue:
+            self.concurrency_queue.put(self.state_id)
+
+        return None
+
     def preemptive_wait(self, time=None):
         """Waiting method which can be preempted
 
