@@ -17,6 +17,7 @@ def on_dialog_key_press(dialog, event, key_mapping, buttons):
 def show_dialog(self, event, text, subtext, options, key_mapping, result):
     import gtk
     dialog = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+    result[1] = dialog
     text = "<span size='50000'>" + text + "</span>"
     dialog.set_markup(text)
     
@@ -52,8 +53,10 @@ def show_dialog(self, event, text, subtext, options, key_mapping, result):
 def execute(self, inputs, outputs, gvm):
     import gobject
     import threading
-    event = threading.Event()
-    result = [0]
+    
+    # self_preempted is a threading.Event object
+    event = self._preempted
+    result = [0, None]  # first entry is the dialog return value, second one is the dialog object
     
     text = inputs['text']
     subtext = inputs['subtext']
@@ -61,7 +64,15 @@ def execute(self, inputs, outputs, gvm):
     key_mapping = inputs['key_mapping']
     
     gobject.idle_add(show_dialog, self, event, text, subtext, options, key_mapping, result)
+    
+    # Event is either set by the dialog or by an external preemption request
     event.wait()
+    
+    # The dialog was not closed by the user, but we got a preemption request
+    if self.preempted:
+        result[1].destroy()
+        return "preempted"
+    
     option = result[0]
     
     if option < 0:

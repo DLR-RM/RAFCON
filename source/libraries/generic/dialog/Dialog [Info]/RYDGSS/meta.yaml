@@ -4,7 +4,12 @@ data_flows:
     7: !DataFlow {data_flow_id: 7, from_key: 1, from_state: RYDGSS, to_key: 1, to_state: NMFUUQ}
     8: !DataFlow {data_flow_id: 8, from_key: 2, from_state: RYDGSS, to_key: 2, to_state: NMFUUQ}
     9: !DataFlow {data_flow_id: 9, from_key: 5, from_state: BMACRG, to_key: 3, to_state: NMFUUQ}
-description: null
+description: 'Message dialog to inform user
+
+
+    This message dialog with headline and subtext can only be confirmed (there is
+    a single button with the specified label). The library finishes, with the button
+    is clicked.'
 filename: script.py
 input_data_ports:
     1: !DataPort {data_port_id: 1, data_type: str, default_value: Information, name: text}

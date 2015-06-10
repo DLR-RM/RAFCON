@@ -2,15 +2,16 @@
 def on_dialog_key_press(dialog, event, key_mapping, buttons):
     from gtk.gdk import keyval_name
     key_name = str.lower(keyval_name(event.keyval))
-    print key_name
     for i, desired_key in enumerate(key_mapping):
+        if i >= len(buttons):
+            break
         if isinstance(desired_key, list):
             key_list = desired_key
             for desired_key in key_list:
                 if str.lower(desired_key) == key_name:
                     buttons[i].clicked()
         elif str.lower(desired_key) == key_name:
-                buttons[i].clicked()
+            buttons[i].clicked()
     pass
 
 def show_dialog(self, event, text, subtext, options, key_mapping, result):
