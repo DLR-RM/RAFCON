@@ -56,7 +56,7 @@ def execute(self, inputs, outputs, gvm):
     
     # self_preempted is a threading.Event object
     event = self._preempted
-    result = [0, None]  # first entry is the dialog return value, second one is the dialog object
+    result = [None, None]  # first entry is the dialog return value, second one is the dialog object
     
     text = inputs['text']
     subtext = inputs['subtext']
@@ -67,14 +67,16 @@ def execute(self, inputs, outputs, gvm):
     
     # Event is either set by the dialog or by an external preemption request
     event.wait()
+
+    option = result[0]
+    dialog = result[1]
     
     # The dialog was not closed by the user, but we got a preemption request
-    if self.preempted:
-        result[1].destroy()
+    if option is None:
+        dialog.destroy()
         return "preempted"
-    
-    option = result[0]
-    
+        
+    event.clear()
     if option < 0:
         return "aborted"
         
