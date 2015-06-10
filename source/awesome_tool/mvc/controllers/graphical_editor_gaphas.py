@@ -464,7 +464,6 @@ class GraphicalEditorController(ExtendedController):
                 from_state_m = parent_state_m.states[from_state_id]
                 from_state_v = from_state_m.temp['gui']['editor']['view']
                 from_outcome_id = transition_m.transition.from_outcome
-                print from_state_v
                 from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
                 # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v, transition_v.from_handle(), False)
 
