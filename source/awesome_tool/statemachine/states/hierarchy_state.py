@@ -7,7 +7,6 @@
 
 
 """
-import yaml
 import traceback
 
 from awesome_tool.statemachine.states.container_state import ContainerState
@@ -20,7 +19,7 @@ from awesome_tool.statemachine.enums import MethodName
 from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem
 
 
-class HierarchyState(ContainerState, yaml.YAMLObject):
+class HierarchyState(ContainerState):
 
     """A class tto represent a hierarchy state for the state machine
 

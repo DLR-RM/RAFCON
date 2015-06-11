@@ -19,7 +19,6 @@ from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.data_flow import DataFlow
 from awesome_tool.statemachine.scope import ScopedData, ScopedVariable
 from awesome_tool.statemachine.id_generator import *
-from awesome_tool.statemachine.config import Config, CONFIG_FILE, global_config
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
 import awesome_tool.statemachine.singleton
 from awesome_tool.utils import log

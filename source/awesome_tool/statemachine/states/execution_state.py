@@ -8,10 +8,8 @@
 
 """
 
-import yaml
 import traceback
 
-from awesome_tool.statemachine.enums import StateType
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -20,7 +18,7 @@ from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.enums import StateExecutionState
 
 
-class ExecutionState(State, yaml.YAMLObject):
+class ExecutionState(State):
 
     """A class to represent a state for executing arbitrary functions
 

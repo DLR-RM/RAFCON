@@ -22,14 +22,14 @@ logger = log.get_logger(__name__)
 from awesome_tool.statemachine.data_port import DataPort
 from awesome_tool.statemachine.enums import DataPortType, StateExecutionState
 from awesome_tool.statemachine.outcome import Outcome
-from awesome_tool.statemachine.script import Script, ScriptType
+from awesome_tool.statemachine.script import Script
 from awesome_tool.statemachine.id_generator import *
 
 
 PATH_SEPARATOR = '/'
 
 
-class State(Observable, yaml.YAMLObject, object):
+class State(Observable, yaml.YAMLObject):
 
     """A class for representing a state in the state machine
 

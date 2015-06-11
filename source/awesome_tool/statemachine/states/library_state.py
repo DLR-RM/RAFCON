@@ -8,7 +8,6 @@
 
 """
 from gtkmvc import Observable
-import yaml
 
 from awesome_tool.statemachine.enums import StateExecutionState
 from awesome_tool.statemachine.script import Script, ScriptType
@@ -19,7 +18,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
-class LibraryState(State, yaml.YAMLObject):
+class LibraryState(State):
 
     """A class to represent a hierarchy state for the state machine
 

@@ -8,7 +8,6 @@
 
 """
 
-import yaml
 import traceback
 from gtkmvc import Observable
 
@@ -23,7 +22,7 @@ from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 
-class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
+class BarrierConcurrencyState(ConcurrencyState):
     """ The barrier concurrency holds a list of states that are executed in parallel. It waits until all states
         finished their execution before it returns.
 
@@ -291,7 +290,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         return state
 
 
-class DeciderState(ExecutionState, yaml.YAMLObject):
+class DeciderState(ExecutionState):
 
     """A class to represent a state for deciding the exit of barrier concurrency state
 

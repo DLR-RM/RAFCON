@@ -9,7 +9,6 @@
 """
 
 import Queue
-import yaml
 import traceback
 
 from awesome_tool.utils import log
@@ -19,11 +18,10 @@ from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.enums import StateExecutionState
-from awesome_tool.statemachine.enums import MethodName
-from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
+from awesome_tool.statemachine.execution.execution_history import ConcurrencyItem
 
 
-class PreemptiveConcurrencyState(ConcurrencyState, yaml.YAMLObject):
+class PreemptiveConcurrencyState(ConcurrencyState):
     """ The preemptive concurrency state has a set of substates which are started when the preemptive concurrency state
     executes. The execution of preemptive concurrency state waits for the first substate to return, preempts all other
     substates and finally returns self.
