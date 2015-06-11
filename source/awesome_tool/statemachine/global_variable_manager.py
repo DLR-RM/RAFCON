@@ -71,7 +71,7 @@ class GlobalVariableManager(Observable):
         self.__dictionary_lock.release()
         logger.debug("Global variable %s was set to %s" % (key, str(value)))
 
-    def get_variable(self, key, per_reference=False, access_key=None):
+    def get_variable(self, key, per_reference=None, access_key=None):
         """Fetches the value of a global variable
 
         :param key: the key of the global variable to be fetched
@@ -87,14 +87,17 @@ class GlobalVariableManager(Observable):
                 access_key = self.lock_variable(key)
 
             # --- variable locked
-            if per_reference:
-                if self.variable_can_be_referenced(key):
+            if self.variable_can_be_referenced(key):
+                if per_reference or per_reference is None:
                     return_value = self.__global_variable_dictionary[key]
                 else:
+                    return_value = copy.deepcopy(self.__global_variable_dictionary[key])
+            else:
+                if per_reference:
                     self.unlock_variable(key, access_key)
                     raise RuntimeError("Variable cannot be accessed by reference")
-            else:
-                return_value = copy.deepcopy(self.__global_variable_dictionary[key])
+                else:
+                    return_value = copy.deepcopy(self.__global_variable_dictionary[key])
             # --- release variable
 
             if unlock:
@@ -186,6 +189,8 @@ class GlobalVariableManager(Observable):
 
         """
         return key in self.__global_variable_dictionary
+
+    variable_exists = variable_exist
 
     def locked_status_for_variable(self, key):
         """
