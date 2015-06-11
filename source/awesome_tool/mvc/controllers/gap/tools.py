@@ -5,7 +5,7 @@ from gaphas.connector import Position
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
-    ScopedDataInputPortView, ScopedDataOutputPortView
+    ScopedDataInputPortView, ScopedDataOutputPortView, PortView
 from awesome_tool.mvc.views.gap.state import StateView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
@@ -95,10 +95,15 @@ class MyItemTool(ItemTool):
 
     def calc_rel_pos_to_parent(self, inmotion):
         parent = self.view.canvas.get_parent(inmotion.item)
-        c_pos = self.view.canvas.project(inmotion.item, inmotion.item.handles()[NW].pos)
-        p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
-        rel_x = c_pos[0].value - p_pos[0].value
-        rel_y = c_pos[1].value - p_pos[1].value
+        if parent:
+            c_pos = self.view.canvas.project(inmotion.item, inmotion.item.handles()[NW].pos)
+            p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
+            rel_x = c_pos[0].value - p_pos[0].value
+            rel_y = c_pos[1].value - p_pos[1].value
+        else:
+            pos = self.view.canvas.project(inmotion.item, inmotion.item.handles()[NW].pos)
+            rel_x = pos[0].value
+            rel_y = pos[1].value
         return rel_x, rel_y
 
 
@@ -224,13 +229,32 @@ class MyHandleTool(HandleTool):
                 self._handle_data_flow_view_change(item, handle)
 
         if isinstance(self._active_connection_view, TransitionView):
-            print self._active_connection_view.handles()
             transition_m = self._active_connection_view.transition_m
             transition_meta = transition_m.meta['gui']['editor']
             waypoint_list = self._convert_handles_pos_list_to_rel_pos_list(self._active_connection_view)
             if waypoint_list != self._waypoint_list:
                 transition_meta['waypoints'] = waypoint_list
                 self._graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
+
+        if isinstance(self.grabbed_item, StateView):
+            item = self.grabbed_item
+            handle = self.grabbed_handle
+
+            rel_pos = (handle.pos.x.value, handle.pos.y.value)
+            port_meta = None
+            for port in item.get_all_ports():
+                if handle is port.handle:
+                    if isinstance(port, IncomeView):
+                        port_meta = item.state_m.meta['income']['gui']['editor']
+                    elif isinstance(port, OutcomeView):
+                        port_meta = item.state_m.meta['outcome%d' % port.outcome_id]['gui']['editor']
+                    elif isinstance(port, InputPortView):
+                        port_meta = item.state_m.meta['input%d' % port.port_id]['gui']['editor']
+                    elif isinstance(port, OutputPortView):
+                        port_meta = item.state_m.meta['output%d' % port.port_id]['gui']['editor']
+                    break
+            port_meta['rel_pos'] = rel_pos
+            self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Move port", True)
 
         # reset temp variables
         self._last_active_port = None

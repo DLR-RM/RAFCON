@@ -248,7 +248,11 @@ class StateView(Element):
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
 
-        income_v.handle.pos = 0, self.height * .05
+        port_meta = self.state_m.meta['income']['gui']['editor']
+        if isinstance(port_meta['rel_pos'], tuple):
+            income_v.handle.pos = port_meta['rel_pos']
+        else:
+            income_v.handle.pos = 0, self.height * .05
         self.add_rect_constraint_for_port(income_v)
         return income_v
 
@@ -258,7 +262,12 @@ class StateView(Element):
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
 
-        outcome_v.handle.pos = self.width, self.height * .05 + (len(self._outcomes) - 1) * 2 * outcome_v.port_side_size
+        port_meta = self.state_m.meta['outcome%d' % outcome_v.outcome_id]['gui']['editor']
+        if isinstance(port_meta['rel_pos'], tuple):
+            outcome_v.handle.pos = port_meta['rel_pos']
+        else:
+            # TODO: place new outcome_view at position where no port is located yet
+            outcome_v.handle.pos = self.width, self.height * .05  + (len(self._outcomes) - 1) * 2 * outcome_v.port_side_size
         self.add_rect_constraint_for_port(outcome_v)
 
     def remove_outcome(self, outcome_v):
@@ -274,7 +283,12 @@ class StateView(Element):
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
 
-        input_port_v.handle.pos = 0, self.height * .95 - (len(self._inputs) - 1) * 2 * input_port_v.port_side_size
+        port_meta = self.state_m.meta['input%d' % input_port_v.port_id]['gui']['editor']
+        if isinstance(port_meta['rel_pos'], tuple):
+            input_port_v.handle.pos = port_meta['rel_pos']
+        else:
+            # TODO: place new outcome_view at position where no port is located yet
+            input_port_v.handle.pos = 0, self.height * .95  - (len(self._inputs) - 1) * 2 * input_port_v.port_side_size
         self.add_rect_constraint_for_port(input_port_v)
 
     def remove_input_port(self, input_port_v):
@@ -290,7 +304,12 @@ class StateView(Element):
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
 
-        output_port_v.handle.pos = self.width, self.height * .95 - (len(self._outputs) - 1) * 2 * output_port_v.port_side_size
+        port_meta = self.state_m.meta['output%d' % output_port_v.port_id]['gui']['editor']
+        if isinstance(port_meta['rel_pos'], tuple):
+            output_port_v.handle.pos = port_meta['rel_pos']
+        else:
+            # TODO: place new outcome_view at position where no port is located yet
+            output_port_v.handle.pos = self.width, self.height * .95  - (len(self._outputs) - 1) * 2 * output_port_v.port_side_size
         self.add_rect_constraint_for_port(output_port_v)
 
     def remove_output_port(self, output_port_v):
