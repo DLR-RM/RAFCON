@@ -2,7 +2,7 @@ from gtk import Button
 from gtk.gdk import color_parse
 from awesome_tool.utils import constants
 
-import sys, getopt, re
+import re
 
 
 def global_color_pool():
