@@ -271,7 +271,14 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The selection
         :param dict info: Information about the change
         """
-        pass
+        self.view.editor.unselect_all()
+        state_v = None
+
+        for state_m in info['args'][0].get_states():
+            state_v = self.get_view_for_model(state_m)
+            self.view.editor.select_item(state_v)
+
+        self.view.editor.focused_item = state_v
 
     def connect_transition_handle_to_state(self, transition_v, transition_m, parent_state_m):
         parent_state_v = self.get_view_for_model(parent_state_m)
