@@ -13,6 +13,7 @@ from gtkmvc import Observable
 import yaml
 
 from awesome_tool.statemachine.id_generator import generate_data_port_id
+from awesome_tool.utils import type_helpers
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -38,8 +39,9 @@ class DataPort(Observable, yaml.YAMLObject):
 
         self._name = None
         self.name = name
-        self._data_type = None
-        self.data_type = data_type
+        self._data_type = type(None)
+        if data_type is not None:
+            self.data_type = data_type
         self._default_value = None
         self.default_value = default_value
 
@@ -107,9 +109,9 @@ class DataPort(Observable, yaml.YAMLObject):
     @Observable.observed
     def data_type(self, data_type):
         try:
-            self.check_data_type(data_type)
-            self._data_type = data_type
-        except (TypeError, AttributeError) as e:
+            # self.check_data_type(data_type)
+            self._data_type = type_helpers.convert_string_to_type(data_type)
+        except ValueError as e:
             raise e
 
     @property
@@ -139,32 +141,17 @@ class DataPort(Observable, yaml.YAMLObject):
         :param default_value: The new default value
         :return:
         """
+        if default_value is None:
+            default_value = self.default_value
         try:
-            self.check_data_type(data_type)
-            default_value = self.check_default_value(default_value)
+            self._data_type = type_helpers.convert_string_to_type(data_type)
 
-            self._data_type = data_type
-            self._default_value = default_value
-        except (TypeError, AttributeError) as e:
+            if type_helpers.type_inherits_of_type(type(default_value), self._data_type):
+                self._default_value = default_value
+            else:
+                self._default_value = None
+        except (TypeError, AttributeError, ValueError) as e:
             logger.error("Could not change data type: {0}".format(e))
-
-    @staticmethod
-    def check_data_type(data_type):
-        """Checks the data type
-
-        Checks whether the passed data type is valid and throws an exception if not.
-        :param data_type: The data type to check
-        """
-        if data_type is not None:
-            if not isinstance(data_type, str):
-                raise TypeError("data_type must be of type str")
-            if data_type not in ('int', 'float', 'long', 'complex', 'bool', 'str', 'basestr', 'unicode', 'dict',
-                                 'tuple', 'list', 'bytearray', 'buffer', 'xrange', 'set', 'frozenset', \
-                                 'object', 'function'):
-                try:
-                    getattr(sys.modules[__name__], data_type)
-                except AttributeError:
-                    raise TypeError("" + data_type + " is not a valid python data type")
 
     def check_default_value(self, default_value, data_type=None):
         """Checks the default value
@@ -180,67 +167,16 @@ class DataPort(Observable, yaml.YAMLObject):
             data_type = self.data_type
 
         if default_value is not None:
-            # If the default value is passes as string, we have to convert it to the data type
-            if isinstance(default_value, basestring):
+            # If the default value is passed as string, we have to convert it to the data type
+            if isinstance(default_value, (str, basestring)):
                 if len(default_value) > 1 and default_value[0] == '$':
                     return default_value
                 if len(default_value) == 0 or default_value == "None":
                     return None
-                default_value = self.convert_string_to_type(default_value, data_type)
+
+                default_value = type_helpers.convert_string_value_to_type_value(default_value, data_type)
                 if default_value is None:
                     raise AttributeError("Could not convert default value '{0}' to data type '{1}'".format(
                         default_value, data_type))
 
-            # check for primitive data types
-            def is_derivative_of_data_type(object_type):
-                if object_type.__name__ == data_type:
-                    return True
-                else:
-                    proper = True
-                    for parent_type in object_type.__bases__:
-                        proper &= is_derivative_of_data_type(parent_type)
-                    return proper
-
-            if not is_derivative_of_data_type(type(default_value)):
-                # check for classes
-                if not isinstance(default_value, getattr(sys.modules[__name__], data_type)):
-                    raise TypeError("Input of execute function must be of type %s" % str(data_type))
         return default_value
-
-    @staticmethod
-    def convert_string_to_type(string_value, data_type):
-        """ Helper function to convert a given string to a given data type
-
-        :param string_value: the string to convert
-        :param data_type: the target data type
-        :return: the converted value
-        """
-        import ast
-        from pydoc import locate
-        converted_value = None
-
-        try:
-            if data_type in ("str", "basestr"):
-                converted_value = str(string_value)
-            elif data_type == "int":
-                converted_value = int(string_value)
-            elif data_type == "float":
-                converted_value = float(string_value)
-            elif data_type == "bool":
-                converted_value = bool(ast.literal_eval(string_value))
-            elif data_type in ("list", "dict", "tuple"):
-                converted_value = ast.literal_eval(string_value)
-                if type(converted_value).__name__ != data_type:
-                    raise ValueError("Invalid syntax")
-            elif data_type == "object":
-                try:
-                    converted_value = ast.literal_eval(string_value)
-                except ValueError:
-                    converted_value = ast.literal_eval('"'+string_value+'"')
-            elif isinstance(type(locate(data_type)), type):
-                converted_value = locate(data_type)(string_value)
-            else:
-                logger.debug("No conversion from string to data type '{0}' defined".format(data_type))
-        except (ValueError, SyntaxError, TypeError) as e:
-            raise AttributeError("Can't convert '{0}' to type '{1}': {2}".format(string_value, data_type, e))
-        return converted_value
