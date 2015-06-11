@@ -24,6 +24,7 @@ class PortView(object):
         self._parent = parent
 
         self._connected_handles = {}
+        self._tmp_connected = False
 
         self.port_side_size = 0.
         self.update_port_side_size()
@@ -58,19 +59,28 @@ class PortView(object):
         from awesome_tool.mvc.views.gap.connection import ConnectionView
         assert isinstance(handle, Handle)
         assert isinstance(connection_view, ConnectionView)
-        if handle not in self._connected_handles.iterkeys():
-            if connection_view.from_handle() is handle and not moving:
+        if handle not in self._connected_handles.iterkeys() and not moving:
+            if connection_view.from_handle() is handle:
                 self._connected_handles[handle] = True
             else:
                 self._connected_handles[handle] = False
 
     def remove_connected_handle(self, handle):
         assert isinstance(handle, Handle)
-        self._connected_handles.pop(handle)
+        if handle in self._connected_handles:
+            self._connected_handles.pop(handle)
+
+    def tmp_connect(self):
+        self._tmp_connected = True
+
+    def tmp_disconnect(self):
+        self._tmp_connected = False
 
     @property
     def connected(self):
-        return len(self._connected_handles) > 0
+        if len(self._connected_handles) == 0:
+            return self._tmp_connected
+        return True
 
     def draw(self, context, state):
         raise NotImplementedError
@@ -154,6 +164,10 @@ class ScopedDataPortView(PortView):
     def scoped_variable_m(self):
         return self._scoped_variable_m()
 
+    @property
+    def port_id(self):
+        return self.scoped_variable_m.scoped_variable.data_port_id
+
     def draw(self, context, state):
         fill_color = "#ffc926"
 
@@ -228,8 +242,8 @@ class InputPortView(DataPortView):
         from awesome_tool.mvc.views.gap.connection import ConnectionView
         assert isinstance(handle, Handle)
         assert isinstance(connection_view, ConnectionView)
-        if handle not in self._connected_handles.iterkeys():
-            if connection_view.to_handle() is handle and not moving:
+        if handle not in self._connected_handles.iterkeys() and not moving:
+            if connection_view.to_handle() is handle:
                 self._connected_handles[handle] = True
             else:
                 self._connected_handles[handle] = False
@@ -247,8 +261,8 @@ class OutputPortView(DataPortView):
         from awesome_tool.mvc.views.gap.connection import ConnectionView
         assert isinstance(handle, Handle)
         assert isinstance(connection_view, ConnectionView)
-        if handle not in self._connected_handles.iterkeys():
-            if connection_view.to_handle() is handle and not moving:
+        if handle not in self._connected_handles.iterkeys() and not moving:
+            if connection_view.to_handle() is handle:
                 self._connected_handles[handle] = True
             else:
                 self._connected_handles[handle] = False

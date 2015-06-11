@@ -14,6 +14,7 @@ from awesome_tool.mvc.views.gap.state import StateView
 from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView
 
 from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.execution_state import ExecutionState
 
 from gaphas import Canvas
 import gaphas.guide
@@ -160,14 +161,20 @@ class GraphicalEditorController(ExtendedController):
             #           OUTCOMES
             # ----------------------------------
             elif method_name == 'add_outcome':
-                state_m = information['kwargs']['model']
+                if isinstance(information['instance'], ExecutionState):
+                    state_m = information['model']
+                else:
+                    state_m = information['kwargs']['model']
                 state_v = self.get_view_for_model(state_m)
                 for outcome_m in state_m.outcomes:
                     if outcome_m.outcome.outcome_id == result:
                         state_v.add_outcome(outcome_m)
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_outcome':
-                state_m = information['kwargs']['model']
+                if isinstance(information['instance'], ExecutionState):
+                    state_m = information['model']
+                else:
+                    state_m = information['kwargs']['model']
                 state_v = self.get_view_for_model(state_m)
                 for outcome_v in state_v.outcomes:
                     if outcome_v.outcome_id == arguments[1]:
@@ -177,28 +184,40 @@ class GraphicalEditorController(ExtendedController):
             #           DATA PORTS
             # ----------------------------------
             elif method_name == 'add_input_data_port':
-                state_m = information['kwargs']['model']
+                if isinstance(information['instance'], ExecutionState):
+                    state_m = information['model']
+                else:
+                    state_m = information['kwargs']['model']
                 state_v = self.get_view_for_model(state_m)
                 for input_data_port_m in state_m.input_data_ports:
                     if input_data_port_m.data_port.data_port_id == result:
                         state_v.add_input_port(input_data_port_m)
                         self.canvas.request_update(state_v)
             elif method_name == 'add_output_data_port':
-                state_m = information['kwargs']['model']
+                if isinstance(information['instance'], ExecutionState):
+                    state_m = information['model']
+                else:
+                    state_m = information['kwargs']['model']
                 state_v = self.get_view_for_model(state_m)
                 for output_data_port_m in state_m.output_data_ports:
                     if output_data_port_m.data_port.data_port_id == result:
                         state_v.add_output_port(output_data_port_m)
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_input_data_port':
-                state_m = information['kwargs']['model']
+                if isinstance(information['instance'], ExecutionState):
+                    state_m = information['model']
+                else:
+                    state_m = information['kwargs']['model']
                 state_v = self.get_view_for_model(state_m)
                 for input_port_v in state_v.inputs:
                     if input_port_v.port_id == arguments[1]:
                         state_v.remove_input_port(input_port_v)
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_output_data_port':
-                state_m = information['kwargs']['model']
+                if isinstance(information['instance'], ExecutionState):
+                    state_m = information['model']
+                else:
+                    state_m = information['kwargs']['model']
                 state_v = self.get_view_for_model(state_m)
                 for output_port_v in state_v.outputs:
                     if output_port_v.port_id == arguments[1]:

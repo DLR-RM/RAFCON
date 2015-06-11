@@ -12,11 +12,15 @@ from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
 from awesome_tool.statemachine.states.container_state import ContainerState
 
 import gtk
+from enum import Enum
 
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+
+
+PortMoved = Enum('PORT', 'FROM TO')
 
 
 class MyDeleteTool(Tool):
@@ -243,52 +247,59 @@ class MyHandleTool(HandleTool):
             return True
 
     def _handle_data_flow_view_change(self, item, handle):
+
+        def check_output_port(port):
+            return isinstance(port, OutputPortView) or isinstance(port, ScopedDataOutputPortView)
+
+        def check_input_port(port):
+            return isinstance(port, InputPortView) or isinstance(port, ScopedDataInputPortView)
+
         start_parent = self._start_port.parent
         last_parent = None
         if self._last_active_port:
             last_parent = self._last_active_port.parent
 
         # Connection changed: input-to-input to input-to-input
-        if (isinstance(self._check_port, InputPortView) and
-                isinstance(self._start_port, InputPortView) and
-                isinstance(self._last_active_port, InputPortView)):
+        if (check_input_port(self._check_port) and
+                check_input_port(self._start_port) and
+                check_input_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, iti_to_iti=True)
         # Connection changed: input-to-input to output-to-input
-        elif (isinstance(self._check_port, InputPortView) and
-                isinstance(self._start_port, InputPortView) and
-                isinstance(self._last_active_port, OutputPortView)):
+        elif (check_input_port(self._check_port) and
+                check_input_port(self._start_port) and
+                check_output_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, iti_to_oti=True)
         # Connection changed: output-to-input to input-to-input
-        elif (isinstance(self._check_port, InputPortView) and
-                isinstance(self._start_port, OutputPortView) and
-                isinstance(self._last_active_port, InputPortView)):
+        elif (check_input_port(self._check_port) and
+                check_output_port(self._start_port) and
+                check_input_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, oti_to_iti=True)
         # Connection changed: output-to-input to output-to-input
-        elif ((isinstance(self._check_port, OutputPortView) and
-                    isinstance(self._start_port, InputPortView) and
-                    isinstance(self._last_active_port, InputPortView)) or
-                (isinstance(self._check_port, InputPortView) and
-                    isinstance(self._start_port, OutputPortView) and
-                    isinstance(self._last_active_port, OutputPortView))):
+        elif ((check_output_port(self._check_port) and
+                    check_input_port(self._start_port) and
+                    check_input_port(self._last_active_port)) or
+                (check_input_port(self._check_port) and
+                    check_output_port(self._start_port) and
+                    check_output_port(self._last_active_port))):
             self._handle_data_flow_change(item, start_parent, last_parent, oti_to_oti=True)
         # Connection changed: output-to-input to output-to-output
-        elif (isinstance(self._check_port, OutputPortView) and
-                isinstance(self._start_port, InputPortView) and
-                isinstance(self._last_active_port, OutputPortView)):
+        elif (check_output_port(self._check_port) and
+                check_input_port(self._start_port) and
+                check_output_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, oti_to_oto=True)
         # Connection changed: output-to-output to output-to-input
-        elif (isinstance(self._check_port, OutputPortView) and
-                isinstance(self._start_port, OutputPortView) and
-                isinstance(self._last_active_port, InputPortView)):
+        elif (check_output_port(self._check_port) and
+                check_output_port(self._start_port) and
+                check_input_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, oto_to_oti=True)
         # Connection changed: output-to-output to output-to-output
-        elif (isinstance(self._check_port, OutputPortView) and
-                isinstance(self._start_port, OutputPortView) and
-                isinstance(self._last_active_port, OutputPortView)):
+        elif (check_output_port(self._check_port) and
+                check_output_port(self._start_port) and
+                check_output_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, oto_to_oto=True)
         # Everything else: Reset to original position
         else:
-            pass
+            self._data_handle_reset_ports(item, handle, start_parent)
 
     def _handle_transition_view_change(self, item, handle):
         start_parent = self._start_port.parent
@@ -345,7 +356,112 @@ class MyHandleTool(HandleTool):
                                               oto_to_oto]):
             return
 
-        print "fas"
+        # DEBUG
+        logger.debug("iti_to_iti: %s" % iti_to_iti)
+        logger.debug("iti_to_oti: %s" % iti_to_oti)
+        logger.debug("oti_to_iti: %s" % oti_to_iti)
+        logger.debug("oti_to_oti: %s" % oti_to_oti)
+        logger.debug("oti_to_oto: %s" % oti_to_oto)
+        logger.debug("oto_to_oti: %s" % oto_to_oti)
+        logger.debug("oto_to_oto: %s" % oto_to_oto)
+
+        check = self._check_port
+        last = self._last_active_port
+
+        port_moved = None
+        if check is item.from_port:
+            port_moved = PortMoved.TO
+        elif check is item.to_port:
+            port_moved = PortMoved.FROM
+
+        def reset_handle():
+            if port_moved is PortMoved.TO:
+                self._data_handle_reset_ports(item, item.to_handle(), start_parent)
+            elif port_moved is PortMoved.FROM:
+                self._data_handle_reset_ports(item, item.from_handle(), start_parent)
+
+        if port_moved is PortMoved.TO:
+            # If other port in same parent
+            if start_parent is last_parent and (iti_to_iti or oti_to_oti or oto_to_oto):
+                item.data_flow_m.data_flow.to_key = last.port_id
+            # If other port not in same parent
+            elif start_parent is not last_parent and (iti_to_iti or oti_to_oti or oti_to_oto or oto_to_oti):
+                # Check if InputPortView (not at ScopedVariable) is already connected
+                if isinstance(last, InputPortView) and last.has_incoming_connection():
+                    reset_handle()
+                    return
+                # Only connect output to output if to_port is in parent of from_port parent
+                elif oti_to_oto and last_parent is not self.get_parents_parent_for_port(item.from_port):
+                    reset_handle()
+                    return
+                to_state_id = self.get_state_id_for_port(last)
+                to_key = last.port_id
+                item.data_flow_m.data_flow.modify_target(to_state_id, to_key)
+            else:
+                reset_handle()
+                return
+        elif port_moved is PortMoved.FROM:
+            # If other port in same parent
+            if start_parent is last_parent and (iti_to_iti or oti_to_oti or oto_to_oto):
+                item.data_flow_m.data_flow.from_key = last.port_id
+            # If other port not in same parent
+            elif start_parent is not last_parent and (iti_to_oti or oti_to_iti or oti_to_oti or oto_to_oto):
+                # Prevent to connect input from state in same hierarchy or below
+                if oti_to_iti and last_parent is not self.get_parents_parent_for_port(item.to_port):
+                    reset_handle()
+                    return
+                # Prevent to connect output of parent to input of child
+                elif oti_to_oti and last_parent is self.get_parents_parent_for_port(item.to_port):
+                    reset_handle()
+                    return
+                # Prevent to connect output with output of same state
+                elif oto_to_oto and last_parent is item.to_port.parent:
+                    reset_handle()
+                    return
+                from_state_id = self.get_state_id_for_port(last)
+                from_key = last.port_id
+                item.data_flow_m.data_flow.modify_origin(from_state_id, from_key)
+            else:
+                reset_handle()
+                return
+
+    def _data_handle_reset_ports(self, connection, handle, start_parent):
+
+        if handle not in connection.handles():
+            return
+
+        self.disconnect_last_active_port(handle, connection)
+        self.view.canvas.disconnect_item(connection, handle)
+
+        if isinstance(start_parent, ScopedVariableView):
+            if isinstance(self._start_port, ScopedDataInputPortView):
+                start_parent.parent_state.connect_to_scoped_variable_input(self._start_port.port_id, connection, handle)
+            if isinstance(self._start_port, ScopedDataOutputPortView):
+                start_parent.parent_state.connect_to_scoped_variable_output(self._start_port.port_id, connection, handle)
+        elif isinstance(start_parent, StateView):
+            if isinstance(self._start_port, InputPortView):
+                start_parent.connect_to_input_port(self._start_port.port_id, connection, handle)
+            if isinstance(self._start_port, OutputPortView):
+                start_parent.connect_to_output_port(self._start_port.port_id, connection, handle)
+
+        self.view.canvas.update()
+
+    @staticmethod
+    def get_state_id_for_port(port):
+        parent = port.parent
+        if isinstance(parent, StateView):
+            return parent.state_m.state.state_id
+        elif isinstance(parent, ScopedVariableView):
+            return parent.parent_state.state_m.state.state_id
+
+    def get_parents_parent_for_port(self, port):
+        port_parent = port.parent
+        if isinstance(port_parent, StateView):
+            return self.view.canvas.get_parent(port_parent)
+        elif isinstance(port_parent, ScopedVariableView):
+            return port_parent.parent_state
+        else:
+            return None
 
     def _handle_transition_change(self, item, start_parent, last_parent, oto_to_oto=False, oto_to_oti=False,
                                   oti_to_oto=False, oti_to_oti=False, iti_to_iti=False):
@@ -495,8 +611,7 @@ class MyHandleTool(HandleTool):
                      isinstance(nt_to_port, ScopedDataInputPortView))):
                 self._add_data_flow_scoped(nt_to_port, nt_from_port)
 
-    @staticmethod
-    def _add_data_flow(nt_to_port, nt_from_port):
+    def _add_data_flow(self, nt_to_port, nt_from_port):
 
         from_state_v = nt_from_port.parent
         to_state_v = nt_to_port.parent
@@ -531,7 +646,10 @@ class MyHandleTool(HandleTool):
         to_data_port_id = nt_to_port.port_id
 
         if isinstance(responsible_parent_m.state, ContainerState):
-            responsible_parent_m.state.add_data_flow(from_state_id, from_data_port_id, to_state_id, to_data_port_id)
+            try:
+                responsible_parent_m.state.add_data_flow(from_state_id, from_data_port_id, to_state_id, to_data_port_id)
+            except AttributeError as e:
+                logger.warn(e)
 
     @staticmethod
     def _add_data_flow_scoped(nt_to_port, nt_from_port):
@@ -680,8 +798,10 @@ class MyHandleTool(HandleTool):
         :param handle: Handle to disconnect from
         :param connection: ConnectionView to be disconnected, holding the handle
         """
+
         if self._last_active_port:
             self._last_active_port.remove_connected_handle(handle)
+            self._last_active_port.tmp_disconnect()
             connection.reset_port_for_handle(handle)
             self._last_active_port = None
 
@@ -714,6 +834,7 @@ class MyHandleTool(HandleTool):
             if self._last_active_port is not port_to_handle:
                 self.disconnect_last_active_port(handle, connection)
             port_to_handle.add_connected_handle(handle, connection, moving=True)
+            port_to_handle.tmp_connect()
             connection.set_port_for_handle(port_to_handle, handle)
             self._last_active_port = port_to_handle
             return True
