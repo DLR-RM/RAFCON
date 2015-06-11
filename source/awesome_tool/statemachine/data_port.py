@@ -227,7 +227,7 @@ class DataPort(Observable, yaml.YAMLObject):
             elif data_type == "float":
                 converted_value = float(string_value)
             elif data_type == "bool":
-                converted_value = bool(string_value)
+                converted_value = bool(ast.literal_eval(string_value))
             elif data_type in ("list", "dict", "tuple"):
                 converted_value = ast.literal_eval(string_value)
                 if type(converted_value).__name__ != data_type:
