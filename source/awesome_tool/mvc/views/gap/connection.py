@@ -51,6 +51,9 @@ class ConnectionView(Line):
         assert isinstance(port, PortView)
         self._to_port = port
 
+    def end_handles(self):
+        return [self.from_handle(), self.to_handle()]
+
     def reset_from_port(self):
         self._from_port = None
 

@@ -1,16 +1,20 @@
 !Vividict
 gui: !Vividict
     editor: !Vividict
+        rel_pos: !Vividict {}
         size: !!python/tuple [215.3174867021276, 128.82937167553192]
 transition1: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            invert_y: false
+            waypoints: []
 transition2: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            invert_y: false
+            waypoints: []
 transition3: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            invert_y: false
+            waypoints: []

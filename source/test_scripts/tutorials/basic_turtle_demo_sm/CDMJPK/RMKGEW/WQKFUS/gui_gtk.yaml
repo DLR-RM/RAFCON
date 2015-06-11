@@ -1,7 +1,8 @@
 !Vividict
 gui: !Vividict
     editor: !Vividict
-        rel_pos: !!python/tuple [9.525055182978704, -26.824540595744644]
+        invert_y: false
+        rel_pos: !!python/tuple [9.525055182978704, 26.824540595744644]
         size: !!python/tuple [16.32189657872337, 15.937739710638255]
 transition1: !Vividict
     gui: !Vividict
@@ -10,12 +11,14 @@ transition1: !Vividict
 transition2: !Vividict
     gui: !Vividict
         editor: !Vividict
+            invert_y: false
             waypoints:
-            - !!python/tuple [11.490237314421206, -7.54108071707104]
-            - !!python/tuple [11.507597479918969, -3.8989006258897145]
-            - !!python/tuple [3.5045611854502217, -3.8989006258897145]
-            - !!python/tuple [3.5045611854502217, -7.5441011004381116]
+            - !!python/tuple [11.490237314421206, 7.54108071707104]
+            - !!python/tuple [11.507597479918969, 3.8989006258897145]
+            - !!python/tuple [3.5045611854502217, 3.8989006258897145]
+            - !!python/tuple [3.5045611854502217, 7.5441011004381116]
 transition3: !Vividict
     gui: !Vividict
         editor: !Vividict
+            invert_y: false
             waypoints: []

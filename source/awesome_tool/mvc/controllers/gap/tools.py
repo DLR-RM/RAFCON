@@ -1,5 +1,7 @@
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
+from gaphas.item import NW
+from gaphas.connector import Position
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
@@ -42,6 +44,7 @@ class MyDeleteTool(Tool):
                 StateMachineHelper.delete_model(self.view.focused_item.data_flow_m)
                 return True
             if isinstance(self.view.focused_item, StateView):
+                # TODO: add delete for multiple selection
                 if self.view.has_focus():
                     self._graphical_editor_view.emit('remove_state_from_state_machine')
                     self.view.focused_item.remove_keep_rect_within_constraint_from_parent()
@@ -67,6 +70,36 @@ class MyItemTool(ItemTool):
         if not self.view.is_focus():
             self.view.grab_focus()
         self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
+
+    def on_motion_notify(self, event):
+        """
+        Normally do nothing.
+        If a button is pressed move the items around.
+        """
+        if event.state & gtk.gdk.BUTTON_PRESS_MASK:
+
+            if not self._movable_items:
+                self._movable_items = set(self.movable_items())
+                for inmotion in self._movable_items:
+                    inmotion.start_move((event.x, event.y))
+
+            for inmotion in self._movable_items:
+                inmotion.move((event.x, event.y))
+                rel_pos = self.calc_rel_pos_to_parent(inmotion)
+                if isinstance(inmotion.item, StateView):
+                    state_m = inmotion.item.state_m
+                    state_m.meta['gui']['editor']['rel_pos'] = rel_pos
+                    self._graphical_editor_view.emit('meta_data_changed', state_m, "Move state", True)
+
+            return True
+
+    def calc_rel_pos_to_parent(self, inmotion):
+        parent = self.view.canvas.get_parent(inmotion.item)
+        c_pos = self.view.canvas.project(inmotion.item, inmotion.item.handles()[NW].pos)
+        p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
+        rel_x = c_pos[0].value - p_pos[0].value
+        rel_y = c_pos[1].value - p_pos[1].value
+        return rel_x, rel_y
 
 
 class MyHoverTool(HoverTool):
@@ -134,8 +167,10 @@ class MultiselectionTool(RubberbandTool):
 
 class MyHandleTool(HandleTool):
 
-    def __init__(self, view=None):
+    def __init__(self, graphical_editor_view, view=None):
         super(MyHandleTool, self).__init__(view)
+
+        self._graphical_editor_view = graphical_editor_view
 
         self._last_active_port = None
         self._new_transition = None
@@ -145,6 +180,8 @@ class MyHandleTool(HandleTool):
         self._active_connection_view_handle = None
         self._start_port = None  # Port where connection view pull starts
         self._check_port = None  # Port of connection view that is not pulled
+
+        self._waypoint_list = None
 
     def on_button_press(self, event):
         view = self.view
@@ -159,6 +196,9 @@ class MyHandleTool(HandleTool):
             elif handle is item.to_handle():
                 self._start_port = item.to_port
                 self._check_port = item.from_port
+
+        if isinstance(item, TransitionView):
+            self._waypoint_list = item.transition_m.meta['gui']['editor']['waypoints']
 
         # Set start state
         if isinstance(item, StateView) or isinstance(item, ScopedVariableView):
@@ -178,10 +218,19 @@ class MyHandleTool(HandleTool):
         if self._last_active_port is not self._start_port:
             item = self._active_connection_view
             handle = self._active_connection_view_handle
-            if isinstance(item, TransitionView):
+            if isinstance(item, TransitionView) and handle in item.end_handles():
                 self._handle_transition_view_change(item, handle)
-            elif isinstance(item, DataFlowView):
+            elif isinstance(item, DataFlowView) and handle in item.end_handles():
                 self._handle_data_flow_view_change(item, handle)
+
+        if isinstance(self._active_connection_view, TransitionView):
+            print self._active_connection_view.handles()
+            transition_m = self._active_connection_view.transition_m
+            transition_meta = transition_m.meta['gui']['editor']
+            waypoint_list = self._convert_handles_pos_list_to_rel_pos_list(self._active_connection_view)
+            if waypoint_list != self._waypoint_list:
+                transition_meta['waypoints'] = waypoint_list
+                self._graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
 
         # reset temp variables
         self._last_active_port = None
@@ -190,6 +239,7 @@ class MyHandleTool(HandleTool):
         self._start_state = None
         self._active_connection_view = None
         self._active_connection_view_handle = None
+        self._waypoint_list = None
 
         super(MyHandleTool, self).on_button_release(event)
 
@@ -264,6 +314,8 @@ class MyHandleTool(HandleTool):
             # If current handle is to_handle of a connection view
             elif isinstance(item, ConnectionView) and item.to_handle() is handle:
                 self.check_sink_item(self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2)), handle, item)
+            elif isinstance(item, TransitionView) and handle is not item.from_handle() and handle is not item.to_handle():
+                self.motion_handle.move(pos, 0.)
             # If current handle is port or corner of a state view (for ports it only works if CONTROL key is pressed)
             elif isinstance(item, StateView):
                 self.motion_handle.move(pos, 0.)
@@ -272,6 +324,23 @@ class MyHandleTool(HandleTool):
                 self.motion_handle.move(pos, 5.0)
 
             return True
+
+    def _convert_handles_pos_list_to_rel_pos_list(self, transition):
+        handles_list = transition.handles()
+        rel_pos_list = []
+        for handle in handles_list:
+            if handle is transition.to_handle() or handle is transition.from_handle():
+                continue
+            rel_pos_list.append(self.calc_rel_pos_to_parent(transition, handle))
+        return rel_pos_list
+
+    def calc_rel_pos_to_parent(self, transition, handle):
+        parent = self.view.canvas.get_parent(transition)
+        c_pos = self.view.canvas.project(transition, handle.pos)
+        p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
+        rel_x = c_pos[0].value - p_pos[0].value
+        rel_y = c_pos[1].value - p_pos[1].value
+        return rel_x, rel_y
 
     def _handle_data_flow_view_change(self, item, handle):
 
@@ -569,12 +638,11 @@ class MyHandleTool(HandleTool):
             return
 
         self.disconnect_last_active_port(handle, item)
+        self.view.canvas.disconnect_item(item, handle)
 
         start_outcome_id = None
         if isinstance(self._start_port, OutcomeView):
             start_outcome_id = self._start_port.outcome_id
-
-        self.view.canvas.disconnect_item(item, handle)
 
         if start_outcome_id is None:
             start_parent.connect_to_income(item, handle)

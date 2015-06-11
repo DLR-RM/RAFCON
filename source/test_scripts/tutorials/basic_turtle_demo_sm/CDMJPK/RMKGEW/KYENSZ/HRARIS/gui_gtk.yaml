@@ -1,6 +1,7 @@
 !Vividict
 gui: !Vividict
     editor: !Vividict
-        rel_pos: !!python/tuple [52.09613941356619, -25.782171182348506]
+        invert_y: false
+        rel_pos: !!python/tuple [52.09613941356619, 25.782171182348506]
         size: !!python/tuple [6.924413686068874, 5.613563443761585]
 input_data_port13: !Vividict {}

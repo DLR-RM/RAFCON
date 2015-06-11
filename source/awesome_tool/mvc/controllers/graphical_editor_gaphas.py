@@ -51,6 +51,7 @@ class GraphicalEditorController(ExtendedController):
         self.view.connect('new_state_selection', self._select_new_states)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('remove_scoped_variable_from_state', self._remove_scoped_variable_from_state)
+        self.view.connect('meta_data_changed', self._meta_data_changed)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -93,6 +94,10 @@ class GraphicalEditorController(ExtendedController):
                         states_to_select.append(state.state_m)
             self.model.selection.clear()
             self.model.selection.set(states_to_select)
+
+    def _meta_data_changed(self, view, model, name, affects_children):
+        self.model.state_machine.marked_dirty = True
+        # History.meta_changed_notify_after(self, model, name, affects_children)
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
@@ -438,9 +443,11 @@ class GraphicalEditorController(ExtendedController):
 
         if isinstance(state_meta['rel_pos'], tuple):
             rel_pos = state_meta['rel_pos']
-            if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
-                    self.model.meta['gui']['editor']['invert_y']:
+            if not isinstance(state_meta['invert_y'], bool) or state_meta['invert_y']:
                 rel_pos = (rel_pos[0], -rel_pos[1])
+                state_meta['rel_pos'] = rel_pos
+                state_meta['invert_y'] = False
+                self.model.state_machine.marked_dirty = True
 
         # # Was the state selected?
         # selected_states = self.model.selection.get_states()
@@ -496,12 +503,16 @@ class GraphicalEditorController(ExtendedController):
                     port_width = port_size[0]
                     max_cols = state_width // port_width
                     (row, col) = divmod(num_scoped_variables, max_cols)
-                    rel_pos = (col * port_width, -port_height * (2 * row + 1))
+                    rel_pos = (col * port_width, port_height * (2 * row + 1))
                     scoped_variable_m.meta['gui']['editor']['rel_pos'] = rel_pos
 
-                if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
-                        self.model.meta['gui']['editor']['invert_y']:
-                    rel_pos = (rel_pos[0], -rel_pos[1])
+                if isinstance(scoped_variable_m.meta['gui']['editor']['rel_pos'], tuple):
+                    if not isinstance(scoped_variable_m.meta['gui']['editor']['invert_y'], bool) or\
+                            scoped_variable_m.meta['gui']['editor']['invert_y']:
+                        rel_pos = (rel_pos[0], -rel_pos[1])
+                        scoped_variable_m.meta['gui']['editor']['rel_pos'] = rel_pos
+                        scoped_variable_m.meta['gui']['editor']['invert_y'] = False
+                        self.model.state_machine.marked_dirty = True
 
                 scoped_variable_v = state_v.add_scoped_variable(scoped_variable_m, port_size)
                 scoped_variable_v.matrix.translate(*rel_pos)
@@ -583,11 +594,20 @@ class GraphicalEditorController(ExtendedController):
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
 
             if use_waypoints:
-                for waypoint in transition_m.meta['gui']['editor']['waypoints']:
-                    if not isinstance(self.model.meta['gui']['editor']['invert_y'], bool) or \
-                            self.model.meta['gui']['editor']['invert_y']:
+                waypoint_list = transition_m.meta['gui']['editor']['waypoints']
+                new_waypoint_list = []
+                for waypoint in waypoint_list:
+                    if not isinstance(transition_m.meta['gui']['editor']['invert_y'], bool) or \
+                            transition_m.meta['gui']['editor']['invert_y']:
                         waypoint = (waypoint[0], -waypoint[1])
+                        new_waypoint_list.append(waypoint)
                     transition_v.add_waypoint(waypoint)
+
+                if not isinstance(transition_m.meta['gui']['editor']['invert_y'], bool) or \
+                        transition_m.meta['gui']['editor']['invert_y']:
+                    transition_m.meta['gui']['editor']['invert_y'] = False
+                    transition_m.meta['gui']['editor']['waypoints'] = new_waypoint_list
+                    self.model.state_machine.marked_dirty = True
 
             # Let the view draw the transition and store the returned OpenGL object id
             # if transition_m in self.model.selection.get_transitions():

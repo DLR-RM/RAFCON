@@ -30,7 +30,7 @@ class GraphicalEditorView(View, gobject.GObject):
         self.editor.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#272c36'))
         self.editor.tool = tool.ToolChain(self.editor).\
             append(MyHoverTool()).\
-            append(MyConnectHandleTool()).\
+            append(MyConnectHandleTool(self)).\
             append(tool.PanTool()).\
             append(tool.ZoomTool()).\
             append(MyItemTool(self)).\
@@ -47,6 +47,11 @@ class GraphicalEditorView(View, gobject.GObject):
         self.editor.set_size_request(500, 500)
 
 gobject.type_register(GraphicalEditorView)
-gobject.signal_new('new_state_selection', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_PYOBJECT, ))
-gobject.signal_new('remove_state_from_state_machine', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None, ())
-gobject.signal_new('remove_scoped_variable_from_state', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('new_state_selection', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
+                   (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('remove_state_from_state_machine', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
+                   ())
+gobject.signal_new('remove_scoped_variable_from_state', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
+                   (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('meta_data_changed', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
+                   (gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, ))
