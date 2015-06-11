@@ -26,7 +26,7 @@ def show_dialog(self, event, text, subtext, options, key_mapping, result):
     msg_ctr = vbox.get_children()[0]
     text_ctr = msg_ctr.get_children()[1]
     text_ctr.get_children()[0].set_size_request(600, -1)
-    text_ctr.get_children()[0].set_size_request(600, -1)
+    text_ctr.get_children()[1].set_size_request(600, -1)
 
     align_action_area = gtk.Alignment(xalign=0.5, yalign=0.0, xscale=0.0, yscale=0.0)
     vbox.pack_end(child=align_action_area)
