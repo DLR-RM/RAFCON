@@ -55,6 +55,7 @@ class StateView(Element):
         self.port_constraints = {}
 
         self.hovered = False
+        self.selected = False
 
         name_width = self.width - min(self.width, self.height) / 15.
         self._name_view = NameView(state_m.state.name, (name_width, self.height * 0.2))
@@ -151,7 +152,10 @@ class StateView(Element):
         # if context.hovered:
         #     c.set_source_rgba(.8, .8, 1, .8)
         # else:
-        c.set_source_color(Color('#50555F'))
+        if self.selected:
+            c.set_source_color(Color('#2e9aff'))
+        else:
+            c.set_source_color(Color('#50555F'))
         c.fill_preserve()
         c.set_source_color(Color('#050505'))
         c.stroke()

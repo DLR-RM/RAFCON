@@ -85,11 +85,16 @@ class MyHoverTool(HoverTool):
             self._prev_hovered_item = self.view.hovered_item
 
 
-class MyRubberbandTool(RubberbandTool):
+class MultiselectionTool(RubberbandTool):
+
+    def __init__(self, graphical_editor_view, view=None):
+        super(MultiselectionTool, self).__init__(view)
+
+        self._graphical_editor_view = graphical_editor_view
 
     def on_button_press(self, event):
         if event.state & gtk.gdk.SHIFT_MASK:
-            return super(MyRubberbandTool, self).on_button_press(event)
+            return super(MultiselectionTool, self).on_button_press(event)
         return False
 
     def on_motion_notify(self, event):
@@ -99,6 +104,28 @@ class MyRubberbandTool(RubberbandTool):
             self.x1, self.y1 = event.x, event.y
             self.queue_draw(view)
             return True
+
+    def on_button_release(self, event):
+        self.queue_draw(self.view)
+        x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
+        # Hold down ALT-key to add selection to current selection
+        if event.state & gtk.gdk.MOD1_MASK:
+            items_to_deselect = []
+        else:
+            items_to_deselect = list(self.view.selected_items)
+        self.view.select_in_rectangle((min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)))
+
+        for item in self.view.selected_items:
+            if not isinstance(item, StateView):
+                items_to_deselect.append(item)
+
+        for item in items_to_deselect:
+            if item in self.view.selected_items:
+                self.view.unselect_item(item)
+
+        self._graphical_editor_view.emit('new_state_selection', self.view.selected_items)
+
+        return True
 
 # ------------------------------------------------------------------
 # -----------------------------SNAPPING-----------------------------

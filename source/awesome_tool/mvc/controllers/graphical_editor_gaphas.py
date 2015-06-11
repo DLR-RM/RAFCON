@@ -48,7 +48,7 @@ class GraphicalEditorController(ExtendedController):
         assert self.view == view
         self.setup_canvas()
         self.view.setup_canvas(self.canvas, self.zoom)
-        self.view.connect('new_state_selection', self._select_new_state)
+        self.view.connect('new_state_selection', self._select_new_states)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('remove_scoped_variable_from_state', self._remove_scoped_variable_from_state)
 
@@ -77,12 +77,22 @@ class GraphicalEditorController(ExtendedController):
                 if isinstance(model, TransitionModel) or isinstance(model, DataFlowModel):
                     StateMachineHelper.add_state(model.parent, StateType.EXECUTION)
 
-    def _select_new_state(self, view, state):
-        if state and isinstance(state, StateView):
-            state_m = state.state_m
+    def _select_new_states(self, view, states):
+        if states and isinstance(states, StateView):
+            state_m = states.state_m
             if not self.model.selection.is_selected(state_m):
+                self.deselect_all_items()
                 self.model.selection.clear()
                 self.model.selection.set(state_m)
+        elif isinstance(states, set):
+            states_to_select = []
+            for state in states:
+                if isinstance(state, StateView):
+                    state_m = state.state_m
+                    if not self.model.selection.is_selected(state_m):
+                        states_to_select.append(state.state_m)
+            self.model.selection.clear()
+            self.model.selection.set(states_to_select)
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
@@ -271,14 +281,23 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The selection
         :param dict info: Information about the change
         """
-        self.view.editor.unselect_all()
+        self.deselect_all_items()
         state_v = None
 
         for state_m in info['args'][0].get_states():
+            if state_m is self.root_state_m:
+                continue
             state_v = self.get_view_for_model(state_m)
+            state_v.selected = True
             self.view.editor.select_item(state_v)
 
         self.view.editor.focused_item = state_v
+
+    def deselect_all_items(self):
+        for item in self.view.editor.canvas.get_all_items():
+            if isinstance(item, StateView):
+                item.selected = False
+        self.view.editor.unselect_all()
 
     def connect_transition_handle_to_state(self, transition_v, transition_m, parent_state_m):
         parent_state_v = self.get_view_for_model(parent_state_m)
