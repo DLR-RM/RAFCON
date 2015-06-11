@@ -17,9 +17,21 @@ def on_dialog_key_press(dialog, event, key_mapping, buttons):
 def show_dialog(self, event, text, subtext, options, key_mapping, result):
     import gtk
     dialog = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+    dialog.set_geometry_hints(min_width=700)
     result[1] = dialog
     text = "<span size='50000'>" + text + "</span>"
     dialog.set_markup(text)
+    hbox = dialog.get_action_area()
+    vbox = hbox.parent
+    msg_ctr = vbox.get_children()[0]
+    text_ctr = msg_ctr.get_children()[1]
+    text_ctr.get_children()[0].set_size_request(600, -1)
+    text_ctr.get_children()[0].set_size_request(600, -1)
+
+    align_action_area = gtk.Alignment(xalign=0.5, yalign=0.0, xscale=0.0, yscale=0.0)
+    vbox.pack_end(child=align_action_area)
+    align_action_area.show()
+    hbox.reparent(new_parent=align_action_area)
     
     if isinstance(subtext, basestring) and len(subtext) > 0:
         subtext = "<span size='20000'>" + subtext + "</span>"
@@ -36,7 +48,7 @@ def show_dialog(self, event, text, subtext, options, key_mapping, result):
         button.show()
         dialog.add_action_widget(button, i)
         buttons[i] = button
-               
+        
     dialog.add_events(gtk.gdk.KEY_PRESS_MASK)
     dialog.connect('key-press-event', on_dialog_key_press, key_mapping, buttons)
 
