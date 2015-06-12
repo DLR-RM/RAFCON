@@ -91,6 +91,18 @@ class StateView(Element):
         port_list += self.outcomes
         port_list += self.inputs
         port_list += self.outputs
+        port_list += self.scoped_variables
+        return port_list
+
+    def get_logic_ports(self):
+        port_list = [self.income]
+        port_list += self.outcomes
+        return port_list
+
+    def get_data_ports(self):
+        port_list = self.inputs
+        port_list += self.outputs
+        port_list += self.scoped_variables
         return port_list
 
     @staticmethod

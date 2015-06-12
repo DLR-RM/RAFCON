@@ -14,7 +14,6 @@ from awesome_tool.mvc.views.gap.state import StateView
 from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView
 
 from awesome_tool.statemachine.states.container_state import ContainerState
-from awesome_tool.statemachine.states.execution_state import ExecutionState
 
 from gaphas import Canvas
 import gaphas.guide
@@ -272,7 +271,10 @@ class GraphicalEditorController(ExtendedController):
     @staticmethod
     def _extract_info_data(info):
         if info['method_name'] == 'state_change':
-            info = info['info']
+            if 'info' in info:
+                info = info['info']
+            elif 'kwargs' in info:
+                info = info['kwargs']
         method_name = info['method_name']
         model = info['model']
         args = info['args']
@@ -361,7 +363,6 @@ class GraphicalEditorController(ExtendedController):
         self._remove_connection_view(parent_state_m)
 
     def get_view_for_model(self, model):
-        # TODO: change model name of each Element to "model" to reduce size of method
         for item in self.canvas.get_root_items():
             if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.state_m is model:
                 return item
