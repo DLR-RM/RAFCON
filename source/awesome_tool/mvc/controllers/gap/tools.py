@@ -1,6 +1,6 @@
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
-from gaphas.item import NW
+from gaphas.item import NW, NE, SW, SE
 from gaphas.connector import Position
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
@@ -89,6 +89,7 @@ class MyItemTool(ItemTool):
                 if isinstance(inmotion.item, StateView):
                     state_m = inmotion.item.state_m
                     state_m.meta['gui']['editor']['rel_pos'] = rel_pos
+                    print rel_pos
                     self._graphical_editor_view.emit('meta_data_changed', state_m, "Move state", True)
 
             return True
@@ -240,21 +241,18 @@ class MyHandleTool(HandleTool):
             item = self.grabbed_item
             handle = self.grabbed_handle
 
-            rel_pos = (handle.pos.x.value, handle.pos.y.value)
-            port_meta = None
-            for port in item.get_all_ports():
-                if handle is port.handle:
-                    if isinstance(port, IncomeView):
-                        port_meta = item.state_m.meta['income']['gui']['editor']
-                    elif isinstance(port, OutcomeView):
-                        port_meta = item.state_m.meta['outcome%d' % port.outcome_id]['gui']['editor']
-                    elif isinstance(port, InputPortView):
-                        port_meta = item.state_m.meta['input%d' % port.port_id]['gui']['editor']
-                    elif isinstance(port, OutputPortView):
-                        port_meta = item.state_m.meta['output%d' % port.port_id]['gui']['editor']
-                    break
-            port_meta['rel_pos'] = rel_pos
-            self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Move port", True)
+            corner_handles = [item.handles()[NW], item.handles()[NE], item.handles()[SW], item.handles()[SE]]
+            if handle in corner_handles:
+                for port in item.get_all_ports():
+                    self._update_port_position_meta_data(item, port.handle)
+                state_meta = item.state_m.meta['gui']['editor']
+                state_meta['size'] = (item.width, item.height)
+                self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Change size", True)
+                state_meta['rel_pos'] = self.calc_rel_pos_to_parent(item, item.handles()[NW])
+                print state_meta['rel_pos']
+                self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Move state", True)
+            else:
+                self._update_port_position_meta_data(item, handle)
 
         # reset temp variables
         self._last_active_port = None
@@ -349,6 +347,24 @@ class MyHandleTool(HandleTool):
 
             return True
 
+    def _update_port_position_meta_data(self, item, handle):
+        rel_pos = (handle.pos.x.value, handle.pos.y.value)
+        port_meta = None
+        for port in item.get_all_ports():
+            if handle is port.handle:
+                if isinstance(port, IncomeView):
+                    port_meta = item.state_m.meta['income']['gui']['editor']
+                elif isinstance(port, OutcomeView):
+                    port_meta = item.state_m.meta['outcome%d' % port.outcome_id]['gui']['editor']
+                elif isinstance(port, InputPortView):
+                    port_meta = item.state_m.meta['input%d' % port.port_id]['gui']['editor']
+                elif isinstance(port, OutputPortView):
+                    port_meta = item.state_m.meta['output%d' % port.port_id]['gui']['editor']
+                break
+        if rel_pos != port_meta['rel_pos']:
+            port_meta['rel_pos'] = rel_pos
+            self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Move port", True)
+
     def _convert_handles_pos_list_to_rel_pos_list(self, transition):
         handles_list = transition.handles()
         rel_pos_list = []
@@ -358,13 +374,31 @@ class MyHandleTool(HandleTool):
             rel_pos_list.append(self.calc_rel_pos_to_parent(transition, handle))
         return rel_pos_list
 
-    def calc_rel_pos_to_parent(self, transition, handle):
-        parent = self.view.canvas.get_parent(transition)
-        c_pos = self.view.canvas.project(transition, handle.pos)
-        p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
-        rel_x = c_pos[0].value - p_pos[0].value
-        rel_y = c_pos[1].value - p_pos[1].value
+    def calc_rel_pos_to_parent(self, item, handle):
+        parent = self.view.canvas.get_parent(item)
+        if parent:
+            c_pos = self.view.canvas.project(item, handle.pos)
+            p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
+            rel_x = c_pos[0].value - p_pos[0].value
+            rel_y = c_pos[1].value - p_pos[1].value
+        else:
+            pos = self.view.canvas.project(item, item.handles()[NW].pos)
+            rel_x = pos[0].value
+            rel_y = pos[1].value
         return rel_x, rel_y
+
+    # def calc_rel_pos_to_parent(self, inmotion):
+    #     parent = self.view.canvas.get_parent(inmotion.item)
+    #     if parent:
+    #         c_pos = self.view.canvas.project(inmotion.item, inmotion.item.handles()[NW].pos)
+    #         p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
+    #         rel_x = c_pos[0].value - p_pos[0].value
+    #         rel_y = c_pos[1].value - p_pos[1].value
+    #     else:
+    #         pos = self.view.canvas.project(inmotion.item, inmotion.item.handles()[NW].pos)
+    #         rel_x = pos[0].value
+    #         rel_y = pos[1].value
+    #     return rel_x, rel_y
 
     def _handle_data_flow_view_change(self, item, handle):
 
