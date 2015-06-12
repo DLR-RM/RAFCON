@@ -44,17 +44,12 @@ class MyDeleteTool(Tool):
                 StateMachineHelper.delete_model(self.view.focused_item.data_flow_m)
                 return True
             if isinstance(self.view.focused_item, StateView):
-                # TODO: add delete for multiple selection
                 if self.view.has_focus():
                     self._graphical_editor_view.emit('remove_state_from_state_machine')
-                    self.view.focused_item.remove_keep_rect_within_constraint_from_parent()
-                    self.view.canvas.remove(self.view.focused_item)
                     return True
             if isinstance(self.view.focused_item, ScopedVariableView):
                 if self.view.has_focus():
                     self._graphical_editor_view.emit('remove_scoped_variable_from_state', self.view.focused_item)
-                    self.view.focused_item.remove_keep_rect_within_constraint_from_parent()
-                    self.view.canvas.remove(self.view.focused_item)
                     return True
 
 

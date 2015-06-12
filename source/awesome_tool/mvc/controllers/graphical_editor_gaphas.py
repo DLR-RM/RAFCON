@@ -125,6 +125,20 @@ class GraphicalEditorController(ExtendedController):
         #             transition_v.remove_connection_from_port(transition_v.from_port)
         #             transition_v.reset_from_port()
 
+        if 'method_name' in info and info['method_name'] == 'root_state_before_change':
+            information = info['kwargs']
+            method_name = information['method_name']
+            arguments = information['args']
+            if method_name == 'state_change':
+                information = info['kwargs']['kwargs']
+                method_name = information['method_name']
+                arguments = information['args']
+            if method_name == 'remove_state':
+                state_m = information['model'].states[arguments[1]]
+                state_v = self.get_view_for_model(state_m)
+                state_v.remove_keep_rect_within_constraint_from_parent()
+                self.canvas.remove(state_v)
+
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             information = info
             parent_state_m = information['kwargs']['model']
@@ -142,6 +156,8 @@ class GraphicalEditorController(ExtendedController):
                 new_state = arguments[1]
                 new_state_m = parent_state_m.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, parent_state_m)
+            elif method_name == 'remove_state':
+                pass  # Handled in root_state_before_change
             # ----------------------------------
             #           TRANSITIONS
             # ----------------------------------
