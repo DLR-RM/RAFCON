@@ -38,10 +38,10 @@ class MyDeleteTool(Tool):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
             # Delete Transition from state machine
             if isinstance(self.view.focused_item, TransitionView):
-                StateMachineHelper.delete_model(self.view.focused_item.transition_m)
+                StateMachineHelper.delete_model(self.view.focused_item.model)
                 return True
             if isinstance(self.view.focused_item, DataFlowView):
-                StateMachineHelper.delete_model(self.view.focused_item.data_flow_m)
+                StateMachineHelper.delete_model(self.view.focused_item.model)
                 return True
             if isinstance(self.view.focused_item, StateView):
                 if self.view.has_focus():
@@ -233,7 +233,7 @@ class MyHandleTool(HandleTool):
                 self._handle_data_flow_view_change(item, handle)
 
         if isinstance(self._active_connection_view, TransitionView):
-            transition_m = self._active_connection_view.transition_m
+            transition_m = self._active_connection_view.model
             transition_meta = transition_m.meta['gui']['editor']
             waypoint_list = self._convert_handles_pos_list_to_rel_pos_list(self._active_connection_view)
             if waypoint_list != self._waypoint_list:
@@ -558,7 +558,7 @@ class MyHandleTool(HandleTool):
         if port_moved is PortMoved.TO:
             # If other port in same parent
             if start_parent is last_parent and (iti_to_iti or oti_to_oti or oto_to_oto):
-                item.data_flow_m.data_flow.to_key = last.port_id
+                item.model.data_flow.to_key = last.port_id
             # If other port not in same parent
             elif start_parent is not last_parent and (iti_to_iti or oti_to_oti or oti_to_oto or oto_to_oti):
                 # Check if InputPortView (not at ScopedVariable) is already connected
@@ -571,14 +571,14 @@ class MyHandleTool(HandleTool):
                     return
                 to_state_id = self.get_state_id_for_port(last)
                 to_key = last.port_id
-                item.data_flow_m.data_flow.modify_target(to_state_id, to_key)
+                item.model.data_flow.modify_target(to_state_id, to_key)
             else:
                 reset_handle()
                 return
         elif port_moved is PortMoved.FROM:
             # If other port in same parent
             if start_parent is last_parent and (iti_to_iti or oti_to_oti or oto_to_oto):
-                item.data_flow_m.data_flow.from_key = last.port_id
+                item.model.data_flow.from_key = last.port_id
             # If other port not in same parent
             elif start_parent is not last_parent and (iti_to_oti or oti_to_iti or oti_to_oti or oto_to_oto):
                 # Prevent to connect input from state in same hierarchy or below
@@ -595,7 +595,7 @@ class MyHandleTool(HandleTool):
                     return
                 from_state_id = self.get_state_id_for_port(last)
                 from_key = last.port_id
-                item.data_flow_m.data_flow.modify_origin(from_state_id, from_key)
+                item.model.data_flow.modify_origin(from_state_id, from_key)
             else:
                 reset_handle()
                 return
@@ -677,15 +677,15 @@ class MyHandleTool(HandleTool):
         if self._check_port is item.from_port:
             # if start_port parent is last_active_port parent then connection is still in parent state
             if start_parent is last_parent and (oto_to_oto or oti_to_oto):
-                item.transition_m.transition.to_outcome = last_outcome_id
+                item.model.transition.to_outcome = last_outcome_id
             elif oto_to_oti or oti_to_oto or oti_to_oti or iti_to_iti:
-                item.transition_m.transition.to_state = state_id
+                item.model.transition.to_state = state_id
             # if not in same parent reset transition to initial connection
             else:
-                item.transition_m.transition.to_outcome = start_outcome_id
+                item.model.transition.to_outcome = start_outcome_id
             return
         elif oti_to_oto:
-            item.transition_m.transition.from_outcome = from_outcome_id
+            item.model.transition.from_outcome = from_outcome_id
             return
         elif iti_to_iti:
             self._handle_reset_ports(item, item.from_handle(), start_parent)
@@ -695,20 +695,20 @@ class MyHandleTool(HandleTool):
             # if start_port parent is last_active_port parent then connection is still in parent state
             if start_parent is last_parent:
                 if not self._last_active_port.has_outgoing_connection():
-                    item.transition_m.transition.from_outcome = last_outcome_id
+                    item.model.transition.from_outcome = last_outcome_id
                 else:
-                    item.transition_m.transition.from_outcome = start_outcome_id
+                    item.model.transition.from_outcome = start_outcome_id
                 return
             # if not in same parent but other state outcome then modify origin
             else:
                 if not self._last_active_port.has_outgoing_connection():
                     if self.is_state_id_root_state(state_id):
-                        item.transition_m.transition.from_outcome = start_outcome_id
+                        item.model.transition.from_outcome = start_outcome_id
                     else:
-                        item.transition_m.transition.modify_origin(state_id, last_outcome_id)
+                        item.model.transition.modify_origin(state_id, last_outcome_id)
                     return
                 else:
-                    item.transition_m.transition.from_outcome = start_outcome_id
+                    item.model.transition.from_outcome = start_outcome_id
                 return
 
     def _handle_reset_ports(self, item, handle, start_parent):

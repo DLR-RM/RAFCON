@@ -158,18 +158,18 @@ class TransitionView(ConnectionView):
     def __init__(self, transition_m, hierarchy_level):
         super(TransitionView, self).__init__(hierarchy_level)
         self._transition_m = None
-        self.transition_m = transition_m
+        self.model = transition_m
         self.line_width = .5 / hierarchy_level
 
         self._line_color = '#81848b'
         self._arrow_color = '#ffffff'
 
     @property
-    def transition_m(self):
+    def model(self):
         return self._transition_m()
 
-    @transition_m.setter
-    def transition_m(self, transition_model):
+    @model.setter
+    def model(self, transition_model):
         assert isinstance(transition_model, TransitionModel)
         self._transition_m = ref(transition_model)
 
@@ -179,20 +179,21 @@ class DataFlowView(ConnectionView):
     def __init__(self, data_flow_m, hierarchy_level):
         super(DataFlowView, self).__init__(hierarchy_level)
         assert isinstance(data_flow_m, DataFlowModel)
-        self._data_flow_m = ref(data_flow_m)
+        self._data_flow_m = None
+        self.model = data_flow_m
         self.line_width = 0.5
 
         self._line_color = '#6c5e3c'
         self._arrow_color = '#ffC926'
 
     @property
-    def data_flow_m(self):
+    def model(self):
         return self._data_flow_m()
 
-    @data_flow_m.setter
-    def data_flow_m(self, data_flow_m):
+    @model.setter
+    def model(self, data_flow_m):
         assert isinstance(data_flow_m, DataFlowModel)
-        self._data_flow_m = data_flow_m
+        self._data_flow_m = ref(data_flow_m)
 
 
 @HandleSelection.when_type(ConnectionView)

@@ -112,13 +112,6 @@ class GraphicalEditorController(ExtendedController):
         """
 
         if 'method_name' in info and info['method_name'] == 'root_state_before_change':
-            # information = info['kwargs']
-            # method_name = information['method_name']
-            # arguments = information['args']
-            # if method_name == 'state_change':
-            #     information = info['kwargs']['kwargs']
-            #     method_name = information['method_name']
-            #     arguments = information['args']
             method_name, parent_state_m, result, arguments, instance = self._extract_info_data(info['kwargs'])
             if method_name == 'remove_state':
                 state_m = parent_state_m.states[arguments[1]]
@@ -276,7 +269,8 @@ class GraphicalEditorController(ExtendedController):
 
         self.view.editor.focused_item = state_v
 
-    def _extract_info_data(self, info):
+    @staticmethod
+    def _extract_info_data(info):
         if info['method_name'] == 'state_change':
             info = info['info']
         method_name = info['method_name']
@@ -353,10 +347,10 @@ class GraphicalEditorController(ExtendedController):
 
         children = self.canvas.get_children(parent_state_v)
         for child in list(children):
-            if transitions and isinstance(child, TransitionView) and child.transition_m not in available_connections:
+            if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
                 child.remove_connection_from_ports()
                 self.canvas.remove(child)
-            elif not transitions and isinstance(child, DataFlowView) and child.data_flow_m not in available_connections:
+            elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:
                 child.remove_connection_from_ports()
                 self.canvas.remove(child)
 
@@ -369,18 +363,10 @@ class GraphicalEditorController(ExtendedController):
     def get_view_for_model(self, model):
         # TODO: change model name of each Element to "model" to reduce size of method
         for item in self.canvas.get_root_items():
-            if isinstance(item, StateView) and item.state_m is model:
-                return item
-            elif isinstance(item, TransitionView) and item.transition_m is model:
-                return item
-            elif isinstance(item, DataFlowView) and item.data_flow_m is model:
+            if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.state_m is model:
                 return item
             for child in list(self.canvas.get_all_children(item)):
-                if isinstance(child, StateView) and child.state_m is model:
-                    return child
-                elif isinstance(child, TransitionView) and child.transition_m is model:
-                    return child
-                elif isinstance(child, DataFlowView) and child.data_flow_m is model:
+                if isinstance(child, (StateView, TransitionView, DataFlowView)) and child.state_m is model:
                     return child
 
     def add_state_view_to_parent(self, state_m, parent_state_m):
