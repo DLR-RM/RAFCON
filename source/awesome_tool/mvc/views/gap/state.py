@@ -57,8 +57,18 @@ class StateView(Element):
         self.hovered = False
         self.selected = False
 
-        name_width = self.width - min(self.width, self.height) / 15.
-        self._name_view = NameView(state_m.state.name, (name_width, self.height * 0.2))
+        if not isinstance(state_m.meta['name']['gui']['editor']['size'], tuple):
+            name_width = self.width - min(self.width, self.height) / 15.
+            name_height = self.height * 0.2
+            name_size = (name_width, name_height)
+        else:
+            name_size = state_m.meta['name']['gui']['editor']['size']
+
+        self._name_view = NameView(state_m.state.name, name_size)
+
+        if isinstance(state_m.meta['name']['gui']['editor']['rel_pos'], tuple):
+            name_pos = state_m.meta['name']['gui']['editor']['rel_pos']
+            self._name_view.matrix.translate(*name_pos)
 
     def setup_canvas(self):
         self._income = self.add_income()

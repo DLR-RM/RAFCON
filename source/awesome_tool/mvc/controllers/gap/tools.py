@@ -5,8 +5,8 @@ from gaphas.connector import Position
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
-    ScopedDataInputPortView, ScopedDataOutputPortView, PortView
-from awesome_tool.mvc.views.gap.state import StateView
+    ScopedDataInputPortView, ScopedDataOutputPortView
+from awesome_tool.mvc.views.gap.state import StateView, NameView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
@@ -89,8 +89,11 @@ class MyItemTool(ItemTool):
                 if isinstance(inmotion.item, StateView):
                     state_m = inmotion.item.state_m
                     state_m.meta['gui']['editor']['rel_pos'] = rel_pos
-                    print rel_pos
                     self._graphical_editor_view.emit('meta_data_changed', state_m, "Move state", True)
+                elif isinstance(inmotion.item, NameView):
+                    state_m = self.view.canvas.get_parent(inmotion.item).state_m
+                    state_m.meta['name']['gui']['editor']['rel_pos'] = rel_pos
+                    self._graphical_editor_view.emit('meta_data_changed', state_m, "Move name", False)
 
             return True
 
@@ -249,10 +252,19 @@ class MyHandleTool(HandleTool):
                 state_meta['size'] = (item.width, item.height)
                 self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Change size", True)
                 state_meta['rel_pos'] = self.calc_rel_pos_to_parent(item, item.handles()[NW])
-                print state_meta['rel_pos']
                 self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Move state", True)
             else:
                 self._update_port_position_meta_data(item, handle)
+
+        if isinstance(self.grabbed_item, NameView):
+            item = self.grabbed_item
+            parent = self.view.canvas.get_parent(item)
+
+            name_meta = parent.state_m.meta['name']['gui']['editor']
+            name_meta['size'] = (item.width, item.height)
+            self._graphical_editor_view.emit('meta_data_changed', parent.state_m, "Change name size", False)
+            name_meta['rel_pos'] = self.calc_rel_pos_to_parent(item, item.handles()[NW])
+            self._graphical_editor_view.emit('meta_data_changed', parent.state_m, "Move name", False)
 
         # reset temp variables
         self._last_active_port = None
