@@ -94,6 +94,10 @@ class MyItemTool(ItemTool):
                     state_m = self.view.canvas.get_parent(inmotion.item).state_m
                     state_m.meta['name']['gui']['editor']['rel_pos'] = rel_pos
                     self._graphical_editor_view.emit('meta_data_changed', state_m, "Move name", False)
+                elif isinstance(inmotion.item, ScopedVariableView):
+                    scoped_variable_m = inmotion.item.scoped_variable_m
+                    scoped_variable_m.meta['gui']['editor']['rel_pos'] = rel_pos
+                    self._graphical_editor_view.emit('meta_data_changed', scoped_variable_m, "Move scoped variable", False)
 
             return True
 
@@ -265,6 +269,15 @@ class MyHandleTool(HandleTool):
             self._graphical_editor_view.emit('meta_data_changed', parent.state_m, "Change name size", False)
             name_meta['rel_pos'] = self.calc_rel_pos_to_parent(item, item.handles()[NW])
             self._graphical_editor_view.emit('meta_data_changed', parent.state_m, "Move name", False)
+
+        if isinstance(self.grabbed_item, ScopedVariableView):
+            item = self.grabbed_item
+
+            scoped_meta = item.scoped_variable_m.meta['gui']['editor']
+            scoped_meta['size'] = (item.width, item.height)
+            self._graphical_editor_view.emit('meta_data_changed', item.scoped_variable_m, "Change size", False)
+            scoped_meta['rel_pos'] = self.calc_rel_pos_to_parent(item, item.handles()[NW])
+            self._graphical_editor_view.emit('meta_data_changed', item.scoped_variable_m, "Move scoped variable", False)
 
         # reset temp variables
         self._last_active_port = None

@@ -8,6 +8,7 @@ data_flows:
         to_state: NDIVLD}
     38: !DataFlow {data_flow_id: 38, from_key: 29, from_state: GLSUJY, to_key: 37,
         to_state: PXTKIH}
+description: null
 filename: script.py
 input_data_ports: {}
 name: 99 Bottles of Beer
