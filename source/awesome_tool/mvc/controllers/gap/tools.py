@@ -126,6 +126,20 @@ class MyHoverTool(HoverTool):
             self._prev_hovered_item = self.view.hovered_item
 
 
+class MultiMoveTool(Tool):
+
+    def on_button_press(self, event):
+        if event.state & gtk.gdk.CONTROL_MASK and \
+                len(self.view.selected_items) > 1:
+            print "move tool press"
+            return True
+
+    # def on_motion_notify(self, event):
+    #     if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.CONTROL_MASK and \
+    #             len(self.view.selected_items) > 1:
+    #         return True
+
+
 class MultiselectionTool(RubberbandTool):
 
     def __init__(self, graphical_editor_view, view=None):
@@ -134,12 +148,13 @@ class MultiselectionTool(RubberbandTool):
         self._graphical_editor_view = graphical_editor_view
 
     def on_button_press(self, event):
-        if event.state & gtk.gdk.SHIFT_MASK:
+        if event.state & gtk.gdk.CONTROL_MASK and event.state & gtk.gdk.SHIFT_MASK:
             return super(MultiselectionTool, self).on_button_press(event)
         return False
 
     def on_motion_notify(self, event):
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.SHIFT_MASK:
+        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.CONTROL_MASK and \
+                event.state & gtk.gdk.SHIFT_MASK:
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y

@@ -9,7 +9,7 @@ from gtkmvc import View
 from gaphas import GtkView
 from gaphas import tool
 from awesome_tool.mvc.controllers.gap.tools import MyConnectHandleTool, MyHoverTool, MyDeleteTool, MyItemTool, \
-    MultiselectionTool
+    MultiselectionTool, MultiMoveTool
 
 
 class GraphicalEditorView(View, gobject.GObject):
