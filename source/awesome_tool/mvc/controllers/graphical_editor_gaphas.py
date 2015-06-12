@@ -6,7 +6,7 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 from awesome_tool.mvc.models.state_machine import StateMachineModel
-from awesome_tool.mvc.models import ContainerStateModel, StateModel
+from awesome_tool.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
 from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView
@@ -110,47 +110,27 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The property that was changed
         :param dict info: Information about the change
         """
-        # if 'method_name' in info and info['method_name'] == 'root_state_before_change':
-        #     kwargs = info['kwargs']
-        #     if kwargs['method_name'] == 'transition_change':
-        #         transition_m = kwargs['args'][0]
-        #         transition_change_kwargs = kwargs['kwargs']
-        #         transition_v = self.get_view_for_model(transition_m)
-        #         if (transition_change_kwargs['method_name'] == 'to_state' or
-        #                     transition_change_kwargs['method_name'] == 'to_outcome'):
-        #             transition_v.remove_connection_from_port(transition_v.to_port)
-        #             transition_v.reset_to_port()
-        #         elif (transition_change_kwargs['method_name'] == 'modify_origin' or
-        #                       transition_change_kwargs['method_name'] == 'from_outcome'):
-        #             transition_v.remove_connection_from_port(transition_v.from_port)
-        #             transition_v.reset_from_port()
 
         if 'method_name' in info and info['method_name'] == 'root_state_before_change':
-            information = info['kwargs']
-            method_name = information['method_name']
-            arguments = information['args']
-            if method_name == 'state_change':
-                information = info['kwargs']['kwargs']
-                method_name = information['method_name']
-                arguments = information['args']
+            # information = info['kwargs']
+            # method_name = information['method_name']
+            # arguments = information['args']
+            # if method_name == 'state_change':
+            #     information = info['kwargs']['kwargs']
+            #     method_name = information['method_name']
+            #     arguments = information['args']
+            method_name, parent_state_m, result, arguments, instance = self._extract_info_data(info['kwargs'])
             if method_name == 'remove_state':
-                state_m = information['model'].states[arguments[1]]
+                state_m = parent_state_m.states[arguments[1]]
                 state_v = self.get_view_for_model(state_m)
                 state_v.remove_keep_rect_within_constraint_from_parent()
+                parent_v = self.canvas.get_parent(state_v)
                 self.canvas.remove(state_v)
+                if parent_v:
+                    self.canvas.request_update(parent_v)
 
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
-            information = info
-            parent_state_m = information['kwargs']['model']
-            method_name = information['kwargs']['method_name']
-            arguments = information['kwargs']['args']
-            result = information['kwargs']['result']
-            if method_name == 'state_change':
-                information = info['kwargs']['info']
-                parent_state_m = information['model']
-                method_name = information['method_name']
-                arguments = information['args']
-                result = information['result']
+            method_name, parent_state_m, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
             if method_name == 'add_state':
                 new_state = arguments[1]
@@ -170,9 +150,9 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_transition':
                 self.remove_transition_view_from_parent_view(parent_state_m)
             elif method_name == 'transition_change':
-                transition_m = arguments[0]
+                transition_m = parent_state_m
                 transition_v = self.get_view_for_model(transition_m)
-                self.connect_transition_handle_to_state(transition_v, transition_m, parent_state_m)
+                self.connect_transition_handle_to_state(transition_v, transition_m, transition_m.parent)
             # ----------------------------------
             #           DATA FLOW
             # ----------------------------------
@@ -185,27 +165,21 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_data_flow':
                 self.remove_data_flow_view_from_parent_view(parent_state_m)
             elif method_name == 'data_flow_change':
-                data_flow_m = arguments[0]
+                data_flow_m = parent_state_m
                 data_flow_v = self.get_view_for_model(data_flow_m)
-                self.connect_data_flow_handle_to_state(data_flow_v, data_flow_m, parent_state_m)
+                self.connect_data_flow_handle_to_state(data_flow_v, data_flow_m, data_flow_m.parent)
             # ----------------------------------
             #           OUTCOMES
             # ----------------------------------
             elif method_name == 'add_outcome':
-                if isinstance(information['instance'], ExecutionState):
-                    state_m = information['model']
-                else:
-                    state_m = information['kwargs']['model']
+                state_m = parent_state_m
                 state_v = self.get_view_for_model(state_m)
                 for outcome_m in state_m.outcomes:
                     if outcome_m.outcome.outcome_id == result:
                         state_v.add_outcome(outcome_m)
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_outcome':
-                if isinstance(information['instance'], ExecutionState):
-                    state_m = information['model']
-                else:
-                    state_m = information['kwargs']['model']
+                state_m = parent_state_m
                 state_v = self.get_view_for_model(state_m)
                 for outcome_v in state_v.outcomes:
                     if outcome_v.outcome_id == arguments[1]:
@@ -215,40 +189,28 @@ class GraphicalEditorController(ExtendedController):
             #           DATA PORTS
             # ----------------------------------
             elif method_name == 'add_input_data_port':
-                if isinstance(information['instance'], ExecutionState):
-                    state_m = information['model']
-                else:
-                    state_m = information['kwargs']['model']
+                state_m = parent_state_m
                 state_v = self.get_view_for_model(state_m)
                 for input_data_port_m in state_m.input_data_ports:
                     if input_data_port_m.data_port.data_port_id == result:
                         state_v.add_input_port(input_data_port_m)
                         self.canvas.request_update(state_v)
             elif method_name == 'add_output_data_port':
-                if isinstance(information['instance'], ExecutionState):
-                    state_m = information['model']
-                else:
-                    state_m = information['kwargs']['model']
+                state_m = parent_state_m
                 state_v = self.get_view_for_model(state_m)
                 for output_data_port_m in state_m.output_data_ports:
                     if output_data_port_m.data_port.data_port_id == result:
                         state_v.add_output_port(output_data_port_m)
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_input_data_port':
-                if isinstance(information['instance'], ExecutionState):
-                    state_m = information['model']
-                else:
-                    state_m = information['kwargs']['model']
+                state_m = parent_state_m
                 state_v = self.get_view_for_model(state_m)
                 for input_port_v in state_v.inputs:
                     if input_port_v.port_id == arguments[1]:
                         state_v.remove_input_port(input_port_v)
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_output_data_port':
-                if isinstance(information['instance'], ExecutionState):
-                    state_m = information['model']
-                else:
-                    state_m = information['kwargs']['model']
+                state_m = parent_state_m
                 state_v = self.get_view_for_model(state_m)
                 for output_port_v in state_v.outputs:
                     if output_port_v.port_id == arguments[1]:
@@ -258,7 +220,7 @@ class GraphicalEditorController(ExtendedController):
             #         SCOPED VARIABLES
             # ----------------------------------
             elif method_name == 'add_scoped_variable':
-                state_m = information['kwargs']['model']
+                state_m = parent_state_m
                 state_v = self.get_view_for_model(state_m)
                 for scoped_variable_m in state_m.scoped_variables:
                     if scoped_variable_m.scoped_variable.data_port_id == result:
@@ -268,7 +230,7 @@ class GraphicalEditorController(ExtendedController):
                         state_v.add_scoped_variable(scoped_variable_m, (width, height))
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_scoped_variable':
-                state_m = information['kwargs']['model']
+                state_m = parent_state_m
                 state_v = self.get_view_for_model(state_m)
                 for scoped_variable_v in state_v.scoped_variables:
                     if scoped_variable_v.port_id == arguments[1]:
@@ -314,6 +276,27 @@ class GraphicalEditorController(ExtendedController):
 
         self.view.editor.focused_item = state_v
 
+    def _extract_info_data(self, info):
+        if info['method_name'] == 'state_change':
+            info = info['info']
+        method_name = info['method_name']
+        model = info['model']
+        args = info['args']
+        instance = info['instance']
+        if 'result' in info:
+            result = info['result']
+        else:
+            result = None
+        if method_name in ('transition_change', 'data_flow_change'):
+            model = args[0]
+        if method_name in ('modify_origin', 'modify_target', 'from_state', 'to_state', 'from_key', 'to_key',
+                           'from_outcome', 'to_outcome'):
+            if isinstance(model, TransitionModel):
+                method_name = 'transition_change'
+            elif isinstance(model, DataFlowModel):
+                method_name = 'data_flow_change'
+        return method_name, model, result, args, instance
+
     def deselect_all_items(self):
         for item in self.view.editor.canvas.get_all_items():
             if isinstance(item, StateView):
@@ -324,11 +307,13 @@ class GraphicalEditorController(ExtendedController):
         parent_state_v = self.get_view_for_model(parent_state_m)
 
         self.canvas.disconnect_item(transition_v)
+        transition_v.remove_connection_from_ports()
         self.draw_transition(transition_m, transition_v, parent_state_m, parent_state_v, False)
         self.canvas.update()
 
     def connect_data_flow_handle_to_state(self, data_flow_v, data_flow_m, parent_state_m):
         self.canvas.disconnect_item(data_flow_v)
+        data_flow_v.remove_connection_from_ports()
         self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
         self.canvas.update()
 

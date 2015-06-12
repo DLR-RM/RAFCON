@@ -8,8 +8,10 @@ from gtkmvc import View
 
 from gaphas import GtkView
 from gaphas import tool
+from gaphas import painter
 from awesome_tool.mvc.controllers.gap.tools import MyConnectHandleTool, MyHoverTool, MyDeleteTool, MyItemTool, \
-    MultiselectionTool, MultiMoveTool
+    MultiselectionTool
+from awesome_tool.mvc.controllers.gap.painter import MyHandlePainter
 
 
 class GraphicalEditorView(View, gobject.GObject):
@@ -36,6 +38,11 @@ class GraphicalEditorView(View, gobject.GObject):
             append(MyItemTool(self)).\
             append(MultiselectionTool(self)).\
             append(MyDeleteTool(self))
+        self.editor.painter = painter.PainterChain(). \
+            append(painter.ItemPainter()). \
+            append(MyHandlePainter()). \
+            append(painter.FocusedItemPainter()). \
+            append(painter.ToolPainter())
         self.scroller.add(self.editor)
         self.v_box.pack_end(self.scroller)
 

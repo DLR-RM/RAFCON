@@ -6,6 +6,8 @@ from awesome_tool.mvc.models.outcome import OutcomeModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
+from awesome_tool.utils import constants
+
 import cairo
 from pango import SCALE, FontDescription
 from gtk.gdk import Color, CairoContext
@@ -17,7 +19,7 @@ SnappedSide = Enum('SIDE', 'LEFT TOP RIGHT BOTTOM')
 
 class PortView(object):
 
-    def __init__(self, parent=None, side=SnappedSide.RIGHT):
+    def __init__(self, name=None, parent=None, side=SnappedSide.RIGHT):
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
         self.side = side
@@ -25,6 +27,8 @@ class PortView(object):
 
         self._connected_handles = {}
         self._tmp_connected = False
+
+        self._name = name
 
         self.port_side_size = 0.
         self.update_port_side_size()
@@ -108,6 +112,55 @@ class PortView(object):
         c.set_source_color(Color('#000'))
         c.stroke()
 
+        if self._name and not self.has_outgoing_connection() and self.parent.parent:
+            self.draw_name(context)
+
+    def draw_name(self, context):
+        outcome_side = self.port_side_size
+        c = context.cairo
+
+        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
+        if isinstance(c, CairoContext):
+            cc = c
+        else:
+            cc = c._cairo
+
+        # c.move_to(*self.position)
+
+        pcc = CairoContext(cc)
+        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        layout = pcc.create_layout()
+        layout.set_text(self._name)
+
+        font_name = constants.FONT_NAMES[0]
+        font_size = outcome_side
+
+        # def set_font_description():
+        font = FontDescription(font_name + " " + str(font_size))
+        layout.set_font_description(font)
+        #
+        # set_font_description()
+        # while layout.get_size()[0] / float(SCALE) > self.width:
+        #     font_size *= 0.9
+        #     set_font_description()
+
+        cc.set_source_color(Color('#ededee'))
+
+        if self.side is SnappedSide.RIGHT:
+            c.move_to(self.pos.x + outcome_side, self.pos.y - outcome_side / 2.)
+        elif self.side is SnappedSide.TOP:
+            c.move_to(self.pos.x - outcome_side / 2., self.pos.y - outcome_side * 2)
+        elif self.side is SnappedSide.LEFT:
+            c.move_to(self.pos.x - (outcome_side + layout.get_size()[0] / float(SCALE)), self.pos.y - outcome_side / 2.)
+        elif self.side is SnappedSide.BOTTOM:
+            c.move_to(self.pos.x - outcome_side / 2., self.pos.y + outcome_side)
+
+        pcc.update_layout(layout)
+        pcc.show_layout(layout)
+
+        c.move_to(outcome_side, outcome_side)
+
     def update_port_side_size(self):
         if self._parent:
             self.port_side_size = min(self._parent.width, self._parent.height) / 20.
@@ -118,7 +171,7 @@ class PortView(object):
 class IncomeView(PortView):
 
     def __init__(self, parent):
-        super(IncomeView, self).__init__(parent, SnappedSide.LEFT)
+        super(IncomeView, self).__init__(parent=parent, side=SnappedSide.LEFT)
 
     def draw(self, context, state):
         self.draw_port(context, state, "#aaaaaa")
@@ -127,7 +180,7 @@ class IncomeView(PortView):
 class OutcomeView(PortView):
 
     def __init__(self, outcome_m, parent):
-        super(OutcomeView, self).__init__(parent)
+        super(OutcomeView, self).__init__(name=outcome_m.outcome.name, parent=parent)
 
         assert isinstance(outcome_m, OutcomeModel)
         self._outcome_m = ref(outcome_m)
@@ -140,6 +193,10 @@ class OutcomeView(PortView):
     @property
     def outcome_id(self):
         return self.outcome_m.outcome.outcome_id
+
+    @property
+    def name(self):
+        return self.outcome_m.outcome.name
 
     def draw(self, context, state):
         if self.outcome_id == -2:
@@ -155,7 +212,7 @@ class OutcomeView(PortView):
 class ScopedDataPortView(PortView):
 
     def __init__(self, parent, scoped_variable_m, side):
-        super(ScopedDataPortView, self).__init__(parent, side)
+        super(ScopedDataPortView, self).__init__(parent=parent, side=side)
 
         assert isinstance(scoped_variable_m, ScopedVariableModel)
         self._scoped_variable_m = ref(scoped_variable_m)
@@ -215,9 +272,9 @@ class ScopedDataOutputPortView(ScopedDataPortView):
 class DataPortView(PortView):
 
     def __init__(self, parent, port_m, side):
-        super(DataPortView, self).__init__(parent, side)
-
         assert isinstance(port_m, DataPortModel)
+        super(DataPortView, self).__init__(name=port_m.data_port.name, parent=parent, side=side)
+
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
 

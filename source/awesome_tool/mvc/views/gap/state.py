@@ -116,6 +116,10 @@ class StateView(Element):
             solver.remove_constraint(constraint)
 
     @property
+    def parent(self):
+        return self.canvas.get_parent(self)
+
+    @property
     def state_m(self):
         return self._state_m()
 
