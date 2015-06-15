@@ -191,11 +191,12 @@ class ContainerState(State):
 
         """
 
-        # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
-        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
-        if own_sm_id is not None:
-            awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
-                own_sm_id, state.script.path)
+        if not storage_load:
+            # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
+            own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+            if own_sm_id is not None:
+                awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
+                    own_sm_id, state.script.path)
 
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)

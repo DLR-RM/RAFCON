@@ -1234,27 +1234,13 @@ class GraphicalEditorController(ExtendedController):
         state_meta = state_m.meta['gui']['editor']
         state_temp = state_m.temp['gui']['editor']
 
-        if state_temp['recalc']:
-            state_temp['recalc'] = False
-            if isinstance(state_meta['size'], tuple):
-                size = state_meta['size']
-            if isinstance(state_meta['rel_pos'], tuple):
-                rel_pos = state_meta['rel_pos']
-            parent_size = state_m.parent.meta['gui']['editor']['size']
-            if size[0] > parent_size[0] / 3.:
-                size = (parent_size[0] / 3., parent_size[1] / 3.)
-            state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
-            state_m.temp['gui']['editor']['pos'] = state_abs_pos
-            new_corner_pos = add_pos(state_abs_pos, size)
-            self._resize_state(state_m, new_corner_pos, keep_ratio=True, resize_content=True)
-            self._redraw()
-
         # Use default values if no size information is stored
         if not isinstance(state_meta['size'], tuple):
             state_meta['size'] = size
 
         size = state_meta['size']
 
+        recalc = False
         # Root state is always in the origin
         if state_m.parent is None:
             pos = (0, 0)
@@ -1263,11 +1249,17 @@ class GraphicalEditorController(ExtendedController):
             # Here the possible case of pos_x and posy_y == 0 must be handled
             if not isinstance(state_meta['rel_pos'], tuple):
                 state_m.meta['gui']['editor']['rel_pos'] = rel_pos
+                recalc = True
 
             rel_pos = state_meta['rel_pos']
             pos = self._get_absolute_position(state_m.parent, rel_pos)
 
         state_temp['pos'] = pos
+
+        # Keep state within parent if default values are used
+        if recalc and state_m.parent is not None:
+            state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
+            self._move_state(state_m, state_abs_pos, redraw=True)
 
         # Was the state selected?
         selected_states = self.model.selection.get_states()
@@ -1306,8 +1298,8 @@ class GraphicalEditorController(ExtendedController):
                 # Calculate default positions for the child states
                 # Make the inset from the top left corner
 
-                child_width = width / 5.
-                child_height = height / 5.
+                child_width = min(width, height) / 5.
+                child_height = min(width, height) / 5.
                 child_size = (child_width, child_height)
                 child_spacing = max(child_size) * 1.2
 
