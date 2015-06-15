@@ -124,14 +124,16 @@ class LibraryManager(Observable):
         while True:  # until the library is found or the user aborts
 
             if target_lib_dict is None:  # This cannot happen in the first iteration
-                logger.warning("Cannot find library '{0}'. Please check your library path configuration.".format(
-                    library_name))
-                logger.warning("If your library path is correct and the library was moved, please select the "
-                               "new root folder of the library. If not, please abort.")
+                notice = "Cannot find library '{0}' in subfolder '{1}'. Please check your library path configuration." \
+                            " If your library path is correct and the library was moved, please select the new root " \
+                            "folder of the library. If not, please abort.".format(library_name, library_path)
+                interface.show_notice_func(notice)
                 new_library_path = interface.open_folder_func("Select root folder for library '{0}'".format(
                     library_name))
                 if new_library_path is None:
-                    raise AttributeError('Library not found in path {0}'.format(library_path))  # Cancel library search
+                    # Cancel library search
+                    raise AttributeError("Library '{0}' not found in subfolder {1}".format(library_name,
+                                                                                           library_path))
                 if not os.path.exists(new_library_path):
                     logger.error('Specified path does not exist')
                     continue

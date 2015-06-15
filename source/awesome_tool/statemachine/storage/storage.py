@@ -19,7 +19,6 @@ from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.utils.storage_utils import StorageUtils
-from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 
 class StateMachineStorage(Observable):
