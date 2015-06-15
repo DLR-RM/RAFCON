@@ -170,6 +170,7 @@ widget_class "*Table.GtkEntry"				style "state_overview_text_entry"
 
 
 
+#-----------EVENTBOX---------------
 style "event_box" = "my_default"
 {
     bg[NORMAL]		= @widget_background
@@ -191,6 +192,15 @@ widget_class "*Viewport.GtkVBox.GtkEventBox"		style "label_event_box"
 widget_class "*VBox.GtkEventBox.GtkEventBox"		style "label_event_box"
 widget_class "*VPaned.GtkEventBox.GtkVBox.GtkEventBox"	style "label_event_box"
 widget_class "*Notebook.GtkEventBox.GtkVPaned.GtkEventBox"	style "label_event_box"
+
+
+
+style "top_label_event_box" = "my_default"
+{
+	bg[NORMAL]	= @widget_background
+}
+widget_class "*VBox.GtkHBox.GtkVPaned.GtkVBox.GtkEventBox.GtkEventBox" style "top_label_event_box"
+#----------------------------------
 
 
 
