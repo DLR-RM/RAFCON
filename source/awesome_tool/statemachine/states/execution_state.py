@@ -8,10 +8,8 @@
 
 """
 
-import yaml
 import traceback
 
-from awesome_tool.statemachine.enums import StateType
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -20,7 +18,7 @@ from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.enums import StateExecutionState
 
 
-class ExecutionState(State, yaml.YAMLObject):
+class ExecutionState(State):
 
     """A class to represent a state for executing arbitrary functions
 
@@ -78,11 +76,11 @@ class ExecutionState(State, yaml.YAMLObject):
 
             if self.backward_execution:
                 logger.debug("Backward executing state with id %s and name %s" % (self._state_id, self.name))
-                outcome = self._execute(self.input_data, self.output_data, backward_execution=True)
+                self._execute(self.input_data, self.output_data, backward_execution=True)
                 # outcome handling is not required as we are in backward mode and the execution order is fixed
                 self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 logger.debug("Finished backward executing state with id %s and name %s" % (self._state_id, self.name))
-                return
+                return self.finalize()
 
             else:
                 logger.debug("Executing state with id %s and name %s" % (self._state_id, self.name))
@@ -92,27 +90,20 @@ class ExecutionState(State, yaml.YAMLObject):
                 # check output data
                 self.check_output_data_type()
 
-                if self.concurrency_queue:
-                    self.concurrency_queue.put(self.state_id)
-
                 if self.preempted:
-                    self.final_outcome = Outcome(-2, "preempted")
-                    return
+                    outcome = Outcome(-2, "preempted")
 
-                self.final_outcome = outcome
-                return
+                return self.finalize(outcome)
 
         except Exception, e:
-            logger.error("State %s had an internal error: %s %s" % (self.name, str(e), str(traceback.format_exc())))
-            traceback.format_exc()
+            logger.error("State {0} had an internal error: {1}\n{2}".format(self.name,
+                                                                            str(e), str(traceback.format_exc())))
             # write error to the output_data of the state
             self.output_data["error"] = e
-            self.final_outcome = Outcome(-1, "aborted")
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-            return
+            return self.finalize(Outcome(-1, "aborted"))
 
-    @classmethod
-    def to_yaml(cls, dumper, data):
+    def get_execution_state_yaml_dict(data):
         dict_representation = {
             'name': data.name,
             'state_id': data.state_id,
@@ -123,9 +114,13 @@ class ExecutionState(State, yaml.YAMLObject):
             'path': data.script.path,
             'filename': data.script.filename
         }
+        return dict_representation
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        dict_representation = ExecutionState.get_execution_state_yaml_dict(data)
         node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
         return node
-
 
     @classmethod
     def from_yaml(cls, loader, node):

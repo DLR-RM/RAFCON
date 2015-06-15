@@ -18,7 +18,7 @@ def create_state_machine():
     state3.add_state(state1)
     state3.set_start_state(state1.state_id)
     state3.add_outcome("Container_Outcome", 6)
-    state3.add_transition(state1.state_id, 3, None, 6)
+    state3.add_transition(state1.state_id, 3, state3.state_id, 6)
     input_state3 = state3.add_input_data_port("input_data_port1", "float", 22.0)
     output_state3 = state3.add_output_data_port("output_data_port1", "float")
     state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)

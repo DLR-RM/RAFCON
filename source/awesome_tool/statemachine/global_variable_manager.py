@@ -10,7 +10,7 @@
 
 from gtkmvc import Observable
 from threading import Lock
-from id_generator import *
+from awesome_tool.statemachine.id_generator import *
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -71,7 +71,7 @@ class GlobalVariableManager(Observable):
         self.__dictionary_lock.release()
         logger.debug("Global variable %s was set to %s" % (key, str(value)))
 
-    def get_variable(self, key, per_reference=False, access_key=None):
+    def get_variable(self, key, per_reference=None, access_key=None):
         """Fetches the value of a global variable
 
         :param key: the key of the global variable to be fetched
@@ -87,14 +87,17 @@ class GlobalVariableManager(Observable):
                 access_key = self.lock_variable(key)
 
             # --- variable locked
-            if per_reference:
-                if self.variable_can_be_referenced(key):
+            if self.variable_can_be_referenced(key):
+                if per_reference or per_reference is None:
                     return_value = self.__global_variable_dictionary[key]
                 else:
+                    return_value = copy.deepcopy(self.__global_variable_dictionary[key])
+            else:
+                if per_reference:
                     self.unlock_variable(key, access_key)
                     raise RuntimeError("Variable cannot be accessed by reference")
-            else:
-                return_value = copy.deepcopy(self.__global_variable_dictionary[key])
+                else:
+                    return_value = copy.deepcopy(self.__global_variable_dictionary[key])
             # --- release variable
 
             if unlock:
@@ -112,7 +115,7 @@ class GlobalVariableManager(Observable):
         return key in self.__variable_references and self.__variable_references[key]
 
     @Observable.observed
-    def delete_global_variable(self, key):
+    def delete_variable(self, key):
         """Deletes a global variable
 
         :param key: the key of the global variable to be deleted
@@ -187,6 +190,8 @@ class GlobalVariableManager(Observable):
         """
         return key in self.__global_variable_dictionary
 
+    variable_exists = variable_exist
+
     def locked_status_for_variable(self, key):
         """
         Returns the status of the lock of a global variable
@@ -206,7 +211,27 @@ class GlobalVariableManager(Observable):
         """Property for the _global_variable_dictionary field
 
         """
-        return copy.deepcopy(self.__global_variable_dictionary)
+        dict_copy = {}
+        for key, value in self.__global_variable_dictionary:
+            if key in self.__variable_references and self.__variable_references[key]:
+                dict_copy[key] = value
+            else:
+                dict_copy[key] = copy.deepcopy(value)
+
+        return dict_copy
+
+    def get_all_keys(self):
+        """Returns all variable names in the GVM
+
+        :return: Keys of all variables
+        """
+        return self.__global_variable_dictionary.keys()
+
+
+    def get_representation(self, key):
+        if not self.variable_exist(key):
+            return ''
+        return str(self.__global_variable_dictionary[key])
 
     def is_locked(self, key):
         """Check whether a variable is currently locked

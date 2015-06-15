@@ -17,6 +17,7 @@ logger = log.get_logger(__name__)
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 import awesome_tool.statemachine.config as config
 from awesome_tool.statemachine import interface
+from collections import OrderedDict
 
 
 class LibraryManager(Observable):
@@ -54,8 +55,10 @@ class LibraryManager(Observable):
                 self._library_paths[lib_key] = lib_path
                 self._libraries[lib_key] = {}
                 self.add_libraries_from_path(lib_path, self._libraries[lib_key])
+                self._libraries[lib_key] = OrderedDict(sorted(self._libraries[lib_key].items()))
             else:
                 logger.warn("Wrong path in config for LibraryManager: Path %s does not exist", lib_path)
+        self._libraries = OrderedDict(sorted(self._libraries.items()))
         logger.debug("Initialization of LibraryManager done.")
 
     def add_libraries_from_path(self, lib_path, target_dict):
@@ -73,6 +76,7 @@ class LibraryManager(Observable):
                 else:
                     target_dict[lib] = {}
                     self.add_libraries_from_path(os.path.join(lib_path, lib), target_dict[lib])
+                    target_dict[lib] = OrderedDict(sorted(target_dict[lib].items()))
 
     def add_library(self, lib, lib_path, target_dict):
         """

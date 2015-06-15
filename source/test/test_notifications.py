@@ -307,7 +307,7 @@ def create_models(*args, **kargs):
     state3.set_start_state(state4)
     state3.add_scoped_variable("share", "int", 3)
     state3.add_transition(state4.state_id, 0, state5.state_id, None)
-    state3.add_transition(state5.state_id, 0, None, 0)
+    state3.add_transition(state5.state_id, 0, state3.state_id, 0)
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
@@ -321,7 +321,7 @@ def create_models(*args, **kargs):
     ctr_state.set_start_state(state1)
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
     ctr_state.add_transition(state2.state_id, 0, state3.state_id, None)
-    ctr_state.add_transition(state3.state_id, 0, None, 0)
+    ctr_state.add_transition(state3.state_id, 0, ctr_state.state_id, 0)
     ctr_state.add_data_flow(state1.state_id, output_state1, state2.state_id, input_par_state2)
     ctr_state.add_data_flow(state2.state_id, output_res_state2, state3.state_id, input_state3)
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
@@ -1016,7 +1016,7 @@ def test_transition_add_remove_notification(with_print=False):
     new_transition_id1 = state_dict['Nested'].add_transition(from_state_id=state1.state_id, from_outcome=outcome_state1,
                                                              to_state_id=state2.state_id, to_outcome=None)
     state_dict['Nested'].add_transition(from_state_id=state2.state_id, from_outcome=outcome_state2,
-                                        to_state_id=None, to_outcome=-1)
+                                        to_state_id=state_dict['Nested'].state_id, to_outcome=-1)
 
     # check state
     state_model_observer = states_observer_dict[state_dict['Nested'].get_path()]

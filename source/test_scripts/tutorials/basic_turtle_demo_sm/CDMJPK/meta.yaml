@@ -15,7 +15,7 @@ state_id: CDMJPK
 transitions:
     1: !Transition {from_outcome: 0, from_state: CKIWDE, to_outcome: null, to_state: RMKGEW,
         transition_id: 1}
-    2: !Transition {from_outcome: 0, from_state: RMKGEW, to_outcome: 0, to_state: null,
+    2: !Transition {from_outcome: 0, from_state: RMKGEW, to_outcome: 0, to_state: CDMJPK,
         transition_id: 2}
     3: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: CKIWDE,
         transition_id: 3}

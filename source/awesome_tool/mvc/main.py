@@ -60,7 +60,7 @@ def create_models(*args, **kargs):
     state3.set_start_state(state4)
     state3.add_scoped_variable("share", "int", 3)
     state3.add_transition(state4.state_id, 0, state5.state_id, None)
-    state3.add_transition(state5.state_id, 0, None, 0)
+    state3.add_transition(state5.state_id, 0, state3.state_id, 0)
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
@@ -74,7 +74,7 @@ def create_models(*args, **kargs):
     ctr_state.set_start_state(state1)
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
     ctr_state.add_transition(state2.state_id, 0, state3.state_id, None)
-    ctr_state.add_transition(state3.state_id, 0, None, 0)
+    ctr_state.add_transition(state3.state_id, 0, ctr_state.state_id, 0)
     ctr_state.add_data_flow(state1.state_id, output_state1, state2.state_id, input_par_state2)
     ctr_state.add_data_flow(state2.state_id, output_res_state2, state3.state_id, input_state3)
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
@@ -97,7 +97,7 @@ def create_models(*args, **kargs):
     #ctr_state.add_data_flow(ctr_state.state_id, scoped_variable2_ctr_state, ctr_state.state_id, output_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    global_var_manager_model = GlobalVariableManagerModel()
+    global_var_manager_model = awesome_tool.mvc.singleton.global_variable_manager_model
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
     # ctr_model = ContainerStateModel(ctr_state)

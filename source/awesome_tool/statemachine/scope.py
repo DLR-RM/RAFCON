@@ -14,11 +14,10 @@ import datetime
 
 from gtkmvc import Observable
 from awesome_tool.statemachine.enums import DataPortType
-import yaml
 
-from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.data_port import DataPort
 
+from awesome_tool.utils import type_helpers
 
 def generate_time_stamp():
     """
@@ -37,7 +36,7 @@ def get_human_readable_time(timestamp):
     return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 
-class ScopedVariable(DataPort, Observable, yaml.YAMLObject):
+class ScopedVariable(DataPort):
 
     """A class for representing a scoped variable in a container state
 
@@ -110,8 +109,9 @@ class ScopedData(Observable):
         self.from_state = from_state
         self.name = name
 
-        self._value_type = None
-        self.value_type = value_type
+        self._value_type = type(None)
+        if value_type is not None:
+            self.value_type = value_type
         self._value = None
         self.value = value
 
@@ -157,11 +157,15 @@ class ScopedData(Observable):
     @Observable.observed
     def value(self, value):
         #check for primitive data types
-        if value is not None and str(type(value).__name__) != self._value_type:
-            print "types", value, str(type(value).__name__), self._value_type
-            #check for classes
-            if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
-                raise TypeError("result must be of type %s" % str(self._value_type))
+        if value is not None and not type_helpers.type_inherits_of_type(type(value), self.value_type):
+            raise TypeError("Result must by of type '{0}'. Given: '{1}' with type '{2}'".format(
+                self.value_type, value, type(value)
+            ))
+        # if value is not None and str(type(value).__name__) != self._value_type:
+        #     print "types", value, str(type(value).__name__), self._value_type
+        #     #check for classes
+        #     if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
+        #         raise TypeError("result must be of type %s" % str(self._value_type))
         self._timestamp = generate_time_stamp()
         self._value = value
 
@@ -175,9 +179,7 @@ class ScopedData(Observable):
     @value_type.setter
     @Observable.observed
     def value_type(self, value_type):
-        if not isinstance(value_type, str):
-            raise TypeError("result_type must be of type str")
-        self._value_type = value_type
+        self._value_type = type_helpers.convert_string_to_type(value_type)
 
     @property
     def from_state(self):

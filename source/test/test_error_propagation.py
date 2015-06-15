@@ -7,6 +7,7 @@ import signal
 from awesome_tool.utils import log
 from awesome_tool.mvc.models import GlobalVariableManagerModel
 from awesome_tool.mvc.views import LoggingView
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 import awesome_tool.mvc.singleton
 import variables_for_pytest
 

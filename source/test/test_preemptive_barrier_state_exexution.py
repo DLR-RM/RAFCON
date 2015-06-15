@@ -27,7 +27,7 @@ def create_preemption_statemachine():
     input2_state3 = state3.add_input_data_port("input_data_port2", "float", 0.1)
     state3.add_data_flow(state3.state_id, input_state3, state1.state_id, input_state1)
     state3.add_data_flow(state3.state_id, input2_state3, state2.state_id, input_state2)
-    state3.add_transition(state1.state_id, 3, None, 3)
+    state3.add_transition(state1.state_id, 3, state3.state_id, 3)
 
     return StateMachine(state3)
 

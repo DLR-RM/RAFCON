@@ -3,7 +3,7 @@ import gobject
 from gtk import ListStore, TreeStore
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.statemachine.states.library_state import LibraryState
-
+from awesome_tool.utils import type_helpers
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -98,31 +98,67 @@ class StateDataFlowsListController(ExtendedController):
         if path[0]:
             self.view.tree_view.set_cursor(path[0])
 
+    def find_free_and_valid_data_flows(self, depend_to_state_id=None):
+        # print "\n internal from %s \n\n internal to %s" % (self.free_to_port_internal, self.from_port_internal)
+        internal_data_flows = []
+        if self.free_to_port_internal and self.from_port_internal:
+            for from_state_id, elems in self.from_port_internal.iteritems():
+                # print "\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems])
+                for from_port in elems:
+                    for to_state_id, elems in self.free_to_port_internal.iteritems():
+                        # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
+                        for to_port in elems:
+                            if type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type):
+                                if depend_to_state_id is None or depend_to_state_id in [from_state_id, to_state_id]:
+                                    internal_data_flows.append((from_state_id, from_port.data_port_id,
+                                                                to_state_id, to_port.data_port_id))
+
+        # print "\n\n\n" + 60*"-" + "\n external from %s \n\n external to %s" % (self.free_to_port_external, self.from_port_external)
+        external_data_flows = []
+        if self.free_to_port_external and self.from_port_external:
+            for from_state_id, elems in self.from_port_external.iteritems():
+                # print "\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems])
+                for from_port in elems:
+                    for to_state_id, elems in self.free_to_port_external.iteritems():
+                        # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
+                        for to_port in elems:
+                            if type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type):
+                                if depend_to_state_id is None or depend_to_state_id in [from_state_id, to_state_id]:
+                                    external_data_flows.append((from_state_id, from_port.data_port_id,
+                                                                to_state_id, to_port.data_port_id))
+
+        return internal_data_flows, external_data_flows
+
     def on_add(self, button, info=None):
         # print "ADD DATA_FLOW"
-        if self.view_dict['data_flows_internal'] and self.free_to_port_internal:
+        own_state_id = self.model.state.state_id
+        [possible_internal_data_flows, possible_external_data_flows] = self.find_free_and_valid_data_flows(own_state_id)
+        # print "\n\npossible internal data_flows\n %s" % possible_internal_data_flows
+        # print "\n\npossible external data_flows\n %s" % possible_external_data_flows
+
+        if self.view_dict['data_flows_internal'] and possible_internal_data_flows:
             # print self.from_port_internal
-            from_state_id = self.from_port_internal.keys()[0]
-            from_key = self.from_port_internal[from_state_id][0].data_port_id
+            from_state_id = possible_internal_data_flows[0][0]
+            from_key = possible_internal_data_flows[0][1]
             # print from_state_id, from_key, self.model.state.state_id
-            to_state_id = self.free_to_port_internal.keys()[0]
-            to_key = self.free_to_port_internal[to_state_id][0].data_port_id
+            to_state_id = possible_internal_data_flows[0][2]
+            to_key = possible_internal_data_flows[0][3]
             # print "NEW DATA_FLOW INTERNAL IS: ", from_state_id, from_key, to_state_id, to_key
             data_flow_id = self.model.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
             # print "NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id]
 
-        elif self.view_dict['data_flows_external'] and self.model.state.output_data_ports:  # self.free_to_port_external:
-            from_state_id = self.model.state.state_id
+        elif self.view_dict['data_flows_external'] and possible_external_data_flows:  # self.free_to_port_external:
+            from_state_id = possible_external_data_flows[0][0]
             # print from_state_id, self.model.state.output_data_ports
-            from_key = self.model.state.output_data_ports.keys()[0]
-            to_state_id = self.free_to_port_external.keys()[0]
-            to_key = self.free_to_port_external[to_state_id][0].data_port_id
+            from_key = possible_external_data_flows[0][1]
+            to_state_id = possible_external_data_flows[0][2]
+            to_key = possible_external_data_flows[0][3]
             # print "NEW DATA_FLOW EXTERNAL IS: ", from_state_id, from_key, to_state_id, to_key, \
             #     get_state_model(self.model.parent, to_state_id).state.get_data_port_by_id(to_key)
             data_flow_id = self.model.parent.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
             # print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
         else:
-                logger.warning("NO OPTION TO ADD TRANSITION")
+                logger.warning("NO OPTION TO ADD DATA FLOW")
 
         # set focus on this new element
         # - at the moment every new element is the last -> easy work around :(
@@ -294,7 +330,8 @@ def get_key_combos(ports, keys_store, port_type, not_key=None):
         # print type(ports), "\n", ports
         if type(ports) == type(list):
             for scope in ports:
-                keys_store.append([scope.data_port.data_type + '.' + scope.data_port.name + '.' + scope.data_port.port_id])
+                keys_store.append([scope.data_port.data_type.__name__ + '.' + scope.data_port.name + '.' +
+                                   scope.data_port.port_id])
         elif ports:
             # print ports
             try:
@@ -366,10 +403,11 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     break
 
             from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
-            from_key_label = from_key_port.data_type + '.' + from_key_port.name + '.' + str(data_flow.from_key)
+            from_key_label = from_key_port.data_type.__name__ + '.' + from_key_port.name + '.' + str(data_flow.from_key)
             to_key_port = tstate.get_data_port_by_id(data_flow.to_key)
 
-            to_key_label = (to_key_port.data_type or 'None') + '.' + to_key_port.name + '.' + str(data_flow.to_key)
+            to_key_label = (to_key_port.data_type.__name__ or 'None') + '.' + to_key_port.name + '.' + str(
+                data_flow.to_key)
             data_flow_dict['internal'][data_flow.data_flow_id] = {'from_state': from_state,
                                                                   'from_key': from_key_label,
                                                                   'to_state': to_state,
@@ -461,9 +499,10 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                         break
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
                 from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
-                from_key_label = from_key_port.data_type + '.' + from_key_port.name + '.' + str(data_flow.from_key)
+                from_key_label = from_key_port.data_type.__name__ + '.' + from_key_port.name + '.' + str(
+                    data_flow.from_key)
                 to_key_port = tstate.get_data_port_by_id(data_flow.to_key)
-                to_key_label = to_key_port.data_type + '.' + to_key_port.name + '.' + str(data_flow.to_key)
+                to_key_label = to_key_port.data_type.__name__ + '.' + to_key_port.name + '.' + str(data_flow.to_key)
                 data_flow_dict['external'][data_flow.data_flow_id] = {'from_state': from_state,
                                                                       'from_key': from_key_label,
                                                                       'to_state': to_state,
@@ -517,13 +556,15 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     for port in free_to_port_external[data_flow.to_state]:
                         to_state = get_state_model(model.parent, data_flow.to_state).state
                         if not port.data_port_id == data_flow.from_key:
-                            to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
+                            to_keys_store.append([port.data_type.__name__ + '.' + port.name + '.' + str(
+                                port.data_port_id)])
                 else:
                     if get_state_model(model.parent, data_flow.to_state):
                         to_state_model = get_state_model(model.parent, data_flow.to_state)
                         port = to_state_model.state.get_data_port_by_id(data_flow.to_key)
                         if not port.data_port_id == data_flow.from_key:
-                            to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
+                            to_keys_store.append([port.data_type.__name__ + '.' + port.name + '.' + str(
+                                port.data_port_id)])
 
                 tree_dict_combos['external'][data_flow.data_flow_id] = {'from_state': from_states_store,
                                                                         'from_key': from_keys_store,

@@ -1,0 +1,12 @@
+instance
+name: Awesome tool example 
+manager: localhost:54414
+
+defines
+# DFC_SRC_PATH: /home_local/stei_fn/taskcontrol/source
+DFC_PYTHONPATH_ADD: %(shell echo $HOME)/.local/lib/python2.7/site-packages/ 
+DFC_NEW_STATE_MACHINE: True
+# DFC_OPEN_STATE_MACHINES: /home_local/stei_fn/taskcontrol/source/test_scripts/tutorials/99_bottles_of_beer
+
+include %(DFC_SRC_PATH)/../share/awesome_tool.inc.lnc
+

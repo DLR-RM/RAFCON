@@ -10,6 +10,8 @@ from awesome_tool.utils.vividict import Vividict
 
 from awesome_tool.mvc.history import History
 
+from awesome_tool.statemachine.states.container_state import ContainerState
+
 
 class StateMachineModel(ModelMT):
     """This model class manages a :class:`awesome_tool.statemachine.state_machine.StateMachine`
@@ -133,3 +135,11 @@ class StateMachineModel(ModelMT):
                                        "__delitem__", "__setitem__"]:
                 return True
         return False
+
+    def get_state_model_by_path(self, path):
+        path_elems = path.split('/')
+        path_elems.pop(0)
+        current_state_model = self.root_state
+        for element in path_elems:
+            current_state_model = current_state_model.states[element]
+        return current_state_model

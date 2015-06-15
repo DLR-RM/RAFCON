@@ -96,7 +96,8 @@ def format_log_record_for_view(record):
     :return:
     """
     # shortens the "name" attribute of the record by "awesome_tool." to save space
-    record.__setattr__("name", record.name.replace("awesome_tool.", ""))
+    if not sys.version_info < (2, 7):
+        record.__setattr__("name", record.name.replace("awesome_tool.", ""))
     formatter = logging.Formatter("%(asctime)s: %(levelname)s - %(name)s:  %(message)s", "%H:%M:%S")
     return formatter.format(record)
 

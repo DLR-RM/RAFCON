@@ -33,7 +33,7 @@ transitions:
         transition_id: 11}
     13: !Transition {from_outcome: 0, from_state: MCOLIQ, to_outcome: null, to_state: HRARIS,
         transition_id: 13}
-    14: !Transition {from_outcome: 0, from_state: HRARIS, to_outcome: 0, to_state: null,
+    14: !Transition {from_outcome: 0, from_state: HRARIS, to_outcome: 0, to_state: KYENSZ,
         transition_id: 14}
     15: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: PAYECU,
         transition_id: 15}

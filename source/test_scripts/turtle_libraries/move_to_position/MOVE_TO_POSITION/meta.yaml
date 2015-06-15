@@ -1,4 +1,5 @@
 !ExecutionState
+description: null
 filename: script.py
 input_data_ports:
     19: !DataPort {data_port_id: 19, data_type: str, default_value: new_turtle, name: global_storage_id_of_turtle_pos}
@@ -12,6 +13,5 @@ outcomes:
     0: !Outcome {name: success, outcome_id: 0}
     1: !Outcome {name: position_not_reached_yet, outcome_id: 1}
 output_data_ports: {}
-path: MOVE_TO_POSITION
+path: /home_local/brun_sb/develop/taskcontrol/source/test_scripts/turtle_libraries/move_to_position/MOVE_TO_POSITION
 state_id: MOVE_TO_POSITION
-state_type: STATE_TYPE.EXECUTION

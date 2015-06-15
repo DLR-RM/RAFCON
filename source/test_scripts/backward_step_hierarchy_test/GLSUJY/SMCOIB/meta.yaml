@@ -3,6 +3,7 @@ data_flows:
     1: !DataFlow {data_flow_id: 1, from_key: 3, from_state: OUWQUJ, to_key: 8, to_state: SMCOIB}
     15: !DataFlow {data_flow_id: 15, from_key: 2, from_state: SMCOIB, to_key: 1, to_state: YSBJGK}
     16: !DataFlow {data_flow_id: 16, from_key: 2, from_state: SMCOIB, to_key: 2, to_state: OUWQUJ}
+description: null
 filename: script.py
 input_data_ports:
     2: !DataPort {data_port_id: 2, data_type: int, default_value: null, name: in}

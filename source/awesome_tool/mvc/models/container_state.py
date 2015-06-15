@@ -17,6 +17,8 @@ from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.utils import log
 
+from awesome_tool.statemachine.states.container_state import ContainerState
+
 logger = log.get_logger(__name__)
 
 
@@ -195,6 +197,46 @@ class ContainerStateModel(StateModel):
             return StateModel
         else:
             return None
+
+    def get_data_port_model(self, data_port_id):
+        """Searches and returns the model of a data port of a given state
+
+        The method searches a port with the given id in the data ports of the given state model. If the state model
+        is a container state, not only the input and output data ports are looked at, but also the scoped variables.
+        :param state_m: The state model to search the data port in
+        :param data_port_id: The data port id to be searched
+        :return: The model of the data port or None if it is not found
+        """
+
+        for scoped_var_m in self.scoped_variables:
+            if scoped_var_m.scoped_variable.data_port_id == data_port_id:
+                return scoped_var_m
+
+        return StateModel.get_data_port_model(self, data_port_id)
+
+    def get_transition_model(self, transition_id):
+        """Searches and return the transition model with the given in the given container state model
+        :param state_m: The state model to search the transition in
+        :param transition_id: The transition id to be searched
+        :return: The model of the transition or None if it is not found
+        """
+        if isinstance(self, ContainerStateModel):
+            for transition_m in self.transitions:
+                if transition_m.transition.transition_id == transition_id:
+                    return transition_m
+        return None
+
+    def get_data_flow_model(self, data_flow_id):
+        """Searches and return the data flow model with the given in the given container state model
+        :param state_m: The state model to search the transition in
+        :param data_flow_id: The data flow id to be searched
+        :return: The model of the data flow or None if it is not found
+        """
+        if isinstance(self, ContainerStateModel):
+            for data_flow_m in self.data_flows:
+                if data_flow_m.data_flow.data_flow_id == data_flow_id:
+                    return data_flow_m
+        return None
 
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):

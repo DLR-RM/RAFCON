@@ -67,6 +67,7 @@ class StateMachine(Observable):
         """
         state.join()
         state.state_execution_status = StateExecutionState.INACTIVE
+        logger.debug("The final outcome of the state was %s" % (str(state.final_outcome)))
         # deferred import to avoid cyclic import at the beginning of the script
         from awesome_tool.statemachine.singleton import state_machine_execution_engine
         state_machine_execution_engine.stop()
@@ -89,6 +90,11 @@ class StateMachine(Observable):
         #     raise AttributeError("root_state has to be of type State")
         self._root_state = root_state
 
+    @Observable.observed
+    def change_root_state_type(self, state_m, new_state_class):
+        from awesome_tool.mvc.statemachine_helper import StateMachineHelper
+        return StateMachineHelper.change_state_type(state_m, new_state_class)
+
     @property
     def marked_dirty(self):
         """Property for the _marked_dirty field
@@ -106,18 +112,21 @@ class StateMachine(Observable):
         self._marked_dirty = marked_dirty
 
     def get_state_by_path(self, path):
+        from awesome_tool.statemachine.states.library_state import LibraryState
         path_item_list = path.split('/')
 
-        state = None
-        if path_item_list.pop(0) == self.root_state.state_id:
-            state = self.root_state
-            for state_id in path_item_list:
+        assert path_item_list.pop(0) == self.root_state.state_id
+        state = self.root_state
+        for state_id in path_item_list:
+            if isinstance(state, LibraryState):
+                state = state.state_copy
+                assert state.state_id == state_id
+            else:
                 try:
                     state = state.states[state_id]
-                except:
-                    logger.warning("----- STATE MACHINE NOT FOUND ----- for path %s and state %s" % (path, state))
-                    state = None
-                    break
+                except KeyError:
+                    logger.warning("Invalid path '{0}' for state machine '{1}'".format(path, self))
+                    return None
         return state
 
     @Observable.observed

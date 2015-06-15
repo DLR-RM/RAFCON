@@ -56,7 +56,7 @@ class MenuBarView(View):
 
         self.win = top_window['main_window']
 
-        for key in self.buttons.viewkeys():
+        for key in self.buttons.iterkeys():
             self.set_image_for_button(key)
 
     def set_image_for_button(self, button_name):

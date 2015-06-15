@@ -9,7 +9,6 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from awesome_tool.statemachine.states.library_state import LibraryState
-from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 
 from awesome_tool.utils import log
@@ -114,6 +113,11 @@ class StateOverviewController(ExtendedController, Model):
         if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
             self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
 
+    @Model.observe('state', after=True)
+    def notify_name_change(self, model, prop_name, info):
+        if info['method_name'] == 'name':
+            self.view['entry_name'].set_text(self.model.state.name)
+
     def change_name(self, entry, otherwidget):
         entry_text = entry.get_text()
         if self.model.state.name != entry_text:
@@ -138,7 +142,13 @@ class StateOverviewController(ExtendedController, Model):
                                                                              class_of_type_text))
 
             new_state_class = self.state_types_dict[type_text]['class']
-            state_model = StateMachineHelper.change_state_type(self.model, new_state_class)
+            if self.model.state.parent is None:
+                from awesome_tool.mvc.singleton import state_machine_manager_model
+                sm_id = state_machine_manager_model.state_machine_manager.get_sm_id_for_state(self.model.state)
+                state_machine = state_machine_manager_model.state_machine_manager.state_machines[sm_id]
+                state_model = state_machine.change_root_state_type(self.model, new_state_class)
+            else:
+                state_model = self.model.parent.state.change_state_type(self.model, new_state_class)
 
             # TODO: the tab should automatically be closed when the old state is deleted. In this case we do not have
             #  to exchange the model

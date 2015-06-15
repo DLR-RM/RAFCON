@@ -149,6 +149,7 @@ widget_class "*EventBox.GtkVBox.GtkHBox.GtkLabel"		style "indicator_label"
 
 
 
+# ----------TEXT ENTRY--------------
 style "text_entry" = "my_default"
 {
     base[ACTIVE]      = @dark_gray
@@ -156,6 +157,16 @@ style "text_entry" = "my_default"
 }
 widget_class "*Entry"					style "text_entry"
 widget_class "*TextView"					style "text_entry"
+
+
+
+style "state_overview_text_entry" = "my_default"
+{
+    base[NORMAL]      = @text_background
+    base[SELECTED]    = @medium_gray
+}
+widget_class "*Table.GtkEntry"				style "state_overview_text_entry"
+#----------------------------------
 
 
 

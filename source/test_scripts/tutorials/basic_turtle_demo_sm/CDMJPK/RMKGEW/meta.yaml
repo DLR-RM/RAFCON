@@ -13,5 +13,5 @@ path: ../../test_scripts/tutorials/basic_turtle_demo_sm/CDMJPK/RMKGEW
 scoped_variables: {}
 state_id: RMKGEW
 transitions:
-    3: !Transition {from_outcome: 0, from_state: KYENSZ, to_outcome: 0, to_state: null,
+    3: !Transition {from_outcome: 0, from_state: KYENSZ, to_outcome: 0, to_state: RMKGEW,
         transition_id: 3}

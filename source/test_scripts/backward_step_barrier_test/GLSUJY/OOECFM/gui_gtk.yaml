@@ -6,7 +6,8 @@ data_flow1: !Vividict
 data_flow2: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: []
+            waypoints:
+            - !!python/tuple [47.575805560521104, -31.770994482408398]
 data_flow27: !Vividict
     gui: !Vividict
         editor: !Vividict
@@ -22,7 +23,8 @@ data_flow3: !Vividict
 data_flow4: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: []
+            waypoints:
+            - !!python/tuple [46.671931743019, -48.36638312932291]
 gui: !Vividict
     editor: !Vividict
         outcome_pos:
@@ -60,7 +62,7 @@ output_data_port19: !Vividict
         editor: !Vividict
             inner_connector_pos: !!python/tuple [1547.9303520215974, -845.2841211090669]
             inner_connector_radius: 4.5165043633323
-            inner_rel_pos: !!python/tuple [67.81233021276603, -28.732733276595795]
+            inner_rel_pos: !!python/tuple [63.645913872340486, -17.354568170212843]
             outer_connector_pos: !!python/tuple [1630.2363825025243, -1787.3189953108097]
             outer_connector_radius: 14.114076135413436
 output_data_port20: !Vividict
@@ -68,7 +70,7 @@ output_data_port20: !Vividict
         editor: !Vividict
             inner_connector_pos: !!python/tuple [1521.2292850847716, -1048.0768882067955]
             inner_connector_radius: 4.5165043633323
-            inner_rel_pos: !!python/tuple [62.0684255319149, -45.70519148936185]
+            inner_rel_pos: !!python/tuple [62.60386859574464, -54.80772357446823]
             outer_connector_pos: !!python/tuple [1630.2363825025243, -1918.6126810265755]
             outer_connector_radius: 14.114076135413436
 output_data_port21: !Vividict
@@ -76,6 +78,22 @@ output_data_port21: !Vividict
         editor: !Vividict
             inner_connector_pos: !!python/tuple [1535.7199467443768, -1243.1174662419326]
             inner_connector_radius: 4.5165043633323
-            inner_rel_pos: !!python/tuple [61.14723404255312, -63.16170212765988]
+            inner_rel_pos: !!python/tuple [62.35198093617015, -63.36249327659604]
             outer_connector_pos: !!python/tuple [1630.2363825025243, -2049.9063667423416]
             outer_connector_radius: 14.114076135413436
+transition1: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: []
+transition2: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: []
+transition3: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: []
+transition4: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: []

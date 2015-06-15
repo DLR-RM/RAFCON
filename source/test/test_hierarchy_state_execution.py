@@ -21,7 +21,8 @@ def create_hierarchy_state():
     state2.add_state(state1)
     state2.set_start_state(state1.state_id)
     state2.add_outcome("Container_Outcome", 6)
-    state2.add_transition(state1.state_id, 3, None, 6)
+    transition_id = state2.add_transition(state1.state_id, 3, state2.state_id, 6)
+    print state2.transitions[transition_id]
     state2.add_input_data_port("input1", "float", 42.0)
     state2.add_output_data_port("output1", "float")
     state2.add_data_flow(state2.state_id,

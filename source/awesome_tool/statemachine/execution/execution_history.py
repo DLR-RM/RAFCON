@@ -163,8 +163,7 @@ class ReturnItem(ScriptItem):
         ScriptItem.__init__(self, state, prev, method_name, state_for_scoped_data)
 
         self.outcome = None
-        if method_name is MethodName.EXECUTE or method_name is MethodName.EXIT:
-            self.outcome = state.final_outcome
+        self.outcome = state.final_outcome
 
     def __str__(self):
         return "ReturnItem %s" % (ScriptItem.__str__(self))

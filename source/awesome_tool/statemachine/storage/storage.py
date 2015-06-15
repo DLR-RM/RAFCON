@@ -19,6 +19,8 @@ from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.utils.storage_utils import StorageUtils
+from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+
 
 class StateMachineStorage(Observable):
 
@@ -96,8 +98,12 @@ class StateMachineStorage(Observable):
         if not self.storage_utils.exists_path(self.base_path):
             self.storage_utils.create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
-        statemachine_content = "root_state: %s\nversion: %s\ncreation_time: %s"\
-                               % (root_state.state_id, version, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+        last_update = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        creation_time = last_update
+        if hasattr(statemachine, 'creation_time'):
+            creation_time = statemachine.creation_time
+        statemachine_content = "root_state: %s\nversion: %s\ncreation_time: %s\nlast_update: %s"\
+                               % (root_state.state_id, version, creation_time, last_update)
         yaml.dump(yaml.load(statemachine_content), f, indent=4)
         f.close()
         # add root state recursively
@@ -155,6 +161,18 @@ class StateMachineStorage(Observable):
             for key, state in state.states.iteritems():
                 self.save_state_recursively(state, state_path)
 
+    def clean_transitions_of_sm(self, root_state):
+        affected_sm = False
+        if hasattr(root_state, "states"):
+            for t_id, transition in root_state.transitions.iteritems():
+                if transition.to_state is None:
+                    affected_sm = True
+                    transition.to_state = root_state.state_id
+            for s_id, state in root_state.states.iteritems():
+                if hasattr(state, "states"):
+                    affected_sm |= self.clean_transitions_of_sm(state)
+        return affected_sm
+
     def load_statemachine_from_yaml(self, base_path=None):
         """
         Loads a state machine from a given path. If no path is specified the state machine is tried to be loaded
@@ -175,9 +193,16 @@ class StateMachineStorage(Observable):
         root_state_id = tmp_dict['root_state']
         version = tmp_dict['version']
         creation_time = tmp_dict['creation_time']
+        if 'last_update' not in tmp_dict:
+            last_update = creation_time
+        else:
+            last_update = tmp_dict['last_update']
         tmp_base_path = os.path.join(self.base_path, root_state_id)
         logger.debug("Loading root state from path %s" % tmp_base_path)
         sm = StateMachine()
+        sm.version = version
+        sm.creation_time = creation_time
+        sm.last_update = last_update
         sm.base_path = base_path
         sm.root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
@@ -192,6 +217,11 @@ class StateMachineStorage(Observable):
 
         sm.base_path = self.base_path
         sm.marked_dirty = False
+
+        # this is a backward compatibility function to ensure that old libraries are still working
+        if self.clean_transitions_of_sm(sm.root_state):
+            self.save_statemachine_as_yaml(sm, base_path)
+
         return [sm, version, creation_time]
 
     def load_state_from_yaml(self, state_path):
@@ -225,7 +255,7 @@ class StateMachineStorage(Observable):
         state.script.path = state_path
         # connect the missing function_handlers for setting the outcome names
         state.connect_all_outcome_function_handles()
-        parent_state.add_state(state)
+        parent_state.add_state(state, storage_load=True)
         # the library state sets his script file to the script file of the root state of its library, thus it should
         # not be overwritten in this case
         from awesome_tool.statemachine.states.library_state import LibraryState

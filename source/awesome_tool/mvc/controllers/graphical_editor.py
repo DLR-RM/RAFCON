@@ -490,8 +490,10 @@ class GraphicalEditorController(ExtendedController):
                                       state_m.meta['gui']['editor']['size'][1])
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords, lower_right_corner)
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-            modifier = event.state
-            self._resize_state(state_m, new_pos, modifier)
+            modifier_keys = event.state
+            keep_ratio = int(modifier_keys & SHIFT_MASK) > 0
+            resize_content = int(modifier_keys & CONTROL_MASK) > 0
+            self._resize_state(state_m, new_pos, keep_ratio=keep_ratio, resize_content=resize_content)
 
         self.mouse_move_last_pos = (event.x, event.y)
         self.mouse_move_last_coords = mouse_current_coord
@@ -763,18 +765,24 @@ class GraphicalEditorController(ExtendedController):
         if to_outcome_id is None:
             responsible_parent_m = to_state_m.parent
         else:
-            to_state_id = None
             responsible_parent_m = to_state_m
 
         try:
-            transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
-                                                                      to_outcome_id)
-            transition_m = StateMachineHelper.get_transition_model(responsible_parent_m, transition_id)
-            transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
+            if not isinstance(responsible_parent_m, ContainerStateModel):
+                logger.warn("Only container states can have inner transitions.")
+            else:
+                transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
+                                                                          to_outcome_id)
+                transition_m = responsible_parent_m.get_transition_model(transition_id)
+                transition_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
         except AttributeError as e:
+            import traceback
             logger.warn("Transition couldn't be added: {0}".format(e))
+            logger.error("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
         except Exception as e:
+            import traceback
             logger.error("Unexpected exception while creating transition: {0}".format(e))
+            logger.error("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
 
         self._abort()
 
@@ -803,7 +811,7 @@ class GraphicalEditorController(ExtendedController):
             try:
                 data_flow_id = responsible_parent.state.add_data_flow(from_state_id, from_port_id,
                                                                       target_state_id, target_port_id)
-                data_flow_m = StateMachineHelper.get_data_flow_model(responsible_parent, data_flow_id)
+                data_flow_m = responsible_parent.get_data_flow_model(data_flow_id)
                 data_flow_m.meta['gui']['editor']['waypoints'] = self.temporary_waypoints
             except AttributeError as e:
                 logger.warn("Data flow couldn't be added: {0}".format(e))
@@ -926,6 +934,8 @@ class GraphicalEditorController(ExtendedController):
                 move_state(self.single_selection)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
                 move_port(self.single_selection)
+            return True # Prevent shortcut from being passed to GTK
+        return False # Allow passing of shortcut
 
     def _move_waypoint(self, new_pos, modifier_keys):
         """Moves the currently selected waypoint to the given position
@@ -994,7 +1004,7 @@ class GraphicalEditorController(ExtendedController):
         self._publish_changes(connection_m, "Move waypoint", affects_children=False)
         self._redraw()
 
-    def _resize_state(self, state_m, new_corner_pos, modifier_keys):
+    def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False):
         """Resize the state by the given delta width and height
 
         The resize function checks the child states and keeps the state around the children, thus limiting the minimum
@@ -1004,7 +1014,8 @@ class GraphicalEditorController(ExtendedController):
 
         :param awesome_tool.mvc.models.state.StateModel state_m: The model of the state to be resized
         :param tuple new_corner_pos: The absolute coordinates of the new desired lower right corner
-        :param modifier_keys: The current pressed modifier keys (mask)
+        :param keep_ratio: Flag, if set, the size ratio is kept constant
+        :param resize_content: Flag, if set, the content of the state is also resized
         """
         state_temp = state_m.temp['gui']['editor']
         state_meta = state_m.meta['gui']['editor']
@@ -1013,7 +1024,7 @@ class GraphicalEditorController(ExtendedController):
         new_height = abs(new_corner_pos[1] - state_temp['pos'][1])
 
         # Keep size ratio?
-        if int(modifier_keys & SHIFT_MASK) > 0:
+        if keep_ratio:
             state_size_ratio = state_meta['size'][0] / state_meta['size'][1]
             new_state_size_ratio = new_width / new_height
 
@@ -1021,9 +1032,6 @@ class GraphicalEditorController(ExtendedController):
                 new_height = new_width / state_size_ratio
             else:
                 new_width = new_height * state_size_ratio
-
-        # User wants to resize content by holding the ctrl keys pressed
-        resize_content = int(modifier_keys & CONTROL_MASK) > 0
 
         min_right_edge = state_temp['pos'][0]
         max_bottom_edge = state_temp['pos'][1]
@@ -1226,9 +1234,24 @@ class GraphicalEditorController(ExtendedController):
         state_meta = state_m.meta['gui']['editor']
         state_temp = state_m.temp['gui']['editor']
 
+        if state_temp['recalc']:
+            state_temp['recalc'] = False
+            if isinstance(state_meta['size'], tuple):
+                size = state_meta['size']
+            if isinstance(state_meta['rel_pos'], tuple):
+                rel_pos = state_meta['rel_pos']
+            parent_size = state_m.parent.meta['gui']['editor']['size']
+            if size[0] > parent_size[0] / 3.:
+                size = (parent_size[0] / 3., parent_size[1] / 3.)
+            state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
+            state_m.temp['gui']['editor']['pos'] = state_abs_pos
+            new_corner_pos = add_pos(state_abs_pos, size)
+            self._resize_state(state_m, new_corner_pos, keep_ratio=True, resize_content=True)
+            self._redraw()
+
         # Use default values if no size information is stored
-        if not isinstance(state_m.meta['gui']['editor']['size'], tuple):
-            state_m.meta['gui']['editor']['size'] = size
+        if not isinstance(state_meta['size'], tuple):
+            state_meta['size'] = size
 
         size = state_meta['size']
 
@@ -1416,14 +1439,16 @@ class GraphicalEditorController(ExtendedController):
                     continue
 
             to_state_id = transition_m.transition.to_state
-            to_state = None if to_state_id is None else parent_state_m.states[to_state_id]
 
-            if to_state is None:  # Transition goes back to parent
+            if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
                 # Set the to coordinates to the outcome coordinates received earlier
                 to_pos = parent_state_m.temp['gui']['editor']['outcome_pos'][
                     transition_m.transition.to_outcome]
             else:
                 # Set the to coordinates to the center of the next state
+                if to_state_id == "KYENSZ":
+                    print "test"
+                to_state = parent_state_m.states[to_state_id]
                 to_pos = to_state.temp['gui']['editor']['income_pos']
 
             waypoints = []
@@ -1464,8 +1489,8 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            from_port = StateMachineHelper.get_data_port_model(from_state, from_key)
-            to_port = StateMachineHelper.get_data_port_model(to_state, to_key)
+            from_port = from_state.get_data_port_model(from_key)
+            to_port = to_state.get_data_port_model(to_key)
 
             if from_port is None:
                 logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
@@ -1855,8 +1880,10 @@ class GraphicalEditorController(ExtendedController):
                 logger.error("Please select a single state for pasting the clipboard")
                 return
             if not isinstance(current_selection.get_states()[0], ContainerStateModel):
-                logger.error("Please select a container state (e. g. a Hierarchy state) for pasting the clipboard.")
-                return
+                # the default behaviour of the copy paste is that the state is copied into the parent state
+                parent_of_old_state = current_selection.get_states()[0].parent
+                current_selection.clear()
+                current_selection.add(parent_of_old_state)
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
             target_state_m = current_selection.get_states()[0]
@@ -1880,6 +1907,8 @@ class GraphicalEditorController(ExtendedController):
                     new_size = (new_size[1] * old_size_ratio, new_size[1])
                 else:
                     new_size = (new_size[0], new_size[0] / old_size_ratio)
-            state_copy_m.meta['gui']['editor']['size'] = new_size
+
+            new_corner_pos = add_pos(state_copy_m.temp['gui']['editor']['pos'], new_size)
+            self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True)
 
             self._redraw()

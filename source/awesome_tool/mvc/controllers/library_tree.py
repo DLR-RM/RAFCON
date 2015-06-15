@@ -9,7 +9,7 @@ from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.states.library_state import LibraryState
 
 
-class LibraryTreeController(ExtendedController):  # (Controller):
+class LibraryTreeController(ExtendedController):
 
     """
 
@@ -34,17 +34,28 @@ class LibraryTreeController(ExtendedController):  # (Controller):
     def right_click(self, widget, event=None):
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             menu = gtk.Menu()
-            add_link_menu_item = gtk.MenuItem("Add Link")
-            add_link_menu_item.connect("activate", self.add_link_button_clicked, self.state_machine_manager_model)
+            add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
+            add_link_menu_item.set_label("Add as library (link)")
+            add_link_menu_item.connect("activate", self.add_link_button_clicked)
 
-            add_template_menu_item = gtk.MenuItem("Add Template")
-            add_template_menu_item.connect("activate", self.add_template_button_clicked, self.state_machine_manager_model)
+            add_template_menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
+            add_template_menu_item.set_label("Add as template (copy)")
+            add_template_menu_item.connect("activate", self.add_template_button_clicked)
+
+            open_menu_item = gtk.ImageMenuItem(gtk.STOCK_OPEN)
+            open_menu_item.set_label("Open")
+            open_menu_item.connect("activate", self.open_button_clicked)
+
+            open_run_menu_item = gtk.MenuItem("Open and run")
+            open_run_menu_item.connect("activate", self.open_run_button_clicked)
 
             menu.append(add_link_menu_item)
             menu.append(add_template_menu_item)
+            menu.append(gtk.SeparatorMenuItem())
+            menu.append(open_menu_item)
+            menu.append(open_run_menu_item)
 
             menu.show_all()
-
             x = int(event.x)
             y = int(event.y)
             time = event.time
@@ -53,6 +64,11 @@ class LibraryTreeController(ExtendedController):  # (Controller):
                 path, col, cellx, celly = pthinfo
                 self.view.grab_focus()
                 self.view.set_cursor(path, col, 0)
+
+                (model, row) = self.view.get_selection().get_selected()
+                if isinstance(model[row][1], dict):  # right click on folder, not library
+                    return False
+
                 menu.popup(None, None, None, event.button, time)
             return True
 
@@ -79,18 +95,17 @@ class LibraryTreeController(ExtendedController):  # (Controller):
                 self.insert_rec(tree_item, child_key, child_item, library_path)
 
     def on_cursor_changed(self, widget):
-        (model, row) = self.view.get_selection().get_selected()
-        library_key = model[row][0]
-        library = model[row][1]
-        #logger.debug("The library state should be inserted into the statemachine")
+        # The user clicked on an entry in the tree store
+        return
 
-    def add_link_button_clicked(self, widget, smm):
+    def add_link_button_clicked(self, widget):
+        smm_m = self.state_machine_manager_model
         (model, row) = self.view.get_selection().get_selected()
         library_key = model[row][0]
         library = model[row][1]
         library_path = model[row][2]
 
-        current_selection = smm.state_machines[smm.selected_state_machine_id].selection
+        current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
         if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
             logger.error("Please select exactly one state for the insertion of a library")
             return
@@ -107,13 +122,14 @@ class LibraryTreeController(ExtendedController):  # (Controller):
 
         current_state.add_state(library_state)
 
-    def add_template_button_clicked(self, widget, smm):
+    def add_template_button_clicked(self, widget):
+        smm_m = self.state_machine_manager_model
         (model, row) = self.view.get_selection().get_selected()
         library_key = model[row][0]
         library = model[row][1]
         library_path = model[row][2]
 
-        current_selection = smm.state_machines[smm.selected_state_machine_id].selection
+        current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
         if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
             logger.error("Please select exactly one state for the insertion of a library template")
             return
@@ -133,7 +149,7 @@ class LibraryTreeController(ExtendedController):  # (Controller):
         for element in path_list:
             target_lib_dict = target_lib_dict[element]
         logger.debug("Load state to which this library state links")
-        state_machine, lib_version, creationtime = awesome_tool.statemachine.singleton.library_manager.storage.\
+        state_machine, lib_version, creation_time = awesome_tool.statemachine.singleton.library_manager.storage.\
             load_statemachine_from_yaml(target_lib_dict[library_name])
 
         state_machine.root_state.change_state_id()
@@ -141,7 +157,26 @@ class LibraryTreeController(ExtendedController):  # (Controller):
         current_state.add_state(state_machine.root_state)
         current_state_model = current_selection.get_states()[0]
         current_state_model.states[state_machine.root_state.state_id].load_meta_data_for_state()
+        current_state_model.states[state_machine.root_state.state_id].temp['gui']['editor']['recalc'] = True
 
+    def open_button_clicked(self, widget):
+        self.open_library_as_state_machine()
+
+    def open_run_button_clicked(self, widget):
+        state_machine = self.open_library_as_state_machine()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
+
+    def open_library_as_state_machine(self):
+        from awesome_tool.statemachine.singleton import global_storage
+        smm_m = self.state_machine_manager_model
+        (model, row) = self.view.get_selection().get_selected()
+        library_path = model[row][1]
+
+        logger.debug("Opening library as state-machine from path '{0}'".format(library_path))
+        state_machine, version, creation_time = global_storage.load_statemachine_from_yaml(library_path)
+
+        smm_m.state_machine_manager.add_state_machine(state_machine)
+        return state_machine
 
 
 
