@@ -159,6 +159,10 @@ class StateView(Element):
     def scoped_variables(self):
         return self._scoped_variables
 
+    @property
+    def name_view(self):
+        return self._name_view
+
     @staticmethod
     def get_state_drawing_area(state):
         assert isinstance(state, StateView)
@@ -372,7 +376,8 @@ class NameView(Element):
     def __init__(self, name, size):
         super(NameView, self).__init__(size[0], size[1])
 
-        self._name = name
+        self._name = None
+        self.name = name
 
         self.min_width = 0.0001
         self.min_height = 0.0001
@@ -382,6 +387,11 @@ class NameView(Element):
     @property
     def name(self):
         return self._name
+
+    @name.setter
+    def name(self, name):
+        assert isinstance(name, str)
+        self._name = name
 
     def draw(self, context):
         c = context.cairo

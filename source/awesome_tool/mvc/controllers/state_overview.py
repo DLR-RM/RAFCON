@@ -86,6 +86,8 @@ class StateOverviewController(ExtendedController, Model):
         view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
         view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)
 
+        view['entry_name'].connect('activate', self.on_activate_entry)
+
     def register_adapters(self):
         """Adapters should be registered in this method call
 
@@ -93,6 +95,9 @@ class StateOverviewController(ExtendedController, Model):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
+
+    def on_activate_entry(self, entry):
+        self.change_name(entry)
 
     def on_toggle_is_start_state(self, button):
 
@@ -118,7 +123,7 @@ class StateOverviewController(ExtendedController, Model):
         if info['method_name'] == 'name':
             self.view['entry_name'].set_text(self.model.state.name)
 
-    def change_name(self, entry, otherwidget):
+    def change_name(self, entry, otherwidget=None):
         entry_text = entry.get_text()
         if self.model.state.name != entry_text:
             try:
