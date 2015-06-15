@@ -5,8 +5,24 @@ from awesome_tool.mvc.views.gap.ports import InputPortView, OutputPortView, Scop
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 
+from gaphas.item import NW
+
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+
+
+def calc_rel_pos_to_parent(canvas, item, handle):
+        parent = canvas.get_parent(item)
+        if parent:
+            c_pos = canvas.project(item, handle.pos)
+            p_pos = canvas.project(parent, parent.handles()[NW].pos)
+            rel_x = c_pos[0].value - p_pos[0].value
+            rel_y = c_pos[1].value - p_pos[1].value
+        else:
+            pos = canvas.project(item, item.handles()[NW].pos)
+            rel_x = pos[0].value
+            rel_y = pos[1].value
+        return rel_x, rel_y
 
 
 def assert_exactly_one_true(bool_list):
@@ -21,9 +37,9 @@ def assert_exactly_one_true(bool_list):
 def get_state_id_for_port(port):
     parent = port.parent
     if isinstance(parent, StateView):
-        return parent.state_m.state.state_id
+        return parent.model.state.state_id
     elif isinstance(parent, ScopedVariableView):
-        return parent.parent_state.state_m.state.state_id
+        return parent.parent_state.model.state.state_id
 
 
 def get_port_for_handle(handle, state):
@@ -111,8 +127,8 @@ def add_data_flow_to_port_parent(to_port, from_port):
     from_state_v = from_port.parent
     to_state_v = to_port.parent
 
-    from_state_m = from_state_v.state_m
-    to_state_m = to_state_v.state_m
+    from_state_m = from_state_v.model
+    to_state_m = to_state_v.model
 
     if (isinstance(from_port, InputPortView) and
             isinstance(to_port, InputPortView) and
@@ -157,30 +173,30 @@ def add_scoped_data_flow_to_port_parent(to_port, from_port):
             return
         elif isinstance(to_port, OutputPortView) and scoped_variable_v.parent_state is not to_port.parent:
             return
-        responsible_parent_m = scoped_variable_v.parent_state.state_m
-        from_state_id = scoped_variable_v.parent_state.state_m.state.state_id
+        responsible_parent_m = scoped_variable_v.parent_state.model
+        from_state_id = scoped_variable_v.parent_state.model.state.state_id
         from_data_port_id = scoped_variable_v.port_id
         if isinstance(to_port, ScopedDataInputPortView):
-            to_state_id = to_port.parent.parent_state.state_m.state.state_id
+            to_state_id = to_port.parent.parent_state.model.state.state_id
             to_data_port_id = to_port.parent.port_id
         else:
-            to_state_id = to_port.parent.state_m.state.state_id
+            to_state_id = to_port.parent.model.state.state_id
             to_data_port_id = to_port.port_id
     elif isinstance(from_port, InputPortView):
         if from_port.parent is not to_port.parent.parent_state:
             return
-        responsible_parent_m = from_port.parent.state_m
-        from_state_id = from_port.parent.state_m.state.state_id
+        responsible_parent_m = from_port.parent.model
+        from_state_id = from_port.parent.model.state.state_id
         from_data_port_id = from_port.port_id
-        to_state_id = to_port.parent.parent_state.state_m.state.state_id
+        to_state_id = to_port.parent.parent_state.model.state.state_id
         to_data_port_id = to_port.parent.port_id
     elif isinstance(from_port, OutputPortView):
         if from_port.parent is to_port.parent.parent_state:
             return
-        responsible_parent_m = to_port.parent.parent_state.state_m
-        from_state_id = from_port.parent.state_m.state.state_id
+        responsible_parent_m = to_port.parent.parent_state.model
+        from_state_id = from_port.parent.model.state.state_id
         from_data_port_id = from_port.port_id
-        to_state_id = to_port.parent.parent_state.state_m.state.state_id
+        to_state_id = to_port.parent.parent_state.model.state.state_id
         to_data_port_id = to_port.parent.port_id
     else:
         return
@@ -203,12 +219,12 @@ def add_transition_to_state(start_state, to_port, from_port):
     to_state_id = None
     to_outcome_id = None
 
-    from_state_m = from_state_v.state_m
-    to_state_m = to_state_v.state_m
+    from_state_m = from_state_v.model
+    to_state_m = to_state_v.model
     responsible_parent_m = None
 
     if isinstance(from_port, OutcomeView):
-        from_state_id = start_state.state_m.state.state_id
+        from_state_id = start_state.model.state.state_id
         from_outcome_id = from_port.outcome_id
 
     if isinstance(to_port, IncomeView) and isinstance(from_port, IncomeView):
@@ -222,12 +238,12 @@ def add_transition_to_state(start_state, to_port, from_port):
         responsible_parent_m = to_state_m
 
     if responsible_parent_m:
-        # try:
-        responsible_parent_m.state.add_transition(from_state_id,
-                                                  from_outcome_id,
-                                                  to_state_id,
-                                                  to_outcome_id)
-        # except AttributeError as e:
-        #     logger.warn("Transition couldn't be added: {0}".format(e))
-        # except Exception as e:
-        #     logger.error("Unexpected exception while creating transition: {0}".format(e))
+        try:
+            responsible_parent_m.state.add_transition(from_state_id,
+                                                      from_outcome_id,
+                                                      to_state_id,
+                                                      to_outcome_id)
+        except AttributeError as e:
+            logger.warn("Transition couldn't be added: {0}".format(e))
+        except Exception as e:
+            logger.error("Unexpected exception while creating transition: {0}".format(e))

@@ -1,6 +1,6 @@
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
-from gaphas.item import NW, NE, SW, SE
+from gaphas.item import NW
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
@@ -10,8 +10,6 @@ from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
 from awesome_tool.mvc.controllers.gap import gap_helper
-
-from awesome_tool.statemachine.states.container_state import ContainerState
 
 import gtk
 from enum import Enum
@@ -40,13 +38,16 @@ class MyDeleteTool(Tool):
             if isinstance(self.view.focused_item, TransitionView):
                 StateMachineHelper.delete_model(self.view.focused_item.model)
                 return True
+            # Delete DataFlow from state machine
             if isinstance(self.view.focused_item, DataFlowView):
                 StateMachineHelper.delete_model(self.view.focused_item.model)
                 return True
+            # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):
                 if self.view.has_focus():
                     self._graphical_editor_view.emit('remove_state_from_state_machine')
                     return True
+            # Delete selected ScopedVariable from state machine
             if isinstance(self.view.focused_item, ScopedVariableView):
                 if self.view.has_focus():
                     self._graphical_editor_view.emit('remove_scoped_variable_from_state', self.view.focused_item)
@@ -80,34 +81,21 @@ class MyItemTool(ItemTool):
 
             for inmotion in self._movable_items:
                 inmotion.move((event.x, event.y))
-                rel_pos = self.calc_rel_pos_to_parent(inmotion)
+                rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item, inmotion.item.handles()[NW])
                 if isinstance(inmotion.item, StateView):
-                    state_m = inmotion.item.state_m
+                    state_m = inmotion.item.model
                     state_m.meta['gui']['editor']['rel_pos'] = rel_pos
                     self._graphical_editor_view.emit('meta_data_changed', state_m, "Move state", True)
                 elif isinstance(inmotion.item, NameView):
-                    state_m = self.view.canvas.get_parent(inmotion.item).state_m
+                    state_m = self.view.canvas.get_parent(inmotion.item).model
                     state_m.meta['name']['gui']['editor']['rel_pos'] = rel_pos
                     self._graphical_editor_view.emit('meta_data_changed', state_m, "Move name", False)
                 elif isinstance(inmotion.item, ScopedVariableView):
-                    scoped_variable_m = inmotion.item.scoped_variable_m
+                    scoped_variable_m = inmotion.item.model
                     scoped_variable_m.meta['gui']['editor']['rel_pos'] = rel_pos
-                    self._graphical_editor_view.emit('meta_data_changed', scoped_variable_m, "Move scoped variable", False)
+                    self._graphical_editor_view.emit('meta_data_changed', scoped_variable_m, "Move scoped", False)
 
             return True
-
-    def calc_rel_pos_to_parent(self, inmotion):
-        parent = self.view.canvas.get_parent(inmotion.item)
-        if parent:
-            c_pos = self.view.canvas.project(inmotion.item, inmotion.item.handles()[NW].pos)
-            p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
-            rel_x = c_pos[0].value - p_pos[0].value
-            rel_y = c_pos[1].value - p_pos[1].value
-        else:
-            pos = self.view.canvas.project(inmotion.item, inmotion.item.handles()[NW].pos)
-            rel_x = pos[0].value
-            rel_y = pos[1].value
-        return rel_x, rel_y
 
 
 class MyHoverTool(HoverTool):
@@ -169,10 +157,6 @@ class MultiselectionTool(RubberbandTool):
 
         return True
 
-# ------------------------------------------------------------------
-# -----------------------------SNAPPING-----------------------------
-# ------------------------------------------------------------------
-
 
 class MyHandleTool(HandleTool):
 
@@ -207,7 +191,7 @@ class MyHandleTool(HandleTool):
                 self._check_port = item.from_port
 
         if isinstance(item, TransitionView):
-            self._waypoint_list = item.transition_m.meta['gui']['editor']['waypoints']
+            self._waypoint_list = item.model.meta['gui']['editor']['waypoints']
 
         # Set start state
         if isinstance(item, StateView) or isinstance(item, ScopedVariableView):
@@ -226,6 +210,7 @@ class MyHandleTool(HandleTool):
             self._new_connection.remove_connection_from_ports()
             self.view.canvas.remove(self._new_connection)
 
+        # if connection has been pulled to another port, update port
         if self._last_active_port is not self._start_port:
             item = self._active_connection_view
             handle = self._active_connection_view_handle
@@ -233,6 +218,11 @@ class MyHandleTool(HandleTool):
                 self._handle_transition_view_change(item, handle)
             elif isinstance(item, DataFlowView) and handle in item.end_handles():
                 self._handle_data_flow_view_change(item, handle)
+        # if connection has been put back to original position, reset port
+        else:
+            item = self._active_connection_view
+            handle = self._active_connection_view_handle
+            self._handle_reset_ports(item, handle, self._start_port.parent)
 
         if isinstance(self._active_connection_view, TransitionView):
             transition_m = self._active_connection_view.model
@@ -242,40 +232,8 @@ class MyHandleTool(HandleTool):
                 transition_meta['waypoints'] = waypoint_list
                 self._graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
 
-        if isinstance(self.grabbed_item, StateView):
-            item = self.grabbed_item
-            handle = self.grabbed_handle
-
-            corner_handles = [item.handles()[NW], item.handles()[NE], item.handles()[SW], item.handles()[SE]]
-            if handle in corner_handles:
-                for port in item.get_all_ports():
-                    self._update_port_position_meta_data(item, port.handle)
-                state_meta = item.state_m.meta['gui']['editor']
-                state_meta['size'] = (item.width, item.height)
-                self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Change size", True)
-                state_meta['rel_pos'] = self.calc_rel_pos_to_parent(item, item.handles()[NW])
-                self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Move state", True)
-            else:
-                self._update_port_position_meta_data(item, handle)
-
-        if isinstance(self.grabbed_item, NameView):
-            item = self.grabbed_item
-            parent = self.view.canvas.get_parent(item)
-
-            name_meta = parent.state_m.meta['name']['gui']['editor']
-            name_meta['size'] = (item.width, item.height)
-            self._graphical_editor_view.emit('meta_data_changed', parent.state_m, "Change name size", False)
-            name_meta['rel_pos'] = self.calc_rel_pos_to_parent(item, item.handles()[NW])
-            self._graphical_editor_view.emit('meta_data_changed', parent.state_m, "Move name", False)
-
-        if isinstance(self.grabbed_item, ScopedVariableView):
-            item = self.grabbed_item
-
-            scoped_meta = item.scoped_variable_m.meta['gui']['editor']
-            scoped_meta['size'] = (item.width, item.height)
-            self._graphical_editor_view.emit('meta_data_changed', item.scoped_variable_m, "Change size", False)
-            scoped_meta['rel_pos'] = self.calc_rel_pos_to_parent(item, item.handles()[NW])
-            self._graphical_editor_view.emit('meta_data_changed', item.scoped_variable_m, "Move scoped variable", False)
+        if isinstance(self.grabbed_item, (StateView, NameView, ScopedVariableView)):
+            self._update_meta_data_for_item(self.grabbed_item)
 
         # reset temp variables
         self._last_active_port = None
@@ -376,17 +334,50 @@ class MyHandleTool(HandleTool):
         for port in item.get_all_ports():
             if handle is port.handle:
                 if isinstance(port, IncomeView):
-                    port_meta = item.state_m.meta['income']['gui']['editor']
+                    port_meta = item.model.meta['income']['gui']['editor']
                 elif isinstance(port, OutcomeView):
-                    port_meta = item.state_m.meta['outcome%d' % port.outcome_id]['gui']['editor']
+                    port_meta = item.model.meta['outcome%d' % port.outcome_id]['gui']['editor']
                 elif isinstance(port, InputPortView):
-                    port_meta = item.state_m.meta['input%d' % port.port_id]['gui']['editor']
+                    port_meta = item.model.meta['input%d' % port.port_id]['gui']['editor']
                 elif isinstance(port, OutputPortView):
-                    port_meta = item.state_m.meta['output%d' % port.port_id]['gui']['editor']
+                    port_meta = item.model.meta['output%d' % port.port_id]['gui']['editor']
                 break
         if rel_pos != port_meta['rel_pos']:
             port_meta['rel_pos'] = rel_pos
-            self._graphical_editor_view.emit('meta_data_changed', item.state_m, "Move port", True)
+            self._graphical_editor_view.emit('meta_data_changed', item.model, "Move port", True)
+
+    def _update_meta_data_for_item(self, item):
+        size_msg = "Change size"
+        affect_children = False
+
+        if isinstance(item, StateView):
+            # If handle for state resize was pulled
+            if self.grabbed_handle in item.corner_handles:
+                # Update all port meta data to match with new position and size of parent
+                for port in item.get_all_ports():
+                    self._update_port_position_meta_data(item, port.handle)
+                meta = item.model.meta['gui']['editor']
+                move_msg = "Move state"
+                affect_children = True
+            # If pulled handle is port update port meta data and return
+            else:
+                self._update_port_position_meta_data(item, self.grabbed_handle)
+                return
+        elif isinstance(item, NameView):
+            parent = self.view.canvas.get_parent(item)
+            assert isinstance(parent, StateView)
+
+            meta = parent.model.meta['name']['gui']['editor']
+            size_msg = "Change name size"
+            move_msg = "Move name"
+        else:
+            meta = item.model.meta['gui']['editor']
+            move_msg = "Move scoped"
+
+        meta['size'] = (item.width, item.height)
+        self._graphical_editor_view.emit('meta_data_changed', item.model, size_msg, affect_children)
+        meta['rel_pos'] = gap_helper.calc_rel_pos_to_parent(self.view.canvas, item, item.handles()[NW])
+        self._graphical_editor_view.emit('meta_data_changed', item.model, move_msg, affect_children)
 
     def _convert_handles_pos_list_to_rel_pos_list(self, transition):
         handles_list = transition.handles()
@@ -394,28 +385,15 @@ class MyHandleTool(HandleTool):
         for handle in handles_list:
             if handle is transition.to_handle() or handle is transition.from_handle():
                 continue
-            rel_pos_list.append(self.calc_rel_pos_to_parent(transition, handle))
+            rel_pos_list.append(gap_helper.calc_rel_pos_to_parent(self.view.canvas, transition, handle))
         return rel_pos_list
-
-    def calc_rel_pos_to_parent(self, item, handle):
-        parent = self.view.canvas.get_parent(item)
-        if parent:
-            c_pos = self.view.canvas.project(item, handle.pos)
-            p_pos = self.view.canvas.project(parent, parent.handles()[NW].pos)
-            rel_x = c_pos[0].value - p_pos[0].value
-            rel_y = c_pos[1].value - p_pos[1].value
-        else:
-            pos = self.view.canvas.project(item, item.handles()[NW].pos)
-            rel_x = pos[0].value
-            rel_y = pos[1].value
-        return rel_x, rel_y
 
     def _handle_data_flow_view_change(self, item, handle):
 
-        def check_output_port(port):
+        def is_output_port(port):
             return isinstance(port, OutputPortView) or isinstance(port, ScopedDataOutputPortView)
 
-        def check_input_port(port):
+        def is_input_port(port):
             return isinstance(port, InputPortView) or isinstance(port, ScopedDataInputPortView)
 
         start_parent = self._start_port.parent
@@ -424,46 +402,46 @@ class MyHandleTool(HandleTool):
             last_parent = self._last_active_port.parent
 
         # Connection changed: input-to-input to input-to-input
-        if (check_input_port(self._check_port) and
-                check_input_port(self._start_port) and
-                check_input_port(self._last_active_port)):
+        if (is_input_port(self._check_port) and
+                is_input_port(self._start_port) and
+                is_input_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, iti_to_iti=True)
         # Connection changed: input-to-input to output-to-input
-        elif (check_input_port(self._check_port) and
-                check_input_port(self._start_port) and
-                check_output_port(self._last_active_port)):
+        elif (is_input_port(self._check_port) and
+                is_input_port(self._start_port) and
+                is_output_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, iti_to_oti=True)
         # Connection changed: output-to-input to input-to-input
-        elif (check_input_port(self._check_port) and
-                check_output_port(self._start_port) and
-                check_input_port(self._last_active_port)):
+        elif (is_input_port(self._check_port) and
+                is_output_port(self._start_port) and
+                is_input_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, oti_to_iti=True)
         # Connection changed: output-to-input to output-to-input
-        elif ((check_output_port(self._check_port) and
-                    check_input_port(self._start_port) and
-                    check_input_port(self._last_active_port)) or
-                (check_input_port(self._check_port) and
-                    check_output_port(self._start_port) and
-                    check_output_port(self._last_active_port))):
+        elif ((is_output_port(self._check_port) and
+                    is_input_port(self._start_port) and
+                    is_input_port(self._last_active_port)) or
+                (is_input_port(self._check_port) and
+                    is_output_port(self._start_port) and
+                    is_output_port(self._last_active_port))):
             self._handle_data_flow_change(item, start_parent, last_parent, oti_to_oti=True)
         # Connection changed: output-to-input to output-to-output
-        elif (check_output_port(self._check_port) and
-                check_input_port(self._start_port) and
-                check_output_port(self._last_active_port)):
+        elif (is_output_port(self._check_port) and
+                is_input_port(self._start_port) and
+                is_output_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, oti_to_oto=True)
         # Connection changed: output-to-output to output-to-input
-        elif (check_output_port(self._check_port) and
-                check_output_port(self._start_port) and
-                check_input_port(self._last_active_port)):
+        elif (is_output_port(self._check_port) and
+                is_output_port(self._start_port) and
+                is_input_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, oto_to_oti=True)
         # Connection changed: output-to-output to output-to-output
-        elif (check_output_port(self._check_port) and
-                check_output_port(self._start_port) and
-                check_output_port(self._last_active_port)):
+        elif (is_output_port(self._check_port) and
+                is_output_port(self._start_port) and
+                is_output_port(self._last_active_port)):
             self._handle_data_flow_change(item, start_parent, last_parent, oto_to_oto=True)
         # Everything else: Reset to original position
         else:
-            self._data_handle_reset_ports(item, handle, start_parent)
+            self._handle_reset_ports(item, handle, start_parent)
 
     def _handle_transition_view_change(self, item, handle):
         start_parent = self._start_port.parent
@@ -522,9 +500,9 @@ class MyHandleTool(HandleTool):
 
         def reset_handle():
             if port_moved is PortMoved.TO:
-                self._data_handle_reset_ports(item, item.to_handle(), start_parent)
+                self._handle_reset_ports(item, item.to_handle(), start_parent)
             elif port_moved is PortMoved.FROM:
-                self._data_handle_reset_ports(item, item.from_handle(), start_parent)
+                self._handle_reset_ports(item, item.from_handle(), start_parent)
 
         if port_moved is PortMoved.TO:
             # If other port in same parent
@@ -571,7 +549,7 @@ class MyHandleTool(HandleTool):
                 reset_handle()
                 return
 
-    def _data_handle_reset_ports(self, connection, handle, start_parent):
+    def _handle_reset_ports(self, connection, handle, start_parent):
 
         if handle not in connection.handles():
             return
@@ -579,20 +557,36 @@ class MyHandleTool(HandleTool):
         self.disconnect_last_active_port(handle, connection)
         self.view.canvas.disconnect_item(connection, handle)
 
-        if isinstance(start_parent, ScopedVariableView):
-            if isinstance(self._start_port, ScopedDataInputPortView):
-                start_parent.parent_state.connect_to_scoped_variable_input(self._start_port.port_id, connection, handle)
-            if isinstance(self._start_port, ScopedDataOutputPortView):
-                start_parent.parent_state.connect_to_scoped_variable_output(self._start_port.port_id, connection, handle)
-        elif isinstance(start_parent, StateView):
-            if isinstance(self._start_port, InputPortView):
-                start_parent.connect_to_input_port(self._start_port.port_id, connection, handle)
-            if isinstance(self._start_port, OutputPortView):
-                start_parent.connect_to_output_port(self._start_port.port_id, connection, handle)
+        if isinstance(connection, TransitionView):
+            start_outcome_id = None
+            if isinstance(self._start_port, OutcomeView):
+                start_outcome_id = self._start_port.outcome_id
+
+            if start_outcome_id is None:
+                start_parent.connect_to_income(connection, handle)
+            else:
+                start_parent.connect_to_outcome(start_outcome_id, connection, handle)
+        elif isinstance(connection, DataFlowView):
+            if isinstance(start_parent, ScopedVariableView):
+                if isinstance(self._start_port, ScopedDataInputPortView):
+                    start_parent.parent_state.connect_to_scoped_variable_input(self._start_port.port_id, connection, handle)
+                if isinstance(self._start_port, ScopedDataOutputPortView):
+                    start_parent.parent_state.connect_to_scoped_variable_output(self._start_port.port_id, connection, handle)
+            elif isinstance(start_parent, StateView):
+                if isinstance(self._start_port, InputPortView):
+                    start_parent.connect_to_input_port(self._start_port.port_id, connection, handle)
+                if isinstance(self._start_port, OutputPortView):
+                    start_parent.connect_to_output_port(self._start_port.port_id, connection, handle)
 
         self.view.canvas.update()
 
     def get_parents_parent_for_port(self, port):
+        """
+        Returns the StateView which is the parent of the StateView containing the port. If the ports parent
+        is neither of Type StateView nor ScopedVariableView or the parent is the root state, None is returned.
+        :param port: Port to return parent's parent
+        :return: View containing the parent of the port, None if parent is root state or not of type StateView or ScopedVariableView
+        """
         port_parent = port.parent
         if isinstance(port_parent, StateView):
             return self.view.canvas.get_parent(port_parent)
@@ -640,10 +634,10 @@ class MyHandleTool(HandleTool):
             from_outcome_id = check.outcome_id
         if isinstance(last, OutcomeView):
             last_outcome_id = last.outcome_id
-        state_id = last_parent.state_m.state.state_id
+        state_id = last_parent.model.state.state_id
 
         if oti_to_oto:
-            state_id = start_parent.state_m.state.state_id
+            state_id = start_parent.model.state.state_id
             start_parent = self.view.canvas.get_parent(start_parent)
 
         # if check_port is from_port then to_port has changed
@@ -684,28 +678,9 @@ class MyHandleTool(HandleTool):
                     item.model.transition.from_outcome = start_outcome_id
                 return
 
-    def _handle_reset_ports(self, item, handle, start_parent):
-
-        if handle not in item.handles():
-            return
-
-        self.disconnect_last_active_port(handle, item)
-        self.view.canvas.disconnect_item(item, handle)
-
-        start_outcome_id = None
-        if isinstance(self._start_port, OutcomeView):
-            start_outcome_id = self._start_port.outcome_id
-
-        if start_outcome_id is None:
-            start_parent.connect_to_income(item, handle)
-        else:
-            start_parent.connect_to_outcome(start_outcome_id, item, handle)
-
-        self.view.canvas.update()
-
     def is_state_id_root_state(self, state_id):
         for state_v in self.view.canvas.get_root_items():
-            if state_v.state_m.state.state_id == state_id:
+            if state_v.model.state.state_id == state_id:
                 return True
         return False
 

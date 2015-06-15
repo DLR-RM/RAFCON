@@ -76,7 +76,7 @@ class ScopedVariableView(Element):
         return self._output_port.port
 
     @property
-    def scoped_variable_m(self):
+    def model(self):
         return self._scoped_variable_m()
 
     @property

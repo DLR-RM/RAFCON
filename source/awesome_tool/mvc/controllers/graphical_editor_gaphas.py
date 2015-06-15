@@ -79,7 +79,7 @@ class GraphicalEditorController(ExtendedController):
 
     def _select_new_states(self, view, states):
         if states and isinstance(states, StateView):
-            state_m = states.state_m
+            state_m = states.model
             if not self.model.selection.is_selected(state_m):
                 self.deselect_all_items()
                 self.model.selection.clear()
@@ -88,9 +88,9 @@ class GraphicalEditorController(ExtendedController):
             states_to_select = []
             for state in states:
                 if isinstance(state, StateView):
-                    state_m = state.state_m
+                    state_m = state.model
                     if not self.model.selection.is_selected(state_m):
-                        states_to_select.append(state.state_m)
+                        states_to_select.append(state.model)
             self.model.selection.clear()
             self.model.selection.set(states_to_select)
 
@@ -285,8 +285,8 @@ class GraphicalEditorController(ExtendedController):
             result = None
         if method_name in ('transition_change', 'data_flow_change'):
             model = args[0]
-        if method_name in ('modify_origin', 'modify_target', 'from_state', 'to_state', 'from_key', 'to_key',
-                           'from_outcome', 'to_outcome'):
+        elif method_name in ('modify_origin', 'modify_target', 'from_state', 'to_state', 'from_key', 'to_key',
+                             'from_outcome', 'to_outcome'):
             if isinstance(model, TransitionModel):
                 method_name = 'transition_change'
             elif isinstance(model, DataFlowModel):
@@ -364,10 +364,10 @@ class GraphicalEditorController(ExtendedController):
 
     def get_view_for_model(self, model):
         for item in self.canvas.get_root_items():
-            if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.state_m is model:
+            if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.model is model:
                 return item
             for child in list(self.canvas.get_all_children(item)):
-                if isinstance(child, (StateView, TransitionView, DataFlowView)) and child.state_m is model:
+                if isinstance(child, (StateView, TransitionView, DataFlowView)) and child.model is model:
                     return child
 
     def add_state_view_to_parent(self, state_m, parent_state_m):
@@ -399,7 +399,7 @@ class GraphicalEditorController(ExtendedController):
 
     @staticmethod
     def _remove_scoped_variable_from_state(view, scoped_variable_v):
-        parent_state = scoped_variable_v.parent_state.state_m.state
+        parent_state = scoped_variable_v.parent_state.model.state
         if isinstance(parent_state, ContainerState):
             parent_state.remove_scoped_variable(scoped_variable_v.port_id)
 

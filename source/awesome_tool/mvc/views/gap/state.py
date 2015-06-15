@@ -132,7 +132,11 @@ class StateView(Element):
         return self.canvas.get_parent(self)
 
     @property
-    def state_m(self):
+    def corner_handles(self):
+        return [self.handles()[NW], self.handles()[NE], self.handles()[SW], self.handles()[SE]]
+
+    @property
+    def model(self):
         return self._state_m()
 
     @property
@@ -252,7 +256,7 @@ class StateView(Element):
         for outcome in self._outcomes:
             if outcome.outcome_id == outcome_id:
                 return outcome
-        raise AttributeError("Outcome with id '{0}' not found in state".format(outcome_id, self.state_m.state.name))
+        raise AttributeError("Outcome with id '{0}' not found in state".format(outcome_id, self.model.state.name))
 
     def input_port(self, port_id):
         return self._data_port(self._inputs, port_id)
@@ -267,14 +271,14 @@ class StateView(Element):
         for port in port_list:
             if port.port_id == port_id:
                 return port
-        raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.state_m.state.name))
+        raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
     def add_income(self):
         income_v = IncomeView(self)
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
 
-        port_meta = self.state_m.meta['income']['gui']['editor']
+        port_meta = self.model.meta['income']['gui']['editor']
         if isinstance(port_meta['rel_pos'], tuple):
             income_v.handle.pos = port_meta['rel_pos']
         else:
@@ -288,7 +292,7 @@ class StateView(Element):
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
 
-        port_meta = self.state_m.meta['outcome%d' % outcome_v.outcome_id]['gui']['editor']
+        port_meta = self.model.meta['outcome%d' % outcome_v.outcome_id]['gui']['editor']
         if isinstance(port_meta['rel_pos'], tuple):
             outcome_v.handle.pos = port_meta['rel_pos']
         else:
@@ -309,7 +313,7 @@ class StateView(Element):
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
 
-        port_meta = self.state_m.meta['input%d' % input_port_v.port_id]['gui']['editor']
+        port_meta = self.model.meta['input%d' % input_port_v.port_id]['gui']['editor']
         if isinstance(port_meta['rel_pos'], tuple):
             input_port_v.handle.pos = port_meta['rel_pos']
         else:
@@ -330,7 +334,7 @@ class StateView(Element):
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
 
-        port_meta = self.state_m.meta['output%d' % output_port_v.port_id]['gui']['editor']
+        port_meta = self.model.meta['output%d' % output_port_v.port_id]['gui']['editor']
         if isinstance(port_meta['rel_pos'], tuple):
             output_port_v.handle.pos = port_meta['rel_pos']
         else:
