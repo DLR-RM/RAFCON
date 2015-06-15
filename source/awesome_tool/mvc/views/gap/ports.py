@@ -12,6 +12,8 @@ import cairo
 from pango import SCALE, FontDescription
 from gtk.gdk import Color, CairoContext
 
+import math
+
 from enum import Enum
 
 SnappedSide = Enum('SIDE', 'LEFT TOP RIGHT BOTTOM')
@@ -125,8 +127,6 @@ class PortView(object):
         else:
             cc = c._cairo
 
-        # c.move_to(*self.position)
-
         pcc = CairoContext(cc)
         pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
@@ -136,28 +136,28 @@ class PortView(object):
         font_name = constants.FONT_NAMES[0]
         font_size = outcome_side
 
-        # def set_font_description():
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
-        #
-        # set_font_description()
-        # while layout.get_size()[0] / float(SCALE) > self.width:
-        #     font_size *= 0.9
-        #     set_font_description()
 
         cc.set_source_color(Color('#ededee'))
+
+        rot_angle = .0
 
         if self.side is SnappedSide.RIGHT:
             c.move_to(self.pos.x + outcome_side, self.pos.y - outcome_side / 2.)
         elif self.side is SnappedSide.TOP:
-            c.move_to(self.pos.x - outcome_side / 2., self.pos.y - outcome_side * 2)
+            c.move_to(self.pos.x - outcome_side / 2., self.pos.y - outcome_side)
+            rot_angle = - math.pi / 2
         elif self.side is SnappedSide.LEFT:
             c.move_to(self.pos.x - (outcome_side + layout.get_size()[0] / float(SCALE)), self.pos.y - outcome_side / 2.)
         elif self.side is SnappedSide.BOTTOM:
-            c.move_to(self.pos.x - outcome_side / 2., self.pos.y + outcome_side)
+            c.move_to(self.pos.x + outcome_side / 2., self.pos.y + outcome_side)
+            rot_angle = math.pi / 2
 
         pcc.update_layout(layout)
+        pcc.rotate(rot_angle)
         pcc.show_layout(layout)
+        pcc.rotate(-rot_angle)
 
         c.move_to(outcome_side, outcome_side)
 

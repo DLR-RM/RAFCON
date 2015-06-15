@@ -228,6 +228,9 @@ class GraphicalEditorController(ExtendedController):
                     if scoped_variable_v.port_id == arguments[1]:
                         scoped_variable_v.remove_keep_rect_within_constraint_from_parent()
                         self.canvas.remove(scoped_variable_v)
+            # ----------------------------------
+            #            STATE NAME
+            # ----------------------------------
             elif method_name == 'name':
                 state_v = self.get_view_for_model(parent_state_m)
                 state_v.name_view.name = arguments[1]
