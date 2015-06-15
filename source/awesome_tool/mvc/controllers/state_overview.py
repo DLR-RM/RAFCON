@@ -1,4 +1,5 @@
 import gtk
+from gtk.gdk import keyval_name
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 
@@ -51,6 +52,7 @@ class StateOverviewController(ExtendedController, Model):
             'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
 
         view['entry_name'].connect('focus-out-event', self.change_name)
+        view['entry_name'].connect('key-press-event', self.check_for_enter)
         if self.model.state.name:
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
@@ -118,7 +120,7 @@ class StateOverviewController(ExtendedController, Model):
         if info['method_name'] == 'name':
             self.view['entry_name'].set_text(self.model.state.name)
 
-    def change_name(self, entry, otherwidget):
+    def change_name(self, entry, event):
         entry_text = entry.get_text()
         if self.model.state.name != entry_text:
             try:
@@ -156,3 +158,8 @@ class StateOverviewController(ExtendedController, Model):
             self.relieve_model(self.model)
             self.observe_model(state_model)
             self.model = state_model
+
+    def check_for_enter(self, entry, event):
+        key_name = keyval_name(event.keyval)
+        if key_name in ["Return", "KP_Enter"]:
+            self.change_name(entry, None)
