@@ -381,6 +381,8 @@ class GraphicalEditorController(ExtendedController):
         state_m.temp['gui']['editor']['view'] = new_state_v
 
         self.canvas.add(new_state_v, parent_state_v)
+        port_side_size = min(parent_state_v.width, parent_state_v.height) / 20.
+        new_state_v.matrix.translate(port_side_size, port_side_size)
 
         for outcome_m in state_m.outcomes:
             new_state_v.add_outcome(outcome_m)
@@ -569,15 +571,14 @@ class GraphicalEditorController(ExtendedController):
                 # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v, transition_v.from_handle(), False)
 
             to_state_id = transition_m.transition.to_state
-            to_state_m = None if to_state_id is None else parent_state_m.states[to_state_id]
 
-            if to_state_m is None:  # Transition goes back to parent
+            if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
                 # Set the to coordinates to the outcome coordinates received earlier
                 to_outcome_id = transition_m.transition.to_outcome
                 parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
-                # parent_state_v.connect_to_double_port_outcome(to_outcome_id, transition_v, transition_v.to_handle(), True)
             else:
                 # Set the to coordinates to the center of the next state
+                to_state_m = parent_state_m.states[to_state_id]
                 to_state_v = to_state_m.temp['gui']['editor']['view']
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
 

@@ -81,8 +81,10 @@ class ConnectionView(Line):
     def remove_connection_from_ports(self):
         if self._from_port:
             self._from_port.remove_connected_handle(self._from_handle)
+            self._from_port.tmp_disconnect()
         if self._to_port:
             self._to_port.remove_connected_handle(self._to_handle)
+            self.to_port.tmp_disconnect()
 
     def _keep_handle_in_parent_state(self, handle):
         canvas = self.canvas

@@ -234,6 +234,7 @@ def add_transition_to_state(start_state, to_port, from_port):
         to_state_id = to_state_m.state.state_id
         responsible_parent_m = from_state_m.parent
     elif isinstance(to_port, OutcomeView) and isinstance(from_port, OutcomeView):
+        to_state_id = to_state_m.state.state_id
         to_outcome_id = to_port.outcome_id
         responsible_parent_m = to_state_m
 

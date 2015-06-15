@@ -219,7 +219,7 @@ class MyHandleTool(HandleTool):
             elif isinstance(item, DataFlowView) and handle in item.end_handles():
                 self._handle_data_flow_view_change(item, handle)
         # if connection has been put back to original position, reset port
-        else:
+        elif self._last_active_port is self._start_port and self._active_connection_view:
             item = self._active_connection_view
             handle = self._active_connection_view_handle
             self._handle_reset_ports(item, handle, self._start_port.parent)
@@ -365,6 +365,7 @@ class MyHandleTool(HandleTool):
                 return
         elif isinstance(item, NameView):
             parent = self.view.canvas.get_parent(item)
+            item = parent
             assert isinstance(parent, StateView)
 
             meta = parent.model.meta['name']['gui']['editor']

@@ -58,7 +58,7 @@ class StateView(Element):
         self.selected = False
 
         if not isinstance(state_m.meta['name']['gui']['editor']['size'], tuple):
-            name_width = self.width - min(self.width, self.height) / 15.
+            name_width = self.width * 0.8
             name_height = self.height * 0.2
             name_size = (name_width, name_height)
         else:
@@ -297,7 +297,7 @@ class StateView(Element):
             outcome_v.handle.pos = port_meta['rel_pos']
         else:
             # TODO: place new outcome_view at position where no port is located yet
-            outcome_v.handle.pos = self.width, self.height * .05  + (len(self._outcomes) - 1) * 2 * outcome_v.port_side_size
+            outcome_v.handle.pos = self.width, self.height * .05 + (len(self._outcomes) - 1) * 2 * outcome_v.port_side_size
         self.add_rect_constraint_for_port(outcome_v)
 
     def remove_outcome(self, outcome_v):
@@ -392,7 +392,7 @@ class NameView(Element):
         else:
             cc = c._cairo
 
-        # c.move_to(*self.position)
+        # c.move_to(*self.)
 
         pcc = CairoContext(cc)
         pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
@@ -412,6 +412,7 @@ class NameView(Element):
             font_size *= 0.9
             set_font_description()
 
+        c.move_to(0, 0)
         cc.set_source_color(Color('#ededee'))
         pcc.update_layout(layout)
         pcc.show_layout(layout)
