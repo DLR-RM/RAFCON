@@ -8,9 +8,12 @@ from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint
 from awesome_tool.mvc.models.transition import TransitionModel
 from awesome_tool.mvc.models.data_flow import DataFlowModel
 
-from awesome_tool.mvc.views.gap.ports import PortView
+from awesome_tool.mvc.views.gap.ports import PortView, SnappedSide, IncomeView, InputPortView, ScopedDataInputPortView,\
+    OutcomeView, OutputPortView, ScopedDataOutputPortView
 
 from gtk.gdk import Color
+
+from math import pi, atan2
 
 
 class ConnectionView(Line):
@@ -27,6 +30,8 @@ class ConnectionView(Line):
 
         self._line_color = ""
         self._arrow_color = ""
+
+        self._head_length = 0.
 
         # self.orthogonal = True
 
@@ -45,11 +50,18 @@ class ConnectionView(Line):
     def from_port(self, port):
         assert isinstance(port, PortView)
         self._from_port = port
+        if self.to_port:
+            self.line_width = min(self.to_port.port_side_size, port.port_side_size) * .2
+        else:
+            self.line_width = port.port_side_size * .2
+        self._head_length = port.port_side_size
 
     @to_port.setter
     def to_port(self, port):
         assert isinstance(port, PortView)
         self._to_port = port
+        if self.from_port:
+            self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
 
     def end_handles(self):
         return [self.from_handle(), self.to_handle()]
@@ -117,12 +129,10 @@ class ConnectionView(Line):
     def draw_head(self, context):
         cr = context.cairo
         cr.set_source_color(Color(self._arrow_color))
-        cr.rectangle(0, -.5 / 4 / self.hierarchy_level, .5 / 2 / self.hierarchy_level, .5/ 2 / self.hierarchy_level)
-        cr.fill_preserve()
         cr.move_to(0, 0)
-        cr.line_to(2.5 / self.hierarchy_level, 0)
+        cr.line_to(self._head_length, 0)
         cr.stroke()
-        cr.move_to(2.5 / self.hierarchy_level, 0)
+        cr.move_to(self._head_length, 0)
         return
 
     def draw_tail(self, context):
@@ -137,6 +147,84 @@ class ConnectionView(Line):
         cr.move_to(0, 0)
         cr.line_to(1.0 / self.hierarchy_level, -1.0 / self.hierarchy_level)
         cr.stroke()
+
+    @staticmethod
+    def is_in_port(port):
+        return isinstance(port, (IncomeView, InputPortView, ScopedDataInputPortView))
+
+    @staticmethod
+    def is_out_port(port):
+        return isinstance(port, (OutcomeView, OutputPortView, ScopedDataOutputPortView))
+
+    def post_update(self, context):
+        super(Line, self).post_update(context)
+
+        if self.from_port is None:
+            h0, h1 = self._handles[:2]
+            p0, p1 = h0.pos, h1.pos
+            self._head_angle = atan2(p1.y - p0.y, p1.x - p0.x)
+        elif self.from_port.side is SnappedSide.RIGHT:
+            self._head_angle = 0 if self.is_out_port(self.from_port) else pi
+        elif self.from_port.side is SnappedSide.TOP:
+            self._head_angle = pi * 3. / 2. if self.is_out_port(self.from_port) else pi / 2.
+        elif self.from_port.side is SnappedSide.LEFT:
+            self._head_angle = pi if self.is_out_port(self.from_port) else 0
+        elif self.from_port.side is SnappedSide.BOTTOM:
+            self._head_angle = pi / 2. if self.is_out_port(self.from_port) else pi * 3. / 2.
+
+        if self.to_port is None:
+            h1, h0 = self._handles[-2:]
+            p1, p0 = h1.pos, h0.pos
+            self._tail_angle = atan2(p1.y - p0.y, p1.x - p0.x)
+        elif self.to_port.side is SnappedSide.RIGHT:
+            self._tail_angle = pi if self.is_out_port(self.to_port) else 0
+        elif self.to_port.side is SnappedSide.TOP:
+            self._tail_angle = pi / 2. if self.is_out_port(self.to_port) else pi * 3. / 2.
+        elif self.to_port.side is SnappedSide.LEFT:
+            self._tail_angle = 0 if self.is_out_port(self.to_port) else pi
+        elif self.to_port.side is SnappedSide.BOTTOM:
+            self._tail_angle = pi * 3. / 2. if self.is_out_port(self.to_port) else pi / 2.
+
+    def draw(self, context):
+        def draw_line_end(pos, angle, draw):
+            cr = context.cairo
+            cr.save()
+            try:
+                cr.translate(*pos)
+                cr.rotate(angle)
+                draw(context)
+            finally:
+                cr.restore()
+
+        cr = context.cairo
+        cr.set_line_width(self.line_width)
+        draw_line_end(self._handles[0].pos, self._head_angle, self.draw_head)
+        for h in self._handles[1:-1]:
+            cr.line_to(*h.pos)
+        draw_line_end(self._get_tail_pos(), self._tail_angle, self.draw_tail)
+        cr.stroke()
+
+    def _get_tail_pos(self):
+        if self.to_port is None:
+            return self._handles[-1].pos
+
+        tail_pos = None
+
+        to_port_left_side = (self._handles[-1].pos.x.value - self.to_port.port_side_size / 2., self._handles[-1].pos.y.value)
+        to_port_right_side = (self._handles[-1].pos.x.value + self.to_port.port_side_size / 2., self._handles[-1].pos.y.value)
+        to_port_top_side = (self._handles[-1].pos.x.value, self._handles[-1].pos.y.value - self.to_port.port_side_size / 2.)
+        to_port_bottom_side = (self._handles[-1].pos.x.value, self._handles[-1].pos.y.value + self.to_port.port_side_size / 2.)
+
+        if self.to_port.side is SnappedSide.RIGHT:
+            tail_pos = to_port_left_side if self.is_out_port(self.to_port) else to_port_right_side
+        elif self.to_port.side is SnappedSide.TOP:
+            tail_pos = to_port_bottom_side if self.is_out_port(self.to_port) else to_port_top_side
+        elif self.to_port.side is SnappedSide.LEFT:
+            tail_pos = to_port_right_side if self.is_out_port(self.to_port) else to_port_left_side
+        elif self.to_port.side is SnappedSide.BOTTOM:
+            tail_pos = to_port_top_side if self.is_out_port(self.to_port) else to_port_bottom_side
+
+        return tail_pos
 
 
 class ConnectionPlaceholderView(ConnectionView):
@@ -183,7 +271,7 @@ class DataFlowView(ConnectionView):
         assert isinstance(data_flow_m, DataFlowModel)
         self._data_flow_m = None
         self.model = data_flow_m
-        self.line_width = 0.5
+        self.line_width = .5 / hierarchy_level
 
         self._line_color = '#6c5e3c'
         self._arrow_color = '#ffC926'
