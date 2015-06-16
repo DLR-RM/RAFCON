@@ -1438,8 +1438,6 @@ class GraphicalEditorController(ExtendedController):
                     transition_m.transition.to_outcome]
             else:
                 # Set the to coordinates to the center of the next state
-                if to_state_id == "KYENSZ":
-                    print "test"
                 to_state = parent_state_m.states[to_state_id]
                 to_pos = to_state.temp['gui']['editor']['income_pos']
 

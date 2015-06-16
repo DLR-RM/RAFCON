@@ -22,3 +22,9 @@ def create_folder_cmd_line(query):
     return user_input
 
 create_folder_func = create_folder_cmd_line
+
+
+def show_notice(query):
+    raw_input(query)
+
+show_notice_func = show_notice
