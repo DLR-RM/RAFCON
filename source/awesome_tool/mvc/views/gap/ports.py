@@ -16,7 +16,26 @@ import math
 
 from enum import Enum
 
-SnappedSide = Enum('SIDE', 'LEFT TOP RIGHT BOTTOM')
+# SnappedSide = Enum('SIDE', 'LEFT TOP RIGHT BOTTOM')
+
+
+class SnappedSide(Enum):
+    LEFT = 1
+    TOP = 2
+    RIGHT = 3
+    BOTTOM = 4
+
+    def next(self):
+        val = self.value + 1
+        if val == 5:
+            val = 1
+        return SnappedSide(val)
+
+    def prev(self):
+        val = self.value - 1
+        if val == 0:
+            val = 4
+        return SnappedSide(val)
 
 
 class PortView(object):

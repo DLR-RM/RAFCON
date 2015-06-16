@@ -14,12 +14,13 @@ from gaphas.painter import CairoBoundingBoxContext
 from gaphas.util import text_align, text_set_font, text_extents
 
 from awesome_tool.mvc.views.gap.constraint import KeepRectangleWithinConstraint, PortRectConstraint
-from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView
+from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, SnappedSide
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.models.state import StateModel
 
-from awesome_tool.utils import constants
+from awesome_tool.utils import constants, log
+logger = log.get_logger(__name__)
 
 
 class StateView(Element):
@@ -300,8 +301,13 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             outcome_v.handle.pos = port_meta['rel_pos']
         else:
-            # TODO: place new outcome_view at position where no port is located yet
-            outcome_v.handle.pos = self.width, self.height * .05 + (len(self._outcomes) - 1) * 2 * outcome_v.port_side_size
+            pos_x, pos_y, side = self._calculate_unoccupied_position(outcome_v.port_side_size, SnappedSide.RIGHT,
+                                                                     outcome_v)
+            if pos_x is None:
+                self.model.state.remove_outcome(outcome_v.outcome_id)
+                return
+            outcome_v.handle.pos = pos_x, pos_y
+            outcome_v.side = side
         self.add_rect_constraint_for_port(outcome_v)
 
     def remove_outcome(self, outcome_v):
@@ -309,7 +315,8 @@ class StateView(Element):
         self._ports.remove(outcome_v.port)
         self._handles.remove(outcome_v.handle)
 
-        self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
+        if outcome_v in self.port_constraints:
+            self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
 
     def add_input_port(self, port_m):
         input_port_v = InputPortView(self, port_m)
@@ -321,8 +328,13 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             input_port_v.handle.pos = port_meta['rel_pos']
         else:
-            # TODO: place new outcome_view at position where no port is located yet
-            input_port_v.handle.pos = 0, self.height * .95  - (len(self._inputs) - 1) * 2 * input_port_v.port_side_size
+            pos_x, pos_y, side = self._calculate_unoccupied_position(input_port_v.port_side_size, SnappedSide.LEFT,
+                                                                     input_port_v, logic=False, in_port=True)
+            if pos_x is None:
+                self.model.state.remove_input_data_port(input_port_v.port_id)
+                return
+            input_port_v.handle.pos = pos_x, pos_y
+            input_port_v.side = side
         self.add_rect_constraint_for_port(input_port_v)
 
     def remove_input_port(self, input_port_v):
@@ -330,7 +342,8 @@ class StateView(Element):
         self._ports.remove(input_port_v.port)
         self._handles.remove(input_port_v.handle)
 
-        self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
+        if input_port_v in self.port_constraints:
+            self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
 
     def add_output_port(self, port_m):
         output_port_v = OutputPortView(self, port_m)
@@ -342,8 +355,13 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             output_port_v.handle.pos = port_meta['rel_pos']
         else:
-            # TODO: place new outcome_view at position where no port is located yet
-            output_port_v.handle.pos = self.width, self.height * .95  - (len(self._outputs) - 1) * 2 * output_port_v.port_side_size
+            pos_x, pos_y, side = self._calculate_unoccupied_position(output_port_v.port_side_size, SnappedSide.RIGHT,
+                                                                     output_port_v, logic=False)
+            if pos_x is None:
+                self.model.state.remove_output_data_port(output_port_v.port_id)
+                return
+            output_port_v.handle.pos = pos_x, pos_y
+            output_port_v.side = side
         self.add_rect_constraint_for_port(output_port_v)
 
     def remove_output_port(self, output_port_v):
@@ -351,7 +369,8 @@ class StateView(Element):
         self._ports.remove(output_port_v.port)
         self._handles.remove(output_port_v.handle)
 
-        self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
+        if output_port_v in self.port_constraints:
+            self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
     def add_scoped_variable(self, scoped_variable_m, size):
         scoped_variable_v = ScopedVariableView(scoped_variable_m, size, self)
@@ -369,6 +388,128 @@ class StateView(Element):
         solver = self.canvas.solver
         solver.add_constraint(constraint)
         self.port_constraints[port] = constraint
+
+    def _calculate_unoccupied_position(self, port_size, side, new_port, logic=True, in_port=False):
+        if in_port:
+            new_pos_x = 0
+        else:
+            new_pos_x = self.width
+        if logic:
+            new_pos_y = self.height * .05
+        else:
+            new_pos_y = self.height * .95
+
+        position_found = False
+        all_ports = self.get_all_ports()
+        new_pos = (new_pos_x, new_pos_y)
+
+        port_limitation_counter = 0
+
+        while not position_found and port_limitation_counter < 100:
+            position_found, new_pos_x, new_pos_y, side = self._check_pos(all_ports, port_size, side, new_port, new_pos, logic, in_port)
+            new_pos = (new_pos_x, new_pos_y)
+            port_limitation_counter += 1
+
+        if port_limitation_counter == 100:
+            logger.warn("Cannot add new port, as there is no space left in State. Please rearrange or delete ports and "
+                        "try again.")
+            return None, None, None
+
+        return new_pos_x, new_pos_y, side
+
+    def _check_pos(self, all_ports, port_size, side, new_port, new_pos, logic, in_port):
+        new_pos_x = new_pos[0]
+        new_pos_y = new_pos[1]
+        new_port_pos_top = new_pos_y - port_size / 2.
+        new_port_pos_bot = new_pos_y + port_size / 2.
+        new_port_pos_left = new_pos_x - port_size / 2.
+        new_port_pos_right = new_pos_x + port_size / 2.
+
+        def adjust_pos(width, height):
+            if side is SnappedSide.RIGHT and new_port_pos_bot > height:
+                return False, new_pos_x - 2 * port_size, height, side.next()
+            elif side is SnappedSide.RIGHT and new_port_pos_top < 0:
+                return False, new_pos_x - 2 * port_size, 0, side.prev()
+            elif side is SnappedSide.LEFT and new_port_pos_bot > height:
+                return False, new_pos_x + 2 * port_size, height, side.prev()
+            elif side is SnappedSide.LEFT and new_port_pos_top < 0:
+                return False, new_pos_x + 2 * port_size, 0, side.next()
+            elif side is SnappedSide.TOP and new_port_pos_right > width:
+                return False, width, new_pos_y + 2 * port_size, side.next()
+            elif side is SnappedSide.TOP and new_port_pos_left < 0:
+                return False, 0, new_pos_y + 2 * port_size, side.prev()
+            elif side is SnappedSide.BOTTOM and new_port_pos_right > width:
+                return False, width, new_pos_y - 2 * port_size, side.prev()
+            elif side is SnappedSide.BOTTOM and new_port_pos_left < 0:
+                return False, 0, new_pos_y - 2 * port_size, side.next()
+
+        for port in all_ports:
+
+            if port is not new_port and port.side is side:
+
+                if side is SnappedSide.RIGHT or side is SnappedSide.LEFT:
+                    port_pos = port.pos
+                    port_pos_top = port_pos.y.value - port_size / 2.
+                    port_pos_bot = port_pos.y.value + port_size / 2.
+
+                    if port_pos_top == new_port_pos_top and port_pos_bot == port_pos_bot:
+                        new_pos_y = self._move_pos_one_step(new_pos_y, port_size, side, logic, in_port)
+                        break
+                    elif port_pos_top < new_port_pos_bot < port_pos_bot:
+                        new_pos_y = self._move_pos_one_step(new_pos_y, port_size, side, logic, in_port)
+                        break
+                    elif port_pos_top < new_port_pos_top < port_pos_bot:
+                        new_pos_y = self._move_pos_one_step(new_pos_y, port_size, side, logic, in_port)
+                        break
+                elif side is SnappedSide.TOP or side is SnappedSide.BOTTOM:
+                    port_pos = port.pos
+                    port_pos_left = port_pos.x.value - port_size / 2.
+                    port_pos_right = port_pos.x.value + port_size / 2.
+
+                    if port_pos_left == new_port_pos_left and port_pos_right == new_port_pos_right:
+                        new_pos_x = self._move_pos_one_step(new_pos_x, port_size, side, logic, in_port)
+                        break
+                    elif port_pos_left < new_port_pos_right < port_pos_right:
+                        new_pos_x = self._move_pos_one_step(new_pos_x, port_size, side, logic, in_port)
+                        break
+                    elif port_pos_left < new_port_pos_left < port_pos_right:
+                        new_pos_x = self._move_pos_one_step(new_pos_x, port_size, side, logic, in_port)
+                        break
+
+        if new_pos_x != new_pos[0] or new_pos_y != new_pos[1]:
+            res = adjust_pos(self.width, self.height)
+            if res:
+                return res
+            return False, new_pos_x, new_pos_y, side
+
+        res = adjust_pos(self.width, self.height)
+        if res:
+            return res
+
+        return True, new_pos_x, new_pos_y, side
+
+    @staticmethod
+    def _move_pos_one_step(pos, port_size, side, logic, in_port):
+        if side is SnappedSide.RIGHT:
+            if logic or (not logic and in_port):
+                return pos + 1.25 * port_size
+            else:
+                return pos - 1.25 * port_size
+        elif side is SnappedSide.LEFT:
+            if logic or (not logic and in_port):
+                return pos - 1.25 * port_size
+            else:
+                return pos + 1.25 * port_size
+        elif side is SnappedSide.BOTTOM:
+            if not in_port and not logic:
+                return pos + 1.25 * port_size
+            else:
+                return pos - 1.25 * port_size
+        elif side is SnappedSide.TOP:
+            if not in_port and not logic:
+                return pos - 1.25 * port_size
+            else:
+                return pos + 1.25 * port_size
 
 
 class NameView(Element):
