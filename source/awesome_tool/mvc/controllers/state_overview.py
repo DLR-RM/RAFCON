@@ -88,7 +88,7 @@ class StateOverviewController(ExtendedController, Model):
         view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
         view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)
 
-        view['entry_name'].connect('activate', self.on_activate_entry)
+        view['entry_name'].connect('activate', self.rename)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -97,6 +97,7 @@ class StateOverviewController(ExtendedController, Model):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
+        pass
 
     def rename(self):
         self.view['entry_name'].grab_focus()

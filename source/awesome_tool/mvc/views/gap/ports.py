@@ -16,7 +16,7 @@ import math
 
 from enum import Enum
 
-# SnappedSide = Enum('SIDE', 'LEFT TOP RIGHT BOTTOM')
+Direction = Enum('DIRECTION', 'UP DOWN LEFT RIGHT')
 
 
 class SnappedSide(Enum):
@@ -40,7 +40,7 @@ class SnappedSide(Enum):
 
 class PortView(object):
 
-    def __init__(self, name=None, parent=None, side=SnappedSide.RIGHT):
+    def __init__(self, in_port, name=None, parent=None, side=SnappedSide.RIGHT):
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
         self.side = side
@@ -50,6 +50,8 @@ class PortView(object):
         self._tmp_connected = False
 
         self._name = name
+
+        self._is_in_port = in_port
 
         self.port_side_size = 0.
         self.update_port_side_size()
@@ -116,15 +118,30 @@ class PortView(object):
         outcome_side = self.port_side_size
         c.set_line_width(outcome_side * 0.03)
 
+        direction = None
+
+        if self.side is SnappedSide.LEFT:
+            direction = Direction.RIGHT if self._is_in_port else Direction.LEFT
+        elif self.side is SnappedSide.TOP:
+            direction = Direction.DOWN if self._is_in_port else Direction.UP
+        elif self.side is SnappedSide.RIGHT:
+            direction = Direction.LEFT if self._is_in_port else Direction.RIGHT
+        elif self.side is SnappedSide.BOTTOM:
+            direction = Direction.UP if self._is_in_port else Direction.DOWN
+
         # Outer part
-        c.rectangle(self.pos.x - outcome_side / 2, self.pos.y - outcome_side / 2, outcome_side, outcome_side)
+        self._draw_triangle(self.pos, direction, c, outcome_side, draw_inner=False)
+        # c.rectangle(self.pos.x - outcome_side / 2, self.pos.y - outcome_side / 2, outcome_side, outcome_side)
+        c.move_to(0, 0)
         c.set_source_color(Color(fill_color))
         c.fill_preserve()
         c.set_source_rgba(0, 0, 0, 0)
         c.stroke()
 
         # Inner part
-        c.rectangle(self.pos.x - outcome_side * 0.85 / 2, self.pos.y - outcome_side * 0.85 / 2, outcome_side * 0.85, outcome_side * 0.85)
+        self._draw_triangle(self.pos, direction, c, outcome_side, draw_inner=True)
+        # c.rectangle(self.pos.x - outcome_side * 0.85 / 2, self.pos.y - outcome_side * 0.85 / 2, outcome_side * 0.85, outcome_side * 0.85)
+        c.move_to(0, 0)
         if self.connected:
             c.set_source_color(Color(fill_color))
         else:
@@ -180,6 +197,36 @@ class PortView(object):
 
         c.move_to(outcome_side, outcome_side)
 
+    @staticmethod
+    def _draw_triangle(pos, direction, context_cairo, outcome_side, draw_inner):
+        c = context_cairo
+
+        if draw_inner:
+            multiplier = .8
+        else:
+            multiplier = 1.
+
+        if direction is Direction.UP:
+            c.move_to(pos.x, pos.y - outcome_side * multiplier / 2.)
+            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y + outcome_side * multiplier / 2.)
+            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y + outcome_side * multiplier / 2.)
+            c.line_to(pos.x, pos.y - outcome_side * multiplier / 2.)
+        elif direction is Direction.DOWN:
+            c.move_to(pos.x, pos.y + outcome_side * multiplier / 2.)
+            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y - outcome_side * multiplier / 2.)
+            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y - outcome_side * multiplier / 2.)
+            c.line_to(pos.x, pos.y + outcome_side * multiplier / 2.)
+        elif direction is Direction.LEFT:
+            c.move_to(pos.x - outcome_side * multiplier / 2., pos.y)
+            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y - outcome_side * multiplier / 2.)
+            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y + outcome_side * multiplier / 2.)
+            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y)
+        elif direction is Direction.RIGHT:
+            c.move_to(pos.x + outcome_side * multiplier / 2., pos.y)
+            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y - outcome_side * multiplier / 2.)
+            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y + outcome_side * multiplier / 2.)
+            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y)
+
     def update_port_side_size(self):
         if self._parent:
             self.port_side_size = min(self._parent.width, self._parent.height) / 20.
@@ -190,16 +237,16 @@ class PortView(object):
 class IncomeView(PortView):
 
     def __init__(self, parent):
-        super(IncomeView, self).__init__(parent=parent, side=SnappedSide.LEFT)
+        super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
 
     def draw(self, context, state):
-        self.draw_port(context, state, "#aaaaaa")
+        self.draw_port(context, state, "#fff")
 
 
 class OutcomeView(PortView):
 
     def __init__(self, outcome_m, parent):
-        super(OutcomeView, self).__init__(name=outcome_m.outcome.name, parent=parent)
+        super(OutcomeView, self).__init__(in_port=False, name=outcome_m.outcome.name, parent=parent)
 
         assert isinstance(outcome_m, OutcomeModel)
         self._outcome_m = ref(outcome_m)
@@ -219,19 +266,19 @@ class OutcomeView(PortView):
 
     def draw(self, context, state):
         if self.outcome_id == -2:
-            fill_color = '#0000ff'
+            fill_color = '#00f'
         elif self.outcome_id == -1:
-            fill_color = '#ff0000'
+            fill_color = '#f00'
         else:
-            fill_color = '#ffffff'
+            fill_color = '#fff'
 
         self.draw_port(context, state, fill_color)
 
 
 class ScopedDataPortView(PortView):
 
-    def __init__(self, parent, scoped_variable_m, side):
-        super(ScopedDataPortView, self).__init__(parent=parent, side=side)
+    def __init__(self, in_port, parent, scoped_variable_m, side):
+        super(ScopedDataPortView, self).__init__(in_port=in_port, parent=parent, side=side)
 
         assert isinstance(scoped_variable_m, ScopedVariableModel)
         self._scoped_variable_m = ref(scoped_variable_m)
@@ -245,29 +292,7 @@ class ScopedDataPortView(PortView):
         return self.scoped_variable_m.scoped_variable.data_port_id
 
     def draw(self, context, state):
-        fill_color = "#ffc926"
-
-        self.update_port_side_size()
-        c = context.cairo
-        outcome_side = self.port_side_size
-        c.set_line_width(outcome_side * 0.03)
-
-        # Outer part
-        c.rectangle(self.pos.x - outcome_side / 2, self.pos.y - outcome_side / 2, outcome_side, outcome_side)
-        c.set_source_color(Color(fill_color))
-        c.fill_preserve()
-        c.set_source_rgba(0, 0, 0, 0)
-        c.stroke()
-
-        # Inner part
-        c.rectangle(self.pos.x - outcome_side * 0.85 / 2, self.pos.y - outcome_side * 0.85 / 2, outcome_side * 0.85, outcome_side * 0.85)
-        if self.connected:
-            c.set_source_color(Color(fill_color))
-        else:
-            c.set_source_color(Color('#000'))
-        c.fill_preserve()
-        c.set_source_color(Color('#000'))
-        c.stroke()
+        self.draw_port(context, state, '#ffc926')
 
     def update_port_side_size(self):
         if self._parent:
@@ -279,20 +304,20 @@ class ScopedDataPortView(PortView):
 class ScopedDataInputPortView(ScopedDataPortView):
 
     def __init__(self, parent, scoped_variable_m):
-        super(ScopedDataInputPortView, self).__init__(parent, scoped_variable_m, SnappedSide.LEFT)
+        super(ScopedDataInputPortView, self).__init__(True, parent, scoped_variable_m, SnappedSide.LEFT)
 
 
 class ScopedDataOutputPortView(ScopedDataPortView):
 
     def __init__(self, parent, scoped_variable_m):
-        super(ScopedDataOutputPortView, self).__init__(parent, scoped_variable_m, SnappedSide.RIGHT)
+        super(ScopedDataOutputPortView, self).__init__(False, parent, scoped_variable_m, SnappedSide.RIGHT)
 
 
 class DataPortView(PortView):
 
-    def __init__(self, parent, port_m, side):
+    def __init__(self, in_port, parent, port_m, side):
         assert isinstance(port_m, DataPortModel)
-        super(DataPortView, self).__init__(name=port_m.data_port.name, parent=parent, side=side)
+        super(DataPortView, self).__init__(in_port=in_port, name=port_m.data_port.name, parent=parent, side=side)
 
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
@@ -312,7 +337,7 @@ class DataPortView(PortView):
 class InputPortView(DataPortView):
 
     def __init__(self, parent, port_m):
-        super(InputPortView, self).__init__(parent, port_m, SnappedSide.LEFT)
+        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT)
 
     def add_connected_handle(self, handle, connection_view, moving=False):
         from awesome_tool.mvc.views.gap.connection import ConnectionView
@@ -331,7 +356,7 @@ class InputPortView(DataPortView):
 class OutputPortView(DataPortView):
 
     def __init__(self, parent, port_m):
-        super(OutputPortView, self).__init__(parent, port_m, SnappedSide.RIGHT)
+        super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT)
 
     def add_connected_handle(self, handle, connection_view, moving=False):
         from awesome_tool.mvc.views.gap.connection import ConnectionView
