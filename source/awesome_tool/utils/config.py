@@ -22,12 +22,12 @@ class DefaultConfig(object):
     def load(self, config_file, opt_path=None):
         assert isinstance(config_file, str)
 
+        if opt_path is None:
+            opt_path = os.path.join(os.path.expanduser('~'), '.awesome_tool')
+
         if not os.path.exists(opt_path):
             logger.warn('No configuration found, using temporary default config and create path on file system.')
-            if opt_path is not None:
-                os.makedirs(opt_path)
-            else:
-                os.makedirs(os.path.join(os.path.expanduser('~'), '.awesome_tool'))
+            os.makedirs(opt_path)
 
         config_file_path = os.path.join(opt_path, config_file)
 

@@ -43,8 +43,10 @@ class GuiConfig(DefaultConfig):
         self.configure_fonts()
         self.configure_source_view_styles()
 
-    def load(self, path=None):
-        super(GuiConfig, self).load(CONFIG_FILE, path)
+        self.load(CONFIG_FILE)
+
+    def load(self, config_file, opt_path=None):
+        super(GuiConfig, self).load(config_file, opt_path)
 
     def configure_gtk(self):
         import gtk

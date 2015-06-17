@@ -37,8 +37,10 @@ class Config(DefaultConfig):
             raise ConfigError("Type should be SM_CONFIG for statemachine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")
 
-    def load(self, path=None):
-        super(Config, self).load(CONFIG_FILE, path)
+        self.load(CONFIG_FILE)
+
+    def load(self, config_file, path=None):
+        super(Config, self).load(config_file, path)
 
 # This variable holds the global configuration parameters for the statemachine
 global_config = Config()

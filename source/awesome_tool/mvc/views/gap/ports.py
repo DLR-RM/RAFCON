@@ -116,7 +116,7 @@ class PortView(object):
     def draw(self, context, state):
         raise NotImplementedError
 
-    def draw_port(self, context, state, fill_color):
+    def draw_port(self, context, fill_color):
         self.update_port_side_size()
         c = context.cairo
         outcome_side = self.port_side_size
@@ -154,7 +154,7 @@ class PortView(object):
         c.set_source_color(Color('#000'))
         c.stroke()
 
-        if self._name and not self.has_outgoing_connection() and self.parent.parent:
+        if self.name and not self.has_outgoing_connection() and self.parent.parent:
             self.draw_name(context)
 
     def draw_name(self, context):
@@ -171,7 +171,7 @@ class PortView(object):
         pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
         layout = pcc.create_layout()
-        layout.set_text(self._name)
+        layout.set_text(self.name)
 
         font_name = constants.FONT_NAMES[0]
         font_size = outcome_side
@@ -244,7 +244,7 @@ class IncomeView(PortView):
         super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
 
     def draw(self, context, state):
-        self.draw_port(context, state, "#fff")
+        self.draw_port(context, "#fff")
 
 
 class OutcomeView(PortView):
@@ -276,7 +276,7 @@ class OutcomeView(PortView):
         else:
             fill_color = '#fff'
 
-        self.draw_port(context, state, fill_color)
+        self.draw_port(context, fill_color)
 
 
 class ScopedDataPortView(PortView):
@@ -296,7 +296,7 @@ class ScopedDataPortView(PortView):
         return self.scoped_variable_m.scoped_variable.data_port_id
 
     def draw(self, context, state):
-        self.draw_port(context, state, '#ffc926')
+        self.draw_port(context, '#ffc926')
 
     def update_port_side_size(self):
         if self._parent:
@@ -334,8 +334,12 @@ class DataPortView(PortView):
     def port_id(self):
         return self.port_m.data_port.data_port_id
 
+    @property
+    def name(self):
+        return self.port_m.data_port.name
+
     def draw(self, context, state):
-        self.draw_port(context, state, "#ffc926")
+        self.draw_port(context, "#ffc926")
 
 
 class InputPortView(DataPortView):

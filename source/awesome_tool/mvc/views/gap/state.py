@@ -7,6 +7,8 @@ from pango import SCALE, FontDescription
 
 from gtk.gdk import CairoContext, Color
 
+from copy import copy
+
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.painter import CairoBoundingBoxContext
@@ -154,7 +156,7 @@ class StateView(Element):
 
     @property
     def inputs(self):
-        return self._inputs
+        return copy(self._inputs)
 
     @property
     def scoped_variables(self):
