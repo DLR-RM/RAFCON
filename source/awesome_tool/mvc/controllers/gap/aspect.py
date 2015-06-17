@@ -74,7 +74,6 @@ class MyItemHandleInMotion(object):
                 # update position of item's handle
                 v2i = view.get_matrix_v2i(item).transform_point
                 handle.pos = v2i(*glue_pos)
-                self._current_port = port
                 return sink
         return None
 

@@ -16,6 +16,8 @@ from enum import Enum
 
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
+import awesome_tool.mvc.controllers.gap.segment
+
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -197,7 +199,21 @@ class MyHandleTool(HandleTool):
         if isinstance(item, StateView) or isinstance(item, ScopedVariableView):
             self._start_state = item
 
-        super(MyHandleTool, self).on_button_press(event)
+        if handle:
+            # Deselect all items unless CTRL or SHIFT is pressed
+            # or the item is already selected.
+            if not (event.state & (gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
+                    or view.hovered_item in view.selected_items):
+                del view.selected_items
+
+            view.hovered_item = item
+            view.focused_item = item
+
+            self.motion_handle = None
+
+            self.grab_handle(item, handle)
+
+            return True
 
     def on_button_release(self, event):
         # Create new transition if pull beginning at port occurred
@@ -219,7 +235,8 @@ class MyHandleTool(HandleTool):
             elif isinstance(item, DataFlowView) and handle in item.end_handles():
                 self._handle_data_flow_view_change(item, handle)
         # if connection has been put back to original position, reset port
-        elif self._last_active_port is self._start_port and self._active_connection_view:
+        elif (self._last_active_port is self._start_port and self._active_connection_view and
+                self._active_connection_view_handle in self._active_connection_view.end_handles()):
             item = self._active_connection_view
             handle = self._active_connection_view_handle
             self._handle_reset_ports(item, handle, self._start_port.parent)
@@ -317,7 +334,7 @@ class MyHandleTool(HandleTool):
             # If current handle is to_handle of a connection view
             elif isinstance(item, ConnectionView) and item.to_handle() is handle:
                 self.check_sink_item(self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2)), handle, item)
-            elif isinstance(item, TransitionView) and handle is not item.from_handle() and handle is not item.to_handle():
+            elif isinstance(item, TransitionView) and handle not in item.end_handles():
                 self.motion_handle.move(pos, 0.)
             # If current handle is port or corner of a state view (for ports it only works if CONTROL key is pressed)
             elif isinstance(item, StateView):

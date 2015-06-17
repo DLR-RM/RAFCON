@@ -1,6 +1,6 @@
 from weakref import ref
 
-from gaphas.segment import Segment, HandleSelection, SegmentHandleSelection
+from gaphas.segment import Segment
 from gaphas.item import Line, NW, SE
 
 from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint
@@ -18,7 +18,7 @@ from math import pi, atan2
 
 class ConnectionView(Line):
 
-    def __init__(self, hierarchy_level):
+    def __init__(self, hierarchy_level, perpendicular_ends=False):
         super(ConnectionView, self).__init__()
         self._from_handle = self.handles()[0]
         self._to_handle = self.handles()[1]
@@ -33,10 +33,7 @@ class ConnectionView(Line):
 
         self._head_length = 0.
 
-        # self.orthogonal = True
-
-    # def setup_canvas(self):
-    #     super(ConnectionView, self).setup_canvas()
+        self._perpendicular_ends = perpendicular_ends
 
     @property
     def from_port(self):
@@ -158,32 +155,39 @@ class ConnectionView(Line):
 
     def post_update(self, context):
         super(Line, self).post_update(context)
-
-        if self.from_port is None:
+        if not self._perpendicular_ends:
             h0, h1 = self._handles[:2]
             p0, p1 = h0.pos, h1.pos
             self._head_angle = atan2(p1.y - p0.y, p1.x - p0.x)
-        elif self.from_port.side is SnappedSide.RIGHT:
-            self._head_angle = 0 if self.is_out_port(self.from_port) else pi
-        elif self.from_port.side is SnappedSide.TOP:
-            self._head_angle = pi * 3. / 2. if self.is_out_port(self.from_port) else pi / 2.
-        elif self.from_port.side is SnappedSide.LEFT:
-            self._head_angle = pi if self.is_out_port(self.from_port) else 0
-        elif self.from_port.side is SnappedSide.BOTTOM:
-            self._head_angle = pi / 2. if self.is_out_port(self.from_port) else pi * 3. / 2.
-
-        if self.to_port is None:
             h1, h0 = self._handles[-2:]
             p1, p0 = h1.pos, h0.pos
             self._tail_angle = atan2(p1.y - p0.y, p1.x - p0.x)
-        elif self.to_port.side is SnappedSide.RIGHT:
-            self._tail_angle = pi if self.is_out_port(self.to_port) else 0
-        elif self.to_port.side is SnappedSide.TOP:
-            self._tail_angle = pi / 2. if self.is_out_port(self.to_port) else pi * 3. / 2.
-        elif self.to_port.side is SnappedSide.LEFT:
-            self._tail_angle = 0 if self.is_out_port(self.to_port) else pi
-        elif self.to_port.side is SnappedSide.BOTTOM:
-            self._tail_angle = pi * 3. / 2. if self.is_out_port(self.to_port) else pi / 2.
+        else:
+            if self.from_port is None:
+                h0, h1 = self._handles[:2]
+                p0, p1 = h0.pos, h1.pos
+                self._head_angle = atan2(p1.y - p0.y, p1.x - p0.x)
+            elif self.from_port.side is SnappedSide.RIGHT:
+                self._head_angle = 0 if self.is_out_port(self.from_port) else pi
+            elif self.from_port.side is SnappedSide.TOP:
+                self._head_angle = pi * 3. / 2. if self.is_out_port(self.from_port) else pi / 2.
+            elif self.from_port.side is SnappedSide.LEFT:
+                self._head_angle = pi if self.is_out_port(self.from_port) else 0
+            elif self.from_port.side is SnappedSide.BOTTOM:
+                self._head_angle = pi / 2. if self.is_out_port(self.from_port) else pi * 3. / 2.
+
+            if self.to_port is None:
+                h1, h0 = self._handles[-2:]
+                p1, p0 = h1.pos, h0.pos
+                self._tail_angle = atan2(p1.y - p0.y, p1.x - p0.x)
+            elif self.to_port.side is SnappedSide.RIGHT:
+                self._tail_angle = pi if self.is_out_port(self.to_port) else 0
+            elif self.to_port.side is SnappedSide.TOP:
+                self._tail_angle = pi / 2. if self.is_out_port(self.to_port) else pi * 3. / 2.
+            elif self.to_port.side is SnappedSide.LEFT:
+                self._tail_angle = 0 if self.is_out_port(self.to_port) else pi
+            elif self.to_port.side is SnappedSide.BOTTOM:
+                self._tail_angle = pi * 3. / 2. if self.is_out_port(self.to_port) else pi / 2.
 
     def draw(self, context):
         def draw_line_end(pos, angle, draw):
@@ -201,7 +205,10 @@ class ConnectionView(Line):
         draw_line_end(self._handles[0].pos, self._head_angle, self.draw_head)
         for h in self._handles[1:-1]:
             cr.line_to(*h.pos)
-        draw_line_end(self._get_tail_pos(), self._tail_angle, self.draw_tail)
+        if not self._perpendicular_ends:
+            draw_line_end(self._handles[-1].pos, self._tail_angle, self.draw_tail)
+        else:
+            draw_line_end(self._get_tail_pos(), self._tail_angle, self.draw_tail)
         cr.stroke()
 
     def _get_tail_pos(self):
@@ -286,9 +293,9 @@ class DataFlowView(ConnectionView):
         self._data_flow_m = ref(data_flow_m)
 
 
-@HandleSelection.when_type(ConnectionView)
-class ConnectionSegmentHandleSelection(SegmentHandleSelection):
-
-    def unselect(self):
-        self.view.canvas.solver.solve()
-        super(ConnectionSegmentHandleSelection, self).unselect()
+# @HandleSelection.when_type(ConnectionView)
+# class ConnectionSegmentHandleSelection(SegmentHandleSelection):
+#
+#     def unselect(self):
+#         self.view.canvas.solver.solve()
+#         super(ConnectionSegmentHandleSelection, self).unselect()
