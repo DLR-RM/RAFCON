@@ -11,7 +11,12 @@ from awesome_tool.mvc.models.data_flow import DataFlowModel
 from awesome_tool.mvc.views.gap.ports import PortView, SnappedSide, IncomeView, InputPortView, ScopedDataInputPortView,\
     OutcomeView, OutputPortView, ScopedDataOutputPortView
 
-from gtk.gdk import Color
+from awesome_tool.utils import constants
+from awesome_tool.mvc.config import global_gui_config
+
+import cairo
+from pango import FontDescription
+from gtk.gdk import Color, CairoContext
 
 from math import pi, atan2
 
@@ -34,6 +39,12 @@ class ConnectionView(Line):
         self._head_length = 0.
 
         self._perpendicular_ends = perpendicular_ends
+
+    @property
+    def name(self):
+        if self.from_port:
+            return self.from_port.name
+        return None
 
     @property
     def from_port(self):
@@ -210,6 +221,63 @@ class ConnectionView(Line):
         else:
             draw_line_end(self._get_tail_pos(), self._tail_angle, self.draw_tail)
         cr.stroke()
+
+        if self.name:
+            self._draw_name(context)
+
+    def _draw_name(self, context):
+        c = context.cairo
+
+        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
+        if isinstance(c, CairoContext):
+            cc = c
+        else:
+            cc = c._cairo
+
+        if len(self._handles) % 2:
+            index = len(self._handles) / 2
+            cx, cy = self._handles[index].pos
+            angle = 0
+        else:
+            index1 = len(self._handles) / 2 - 1
+            index2 = index1 + 1
+
+            p1, p2 = self._handles[index1].pos, self._handles[index2].pos
+
+            cx = (p1.x + p2.x) / 2
+            cy = (p1.y + p2.y) / 2
+
+            angle = atan2(p2.y - p1.y, p2.x - p1.x)
+            if angle < -pi / 2.:
+                angle += pi
+            elif angle > pi / 2.:
+                angle -= pi
+
+        outcome_side = self.from_port.port_side_size
+
+        pcc = CairoContext(cc)
+        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        layout = pcc.create_layout()
+        layout.set_text(self.name)
+
+        font_name = constants.FONT_NAMES[0]
+        font_size = outcome_side
+
+        font = FontDescription(font_name + " " + str(font_size))
+        layout.set_font_description(font)
+
+        cc.set_source_color(Color('#ededee'))
+        pcc.update_layout(layout)
+        c.save()
+
+        c.move_to(cx, cy)
+        if global_gui_config.get_config_value("ROTATE_NAMES_ON_CONNECTIONS", default=False):
+            c.rotate(angle)
+
+        pcc.show_layout(layout)
+
+        c.restore()
 
     def _get_tail_pos(self):
         if self.to_port is None:
