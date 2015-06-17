@@ -1,0 +1,34 @@
+!ExecutionState
+description: 'All data exist
+
+
+    Checks whether all of the given key exist in the data storage of the next higher
+    library or root state.
+
+
+    Parameters:
+
+    * key: A list with names of the data
+
+
+    Outcomes:
+
+    * yes: If all keys exist
+
+    * no: If at least one key does not exist'
+filename: script.py
+input_data_ports:
+    1: !DataPort
+        data_port_id: 1
+        data_type: !!python/name:__builtin__.list ''
+        default_value: []
+        name: keys
+name: all data exist
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: 'yes', outcome_id: 0}
+    1: !Outcome {name: 'no', outcome_id: 1}
+output_data_ports: {}
+path: /home_local/stei_fn/taskcontrol/source/libraries/generic/storage/all data exist/MTFZBT
+state_id: MTFZBT
