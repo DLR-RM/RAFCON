@@ -97,6 +97,9 @@ class StateOverviewController(ExtendedController, Model):
         #self.adapt(self.__state_property_adapter("name", "input_name"))
         pass
 
+    def rename(self):
+        self.view['entry_name'].grab_focus()
+
     def on_toggle_is_start_state(self, button):
 
         if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
