@@ -133,6 +133,10 @@ class StateView(Element):
             solver.remove_constraint(constraint)
 
     @property
+    def port_side_size(self):
+        return min(self.width, self.height) / 20.
+
+    @property
     def parent(self):
         return self.canvas.get_parent(self)
 

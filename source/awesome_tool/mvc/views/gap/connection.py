@@ -47,6 +47,10 @@ class ConnectionView(Line):
         return None
 
     @property
+    def parent(self):
+        return self.canvas.get_parent(self)
+
+    @property
     def from_port(self):
         return self._from_port
 

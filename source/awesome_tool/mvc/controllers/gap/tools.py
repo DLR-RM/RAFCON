@@ -171,6 +171,9 @@ class MyHandleTool(HandleTool):
         self._new_connection = None
         self._start_state = None
 
+        self._last_hovered_state = None
+        self._glue_distance = None
+
         self._active_connection_view = None
         self._active_connection_view_handle = None
         self._start_port = None  # Port where connection view pull starts
@@ -260,6 +263,8 @@ class MyHandleTool(HandleTool):
         self._active_connection_view = None
         self._active_connection_view_handle = None
         self._waypoint_list = None
+        self._glue_distance = 0
+        self._last_hovered_state = None
 
         super(MyHandleTool, self).on_button_release(event)
 
@@ -330,10 +335,12 @@ class MyHandleTool(HandleTool):
 
             # If current handle is from_handle of a connection view
             if isinstance(item, ConnectionView) and item.from_handle() is handle:
-                self.check_sink_item(self.motion_handle.move(pos, 5.0 / ((item.hierarchy_level + 1) * 2)), handle, item)
+                self._get_port_side_size_for_hovered_state(pos)
+                self.check_sink_item(self.motion_handle.move(pos, self._glue_distance), handle, item)
             # If current handle is to_handle of a connection view
             elif isinstance(item, ConnectionView) and item.to_handle() is handle:
-                self.check_sink_item(self.motion_handle.move(pos, 5.0 / (item.hierarchy_level * 2)), handle, item)
+                self._get_port_side_size_for_hovered_state(pos)
+                self.check_sink_item(self.motion_handle.move(pos, self._glue_distance), handle, item)
             elif isinstance(item, TransitionView) and handle not in item.end_handles():
                 self.motion_handle.move(pos, 0.)
             # If current handle is port or corner of a state view (for ports it only works if CONTROL key is pressed)
@@ -344,6 +351,14 @@ class MyHandleTool(HandleTool):
                 self.motion_handle.move(pos, 5.0)
 
             return True
+
+    def _get_port_side_size_for_hovered_state(self, pos):
+        item_below = self.view.get_item_at_point(pos, False)
+        if isinstance(item_below, NameView):
+            item_below = self.view.canvas.get_parent(item_below)
+        if isinstance(item_below, StateView) and item_below is not self._last_hovered_state:
+            self._last_hovered_state = item_below
+            self._glue_distance = item_below.port_side_size / 2.
 
     def _update_port_position_meta_data(self, item, handle):
         rel_pos = (handle.pos.x.value, handle.pos.y.value)
