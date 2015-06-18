@@ -46,8 +46,13 @@ class PortView(object):
         self.side = side
         self._parent = parent
 
-        self._connected_handles = {}
-        self._tmp_connected = False
+        # self._connected_handles = {}
+        # self._tmp_connected = False
+
+        self._incoming_handles = []
+        self._outgoing_handles = []
+        self._tmp_incoming_connected = False
+        self._tmp_outgoing_connected = False
 
         self._name = name
 
@@ -76,41 +81,52 @@ class PortView(object):
     def port_pos(self):
         return self.port.point
 
-    @property
-    def connected_handles(self):
-        return self._connected_handles.iterkeys()
+    # @property
+    # def connected_handles(self):
+    #     return self._connected_handles.iterkeys()
 
     def has_outgoing_connection(self):
-        for outgoing_connection in self._connected_handles.itervalues():
-            if outgoing_connection:
-                return True
-        return False
+        return len(self._outgoing_handles) > 0
+
+    def has_incoming_connection(self):
+        return len(self._incoming_handles) > 0
 
     def add_connected_handle(self, handle, connection_view, moving=False):
         from awesome_tool.mvc.views.gap.connection import ConnectionView
         assert isinstance(handle, Handle)
         assert isinstance(connection_view, ConnectionView)
-        if handle not in self._connected_handles.iterkeys() and not moving:
-            if connection_view.from_handle() is handle:
-                self._connected_handles[handle] = True
-            else:
-                self._connected_handles[handle] = False
+        if not moving and handle is connection_view.from_handle() and handle not in self._outgoing_handles:
+            self._outgoing_handles.append(handle)
+        elif not moving and handle is connection_view.to_handle() and handle not in self._incoming_handles:
+            self._incoming_handles.append(handle)
 
     def remove_connected_handle(self, handle):
         assert isinstance(handle, Handle)
-        if handle in self._connected_handles:
-            self._connected_handles.pop(handle)
+        if handle in self._incoming_handles:
+            self._incoming_handles.remove(handle)
+        elif handle in self._outgoing_handles:
+            self._outgoing_handles.remove(handle)
 
-    def tmp_connect(self):
-        self._tmp_connected = True
+    def tmp_connect(self, handle, connection_view):
+        if handle is connection_view.from_handle():
+            self._tmp_outgoing_connected = True
+        elif handle is connection_view.to_handle():
+            self._tmp_incoming_connected = True
 
     def tmp_disconnect(self):
-        self._tmp_connected = False
+        self._tmp_incoming_connected = False
+        self._tmp_outgoing_connected = False
 
     @property
-    def connected(self):
-        if len(self._connected_handles) == 0:
-            return self._tmp_connected
+    def connected_outgoing(self):
+        if len(self._outgoing_handles) == 0:
+            return self._tmp_outgoing_connected
+        return True
+
+    @property
+    def connected_incoming(self):
+        if len(self._incoming_handles) == 0:
+            return self._tmp_incoming_connected
         return True
 
     def draw(self, context, state):
@@ -137,21 +153,21 @@ class PortView(object):
         self._draw_triangle(self.pos, direction, c, outcome_side, draw_inner=False)
         # c.rectangle(self.pos.x - outcome_side / 2, self.pos.y - outcome_side / 2, outcome_side, outcome_side)
         c.move_to(0, 0)
-        c.set_source_color(Color(fill_color))
+        c.set_source_color(Color('#000'))
         c.fill_preserve()
-        c.set_source_rgba(0, 0, 0, 0)
+        c.set_source_color(Color(fill_color))
         c.stroke()
 
         # Inner part
-        self._draw_triangle(self.pos, direction, c, outcome_side, draw_inner=True)
-        # c.rectangle(self.pos.x - outcome_side * 0.85 / 2, self.pos.y - outcome_side * 0.85 / 2, outcome_side * 0.85, outcome_side * 0.85)
-        c.move_to(0, 0)
-        if self.connected:
-            c.set_source_color(Color(fill_color))
-        else:
-            c.set_source_color(Color('#000'))
+        if self.connected_incoming and self.connected_outgoing:
+            self._draw_triangle(self.pos, direction, c, outcome_side, draw_inner=True)
+        elif self.connected_incoming:
+            self._draw_triangle_half(self.pos, direction, c, outcome_side, front_part=False)
+        elif self.connected_outgoing:
+            self._draw_triangle_half(self.pos, direction, c, outcome_side, front_part=True)
+        c.set_source_color(Color(fill_color))
         c.fill_preserve()
-        c.set_source_color(Color('#000'))
+        c.set_source_rgba(0, 0, 0, 0)
         c.stroke()
 
         if self.name and not self.has_outgoing_connection() and self.parent.parent:
@@ -205,31 +221,96 @@ class PortView(object):
     def _draw_triangle(pos, direction, context_cairo, outcome_side, draw_inner):
         c = context_cairo
 
+        side_half = outcome_side / 2.
+
         if draw_inner:
             multiplier = .8
+            multiplier_comp_1 = multiplier * 1.125
+            multiplier_comp_2 = multiplier * 1.05
         else:
             multiplier = 1.
+            multiplier_comp_1 = 1.
+            multiplier_comp_2 = 1.
 
         if direction is Direction.UP:
-            c.move_to(pos.x, pos.y - outcome_side * multiplier / 2.)
-            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y + outcome_side * multiplier / 2.)
-            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y + outcome_side * multiplier / 2.)
-            c.line_to(pos.x, pos.y - outcome_side * multiplier / 2.)
+            c.move_to(pos.x, pos.y - side_half * multiplier)
+            c.line_to(pos.x - side_half * multiplier_comp_2, pos.y + side_half * multiplier_comp_1)
+            c.line_to(pos.x + side_half * multiplier_comp_2, pos.y + side_half * multiplier_comp_1)
+            c.line_to(pos.x, pos.y - side_half * multiplier)
         elif direction is Direction.DOWN:
-            c.move_to(pos.x, pos.y + outcome_side * multiplier / 2.)
-            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y - outcome_side * multiplier / 2.)
-            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y - outcome_side * multiplier / 2.)
-            c.line_to(pos.x, pos.y + outcome_side * multiplier / 2.)
+            c.move_to(pos.x, pos.y + side_half * multiplier)
+            c.line_to(pos.x - side_half * multiplier_comp_2, pos.y - side_half * multiplier_comp_1)
+            c.line_to(pos.x + side_half * multiplier_comp_2, pos.y - side_half * multiplier_comp_1)
+            c.line_to(pos.x, pos.y + side_half * multiplier)
         elif direction is Direction.LEFT:
-            c.move_to(pos.x - outcome_side * multiplier / 2., pos.y)
-            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y - outcome_side * multiplier / 2.)
-            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y + outcome_side * multiplier / 2.)
-            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y)
+            c.move_to(pos.x - side_half * multiplier, pos.y)
+            c.line_to(pos.x + side_half * multiplier_comp_1, pos.y - side_half * multiplier_comp_2)
+            c.line_to(pos.x + side_half * multiplier_comp_1, pos.y + side_half * multiplier_comp_2)
+            c.line_to(pos.x - side_half * multiplier, pos.y)
         elif direction is Direction.RIGHT:
-            c.move_to(pos.x + outcome_side * multiplier / 2., pos.y)
-            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y - outcome_side * multiplier / 2.)
-            c.line_to(pos.x - outcome_side * multiplier / 2., pos.y + outcome_side * multiplier / 2.)
-            c.line_to(pos.x + outcome_side * multiplier / 2., pos.y)
+            c.move_to(pos.x + side_half * multiplier, pos.y)
+            c.line_to(pos.x - side_half * multiplier_comp_1, pos.y - side_half * multiplier_comp_2)
+            c.line_to(pos.x - side_half * multiplier_comp_1, pos.y + side_half * multiplier_comp_2)
+            c.line_to(pos.x + side_half * multiplier, pos.y)
+
+    @staticmethod
+    def _draw_triangle_half(pos, direction, context_cairo, outcome_side, front_part):
+        c = context_cairo
+
+        multiplier_comp_1 = 1.125
+        multiplier_comp_2 = 1.05
+
+        side_half = outcome_side / 2. * .8
+        side_quarter = outcome_side / 4. * .8
+
+        if direction is Direction.UP:
+            if front_part:
+                c.move_to(pos.x - side_quarter, pos.y)
+                c.line_to(pos.x, pos.y - side_half)
+                c.line_to(pos.x + side_quarter, pos.y)
+                c.line_to(pos.x - side_quarter, pos.y)
+            else:
+                c.move_to(pos.x - side_quarter, pos.y)
+                c.line_to(pos.x + side_quarter, pos.y)
+                c.line_to(pos.x + side_half * multiplier_comp_2, pos.y + side_half * multiplier_comp_1)
+                c.line_to(pos.x - side_half * multiplier_comp_2, pos.y + side_half * multiplier_comp_1)
+                c.line_to(pos.x - side_quarter, pos.y)
+        elif direction is Direction.DOWN:
+            if front_part:
+                c.move_to(pos.x - side_quarter, pos.y)
+                c.line_to(pos.x, pos.y + side_half)
+                c.line_to(pos.x + side_quarter, pos.y)
+                c.line_to(pos.x - side_quarter, pos.y)
+            else:
+                c.move_to(pos.x - side_quarter, pos.y)
+                c.line_to(pos.x + side_quarter, pos.y)
+                c.line_to(pos.x + side_half * multiplier_comp_2, pos.y - side_half * multiplier_comp_1)
+                c.line_to(pos.x - side_half * multiplier_comp_2, pos.y - side_half * multiplier_comp_1)
+                c.line_to(pos.x - side_quarter, pos.y)
+        elif direction is Direction.LEFT:
+            if front_part:
+                c.move_to(pos.x, pos.y - side_quarter)
+                c.line_to(pos.x - side_half, pos.y)
+                c.line_to(pos.x, pos.y + side_quarter)
+                c.line_to(pos.x, pos.y - side_quarter)
+            else:
+                c.move_to(pos.x, pos.y - side_quarter)
+                c.line_to(pos.x, pos.y + side_quarter)
+                c.line_to(pos.x + side_half * multiplier_comp_1, pos.y + side_half * multiplier_comp_2)
+                c.line_to(pos.x + side_half * multiplier_comp_1, pos.y - side_half * multiplier_comp_2)
+                c.line_to(pos.x, pos.y - side_quarter)
+        elif direction is Direction.RIGHT:
+            if front_part:
+                c.move_to(pos.x, pos.y - side_quarter)
+                c.line_to(pos.x + side_half, pos.y)
+                c.line_to(pos.x, pos.y + side_quarter)
+                c.line_to(pos.x, pos.y - side_quarter)
+            else:
+                c.move_to(pos.x, pos.y - side_quarter)
+                c.line_to(pos.x, pos.y + side_quarter)
+                c.line_to(pos.x - side_half * multiplier_comp_1, pos.y + side_half * multiplier_comp_2)
+                c.line_to(pos.x - side_half * multiplier_comp_1, pos.y - side_half * multiplier_comp_2)
+                c.line_to(pos.x, pos.y - side_quarter)
 
     def update_port_side_size(self):
         if self._parent:
@@ -347,18 +428,18 @@ class InputPortView(DataPortView):
     def __init__(self, parent, port_m):
         super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT)
 
-    def add_connected_handle(self, handle, connection_view, moving=False):
-        from awesome_tool.mvc.views.gap.connection import ConnectionView
-        assert isinstance(handle, Handle)
-        assert isinstance(connection_view, ConnectionView)
-        if handle not in self._connected_handles.iterkeys() and not moving:
-            if connection_view.to_handle() is handle:
-                self._connected_handles[handle] = True
-            else:
-                self._connected_handles[handle] = False
+    # def add_connected_handle(self, handle, connection_view, moving=False):
+    #     from awesome_tool.mvc.views.gap.connection import ConnectionView
+    #     assert isinstance(handle, Handle)
+    #     assert isinstance(connection_view, ConnectionView)
+    #     if handle not in self._connected_handles.iterkeys() and not moving:
+    #         if connection_view.to_handle() is handle:
+    #             self._connected_handles[handle] = True
+    #         else:
+    #             self._connected_handles[handle] = False
 
-    def has_incoming_connection(self):
-        return super(InputPortView, self).has_outgoing_connection()
+    # def has_incoming_connection(self):
+    #     return super(InputPortView, self).has_outgoing_connection()
 
 
 class OutputPortView(DataPortView):
@@ -366,15 +447,15 @@ class OutputPortView(DataPortView):
     def __init__(self, parent, port_m):
         super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT)
 
-    def add_connected_handle(self, handle, connection_view, moving=False):
-        from awesome_tool.mvc.views.gap.connection import ConnectionView
-        assert isinstance(handle, Handle)
-        assert isinstance(connection_view, ConnectionView)
-        if handle not in self._connected_handles.iterkeys() and not moving:
-            if connection_view.to_handle() is handle:
-                self._connected_handles[handle] = True
-            else:
-                self._connected_handles[handle] = False
+    # def add_connected_handle(self, handle, connection_view, moving=False):
+    #     from awesome_tool.mvc.views.gap.connection import ConnectionView
+    #     assert isinstance(handle, Handle)
+    #     assert isinstance(connection_view, ConnectionView)
+    #     if handle not in self._connected_handles.iterkeys() and not moving:
+    #         if connection_view.to_handle() is handle:
+    #             self._connected_handles[handle] = True
+    #         else:
+    #             self._connected_handles[handle] = False
 
-    def has_incoming_connection(self):
-        return super(OutputPortView, self).has_outgoing_connection()
+    # def has_incoming_connection(self):
+    #     return super(OutputPortView, self).has_outgoing_connection()

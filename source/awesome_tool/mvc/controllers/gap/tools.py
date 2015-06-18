@@ -780,7 +780,7 @@ class MyHandleTool(HandleTool):
             if self._last_active_port is not port_to_handle:
                 self.disconnect_last_active_port(handle, connection)
             port_to_handle.add_connected_handle(handle, connection, moving=True)
-            port_to_handle.tmp_connect()
+            port_to_handle.tmp_connect(handle, connection)
             connection.set_port_for_handle(port_to_handle, handle)
             self._last_active_port = port_to_handle
             return True
