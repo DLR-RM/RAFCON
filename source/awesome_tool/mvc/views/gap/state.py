@@ -565,7 +565,7 @@ class NameView(Element):
             layout.set_font_description(font)
 
         set_font_description()
-        while layout.get_size()[0] / float(SCALE) > self.width:
+        while layout.get_size()[0] / float(SCALE) > self.width or layout.get_size()[1] / float(SCALE) > self.height:
             font_size *= 0.9
             set_font_description()
 
