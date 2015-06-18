@@ -43,7 +43,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                                   filename, check_path=check_path)
 
         if not load_from_storage:
-            self.add_state(DeciderState(state_id=UNIQUE_DECIDER_STATE_ID))
+            self.add_state(DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
 
     def run(self):
         """ This defines the sequence of actions that are taken when the barrier concurrency state is executed

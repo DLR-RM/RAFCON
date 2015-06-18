@@ -41,12 +41,13 @@ class GraphicalEditorController(ExtendedController):
         self.canvas = Canvas()
         self.zoom = 3.
 
+        view.setup_canvas(self.canvas, self.zoom)
+
     def register_view(self, view):
         """Called when the View was registered
         """
         assert self.view == view
         self.setup_canvas()
-        self.view.setup_canvas(self.canvas, self.zoom)
         self.view.connect('new_state_selection', self._select_new_states)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('remove_scoped_variable_from_state', self._remove_scoped_variable_from_state)
@@ -243,7 +244,11 @@ class GraphicalEditorController(ExtendedController):
                 else:
                     self.canvas.request_update(state_v)
             elif method_name == 'state_execution_status':
-                print method_name, model, result, arguments, instance
+                state_v = self.get_view_for_model(model)
+                self.canvas.request_update(state_v, matrix=False)
+            elif method_name == 'change_state_type':
+                for child_m in result.states.itervalues():
+                    self.add_state_view_to_parent(child_m, result)
             else:
                 print method_name
 

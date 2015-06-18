@@ -21,6 +21,8 @@ from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.models.state import StateModel
 
+from awesome_tool.statemachine.enums import StateExecutionState
+
 from awesome_tool.utils import constants, log
 logger = log.get_logger(__name__)
 
@@ -191,6 +193,8 @@ class StateView(Element):
         # else:
         if self.selected:
             c.set_source_color(Color('#2e9aff'))
+        elif self.model.state.active:
+            c.set_source_color(Color('#5b8d4f'))
         else:
             c.set_source_color(Color('#50555F'))
         c.fill_preserve()
