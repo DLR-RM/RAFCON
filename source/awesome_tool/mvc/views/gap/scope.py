@@ -131,7 +131,8 @@ class ScopedVariableView(Element):
             layout.set_font_description(font)
 
         set_font_description()
-        while layout.get_size()[0] / float(SCALE) > self.width - 2 * self._port_side_size:
+        while (layout.get_size()[0] / float(SCALE) > self.width - 2 * self._port_side_size or
+                layout.get_size()[1] / float(SCALE) > self.height):
             font_size *= 0.9
             set_font_description()
 
