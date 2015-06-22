@@ -45,11 +45,6 @@ class StateView(Element):
         self.width = size[0]
         self.height = size[1]
 
-        self._left_center = Position((0, self.height / 2.))
-        self._right_center = Position((self.width, self.height / 2.))
-        self.constraint(line=(self._left_center, (self._handles[NW].pos, self._handles[SW].pos)), align=0.5)
-        self.constraint(line=(self._right_center, (self._handles[NE].pos, self._handles[SE].pos)), align=0.5)
-
         self._income = None
         self._outcomes = []
         self._inputs = []
