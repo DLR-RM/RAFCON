@@ -39,7 +39,9 @@ class Config(DefaultConfig):
 
         self.load(CONFIG_FILE)
 
-    def load(self, config_file, path=None):
+    def load(self, config_file=None, path=None):
+        if config_file is None:
+            config_file = CONFIG_FILE
         super(Config, self).load(config_file, path)
 
 # This variable holds the global configuration parameters for the statemachine

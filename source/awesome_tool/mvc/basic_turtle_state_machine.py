@@ -151,8 +151,8 @@ def run_turtle_demo():
     logger = log.get_logger("turtle demo")
 
     home_path = os.path.join(os.path.expanduser('~'), '.awesome_tool')
-    global_config.load(home_path)
-    global_gui_config.load(home_path)
+    global_config.load(path=home_path)
+    global_gui_config.load(path=home_path)
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
 

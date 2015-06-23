@@ -45,8 +45,10 @@ class GuiConfig(DefaultConfig):
 
         self.load(CONFIG_FILE)
 
-    def load(self, config_file, opt_path=None):
-        super(GuiConfig, self).load(config_file, opt_path)
+    def load(self, config_file=None, path=None):
+        if config_file is None:
+            config_file = CONFIG_FILE
+        super(GuiConfig, self).load(config_file, path)
 
     def configure_gtk(self):
         import gtk
