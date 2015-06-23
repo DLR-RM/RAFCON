@@ -118,20 +118,6 @@ class MyCanvas(Canvas):
             projection = projection.variable()
         return projection
 
-    def update_constraints(self, items):
-        """
-        Update constraints. Also variables may be marked as dirty before the
-        constraint solver kicks in.
-        """
-        # request solving of external constraints associated with dirty items
-        request_resolve = self._solver.request_resolve
-        for item in items:
-            for p in item._canvas_projections:
-                request_resolve(p[0], projections_only=True)
-                request_resolve(p[1], projections_only=True)
-        # solve all constraints
-        self._solver.solve()
-
     def update_matrices(self, items):
         return self._update_matrices_moving(items)
 
@@ -153,9 +139,6 @@ class MyCanvas(Canvas):
             if isinstance(item, (StateView, NameView)) and item.moving:
                 self.update_matrix(item, parent)
                 changed.add(item)
-
-                # changed_children = self._update_matrices_moving(set(self.get_children(item)), True)
-                # changed.update(changed_children)
             elif not moving:
                 self.update_matrix(item, parent)
                 changed.add(item)
