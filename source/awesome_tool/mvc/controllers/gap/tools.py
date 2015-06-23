@@ -80,6 +80,9 @@ class MyItemTool(ItemTool):
             self.view.grab_focus()
         self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
 
+        if event.button == 3:
+            self._graphical_editor_view.emit('deselect_states')
+
         return True
 
     def on_button_release(self, event):

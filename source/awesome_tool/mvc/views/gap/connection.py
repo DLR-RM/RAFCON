@@ -4,6 +4,7 @@ from gaphas.segment import Segment
 from gaphas.item import Line, NW, SE
 
 from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint
+from awesome_tool.mvc.views.gap.line import PerpLine
 
 from awesome_tool.mvc.models.transition import TransitionModel
 from awesome_tool.mvc.models.data_flow import DataFlowModel
@@ -307,6 +308,44 @@ class ConnectionView(Line):
             tail_pos = to_port_top_side if self.is_out_port(self.to_port) else to_port_bottom_side
 
         return tail_pos
+
+
+class PerpConnectionView(PerpLine):
+
+    def end_handles(self):
+        return [self.from_handle(), self.to_handle()]
+
+    def reset_from_port(self):
+        self._from_port = None
+
+    def reset_to_port(self):
+        self._to_port = None
+
+    def set_port_for_handle(self, port, handle):
+        if handle is self.from_handle():
+            self.from_port = port
+        elif handle is self.to_handle():
+            self.to_port = port
+
+    def reset_port_for_handle(self, handle):
+        if handle is self.from_handle():
+            self.reset_from_port()
+        elif handle is self.to_handle():
+            self.reset_to_port()
+
+    def remove_connection_from_port(self, port):
+        if self._from_port and port is self._from_port:
+            self._from_port.remove_connected_handle(self._from_handle)
+        elif self._to_port and port is self._to_port:
+            self._to_port.remove_connected_handle(self._to_handle)
+
+    def remove_connection_from_ports(self):
+        if self._from_port:
+            self._from_port.remove_connected_handle(self._from_handle)
+            self._from_port.tmp_disconnect()
+        if self._to_port:
+            self._to_port.remove_connected_handle(self._to_handle)
+            self.to_port.tmp_disconnect()
 
 
 class ConnectionPlaceholderView(ConnectionView):

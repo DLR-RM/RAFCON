@@ -50,6 +50,7 @@ class GraphicalEditorController(ExtendedController):
         assert self.view == view
         self.setup_canvas()
         self.view.connect('new_state_selection', self._select_new_states)
+        self.view.connect('deselect_states', self._deselect_states)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('remove_scoped_variable_from_state', self._remove_scoped_variable_from_state)
         self.view.connect('meta_data_changed', self._meta_data_changed)
@@ -95,6 +96,10 @@ class GraphicalEditorController(ExtendedController):
                         states_to_select.append(state.model)
             self.model.selection.clear()
             self.model.selection.set(states_to_select)
+
+    def _deselect_states(self, view):
+        self.deselect_all_items()
+        self.model.selection.clear()
 
     def _meta_data_changed(self, view, model, name, affects_children):
         self.model.state_machine.marked_dirty = True
@@ -282,8 +287,6 @@ class GraphicalEditorController(ExtendedController):
         state_v = None
 
         for state_m in info['args'][0].get_states():
-            if state_m is self.root_state_m:
-                continue
             state_v = self.get_view_for_model(state_m)
             state_v.selected = True
             self.view.editor.select_item(state_v)
