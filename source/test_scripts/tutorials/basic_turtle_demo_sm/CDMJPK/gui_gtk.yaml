@@ -2,7 +2,7 @@
 gui: !Vividict
     editor: !Vividict
         invert_y: false
-        rel_pos: !!python/tuple [10.094143178827, -9.905856821173]
+        rel_pos: !!python/tuple [10, 10]
         size: !!python/tuple [215.3174867021276, 128.82937167553192]
 income: !Vividict
     gui: !Vividict
