@@ -1,12 +1,9 @@
 from gaphas.canvas import Canvas
 from gaphas.solver import Projection
 from gaphas.decorators import nonrecursive, async, PRIORITY_HIGH_IDLE
-from gaphas.constraint import PositionConstraint
 
 from awesome_tool.mvc.views.gap.state import StateView, NameView
 from awesome_tool.mvc.views.gap.constraint import KeepRectangleWithinConstraint
-
-from time import clock
 
 
 class MyCanvas(Canvas):
@@ -58,7 +55,6 @@ class MyCanvas(Canvas):
             self._dirty_matrix_items.clear()
 
             self.update_outer_constraints(dirty_matrix_items)
-            # self.update_constraints(dirty_matrix_items)
 
             # no matrix can change during constraint solving
             assert not self._dirty_matrix_items, 'No matrices may have been marked dirty (%s)' % (self._dirty_matrix_items,)
@@ -93,19 +89,9 @@ class MyCanvas(Canvas):
         self._update_views(dirty_items, dirty_matrix_items)
 
     def update_outer_constraints(self, items):
-        from awesome_tool.mvc.views.gap.connection import ConnectionView
         assert len(items) == 1
         request_resolve = self._solver.request_resolve
         for item in items:
-            parent = self.get_parent(item)
-            if parent:
-                for child in self.get_children(parent):
-                    if isinstance(child, ConnectionView):
-                        all_ports = item.get_all_ports()
-                        if child.from_port in all_ports or child.to_port in all_ports:
-                            for p in child._canvas_projections:
-                                request_resolve(p[0], projections_only=True)
-                                request_resolve(p[1], projections_only=True)
             for p in item._canvas_projections:
                 p0 = self.get_var(p[0])
                 p1 = self.get_var(p[1])
@@ -118,7 +104,6 @@ class MyCanvas(Canvas):
                 for cons in p1._constraints:
                     if isinstance(cons, KeepRectangleWithinConstraint) and cons.child is not item:
                         p1_cons_to_remove.add(cons)
-
                 for rem in p0_cons_to_remove:
                     p0._constraints.remove(rem)
                 for rem in p1_cons_to_remove:
@@ -139,20 +124,13 @@ class MyCanvas(Canvas):
         constraint solver kicks in.
         """
         # request solving of external constraints associated with dirty items
-        tic = clock()
         request_resolve = self._solver.request_resolve
         for item in items:
             for p in item._canvas_projections:
                 request_resolve(p[0], projections_only=True)
                 request_resolve(p[1], projections_only=True)
-        toc = clock()
-        print "in update_constraints - request_resolve: %.20f" % (toc - tic)
-        tic = clock()
         # solve all constraints
         self._solver.solve()
-        toc = clock()
-        print "in update_constraints - solve: %.20f" % (toc - tic)
-        print "-------------------------"
 
     def update_matrices(self, items):
         return self._update_matrices_moving(items)

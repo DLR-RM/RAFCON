@@ -4,3 +4,24 @@ gui: !Vividict
         invert_y: false
         rel_pos: !!python/tuple [4.455818815572357, 25.97876123889681]
         size: !!python/tuple [6.924413686068874, 5.613563443761585]
+income: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !!python/tuple [3.5390565315607283, 0.1875]
+name: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+            size: !Vividict {}
+outcome-1: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+outcome-2: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+outcome0: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}

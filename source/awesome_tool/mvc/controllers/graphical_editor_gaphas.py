@@ -396,14 +396,14 @@ class GraphicalEditorController(ExtendedController):
         parent_state_v = self.get_view_for_model(parent_state_m)
 
         new_state_side_size = min(parent_state_v.width * 0.2, parent_state_v.height * 0.2)
-        new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
+        new_state_hierarchy_level = parent_state_v.hierarchy_level * 2
 
         new_state_v = StateView(state_m, (new_state_side_size, new_state_side_size), new_state_hierarchy_level)
 
         state_m.temp['gui']['editor']['view'] = new_state_v
 
         self.canvas.add(new_state_v, parent_state_v)
-        port_side_size = min(parent_state_v.width, parent_state_v.height) / 20.
+        port_side_size = 3. / new_state_hierarchy_level
         new_state_v.matrix.translate(port_side_size, port_side_size)
 
         for outcome_m in state_m.outcomes:
@@ -546,7 +546,7 @@ class GraphicalEditorController(ExtendedController):
                 child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
                 num_child_state += 1
 
-                self.setup_state(child_state, state_v, child_rel_pos, child_size, hierarchy_level + 1)
+                self.setup_state(child_state, state_v, child_rel_pos, child_size, hierarchy_level * 2)
 
             # if global_gui_config.get_config_value('show_data_flows', True):
             #     self.draw_inner_data_ports(state_m, depth)

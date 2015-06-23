@@ -1,9 +1,11 @@
 !LibraryState
 filename: script.py
 input_data_ports:
-    10: !DataPort {data_port_id: 10, data_type: str, default_value: new_turtle, name: turtle_name}
-    11: !DataPort {data_port_id: 11, data_type: float, default_value: 1.0, name: x_vel}
-    12: !DataPort {data_port_id: 12, data_type: float, default_value: 0.3, name: phi_vel}
+    10: !DataPort {data_port_id: 10, data_type: !!python/name:__builtin__.str '',
+        default_value: new_turtle, name: turtle_name}
+    11: !DataPort {data_port_id: 11, data_type: &id001 !!python/name:__builtin__.float '',
+        default_value: 1.0, name: x_vel}
+    12: !DataPort {data_port_id: 12, data_type: *id001, default_value: 0.3, name: phi_vel}
 library_name: set_velocity
 library_path: turtle_libraries
 name: set velocity1

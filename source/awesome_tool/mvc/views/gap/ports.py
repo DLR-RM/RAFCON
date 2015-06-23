@@ -40,7 +40,7 @@ class SnappedSide(Enum):
 
 class PortView(object):
 
-    def __init__(self, in_port, name=None, parent=None, side=SnappedSide.RIGHT):
+    def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
         self.side = side
@@ -58,8 +58,12 @@ class PortView(object):
 
         self._is_in_port = in_port
 
-        self.port_side_size = 0.
+        self._port_side_size = port_side_size
         self.update_port_side_size()
+
+    @property
+    def port_side_size(self):
+        return self._port_side_size
 
     @property
     def name(self):
@@ -80,10 +84,6 @@ class PortView(object):
     @property
     def port_pos(self):
         return self.port.point
-
-    # @property
-    # def connected_handles(self):
-    #     return self._connected_handles.iterkeys()
 
     def has_outgoing_connection(self):
         return len(self._outgoing_handles) > 0
@@ -313,16 +313,17 @@ class PortView(object):
                 c.line_to(pos.x, pos.y - side_quarter)
 
     def update_port_side_size(self):
-        if self._parent:
-            self.port_side_size = min(self._parent.width, self._parent.height) / 20.
-        else:
-            self.port_side_size = 5.
+        return
+        # if self._parent:
+        #     self._port_side_size = min(self._parent.width, self._parent.height) / 20.
+        # else:
+        #     self._port_side_size = 5.
 
 
 class IncomeView(PortView):
 
-    def __init__(self, parent):
-        super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
+    def __init__(self, parent, port_side_size):
+        super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent, side=SnappedSide.LEFT)
 
     def draw(self, context, state):
         self.draw_port(context, "#fff")
@@ -330,8 +331,8 @@ class IncomeView(PortView):
 
 class OutcomeView(PortView):
 
-    def __init__(self, outcome_m, parent):
-        super(OutcomeView, self).__init__(in_port=False, name=outcome_m.outcome.name, parent=parent)
+    def __init__(self, outcome_m, parent, port_side_size):
+        super(OutcomeView, self).__init__(in_port=False, port_side_size=port_side_size, name=outcome_m.outcome.name, parent=parent)
 
         assert isinstance(outcome_m, OutcomeModel)
         self._outcome_m = ref(outcome_m)
@@ -363,10 +364,12 @@ class OutcomeView(PortView):
 class ScopedDataPortView(PortView):
 
     def __init__(self, in_port, parent, scoped_variable_m, side):
-        super(ScopedDataPortView, self).__init__(in_port=in_port, parent=parent, side=side)
+        super(ScopedDataPortView, self).__init__(in_port=in_port, port_side_size=0, parent=parent, side=side)
 
         assert isinstance(scoped_variable_m, ScopedVariableModel)
         self._scoped_variable_m = ref(scoped_variable_m)
+
+        self.update_port_side_size()
 
     @property
     def scoped_variable_m(self):
@@ -381,9 +384,9 @@ class ScopedDataPortView(PortView):
 
     def update_port_side_size(self):
         if self._parent:
-            self.port_side_size = min(self._parent.width, self._parent.height) / 5.
+            self._port_side_size = min(self._parent.width, self._parent.height) / 5.
         else:
-            self.port_side_size = 5.
+            self._port_side_size = 5.
 
 
 class ScopedDataInputPortView(ScopedDataPortView):
@@ -400,9 +403,9 @@ class ScopedDataOutputPortView(ScopedDataPortView):
 
 class DataPortView(PortView):
 
-    def __init__(self, in_port, parent, port_m, side):
+    def __init__(self, in_port, parent, port_m, side, port_side_size):
         assert isinstance(port_m, DataPortModel)
-        super(DataPortView, self).__init__(in_port=in_port, name=port_m.data_port.name, parent=parent, side=side)
+        super(DataPortView, self).__init__(in_port=in_port, port_side_size=port_side_size, name=port_m.data_port.name, parent=parent, side=side)
 
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
@@ -425,11 +428,11 @@ class DataPortView(PortView):
 
 class InputPortView(DataPortView):
 
-    def __init__(self, parent, port_m):
-        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT)
+    def __init__(self, parent, port_m, port_side_size):
+        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size)
 
 
 class OutputPortView(DataPortView):
 
-    def __init__(self, parent, port_m):
-        super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT)
+    def __init__(self, parent, port_m, port_side_size):
+        super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT, port_side_size)

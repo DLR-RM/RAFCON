@@ -1,7 +1,8 @@
 !LibraryState
 filename: script.py
 input_data_ports:
-    13: !DataPort {data_port_id: 13, data_type: str, default_value: new_turtle, name: turtle_name}
+    13: !DataPort {data_port_id: 13, data_type: !!python/name:__builtin__.str '',
+        default_value: new_turtle, name: turtle_name}
 library_name: kill_turtle
 library_path: turtle_libraries
 name: kill turtle

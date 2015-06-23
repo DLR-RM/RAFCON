@@ -107,7 +107,7 @@ class StateView(Element):
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
-        port_side_size = min(parent.width, parent.height) / 20.
+        port_side_size = parent.port_side_size
 
         child_nw_abs = canvas.project(child, child.handles()[NW].pos)
         child_se_abs = canvas.project(child, child.handles()[SE].pos)
@@ -128,7 +128,8 @@ class StateView(Element):
 
     @property
     def port_side_size(self):
-        return min(self.width, self.height) / 20.
+        # return min(self.width, self.height) / 20.
+        return 3. / self.hierarchy_level
 
     @property
     def parent(self):
@@ -169,7 +170,7 @@ class StateView(Element):
     @staticmethod
     def get_state_drawing_area(state):
         assert isinstance(state, StateView)
-        port_side_size = min(state.width, state.height) / 20.
+        port_side_size = state.port_side_size
 
         state_nw_pos_x = state.handles()[NW].pos.x + port_side_size
         state_nw_pos_y = state.handles()[NW].pos.y + port_side_size
@@ -181,7 +182,7 @@ class StateView(Element):
         return state_nw_pos, state_se_pos
 
     def draw(self, context):
-        if self.moving and self.parent.moving:
+        if self.moving and self.parent and self.parent.moving:
             return
         c = context.cairo
 
@@ -220,9 +221,9 @@ class StateView(Element):
             output.draw(context, self)
 
         if self.moving:
-            self._draw_moving_text(context)
+            self._draw_moving_symbol(context)
 
-    def _draw_moving_text(self, context):
+    def _draw_moving_symbol(self, context):
         c = context.cairo
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
@@ -237,7 +238,7 @@ class StateView(Element):
         layout = pcc.create_layout()
 
         font_name = constants.FONT_NAMES[1]
-        font_size = 20
+        font_size = 30
 
         def set_font_description():
             layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
@@ -246,7 +247,11 @@ class StateView(Element):
                               'f047'))
 
         set_font_description()
-        while layout.get_size()[0] / float(SCALE) > self.width or layout.get_size()[1] / float(SCALE) > self.height:
+
+        max_width = self.width - 2 * self.port_side_size
+        max_height = self.height - 2 * self.port_side_size
+
+        while layout.get_size()[0] / float(SCALE) > max_width or layout.get_size()[1] / float(SCALE) > max_height:
             font_size *= 0.9
             set_font_description()
 
@@ -322,7 +327,7 @@ class StateView(Element):
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
     def add_income(self):
-        income_v = IncomeView(self)
+        income_v = IncomeView(self, self.port_side_size)
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
 
@@ -335,7 +340,7 @@ class StateView(Element):
         return income_v
 
     def add_outcome(self, outcome_m):
-        outcome_v = OutcomeView(outcome_m, self)
+        outcome_v = OutcomeView(outcome_m, self, self.port_side_size)
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
@@ -362,7 +367,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
 
     def add_input_port(self, port_m):
-        input_port_v = InputPortView(self, port_m)
+        input_port_v = InputPortView(self, port_m, self.port_side_size)
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
@@ -389,7 +394,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
 
     def add_output_port(self, port_m):
-        output_port_v = OutputPortView(self, port_m)
+        output_port_v = OutputPortView(self, port_m, self.port_side_size)
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
@@ -438,9 +443,9 @@ class StateView(Element):
         else:
             new_pos_x = self.width
         if logic:
-            new_pos_y = self.height * .05
+            new_pos_y = self.height * .15
         else:
-            new_pos_y = self.height * .95
+            new_pos_y = self.height * .85
 
         position_found = False
         all_ports = self.get_all_ports()
