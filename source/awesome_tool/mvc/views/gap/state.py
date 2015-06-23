@@ -1,8 +1,6 @@
 from weakref import ref
 
 import cairo
-# import pango
-from pangocairo import CairoContext
 from pango import SCALE, FontDescription
 
 from gtk.gdk import CairoContext, Color
@@ -11,17 +9,12 @@ from copy import copy
 
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
-from gaphas.painter import CairoBoundingBoxContext
-
-from gaphas.util import text_align, text_set_font, text_extents
 
 from awesome_tool.mvc.views.gap.constraint import KeepRectangleWithinConstraint, PortRectConstraint
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, SnappedSide
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.models.state import StateModel
-
-from awesome_tool.statemachine.enums import StateExecutionState
 
 from awesome_tool.utils import constants, log
 logger = log.get_logger(__name__)
@@ -56,6 +49,7 @@ class StateView(Element):
 
         self.hovered = False
         self.selected = False
+        self.moving = False
 
         if not isinstance(state_m.meta['name']['gui']['editor']['size'], tuple):
             name_width = self.width * 0.8
@@ -104,6 +98,11 @@ class StateView(Element):
         port_list += self.outputs
         port_list += self.scoped_variables
         return port_list
+
+    def set_children_moving(self, moving):
+        for child in self.canvas.get_all_children(self):
+            if isinstance(child, (StateView, NameView)):
+                child.moving = moving
 
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
@@ -182,6 +181,8 @@ class StateView(Element):
         return state_nw_pos, state_se_pos
 
     def draw(self, context):
+        if self.moving and self.parent.moving:
+            return
         c = context.cairo
 
         c.set_line_width(0.1 / self.hierarchy_level)
@@ -217,6 +218,43 @@ class StateView(Element):
 
         for output in self._outputs:
             output.draw(context, self)
+
+        if self.moving:
+            self._draw_moving_text(context)
+
+    def _draw_moving_text(self, context):
+        c = context.cairo
+
+        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
+        if isinstance(c, CairoContext):
+            cc = c
+        else:
+            cc = c._cairo
+
+        pcc = CairoContext(cc)
+        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        layout = pcc.create_layout()
+
+        font_name = constants.FONT_NAMES[1]
+        font_size = 20
+
+        def set_font_description():
+            layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
+                              (font_name,
+                              font_size,
+                              'f047'))
+
+        set_font_description()
+        while layout.get_size()[0] / float(SCALE) > self.width or layout.get_size()[1] / float(SCALE) > self.height:
+            font_size *= 0.9
+            set_font_description()
+
+        c.move_to(self.width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
+                  self.height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
+        cc.set_source_color(Color('#ededee'))
+        pcc.update_layout(layout)
+        pcc.show_layout(layout)
 
     def connect_to_income(self, item, handle):
         self._income.add_connected_handle(handle, item)
@@ -530,6 +568,8 @@ class NameView(Element):
         self.width = size[0]
         self.height = size[1]
 
+        self.moving = False
+
     @property
     def name(self):
         return self._name
@@ -539,7 +579,14 @@ class NameView(Element):
         assert isinstance(name, str)
         self._name = name
 
+    @property
+    def parent(self):
+        return self.canvas.get_parent(self)
+
     def draw(self, context):
+        if self.moving:
+            return
+
         c = context.cairo
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)

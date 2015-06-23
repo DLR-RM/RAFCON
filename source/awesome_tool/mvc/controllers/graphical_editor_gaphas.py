@@ -14,6 +14,7 @@ from awesome_tool.mvc.views.gap.state import StateView
 from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView
 
 from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.mvc.views.gap.canvas import MyCanvas
 
 from gaphas import Canvas
 import gaphas.guide
@@ -38,7 +39,7 @@ class GraphicalEditorController(ExtendedController):
         # assert isinstance(self.view.editor, GraphicalEditor)
         self.root_state_m = model.root_state
 
-        self.canvas = Canvas()
+        self.canvas = MyCanvas()
         self.zoom = 3.
 
         view.setup_canvas(self.canvas, self.zoom)

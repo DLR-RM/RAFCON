@@ -62,12 +62,34 @@ class MyItemTool(ItemTool):
         super(MyItemTool, self).__init__(view, buttons)
         self._graphical_editor_view = graphical_editor_view
 
+        self._item = None
+
+    def set_moving(self):
+        if not self._item.moving:
+            self._item.moving = True
+            self._item.set_children_moving(True)
+
     def on_button_press(self, event):
         super(MyItemTool, self).on_button_press(event)
+
+        item = self.get_item()
+        if isinstance(item, StateView):
+            self._item = item
 
         if not self.view.is_focus():
             self.view.grab_focus()
         self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
+
+        return True
+
+    def on_button_release(self, event):
+        if isinstance(self._item, StateView):
+            self._item.moving = False
+            self._item.set_children_moving(False)
+            self.view.canvas.request_update(self._item)
+            self._item = None
+
+        return super(MyItemTool, self).on_button_release(event)
 
     def on_motion_notify(self, event):
         """
@@ -75,6 +97,9 @@ class MyItemTool(ItemTool):
         If a button is pressed move the items around.
         """
         if event.state & gtk.gdk.BUTTON_PRESS_MASK:
+
+            if self._item:
+                self.set_moving()
 
             if not self._movable_items:
                 self._movable_items = set(self.movable_items())
