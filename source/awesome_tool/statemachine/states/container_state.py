@@ -19,9 +19,9 @@ from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.data_flow import DataFlow
 from awesome_tool.statemachine.scope import ScopedData, ScopedVariable
 from awesome_tool.statemachine.id_generator import *
-from awesome_tool.statemachine.config import Config, CONFIG_FILE, global_config
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
 import awesome_tool.statemachine.singleton
+from awesome_tool.utils.type_helpers import type_inherits_of_type
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -191,11 +191,12 @@ class ContainerState(State):
 
         """
 
-        # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
-        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
-        if own_sm_id is not None:
-            awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
-                own_sm_id, state.script.path)
+        if not storage_load:
+            # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
+            own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+            if own_sm_id is not None:
+                awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
+                    own_sm_id, state.script.path)
 
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
@@ -441,7 +442,7 @@ class ContainerState(State):
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
-        if result_transition is None:
+        if result_transition is None and outcome.outcome_id >= 0:
             logger.warn("No transition found for state with name %s!" % self.name)
         return result_transition
 
@@ -636,7 +637,7 @@ class ContainerState(State):
                                          (str(to_data_port_id), str(to_state_id)))
 
         # check if the data types of the tow ports are the same
-        if not from_data_port.data_type == to_data_port.data_type:
+        if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
             raise AttributeError("The from data port and the to data port do not have the same data type (%s and %s)" %
                                  (str(from_data_port.data_type), str(to_data_port.data_type)))
 
@@ -900,14 +901,14 @@ class ContainerState(State):
             for input_data_port_key, data_port in self.input_data_ports.iteritems():
                 if dict_key == data_port.name:
                     self.scoped_data[str(input_data_port_key)+self.state_id] =\
-                        ScopedData(data_port.name, value, type(value).__name__, self.state_id, DataPortType.INPUT)
+                        ScopedData(data_port.name, value, type(value), self.state_id, DataPortType.INPUT)
                     # forward the data to scoped variables
                     for data_flow_key, data_flow in self.data_flows.iteritems():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
                             if data_flow.to_state == self.state_id:
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
                                 self.scoped_data[str(data_flow.to_key)+self.state_id] = \
-                                    ScopedData(current_scoped_variable.name, value, type(value).__name__, self.state_id,
+                                    ScopedData(current_scoped_variable.name, value, type(value), self.state_id,
                                                DataPortType.SCOPED)
 
     def add_state_execution_output_to_scoped_data(self, dictionary, state):
@@ -920,7 +921,7 @@ class ContainerState(State):
             for output_data_port_key, data_port in state.output_data_ports.iteritems():
                 if output_name == data_port.name:
                     self.scoped_data[str(output_data_port_key)+state.state_id] =\
-                        ScopedData(data_port.name, value, type(value).__name__, state.state_id, DataPortType.OUTPUT)
+                        ScopedData(data_port.name, value, type(value), state.state_id, DataPortType.OUTPUT)
 
     def add_default_values_of_scoped_variables_to_scoped_data(self):
         """Add the scoped variables default values to the scoped_data dictionary
@@ -955,7 +956,7 @@ class ContainerState(State):
                         if data_flow.to_key in self.scoped_variables.iterkeys():  # is target data port scoped?
                             current_scoped_variable = self.scoped_variables[data_flow.to_key]
                             self.scoped_data[str(data_flow.to_key) + self.state_id] = \
-                                ScopedData(current_scoped_variable.name, value, type(value).__name__, state.state_id,
+                                ScopedData(current_scoped_variable.name, value, type(value), state.state_id,
                                            DataPortType.SCOPED)
 
     # ---------------------------------------------------------------------------------------------

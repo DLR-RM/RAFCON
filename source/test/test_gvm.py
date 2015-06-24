@@ -6,14 +6,25 @@ def test_references():
     gvm = GlobalVariableManager()
     d = {'a': 1, 'b': 2}
 
-    gvm.set_variable('d', d, True)
-    _d = gvm.get_variable('d', True)
+    # Test access by reference
+    gvm.set_variable('d', d, per_reference=True)
+    _d = gvm.get_variable('d', per_reference=True)
     d['a'] = 3
     assert d['a'] == _d['a'] == 3
-    __d = gvm.get_variable('d', True)
+    __d = gvm.get_variable('d', per_reference=True)
     assert d['a'] == __d['a'] == 3
+    ___d = gvm.get_variable('d')
+    d['a'] = 4
+    assert d['a'] == __d['a'] == ___d['a'] == 4
 
-    dc = gvm.get_variable('d', False)
+    # Test set by reference, get by copy
+    gvm.set_variable('x', d, per_reference=True)
+    cd = gvm.get_variable('x', per_reference=False)
+    d['a'] = 5
+    assert d['a'] == 5 and cd['a'] == 4
+
+    # Test access by copy
+    dc = gvm.get_variable('d', per_reference=False)
     d['b'] = 5
     assert d['a'] == dc['a']
     assert d['b'] != dc['b']

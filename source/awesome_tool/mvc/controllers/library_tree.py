@@ -160,7 +160,10 @@ class LibraryTreeController(ExtendedController):
         current_state_model.states[state_machine.root_state.state_id].temp['gui']['editor']['recalc'] = True
 
     def open_button_clicked(self, widget):
-        self.open_library_as_state_machine()
+        try:
+            self.open_library_as_state_machine()
+        except AttributeError as e:
+            logger.error("Could not open library: {0}".format(e))
 
     def open_run_button_clicked(self, widget):
         state_machine = self.open_library_as_state_machine()

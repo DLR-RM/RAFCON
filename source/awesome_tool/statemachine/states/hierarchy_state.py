@@ -7,7 +7,6 @@
 
 
 """
-import yaml
 import traceback
 
 from awesome_tool.statemachine.states.container_state import ContainerState
@@ -20,7 +19,7 @@ from awesome_tool.statemachine.enums import MethodName
 from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem
 
 
-class HierarchyState(ContainerState, yaml.YAMLObject):
+class HierarchyState(ContainerState):
 
     """A class tto represent a hierarchy state for the state machine
 
@@ -173,29 +172,22 @@ class HierarchyState(ContainerState, yaml.YAMLObject):
 
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
-            # notify other threads that wait for this thread to finish
-            if self.concurrency_queue:
-                self.concurrency_queue.put(self.state_id)
-
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
-                return
 
-            logger.debug("Return from hierarchy state %s", self.name)
-            return
+            logger.debug("Returning from hierarchy state {0}".format(self.name))
+            return self.finalize(self.final_outcome)
 
         except Exception, e:
-            if str(e) == "child_state stopped":
-                logger.debug("State %s was stopped!" % self.name)
+            if str(e) == "child_state stopped" or str(e) == "state stopped":
+                logger.debug("State '{0}' was stopped!".format(self.name))
             else:
-                logger.error("State %s had an internal error: %s %s" % (self.name, str(e), str(traceback.format_exc())))
-            # notify other threads that wait for this thread to finish
-            if self.concurrency_queue:
-                self.concurrency_queue.put(self.state_id)
-            self.final_outcome = Outcome(-1, "aborted")
+                logger.error("State '{0}' had an internal error: {1}\n{2}".finalize(
+                    self.name, str(e), str(traceback.format_exc())))
+
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-            return
+            return self.finalize(Outcome(-1, "aborted"))
 
     @classmethod
     def to_yaml(cls, dumper, data):

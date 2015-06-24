@@ -42,6 +42,7 @@ class ShortcutManager():
             'entry': '<Control>E',
             'fit': '<Control>space',
             'info': '<Control>I',
+            'rename': 'F2',
             'start': 'F5',
             'step_mode': 'F6',
             'pause': 'F7',
@@ -87,7 +88,7 @@ class ShortcutManager():
                     return action
         return None
 
-    def add_callback_for_action(self, action, callback):
+    def add_callback_for_action(self, action, callback, *parameters):
         """Adds a callback function to an action
 
         The method checks whether both action and callback are valid. If so, the callback is added to the list of
@@ -97,14 +98,12 @@ class ShortcutManager():
         parameter
         :return: True is the parameters are valid and the callback is registered, False else
         """
-        #print "check add callback"
         if action in self.__action_to_shortcuts:  # Is the action valid?
             if hasattr(callback, '__call__'):  # Is the callback really a function?
                 if action not in self.__action_to_callbacks:
                     self.__action_to_callbacks[action] = []
                 assert isinstance(self.__action_to_callbacks[action], list)
                 self.__action_to_callbacks[action].append(callback)
-                #print "add callback"
                 return True
         return False
 

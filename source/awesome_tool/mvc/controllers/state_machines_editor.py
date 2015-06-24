@@ -233,8 +233,6 @@ class StateMachinesEditorController(ExtendedController):
             self.model.selected_state_machine_id = \
                 self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
         else:
-            logger.warn("No state machine left to be the selected state machine. "
-                        "The selected state machine id will be None!")
             self.model.selected_state_machine_id = None
 
         if state_machine_model.state_machine.marked_dirty:

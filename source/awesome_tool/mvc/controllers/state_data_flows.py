@@ -3,7 +3,7 @@ import gobject
 from gtk import ListStore, TreeStore
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.statemachine.states.library_state import LibraryState
-
+from awesome_tool.utils import type_helpers
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -108,7 +108,7 @@ class StateDataFlowsListController(ExtendedController):
                     for to_state_id, elems in self.free_to_port_internal.iteritems():
                         # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
                         for to_port in elems:
-                            if from_port.data_type == to_port.data_type:
+                            if type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type):
                                 if depend_to_state_id is None or depend_to_state_id in [from_state_id, to_state_id]:
                                     internal_data_flows.append((from_state_id, from_port.data_port_id,
                                                                 to_state_id, to_port.data_port_id))
@@ -122,7 +122,7 @@ class StateDataFlowsListController(ExtendedController):
                     for to_state_id, elems in self.free_to_port_external.iteritems():
                         # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
                         for to_port in elems:
-                            if from_port.data_type == to_port.data_type:
+                            if type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type):
                                 if depend_to_state_id is None or depend_to_state_id in [from_state_id, to_state_id]:
                                     external_data_flows.append((from_state_id, from_port.data_port_id,
                                                                 to_state_id, to_port.data_port_id))
@@ -330,7 +330,8 @@ def get_key_combos(ports, keys_store, port_type, not_key=None):
         # print type(ports), "\n", ports
         if type(ports) == type(list):
             for scope in ports:
-                keys_store.append([scope.data_port.data_type + '.' + scope.data_port.name + '.' + scope.data_port.port_id])
+                keys_store.append([scope.data_port.data_type.__name__ + '.' + scope.data_port.name + '.' +
+                                   scope.data_port.port_id])
         elif ports:
             # print ports
             try:
@@ -402,10 +403,11 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     break
 
             from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
-            from_key_label = from_key_port.data_type + '.' + from_key_port.name + '.' + str(data_flow.from_key)
+            from_key_label = from_key_port.data_type.__name__ + '.' + from_key_port.name + '.' + str(data_flow.from_key)
             to_key_port = tstate.get_data_port_by_id(data_flow.to_key)
 
-            to_key_label = (to_key_port.data_type or 'None') + '.' + to_key_port.name + '.' + str(data_flow.to_key)
+            to_key_label = (to_key_port.data_type.__name__ or 'None') + '.' + to_key_port.name + '.' + str(
+                data_flow.to_key)
             data_flow_dict['internal'][data_flow.data_flow_id] = {'from_state': from_state,
                                                                   'from_key': from_key_label,
                                                                   'to_state': to_state,
@@ -497,9 +499,10 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                         break
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
                 from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
-                from_key_label = from_key_port.data_type + '.' + from_key_port.name + '.' + str(data_flow.from_key)
+                from_key_label = from_key_port.data_type.__name__ + '.' + from_key_port.name + '.' + str(
+                    data_flow.from_key)
                 to_key_port = tstate.get_data_port_by_id(data_flow.to_key)
-                to_key_label = to_key_port.data_type + '.' + to_key_port.name + '.' + str(data_flow.to_key)
+                to_key_label = to_key_port.data_type.__name__ + '.' + to_key_port.name + '.' + str(data_flow.to_key)
                 data_flow_dict['external'][data_flow.data_flow_id] = {'from_state': from_state,
                                                                       'from_key': from_key_label,
                                                                       'to_state': to_state,
@@ -553,13 +556,15 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     for port in free_to_port_external[data_flow.to_state]:
                         to_state = get_state_model(model.parent, data_flow.to_state).state
                         if not port.data_port_id == data_flow.from_key:
-                            to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
+                            to_keys_store.append([port.data_type.__name__ + '.' + port.name + '.' + str(
+                                port.data_port_id)])
                 else:
                     if get_state_model(model.parent, data_flow.to_state):
                         to_state_model = get_state_model(model.parent, data_flow.to_state)
                         port = to_state_model.state.get_data_port_by_id(data_flow.to_key)
                         if not port.data_port_id == data_flow.from_key:
-                            to_keys_store.append([port.data_type + '.' + port.name + '.' + str(port.data_port_id)])
+                            to_keys_store.append([port.data_type.__name__ + '.' + port.name + '.' + str(
+                                port.data_port_id)])
 
                 tree_dict_combos['external'][data_flow.data_flow_id] = {'from_state': from_states_store,
                                                                         'from_key': from_keys_store,

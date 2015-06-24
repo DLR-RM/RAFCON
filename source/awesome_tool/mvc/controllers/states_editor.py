@@ -132,6 +132,13 @@ class StatesEditorController(ExtendedController):
         if self._selected_state_machine_model:
             self.add_state_editor(self._selected_state_machine_model.root_state, self.editor_type)
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
+
     def add_state_editor(self, state_model, editor_type=None):
         sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
         state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
@@ -140,6 +147,7 @@ class StatesEditorController(ExtendedController):
 
         state_editor_view = StateEditorView()
         state_editor_ctrl = StateEditorController(state_model, state_editor_view)
+
 
         tab_label_text = limit_tab_label_text("%s|%s" % (sm_id, str(state_model.state.name)))
         (evtbox, new_label) = create_tab_header(tab_label_text, self.on_destroy_clicked,
@@ -273,7 +281,7 @@ class StatesEditorController(ExtendedController):
         assert isinstance(selection, Selection)
         # logger.debug("The viewer should jump as selected to tab in states_editor %s %s %s" % (info.instance, model, property))
         if selection.get_num_states() == 1 and len(selection) == 1:
-            self.change_state_editor_selection(info.instance.get_states()[0])
+            self.change_state_editor_selection(selection.get_states()[0])
 
     @ExtendedController.observe("state", before=True)
     @ExtendedController.observe("states", before=True)
@@ -335,3 +343,19 @@ class StatesEditorController(ExtendedController):
         for identifier, tab in self.tabs.iteritems():
             if tab["page"] is page:  # reference comparison on purpose
                 return identifier
+
+    def rename_selected_state(self, key_value, modifier_mask):
+        """Callback method for shortcut action rename
+
+        Searches for a single selected state model and open the according page. Page is created if it is not
+        existing. Then the rename method of the state controller is called.
+        :param key_value:
+        :param modifier_mask:
+        """
+        selection = self._selected_state_machine_model.selection
+        if selection.get_num_states() == 1 and len(selection) == 1:
+            selected_state = selection.get_states()[0]
+            self.change_state_editor_selection(selected_state)
+            _, state_identifier = self.find_page_of_state_model(selected_state)
+            state_controller = self.tabs[state_identifier]['ctrl']
+            state_controller.rename()

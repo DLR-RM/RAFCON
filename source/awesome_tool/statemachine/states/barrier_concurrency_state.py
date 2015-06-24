@@ -8,7 +8,6 @@
 
 """
 
-import yaml
 import traceback
 from gtkmvc import Observable
 
@@ -23,7 +22,7 @@ from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 
-class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
+class BarrierConcurrencyState(ConcurrencyState):
     """ The barrier concurrency holds a list of states that are executed in parallel. It waits until all states
         finished their execution before it returns.
 
@@ -114,12 +113,9 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                     assert isinstance(last_history_item, ConcurrencyItem)
 
                     # do not write the output of the entry script
-                    # final outcome is not important as the execution order is fixed during backward stepping
                     self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                    if self.concurrency_queue:
-                        self.concurrency_queue.put(self.state_id)
                     logger.debug("Backward leave the barrier concurrency state with name %s" % (self.name))
-                    return
+                    return self.finalize()
                 else:
                     self.backward_execution = False
 
@@ -159,7 +155,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
                 # this is the case if the user stops the sm execution, this will be caught at the end of the run method
                 raise RuntimeError("decider_state stopped")
 
-            self.final_outcome = self.outcomes[transition.to_outcome]
+            outcome = self.outcomes[transition.to_outcome]
 
             #######################################################
             # decider execution finished
@@ -171,20 +167,16 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
 
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
-            if self.concurrency_queue:
-                self.concurrency_queue.put(self.state_id)
-
             if self.preempted:
-                self.final_outcome = Outcome(-2, "preempted")
+                outcome = Outcome(-2, "preempted")
 
-            return
+            return self.finalize(outcome)
 
         except Exception, e:
-            logger.error("Runtime error %s %s" % (e, str(traceback.format_exc())))
-            self.final_outcome = Outcome(-1, "aborted")
+            logger.error("Runtime error: {0}\n{1}".format(e, str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-            return
+            return self.finalize(Outcome(-1, "aborted"))
 
     @Observable.observed
     def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None,
@@ -298,7 +290,7 @@ class BarrierConcurrencyState(ConcurrencyState, yaml.YAMLObject):
         return state
 
 
-class DeciderState(ExecutionState, yaml.YAMLObject):
+class DeciderState(ExecutionState):
 
     """A class to represent a state for deciding the exit of barrier concurrency state
 

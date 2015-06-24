@@ -147,3 +147,7 @@ class StateEditorController(ExtendedController):
             logger.debug("Changed description of state {0}".format(self.model.state.name))
             self.model.state.description = entry_text
             self.view['description_text_view'].get_buffer().set_text(self.model.state.description)
+
+    def rename(self):
+        state_overview_controller = self.get_controller('properties_ctrl')
+        state_overview_controller.rename()
