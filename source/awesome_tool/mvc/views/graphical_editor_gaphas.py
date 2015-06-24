@@ -12,6 +12,7 @@ from gaphas import painter
 from awesome_tool.mvc.controllers.gap.tools import MyConnectHandleTool, MyHoverTool, MyDeleteTool, MyItemTool, \
     MultiselectionTool
 from awesome_tool.mvc.controllers.gap.painter import MyHandlePainter
+from awesome_tool.mvc.views.gap.view import ExtendedGtkView
 
 
 class GraphicalEditorView(View, gobject.GObject):
@@ -28,7 +29,7 @@ class GraphicalEditorView(View, gobject.GObject):
 
         self.v_box = gtk.VBox()
         self.scroller = gtk.ScrolledWindow()
-        self.editor = GtkView()
+        self.editor = ExtendedGtkView()
         self.editor.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#272c36'))
         self.editor.tool = tool.ToolChain(self.editor).\
             append(MyHoverTool()).\

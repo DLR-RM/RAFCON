@@ -69,12 +69,20 @@ def get_port_for_handle(handle, state):
             return state.output_port
 
 
-def create_new_connection(start_state, from_port, to_port):
+def create_new_connection(start_state, from_port, to_port, drop_state=None):
     """
     Creates a new connection and adds this connection to the state machine model.
     If the new connection is transition:
     Only transitions from outcomes are added (transitions from incomes are added via "start_state" checkbox
     """
+    def is_income_or_outcome(port):
+        return isinstance(port, IncomeView) or isinstance(port, OutcomeView)
+
+    def is_input_or_output(port):
+        return isinstance(port, InputPortView) or isinstance(port, OutputPortView)
+
+    def is_scoped_input_or_input_or_output(port):
+        return isinstance(port, ScopedDataInputPortView) or is_input_or_output(port)
 
     # Ensure from_port is an outcome and
     # from_port as well as to_port are connected to transition and
@@ -92,15 +100,6 @@ def create_new_connection(start_state, from_port, to_port):
         if isinstance(from_port, InputPortView) and isinstance(to_port, OutputPortView):
             logger.warn("Cannot connect input to output")
             return
-
-        def is_income_or_outcome(port):
-            return isinstance(port, IncomeView) or isinstance(port, OutcomeView)
-
-        def is_input_or_output(port):
-            return isinstance(port, InputPortView) or isinstance(port, OutputPortView)
-
-        def is_scoped_input_or_input_or_output(port):
-            return isinstance(port, ScopedDataInputPortView) or is_input_or_output(port)
 
         # It is possible to create new transitions from:
         # - income to income (parent state to child state)
@@ -120,6 +119,9 @@ def create_new_connection(start_state, from_port, to_port):
         elif ((isinstance(from_port, ScopedDataOutputPortView) and is_scoped_input_or_input_or_output(to_port))
               or (is_input_or_output(from_port) and isinstance(to_port, ScopedDataInputPortView))):
             add_scoped_data_flow_to_port_parent(to_port, from_port)
+    elif from_port and drop_state:
+        if is_income_or_outcome(from_port):
+            add_transition_to_state(start_state, drop_state.income, from_port)
 
 
 def add_data_flow_to_port_parent(to_port, from_port):

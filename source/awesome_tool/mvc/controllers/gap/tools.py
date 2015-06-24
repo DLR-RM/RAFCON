@@ -197,10 +197,13 @@ class MyHandleTool(HandleTool):
 
         self._last_active_port = None
         self._new_connection = None
+
         self._start_state = None
+        self._start_width = None
+        self._start_height = None
 
         self._last_hovered_state = None
-        self._glue_distance = None
+        self._glue_distance = .5
 
         self._active_connection_view = None
         self._active_connection_view_handle = None
@@ -229,6 +232,8 @@ class MyHandleTool(HandleTool):
         # Set start state
         if isinstance(item, StateView) or isinstance(item, ScopedVariableView):
             self._start_state = item
+            self._start_width = item.width
+            self._start_height = item.height
 
         if handle:
             # Deselect all items unless CTRL or SHIFT is pressed
@@ -246,12 +251,33 @@ class MyHandleTool(HandleTool):
 
             return True
 
+    def _get_drop_item(self, event):
+        get_parent = self.view.canvas.get_parent
+        drop_item = self.view.get_item_at_point_exclude((event.x, event.y), exclude=[self._new_connection])
+        if drop_item and not isinstance(drop_item, StateView):
+            drop_item = get_parent(drop_item)
+        parent = self._start_state
+
+        if (isinstance(self._new_connection.from_port, IncomeView) and
+                drop_item not in self.view.canvas.get_children(parent)):
+            drop_item = None
+        elif (isinstance(self._new_connection.from_port, OutcomeView) and
+              drop_item not in self.view.canvas.get_children(get_parent(parent))):
+            drop_item = None
+
+        if drop_item:
+            assert isinstance(drop_item, StateView)
+
+        return drop_item
+
     def on_button_release(self, event):
         # Create new transition if pull beginning at port occurred
         if self._new_connection:
+            drop_item = self._get_drop_item(event)
             gap_helper.create_new_connection(self._start_state,
                                              self._new_connection.from_port,
-                                             self._new_connection.to_port)
+                                             self._new_connection.to_port,
+                                             drop_state=drop_item)
 
             # remove placeholder from canvas
             self._new_connection.remove_connection_from_ports()
@@ -288,6 +314,8 @@ class MyHandleTool(HandleTool):
         self._check_port = None
         self._new_connection = None
         self._start_state = None
+        self._start_width = None
+        self._start_height = None
         self._active_connection_view = None
         self._active_connection_view_handle = None
         self._waypoint_list = None
@@ -372,6 +400,9 @@ class MyHandleTool(HandleTool):
             elif isinstance(item, TransitionView) and handle not in item.end_handles():
                 self.motion_handle.move(pos, 0.)
             # If current handle is port or corner of a state view (for ports it only works if CONTROL key is pressed)
+            elif isinstance(item, StateView) and handle in item.corner_handles:
+                self.motion_handle.move(pos, 0.)
+                # self._adjust_size_and_position(item, self._start_width, self._start_height)
             elif isinstance(item, StateView):
                 self.motion_handle.move(pos, 0.)
             # All other handles
@@ -379,6 +410,40 @@ class MyHandleTool(HandleTool):
                 self.motion_handle.move(pos, 5.0)
 
             return True
+
+    def _adjust_size_and_position(self, parent, start_width, start_height):
+        width_ratio = parent.width / start_width
+        height_ratio = parent.height / start_height
+        for child in self.view.canvas.get_children(parent):
+            if isinstance(child, (StateView, NameView)):
+                start_width = child.width
+                start_height = child.height
+
+                child.width *= width_ratio
+                child.height *= height_ratio
+
+                child_nw = child.handles()[NW].pos
+                child_pos_abs = self.view.canvas.project(child, child_nw)
+                parent_nw = parent.handles()[NW].pos
+                parent_pos_abs = self.view.canvas.project(parent, parent_nw)
+
+                diff_x = child_pos_abs[0].value - parent_pos_abs[0].value
+                diff_y = child_pos_abs[1].value - parent_pos_abs[1].value
+
+                if diff_x >= 1:
+                    diff_x *= width_ratio
+                else:
+                    diff_x /= width_ratio
+                if diff_y >= 1:
+                    diff_y *= height_ratio
+                else:
+                    diff_y /= height_ratio
+
+                child_pos_abs[0].value = parent_pos_abs[0].value + diff_x
+                child_pos_abs[1].value = parent_pos_abs[1].value + diff_y
+
+                if isinstance(child, StateView):
+                    self._adjust_size_and_position(child, start_width, start_height)
 
     def _get_port_side_size_for_hovered_state(self, pos):
         item_below = self.view.get_item_at_point(pos, False)

@@ -206,7 +206,7 @@ class ConnectionView(Line):
                 self._tail_angle = pi * 3. / 2. if self.is_out_port(self.to_port) else pi / 2.
 
     def draw(self, context):
-        if self.parent.moving:
+        if self.parent and self.parent.moving:
             return
 
         def draw_line_end(pos, angle, draw):
