@@ -51,7 +51,7 @@ class StateView(Element):
 
         self.hovered = False
         self.selected = False
-        self.moving = False
+        self._moving = False
 
         if not isinstance(state_m.meta['name']['gui']['editor']['size'], tuple):
             name_width = self.width * 0.8
@@ -101,11 +101,6 @@ class StateView(Element):
         port_list += self.scoped_variables
         return port_list
 
-    def set_children_moving(self, moving):
-        for child in self.canvas.get_all_children(self):
-            if isinstance(child, (StateView, NameView)):
-                child.moving = moving
-
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
@@ -127,6 +122,18 @@ class StateView(Element):
             constraint = parent.keep_rect_constraints[self]
             solver = canvas.solver
             solver.remove_constraint(constraint)
+
+    @property
+    def moving(self):
+        return self._moving
+
+    @moving.setter
+    def moving(self, moving):
+        assert isinstance(moving, bool)
+        self._moving = moving
+        for child in self.canvas.get_children(self):
+            if isinstance(child, (StateView, NameView)):
+                child.moving = moving
 
     @property
     def port_side_size(self):

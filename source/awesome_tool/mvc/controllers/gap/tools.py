@@ -1,6 +1,6 @@
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
-from gaphas.item import NW, SE
+from gaphas.item import NW
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
@@ -11,15 +11,11 @@ from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
 from awesome_tool.mvc.controllers.gap import gap_helper
 
-from awesome_tool.mvc.models.container_state import ContainerStateModel
-
 import gtk
 from gtk.gdk import CONTROL_MASK
 from enum import Enum
 
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
-
-import awesome_tool.mvc.controllers.gap.segment
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -67,11 +63,6 @@ class MyItemTool(ItemTool):
 
         self._item = None
 
-    def set_moving(self):
-        if not self._item.moving:
-            self._item.moving = True
-            self._item.set_children_moving(True)
-
     def on_button_press(self, event):
         super(MyItemTool, self).on_button_press(event)
 
@@ -91,7 +82,6 @@ class MyItemTool(ItemTool):
     def on_button_release(self, event):
         if isinstance(self._item, StateView):
             self._item.moving = False
-            self._item.set_children_moving(False)
             self.view.canvas.request_update(self._item)
             self._item = None
 
@@ -104,8 +94,8 @@ class MyItemTool(ItemTool):
         """
         if event.state & gtk.gdk.BUTTON_PRESS_MASK:
 
-            if self._item:
-                self.set_moving()
+            if self._item and not self._item.moving:
+                self._item.moving = True
 
             if not self._movable_items:
                 self._movable_items = set(self.movable_items())

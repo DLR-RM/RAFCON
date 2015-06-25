@@ -505,7 +505,6 @@ class GraphicalEditorController(ExtendedController):
         :param float depth: The hierarchy level of the state
         """
         assert isinstance(state_m, StateModel)
-        print state_m.meta
         state_meta = state_m.meta['gui']['editor']
         state_temp = state_m.temp['gui']['editor']
 
