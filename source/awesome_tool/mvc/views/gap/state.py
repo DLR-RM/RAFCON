@@ -123,6 +123,12 @@ class StateView(Element):
             solver = canvas.solver
             solver.remove_constraint(constraint)
 
+    def has_selected_child(self):
+        for child in self.canvas.get_children(self):
+            if isinstance(child, StateView) and child.selected:
+                return True
+        return False
+
     @property
     def moving(self):
         return self._moving
@@ -209,21 +215,21 @@ class StateView(Element):
         # if context.hovered:
         #     c.set_source_rgba(.8, .8, 1, .8)
         # else:
-        if self.selected:
-            c.set_source_color(Color('#2e9aff'))
-        elif self.model.state.active:
-            c.set_source_color(Color('#5b8d4f'))
+        if self.model.state.active:
+            c.set_source_color(Color(constants.STATE_ACTIVE_COLOR))
+        elif self.selected:
+            c.set_source_color(Color(constants.STATE_SELECTED_COLOR))
         else:
-            c.set_source_color(Color('#50555F'))
+            c.set_source_color(Color(constants.STATE_BORDER_COLOR))
         c.fill_preserve()
-        c.set_source_color(Color('#050505'))
+        c.set_source_color(Color('#000'))
         c.stroke()
 
         inner_nw, inner_se = self.get_state_drawing_area(self)
         c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-        c.set_source_color(Color('#383D47'))
+        c.set_source_color(Color(constants.STATE_BACKGROUND_COLOR))
         c.fill_preserve()
-        c.set_source_color(Color('#050505'))
+        c.set_source_color(Color('#000'))
         c.stroke()
 
         self._income.port_side_size = self.port_side_size

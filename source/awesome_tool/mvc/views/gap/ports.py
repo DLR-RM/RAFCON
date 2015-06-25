@@ -37,6 +37,17 @@ class SnappedSide(Enum):
             val = 4
         return SnappedSide(val)
 
+    def opposite(self):
+        val = self.value
+        if val == 1:
+            return SnappedSide(3)
+        elif val == 2:
+            return SnappedSide(4)
+        elif val == 3:
+            return SnappedSide(1)
+        elif val == 4:
+            return SnappedSide(2)
+
 
 class PortView(object):
 
@@ -46,8 +57,15 @@ class PortView(object):
         self.side = side
         self._parent = parent
 
-        # self._connected_handles = {}
-        # self._tmp_connected = False
+        self._fill = False
+        self._draw_connection_to_port = True
+
+        if self._fill:
+            self.text_color = constants.STATE_BACKGROUND_COLOR
+            self.fill_color = constants.LABEL_COLOR
+        else:
+            self.text_color = constants.LABEL_COLOR
+            self.fill_color = constants.LABEL_COLOR
 
         self._incoming_handles = []
         self._outgoing_handles = []
@@ -174,7 +192,7 @@ class PortView(object):
         c.set_source_rgba(0, 0, 0, 0)
         c.stroke()
 
-        if self.name and not self.has_outgoing_connection() and self.parent.parent:
+        if self.name and not self.has_outgoing_connection():  # and self.parent.parent:
             self.draw_name(context)
 
     def draw_name(self, context):
@@ -199,20 +217,84 @@ class PortView(object):
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
 
-        cc.set_source_color(Color('#ededee'))
-
         rot_angle = .0
 
-        if self.side is SnappedSide.RIGHT:
-            c.move_to(self.pos.x + outcome_side, self.pos.y - outcome_side / 2.)
-        elif self.side is SnappedSide.TOP:
-            c.move_to(self.pos.x - outcome_side / 2., self.pos.y - outcome_side)
+        text_size = (layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE))
+
+        move_x = 0.
+        move_y = 0.
+
+        print_side = self.side if not self.parent.has_selected_child() else self.side.opposite()
+
+        if print_side is SnappedSide.LEFT:
+            move_x = self.pos.x + 2 * outcome_side
+            move_y = self.pos.y - text_size[1] / 2.
+
+            c.move_to(move_x, move_y)
+            c.line_to(move_x + text_size[0], move_y)
+            c.line_to(move_x + text_size[0], self.pos.y + text_size[1] / 2.)
+            c.line_to(move_x, move_y + text_size[1])
+            c.line_to(self.pos.x + outcome_side, self.pos.y)
+            if self._draw_connection_to_port:
+                c.line_to(self.pos.x + outcome_side / 2., self.pos.y)
+                c.line_to(self.pos.x + outcome_side, self.pos.y)
+            c.line_to(move_x, move_y)
+        elif print_side is SnappedSide.BOTTOM:
+            move_x = self.pos.x - text_size[1] / 2.
+            move_y = self.pos.y - 2 * outcome_side
+
+            c.move_to(move_x, move_y)
+            c.line_to(move_x, move_y - text_size[0])
+            c.line_to(move_x + text_size[1], move_y - text_size[0])
+            c.line_to(move_x + text_size[1], move_y)
+            c.line_to(self.pos.x, self.pos.y - outcome_side)
+            if self._draw_connection_to_port:
+                c.line_to(self.pos.x, self.pos.y - outcome_side / 2.)
+                c.line_to(self.pos.x, self.pos.y - outcome_side)
+            c.line_to(move_x, move_y)
+
             rot_angle = - math.pi / 2
-        elif self.side is SnappedSide.LEFT:
-            c.move_to(self.pos.x - (outcome_side + layout.get_size()[0] / float(SCALE)), self.pos.y - outcome_side / 2.)
-        elif self.side is SnappedSide.BOTTOM:
-            c.move_to(self.pos.x + outcome_side / 2., self.pos.y + outcome_side)
+        elif print_side is SnappedSide.RIGHT:
+            move_x = self.pos.x - (2 * outcome_side + text_size[0])
+            move_y = self.pos.y - text_size[1] / 2.
+
+            c.move_to(move_x, move_y)
+            c.line_to(move_x + text_size[0], move_y)
+            c.line_to(self.pos.x - outcome_side, self.pos.y)
+            if self._draw_connection_to_port:
+                c.line_to(self.pos.x - outcome_side / 2., self.pos.y)
+                c.line_to(self.pos.x - outcome_side, self.pos.y)
+            c.line_to(move_x + text_size[0], self.pos.y + text_size[1] / 2.)
+            c.line_to(move_x, move_y + text_size[1])
+            c.line_to(move_x, move_y)
+        elif print_side is SnappedSide.TOP:
+            move_x = self.pos.x + text_size[1] / 2.
+            move_y = self.pos.y + 2 * outcome_side
+
+            c.move_to(move_x, move_y)
+            c.line_to(move_x, move_y + text_size[0])
+            c.line_to(move_x - text_size[1], move_y + text_size[0])
+            c.line_to(move_x - text_size[1], move_y)
+            c.line_to(self.pos.x, self.pos.y + outcome_side)
+            if self._draw_connection_to_port:
+                c.line_to(self.pos.x, self.pos.y + outcome_side / 2.)
+                c.line_to(self.pos.x, self.pos.y + outcome_side)
+            c.line_to(move_x, move_y)
+
             rot_angle = math.pi / 2
+
+        if self._fill:
+            c.set_source_color(Color(self.fill_color))
+            c.fill_preserve()
+            c.set_source_color(Color(self.fill_color))
+            c.stroke()
+        else:
+            c.set_source_color(Color(self.fill_color))
+            c.stroke()
+
+        c.move_to(move_x, move_y)
+
+        cc.set_source_color(Color(self.text_color))
 
         pcc.update_layout(layout)
         pcc.rotate(rot_angle)
@@ -414,6 +496,13 @@ class DataPortView(PortView):
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
 
+        if self._fill:
+            self.text_color = constants.STATE_BACKGROUND_COLOR
+            self.fill_color = constants.DATA_PORT_COLOR
+        else:
+            self.text_color = constants.DATA_PORT_COLOR
+            self.fill_color = constants.DATA_PORT_COLOR
+
     @property
     def port_m(self):
         return self._port_m()
@@ -427,7 +516,7 @@ class DataPortView(PortView):
         return self.port_m.data_port.name
 
     def draw(self, context, state):
-        self.draw_port(context, "#ffc926")
+        self.draw_port(context, constants.DATA_PORT_COLOR)
 
 
 class InputPortView(DataPortView):
