@@ -6,7 +6,6 @@ import gobject
 
 from gtkmvc import View
 
-from gaphas import GtkView
 from gaphas import tool
 from gaphas import painter
 from awesome_tool.mvc.controllers.gap.tools import MyConnectHandleTool, MyHoverTool, MyDeleteTool, MyItemTool, \

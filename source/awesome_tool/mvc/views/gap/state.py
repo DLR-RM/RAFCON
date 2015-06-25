@@ -13,8 +13,10 @@ from gaphas.connector import Position
 from awesome_tool.mvc.views.gap.constraint import KeepRectangleWithinConstraint, PortRectConstraint
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, SnappedSide
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
+from awesome_tool.mvc.views.gap.connection import TransitionView
 
 from awesome_tool.mvc.models.state import StateModel
+from awesome_tool.mvc.models.container_state import ContainerStateModel
 
 from awesome_tool.utils import constants, log
 logger = log.get_logger(__name__)
@@ -128,8 +130,8 @@ class StateView(Element):
 
     @property
     def port_side_size(self):
-        # return min(self.width, self.height) / 20.
-        return 3. / self.hierarchy_level
+        return min(min(self.width, self.height) / 20., 3. / self.hierarchy_level)
+        # return 3. / self.hierarchy_level
 
     @property
     def parent(self):
@@ -166,6 +168,14 @@ class StateView(Element):
     @property
     def name_view(self):
         return self._name_view
+
+    @property
+    def child_state_vs(self):
+        child_state_vs = []
+        for child in self.canvas.get_children(self):
+            if isinstance(child, StateView):
+                child_state_vs.append(child)
+        return child_state_vs
 
     @staticmethod
     def get_state_drawing_area(state):
@@ -209,15 +219,19 @@ class StateView(Element):
         c.set_source_color(Color('#050505'))
         c.stroke()
 
+        self._income.port_side_size = self.port_side_size
         self._income.draw(context, self)
 
         for outcome in self._outcomes:
+            outcome.port_side_size = self.port_side_size
             outcome.draw(context, self)
 
         for input in self._inputs:
+            input.port_side_size = self.port_side_size
             input.draw(context, self)
 
         for output in self._outputs:
+            output.port_side_size = self.port_side_size
             output.draw(context, self)
 
         if self.moving:
@@ -260,6 +274,13 @@ class StateView(Element):
         cc.set_source_color(Color('#ededee'))
         pcc.update_layout(layout)
         pcc.show_layout(layout)
+
+    def get_transitions(self):
+        transitions = []
+        for child in self.canvas.get_children(self):
+            if isinstance(child, TransitionView):
+                transitions.append(child)
+        return transitions
 
     def connect_to_income(self, item, handle):
         self._income.add_connected_handle(handle, item)
@@ -558,6 +579,71 @@ class StateView(Element):
                 return pos - 1.25 * port_size
             else:
                 return pos + 1.25 * port_size
+
+    def resize_all_children(self, old_size):
+        from awesome_tool.mvc.controllers.gap import gap_helper
+        new_size = (self.width, self.height)
+        canvas = self.canvas
+
+        def resize_child(state, old_size, new_size):
+            def calc_abs_pos(item, pos):
+                projection = canvas.project(item, pos)
+                return projection[0].value, projection[1].value
+
+            def handle_set_rel_pos(item, handle_pos, new_pos, parent_abs_pos, old_size=None):
+                projection = canvas.project(item, handle_pos)
+                projection[0].value = parent_abs_pos[0] + new_pos[0]
+                projection[1].value = parent_abs_pos[1] + new_pos[1]
+                if isinstance(item, StateView) and old_size:
+                    item.handles()[SE].pos.x = item.handles()[NW].pos.x + old_size[0]
+                    item.handles()[SE].pos.y = item.handles()[NW].pos.y + old_size[1]
+
+            state_abs_pos = calc_abs_pos(state, state.handles()[NW].pos)
+
+            width_factor = new_size[0] / old_size[0]
+            height_factor = new_size[1] / old_size[1]
+
+            def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
+                old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
+                old_rel_pos_y_rel = old_rel_pos[1] / old_parent_size[1]
+                new_rel_pos_x = new_parent_size[0] * old_rel_pos_x_rel
+                new_rel_pos_y = new_parent_size[1] * old_rel_pos_y_rel
+                return new_rel_pos_x, new_rel_pos_y
+
+            for port_v in state.get_all_ports():
+                new_rel_pos = calc_new_rel_pos(port_v.handle.pos, old_size, new_size)
+                port_v.handle.pos = new_rel_pos
+
+            name_v = state.name_view
+            old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, name_v, name_v.handles()[NW])
+            new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
+            handle_set_rel_pos(name_v, name_v.handles()[NW].pos, new_rel_pos, state_abs_pos,
+                               (name_v.width, name_v.height))
+
+            name_v.width *= width_factor
+            name_v.height *= height_factor
+
+            if isinstance(state.model, ContainerStateModel):
+                for transition_v in state.get_transitions():
+                    for waypoint in transition_v.waypoints:
+                        old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, transition_v, waypoint)
+                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
+                        handle_set_rel_pos(transition_v, waypoint.pos, new_rel_pos, state_abs_pos)
+
+                for child_state_v in self.child_state_vs:
+                    old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, child_state_v, child_state_v.handles()[NW])
+                    new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
+                    handle_set_rel_pos(child_state_v, child_state_v.handles()[NW].pos, new_rel_pos, state_abs_pos,
+                                       (child_state_v.width, child_state_v.height))
+
+                    old_size = (child_state_v.width, child_state_v.height)
+                    new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
+                    child_state_v.width = new_size[0]
+                    child_state_v.height = new_size[1]
+
+                    resize_child(child_state_v, old_size, new_size)
+
+        resize_child(self, old_size, new_size)
 
 
 class NameView(Element):

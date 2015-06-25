@@ -1,6 +1,6 @@
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
-from gaphas.item import NW
+from gaphas.item import NW, SE
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
@@ -11,7 +11,10 @@ from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
 from awesome_tool.mvc.controllers.gap import gap_helper
 
+from awesome_tool.mvc.models.container_state import ContainerStateModel
+
 import gtk
+from gtk.gdk import CONTROL_MASK
 from enum import Enum
 
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
@@ -195,6 +198,8 @@ class MyHandleTool(HandleTool):
 
         self._graphical_editor_view = graphical_editor_view
 
+        self._child_resize = False
+
         self._last_active_port = None
         self._new_connection = None
 
@@ -251,9 +256,15 @@ class MyHandleTool(HandleTool):
 
             return True
 
-    def _get_drop_item(self, event):
+    def _get_drop_item(self, pos):
+        """
+        Find state the new connection was dropped on. Returns the state if valid connection found, None otherwise.
+        Invalid connections are: state connection to itself, connection across hierarchy levels.
+        :param pos: Position to check for drop_item
+        :return: State connection was dropped on or None
+        """
         get_parent = self.view.canvas.get_parent
-        drop_item = self.view.get_item_at_point_exclude((event.x, event.y), exclude=[self._new_connection])
+        drop_item = self.view.get_item_at_point_exclude(pos, exclude=[self._new_connection])
         if drop_item and not isinstance(drop_item, StateView):
             drop_item = get_parent(drop_item)
         parent = self._start_state
@@ -273,7 +284,7 @@ class MyHandleTool(HandleTool):
     def on_button_release(self, event):
         # Create new transition if pull beginning at port occurred
         if self._new_connection:
-            drop_item = self._get_drop_item(event)
+            drop_item = self._get_drop_item((event.x, event.y))
             gap_helper.create_new_connection(self._start_state,
                                              self._new_connection.from_port,
                                              self._new_connection.to_port,
@@ -299,15 +310,22 @@ class MyHandleTool(HandleTool):
             self._handle_reset_ports(item, handle, self._start_port.parent)
 
         if isinstance(self._active_connection_view, TransitionView):
-            transition_m = self._active_connection_view.model
-            transition_meta = transition_m.meta['gui']['editor']
-            waypoint_list = self._convert_handles_pos_list_to_rel_pos_list(self._active_connection_view)
-            if waypoint_list != self._waypoint_list:
-                transition_meta['waypoints'] = waypoint_list
-                self._graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
+            gap_helper.update_transition_waypoints(self._graphical_editor_view, self._active_connection_view, self._waypoint_list)
 
         if isinstance(self.grabbed_item, (StateView, NameView, ScopedVariableView)):
-            self._update_meta_data_for_item(self.grabbed_item)
+
+            if self._child_resize and isinstance(self.grabbed_item, StateView):
+
+                def update_meta_data(state):
+                    for transition_v in state.get_transitions():
+                        gap_helper.update_transition_waypoints(self._graphical_editor_view, transition_v, None)
+                    gap_helper.update_meta_data_for_item(self._graphical_editor_view, self.grabbed_handle, state, True)
+                    for child_state_v in state.child_state_vs:
+                        update_meta_data(child_state_v)
+
+                update_meta_data(self.grabbed_item)
+                self._child_resize = False
+            gap_helper.update_meta_data_for_item(self._graphical_editor_view, self.grabbed_handle, self.grabbed_item)
 
         # reset temp variables
         self._last_active_port = None
@@ -401,8 +419,11 @@ class MyHandleTool(HandleTool):
                 self.motion_handle.move(pos, 0.)
             # If current handle is port or corner of a state view (for ports it only works if CONTROL key is pressed)
             elif isinstance(item, StateView) and handle in item.corner_handles:
+                old_size = (item.width, item.height)
                 self.motion_handle.move(pos, 0.)
-                # self._adjust_size_and_position(item, self._start_width, self._start_height)
+                if event.state & CONTROL_MASK:
+                    self._child_resize = True
+                    item.resize_all_children(old_size)
             elif isinstance(item, StateView):
                 self.motion_handle.move(pos, 0.)
             # All other handles
@@ -411,40 +432,6 @@ class MyHandleTool(HandleTool):
 
             return True
 
-    def _adjust_size_and_position(self, parent, start_width, start_height):
-        width_ratio = parent.width / start_width
-        height_ratio = parent.height / start_height
-        for child in self.view.canvas.get_children(parent):
-            if isinstance(child, (StateView, NameView)):
-                start_width = child.width
-                start_height = child.height
-
-                child.width *= width_ratio
-                child.height *= height_ratio
-
-                child_nw = child.handles()[NW].pos
-                child_pos_abs = self.view.canvas.project(child, child_nw)
-                parent_nw = parent.handles()[NW].pos
-                parent_pos_abs = self.view.canvas.project(parent, parent_nw)
-
-                diff_x = child_pos_abs[0].value - parent_pos_abs[0].value
-                diff_y = child_pos_abs[1].value - parent_pos_abs[1].value
-
-                if diff_x >= 1:
-                    diff_x *= width_ratio
-                else:
-                    diff_x /= width_ratio
-                if diff_y >= 1:
-                    diff_y *= height_ratio
-                else:
-                    diff_y /= height_ratio
-
-                child_pos_abs[0].value = parent_pos_abs[0].value + diff_x
-                child_pos_abs[1].value = parent_pos_abs[1].value + diff_y
-
-                if isinstance(child, StateView):
-                    self._adjust_size_and_position(child, start_width, start_height)
-
     def _get_port_side_size_for_hovered_state(self, pos):
         item_below = self.view.get_item_at_point(pos, False)
         if isinstance(item_below, NameView):
@@ -452,67 +439,6 @@ class MyHandleTool(HandleTool):
         if isinstance(item_below, StateView) and item_below is not self._last_hovered_state:
             self._last_hovered_state = item_below
             self._glue_distance = item_below.port_side_size / 2.
-
-    def _update_port_position_meta_data(self, item, handle):
-        rel_pos = (handle.pos.x.value, handle.pos.y.value)
-        port_meta = None
-        for port in item.get_all_ports():
-            if handle is port.handle:
-                if isinstance(port, IncomeView):
-                    port_meta = item.model.meta['income']['gui']['editor']
-                elif isinstance(port, OutcomeView):
-                    port_meta = item.model.meta['outcome%d' % port.outcome_id]['gui']['editor']
-                elif isinstance(port, InputPortView):
-                    port_meta = item.model.meta['input%d' % port.port_id]['gui']['editor']
-                elif isinstance(port, OutputPortView):
-                    port_meta = item.model.meta['output%d' % port.port_id]['gui']['editor']
-                break
-        if rel_pos != port_meta['rel_pos']:
-            port_meta['rel_pos'] = rel_pos
-            self._graphical_editor_view.emit('meta_data_changed', item.model, "Move port", True)
-
-    def _update_meta_data_for_item(self, item):
-        size_msg = "Change size"
-        affect_children = False
-
-        if isinstance(item, StateView):
-            # If handle for state resize was pulled
-            if self.grabbed_handle in item.corner_handles:
-                # Update all port meta data to match with new position and size of parent
-                for port in item.get_all_ports():
-                    self._update_port_position_meta_data(item, port.handle)
-                meta = item.model.meta['gui']['editor']
-                move_msg = "Move state"
-                affect_children = True
-            # If pulled handle is port update port meta data and return
-            else:
-                self._update_port_position_meta_data(item, self.grabbed_handle)
-                return
-        elif isinstance(item, NameView):
-            parent = self.view.canvas.get_parent(item)
-            item = parent
-            assert isinstance(parent, StateView)
-
-            meta = parent.model.meta['name']['gui']['editor']
-            size_msg = "Change name size"
-            move_msg = "Move name"
-        else:
-            meta = item.model.meta['gui']['editor']
-            move_msg = "Move scoped"
-
-        meta['size'] = (item.width, item.height)
-        self._graphical_editor_view.emit('meta_data_changed', item.model, size_msg, affect_children)
-        meta['rel_pos'] = gap_helper.calc_rel_pos_to_parent(self.view.canvas, item, item.handles()[NW])
-        self._graphical_editor_view.emit('meta_data_changed', item.model, move_msg, affect_children)
-
-    def _convert_handles_pos_list_to_rel_pos_list(self, transition):
-        handles_list = transition.handles()
-        rel_pos_list = []
-        for handle in handles_list:
-            if handle is transition.to_handle() or handle is transition.from_handle():
-                continue
-            rel_pos_list.append(gap_helper.calc_rel_pos_to_parent(self.view.canvas, transition, handle))
-        return rel_pos_list
 
     def _handle_data_flow_view_change(self, item, handle):
 

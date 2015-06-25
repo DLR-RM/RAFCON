@@ -65,6 +65,10 @@ class PortView(object):
     def port_side_size(self):
         return self._port_side_size
 
+    @port_side_size.setter
+    def port_side_size(self, port_side_size):
+        self._port_side_size = port_side_size
+
     @property
     def name(self):
         return self._name

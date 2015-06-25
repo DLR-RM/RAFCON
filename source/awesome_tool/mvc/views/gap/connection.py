@@ -76,6 +76,14 @@ class ConnectionView(Line):
         if self.from_port:
             self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
 
+    @property
+    def waypoints(self):
+        waypoints = []
+        for handle in self.handles():
+            if handle not in self.end_handles():
+                waypoints.append(handle)
+        return waypoints
+
     def end_handles(self):
         return [self.from_handle(), self.to_handle()]
 

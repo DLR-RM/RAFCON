@@ -1,7 +1,8 @@
-from awesome_tool.mvc.views.gap.state import StateView
+from awesome_tool.mvc.views.gap.state import StateView, NameView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 from awesome_tool.mvc.views.gap.ports import InputPortView, OutputPortView, ScopedDataInputPortView,\
     ScopedDataOutputPortView, IncomeView, OutcomeView
+from awesome_tool.mvc.views.gap.connection import TransitionView
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 
@@ -12,17 +13,17 @@ logger = log.get_logger(__name__)
 
 
 def calc_rel_pos_to_parent(canvas, item, handle):
-        parent = canvas.get_parent(item)
-        if parent:
-            c_pos = canvas.project(item, handle.pos)
-            p_pos = canvas.project(parent, parent.handles()[NW].pos)
-            rel_x = c_pos[0].value - p_pos[0].value
-            rel_y = c_pos[1].value - p_pos[1].value
-        else:
-            pos = canvas.project(item, item.handles()[NW].pos)
-            rel_x = pos[0].value
-            rel_y = pos[1].value
-        return rel_x, rel_y
+    parent = canvas.get_parent(item)
+    if parent:
+        c_pos = canvas.project(item, handle.pos)
+        p_pos = canvas.project(parent, parent.handles()[NW].pos)
+        rel_x = c_pos[0].value - p_pos[0].value
+        rel_y = c_pos[1].value - p_pos[1].value
+    else:
+        pos = canvas.project(item, item.handles()[NW].pos)
+        rel_x = pos[0].value
+        rel_y = pos[1].value
+    return rel_x, rel_y
 
 
 def assert_exactly_one_true(bool_list):
@@ -250,3 +251,77 @@ def add_transition_to_state(start_state, to_port, from_port):
             logger.warn("Transition couldn't be added: {0}".format(e))
         except Exception as e:
             logger.error("Unexpected exception while creating transition: {0}".format(e))
+
+
+def convert_handles_pos_list_to_rel_pos_list(canvas, transition):
+    handles_list = transition.handles()
+    rel_pos_list = []
+    for handle in handles_list:
+        if handle is transition.to_handle() or handle is transition.from_handle():
+            continue
+        rel_pos_list.append(calc_rel_pos_to_parent(canvas, transition, handle))
+    return rel_pos_list
+
+
+def update_transition_waypoints(graphical_editor_view, transition_v, last_waypoint_list):
+    assert isinstance(transition_v, TransitionView)
+    transition_m = transition_v.model
+    transition_meta = transition_m.meta['gui']['editor']
+    waypoint_list = convert_handles_pos_list_to_rel_pos_list(graphical_editor_view.editor.canvas, transition_v)
+    if waypoint_list != last_waypoint_list:
+        transition_meta['waypoints'] = waypoint_list
+        graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
+
+
+def update_port_position_meta_data(graphical_editor_view, item, handle):
+    rel_pos = (handle.pos.x.value, handle.pos.y.value)
+    port_meta = None
+    for port in item.get_all_ports():
+        if handle is port.handle:
+            if isinstance(port, IncomeView):
+                port_meta = item.model.meta['income']['gui']['editor']
+            elif isinstance(port, OutcomeView):
+                port_meta = item.model.meta['outcome%d' % port.outcome_id]['gui']['editor']
+            elif isinstance(port, InputPortView):
+                port_meta = item.model.meta['input%d' % port.port_id]['gui']['editor']
+            elif isinstance(port, OutputPortView):
+                port_meta = item.model.meta['output%d' % port.port_id]['gui']['editor']
+            break
+    if rel_pos != port_meta['rel_pos']:
+        port_meta['rel_pos'] = rel_pos
+        graphical_editor_view.emit('meta_data_changed', item.model, "Move port", True)
+
+
+def update_meta_data_for_item(graphical_editor_view, grabbed_handle, item, child_resize=False):
+    size_msg = "Change size"
+    affect_children = False
+
+    if isinstance(item, StateView):
+        # If handle for state resize was pulled
+        if grabbed_handle in item.corner_handles or child_resize:
+            # Update all port meta data to match with new position and size of parent
+            for port in item.get_all_ports():
+                update_port_position_meta_data(graphical_editor_view, item, port.handle)
+            meta = item.model.meta['gui']['editor']
+            move_msg = "Move state"
+            affect_children = True
+        # If pulled handle is port update port meta data and return
+        else:
+            update_port_position_meta_data(graphical_editor_view, item, grabbed_handle)
+            return
+    elif isinstance(item, NameView):
+        parent = graphical_editor_view.editor.canvas.get_parent(item)
+        item = parent
+        assert isinstance(parent, StateView)
+
+        meta = parent.model.meta['name']['gui']['editor']
+        size_msg = "Change name size"
+        move_msg = "Move name"
+    else:
+        meta = item.model.meta['gui']['editor']
+        move_msg = "Move scoped"
+
+    meta['size'] = (item.width, item.height)
+    graphical_editor_view.emit('meta_data_changed', item.model, size_msg, affect_children)
+    meta['rel_pos'] = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, item, item.handles()[NW])
+    graphical_editor_view.emit('meta_data_changed', item.model, move_msg, affect_children)

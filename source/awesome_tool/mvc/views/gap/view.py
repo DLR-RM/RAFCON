@@ -9,6 +9,7 @@ class ExtendedGtkView(GtkView):
 
         Parameters:
          - selected: if False returns first non-selected item
+         - exclude: if specified don't check for these items
         """
         items = self._qtree.find_intersect((pos[0], pos[1], 1, 1))
         for item in self._canvas.sort(items, reverse=True):

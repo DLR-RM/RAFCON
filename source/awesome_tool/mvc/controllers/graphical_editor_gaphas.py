@@ -2,6 +2,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.mvc.clipboard import global_clipboard
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
@@ -67,6 +68,10 @@ class GraphicalEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action("add", self._add_execution_state)
 
+        shortcut_manager.add_callback_for_action("copy", self._copy_selection)
+        shortcut_manager.add_callback_for_action("paste", self._paste_clipboard)
+        shortcut_manager.add_callback_for_action("cut", self._cut_selection)
+
     def _add_execution_state(self, *args):
         from awesome_tool.statemachine.enums import StateType
         from awesome_tool.mvc.models import StateModel, TransitionModel, DataFlowModel
@@ -79,6 +84,71 @@ class GraphicalEditorController(ExtendedController):
                     StateMachineHelper.add_state(model, StateType.EXECUTION)
                 if isinstance(model, TransitionModel) or isinstance(model, DataFlowModel):
                     StateMachineHelper.add_state(model.parent, StateType.EXECUTION)
+
+    def _copy_selection(self, *args):
+        """Copies the current selection to the clipboard.
+        """
+        if self.view.editor.has_focus():
+            logger.debug("copy selection")
+            global_clipboard.copy(self.model.selection)
+
+    def _cut_selection(self, *args):
+        """Cuts the current selection and copys it to the clipboard.
+        """
+        if self.view.editor.has_focus():
+            logger.debug("cut selection")
+            global_clipboard.cut(self.model.selection)
+
+    def _paste_clipboard(self, *args):
+        """Paste the current clipboard into the current selection if the current selection is a container state.
+        """
+        if self.view.editor.has_focus():
+            logger.debug("Paste")
+
+            current_selection = self.model.selection
+
+            if len(current_selection) != 1 or len(current_selection.get_states()) < 1:
+                logger.error("Please select a single state for pasting the clipboard")
+                return
+            if not isinstance(current_selection.get_states()[0], ContainerStateModel):
+                # the default behaviour of the copy paste is that the state is copied into the parent state
+                parent_of_old_state = current_selection.get_states()[0].parent
+                current_selection.clear()
+                current_selection.add(parent_of_old_state)
+
+            # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
+            target_state_m = current_selection.get_states()[0]
+            state_copy_m, state_orig_m = global_clipboard.paste(target_state_m)
+
+            if state_copy_m is None:  # An error occurred while pasting
+                return
+
+            # Adjust size of new state
+            old_size = state_orig_m.meta['gui']['editor']['size']
+            target_size = target_state_m.meta['gui']['editor']['size']
+
+            # Use the old size, if it is smaller than the target state
+            if old_size[0] < target_size[0] and old_size[1] < target_size[1]:
+                new_size = old_size
+            # Resize to 1/3 of the target state, but keep the size ratio
+            else:
+                new_size = (target_size[0] / 3., target_size[1] / 3.)
+                old_size_ratio = old_size[0] / old_size[1]
+                if old_size_ratio < new_size[0] / new_size[1]:
+                    new_size = (new_size[1] * old_size_ratio, new_size[1])
+                else:
+                    new_size = (new_size[0], new_size[0] / old_size_ratio)
+
+            new_state_v = self.get_view_for_model(state_copy_m)
+            new_state_v.width = new_size[0]
+            new_state_v.height = new_size[1]
+
+            print state_orig_m
+            print state_orig_m.meta
+            print state_copy_m
+            print state_copy_m.meta
+
+            new_state_v.resize_all_children(old_size)
 
     def _select_new_states(self, view, states):
         if states and isinstance(states, StateView):
@@ -130,7 +200,6 @@ class GraphicalEditorController(ExtendedController):
 
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
-
             if method_name == 'add_state':
                 new_state = arguments[1]
                 new_state_m = model.states[new_state.state_id]
@@ -396,27 +465,16 @@ class GraphicalEditorController(ExtendedController):
                     return child
 
     def add_state_view_to_parent(self, state_m, parent_state_m):
+        print state_m
+        print state_m.meta
         parent_state_v = self.get_view_for_model(parent_state_m)
 
         new_state_side_size = min(parent_state_v.width * 0.2, parent_state_v.height * 0.2)
         new_state_hierarchy_level = parent_state_v.hierarchy_level * 2
+        new_state_size = (new_state_side_size, new_state_side_size)
 
-        new_state_v = StateView(state_m, (new_state_side_size, new_state_side_size), new_state_hierarchy_level)
-
-        state_m.temp['gui']['editor']['view'] = new_state_v
-
-        self.canvas.add(new_state_v, parent_state_v)
-        port_side_size = 3. / new_state_hierarchy_level
-        new_state_v.matrix.translate(port_side_size, port_side_size)
-
-        for outcome_m in state_m.outcomes:
-            new_state_v.add_outcome(outcome_m)
-
-        for input_port_m in state_m.input_data_ports:
-            new_state_v.add_input_port(input_port_m)
-
-        for output_port_m in state_m.output_data_ports:
-            new_state_v.add_output_port(output_port_m)
+        self.setup_state(state_m, parent_state_v, size=new_state_size, hierarchy_level=new_state_hierarchy_level)
+        return
 
     def _remove_state_view(self, view):
         selection = self.model.selection.get_all()
@@ -447,6 +505,7 @@ class GraphicalEditorController(ExtendedController):
         :param float depth: The hierarchy level of the state
         """
         assert isinstance(state_m, StateModel)
+        print state_m.meta
         state_meta = state_m.meta['gui']['editor']
         state_temp = state_m.temp['gui']['editor']
 
