@@ -7,7 +7,7 @@ gui: !Vividict
 income: !Vividict
     gui: !Vividict
         editor: !Vividict
-            rel_pos: !Vividict {}
+            rel_pos: !!python/tuple [0.5, 3.6526009695028616]
 input30: !Vividict
     gui: !Vividict
         editor: !Vividict

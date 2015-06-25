@@ -2,7 +2,8 @@
 description: null
 filename: script.py
 input_data_ports:
-    35: !DataPort {data_port_id: 35, data_type: int, default_value: 99, name: bottles}
+    35: !DataPort {data_port_id: 35, data_type: !!python/name:__builtin__.int '',
+        default_value: 99, name: bottles}
 name: Count bottles
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}

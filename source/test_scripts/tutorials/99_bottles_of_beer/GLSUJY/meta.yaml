@@ -19,12 +19,13 @@ outcomes:
 output_data_ports: {}
 path: ../../test_scripts/tutorials/99_bottles_of_beer/GLSUJY
 scoped_variables:
-    29: !ScopedVariable {data_type: int, default_value: 99, name: bottles, scoped_variable_id: 29}
+    29: !ScopedVariable {data_type: !!python/name:__builtin__.int '', default_value: 99,
+        name: bottles, scoped_variable_id: 29}
 state_id: GLSUJY
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: PXTKIH,
         transition_id: 1}
-    7: !Transition {from_outcome: 0, from_state: SFZGMH, to_outcome: 0, to_state: null,
+    7: !Transition {from_outcome: 0, from_state: SFZGMH, to_outcome: 0, to_state: GLSUJY,
         transition_id: 7}
     8: !Transition {from_outcome: 0, from_state: PXTKIH, to_outcome: null, to_state: NDIVLD,
         transition_id: 8}
