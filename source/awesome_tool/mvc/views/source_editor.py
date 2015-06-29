@@ -58,7 +58,7 @@ class SourceEditorView(View):
                         global_gui_config.get_config_value("SOURCE_EDITOR_STYLE"))
                     )
                 else:
-                    b.set_style_scheme(style_scheme_manager.get_scheme('awesome-style'))
+                    b.set_style_scheme(style_scheme_manager.get_scheme('classic'))
                 self.textview.set_tab_width(4)
                 self.textview.set_insert_spaces_instead_of_tabs(True)
                 self.textview.set_show_line_numbers(True)

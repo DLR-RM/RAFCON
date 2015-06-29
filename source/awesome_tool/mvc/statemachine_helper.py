@@ -160,22 +160,33 @@ class StateMachineHelper():
         if current_state_is_container and new_state_is_container:
             assert isinstance(state, ContainerState)
 
+            # if new_state_class in [BarrierConcurrencyState, PreemptiveConcurrencyState]:
+            # remove transitions -> is been done here, because sometimes the TransitionsModels remain
+            for t_id in state.transitions.keys():
+                state.remove_transition(t_id)
+            state_transitions = {}
+            state_start_state_id = None
+            # else:
+            #     state_transitions = state.transitions
+            #     state_start_state_id = state.start_state_id
             new_state = new_state_class(name=state.name, state_id=state.state_id,
                                         input_data_ports=state.input_data_ports, output_data_ports=state.output_data_ports,
                                         outcomes=state.outcomes, states=state.states,
-                                        transitions=state.transitions, data_flows=state.data_flows,
-                                        start_state_id=state.start_state_id, scoped_variables=state.scoped_variables,
+                                        transitions=state_transitions, data_flows=state.data_flows,
+                                        start_state_id=state_start_state_id, scoped_variables=state.scoped_variables,
                                         v_checker=state.v_checker,
                                         path=state.script.path, filename=state.script.filename,
                                         check_path=False)
         else:
             if hasattr(state, "states"):
+                # logger.debug("Delete states to prepare ExecutionState %s" % state.states.keys())
+                # print state.states
                 for child_state_id in state.states.keys():
                     state.remove_state(child_state_id)
             new_state = new_state_class(name=state.name, state_id=state.state_id,
                                         input_data_ports=state.input_data_ports, output_data_ports=state.output_data_ports,
-                                        outcomes=state.outcomes, path=state.script.path, filename=state.script.filename,
-                                        check_path=False)
+                                        outcomes=state.outcomes)  # , path=state.script.path, filename=state.script.filename,
+                                        # check_path=False)
 
         new_state._used_data_port_ids = state._used_data_port_ids
         new_state._used_outcome_ids = state._used_outcome_ids
@@ -266,8 +277,10 @@ class StateMachineHelper():
             parent_state.add_state(new_state)
 
             # re-implement  related transitions and data flows
-            for t in connected_transitions:
-                parent_state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
+            if not (isinstance(parent_state, BarrierConcurrencyState) or
+                        isinstance(parent_state, PreemptiveConcurrencyState)):
+                for t in connected_transitions:
+                    parent_state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
 
             for df in connected_data_flows:
                 parent_state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
@@ -315,8 +328,10 @@ class StateMachineHelper():
             # insert again meta data of external related linkage elements
             link_models_to_new_model(new_state_m, model_properties)
 
-            for t_id, t_meta in state_data_m['transitions'].iteritems():
-                parent_m.get_transition_model(t_id).meta = t_meta
+            if not (isinstance(new_state_m.state, PreemptiveConcurrencyState) or
+                    isinstance(new_state_m.state, BarrierConcurrencyState)):
+                for t_id, t_meta in state_data_m['transitions'].iteritems():
+                    parent_m.get_transition_model(t_id).meta = t_meta
 
             for df_id, df_meta in state_data_m['data_flows'].iteritems():
                 parent_m.get_data_flow_model(df_id).meta = df_meta
