@@ -33,6 +33,7 @@ class StateTransitionsListController(ExtendedController):
         self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
                                         str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
         self.combo = {}
+        self.no_update = False  # reduce the updating of the widget to the moment it becomes focused, what seems to be enought
 
         if self.model.parent is not None:
             self.observe_model(self.model.parent)
@@ -469,13 +470,30 @@ class StateTransitionsListController(ExtendedController):
                                               True,  # is_external
                                               '#f0E5C7', '#f0E5c7', t, self.model.state, True])
 
+    @ExtendedController.observe("change_root_state_type", before=True)
+    @ExtendedController.observe("change_state_type", before=True)
+    def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+        # self.notification_logs(model, prop_name, info)
+        # print "DO_LOCK TRANSITION WIDGET"
+        self.no_update = True
+        self.combo = {}
+
     @ExtendedController.observe("states", after=True)
     @ExtendedController.observe("transitions", after=True)
     @ExtendedController.observe("outcomes", after=True)
+    @ExtendedController.observe("change_root_state_type", after=True)
+    @ExtendedController.observe("change_state_type", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         # self.notification_logs(model, prop_name, info)
+        if self.no_update and info.method_name in ["change_state_type" and "change_root_state_type"]:
+            # print "DO_UNLOCK TRANSITION WIDGET"
+            self.no_update = False
+            self.combo = {}
 
-        self.update()
+        if self.no_update:
+            return
+        # print "DO_UPDATE TRANSITION WIDGET"
+        # self.update()
 
     def notification_logs(self, model, prop_name, info):
         #logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %

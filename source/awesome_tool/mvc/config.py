@@ -21,6 +21,8 @@ WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
 WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
 
 show_data_flows: True
+
+HISTORY_ENABLED: False
 """
 
 CONFIG_FILE = "gui_config.yaml"
