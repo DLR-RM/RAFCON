@@ -594,9 +594,9 @@ class ContainerState(State):
                 data_flow_id = generate_data_flow_id()
 
         if not (from_state_id in self.states or from_state_id == self.state_id):
-            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
+            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id)
         if not (to_state_id in self.states or to_state_id == self.state_id):
-            raise AttributeError("To_state %s does not exit in the container state" % to_state_id.state_id)
+            raise AttributeError("To_state %s does not exit in the container state" % to_state_id)
 
         if from_state_id == self.state_id:  # data_flow originates in container state
             from_state = self
@@ -835,6 +835,14 @@ class ContainerState(State):
             self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
+
+    def modify_scoped_variable_name(self, name, scoped_variable_id):
+        if name in self.__scoped_variables_names:
+            logger.warning("A scoped variable with name %s already exists", name)
+            return
+        self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
+        self._scoped_variables[scoped_variable_id].name = name
+        self.__scoped_variables_names.append(name)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------

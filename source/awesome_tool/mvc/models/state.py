@@ -143,6 +143,16 @@ class StateModel(ModelMT):
         if self.parent is not None:
             self.parent.model_changed(model, prop_name, info)
 
+    def get_outcome_model(self, outcome_id):
+        """Searches and return the outcome model in this state model
+        :param outcome_id: The outcome id to be searched
+        :return: The model of the data flow or None if it is not found
+        """
+        for outcome_m in self.outcomes:
+            if outcome_m.outcome.outcome_id == outcome_id:
+                return outcome_m
+        return None
+
     def get_data_port_model(self, data_port_id):
         """Searches and returns the model of a data port of a given state
 

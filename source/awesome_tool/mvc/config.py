@@ -23,6 +23,7 @@ WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
 show_data_flows: True
 
 ROTATE_NAMES_ON_CONNECTIONS: False
+HISTORY_ENABLED: False
 """
 
 CONFIG_FILE = "gui_config.yaml"
