@@ -1,5 +1,7 @@
 from gaphas.painter import HandlePainter
 
+from awesome_tool.mvc.views.gap.connection import ConnectionView, ScopedVariableDataFlowView
+
 from cairo import ANTIALIAS_NONE
 
 
@@ -19,7 +21,9 @@ class MyHandlePainter(HandlePainter):
 
         get_connection = view.canvas.get_connection
         for h in item.handles():
-            if not h.visible:
+            if not h.visible or isinstance(item, ConnectionView) and h in item.perp_waypoint_handles():
+                continue
+            if isinstance(item, ScopedVariableDataFlowView) and h not in item.end_handles():
                 continue
             # connected and not being moved, see HandleTool.on_button_press
             if get_connection(h):

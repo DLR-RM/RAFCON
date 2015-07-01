@@ -212,6 +212,8 @@ class MyHandleTool(HandleTool):
         item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
 
         if isinstance(item, ConnectionView):
+            if handle is item.handles()[1] or handle is item.handles()[len(item.handles()) - 2]:
+                return False
             self._active_connection_view = item
             self._active_connection_view_handle = handle
             if handle is item.from_handle():

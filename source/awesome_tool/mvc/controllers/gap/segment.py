@@ -7,7 +7,7 @@ from gaphas.segment import LineSegment, Segment
 from gaphas.aspect import HandleFinder, HandleSelection, PaintFocused
 from gaphas.aspect import ItemHandleFinder, ItemHandleSelection, ItemPaintFocused
 
-from awesome_tool.mvc.views.gap.connection import ConnectionView
+from awesome_tool.mvc.views.gap.connection import ConnectionView, DataFlowView
 
 
 @Segment.when_type(ConnectionView)
@@ -15,9 +15,13 @@ class TransitionSegment(LineSegment):
 
     def split(self, pos):
         item = self.item
+        if isinstance(item, DataFlowView):
+            return
         handles = item.handles()
         x, y = self.view.get_matrix_v2i(item).transform_point(*pos)
         for h1, h2 in zip(handles, handles[1:]):
+            if (h1 in item.end_handles() or h2 in item.end_handles()) and len(handles) > 2:
+                continue
             xp = (h1.pos.x + h2.pos.x) / 2
             yp = (h1.pos.y + h2.pos.y) / 2
             if distance_point_point_fast((x, y), (xp, yp)) <= 2. / item.hierarchy_level:
@@ -106,11 +110,12 @@ class LineSegmentPainter(ItemPaintFocused):
     def paint(self, context):
         view = self.view
         item = view.hovered_item
+        if isinstance(item, DataFlowView):
+            return
         if item and item is view.focused_item:
             cr = context.cairo
             h = item.handles()
             for h1, h2 in zip(h[:-1], h[1:]):
-                # TODO: draw pseudo port correctly on line
                 p1, p2 = h1.pos, h2.pos
                 cx = (p1.x + p2.x) / 2
                 cy = (p1.y + p2.y) / 2

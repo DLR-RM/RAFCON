@@ -1,10 +1,11 @@
 from gaphas.item import Line, NW, SE
 from gaphas.segment import Segment
 
-from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint
+from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView,\
     ScopedDataInputPortView, ScopedDataOutputPortView, PortView
-from awesome_tool.mvc.views.gap.ports import SnappedSide
+
+from awesome_tool.mvc.controllers.gap.enums import SnappedSide
 
 from awesome_tool.utils import constants
 from awesome_tool.mvc.config import global_gui_config
@@ -17,7 +18,7 @@ from math import atan2, pi
 
 class PerpLine(Line):
 
-    def __init__(self, hierarchy_level, perpendicular_ends=True):
+    def __init__(self, hierarchy_level):
         super(PerpLine, self).__init__()
         self._from_handle = self.handles()[0]
         self._to_handle = self.handles()[1]
@@ -26,13 +27,17 @@ class PerpLine(Line):
         self.hierarchy_level = hierarchy_level
 
         self._from_port = None
+        self._from_waypoint = None
+        self._from_port_constraint = None
         self._to_port = None
-
-        self._perpendicular_ends = perpendicular_ends
+        self._to_waypoint = None
+        self._to_port_constraint = None
 
         self._arrow_color = ""
         self._line_color = ""
         self._head_length = 0.
+        self._to_head_length = 0.
+        self._head_draw_offset = 0.
 
     @property
     def name(self):
@@ -56,18 +61,62 @@ class PerpLine(Line):
     def from_port(self, port):
         assert isinstance(port, PortView)
         self._from_port = port
+        self._head_length = port.port_side_size
+        if not self._from_waypoint:
+            self._from_waypoint = self.add_perp_waypoint()
+            self._from_port_constraint = KeepPortDistanceConstraint(self.from_handle().pos, self._from_waypoint.pos,
+                                                                    port, self._head_length, self.is_out_port(port))
+            self.canvas.solver.add_constraint(self._from_port_constraint)
         if self.to_port:
             self.line_width = min(self.to_port.port_side_size, port.port_side_size) * .2
         else:
             self.line_width = port.port_side_size * .2
-        self._head_length = port.port_side_size
 
     @to_port.setter
     def to_port(self, port):
         assert isinstance(port, PortView)
         self._to_port = port
+        self._to_head_length = port.port_side_size
+        if not self._to_waypoint:
+            self._to_waypoint = self.add_perp_waypoint(begin=False)
+            self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos,
+                                                                  port, 2 * self._to_head_length, self.is_in_port(port))
+            self.canvas.solver.add_constraint(self._to_port_constraint)
         if self.from_port:
             self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
+
+    def end_handles_perp(self):
+        end_handles = [self.from_handle(), self.to_handle()]
+        if self._from_waypoint:
+            end_handles.append(self._from_waypoint)
+        if self._to_waypoint:
+            end_handles.append(self._to_waypoint)
+        return end_handles
+
+    def end_handles(self):
+        return [self.from_handle(), self.to_handle()]
+
+    def perp_waypoint_handles(self):
+        waypoint_handles = []
+        if self._from_waypoint:
+            waypoint_handles.append(self._from_waypoint)
+        if self._to_waypoint:
+            waypoint_handles.append(self._to_waypoint)
+        return waypoint_handles
+
+    def reset_from_port(self):
+        self._from_port = None
+        self.canvas.solver.remove_constraint(self._from_port_constraint)
+        self._from_port_constraint = None
+        self._handles.remove(self._from_waypoint)
+        self._from_waypoint = None
+
+    def reset_to_port(self):
+        self._to_port = None
+        self.canvas.solver.remove_constraint(self._to_port_constraint)
+        self._to_port_constraint = None
+        self._handles.remove(self._to_waypoint)
+        self._to_waypoint = None
 
     def from_handle(self):
         return self._from_handle
@@ -86,14 +135,14 @@ class PerpLine(Line):
     def draw_tail(self, context):
         cr = context.cairo
         cr.set_source_color(Color(self._line_color))
-        cr.line_to(2.5 / self.hierarchy_level, 0)
+        cr.line_to(2 * self._to_head_length, 0)
         cr.stroke()
         cr.set_source_color(Color(self._arrow_color))
-        cr.move_to(2.5 / self.hierarchy_level, 0)
-        cr.line_to(0, 0)
-        cr.line_to(1.0 / self.hierarchy_level, 1.0 / self.hierarchy_level)
-        cr.move_to(0, 0)
-        cr.line_to(1.0 / self.hierarchy_level, -1.0 / self.hierarchy_level)
+        cr.move_to(2 * self._to_head_length, 0)
+        cr.line_to(self._head_draw_offset, 0)
+        cr.line_to(self._to_head_length / 2. + self._head_draw_offset, self._to_head_length / 2.)
+        cr.move_to(self._head_draw_offset, 0)
+        cr.line_to(self._to_head_length / 2. + self._head_draw_offset, -self._to_head_length / 2.)
         cr.stroke()
 
     def draw(self, context):
@@ -115,10 +164,11 @@ class PerpLine(Line):
         draw_line_end(self._handles[0].pos, self._head_angle, self.draw_head)
         for h in self._handles[1:-1]:
             cr.line_to(*h.pos)
-        if not self._perpendicular_ends:
-            draw_line_end(self._handles[-1].pos, self._tail_angle, self.draw_tail)
+        if self.to_port is None:
+            self._head_draw_offset = 0.
         else:
-            draw_line_end(self._get_tail_pos(), self._tail_angle, self.draw_tail)
+            self._head_draw_offset = self._to_head_length / 2.
+        draw_line_end(self._handles[-1].pos, self._tail_angle, self.draw_tail)
         cr.stroke()
 
         if self.name:
@@ -152,7 +202,12 @@ class PerpLine(Line):
             elif angle > pi / 2.:
                 angle -= pi
 
-        outcome_side = self.from_port.port_side_size
+        if self.from_port:
+            outcome_side = self.from_port.port_side_size
+        elif self.to_port:
+            outcome_side = self.to_port.port_side_size
+        else:
+            outcome_side = 5.
 
         pcc = CairoContext(cc)
         pcc.set_antialias(ANTIALIAS_SUBPIXEL)
@@ -178,33 +233,6 @@ class PerpLine(Line):
 
         c.restore()
 
-    def post_update(self, context):
-        if self.from_port is None:
-            h0, h1 = self._handles[:2]
-            p0, p1 = h0.pos, h1.pos
-            self._head_angle = atan2(p1.y - p0.y, p1.x - p0.x)
-        elif self.from_port.side is SnappedSide.RIGHT:
-            self._head_angle = 0 if self.is_out_port(self.from_port) else pi
-        elif self.from_port.side is SnappedSide.TOP:
-            self._head_angle = pi * 3. / 2. if self.is_out_port(self.from_port) else pi / 2.
-        elif self.from_port.side is SnappedSide.LEFT:
-            self._head_angle = pi if self.is_out_port(self.from_port) else 0
-        elif self.from_port.side is SnappedSide.BOTTOM:
-            self._head_angle = pi / 2. if self.is_out_port(self.from_port) else pi * 3. / 2.
-
-        if self.to_port is None:
-            h1, h0 = self._handles[-2:]
-            p1, p0 = h1.pos, h0.pos
-            self._tail_angle = atan2(p1.y - p0.y, p1.x - p0.x)
-        elif self.to_port.side is SnappedSide.RIGHT:
-            self._tail_angle = pi if self.is_out_port(self.to_port) else 0
-        elif self.to_port.side is SnappedSide.TOP:
-            self._tail_angle = pi / 2. if self.is_out_port(self.to_port) else pi * 3. / 2.
-        elif self.to_port.side is SnappedSide.LEFT:
-            self._tail_angle = 0 if self.is_out_port(self.to_port) else pi
-        elif self.to_port.side is SnappedSide.BOTTOM:
-            self._tail_angle = pi * 3. / 2. if self.is_out_port(self.to_port) else pi / 2.
-
     def _update_ports(self):
         assert len(self._handles) >= 2, 'Not enough segments'
         self._ports = []
@@ -221,6 +249,15 @@ class PerpLine(Line):
         self._handles.insert(-1, handle)
         self._keep_handle_in_parent_state(handle)
         self._update_ports()
+
+    def add_perp_waypoint(self, pos=(0, 0), begin=True):
+        handle = self._create_handle(pos)
+        if begin:
+            self._handles.insert(1, handle)
+        else:
+            self._handles.insert(len(self._handles) - 1, handle)
+        self._update_ports()
+        return handle
 
     @staticmethod
     def is_in_port(port):

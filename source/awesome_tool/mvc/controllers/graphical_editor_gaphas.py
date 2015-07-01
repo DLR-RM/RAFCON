@@ -1,6 +1,8 @@
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
+from awesome_tool.mvc.controllers.gap import segment
+
 from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.mvc.clipboard import global_clipboard
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
@@ -12,7 +14,10 @@ from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
 from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView
 from awesome_tool.mvc.views.gap.state import StateView
-from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView
+from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView, FromScopedVariableDataFlowView,\
+    ToScopedVariableDataFlowView
+
+from awesome_tool.mvc.controllers.gap.enums import Direction
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.mvc.views.gap.canvas import MyCanvas
@@ -642,6 +647,22 @@ class GraphicalEditorController(ExtendedController):
 
     def draw_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
         try:
+            if use_waypoints:
+                waypoint_list = transition_m.meta['gui']['editor']['waypoints']
+                new_waypoint_list = []
+                for waypoint in waypoint_list:
+                    if not isinstance(transition_m.meta['gui']['editor']['invert_y'], bool) or \
+                            transition_m.meta['gui']['editor']['invert_y']:
+                        waypoint = (waypoint[0], -waypoint[1])
+                        new_waypoint_list.append(waypoint)
+                    transition_v.add_waypoint(waypoint)
+
+                if not isinstance(transition_m.meta['gui']['editor']['invert_y'], bool) or \
+                        transition_m.meta['gui']['editor']['invert_y']:
+                    transition_m.meta['gui']['editor']['invert_y'] = False
+                    transition_m.meta['gui']['editor']['waypoints'] = new_waypoint_list
+                    self.model.state_machine.marked_dirty = True
+
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
             if from_state_id is None:
@@ -664,22 +685,6 @@ class GraphicalEditorController(ExtendedController):
                 to_state_m = parent_state_m.states[to_state_id]
                 to_state_v = to_state_m.temp['gui']['editor']['view']
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
-
-            if use_waypoints:
-                waypoint_list = transition_m.meta['gui']['editor']['waypoints']
-                new_waypoint_list = []
-                for waypoint in waypoint_list:
-                    if not isinstance(transition_m.meta['gui']['editor']['invert_y'], bool) or \
-                            transition_m.meta['gui']['editor']['invert_y']:
-                        waypoint = (waypoint[0], -waypoint[1])
-                        new_waypoint_list.append(waypoint)
-                    transition_v.add_waypoint(waypoint)
-
-                if not isinstance(transition_m.meta['gui']['editor']['invert_y'], bool) or \
-                        transition_m.meta['gui']['editor']['invert_y']:
-                    transition_m.meta['gui']['editor']['invert_y'] = False
-                    transition_m.meta['gui']['editor']['waypoints'] = new_waypoint_list
-                    self.model.state_machine.marked_dirty = True
 
             # Let the view draw the transition and store the returned OpenGL object id
             # if transition_m in self.model.selection.get_transitions():
@@ -706,7 +711,28 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(parent_state_v, StateView)
         for data_flow_m in parent_state_m.data_flows:
 
-            data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
+            from_state_id = data_flow_m.data_flow.from_state
+            from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
+                from_state_id]
+
+            to_state_id = data_flow_m.data_flow.to_state
+            to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
+                to_state_id]
+
+            from_key = data_flow_m.data_flow.from_key
+            to_key = data_flow_m.data_flow.to_key
+
+            from_port_m = from_state_m.get_data_port_model(from_key)
+            to_port_m = to_state_m.get_data_port_model(to_key)
+
+            if isinstance(from_port_m, ScopedVariableModel):
+                name = from_port_m.scoped_variable.name
+                data_flow_v = FromScopedVariableDataFlowView(data_flow_m, hierarchy_level, name)
+            elif isinstance(to_port_m, ScopedVariableModel):
+                name = to_port_m.scoped_variable.name
+                data_flow_v = ToScopedVariableDataFlowView(data_flow_m, hierarchy_level, name)
+            else:
+                data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
             self.canvas.add(data_flow_v, parent_state_v)
 
             self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)

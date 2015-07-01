@@ -257,7 +257,7 @@ def convert_handles_pos_list_to_rel_pos_list(canvas, transition):
     handles_list = transition.handles()
     rel_pos_list = []
     for handle in handles_list:
-        if handle is transition.to_handle() or handle is transition.from_handle():
+        if handle in transition.end_handles_perp():
             continue
         rel_pos_list.append(calc_rel_pos_to_parent(canvas, transition, handle))
     return rel_pos_list

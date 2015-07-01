@@ -3,7 +3,9 @@ logger = log.get_logger(__name__)
 
 from gaphas.geometry import distance_point_point
 from gaphas.constraint import Constraint
-from awesome_tool.mvc.views.gap.ports import SnappedSide
+from awesome_tool.mvc.views.gap.ports import PortView
+
+from awesome_tool.mvc.controllers.gap.enums import SnappedSide
 
 from copy import deepcopy
 
@@ -80,6 +82,51 @@ class KeepPointWithinConstraint(KeepRectangleWithinConstraint):
 
     def __init__(self, parent_nw, parent_se, child_pos, margin=None):
         super(KeepPointWithinConstraint, self).__init__(parent_nw, parent_se, child_pos, child_pos)
+
+
+class KeepRelativePositionConstraint(Constraint):
+
+    def __init__(self, anchor, point):
+        super(KeepRelativePositionConstraint, self).__init__(anchor[0], anchor[1], point[0], point[1])
+
+        self.point = point
+        self.anchor = anchor
+
+        self._dx = point.x.value - anchor.x.value
+        self._dy = point.y.value - anchor.y.value
+
+    def solve_for(self, var):
+        self.point.x = self._dx + self.anchor.x.value
+        self.point.y = self._dy + self.anchor.y.value
+
+
+class KeepPortDistanceConstraint(Constraint):
+
+    def __init__(self, anchor, point, port, port_side_size, incoming):
+        super(KeepPortDistanceConstraint, self).__init__(anchor[0], anchor[1], point[0], point[1])
+        assert isinstance(port, PortView)
+
+        self.distance = port_side_size
+
+        self.incoming = incoming
+        self.point = point
+        self.anchor = anchor
+        self.port = port
+
+    def solve_for(self, var):
+        distance = self.distance
+        if self.port.side is SnappedSide.TOP:
+            self.point[0].value = self.anchor[0]
+            self.point[1].value = self.anchor[1].value - distance if self.incoming else self.anchor[1].value + distance
+        elif self.port.side is SnappedSide.BOTTOM:
+            self.point[0].value = self.anchor[0]
+            self.point[1].value = self.anchor[1].value + distance if self.incoming else self.anchor[1].value - distance
+        elif self.port.side is SnappedSide.LEFT:
+            self.point[0].value = self.anchor[0].value - distance if self.incoming else self.anchor[0].value + distance
+            self.point[1].value = self.anchor[1]
+        elif self.port.side is SnappedSide.RIGHT:
+            self.point[0].value = self.anchor[0].value + distance if self.incoming else self.anchor[0].value - distance
+            self.point[1].value = self.anchor[1]
 
 
 class PortRectConstraint(Constraint):

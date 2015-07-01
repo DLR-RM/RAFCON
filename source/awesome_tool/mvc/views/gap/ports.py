@@ -8,52 +8,28 @@ from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 
 from awesome_tool.utils import constants
 
+from awesome_tool.mvc.controllers.gap import gap_draw_helper
+
+from gtkmvc.model import Model
+
 import cairo
 from pango import SCALE, FontDescription
 from gtk.gdk import Color, CairoContext
 
-import math
-
-from enum import Enum
-
-Direction = Enum('DIRECTION', 'UP DOWN LEFT RIGHT')
+from awesome_tool.mvc.controllers.gap.enums import SnappedSide, Direction
 
 
-class SnappedSide(Enum):
-    LEFT = 1
-    TOP = 2
-    RIGHT = 3
-    BOTTOM = 4
+class PortView(Model, object):
 
-    def next(self):
-        val = self.value + 1
-        if val == 5:
-            val = 1
-        return SnappedSide(val)
+    side = None
 
-    def prev(self):
-        val = self.value - 1
-        if val == 0:
-            val = 4
-        return SnappedSide(val)
-
-    def opposite(self):
-        val = self.value
-        if val == 1:
-            return SnappedSide(3)
-        elif val == 2:
-            return SnappedSide(4)
-        elif val == 3:
-            return SnappedSide(1)
-        elif val == 4:
-            return SnappedSide(2)
-
-
-class PortView(object):
+    __observables__ = ('side', )
 
     def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
+        Model.__init__(self)
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
+        self._side = None
         self.side = side
         self._parent = parent
 
@@ -78,6 +54,16 @@ class PortView(object):
 
         self._port_side_size = port_side_size
         self.update_port_side_size()
+
+    @property
+    def side(self):
+        return self._side
+
+    @side.setter
+    @Model.setter('side')
+    def side(self, side):
+        assert isinstance(side, SnappedSide)
+        self._side = side
 
     @property
     def port_side_size(self):
@@ -217,80 +203,13 @@ class PortView(object):
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
 
-        rot_angle = .0
-
         text_size = (layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE))
-
-        move_x = 0.
-        move_y = 0.
 
         print_side = self.side if not self.parent.has_selected_child() else self.side.opposite()
 
-        if print_side is SnappedSide.LEFT:
-            move_x = self.pos.x + 2 * outcome_side
-            move_y = self.pos.y - text_size[1] / 2.
-
-            c.move_to(move_x, move_y)
-            c.line_to(move_x + text_size[0], move_y)
-            c.line_to(move_x + text_size[0], self.pos.y + text_size[1] / 2.)
-            c.line_to(move_x, move_y + text_size[1])
-            c.line_to(self.pos.x + outcome_side, self.pos.y)
-            if self._draw_connection_to_port:
-                c.line_to(self.pos.x + outcome_side / 2., self.pos.y)
-                c.line_to(self.pos.x + outcome_side, self.pos.y)
-            c.line_to(move_x, move_y)
-        elif print_side is SnappedSide.BOTTOM:
-            move_x = self.pos.x - text_size[1] / 2.
-            move_y = self.pos.y - 2 * outcome_side
-
-            c.move_to(move_x, move_y)
-            c.line_to(move_x, move_y - text_size[0])
-            c.line_to(move_x + text_size[1], move_y - text_size[0])
-            c.line_to(move_x + text_size[1], move_y)
-            c.line_to(self.pos.x, self.pos.y - outcome_side)
-            if self._draw_connection_to_port:
-                c.line_to(self.pos.x, self.pos.y - outcome_side / 2.)
-                c.line_to(self.pos.x, self.pos.y - outcome_side)
-            c.line_to(move_x, move_y)
-
-            rot_angle = - math.pi / 2
-        elif print_side is SnappedSide.RIGHT:
-            move_x = self.pos.x - (2 * outcome_side + text_size[0])
-            move_y = self.pos.y - text_size[1] / 2.
-
-            c.move_to(move_x, move_y)
-            c.line_to(move_x + text_size[0], move_y)
-            c.line_to(self.pos.x - outcome_side, self.pos.y)
-            if self._draw_connection_to_port:
-                c.line_to(self.pos.x - outcome_side / 2., self.pos.y)
-                c.line_to(self.pos.x - outcome_side, self.pos.y)
-            c.line_to(move_x + text_size[0], self.pos.y + text_size[1] / 2.)
-            c.line_to(move_x, move_y + text_size[1])
-            c.line_to(move_x, move_y)
-        elif print_side is SnappedSide.TOP:
-            move_x = self.pos.x + text_size[1] / 2.
-            move_y = self.pos.y + 2 * outcome_side
-
-            c.move_to(move_x, move_y)
-            c.line_to(move_x, move_y + text_size[0])
-            c.line_to(move_x - text_size[1], move_y + text_size[0])
-            c.line_to(move_x - text_size[1], move_y)
-            c.line_to(self.pos.x, self.pos.y + outcome_side)
-            if self._draw_connection_to_port:
-                c.line_to(self.pos.x, self.pos.y + outcome_side / 2.)
-                c.line_to(self.pos.x, self.pos.y + outcome_side)
-            c.line_to(move_x, move_y)
-
-            rot_angle = math.pi / 2
-
-        if self._fill:
-            c.set_source_color(Color(self.fill_color))
-            c.fill_preserve()
-            c.set_source_color(Color(self.fill_color))
-            c.stroke()
-        else:
-            c.set_source_color(Color(self.fill_color))
-            c.stroke()
+        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, self.fill_color, text_size, self.pos,
+                                                                    print_side, self.port_side_size,
+                                                                    self._draw_connection_to_port, self._fill)
 
         c.move_to(move_x, move_y)
 
@@ -450,6 +369,7 @@ class OutcomeView(PortView):
 class ScopedDataPortView(PortView):
 
     def __init__(self, in_port, parent, scoped_variable_m, side):
+
         super(ScopedDataPortView, self).__init__(in_port=in_port, port_side_size=0, parent=parent, side=side)
 
         assert isinstance(scoped_variable_m, ScopedVariableModel)

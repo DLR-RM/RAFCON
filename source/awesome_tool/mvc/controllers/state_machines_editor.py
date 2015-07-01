@@ -14,12 +14,12 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 logger = log.get_logger(__name__)
 
 GAPHAS_AVAILABLE = True
-try:
-    from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
-    from awesome_tool.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
-        GraphicalEditorGaphasController
-except:
-    GAPHAS_AVAILABLE = False
+# try:
+from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
+from awesome_tool.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
+    GraphicalEditorGaphasController
+# except:
+#     GAPHAS_AVAILABLE = False
 
 import awesome_tool.statemachine.singleton
 from awesome_tool.utils import constants, helper
