@@ -205,7 +205,7 @@ class PortView(Model, object):
 
         text_size = (layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE))
 
-        print_side = self.side if not self.parent.has_selected_child() else self.side.opposite()
+        print_side = self.side if not self.parent.selected else self.side.opposite()
 
         rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, self.fill_color, text_size, self.pos,
                                                                     print_side, self.port_side_size,

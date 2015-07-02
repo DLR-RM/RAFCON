@@ -2,7 +2,8 @@ from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
 from gaphas.item import NW
 
-from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, DataFlowView
+from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView,\
+    DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedDataInputPortView, ScopedDataOutputPortView
 from awesome_tool.mvc.views.gap.state import StateView, NameView
@@ -757,6 +758,20 @@ class MyHandleTool(HandleTool):
                         (isinstance(connection, ConnectionPlaceholderView) and connection.transition_placeholder)):
                     if self.set_matching_port(state.get_logic_ports(), item.port, handle, connection):
                         return
+                elif isinstance(connection, FromScopedVariableDataFlowView):
+                    if handle is connection.from_handle():
+                        if self.set_matching_port(state.scoped_variables, item.port, handle, connection):
+                            return
+                    elif handle is connection.to_handle():
+                        if self.set_matching_port(state.inputs, item.port, handle, connection):
+                            return
+                elif isinstance(connection, ToScopedVariableDataFlowView):
+                    if handle is connection.to_handle():
+                        if self.set_matching_port(state.scoped_variables, item.port, handle, connection):
+                            return
+                    elif handle is connection.from_handle():
+                        if self.set_matching_port(state.outputs, item.port, handle, connection):
+                            return
                 elif (isinstance(connection, DataFlowView) or
                         (isinstance(connection, ConnectionPlaceholderView) and not connection.transition_placeholder)):
                     if self.set_matching_port(state.get_data_ports(), item.port, handle, connection):
