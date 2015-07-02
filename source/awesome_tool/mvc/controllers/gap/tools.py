@@ -5,7 +5,7 @@ from gaphas.item import NW
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView,\
     DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
-    ScopedDataInputPortView, ScopedDataOutputPortView
+    ScopedDataInputPortView, ScopedDataOutputPortView, ScopedVariablePortView
 from awesome_tool.mvc.views.gap.state import StateView, NameView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
@@ -228,7 +228,7 @@ class MyHandleTool(HandleTool):
             self._waypoint_list = item.model.meta['gui']['editor']['waypoints']
 
         # Set start state
-        if isinstance(item, StateView) or isinstance(item, ScopedVariableView):
+        if isinstance(item, StateView):  # or isinstance(item, ScopedVariableView):
             self._start_state = item
             self._start_width = item.width
             self._start_height = item.height
@@ -357,8 +357,9 @@ class MyHandleTool(HandleTool):
             start_port = gap_helper.get_port_for_handle(handle, start_state)
 
             # If the start state has a parent continue (ensure no transition is created from top level state)
-            if ((isinstance(start_state_parent, StateView) or (start_state_parent is None and isinstance(start_port, IncomeView)) or
-                    (start_state_parent is None and isinstance(start_port, InputPortView))) and start_port):
+            if (start_port and (isinstance(start_state_parent, StateView) or
+                                (start_state_parent is None and isinstance(start_port, (IncomeView, InputPortView,
+                                                                                        ScopedVariablePortView))))):
 
                 # Go up one hierarchy_level to match the transitions line width
                 transition_placeholder = isinstance(start_port, IncomeView) or isinstance(start_port, OutcomeView)
@@ -379,12 +380,9 @@ class MyHandleTool(HandleTool):
                     start_state.connect_to_input_port(start_port.port_id, placeholder_v, placeholder_v.from_handle())
                 elif isinstance(start_port, OutputPortView):
                     start_state.connect_to_output_port(start_port.port_id, placeholder_v, placeholder_v.from_handle())
-                elif isinstance(start_port, ScopedDataInputPortView):
-                    # It is not possible to create connection beginning from Scoped Data Input Port
-                    return False
-                elif isinstance(start_port, ScopedDataOutputPortView):
-                    start_state_parent.connect_to_scoped_variable_output(start_state.port_id, placeholder_v,
-                                                                         placeholder_v.from_handle())
+                elif isinstance(start_port, ScopedVariablePortView):
+                    start_state.connect_to_scoped_variable_port(start_port.port_id, placeholder_v,
+                                                                placeholder_v.from_handle())
                 # Ungrab start port handle and grab new transition's to handle to move, also set motion handle
                 # to just grabbed handle
                 self.ungrab_handle()
@@ -436,10 +434,10 @@ class MyHandleTool(HandleTool):
     def _handle_data_flow_view_change(self, item, handle):
 
         def is_output_port(port):
-            return isinstance(port, OutputPortView) or isinstance(port, ScopedDataOutputPortView)
+            return isinstance(port, OutputPortView) or isinstance(port, ScopedVariablePortView)
 
         def is_input_port(port):
-            return isinstance(port, InputPortView) or isinstance(port, ScopedDataInputPortView)
+            return isinstance(port, InputPortView) or isinstance(port, ScopedVariablePortView)
 
         start_parent = self._start_port.parent
         last_parent = None
@@ -622,6 +620,8 @@ class MyHandleTool(HandleTool):
                     start_parent.connect_to_input_port(self._start_port.port_id, connection, handle)
                 if isinstance(self._start_port, OutputPortView):
                     start_parent.connect_to_output_port(self._start_port.port_id, connection, handle)
+                if isinstance(self._start_port, ScopedVariablePortView):
+                    start_parent.connect_to_scoped_variable_port(self._start_port.port_id, connection, handle)
 
         self.view.canvas.update()
 

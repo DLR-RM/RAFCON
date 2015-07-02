@@ -431,8 +431,29 @@ class GraphicalEditorController(ExtendedController):
     def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
         parent_state_v = self.get_view_for_model(parent_state_m)
 
+        from_state_id = data_flow_m.data_flow.from_state
+        from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
+            from_state_id]
+
+        to_state_id = data_flow_m.data_flow.to_state
+        to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
+            to_state_id]
+
         new_data_flow_hierarchy_level = parent_state_v.hierarchy_level
-        new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
+        from_key = data_flow_m.data_flow.from_key
+        to_key = data_flow_m.data_flow.to_key
+
+        from_port_m = from_state_m.get_data_port_model(from_key)
+        to_port_m = to_state_m.get_data_port_model(to_key)
+
+        if isinstance(from_port_m, ScopedVariableModel):
+            new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
+                                                             from_port_m.scoped_variable.name)
+        elif isinstance(to_port_m, ScopedVariableModel):
+            new_data_flow_v = ToScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
+                                                           to_port_m.scoped_variable.name)
+        else:
+            new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
 
         self.canvas.add(new_data_flow_v, parent_state_v)
 
@@ -563,38 +584,8 @@ class GraphicalEditorController(ExtendedController):
             state_width = size[0]
             state_height = size[1]
 
-            num_scoped_variables = 0
             for scoped_variable_m in state_m.scoped_variables:
-                if not isinstance(scoped_variable_m.meta['gui']['editor']['size'], tuple):
-                    port_height = min(state_meta['size']) / 15.
-                    port_width = min(state_meta['size']) / 5.
-                    scoped_variable_m.meta['gui']['editor']['size'] = (port_width, port_height)
-                port_size = scoped_variable_m.meta['gui']['editor']['size']
-
-                if isinstance(scoped_variable_m.meta['gui']['editor']['rel_pos'], tuple):
-                    rel_pos = scoped_variable_m.meta['gui']['editor']['rel_pos']
-                elif isinstance(scoped_variable_m.meta['gui']['editor']['inner_rel_pos'], tuple):
-                    rel_pos = scoped_variable_m.meta['gui']['editor']['inner_rel_pos']
-                else:
-                    # Put scoped variables by default row-wise in at the top
-                    port_height = port_size[1]
-                    port_width = port_size[0]
-                    max_cols = state_width // port_width
-                    (row, col) = divmod(num_scoped_variables, max_cols)
-                    rel_pos = (col * port_width, port_height * (2 * row + 1))
-                    scoped_variable_m.meta['gui']['editor']['rel_pos'] = rel_pos
-
-                if isinstance(scoped_variable_m.meta['gui']['editor']['rel_pos'], tuple):
-                    if not isinstance(scoped_variable_m.meta['gui']['editor']['invert_y'], bool) or\
-                            scoped_variable_m.meta['gui']['editor']['invert_y']:
-                        rel_pos = (rel_pos[0], -rel_pos[1])
-                        scoped_variable_m.meta['gui']['editor']['rel_pos'] = rel_pos
-                        scoped_variable_m.meta['gui']['editor']['invert_y'] = False
-                        self.model.state_machine.marked_dirty = True
-
-                scoped_variable_v = state_v.add_scoped_variable(scoped_variable_m, port_size)
-                scoped_variable_v.matrix.translate(*rel_pos)
-                num_scoped_variables += 1
+                state_v.add_scoped_variable(scoped_variable_m)
 
             for child_state in state_m.states.itervalues():
                 # Calculate default positions for the child states
@@ -766,14 +757,14 @@ class GraphicalEditorController(ExtendedController):
 
         # For scoped variables, there is no inner and outer connector
         if isinstance(from_port_m, ScopedVariableModel):
-            from_state_v.connect_to_scoped_variable_output(from_key, data_flow_v, data_flow_v.from_handle())
+            from_state_v.connect_to_scoped_variable_port(from_key, data_flow_v, data_flow_v.from_handle())
         elif from_port_m in from_state_m.input_data_ports:
             from_state_v.connect_to_input_port(from_key, data_flow_v, data_flow_v.from_handle())
         elif from_port_m in from_state_m.output_data_ports:
             from_state_v.connect_to_output_port(from_key, data_flow_v, data_flow_v.from_handle())
 
         if isinstance(to_port_m, ScopedVariableModel):
-            to_state_v.connect_to_scoped_variable_input(to_key, data_flow_v, data_flow_v.to_handle())
+            to_state_v.connect_to_scoped_variable_port(to_key, data_flow_v, data_flow_v.to_handle())
         elif to_port_m in to_state_m.output_data_ports:
             to_state_v.connect_to_output_port(to_key, data_flow_v, data_flow_v.to_handle())
         elif to_port_m in to_state_m.input_data_ports:

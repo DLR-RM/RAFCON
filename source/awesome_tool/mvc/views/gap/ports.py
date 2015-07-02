@@ -12,6 +12,8 @@ from awesome_tool.mvc.controllers.gap import gap_draw_helper
 
 from gtkmvc.model import Model
 
+from math import pi
+
 import cairo
 from pango import SCALE, FontDescription
 from gtk.gdk import Color, CairoContext
@@ -364,6 +366,141 @@ class OutcomeView(PortView):
             fill_color = '#fff'
 
         self.draw_port(context, fill_color)
+
+
+class ScopedVariablePortView(PortView):
+
+    def __init__(self, parent, port_side_size, scoped_variable_m):
+        super(ScopedVariablePortView, self).__init__(False, port_side_size, parent=parent, side=SnappedSide.TOP)
+
+        assert isinstance(scoped_variable_m, ScopedVariableModel)
+        self._scoped_variable_m = ref(scoped_variable_m)
+
+    @property
+    def model(self):
+        return self._scoped_variable_m()
+
+    @property
+    def port_id(self):
+        return self.model.scoped_variable.data_port_id
+
+    @property
+    def name(self):
+        return self.model.scoped_variable.name
+
+    def draw(self, context, state):
+        name_size = self._get_name_size(context)
+
+        self.update_port_side_size()
+        c = context.cairo
+        outcome_side = self.port_side_size
+
+        self._draw_rectangle(c, name_size[0], outcome_side)
+        c.set_source_color(Color('#f00'))
+        c.fill_preserve()
+        c.stroke()
+
+        self.draw_name(context)
+
+    def draw_name(self, context):
+        outcome_side = self.port_side_size
+        c = context.cairo
+
+        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
+        if isinstance(c, CairoContext):
+            cc = c
+        else:
+            cc = c._cairo
+
+        pcc = CairoContext(cc)
+        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        layout = pcc.create_layout()
+        layout.set_text(self.name)
+
+        font_name = constants.FONT_NAMES[0]
+        font_size = outcome_side * .8
+
+        font = FontDescription(font_name + " " + str(font_size))
+        layout.set_font_description(font)
+
+        name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
+
+        cc.set_source_color(Color('#ededee'))
+
+        rot_angle = .0
+        draw_pos = self._get_draw_position(name_size[0], outcome_side)
+
+        if self.side is SnappedSide.RIGHT:
+            c.move_to(draw_pos[0] + outcome_side, draw_pos[1])
+            rot_angle = pi / 2
+        elif self.side is SnappedSide.LEFT:
+            c.move_to(draw_pos[0], draw_pos[1] + name_size[0])
+            rot_angle = - pi / 2
+        elif self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
+            c.move_to(draw_pos[0], draw_pos[1])
+
+        pcc.update_layout(layout)
+        pcc.rotate(rot_angle)
+        pcc.show_layout(layout)
+        pcc.rotate(-rot_angle)
+
+        c.move_to(*self.pos)
+
+    def _draw_rectangle(self, context_cairo, text_width, port_height):
+        c = context_cairo
+
+        text_width_half = text_width / 2. + port_height * .2
+
+        draw_pos = self._get_draw_position(text_width, port_height)
+
+        if self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
+            c.rectangle(draw_pos[0], draw_pos[1], text_width_half * 2., port_height)
+        elif self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
+            c.rectangle(draw_pos[0], draw_pos[1], port_height, text_width_half * 2.)
+
+    def _get_draw_position(self, text_width, port_height):
+        text_width_half = text_width / 2. + port_height * .2
+        height_half = port_height / 2.
+
+        offset = .0
+
+        if self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
+            if self.pos.x - text_width_half < 0:
+                offset = self.pos.x - text_width_half
+            elif self.pos.x + text_width_half > self.parent.width:
+                offset = self.pos.x + text_width_half - self.parent.width
+            return self.pos.x - text_width_half - offset, self.pos.y - height_half
+        elif self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
+            if self.pos.y - text_width_half < 0:
+                offset = self.pos.y - text_width_half
+            elif self.pos.y + text_width_half > self.parent.height:
+                offset = self.pos.y + text_width_half - self.parent.height
+            return self.pos.x - height_half, self.pos.y - text_width_half - offset
+
+    def _get_name_size(self, context):
+        outcome_side = self.port_side_size
+        c = context.cairo
+
+        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
+        if isinstance(c, CairoContext):
+            cc = c
+        else:
+            cc = c._cairo
+
+        pcc = CairoContext(cc)
+        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        layout = pcc.create_layout()
+        layout.set_text(self.name)
+
+        font_name = constants.FONT_NAMES[0]
+        font_size = outcome_side * .8
+
+        font = FontDescription(font_name + " " + str(font_size))
+        layout.set_font_description(font)
+
+        return layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
 
 
 class ScopedDataPortView(PortView):

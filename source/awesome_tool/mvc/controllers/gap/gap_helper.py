@@ -1,7 +1,7 @@
 from awesome_tool.mvc.views.gap.state import StateView, NameView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 from awesome_tool.mvc.views.gap.ports import InputPortView, OutputPortView, ScopedDataInputPortView,\
-    ScopedDataOutputPortView, IncomeView, OutcomeView
+    ScopedDataOutputPortView, IncomeView, OutcomeView, ScopedVariablePortView
 from awesome_tool.mvc.views.gap.connection import TransitionView
 
 from awesome_tool.statemachine.states.container_state import ContainerState
@@ -63,6 +63,9 @@ def get_port_for_handle(handle, state):
             for output in state.outputs:
                 if output.handle == handle:
                     return output
+            for scoped in state.scoped_variables:
+                if scoped.handle == handle:
+                    return scoped
     elif isinstance(state, ScopedVariableView):
         if state.input_port.handle == handle:
             return state.input_port
@@ -114,15 +117,69 @@ def create_new_connection(start_state, from_port, to_port, drop_state=None):
         # - output to output (child state to parent state)
         elif is_input_or_output(from_port) and is_input_or_output(to_port):
             add_data_flow_to_port_parent(to_port, from_port)
-        # It is possible to create a new connection beginning at a scoped variable output to a scoped variable
-        # input, input or output and it is possible to create a new connection beginning at an input or output to a
-        # scoped variable input
-        elif ((isinstance(from_port, ScopedDataOutputPortView) and is_scoped_input_or_input_or_output(to_port))
-              or (is_input_or_output(from_port) and isinstance(to_port, ScopedDataInputPortView))):
-            add_scoped_data_flow_to_port_parent(to_port, from_port)
+        # # It is possible to create a new connection beginning at a scoped variable output to a scoped variable
+        # # input, input or output and it is possible to create a new connection beginning at an input or output to a
+        # # scoped variable input
+        # elif ((isinstance(from_port, ScopedDataOutputPortView) and is_scoped_input_or_input_or_output(to_port))
+        #       or (is_input_or_output(from_port) and isinstance(to_port, ScopedDataInputPortView))):
+        #     add_scoped_data_flow_to_port_parent(to_port, from_port)
+        elif isinstance(from_port, ScopedVariablePortView) and is_input_or_output(to_port):
+            add_from_scoped_variable_data_flow_to_port_parent(to_port, from_port)
+        elif is_input_or_output(from_port) and isinstance(to_port, ScopedVariablePortView):
+            add_to_scoped_variable_data_flow_to_port_parent(to_port, from_port)
     elif from_port and drop_state:
         if is_income_or_outcome(from_port):
             add_transition_to_state(start_state, drop_state.income, from_port)
+
+
+def add_from_scoped_variable_data_flow_to_port_parent(to_port, from_port):
+    from_state_v = from_port.parent
+    to_state_v = to_port.parent
+
+    from_state_m = from_state_v.model
+    to_state_m = to_state_v.model
+
+    if isinstance(to_port, InputPortView) and from_state_v is to_state_v:
+        return
+    if isinstance(to_port, InputPortView) and to_port.has_incoming_connection():
+        return
+
+    responsible_parent_m = from_state_m
+
+    from_state_id = from_state_m.state.state_id
+    from_data_port_id = from_port.port_id
+    to_state_id = to_state_m.state.state_id
+    to_data_port_id = to_port.port_id
+
+    if isinstance(responsible_parent_m.state, ContainerState):
+        try:
+            responsible_parent_m.state.add_data_flow(from_state_id, from_data_port_id, to_state_id, to_data_port_id)
+        except AttributeError as e:
+            logger.warn(e)
+
+
+def add_to_scoped_variable_data_flow_to_port_parent(to_port, from_port):
+    from_state_v = from_port.parent
+    to_state_v = to_port.parent
+
+    from_state_m = from_state_v.model
+    to_state_m = to_state_v.model
+
+    if isinstance(from_port, OutputPortView) and to_state_v in from_state_v.parent.child_state_vs:
+        return
+
+    responsible_parent_m = to_state_m
+
+    from_state_id = from_state_m.state.state_id
+    from_data_port_id = from_port.port_id
+    to_state_id = to_state_m.state.state_id
+    to_data_port_id = to_port.port_id
+
+    if isinstance(responsible_parent_m.state, ContainerState):
+        try:
+            responsible_parent_m.state.add_data_flow(from_state_id, from_data_port_id, to_state_id, to_data_port_id)
+        except AttributeError as e:
+            logger.warn(e)
 
 
 def add_data_flow_to_port_parent(to_port, from_port):
@@ -286,6 +343,8 @@ def update_port_position_meta_data(graphical_editor_view, item, handle):
                 port_meta = item.model.meta['input%d' % port.port_id]['gui']['editor']
             elif isinstance(port, OutputPortView):
                 port_meta = item.model.meta['output%d' % port.port_id]['gui']['editor']
+            elif isinstance(port, ScopedVariablePortView):
+                port_meta = item.model.meta['scoped%d' % port.port_id]['gui']['editor']
             break
     if rel_pos != port_meta['rel_pos']:
         port_meta['rel_pos'] = rel_pos

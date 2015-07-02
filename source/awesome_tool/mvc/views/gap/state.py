@@ -11,7 +11,8 @@ from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 
 from awesome_tool.mvc.views.gap.constraint import KeepRectangleWithinConstraint, PortRectConstraint
-from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView
+from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
+    ScopedVariablePortView
 from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 from awesome_tool.mvc.views.gap.connection import TransitionView
 
@@ -47,6 +48,7 @@ class StateView(Element):
         self._inputs = []
         self._outputs = []
         self._scoped_variables = []
+        self._scoped_variables_ports = []
 
         self.keep_rect_constraints = {}
         self.port_constraints = {}
@@ -178,7 +180,7 @@ class StateView(Element):
 
     @property
     def scoped_variables(self):
-        return self._scoped_variables
+        return self._scoped_variables_ports
 
     @property
     def name_view(self):
@@ -248,6 +250,10 @@ class StateView(Element):
         for output in self._outputs:
             output.port_side_size = self.port_side_size
             output.draw(context, self)
+
+        for scoped_variable in self._scoped_variables_ports:
+            scoped_variable.port_side_size = self.port_side_size
+            scoped_variable.draw(context, self)
 
         if self.moving:
             self._draw_moving_symbol(context)
@@ -320,19 +326,25 @@ class StateView(Element):
         item.set_port_for_handle(port_v, handle)
         self._connect_to_port(port_v.port, item, handle)
 
-    def connect_to_scoped_variable_input(self, scoped_variable_id, item, handle):
-        scoped_variable_v = self.scoped_variable(scoped_variable_id)
-        scoped_variable_v.input_port.add_connected_handle(handle, item)
-        item.set_port_for_handle(scoped_variable_v.input_port, handle)
-        c = scoped_variable_v.input_port_port.constraint(self.canvas, item, handle, scoped_variable_v)
-        self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.input_port_port, c)
+    def connect_to_scoped_variable_port(self, scoped_variable_id, item, handle):
+        port_v = self.scoped_variable(scoped_variable_id)
+        port_v.add_connected_handle(handle, item)
+        item.set_port_for_handle(port_v, handle)
+        self._connect_to_port(port_v.port, item, handle)
 
-    def connect_to_scoped_variable_output(self, scoped_variable_id, item, handle):
-        scoped_variable_v = self.scoped_variable(scoped_variable_id)
-        scoped_variable_v.output_port.add_connected_handle(handle, item)
-        item.set_port_for_handle(scoped_variable_v.output_port, handle)
-        c = scoped_variable_v.output_port_port.constraint(self.canvas, item, handle, scoped_variable_v)
-        self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.output_port_port, c)
+    # def connect_to_scoped_variable_input(self, scoped_variable_id, item, handle):
+    #     scoped_variable_v = self.scoped_variable(scoped_variable_id)
+    #     scoped_variable_v.input_port.add_connected_handle(handle, item)
+    #     item.set_port_for_handle(scoped_variable_v.input_port, handle)
+    #     c = scoped_variable_v.input_port_port.constraint(self.canvas, item, handle, scoped_variable_v)
+    #     self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.input_port_port, c)
+    #
+    # def connect_to_scoped_variable_output(self, scoped_variable_id, item, handle):
+    #     scoped_variable_v = self.scoped_variable(scoped_variable_id)
+    #     scoped_variable_v.output_port.add_connected_handle(handle, item)
+    #     item.set_port_for_handle(scoped_variable_v.output_port, handle)
+    #     c = scoped_variable_v.output_port_port.constraint(self.canvas, item, handle, scoped_variable_v)
+    #     self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.output_port_port, c)
 
     def _connect_to_port(self, port, item, handle):
         c = port.constraint(self.canvas, item, handle, self)
@@ -354,7 +366,7 @@ class StateView(Element):
         return self._data_port(self._outputs, port_id)
 
     def scoped_variable(self, scoped_variable_id):
-        return self._data_port(self._scoped_variables, scoped_variable_id)
+        return self._data_port(self._scoped_variables_ports, scoped_variable_id)
 
     def _data_port(self, port_list, port_id):
         for port in port_list:
@@ -456,16 +468,26 @@ class StateView(Element):
         if output_port_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
-    def add_scoped_variable(self, scoped_variable_m, size):
-        scoped_variable_v = ScopedVariableView(scoped_variable_m, size, self)
-        self._scoped_variables.append(scoped_variable_v)
+    # def add_scoped_variable(self, scoped_variable_m, size):
+    #     scoped_variable_v = ScopedVariableView(scoped_variable_m, size, self)
+    #     self._scoped_variables.append(scoped_variable_v)
+    #
+    #     canvas = self.canvas
+    #     canvas.add(scoped_variable_v, self)
+    #
+    #     self.add_keep_rect_within_constraint(canvas, self, scoped_variable_v)
+    #
+    #     return scoped_variable_v
 
-        canvas = self.canvas
-        canvas.add(scoped_variable_v, self)
+    def add_scoped_variable(self, scoped_variable_m):
+        scoped_variable_port_v = ScopedVariablePortView(self, self.port_side_size, scoped_variable_m)
+        self._scoped_variables_ports.append(scoped_variable_port_v)
+        self._ports.append(scoped_variable_port_v.port)
+        self._handles.append(scoped_variable_port_v.handle)
 
-        self.add_keep_rect_within_constraint(canvas, self, scoped_variable_v)
+        scoped_variable_port_v.handle.pos = self.width / 2, 0
 
-        return scoped_variable_v
+        self.add_rect_constraint_for_port(scoped_variable_port_v)
 
     def add_rect_constraint_for_port(self, port):
         constraint = PortRectConstraint((self.handles()[NW].pos, self.handles()[SE].pos), port.pos, port)

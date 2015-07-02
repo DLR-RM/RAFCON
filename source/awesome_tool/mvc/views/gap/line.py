@@ -146,7 +146,7 @@ class PerpLine(Line):
         cr.stroke()
 
     def draw(self, context):
-        if self.parent.moving:
+        if self.parent and self.parent.moving:
             return
 
         def draw_line_end(pos, angle, draw):
