@@ -85,8 +85,8 @@ class NetworkConnections(ExtendedController):
                 self.udp_registered = True
 
     def on_tcp_connect_button_clicked(self, widget, event=None):
-        if global_net_config.get_config_value("SPACEBOARD_CUP_MODE"):
-            logger.error("No TCP connection possible in Spaceboard Cup Mode")
+        if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
+            logger.error("No TCP connection possible in Spacebot Cup Mode")
             return
         if not self.tcp_connected and self.tcp_connector is None:
             self.tcp_connector = reactor.connectTCP(global_net_config.get_server_ip(),
@@ -233,8 +233,8 @@ class UDPConnection(DatagramProtocol):
         Starts the UDP connection with the server and sends an initial "Register Statemachine" message
         """
         sm_name = self.network_connection.model.get_selected_state_machine_model().root_state.state.name
-        if global_net_config.get_config_value("SPACEBOARD_CUP_MODE"):
-            logger.warning("Register UDP connection without acknowledge - Spaceboard Cup Mode")
+        if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
+            logger.warning("Register UDP connection without acknowledge - Spacebot Cup Mode")
             self.send_non_acknowledged_message(sm_name,
                                                (global_net_config.get_server_ip(),
                                                 global_net_config.get_server_udp_port()),
