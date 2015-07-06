@@ -94,8 +94,7 @@ class LoggingView(View):
         :param text_to_split: Text to split
         :return: Array containing the content of text_to_split split up
         """
-
-        assert isinstance(text_to_split, str)
+        assert isinstance(text_to_split, (str, unicode))
         first_separation = text_to_split.find(": ") + 1
         splitt = [text_to_split[:first_separation]]
         second_separation = text_to_split.find(":", first_separation) + 1

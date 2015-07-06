@@ -100,7 +100,7 @@ class StateMachinesEditorController(ExtendedController):
 
         assert isinstance(state_machine_model, StateMachineModel)
 
-        self.get_controller('network_connections_ctrl').register_statemachine_model(state_machine_model)
+        self.get_controller('network_connections_ctrl').network_connections.register_statemachine_model(state_machine_model)
 
         sm_identifier = state_machine_model.state_machine.state_machine_id
         logger.debug("Create new graphical editor for state machine model with sm id %s" % str(sm_identifier))

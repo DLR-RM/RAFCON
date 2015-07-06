@@ -1,0 +1,11 @@
+package awesome_tool;
+
+message UDPMessage{
+
+    optional string sm_name = 1;
+    optional string root_id = 2;
+    required string flag = 3;
+    required string message = 4;
+    required bool acknowledge = 5;
+
+}

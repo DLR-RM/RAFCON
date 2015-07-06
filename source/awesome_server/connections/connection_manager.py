@@ -33,9 +33,8 @@ class ConnectionManager(Observable):
         pass
 
     def udp_data_received(self, connection, message, ip, port):
-        msg = Message.parse_from_string(message)
-        if msg.flag != "ACK":
-            self.new_udp_message_detected(msg, ip, port)
+        if message.flag != "ACK":
+            self.new_udp_message_detected(message, ip, port)
 
     @Observable.observed
     def new_udp_message_detected(self, msg, ip, port):
