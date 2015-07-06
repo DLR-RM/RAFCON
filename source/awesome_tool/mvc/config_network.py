@@ -32,11 +32,19 @@ class NetworkConfig(DefaultConfig):
     """
 
     def __init__(self):
-        sm_path, gui_path, net_path = helper.get_opt_paths()
-        DefaultConfig.__init__(self, CONFIG_FILE, DEFAULT_CONFIG, net_path)
+        super(NetworkConfig, self).__init__(DEFAULT_CONFIG)
+        # sm_path, gui_path, net_path = helper.get_opt_paths()
+        # DefaultConfig.__init__(self, CONFIG_FILE, DEFAULT_CONFIG, net_path)
         if self.get_config_value("TYPE") != "NETWORK_CONFIG":
             raise ConfigError("Type should be NETWORK_CONFIG for Network configuration. "
                               "Please add \"TYPE: NETWORK_CONFIG\" to your net_config.yaml file.")
+
+        self.load(CONFIG_FILE)
+
+    def load(self, config_file=None, path=None):
+        if config_file is None:
+            config_file = CONFIG_FILE
+        super(NetworkConfig, self).load(config_file, path)
 
     def get_server_ip(self):
         return self.get_config_value("SERVER_IP")

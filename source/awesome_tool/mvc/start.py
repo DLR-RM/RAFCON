@@ -16,7 +16,8 @@ from awesome_tool.mvc.views.main_window import MainWindowView
 import awesome_tool.statemachine.singleton as sm_singletons
 import awesome_tool.mvc.singleton as mvc_singletons
 
-from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.mvc.config_gui import global_gui_config
+from awesome_tool.mvc.config_network import global_net_config
 from awesome_tool.statemachine.config import global_config
 
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
@@ -92,6 +93,10 @@ if __name__ == '__main__':
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
+    parser.add_argument('-i', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
+                        default=home_path, nargs='?', const=home_path,
+                        help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
+                             "a config file and use the default configuration. Default: {0}".format(home_path))
 
     result = parser.parse_args()
     setup_config = vars(result)
@@ -100,6 +105,7 @@ if __name__ == '__main__':
 
     global_config.load(setup_config['config_path'])
     global_gui_config.load(setup_config['gui_config_path'])
+    global_net_config.load(setup_config['net_config_path'])
 
     # Initialize library
     sm_singletons.library_manager.initialize()
