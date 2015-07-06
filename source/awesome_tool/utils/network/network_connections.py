@@ -378,6 +378,14 @@ class UDPConnection(DatagramProtocol):
             self.messages_to_be_acknowledged[msg.message] = (stop_event, True)
         elif msg.flag == "EXE":
             self.network_connection.change_execution_mode(msg.message)
+        elif msg.flag == "ALR":  # ALR = already registered
+            logger.error("Statemachine with name of this statemachine already registered at server - change name and"
+                         "try again")
+            stop_event = self.messages_to_be_acknowledged[msg.message][0]
+            stop_event.set()
+            self.network_connection.udp_registered = False
+            self.network_connection.udp_connection_reactor_port.stopListening()
+            self.emit_udp_no_response_received()
 
     def check_send_acknowledge(self, msg, addr):
         """

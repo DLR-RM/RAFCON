@@ -115,15 +115,12 @@ class DebugViewController(ExtendedController):
         self.model.connection_manager.server_html.send_state_data("my_state_id", "my_nested_state_id", "Nested",
                                                                   75, 60, 100, 100)
 
-    @ExtendedController.observe("_udp_clients", after=True)
-    def add_udp_client(self, model, prop_name, info):
-        if isinstance(info.args[1], dict):
-            new_entry = info.args[1].iterkeys().next()
-            clients = info.instance[info.args[0]]
-            if self.view:
-                ip, port = clients[new_entry]
-                self.view["liststore"].append(["%s:%s" % (new_entry, ip), ip, port])
-                self.view["combobox"].set_active(len(self.view["liststore"]) - 1)
+    @ExtendedController.observe("_new_udp_client_signal", signal=True)
+    def new_udp_client_added(self, model, prop_name, info):
+        if self.view:
+            new_entry, ip, port = info["arg"]
+            self.view["liststore"].append(["%s - %s:%d" % (new_entry, ip, port), ip, port])
+            self.view["combobox"].set_active(len(self.view["liststore"]) - 1)
 
     @ExtendedController.observe("_tcp_messages_received", after=True)
     def handle_tcp_message_received(self, model, prop_name, info):
@@ -191,7 +188,12 @@ class DebugViewController(ExtendedController):
 
     @ExtendedController.observe("_udp_messages_received", after=True)
     def handle_udp_message_received(self, mode, prop_name, info):
-        message = info["args"][1]
+        msg = info["args"][1]
+        if msg.flag == "REG":
+            message = "registered"
+        else:
+            message = msg.message
+
         if message == 'RUNNING':
             state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.RUNNING)
         elif message == 'PAUSED':
@@ -202,7 +204,7 @@ class DebugViewController(ExtendedController):
             state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.STEPPING)
         elif not message.startswith('-'):
             self.last_active_state_message = message
-        self.print_msg(message)
+        self.print_msg("%s: %s" % (msg.sm_name, message))
 
     def process_yaml_files(self, files):
         for f in files:

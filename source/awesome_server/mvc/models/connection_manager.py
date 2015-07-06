@@ -1,4 +1,4 @@
-from gtkmvc import Model, Observable
+from gtkmvc import Model, Observable, Signal
 
 from awesome_server.connections.connection_manager import ConnectionManager
 from awesome_server.mvc.models.udp_connection import UDPConnectionModel
@@ -13,9 +13,10 @@ class ConnectionManagerModel(Model, Observable):
     _udp_clients = {}
     _tcp_messages_received = {}
     _udp_messages_received = {}
+    _new_udp_client_signal = Signal()
     connection_manager = None
 
-    __observables__ = ("_udp_clients", "_tcp_messages_received", "_udp_messages_received", "connection_manager")
+    __observables__ = ("_new_udp_client_signal", "_udp_clients", "_tcp_messages_received", "_udp_messages_received", "connection_manager")
 
     def __init__(self, connection_manager):
         Model.__init__(self)
@@ -32,7 +33,7 @@ class ConnectionManagerModel(Model, Observable):
         :return: UDPConnection containing address, None if no connection found
         """
         for connection, addresses in self.udp_clients.iteritems():
-            if addr in addresses.itervalues():
+            if addr in addresses:
                 return connection
         return None
 
@@ -47,7 +48,7 @@ class ConnectionManagerModel(Model, Observable):
             self.observe_model(UDPConnectionModel(info.result))
         elif info["method_name"] == "new_udp_message_detected":
             msg = info["args"][1]
-            self._udp_messages_received[msg.message_id] = msg.message
+            self._udp_messages_received[msg.message_id] = msg
         elif info["method_name"] == "tcp_data_received":
             # TODO: connection to be replaced with unique sm_id
             connection, message = info["args"][2:]
@@ -58,7 +59,8 @@ class ConnectionManagerModel(Model, Observable):
         """
         Keeps track of addresses of clients connected to all UDPConnections
         """
-        self.udp_clients[info.model.udp_connection] = info.instance
+        self.udp_clients[info.model.udp_connection].append(info["args"][1])
+        self._new_udp_client_signal.emit((info["args"][0], info["args"][1][0], info["args"][1][1]))
 
     @property
     def udp_clients(self):

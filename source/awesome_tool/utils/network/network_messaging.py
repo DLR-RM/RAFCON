@@ -72,7 +72,7 @@ class Message:
 
     @property
     def message(self):
-        return self._proto_msg.message
+        return str(self._proto_msg.message)
 
     @property
     def akg_msg(self):

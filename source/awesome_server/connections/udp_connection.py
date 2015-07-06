@@ -37,9 +37,6 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         msg = Message.parse_from_string(data)
         if msg.check_checksum() and not self.check_for_message_in_history(msg):
             self.check_and_execute_flag(msg, addr)
-            self.check_send_acknowledge(msg, addr)
-
-            self.emit("data_received", msg, addr[0], addr[1])
 
     def check_for_message_in_history(self, msg):
         msg_already_received = msg.message_id in self._rcvd_udp_messages_history
@@ -122,6 +119,9 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         :param msg: Received message to execute
         """
         if msg.flag == "REG" and addr not in self.clients.itervalues():
+            if msg.sm_name in self.clients.iterkeys():
+                self.send_non_acknowledged_message(msg.message_id, addr, "ALR")
+                return
             logger.debug("Register new statemachine at address: %s" % repr(addr))
             self.append_client(msg.sm_name, addr)
         elif msg.flag == "ACK" and msg.message in self.messages_to_be_acknowledged.iterkeys():
@@ -130,8 +130,15 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
             stop_event.set()
             self.messages_to_be_acknowledged[msg.message] = (stop_event, True)
         elif addr not in self.clients.itervalues():
+            if msg.sm_name in self.clients.iterkeys():
+                self.send_non_acknowledged_message(msg.message_id, addr, "ALR")
+                return
             logger.debug("Unregistered statemachine sent message - register as new statemachine at address: %s" % repr(addr))
             self.append_client(msg.sm_name, addr)
+
+        self.check_send_acknowledge(msg, addr)
+
+        self.emit("data_received", msg, addr[0], addr[1])
 
     def check_send_acknowledge(self, msg, addr):
         """
