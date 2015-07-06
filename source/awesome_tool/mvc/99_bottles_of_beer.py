@@ -1,3 +1,8 @@
+from twisted.internet import gtk2reactor
+gtk2reactor.install()
+
+from twisted.internet import reactor
+
 import logging
 import sys
 import os
@@ -13,7 +18,8 @@ from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import awesome_tool.statemachine.singleton
 import awesome_tool.mvc.singleton
-from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.mvc.config_gui import global_gui_config
+from awesome_tool.mvc.config_network import global_net_config
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.states.library_state import LibraryState
 
@@ -153,6 +159,7 @@ def run_turtle_demo():
     home_path = os.path.join(os.path.expanduser('~'), '.awesome_tool')
     global_config.load(path=home_path)
     global_gui_config.load(path=home_path)
+    global_net_config.load(path=home_path)
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
 
@@ -179,6 +186,7 @@ def run_turtle_demo():
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
     #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
+    reactor.run()
     gtk.main()
     logger.debug("Gtk main loop exited!")
 

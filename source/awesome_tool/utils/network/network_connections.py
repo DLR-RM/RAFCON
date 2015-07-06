@@ -1,4 +1,4 @@
-from threading import Event, Thread
+from threading import Event, Thread, Timer
 
 from twisted.internet import reactor, protocol
 from twisted.internet.protocol import DatagramProtocol
@@ -83,6 +83,21 @@ class NetworkConnections(Observer, gobject.GObject):
                 logger.error("Cannot establish UDP connection - Port already in use")
             else:
                 self.udp_registered = True
+        else:
+            self.emit('udp_no_response_received')
+            self.udp_connection_reactor_port.stopListening()
+            self.udp_registered = False
+            self.reconnect_udp()
+
+    def reconnect_udp(self):
+        try:
+            self.udp_connection_reactor_port = reactor.listenUDP(global_net_config.get_config_value("SELF_UDP_PORT"),
+                                                                 self.udp_connection)
+        except CannotListenError:
+            timer = Timer(.1, self.reconnect_udp)
+            timer.start()
+        else:
+            self.udp_registered = True
 
     def connect_tcp(self):
         if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
