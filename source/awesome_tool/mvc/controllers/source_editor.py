@@ -1,4 +1,5 @@
 import gtk
+import os
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from pylint import epylint as lint
 
@@ -13,6 +14,8 @@ class SourceEditorController(ExtendedController):
     # TODO Missing functions
     # - Code function-expander
     # - Code completion
+
+    tmp_file = os.path.join('/tmp', 'file_to_get_pylinted.py')
 
     def __init__(self, model, view):
         """Constructor
@@ -73,7 +76,7 @@ class SourceEditorController(ExtendedController):
         text_file.close()
 
         (pylint_stdout, pylint_stderr) = lint.py_run(
-            "/tmp/file_to_get_pylinted.py --errors-only --disable=print-statement ",
+            self.tmp_file + " --errors-only --disable=print-statement ",
             True, script="epylint")
         # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
 
@@ -91,16 +94,19 @@ class SourceEditorController(ExtendedController):
                     invalid_sytax = True
 
         if invalid_sytax:
+            from awesome_tool.utils.helper import set_button_children_size_request
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
             for elem in pylint_stdout_data:
                 if "error" in elem:
                     if self.filter_out_not_compatible_modules(elem):
-                        message_string = "%s\n\n%s " % (message_string, str(elem))
+                        error_string = self.format_error_string(str(elem))
+                        message_string += "\n\n" + error_string
             message.set_markup(message_string)
             message.add_button("Yes", 42)
             message.add_button("No", 43)
             message.connect('response', self.on_message_dialog_response_signal, current_text)
+            set_button_children_size_request(message)
             message.show()
         else:
             if self.model.state.set_script_text(current_text):
@@ -119,6 +125,14 @@ class SourceEditorController(ExtendedController):
             if elem in pylint_msg:
                 return False
         return True
+
+    def format_error_string(self, error_string):
+        error_string = error_string.replace(self.tmp_file, '', 1)
+        error_parts = error_string.split(':')
+        line = error_parts[1]
+        error_parts = error_parts[2].split(')')
+        error = error_parts[1]
+        return "Line " + line + ": " + error
 
     def cancel_clicked(self, button):
         self.view.set_text(self.model.state.script.script)

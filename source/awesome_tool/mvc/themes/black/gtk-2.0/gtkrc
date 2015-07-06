@@ -149,6 +149,7 @@ widget_class "*EventBox.GtkVBox.GtkHBox.GtkLabel"		style "indicator_label"
 
 
 
+# ----------TEXT ENTRY--------------
 style "text_entry" = "my_default"
 {
     base[ACTIVE]      = @dark_gray
@@ -159,6 +160,17 @@ widget_class "*TextView"					style "text_entry"
 
 
 
+style "state_overview_text_entry" = "my_default"
+{
+    base[NORMAL]      = @text_background
+    base[SELECTED]    = @medium_gray
+}
+widget_class "*Table.GtkEntry"				style "state_overview_text_entry"
+#----------------------------------
+
+
+
+#-----------EVENTBOX---------------
 style "event_box" = "my_default"
 {
     bg[NORMAL]		= @widget_background
@@ -180,6 +192,15 @@ widget_class "*Viewport.GtkVBox.GtkEventBox"		style "label_event_box"
 widget_class "*VBox.GtkEventBox.GtkEventBox"		style "label_event_box"
 widget_class "*VPaned.GtkEventBox.GtkVBox.GtkEventBox"	style "label_event_box"
 widget_class "*Notebook.GtkEventBox.GtkVPaned.GtkEventBox"	style "label_event_box"
+
+
+
+style "top_label_event_box" = "my_default"
+{
+	bg[NORMAL]	= @widget_background
+}
+widget_class "*VBox.GtkHBox.GtkVPaned.GtkVBox.GtkEventBox.GtkEventBox" style "top_label_event_box"
+#----------------------------------
 
 
 

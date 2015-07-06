@@ -11,6 +11,10 @@
 # pylint 1.4.1
 # pygtkglext 1.1.0
 # PyGTKSourceView 2.10.1
+# simplegeneric-0.8.1
+# setuptools-git 1.1
+# decorator 3.4.2
+# gaphas https://github.com/amolenaar/gaphas.git
 
 # source python 2.7 etc.
 source /volume/USERSTORE/lehn_pt/ros/indigo/setup.bash
@@ -118,4 +122,38 @@ make
 make install
 cd ..
 
+# simplegeneric-0.8.1
+wget https://pypi.python.org/packages/source/s/simplegeneric/simplegeneric-0.8.1.zip
+unzip simplegeneric-0.8.1.zip
+cd simplegeneric-0.8.1
+python setup.py install --prefix=$1
+cd ..
+
+# setuptools-git 1.1
+wget https://pypi.python.org/packages/source/s/setuptools-git/setuptools-git-1.1.tar.gz
+tar xfz setuptools-git-1.1.tar.gz
+cd setuptools-git-1.1
+python setup.py install --prefix=$1
+cd ..
+
+# decorator-3.4.2
+wget https://pypi.python.org/packages/source/d/decorator/decorator-3.4.2.tar.gz 
+tar xfz decorator-3.4.2.tar.gz
+cd decorator-3.4.2
+python setup.py install --prefix=$1
+cd ..
+
+# zope.interface-4.1.2
+wget https://pypi.python.org/packages/source/z/zope.interface/zope.interface-4.1.2.tar.gz
+tar xfz zope.interface-4.1.2.tar.gz
+cd zope.interface-4.1.2
+python setup.py install --prefix=$1
+cd ..
+
+# Twisted-15.2.1
+wget https://pypi.python.org/packages/source/T/Twisted/Twisted-15.2.1.tar.bz2
+tar xjf Twisted-15.2.1.tar.bz2
+cd Twisted-15.2.1
+python setup.py install --prefix=$1
+cd ..
 

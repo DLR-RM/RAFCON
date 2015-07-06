@@ -3,15 +3,27 @@ import pango
 import gtk
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
+
 from awesome_tool.mvc.views.graphical_editor import GraphicalEditorView
+
 from awesome_tool.mvc.controllers.graphical_editor import GraphicalEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel, StateMachine
 from awesome_tool.utils import log
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 logger = log.get_logger(__name__)
+
+GAPHAS_AVAILABLE = True
+# try:
+from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
+from awesome_tool.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
+    GraphicalEditorGaphasController
+# except:
+#     GAPHAS_AVAILABLE = False
+
 import awesome_tool.statemachine.singleton
 from awesome_tool.utils import constants, helper
+from awesome_tool.mvc.config import global_gui_config
 
 
 def create_tab_close_button(callback, *additional_parameters):
@@ -105,9 +117,13 @@ class StateMachinesEditorController(ExtendedController):
         sm_identifier = state_machine_model.state_machine.state_machine_id
         logger.debug("Create new graphical editor for state machine model with sm id %s" % str(sm_identifier))
 
-        graphical_editor_view = GraphicalEditorView()
+        if global_gui_config.get_config_value('GAPHAS_EDITOR', False) and GAPHAS_AVAILABLE:
+            graphical_editor_view = GraphicalEditorGaphasView()
+            graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_model, graphical_editor_view)
+        else:
+            graphical_editor_view = GraphicalEditorView()
+            graphical_editor_ctrl = GraphicalEditorController(state_machine_model, graphical_editor_view)
 
-        graphical_editor_ctrl = GraphicalEditorController(state_machine_model, graphical_editor_view)
         self.add_controller(sm_identifier, graphical_editor_ctrl)
         name_add_on = ""
         if state_machine_model.state_machine.marked_dirty:
@@ -220,8 +236,6 @@ class StateMachinesEditorController(ExtendedController):
             self.model.selected_state_machine_id = \
                 self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
         else:
-            logger.warn("No state machine left to be the selected state machine. "
-                        "The selected state machine id will be None!")
             self.model.selected_state_machine_id = None
 
         if state_machine_model.state_machine.marked_dirty:

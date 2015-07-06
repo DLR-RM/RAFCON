@@ -105,12 +105,13 @@ class MenuBarController(ExtendedController):
         logger.debug("Successfully saved graphics meta data.")
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
-        if interface.create_folder_func is None:
-            logger.error("No function defined for creating a folder")
-            return False
-        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
         if path is None:
-            return False
+            if interface.create_folder_func is None:
+                logger.error("No function defined for creating a folder")
+                return False
+            path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
+            if path is None:
+                return False
         self.model.get_selected_state_machine_model().state_machine.base_path = path
         self.on_save_activate(widget, data)
         return True

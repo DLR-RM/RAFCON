@@ -1,10 +1,12 @@
 !LibraryState
 filename: script.py
 input_data_ports:
-    6: !DataPort {data_port_id: 6, data_type: str, default_value: new_turtle, name: turtle_name}
-    7: !DataPort {data_port_id: 7, data_type: float, default_value: 1.0, name: x_pos}
-    8: !DataPort {data_port_id: 8, data_type: float, default_value: 1.0, name: y_pos}
-    9: !DataPort {data_port_id: 9, data_type: float, default_value: 1.0, name: phi}
+    6: !DataPort {data_port_id: 6, data_type: !!python/name:__builtin__.str '', default_value: new_turtle,
+        name: turtle_name}
+    7: !DataPort {data_port_id: 7, data_type: &id001 !!python/name:__builtin__.float '',
+        default_value: 1.0, name: x_pos}
+    8: !DataPort {data_port_id: 8, data_type: *id001, default_value: 1.0, name: y_pos}
+    9: !DataPort {data_port_id: 9, data_type: *id001, default_value: 1.0, name: phi}
 library_name: teleport_turtle
 library_path: turtle_libraries
 name: teleport turtle

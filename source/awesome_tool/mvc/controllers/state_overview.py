@@ -1,4 +1,5 @@
 import gtk
+from gtk.gdk import keyval_name
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 
@@ -9,7 +10,6 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from awesome_tool.statemachine.states.library_state import LibraryState
-from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
 
 from awesome_tool.utils import log
@@ -52,6 +52,7 @@ class StateOverviewController(ExtendedController, Model):
             'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
 
         view['entry_name'].connect('focus-out-event', self.change_name)
+        view['entry_name'].connect('key-press-event', self.check_for_enter)
         if self.model.state.name:
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
@@ -94,29 +95,43 @@ class StateOverviewController(ExtendedController, Model):
         the State.
         """
         #self.adapt(self.__state_property_adapter("name", "input_name"))
+        pass
+
+    def rename(self):
+        self.view['entry_name'].grab_focus()
 
     def on_toggle_is_start_state(self, button):
 
         if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
             if self.model.parent is not None:
-                if self.view['is_start_state_checkbutton'].get_active():
-                    logger.debug("set start_state_id %s" % self.model.state.state_id)
-                    self.model.parent.state.start_state_id = self.model.state.state_id
-                else:
-                    logger.debug("set start_state_id %s" % str(None))
-                    self.model.parent.state.start_state_id = None
+                try:
+                    if self.view['is_start_state_checkbutton'].get_active():
+                        self.model.parent.state.start_state_id = self.model.state.state_id
+                        logger.debug("New start state '{0}'".format(self.model.state.name))
+                    else:
+                        self.model.parent.state.start_state_id = None
+                        logger.debug("Start state unset, no start state defined")
+                except AttributeError as e:
+                    logger.warn("Could no change start state: {0}".format(e))
 
     @Model.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):
         if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
             self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
 
-    def change_name(self, entry, otherwidget):
+    @Model.observe('state', after=True)
+    def notify_name_change(self, model, prop_name, info):
+        if info['method_name'] == 'name':
+            self.view['entry_name'].set_text(self.model.state.name)
+
+    def change_name(self, entry, event):
         entry_text = entry.get_text()
-        if len(entry_text) > 0 and not self.model.state.name == entry_text:
-            logger.debug("State %s changed name from '%s' to: '%s'\n" % (self.model.state.state_id,
-                                                                         self.model.state.name, entry_text))
-            self.model.state.name = entry_text
+        if self.model.state.name != entry_text:
+            try:
+                self.model.state.name = entry_text
+                logger.debug("State '{0}' changed name to '{1}'".format(self.model.state.name, entry_text))
+            except (TypeError, ValueError) as e:
+                logger.warn("Could not change state name: {0}".format(e))
             self.view['entry_name'].set_text(self.model.state.name)
 
     def change_type(self, widget, model=None, info=None):
@@ -133,7 +148,13 @@ class StateOverviewController(ExtendedController, Model):
                                                                              class_of_type_text))
 
             new_state_class = self.state_types_dict[type_text]['class']
-            state_model = StateMachineHelper.change_state_type(self.model, new_state_class)
+            if self.model.state.parent is None:
+                from awesome_tool.mvc.singleton import state_machine_manager_model
+                sm_id = state_machine_manager_model.state_machine_manager.get_sm_id_for_state(self.model.state)
+                state_machine = state_machine_manager_model.state_machine_manager.state_machines[sm_id]
+                state_model = state_machine.change_root_state_type(self.model, new_state_class)
+            else:
+                state_model = self.model.parent.state.change_state_type(self.model, new_state_class)
 
             # TODO: the tab should automatically be closed when the old state is deleted. In this case we do not have
             #  to exchange the model
@@ -141,3 +162,8 @@ class StateOverviewController(ExtendedController, Model):
             self.relieve_model(self.model)
             self.observe_model(state_model)
             self.model = state_model
+
+    def check_for_enter(self, entry, event):
+        key_name = keyval_name(event.keyval)
+        if key_name in ["Return", "KP_Enter"]:
+            self.change_name(entry, None)

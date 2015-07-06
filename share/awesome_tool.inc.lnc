@@ -1,7 +1,30 @@
 
+# This include file can be customized by defining the following defines 
+# before including this file:
+#   DFC_SRC_PATH
+#     (optional) path to the source folder of Awesome tool
+#     defaults to /volume/USERSTORE/brun_sb/public/DFC/source
+#   DFC_PYTHONPATH_ADD
+#     (optional) path to be added to the PYTHONPATH
+#   DFC_NEW_STATE_MACHINE:
+#     (optional) set this to "True" if you want to have a new
+#     state-machine created when opening Awesome tool
+#     defaults to False
+#   DFC_OPEN_STATE_MACHINES:
+#     (optional) specify paths to state-machines that shall be
+#     opened with Awesome tool; separate multiple paths by space
+#     defaults to None
+#   DFC_CONFIG_PATH:
+#     (optional) specify path to config file config.yaml
+#     defaults to ~/.awesome_tool
+#   DFC_GUI_CONFIG_PATH:
+#     (optional) specify path to GUI config file gui_config.yaml
+#     defaults to ~/.awesome_tool
+
 defines
 DFC_SRC_PATH: %(ifndef "DFC_SRC_PATH", "/volume/USERSTORE/brun_sb/public/DFC/source")
 DFC_PYTHONPATH_ADD: %(ifndef "DFC_PYTHONPATH_ADD", "")
+DFC_NEW_STATE_MACHINE: %(ifeq "%(DFC_NEW_STATE_MACHINE)", "True", "-n", "")
 
 # $(ARCH) is i686 for 32bit, x86_64 for 64bit
 # x86 for 32bit, x86_64 for 64bit
@@ -27,6 +50,7 @@ environment: [
     LD_LIBRARY_PATH=%(DFC_LD_LIBRARY_PATH)
 ]
 pass_environment: HOME, DISPLAY
-command: /opt/python/python2.7/bin/python %(DFC_SRC_PATH)/awesome_tool/mvc/empty_statemachine.py
+command: /opt/python/python2.7/bin/python %(DFC_SRC_PATH)/awesome_tool/mvc/start.py %(DFC_NEW_STATE_MACHINE) -o %(DFC_OPEN_STATE_MACHINES) -c %(DFC_CONFIG_PATH) -g %(DFC_GUI_CONFIG_PATH)
 # warning_regex: WARNING
 flags: no_error_on_stop
+ready_regex: Ready

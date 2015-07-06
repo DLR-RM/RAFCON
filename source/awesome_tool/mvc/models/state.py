@@ -143,6 +143,44 @@ class StateModel(ModelMT):
         if self.parent is not None:
             self.parent.model_changed(model, prop_name, info)
 
+    def get_outcome_model(self, outcome_id):
+        """Searches and return the outcome model in this state model
+        :param outcome_id: The outcome id to be searched
+        :return: The model of the data flow or None if it is not found
+        """
+        for outcome_m in self.outcomes:
+            if outcome_m.outcome.outcome_id == outcome_id:
+                return outcome_m
+        return None
+
+    def get_data_port_model(self, data_port_id):
+        """Searches and returns the model of a data port of a given state
+
+        The method searches a port with the given id in the data ports of the given state model. If the state model
+        is a container state, not only the input and output data ports are looked at, but also the scoped variables.
+        :param state_m: The state model to search the data port in
+        :param data_port_id: The data port id to be searched
+        :return: The model of the data port or None if it is not found
+        """
+        def find_port_in_list(data_port_list):
+            """Helper method to search for a port within a given list
+
+            :param data_port_list: The list to search the data port in
+            :return: The model of teh data port or None if it is not found
+            """
+            for port_m in data_port_list:
+                if port_m.data_port.data_port_id == data_port_id:
+                    return port_m
+            return None
+
+        port_m = find_port_in_list(self.input_data_ports)
+        if port_m is not None:
+            return port_m
+        port_m = find_port_in_list(self.output_data_ports)
+        if port_m is not None:
+            return port_m
+        return None
+
     def get_model_info(self, model):
         model_key = None
         if model == "input_data_port":

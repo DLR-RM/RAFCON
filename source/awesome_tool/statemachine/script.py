@@ -48,11 +48,9 @@ def execute(self, inputs, outputs, gvm):
 
     DEFAULT_SCRIPT_CONTAINER = """
 
-def enter(self, scoped_variables, gvm):
-    pass
-
-def exit(self, scoped_variables, gvm):
-    pass
+###########################################################
+# Container States do not have a script
+###########################################################
 
 """
 
@@ -132,44 +130,6 @@ def exit(self, scoped_variables, gvm):
         else:
             return self._compiled_module.execute(state, inputs, outputs,
                                                  awesome_tool.statemachine.singleton.global_variable_manager)
-
-    def enter(self, state, scoped_variables={}, backward_execution=False):
-        """
-        Execute the custom "enter" function specified in the script.
-        :param state: the state to which runs the execute function
-        :param inputs: the input data of the script
-        :param outputs: the output data of the script
-        :return:
-        """
-        if backward_execution:
-            if hasattr(self._compiled_module, "backward_enter"):
-                return self._compiled_module.backward_enter(
-                    state, scoped_variables, awesome_tool.statemachine.singleton.global_variable_manager
-                )
-            else:
-                return None
-        else:
-            return self._compiled_module.enter(state, scoped_variables,
-                                               awesome_tool.statemachine.singleton.global_variable_manager)
-
-    def exit(self, state, scoped_variables={}, backward_execution=False):
-        """
-        Execute the custom "exit" function specified in the script.
-        :param state: the state to which runs the execute function
-        :param inputs: the input data of the script
-        :param outputs: the output data of the script
-        :return:
-        """
-        if backward_execution:
-            if hasattr(self._compiled_module, "backward_exit"):
-                return self._compiled_module.backward_exit(
-                    state, scoped_variables, awesome_tool.statemachine.singleton.global_variable_manager
-                )
-            else:
-                return None
-        else:
-            return self._compiled_module.exit(state, scoped_variables,
-                                              awesome_tool.statemachine.singleton.global_variable_manager)
 
     def load_and_build_module(self):
         """Loads and builds the module given by the path and the filename

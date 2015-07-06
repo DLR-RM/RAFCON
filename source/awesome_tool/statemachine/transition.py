@@ -32,7 +32,7 @@ class Transition(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Transition'
 
-    def __init__(self, from_state=None, from_outcome=None, to_state=None, to_outcome=None, transition_id=None):
+    def __init__(self, from_state, from_outcome, to_state, to_outcome, transition_id):
         Observable.__init__(self)
 
         self._transition_id = None
@@ -49,6 +49,10 @@ class Transition(Observable, yaml.YAMLObject):
 
         self._to_state = None
         self.to_state = to_state
+
+        # if to_state is None:
+        #     raise TypeError("to_state must not be None")
+        #     exit(-1)
 
         self._to_outcome = None
         self.to_outcome = to_outcome
@@ -145,8 +149,6 @@ class Transition(Observable, yaml.YAMLObject):
             raise TypeError("to_state must be of type str")
 
         self._to_state = to_state
-        if isinstance(to_state, str):
-            self._to_outcome = None
 
     @property
     def to_outcome(self):
@@ -162,8 +164,6 @@ class Transition(Observable, yaml.YAMLObject):
             raise TypeError("to_outcome must be of type int")
 
         self._to_outcome = to_outcome
-        if isinstance(to_outcome, int):
-            self._to_state = None
 
     @property
     def transition_id(self):

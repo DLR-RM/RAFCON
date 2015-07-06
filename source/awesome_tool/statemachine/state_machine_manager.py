@@ -47,7 +47,7 @@ class StateMachineManager(Observable):
                 global_storage.load_statemachine_from_yaml(state_machine_id_to_path[sm_ids[sm_idx]])
             self.add_state_machine(state_machine)
 
-    def get_sm_id_for_state(self, state):
+    def get_sm_id_for_state(self, state, get_state_by_identity=False):
         """
         Calculate the state_machine_id for the state
         :param state: the state to get the state id for
@@ -60,11 +60,15 @@ class StateMachineManager(Observable):
         for sm_id, sm in self.state_machines.iteritems():
 
             if sm.root_state.state_id == root_state_id:
-                sm_state = sm.get_state_by_path(state_path)
-                if sm_state and sm_state is state:
-                    return sm_id
+
+                if get_state_by_identity:
+                    sm_state = sm.get_state_by_path(state_path)
+                    if sm_state and sm_state is state:
+                        return sm_id
+                    else:
+                        logger.warning("sm_id is not secure as long the identity check of the state and reference failed")
                 else:
-                    logger.debug("sm_id is not secure as long the identity check of the state and reference failed")
+                    return sm_id
 
         logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
         return None
@@ -112,9 +116,8 @@ class StateMachineManager(Observable):
         if state_machine_id in self._state_machines:
             del self._state_machines[state_machine_id]
         else:
-            logger.error("there is no valid argument state_machine_id: %s" % state_machine_id)
+            logger.error("There is no state_machine with state_machine_id: %s" % state_machine_id)
 
-        print self._state_machines
         if state_machine_id is self.active_state_machine_id:
             if len(self._state_machines) > 0:
                 self.active_state_machine_id = self._state_machines[self._state_machines.keys()[0]].state_machine_id
@@ -122,12 +125,12 @@ class StateMachineManager(Observable):
                 self.active_state_machine_id = None
 
     def get_active_state_machine(self):
-        """Return a reference to the active statemachine
+        """Return a reference to the active state-machine
         """
         if self._active_state_machine_id in self._state_machines:
             return self._state_machines[self._active_state_machine_id]
         else:
-            logger.warn("No active state machine specified!")
+            return None
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

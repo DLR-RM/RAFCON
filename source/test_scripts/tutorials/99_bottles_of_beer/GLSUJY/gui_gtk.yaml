@@ -25,32 +25,61 @@ data_flow38: !Vividict
             - !!python/tuple [9.97059259918693, -58.51063829787235]
 gui: !Vividict
     editor: !Vividict
+        rel_pos: !Vividict {}
         size: !!python/tuple [116.27659574468086, 101.59574468085107]
+income: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !!python/tuple [1.5, 24.752787336366705]
+name: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+            size: !Vividict {}
+outcome-1: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+outcome-2: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+outcome0: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !!python/tuple [114.77659574468086, 39.04860338046669]
 scoped_variable29: !Vividict
     gui: !Vividict
         editor: !Vividict
             inner_rel_pos: !!python/tuple [28.34042553191489, -74.19148936170212]
+            invert_y: false
+            rel_pos: !!python/tuple [37.03900709219856, 72.39893617021269]
+            size: !!python/tuple [20.319148936170215, 6.7730496453900715]
 transition1: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            invert_y: false
+            waypoints:
+            - !!python/tuple [16.562622922933386, 24.520335042966707]
 transition10: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            invert_y: false
+            waypoints: []
 transition7: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            invert_y: false
+            waypoints: []
 transition8: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            invert_y: false
+            waypoints: []
 transition9: !Vividict
     gui: !Vividict
         editor: !Vividict
+            invert_y: false
             waypoints:
-            - !!python/tuple [96.04090167723922, -49.5886524822695]
-            - !!python/tuple [96.04090167723922, -24.45143807178587]
-            - !!python/tuple [3.5596824374310785, -24.45143807178588]
-            - !!python/tuple [3.55968243743108, -46.51063829787234]
+            - !!python/tuple [85.13604947593333, 24.287882749566705]
+            - !!python/tuple [16.56262292293337, 24.404108896266706]

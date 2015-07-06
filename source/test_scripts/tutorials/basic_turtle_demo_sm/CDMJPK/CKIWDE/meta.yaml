@@ -1,7 +1,8 @@
 !LibraryState
 filename: script.py
 input_data_ports:
-    1: !DataPort {data_port_id: 1, data_type: str, default_value: new_ros_node, name: node_name}
+    1: !DataPort {data_port_id: 1, data_type: !!python/name:__builtin__.str '', default_value: new_ros_node,
+        name: node_name}
 library_name: init_ros_node
 library_path: ros_libraries
 name: init ros node

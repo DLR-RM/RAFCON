@@ -30,12 +30,10 @@ def create_statemachine():
 
     state4.add_transition(state1.state_id, 3, state2.state_id, None)
     state4.add_transition(state1.state_id, 4, state3.state_id, None)
-    state4.add_transition(state2.state_id, 3, None, 5)
-    state4.add_transition(state3.state_id, 3, None, 5)
+    state4.add_transition(state2.state_id, 3, state4.state_id, 5)
+    state4.add_transition(state3.state_id, 3, state4.state_id, 5)
 
     t = state4.add_transition(state2.state_id, 4, state1.state_id, 5)
-    if not state4.transitions[t].to_state is None:
-        raise StandardError("Transition should not have a to_state")
 
     state4.remove_transition(t)
     state4.add_transition(state2.state_id, 4, state1.state_id, None)

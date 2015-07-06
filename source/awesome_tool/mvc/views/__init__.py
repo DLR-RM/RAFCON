@@ -18,6 +18,7 @@ from logging import LoggingView
 from state_editor import StateEditorView
 
 from state_machine_tree import StateMachineTreeView
+from state_machine_history import StateMachineHistoryView
 from library_tree import LibraryTreeView
 #from state_editors_notebook import StateEditorsNotebookView
 #from state_machines_notebook import StateMachinesNotebookView

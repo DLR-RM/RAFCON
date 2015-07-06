@@ -42,6 +42,7 @@ class ShortcutManager():
             'entry': '<Control>E',
             'fit': '<Control>space',
             'info': '<Control>I',
+            'rename': 'F2',
             'start': 'F5',
             'step_mode': 'F6',
             'pause': 'F7',
@@ -74,11 +75,10 @@ class ShortcutManager():
                 self.accel_group.connect_group(keyval, modifier_mask, gtk.ACCEL_VISIBLE, callback)
 
     def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
-        self.trigger_action(action, key_value, modifier_mask)
-        if action in ['up', 'down', 'left', 'right']:
-            # TODO: return True, if the controller implementing the action is focused
-            return True
-        return False
+        res = self.trigger_action(action, key_value, modifier_mask)
+        # If returning False, the shortcut is forwarded to GTK to be used for default actions (like copy and paste in
+        #  a text field). If a controller wants to prevent this, it has to return True.
+        return res
 
     def __get_action_for_shortcut(self, lookup_shortcut):
         for action in self.__action_to_shortcuts:
@@ -88,7 +88,7 @@ class ShortcutManager():
                     return action
         return None
 
-    def add_callback_for_action(self, action, callback):
+    def add_callback_for_action(self, action, callback, *parameters):
         """Adds a callback function to an action
 
         The method checks whether both action and callback are valid. If so, the callback is added to the list of
@@ -98,14 +98,12 @@ class ShortcutManager():
         parameter
         :return: True is the parameters are valid and the callback is registered, False else
         """
-        #print "check add callback"
         if action in self.__action_to_shortcuts:  # Is the action valid?
             if hasattr(callback, '__call__'):  # Is the callback really a function?
                 if action not in self.__action_to_callbacks:
                     self.__action_to_callbacks[action] = []
                 assert isinstance(self.__action_to_callbacks[action], list)
                 self.__action_to_callbacks[action].append(callback)
-                #print "add callback"
                 return True
         return False
 
@@ -127,13 +125,14 @@ class ShortcutManager():
         :param modifier_mask: The modifier mask of the shortcut that caused the trigger
         :return: The number of callback functions called
         """
-        ctr = 0
+        res = False
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
-                ctr += 1
                 try:
-                    callback_function(key_value, modifier_mask)
+                    ret = callback_function(key_value, modifier_mask)
+                    # If at least one controller returns True, the whole result becomes True
+                    res |= (False if ret is None else ret)
                 except Exception as e:
                     logger.error('Exception while calling callback methods for action "{0}": {1} {2}'.format(
                         action, e.message, traceback.format_exc()))
-        return ctr
+        return res

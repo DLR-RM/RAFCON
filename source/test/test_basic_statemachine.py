@@ -122,9 +122,9 @@ def test_create_container_state():
 
     container.add_transition(state1.state_id, -1, state2.state_id, None)
     assert len(container.transitions) == 1
-    container.add_transition(state1.state_id, -2, None, -2)
+    container.add_transition(state1.state_id, -2, container.state_id, -2)
     assert len(container.transitions) == 2
-    t3 = container.add_transition(state2.state_id, -1, None, -1)
+    t3 = container.add_transition(state2.state_id, -1, container.state_id, -1)
     assert len(container.transitions) == 3
 
     with raises(AttributeError):
@@ -141,13 +141,19 @@ def test_create_container_state():
         container.add_transition(state1.state_id, -1, -1, None)
     with raises(AttributeError):
         # Non-existing to outcome
-        container.add_transition(state1.state_id, -1, None, -3)
+        container.add_transition(state1.state_id, -1, container.state_id, -3)
     with raises(AttributeError):
         # Transition pointing to the state itself
         container.add_transition(state1.state_id, -2, state1.state_id, None)
     with raises(AttributeError):
         # to_state_id and to_outcome not None
         container.add_transition(state1.state_id, -2, state1.state_id, -1)
+    with raises(AttributeError):
+        # Transition from connected outcome
+        container.add_transition(state2.state_id, -1, state2.state_id, -2)
+    with raises(AttributeError):
+        # Transition going from one outcome to another outcome of the same state
+        container.add_transition(state2.state_id, -1, state2.state_id, -2)
 
     with raises(AttributeError):
         # The removal of an undefined transition should throw an AttributeError
@@ -158,7 +164,7 @@ def test_create_container_state():
     with raises(AttributeError):
         # The removal of an undefined transition should throw an AttributeError
         container.remove_transition(t3)
-    container.add_transition(state2.state_id, -1, None, -1)
+    container.add_transition(state2.state_id, -1, container.state_id, -1)
     assert len(container.transitions) == 3
 
     container.remove_state(state1.state_id)
@@ -185,7 +191,7 @@ def test_port_and_outcome_removal():
     output_state1 = state1.add_output_data_port("output", "float")
 
     container.add_state(state1)
-    container.add_transition(state1.state_id, 0, None, -2)
+    container.add_transition(state1.state_id, 0, container.state_id, -2)
     container.add_data_flow(container.state_id, input_container_state, state1.state_id, input_state1)
     container.add_data_flow(state1.state_id, output_state1, container.state_id, output_container_state)
     container.add_data_flow(container.state_id, input_container_state,

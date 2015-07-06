@@ -1,6 +1,36 @@
 !Vividict
 gui: !Vividict
     editor: !Vividict
-        rel_pos: !!python/tuple [71.40425531914893, -36.25531914893617]
+        invert_y: false
+        rel_pos: !!python/tuple [71.40425531914893, 36.25531914893617]
         size: !!python/tuple [20.0, 20.0]
+income: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !!python/tuple [0.5, 2.328379644730525]
+input35: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
 input_data_port35: !Vividict {}
+name: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+            size: !Vividict {}
+outcome-1: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+outcome-2: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+outcome0: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !Vividict {}
+outcome1: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            rel_pos: !!python/tuple [13.731794156784403, 0.5]

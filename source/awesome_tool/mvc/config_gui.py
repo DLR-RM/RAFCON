@@ -5,7 +5,6 @@ import shutil
 
 from awesome_tool.utils.config import DefaultConfig, ConfigError
 from awesome_tool.utils import constants
-from awesome_tool.utils import helper
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -15,11 +14,16 @@ TYPE: GUI_CONFIG
 
 SOURCE_EDITOR_STYLE: awesome-style
 
+GAPHAS_EDITOR: True
+
 WAYPOINT_SNAP_ANGLE: 45
 WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
 WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
 
-show_data_flows: true
+show_data_flows: True
+
+ROTATE_NAMES_ON_CONNECTIONS: False
+HISTORY_ENABLED: False
 """
 
 CONFIG_FILE = "gui_config.yaml"
@@ -31,21 +35,34 @@ class GuiConfig(DefaultConfig):
     """
 
     def __init__(self):
-        sm_path, gui_path, net_path = helper.get_opt_paths()
-        DefaultConfig.__init__(self, CONFIG_FILE, DEFAULT_CONFIG, gui_path)
+        super(GuiConfig, self).__init__(DEFAULT_CONFIG)
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
         self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
+        self.configure_gtk()
         self.configure_fonts()
         self.configure_source_view_styles()
+
+        self.load(CONFIG_FILE)
+
+    def load(self, config_file=None, path=None):
+        if config_file is None:
+            config_file = CONFIG_FILE
+        super(GuiConfig, self).load(config_file, path)
+
+    def configure_gtk(self):
+        import gtk
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        gtkrc_path = os.path.join(file_path, 'themes', 'black', 'gtk-2.0', 'gtkrc')
+        gtk.rc_parse(gtkrc_path)
 
     def configure_fonts(self):
         tv = gtk.TextView()
         context = tv.get_pango_context()
         fonts = context.list_families()
 
-        font_path = os.path.join(os.getenv("HOME"), ".fonts")
+        font_path = os.path.join(os.path.expanduser('~'), '.fonts')
 
         font_copied = False
 
@@ -75,7 +92,7 @@ class GuiConfig(DefaultConfig):
             os.execl(python, python, * sys.argv)
 
     def configure_source_view_styles(self):
-        path = os.path.join(os.getenv("HOME"), ".local/share/gtksourceview-2.0/styles")
+        path = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0', 'styles')
 
         if not os.path.isdir(path):
             os.makedirs(path)

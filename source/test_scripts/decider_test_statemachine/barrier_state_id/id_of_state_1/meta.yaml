@@ -1,0 +1,16 @@
+!ExecutionState
+description: null
+filename: script.py
+input_data_ports:
+    26: !DataPort {data_port_id: 26, data_type: float, default_value: null, name: input_data_port1}
+name: FirstState
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+    3: !Outcome {name: FirstOutcomeState1, outcome_id: 3}
+    4: !Outcome {name: SecondOutcomeState1, outcome_id: 4}
+output_data_ports:
+    27: !DataPort {data_port_id: 27, data_type: float, default_value: null, name: output_data_port1}
+path: barrier_state_id/id_of_state_1
+state_id: id_of_state_1

@@ -22,14 +22,14 @@ logger = log.get_logger(__name__)
 from awesome_tool.statemachine.data_port import DataPort
 from awesome_tool.statemachine.enums import DataPortType, StateExecutionState
 from awesome_tool.statemachine.outcome import Outcome
-from awesome_tool.statemachine.script import Script, ScriptType
+from awesome_tool.statemachine.script import Script
 from awesome_tool.statemachine.id_generator import *
 
 
 PATH_SEPARATOR = '/'
 
 
-class State(Observable, yaml.YAMLObject, object):
+class State(Observable, yaml.YAMLObject):
 
     """A class for representing a state in the state machine
 
@@ -150,6 +150,13 @@ class State(Observable, yaml.YAMLObject, object):
         """
         self.preempted = True
 
+    def get_previously_executed_state(self):
+        """
+        Calculates the state that was executed before this state
+        :return: The last state in the execution history
+        """
+        return self.execution_history.get_last_history_item().prev.state_reference
+
     # ---------------------------------------------------------------------------------------------
     # ------------------------------- input/output data handling ----------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -162,8 +169,21 @@ class State(Observable, yaml.YAMLObject, object):
         """
         result_dict = {}
         for input_port_key, value in state.input_data_ports.iteritems():
-            # at first load all default values
-            result_dict[value.name] = copy.copy(value.default_value)
+            default = value.default_value
+            # if the user sets the default value to a string starting with $, try to retrieve the value
+            # from the global variable manager
+            if isinstance(default, str) and len(default) > 0 and default[0] == '$':
+                from awesome_tool.statemachine.singleton import global_variable_manager as gvm
+                var_name = default[1:]
+                if not gvm.variable_exist(var_name):
+                    logger.error("The global variable '{0}' does not exist".format(var_name))
+                    global_value = None
+                else:
+                    global_value = gvm.get_variable(var_name)
+                result_dict[value.name] = global_value
+            else:
+                # set input to its default value
+                result_dict[value.name] = copy.copy(default)
         return result_dict
 
     def create_output_dictionary_for_state(self, state):
@@ -174,7 +194,7 @@ class State(Observable, yaml.YAMLObject, object):
         """
         result_dict = {}
         for key, data_port in state.output_data_ports.iteritems():
-            result_dict[data_port.name] = None
+            result_dict[data_port.name] = data_port.default_value
         return result_dict
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data port functions -------------------------------------
@@ -609,7 +629,7 @@ class State(Observable, yaml.YAMLObject, object):
                 if not isinstance(value, Outcome):
                     raise TypeError("element of outcomes must be of type Outcome")
             self._outcomes = outcomes
-            #aborted and preempted must always exist
+            # aborted and preempted must always exist
             if -1 not in outcomes:
                 self.add_outcome("aborted", -1)
             if -2 not in outcomes:
@@ -758,6 +778,26 @@ class State(Observable, yaml.YAMLObject, object):
             raise TypeError("state_execution_status must be of type StateExecutionState")
 
         self._state_execution_status = state_execution_status
+
+    def finalize(self, outcome=None):
+        """Finalize state
+
+        This method is called when the run method finishes
+
+        :param awesome_tool.statemachine.outcome.Outcome outcome: final outcome of the state
+        :return: Nothing for the moment
+        """
+
+        # Set the final outcome of the state
+        # This is the outcome, the state is left on
+        if outcome is not None:
+            self.final_outcome = outcome
+
+        # If we are within a concurrency state, we have to notify it about our finalization
+        if self.concurrency_queue:
+            self.concurrency_queue.put(self.state_id)
+
+        return None
 
     def preemptive_wait(self, time=None):
         """Waiting method which can be preempted

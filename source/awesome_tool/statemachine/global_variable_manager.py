@@ -10,7 +10,7 @@
 
 from gtkmvc import Observable
 from threading import Lock
-from id_generator import *
+from awesome_tool.statemachine.id_generator import *
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -34,9 +34,10 @@ class GlobalVariableManager(Observable):
         self.__variable_locks = {}
         self.__dictionary_lock = Lock()
         self.__access_keys = {}
+        self.__variable_references = {}
 
     @Observable.observed
-    def set_variable(self, key, value):
+    def set_variable(self, key, value, per_reference=False, access_key=None):
         """Sets a global variable
 
         :param key: the key of the global variable to be set
@@ -44,32 +45,77 @@ class GlobalVariableManager(Observable):
 
         """
         self.__dictionary_lock.acquire()
-        self.__variable_locks[key] = Lock()
-        access_key = self.lock_variable(key)
+        unlock = True
+        if self.variable_exist(key):
+            if self.is_locked(key) and self.__access_keys[key] != access_key:
+                raise RuntimeError("Wrong access key for accessing global variable")
+            elif self.is_locked(key):
+                unlock = False
+            else:
+                access_key = self.lock_variable(key)
+        else:
+            self.__variable_locks[key] = Lock()
+            access_key = self.lock_variable(key)
+
         # --- variable locked
-        self.__global_variable_dictionary[key] = copy.deepcopy(value)
+        if per_reference:
+            self.__global_variable_dictionary[key] = value
+            self.__variable_references[key] = True
+        else:
+            self.__global_variable_dictionary[key] = copy.deepcopy(value)
+            self.__variable_references[key] = False
         # --- release variable
-        self.unlock_variable(key, access_key)
+
+        if unlock:
+            self.unlock_variable(key, access_key)
         self.__dictionary_lock.release()
         logger.debug("Global variable %s was set to %s" % (key, str(value)))
 
-    def get_variable(self, key):
+    def get_variable(self, key, per_reference=None, access_key=None):
         """Fetches the value of a global variable
 
-        :param key: the key of the global variable to be fechted
-
+        :param key: the key of the global variable to be fetched
+        :return: The value stored at in the global variable key
         """
-        if key in self.__global_variable_dictionary:
-            return_value = None
-            access_key = self.lock_variable(key)
-            return_value = copy.deepcopy(self.__global_variable_dictionary[key])
-            self.unlock_variable(key, access_key)
+        if self.variable_exist(key):
+            unlock = True
+            if self.is_locked(key) and self.__access_keys[key] != access_key:
+                raise RuntimeError("Wrong access key for accessing global variable")
+            elif self.is_locked(key):
+                unlock = False
+            else:
+                access_key = self.lock_variable(key)
+
+            # --- variable locked
+            if self.variable_can_be_referenced(key):
+                if per_reference or per_reference is None:
+                    return_value = self.__global_variable_dictionary[key]
+                else:
+                    return_value = copy.deepcopy(self.__global_variable_dictionary[key])
+            else:
+                if per_reference:
+                    self.unlock_variable(key, access_key)
+                    raise RuntimeError("Variable cannot be accessed by reference")
+                else:
+                    return_value = copy.deepcopy(self.__global_variable_dictionary[key])
+            # --- release variable
+
+            if unlock:
+                self.unlock_variable(key, access_key)
             return return_value
         else:
             raise AttributeError("Global variable %s does not exist!" % str(key))
 
+    def variable_can_be_referenced(self, key):
+        """Checks whether the value of the variable can be returned by reference
+
+        :param str key: Name of the variable
+        :return: True if value of variable can bbe returned by reference, False else
+        """
+        return key in self.__variable_references and self.__variable_references[key]
+
     @Observable.observed
-    def delete_global_variable(self, key):
+    def delete_variable(self, key):
         """Deletes a global variable
 
         :param key: the key of the global variable to be deleted
@@ -81,6 +127,7 @@ class GlobalVariableManager(Observable):
             del self.__global_variable_dictionary[key]
             self.unlock_variable(key, access_key)
             del self.__variable_locks[key]
+            del self.__variable_references[key]
         else:
             raise AttributeError("Global variable %s does not exist!" % str(key))
         self.__dictionary_lock.release()
@@ -124,10 +171,7 @@ class GlobalVariableManager(Observable):
         :param value: the new value of the global variable
 
         """
-        if self.__access_keys[key] is access_key:
-            self.__global_variable_dictionary[key] = copy.deepcopy(value)
-        else:
-            raise RuntimeError("Wrong access key for accessing global variable")
+        return self.set_variable(key, value, per_reference=False, access_key=access_key)
 
     def get_locked_variable(self, key, access_key):
         """Returns the value of an global variable that is already locked
@@ -136,10 +180,7 @@ class GlobalVariableManager(Observable):
         :param access_key: the access_key to the global variable that is already locked
 
         """
-        if self.__access_keys[key] is access_key:
-            return copy.deepcopy(self.__global_variable_dictionary[key])
-        else:
-            raise RuntimeError("Wrong access key for accessing global variable")
+        return self.get_variable(key, per_reference=False, access_key=access_key)
 
     def variable_exist(self, key):
         """Checks if a global variable exist
@@ -147,10 +188,9 @@ class GlobalVariableManager(Observable):
         :param key: the name of the global variable
 
         """
-        if key in self.__global_variable_dictionary:
-            return True
-        else:
-            return False
+        return key in self.__global_variable_dictionary
+
+    variable_exists = variable_exist
 
     def locked_status_for_variable(self, key):
         """
@@ -160,6 +200,7 @@ class GlobalVariableManager(Observable):
         """
         if key in self.__variable_locks:
             return self.__variable_locks[key].locked()
+        return False
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -170,5 +211,32 @@ class GlobalVariableManager(Observable):
         """Property for the _global_variable_dictionary field
 
         """
-        return copy.deepcopy(self.__global_variable_dictionary)
-        #return self.__global_variable_dictionary
+        dict_copy = {}
+        for key, value in self.__global_variable_dictionary:
+            if key in self.__variable_references and self.__variable_references[key]:
+                dict_copy[key] = value
+            else:
+                dict_copy[key] = copy.deepcopy(value)
+
+        return dict_copy
+
+    def get_all_keys(self):
+        """Returns all variable names in the GVM
+
+        :return: Keys of all variables
+        """
+        return self.__global_variable_dictionary.keys()
+
+
+    def get_representation(self, key):
+        if not self.variable_exist(key):
+            return ''
+        return str(self.__global_variable_dictionary[key])
+
+    def is_locked(self, key):
+        """Check whether a variable is currently locked
+
+        :param str key: The name of the variable
+        :return: True if locked, False else
+        """
+        return self.locked_status_for_variable(key)

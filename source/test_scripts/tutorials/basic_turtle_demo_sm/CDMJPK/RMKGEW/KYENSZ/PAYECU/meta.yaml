@@ -1,10 +1,12 @@
 !LibraryState
 filename: script.py
 input_data_ports:
-    2: !DataPort {data_port_id: 2, data_type: str, default_value: new_turtle, name: turtle_name}
-    3: !DataPort {data_port_id: 3, data_type: float, default_value: 5.0, name: x_pos}
-    4: !DataPort {data_port_id: 4, data_type: float, default_value: 5.0, name: y_pos}
-    5: !DataPort {data_port_id: 5, data_type: float, default_value: 1.0, name: phi}
+    2: !DataPort {data_port_id: 2, data_type: !!python/name:__builtin__.str '', default_value: new_turtle,
+        name: turtle_name}
+    3: !DataPort {data_port_id: 3, data_type: &id001 !!python/name:__builtin__.float '',
+        default_value: 5.0, name: x_pos}
+    4: !DataPort {data_port_id: 4, data_type: *id001, default_value: 5.0, name: y_pos}
+    5: !DataPort {data_port_id: 5, data_type: *id001, default_value: 1.0, name: phi}
 library_name: spawn_turtle
 library_path: turtle_libraries
 name: spawn turtle

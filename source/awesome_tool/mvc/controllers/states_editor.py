@@ -82,8 +82,7 @@ class StatesEditorController(ExtendedController):
 
     def close_state_tab(self, widget, page_num):
         page_to_close = widget.get_nth_page(page_num)
-
-        self.close_page(page_to_close)
+        self.close_page(page_to_close, self.get_state_identifier_for_page(page_to_close))
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, property, info):
@@ -133,6 +132,13 @@ class StatesEditorController(ExtendedController):
         if self._selected_state_machine_model:
             self.add_state_editor(self._selected_state_machine_model.root_state, self.editor_type)
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
+
     def add_state_editor(self, state_model, editor_type=None):
         sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
         state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
@@ -141,6 +147,7 @@ class StatesEditorController(ExtendedController):
 
         state_editor_view = StateEditorView()
         state_editor_ctrl = StateEditorController(state_model, state_editor_view)
+
 
         tab_label_text = limit_tab_label_text("%s|%s" % (sm_id, str(state_model.state.name)))
         (evtbox, new_label) = create_tab_header(tab_label_text, self.on_destroy_clicked,
@@ -161,13 +168,14 @@ class StatesEditorController(ExtendedController):
                                        'view': state_editor_view, 'is_sticky': False, 'event_box': evtbox}
         return idx
 
-    def close_page(self, page_to_close):
+    def close_page(self, page_to_close, state_identifier):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
 
-        #page_to_close = self.tabs[state_identifier]['page']
         if page_to_close:
             current_idx = self.view.notebook.page_num(page_to_close)
             self.view.notebook.remove_page(current_idx)
+        if state_identifier in self.tabs:
+            del self.tabs[state_identifier]
 
     def find_page_of_state_model(self, state_model):
         #print event, state_model, result
@@ -185,23 +193,10 @@ class StatesEditorController(ExtendedController):
 
         return searched_page, state_identifier
 
-    def destroy_state_editor_page(self, state_identifier):
-        """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
-        # del self.tabs[state_identifier]['ctrl']
-        # del self.tabs[state_identifier]['view']
-        state_model = self.tabs[state_identifier]['state_model']
-        del self.tabs[state_identifier]
-        self.remove_controller(state_identifier)
-
     def on_destroy_clicked(self, event, state_model, result):
         [page, state_identifier] = self.find_page_of_state_model(state_model)
         if page:
-            self.close_page(page)
-            # print "----------- close_page %s" % state_model
-        if state_identifier:
-            self.destroy_state_editor_page(state_identifier)
-            # print "----------- destroy_state_editor_page%s" % state_model
-            # print "left over tabs ", self.tabs
+            self.close_page(page, state_identifier)
 
     def on_toogle_sticky_clicked(self, event, state_model, result):
         """ Callback for the "toogle-sticky-check-button" emitted by custom TabLabel widget. """
@@ -249,7 +244,7 @@ class StatesEditorController(ExtendedController):
             # logger.debug("State %s is SELECTED" % selected_model.state.name)
 
             # print "state_identifier: %s" % state_identifier
-            if not state_identifier in self.tabs:
+            if state_identifier not in self.tabs:
                 # print "--------- add state editor %s" % selected_model
                 idx = self.add_state_editor(selected_model, self.editor_type)
                 self.view.notebook.set_current_page(idx)
@@ -286,7 +281,7 @@ class StatesEditorController(ExtendedController):
         assert isinstance(selection, Selection)
         # logger.debug("The viewer should jump as selected to tab in states_editor %s %s %s" % (info.instance, model, property))
         if selection.get_num_states() == 1 and len(selection) == 1:
-            self.change_state_editor_selection(info.instance.get_states()[0])
+            self.change_state_editor_selection(selection.get_states()[0])
 
     @ExtendedController.observe("state", before=True)
     @ExtendedController.observe("states", before=True)
@@ -343,3 +338,24 @@ class StatesEditorController(ExtendedController):
                 fontdesc = pango.FontDescription("Serif Bold 12")
                 page_dict['page'].title_label.modify_font(fontdesc)
                 page_dict['page'].title_label.set_tooltip_text(tab_label)
+
+    def get_state_identifier_for_page(self, page):
+        for identifier, tab in self.tabs.iteritems():
+            if tab["page"] is page:  # reference comparison on purpose
+                return identifier
+
+    def rename_selected_state(self, key_value, modifier_mask):
+        """Callback method for shortcut action rename
+
+        Searches for a single selected state model and open the according page. Page is created if it is not
+        existing. Then the rename method of the state controller is called.
+        :param key_value:
+        :param modifier_mask:
+        """
+        selection = self._selected_state_machine_model.selection
+        if selection.get_num_states() == 1 and len(selection) == 1:
+            selected_state = selection.get_states()[0]
+            self.change_state_editor_selection(selected_state)
+            _, state_identifier = self.find_page_of_state_model(selected_state)
+            state_controller = self.tabs[state_identifier]['ctrl']
+            state_controller.rename()

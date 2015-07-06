@@ -21,8 +21,8 @@ def create_preemptive_wait_statemachine():
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_outcome("end", 3)
-    ctr_state.add_transition(state1.state_id, 3, None, 3)
-    ctr_state.add_transition(state2.state_id, 3, None, 3)
+    ctr_state.add_transition(state1.state_id, 3, ctr_state.state_id, 3)
+    ctr_state.add_transition(state2.state_id, 3, ctr_state.state_id, 3)
 
     return StateMachine(ctr_state)
 

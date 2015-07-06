@@ -1,20 +1,19 @@
-import traceback
-
 import gtk
 
-from awesome_tool.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, LibraryTreeController
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
+
+from awesome_tool.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, \
+    StateMachineHistoryController, LibraryTreeController
+
 import awesome_tool.statemachine.singleton
+from awesome_tool.mvc.singleton import global_variable_manager_model as gvm_model
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.controllers.states_editor import StatesEditorController
 from awesome_tool.mvc.controllers.state_machines_editor import StateMachinesEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
-from awesome_tool.mvc.selection import Selection
 from awesome_tool.mvc.models.library_manager import LibraryManagerModel
 from awesome_tool.mvc.shortcut_manager import ShortcutManager
-from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
-from awesome_tool.mvc.views.states_editor import StatesEditorView
-from awesome_tool.utils import log
-logger = log.get_logger(__name__)
 import awesome_tool.statemachine.config
 from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
@@ -28,7 +27,7 @@ import threading
 
 class MainWindowController(ExtendedController):
 
-    def __init__(self, state_machine_manager_model, view, gvm_model, editor_type='PortConnectionGrouped'):
+    def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
         self.editor_type = editor_type
@@ -37,13 +36,6 @@ class MainWindowController(ExtendedController):
         # state machine manager
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
-        active_state_machine_id = state_machine_manager.active_state_machine_id
-        active_state_machine = None
-        if len(state_machine_manager_model.state_machines) > 0:
-            active_state_machine = state_machine_manager_model.state_machines[active_state_machine_id]
-
-        if active_state_machine is None:
-            logger.warn("No active state machine found")
 
         # execution engine
         self.state_machine_execution_engine = awesome_tool.statemachine.singleton.state_machine_execution_engine
@@ -159,10 +151,16 @@ class MainWindowController(ExtendedController):
         page_num = view["tree_notebook_2"].page_num(history_tab)
         view["tree_notebook_2"].remove_page(page_num)
         #append new tab
+        state_machine_history_controller = StateMachineHistoryController(state_machine_manager_model,
+                                                                         view.state_machine_history)
+        self.add_controller('state_machine_history_controller', state_machine_history_controller)
+        history_label = gtk.Label('HISTORY')
+        history_notebook_widget = self.create_notebook_widget("HISTORY", view.state_machine_history.get_top_widget())
+        view["tree_notebook_2"].insert_page(history_notebook_widget, history_label, page_num)
 
-        history_tab_label = gtk.Label('History')
-        history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
-        view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
+        # history_tab_label = gtk.Label('History')
+        # history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
+        # view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
 
         ######################################################
         # execution history

@@ -8,6 +8,7 @@ data_flows:
     10: !DataFlow {data_flow_id: 10, from_key: 3, from_state: WLYRHK, to_key: 2, to_state: DIDVOV}
     13: !DataFlow {data_flow_id: 13, from_key: 3, from_state: DIDVOV, to_key: 12,
         to_state: TTJNXL}
+description: null
 filename: script.py
 input_data_ports:
     1: !DataPort {data_port_id: 1, data_type: int, default_value: 10, name: number_in}
@@ -31,5 +32,5 @@ transitions:
         transition_id: 3}
     4: !Transition {from_outcome: 0, from_state: XMQBQM, to_outcome: null, to_state: DIDVOV,
         transition_id: 4}
-    6: !Transition {from_outcome: 0, from_state: DIDVOV, to_outcome: 0, to_state: null,
+    6: !Transition {from_outcome: 0, from_state: DIDVOV, to_outcome: 0, to_state: TTJNXL,
         transition_id: 6}

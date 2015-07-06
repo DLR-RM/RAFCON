@@ -8,7 +8,9 @@
 
 """
 from awesome_tool.statemachine.singleton import state_machine_manager
+from awesome_tool.statemachine.singleton import global_variable_manager
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from awesome_tool.statemachine import interface
 
 global_focus = None
@@ -53,5 +55,19 @@ def create_folder(query):
 
 interface.create_folder_func = create_folder
 
+
+def show_notice(query):
+    import gtk
+    dialog = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
+    dialog.set_markup(query)
+    from awesome_tool.utils.helper import set_button_children_size_request
+    set_button_children_size_request(dialog)
+    dialog.run()
+    dialog.destroy()
+
+interface.show_notice_func = show_notice
+
 # This variable holds the global state machine manager model as long as only one StateMachineMangerModel is allowed
 state_machine_manager_model = StateMachineManagerModel(state_machine_manager)
+
+global_variable_manager_model = GlobalVariableManagerModel(global_variable_manager)

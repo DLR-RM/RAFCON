@@ -17,7 +17,8 @@ DEFAULT_CONFIG = """
 
 TYPE: SM_CONFIG
 
-LIBRARY_PATHS: {"test_libraries": "../../test_scripts/test_libraries",
+LIBRARY_PATHS: {"generic": "../../libraries/generic",
+                "test_libraries": "../../test_scripts/test_libraries",
                  "ros_libraries": "../../test_scripts/ros_libraries",
                  "turtle_libraries": "../../test_scripts/turtle_libraries"}
 """
@@ -31,11 +32,17 @@ class Config(DefaultConfig):
     """
 
     def __init__(self):
-        sm_path, gui_path, net_path = helper.get_opt_paths()
-        DefaultConfig.__init__(self, CONFIG_FILE, DEFAULT_CONFIG, sm_path)
+        super(Config, self).__init__(DEFAULT_CONFIG)
         if self.get_config_value("TYPE") != "SM_CONFIG":
             raise ConfigError("Type should be SM_CONFIG for statemachine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")
+
+        self.load(CONFIG_FILE)
+
+    def load(self, config_file=None, path=None):
+        if config_file is None:
+            config_file = CONFIG_FILE
+        super(Config, self).load(config_file, path)
 
 # This variable holds the global configuration parameters for the statemachine
 global_config = Config()

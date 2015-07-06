@@ -10,10 +10,7 @@
 from threading import Condition
 import copy
 from gtkmvc import Observable
-import os
 
-from awesome_tool.utils import log
-logger = log.get_logger(__name__)
 from awesome_tool.statemachine.enums import DataPortType, StateExecutionState
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.states.state import State
@@ -22,9 +19,11 @@ from awesome_tool.statemachine.outcome import Outcome
 from awesome_tool.statemachine.data_flow import DataFlow
 from awesome_tool.statemachine.scope import ScopedData, ScopedVariable
 from awesome_tool.statemachine.id_generator import *
-from awesome_tool.statemachine.config import *
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
 import awesome_tool.statemachine.singleton
+from awesome_tool.utils.type_helpers import type_inherits_of_type
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
 
 
 class ContainerState(State):
@@ -99,33 +98,6 @@ class ContainerState(State):
         self.add_default_values_of_scoped_variables_to_scoped_data()
         self.add_input_data_to_scoped_data(self.input_data)
 
-    def enter(self, scoped_variables_dict, backward_execution=False):
-        """Called on entering the container state
-
-        Here initializations of scoped variables and modules that are supposed to be used by the children take place.
-        This method calls the custom entry function provided by a python script.
-
-        :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
-        """
-        self.state_execution_status = StateExecutionState.ENTER
-        logger.debug("Calling enter() script of container state with name %s (backward: %s)",
-                     self.name, backward_execution)
-        self.script.load_and_build_module()
-        self.script.enter(self, scoped_variables_dict, backward_execution)
-
-    def exit(self, scoped_variables_dict, backward_execution=False):
-        """Called on exiting the container state
-
-        Clean up code for the state and its variables is executed here. This method calls the custom exit function
-        provided by a python script.
-        :param scoped_variables_dict: a dictionary of all scoped variables that are passed to the custom function
-        """
-        self.state_execution_status = StateExecutionState.EXIT
-        logger.debug("Calling exit() script of container state with name %s (backward: %s)",
-                     self.name, backward_execution)
-        self.script.load_and_build_module()
-        self.script.exit(self, scoped_variables_dict, backward_execution)
-
     def handle_no_transition(self, state):
         """
         This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
@@ -180,6 +152,18 @@ class ContainerState(State):
 
         return transition
 
+    def handle_no_start_state(self):
+        """Handles the situation, when no start state exists during execution
+
+        The method waits, until a transition is created. It then checks again for an existing start state and waits
+        again, if this is not the case.
+        """
+        while self.get_start_state(set_final_outcome=True) is None:
+            self._transitions_cv.acquire()
+            self._transitions_cv.wait(3.0)
+            self._transitions_cv.release()
+        return self.get_start_state()
+
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- state functions --------------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -200,18 +184,19 @@ class ContainerState(State):
         return state_id
 
     @Observable.observed
-    def add_state(self, state):
+    def add_state(self, state, storage_load=False):
         """Adds a state to the container state.
 
         :param state: the state that is going to be added
 
         """
 
-        # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
-        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
-        if own_sm_id is not None:
-            awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
-                own_sm_id, state.script.path)
+        if not storage_load:
+            # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
+            own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+            if own_sm_id is not None:
+                awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
+                    own_sm_id, state.script.path)
 
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
@@ -224,6 +209,7 @@ class ContainerState(State):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
+        :param recursive_deletion: a flag to indicate a recursive deletion of all substates
 
         """
         if state_id not in self.states:
@@ -247,7 +233,7 @@ class ContainerState(State):
             if transition.from_state == state_id or transition.to_state == state_id:
                 keys_to_delete.append(key)
         for key in keys_to_delete:
-            self.remove_transition(key)
+            self.remove_transition(key, True)
 
         keys_to_delete = []
         for key, data_flow in self.data_flows.iteritems():
@@ -268,6 +254,11 @@ class ContainerState(State):
 
         # final delete the state it self
         del self.states[state_id]
+
+    @Observable.observed
+    def change_state_type(self, state_m, new_state_class):
+        from awesome_tool.mvc.statemachine_helper import StateMachineHelper
+        return StateMachineHelper.change_state_type(state_m, new_state_class)
 
     # @Observable.observed
     def set_start_state(self, state):
@@ -306,18 +297,11 @@ class ContainerState(State):
     # ---------------------------------- transition functions -------------------------------------
     # ---------------------------------------------------------------------------------------------
 
-    @Observable.observed
-    #Primary key is transition_id
-    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
-        """Adds a transition to the container state
+    def check_transition_id(self, transition_id):
+        """ Check the transition id and calculate a new one if its None
 
-        Note: Either the toState or the toOutcome needs to be "None"
-
-        :param from_state_id: The source state of the transition
-        :param from_outcome: The outcome of the source state to connect the transition to
-        :param to_state_id: The target state of the transition
-        :param to_outcome: The target outcome of a container state
-        :param transition_id: An optional transition id for the new transition
+        :param transition_id: The transition-id to check
+        :return: The new transition id
         """
         if transition_id is not None:
             if transition_id in self._transitions.iterkeys():
@@ -326,8 +310,22 @@ class ContainerState(State):
             transition_id = generate_transition_id()
             while transition_id in self._transitions.iterkeys():
                 transition_id = generate_transition_id()
+        return transition_id
 
-        # Check if transition is starting transition and the start state is already defined
+    def basic_transition_checks(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id):
+        """ Check if transition is starting transition and the start state is already defined
+
+        :param from_state_id: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :param to_state_id: The target state of the transition
+        :param to_outcome: The target outcome of a container state
+        :param transition_id: An optional transition id for the new transition
+        :return:
+        """
+
+        # from_state and from_outcome can be None in the start_transition case
+        # to_outcome is None in the normal state case
+
         if from_state_id is None and self.start_state_id is not None:
             raise AttributeError("The start state is already defined: {0}".format(self.get_start_state().name))
 
@@ -337,10 +335,41 @@ class ContainerState(State):
 
         if to_state_id is not None:
             if not (to_state_id in self.states or to_state_id == self.state_id):
-                raise AttributeError("To_state {0} does not exist in the container state".format(to_state_id))
+                raise AttributeError("To_state {0} does not exist in the container state with id {1}".format(
+                    to_state_id, self.state_id))
 
-        if to_state_id is None and to_outcome is None:
-            raise AttributeError("Either the to_state_id or the to_outcome must be None")
+        if to_state_id is None:
+            raise AttributeError("to_state_id must not be None")
+
+        if from_state_id == to_state_id and to_outcome is not None:
+            raise AttributeError("Transitions are not allowed to go from one outcome to another "
+                                 "outcome of the same state!")
+
+    def check_if_outcome_already_connected(self, from_state_id, from_outcome):
+        """ check if outcome of from state is not already connected
+
+        :param from_state_id: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :return:
+        """
+        for trans_key, transition in self.transitions.iteritems():
+            if transition.from_state == from_state_id:
+                if transition.from_outcome == from_outcome:
+                    raise AttributeError("Outcome %s of state %s is already connected" %
+                                         (str(from_outcome), str(from_state_id)))
+
+    def create_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id):
+        """ Creates a new transition.
+
+        Lookout: Check the parameters first before creating a new transition
+
+        :param from_state_id: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :param to_state_id: The target state of the transition
+        :param to_outcome: The target outcome of a container state
+        :param transition_id: An optional transition id for the new transition
+        :return:
+        """
 
         # get correct states
         if from_state_id is not None:
@@ -348,23 +377,6 @@ class ContainerState(State):
                 from_state = self
             else:
                 from_state = self.states[from_state_id]
-
-        if to_state_id is None and to_outcome is None:
-            raise AttributeError("Either to_state_id or to_outcome must not be None")
-
-        # check if outcome of from state is not already connected
-        for trans_key, transition in self.transitions.iteritems():
-            if transition.from_state == from_state_id:
-                if transition.from_outcome == from_outcome:
-                    raise AttributeError("outcome %s of state %s is already connected" %
-                                         (str(from_outcome), str(from_state_id)))
-
-
-        from awesome_tool.statemachine.states.concurrency_state import ConcurrencyState
-        # check if state is a concurrency state, in concurrency states only transitions to the parents are allowed
-        if isinstance(self, ConcurrencyState):
-            if to_state_id is not None:  # None means that the target state is the containing state
-                raise AttributeError("In concurrency states the to_state must be the container state itself")
 
         # finally add transition
         if from_outcome is not None:
@@ -382,12 +394,35 @@ class ContainerState(State):
                 raise AttributeError("from_state does not have outcome %s", from_state)
         else:
             self.transitions[transition_id] =\
-                        Transition(None, None, to_state_id, to_outcome, transition_id)
+                Transition(None, None, to_state_id, to_outcome, transition_id)
 
         # notify all states waiting for transition to be connected
         self._transitions_cv.acquire()
         self._transitions_cv.notify_all()
         self._transitions_cv.release()
+
+        return transition_id
+
+    @Observable.observed
+    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
+        """Adds a transition to the container state
+
+        Note: Either the toState or the toOutcome needs to be "None"
+
+        :param from_state_id: The source state of the transition
+        :param from_outcome: The outcome of the source state to connect the transition to
+        :param to_state_id: The target state of the transition
+        :param to_outcome: The target outcome of a container state
+        :param transition_id: An optional transition id for the new transition
+        """
+
+        transition_id = self.check_transition_id(transition_id)
+
+        self.basic_transition_checks(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+
+        self.check_if_outcome_already_connected(from_state_id, from_outcome)
+
+        self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
 
         return transition_id
 
@@ -407,12 +442,12 @@ class ContainerState(State):
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
-        if result_transition is None:
+        if result_transition is None and outcome.outcome_id >= 0:
             logger.warn("No transition found for state with name %s!" % self.name)
         return result_transition
 
     @Observable.observed
-    def remove_transition(self, transition_id):
+    def remove_transition(self, transition_id, force=False):
         """Removes a transition from the container state
 
         :param transition_id: the id of the transition to remove
@@ -559,9 +594,9 @@ class ContainerState(State):
                 data_flow_id = generate_data_flow_id()
 
         if not (from_state_id in self.states or from_state_id == self.state_id):
-            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id.state_id)
+            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id)
         if not (to_state_id in self.states or to_state_id == self.state_id):
-            raise AttributeError("To_state %s does not exit in the container state" % to_state_id.state_id)
+            raise AttributeError("To_state %s does not exit in the container state" % to_state_id)
 
         if from_state_id == self.state_id:  # data_flow originates in container state
             from_state = self
@@ -602,7 +637,7 @@ class ContainerState(State):
                                          (str(to_data_port_id), str(to_state_id)))
 
         # check if the data types of the tow ports are the same
-        if not from_data_port.data_type == to_data_port.data_type:
+        if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
             raise AttributeError("The from data port and the to data port do not have the same data type (%s and %s)" %
                                  (str(from_data_port.data_type), str(to_data_port.data_type)))
 
@@ -801,6 +836,14 @@ class ContainerState(State):
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
 
+    def modify_scoped_variable_name(self, name, scoped_variable_id):
+        if name in self.__scoped_variables_names:
+            logger.warning("A scoped variable with name %s already exists", name)
+            return
+        self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
+        self._scoped_variables[scoped_variable_id].name = name
+        self.__scoped_variables_names.append(name)
+
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -866,14 +909,14 @@ class ContainerState(State):
             for input_data_port_key, data_port in self.input_data_ports.iteritems():
                 if dict_key == data_port.name:
                     self.scoped_data[str(input_data_port_key)+self.state_id] =\
-                        ScopedData(data_port.name, value, type(value).__name__, self.state_id, DataPortType.INPUT)
+                        ScopedData(data_port.name, value, type(value), self.state_id, DataPortType.INPUT)
                     # forward the data to scoped variables
                     for data_flow_key, data_flow in self.data_flows.iteritems():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
                             if data_flow.to_state == self.state_id:
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
                                 self.scoped_data[str(data_flow.to_key)+self.state_id] = \
-                                    ScopedData(current_scoped_variable.name, value, type(value).__name__, self.state_id,
+                                    ScopedData(current_scoped_variable.name, value, type(value), self.state_id,
                                                DataPortType.SCOPED)
 
     def add_state_execution_output_to_scoped_data(self, dictionary, state):
@@ -886,7 +929,7 @@ class ContainerState(State):
             for output_data_port_key, data_port in state.output_data_ports.iteritems():
                 if output_name == data_port.name:
                     self.scoped_data[str(output_data_port_key)+state.state_id] =\
-                        ScopedData(data_port.name, value, type(value).__name__, state.state_id, DataPortType.OUTPUT)
+                        ScopedData(data_port.name, value, type(value), state.state_id, DataPortType.OUTPUT)
 
     def add_default_values_of_scoped_variables_to_scoped_data(self):
         """Add the scoped variables default values to the scoped_data dictionary
@@ -921,7 +964,7 @@ class ContainerState(State):
                         if data_flow.to_key in self.scoped_variables.iterkeys():  # is target data port scoped?
                             current_scoped_variable = self.scoped_variables[data_flow.to_key]
                             self.scoped_data[str(data_flow.to_key) + self.state_id] = \
-                                ScopedData(current_scoped_variable.name, value, type(value).__name__, state.state_id,
+                                ScopedData(current_scoped_variable.name, value, type(value), state.state_id,
                                            DataPortType.SCOPED)
 
     # ---------------------------------------------------------------------------------------------
@@ -975,7 +1018,7 @@ class ContainerState(State):
         if not isinstance(transition, Transition):
             raise TypeError("transition must be of type Transition")
         # the to_state is None when the transition connects an outcome of a child state to the outcome of a parent state
-        if transition.to_state is None:
+        if transition.to_state == self.state_id or transition.to_state is None:
             return self
         else:
             return self.states[transition.to_state]
@@ -1007,21 +1050,9 @@ class ContainerState(State):
                             self.output_data[output_name] = \
                                 copy.deepcopy(self.scoped_data[scoped_data_key].value)
                         else:
-                            logger.error("Output data with name %s was not found in the scoped data. "
-                                         "This normally means a statemachine design error", output_name)
-
-    def add_enter_exit_script_output_dict_to_scoped_data(self, output_dict):
-        """ Copy the data of the enter/exit scripts to the scoped data
-
-        :param output_dict: the output dictionary of the scripts
-        :return:
-        """
-        for output_name, output_data in output_dict.iteritems():
-            for key_sdata, sdata in self.scoped_data.iteritems():
-                if sdata.data_port_type is DataPortType.SCOPED and output_name == sdata.name:
-                    scoped_variable_key = self.get_scoped_variable_from_name(output_name)
-                    tmp = ScopedData(output_name, output_data, type(output_data).__name__, self.state_id, DataPortType.SCOPED)
-                    self.scoped_data[str(scoped_variable_key)+self.state_id] = tmp
+                            if not self.backward_execution:
+                                logger.error("Output data with name %s was not found in the scoped data. "
+                                             "This normally means a statemachine design error", output_name)
 
     # yaml part
     def get_container_state_yaml_dict(data):

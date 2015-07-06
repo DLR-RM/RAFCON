@@ -17,6 +17,9 @@ logger = log.get_logger(__name__)
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 import awesome_tool.statemachine.config as config
 from awesome_tool.statemachine import interface
+import sys
+if not sys.version_info < (2, 7):
+    from collections import OrderedDict
 
 
 class LibraryManager(Observable):
@@ -30,6 +33,7 @@ class LibraryManager(Observable):
     def __init__(self):
         Observable.__init__(self)
         self._libraries = {}
+        self._library_paths = {}
         logger.debug("Initializing Storage object ...")
         self.storage = StateMachineStorage("../")
 
@@ -46,13 +50,23 @@ class LibraryManager(Observable):
         self._libraries = {}
         self._library_paths = {}
         for lib_key, lib_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
+            lib_path = os.path.expanduser(lib_path)
             if os.path.exists(lib_path):
                 lib_path = os.path.realpath(lib_path)
+                logger.debug('Adding libraries from {0}'.format(lib_path))
                 self._library_paths[lib_key] = lib_path
                 self._libraries[lib_key] = {}
                 self.add_libraries_from_path(lib_path, self._libraries[lib_key])
+                if not sys.version_info < (2, 7):
+                    self._libraries[lib_key] = OrderedDict(sorted(self._libraries[lib_key].items()))
+                else:
+                    self._libraries[lib_key] = dict(sorted(self._libraries[lib_key].items()))
             else:
                 logger.warn("Wrong path in config for LibraryManager: Path %s does not exist", lib_path)
+        if not sys.version_info < (2, 7):
+            self._libraries = OrderedDict(sorted(self._libraries.items()))
+        else:
+            self._libraries = dict(sorted(self._libraries.items()))
         logger.debug("Initialization of LibraryManager done.")
 
     def add_libraries_from_path(self, lib_path, target_dict):
@@ -70,7 +84,10 @@ class LibraryManager(Observable):
                 else:
                     target_dict[lib] = {}
                     self.add_libraries_from_path(os.path.join(lib_path, lib), target_dict[lib])
-
+                    if not sys.version_info < (2, 7):
+                        target_dict[lib] = OrderedDict(sorted(target_dict[lib].items()))
+                    else:
+                        target_dict[lib] = dict(sorted(target_dict[lib].items()))
     def add_library(self, lib, lib_path, target_dict):
         """
         Adds a single library path to the specified library dictionary.
@@ -117,14 +134,16 @@ class LibraryManager(Observable):
         while True:  # until the library is found or the user aborts
 
             if target_lib_dict is None:  # This cannot happen in the first iteration
-                logger.warning("Cannot find library '{0}'. Please check your library path configuration.".format(
-                    library_name))
-                logger.warning("If your library path is correct and the library was moved, please select the "
-                               "new root folder of the library. If not, please abort.")
+                notice = "Cannot find library '{0}' in subfolder '{1}'. Please check your library path configuration." \
+                            " If your library path is correct and the library was moved, please select the new root " \
+                            "folder of the library. If not, please abort.".format(library_name, library_path)
+                interface.show_notice_func(notice)
                 new_library_path = interface.open_folder_func("Select root folder for library '{0}'".format(
                     library_name))
                 if new_library_path is None:
-                    raise AttributeError('Library not found in path {0}'.format(library_path))  # Cancel library search
+                    # Cancel library search
+                    raise AttributeError("Library '{0}' not found in subfolder {1}".format(library_name,
+                                                                                           library_path))
                 if not os.path.exists(new_library_path):
                     logger.error('Specified path does not exist')
                     continue

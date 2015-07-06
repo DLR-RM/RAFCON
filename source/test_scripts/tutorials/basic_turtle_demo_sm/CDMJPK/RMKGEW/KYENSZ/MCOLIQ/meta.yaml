@@ -1,10 +1,13 @@
 !LibraryState
 filename: script.py
 input_data_ports:
-    19: !DataPort {data_port_id: 19, data_type: str, default_value: new_turtle, name: global_storage_id_of_turtle_pos}
-    20: !DataPort {data_port_id: 20, data_type: str, default_value: new_turtle, name: turtle_name}
-    21: !DataPort {data_port_id: 21, data_type: float, default_value: 9.0, name: x_pos}
-    22: !DataPort {data_port_id: 22, data_type: float, default_value: 5.0, name: y_pos}
+    19: !DataPort {data_port_id: 19, data_type: &id001 !!python/name:__builtin__.str '',
+        default_value: new_turtle, name: global_storage_id_of_turtle_pos}
+    20: !DataPort {data_port_id: 20, data_type: *id001, default_value: new_turtle,
+        name: turtle_name}
+    21: !DataPort {data_port_id: 21, data_type: &id002 !!python/name:__builtin__.float '',
+        default_value: 9.0, name: x_pos}
+    22: !DataPort {data_port_id: 22, data_type: *id002, default_value: 5.0, name: y_pos}
 library_name: move_to_position
 library_path: turtle_libraries
 name: move to position
