@@ -3,7 +3,8 @@ import gtk
 from gtkmvc import View
 from awesome_tool.mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
      GlobalVariableEditorView, SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-     LoggingView, StateMachineTreeView, LibraryTreeView, MenuBarView, ToolBarView, TopToolBarView, ExecutionHistoryView
+     LoggingView, StateMachineTreeView, LibraryTreeView, MenuBarView, ToolBarView, StateMachineHistoryView, TopToolBarView, \
+     ExecutionHistoryView
 from awesome_tool.mvc.views.states_editor import StatesEditorView
 from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
 from awesome_tool.utils import constants
@@ -30,6 +31,9 @@ class MainWindowView(View):
         self.global_var_manager_view = GlobalVariableEditorView()
         self.global_var_manager_view.show()
 
+        self.state_machine_history = StateMachineHistoryView()
+        self.state_machine_history.show()
+        
         self.execution_history_view = ExecutionHistoryView()
         self.execution_history_view.show()
 

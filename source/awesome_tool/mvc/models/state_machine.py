@@ -12,6 +12,10 @@ from awesome_tool.mvc.history import History
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 
+from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.utils import log
+logger = log.get_logger(__name__)
+
 
 class StateMachineModel(ModelMT):
     """This model class manages a :class:`awesome_tool.statemachine.state_machine.StateMachine`
@@ -48,8 +52,12 @@ class StateMachineModel(ModelMT):
         self.sm_manager_model = sm_manager_model
 
         self.selection = awesome_tool.mvc.selection.Selection()
-        
+
+        HISTORY_ENABLED = global_gui_config.get_config_value('HISTORY_ENABLED')
+        logger.info("is history enabled: %s" % HISTORY_ENABLED)
         self.history = History(self)
+        if not HISTORY_ENABLED:
+            self.history.fake = True
 
         if isinstance(meta, Vividict):
             self.meta = meta
@@ -140,6 +148,10 @@ class StateMachineModel(ModelMT):
         path_elems = path.split('/')
         path_elems.pop(0)
         current_state_model = self.root_state
-        for element in path_elems:
-            current_state_model = current_state_model.states[element]
+        for state_id in path_elems:
+            if state_id in current_state_model.states:
+                current_state_model = current_state_model.states[state_id]
+            else:
+                logger.error("path element %s of '%s' could not be found" % (current_state_model.state.get_path(), path.split('/')))
+                assert False
         return current_state_model

@@ -3,7 +3,9 @@ import gtk
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
-from awesome_tool.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, LibraryTreeController
+from awesome_tool.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, \
+    StateMachineHistoryController, LibraryTreeController
+
 import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.singleton import global_variable_manager_model as gvm_model
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
@@ -140,10 +142,16 @@ class MainWindowController(ExtendedController):
         page_num = view["tree_notebook_2"].page_num(history_tab)
         view["tree_notebook_2"].remove_page(page_num)
         #append new tab
+        state_machine_history_controller = StateMachineHistoryController(state_machine_manager_model,
+                                                                         view.state_machine_history)
+        self.add_controller('state_machine_history_controller', state_machine_history_controller)
+        history_label = gtk.Label('HISTORY')
+        history_notebook_widget = self.create_notebook_widget("HISTORY", view.state_machine_history.get_top_widget())
+        view["tree_notebook_2"].insert_page(history_notebook_widget, history_label, page_num)
 
-        history_tab_label = gtk.Label('History')
-        history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
-        view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
+        # history_tab_label = gtk.Label('History')
+        # history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
+        # view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
 
         ######################################################
         # execution history
