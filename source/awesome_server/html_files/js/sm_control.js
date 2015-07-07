@@ -3,12 +3,17 @@ function send_command(cmd) {
 
     var sm_selector = document.getElementById("sm_selector");
     addr = sm_selector[sm_selector.selectedIndex].value;
+    selected_sm = sm_selector[sm_selector.selectedIndex].text;
     
     if (addr == "none") {
     	return;	
     }
+    
+    if (cmd == "reload_sm") {
+	    requested_reload_sm = true;
+    }
 
-    $.ajax({type:"POST", url: host, data: {"command": cmd, "addr": addr}, success: function() {}});
+    $.ajax({type:"POST", url: host, data: {"command": cmd, "sm_name": selected_sm, "addr": addr}, success: function() {}});
 }
 
 function send_reload_command() {

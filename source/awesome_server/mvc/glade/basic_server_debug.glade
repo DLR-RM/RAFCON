@@ -97,32 +97,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="hbox3">
+              <object class="GtkButton" id="load_statemachine_button">
+                <property name="label" translatable="yes">Load Statemachine from Folder</property>
                 <property name="visible">True</property>
-                <child>
-                  <object class="GtkButton" id="send_state_to_browser_button">
-                    <property name="label" translatable="yes">Send State to Browser</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <signal name="clicked" handler="on_send_state_to_browser_button_clicked"/>
-                  </object>
-                  <packing>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="send_nested_state_to_browser_button">
-                    <property name="label" translatable="yes">Send nested State to Browser</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <signal name="clicked" handler="on_send_nested_state_to_browser_button_clicked"/>
-                  </object>
-                  <packing>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
               </object>
               <packing>
                 <property name="position">1</property>

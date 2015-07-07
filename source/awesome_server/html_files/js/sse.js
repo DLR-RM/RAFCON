@@ -3,6 +3,7 @@ var highlighted_states = [];
 var previous_active_states = [];
 var previous_highlighted_states = [];
 var id_list = {};
+var requested_reload_sm = true;
 
 function sse() {
 	var source = new EventSource('/state_machine_event_source');
@@ -13,11 +14,17 @@ function sse() {
         source.addEventListener("registration", new_state_machine_registered, false);
         source.addEventListener("new_state", new_state_event, false);
         source.addEventListener("new_connection", new_connection_event, false);
+        source.addEventListener("sm_transmission_end", sm_transmission_end, false);
         source.onerror = function(e) {
         	alert("Server closed connection.");
     		source.close();
         };
     }
+}
+
+
+function sm_transmission_end(e) {
+	requested_reload_sm = false;
 }
 
 function handle_unrecognized_messages(e) {
@@ -36,6 +43,10 @@ function handle_unrecognized_messages(e) {
 
 function active_state_changed(e) {
 	var data = JSON.parse(e.data);
+    var sm_selector = document.getElementById("sm_selector");
+	if (sm_selector[sm_selector.selectedIndex].text != data.sm_name){
+		return;
+	}
 	
 	if (!data.msg.startsWith('-')){
     	new_active_states = data.msg.split("/");
@@ -58,8 +69,12 @@ function active_state_changed(e) {
 function execution_state_changed(e) {
 	var data = JSON.parse(e.data);
 	var execution_mode = document.getElementById("execution_mode");
-	execution_mode.innerHTML = data.msg;
-	if (data.msg == "STOPPED") {
+    var sm_selector = document.getElementById("sm_selector");
+	var selected_sm = sm_selector[sm_selector.selectedIndex].text;
+	if (selected_sm == data.sm_name){
+		execution_mode.innerHTML = data.msg;
+	}
+	if (data.msg == "STOPPED" && selected_sm == data.sm_name) {
 		for (state_id in id_list) {
     		deactivate_state(id_list[state_id]);
     		deactivate_parent_state(id_list[state_id]);
@@ -87,10 +102,10 @@ function new_state_machine_registered(e) {
     var addr = data.ip + ":" + data.port; 
     newOption.value = addr;
 
-    if (check_selector_options(data.msg)) {
-        newOption.text = data.msg + ":" + data.port;
+    if (check_selector_options(data.sm_name)) {
+        newOption.text = data.sm_name + ":" + data.port;
     } else {
-        newOption.text = data.msg;
+        newOption.text = data.sm_name;
     }
     sm_selector.appendChild(newOption);
 
@@ -98,11 +113,17 @@ function new_state_machine_registered(e) {
         sm_selector.removeChild(sm_selector[0]);
     }
 
-    alert("New Statemachine registered: " + data.msg);
+    alert("New Statemachine registered: " + data.sm_name);
 }
 
 function new_state_event(e) {
+	var sm_selector = document.getElementById("sm_selector");
+	var selected_sm = sm_selector[sm_selector.selectedIndex].text;
 	var data = JSON.parse(e.data);
+	
+	if (requested_reload_sm == false || selected_sm != data.sm_name){
+		return;
+	}
         	
 	var position = { x: parseFloat(data.pos_x), y: parseFloat(data.pos_y) };
 	var size = { width: parseFloat(data.width), height: parseFloat(data.height) };
@@ -127,7 +148,13 @@ function new_state_event(e) {
 }
 
 function new_connection_event(e) {
+	var sm_selector = document.getElementById("sm_selector");
+	var selected_sm = sm_selector[sm_selector.selectedIndex].text;
 	var data = JSON.parse(e.data);
+	
+	if (requested_reload_sm == false || selected_sm != data.sm_name){
+		return;
+	}
 	
 	var waypoints = [];
 	

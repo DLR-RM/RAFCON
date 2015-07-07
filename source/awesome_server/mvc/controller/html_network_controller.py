@@ -31,11 +31,12 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         self.sse_conns.add(request)
         return server.NOT_DONE_YET
 
-    def send_data(self, data, ip, port, data_flag):
+    def send_data(self, data, ip, port, data_flag, sm_name):
         for conn in self.sse_conns:
-            self.send_data_to_request(conn, data, ip, port, data_flag)
+            self.send_data_to_request(conn, data, ip, port, data_flag, sm_name)
 
-    def send_data_to_request(self, request, data, ip, port, data_flag):
+    def send_data_to_request(self, request, data, ip, port, data_flag, sm_name):
+        json_pkg = ""
         if data_flag == "REG":
             json_pkg = "event: registration\n" \
                        "id: 1\n"
@@ -48,15 +49,18 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
 
         json_pkg += "data: {" \
                    "\"msg\": \"%s\", " \
+                   "\"sm_name\": \"%s\", " \
                    "\"ip\": \"%s\", " \
-                   "\"port\": \"%d\"}\n\n" % (data, ip, port)
+                   "\"port\": \"%d\"}\n\n" % (data, sm_name, ip, port)
 
         request.write(json_pkg)
 
-    def send_state_data(self, parent_id, state_id, state_name, pos_x, pos_y, width, height, hierarchy_level, outcomes):
+    def send_state_data(self, sm_name, parent_id, state_id, state_name, pos_x, pos_y, width, height, hierarchy_level,
+                        outcomes):
         json_pkg = "event: new_state\n" \
                    "id: 4\n" \
                    "data: {" \
+                   "\"sm_name\": \"%s\"," \
                    "\"parent_id\": \"%s\"," \
                    "\"state_id\": \"%s\"," \
                    "\"state_name\": \"%s\"," \
@@ -65,7 +69,8 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
                    "\"width\": \"%f\"," \
                    "\"height\": \"%f\"," \
                    "\"hierarchy_level\": \"%d\"," \
-                   "\"outcomes\": [" % (parent_id,
+                   "\"outcomes\": [" % (sm_name,
+                                        parent_id,
                                         state_id,
                                         state_name,
                                         pos_x,
@@ -86,16 +91,18 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
         for conn in self.sse_conns:
             conn.write(json_pkg)
 
-    def send_connection_data(self, container_state_id, from_outcome, from_state, to_outcome, to_state, waypoints):
+    def send_connection_data(self, sm_name, container_state_id, from_outcome, from_state, to_outcome, to_state, waypoints):
         json_pkg = "event: new_connection\n" \
                    "id: 5\n" \
                    "data: {" \
+                   "\"sm_name\": \"%s\"," \
                    "\"container_state_id\": \"%s\"," \
                    "\"from_outcome\": \"%s\"," \
                    "\"from_state\": \"%s\"," \
                    "\"to_outcome\": \"%s\"," \
                    "\"to_state\": \"%s\"," \
-                   "\"waypoints\": [" % (container_state_id,
+                   "\"waypoints\": [" % (sm_name,
+                                         container_state_id,
                                          from_outcome,
                                          from_state,
                                          to_outcome,
@@ -108,6 +115,13 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
             json_pkg = "]}\n\n".join(json_pkg.rsplit(",", 1))
         else:
             json_pkg += "]}\n\n"
+
+        for conn in self.sse_conns:
+            conn.write(json_pkg)
+
+    def send_sm_transmission_end(self):
+        json_pkg = "event: sm_transmission_end\n" \
+                   "data: none\n\n"
 
         for conn in self.sse_conns:
             conn.write(json_pkg)
@@ -157,10 +171,11 @@ class DefaultPage(resource.Resource):
 
     def render_POST(self, request):
         command = request.args["command"][0]
+        sm_name = request.args["sm_name"][0]
         ip, port = request.args["addr"][0].split(":")
         if command and ip and port:
             logger.debug("Received command: \'%s\'" % command)
-            self.controller.emit("command_received", command, ip, int(port))
+            self.controller.emit("command_received", command, sm_name, ip, int(port))
         return "Success"
 
 
@@ -184,5 +199,6 @@ class DebugPage(DefaultPage):
 
 gobject.type_register(HtmlNetworkController)
 gobject.signal_new("command_received", HtmlNetworkController, gobject.SIGNAL_RUN_FIRST, None, (gobject.TYPE_STRING,
+                                                                                               gobject.TYPE_STRING,
                                                                                                gobject.TYPE_STRING,
                                                                                                gobject.TYPE_INT))

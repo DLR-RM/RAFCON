@@ -12,7 +12,7 @@ from awesome_tool.mvc.history import History
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 
-from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.mvc.config_gui import global_gui_config
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 

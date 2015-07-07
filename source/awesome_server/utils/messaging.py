@@ -37,8 +37,6 @@ class Message(gobject.GObject):
                 raise AttributeError("Message has to be specified")
 
             self._proto_msg = UDPMessage()
-            # self._proto_msg.sm_name = sm_name
-            # self._proto_msg.root_it = root_id
             self._proto_msg.flag = flag
             self._proto_msg.message = message
             self._proto_msg.acknowledge = ack_msg
@@ -63,15 +61,15 @@ class Message(gobject.GObject):
 
     @property
     def sm_name(self):
-        return self._proto_msg.sm_name
+        return str(self._proto_msg.sm_name)
 
     @property
     def root_id(self):
-        return self._proto_msg.root_id
+        return str(self._proto_msg.root_id)
 
     @property
     def message(self):
-        return self._proto_msg.message
+        return str(self._proto_msg.message)
 
     @property
     def akg_msg(self):
@@ -79,7 +77,7 @@ class Message(gobject.GObject):
 
     @property
     def flag(self):
-        return self._proto_msg.flag
+        return str(self._proto_msg.flag)
 
     @message.setter
     def message(self, message):

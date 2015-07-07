@@ -19,9 +19,6 @@ class TCPConnection(protocol.Protocol, gobject.GObject):
     def dataReceived(self, data):
         self.incoming_data_buffer += data
         if data.endswith("TRANSMISSION_END"):
-            f = open("/home/flow/tcp_received", "w")
-            f.write(self.incoming_data_buffer.split("TRANSMISSION_END")[0])
-            f.close()
             self.factory.forward_received_data(self, self.incoming_data_buffer.split("TRANSMISSION_END")[0])
             self.incoming_data_buffer = ""
         # self.transport.write(data)

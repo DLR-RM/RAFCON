@@ -64,11 +64,11 @@ class Message:
 
     @property
     def sm_name(self):
-        return self._proto_msg.sm_name
+        return str(self._proto_msg.sm_name)
 
     @property
     def root_id(self):
-        return self._proto_msg.root_id
+        return str(self._proto_msg.root_id)
 
     @property
     def message(self):
@@ -80,7 +80,7 @@ class Message:
 
     @property
     def flag(self):
-        return self._proto_msg.flag
+        return str(self._proto_msg.flag)
 
     @message.setter
     def message(self, message):

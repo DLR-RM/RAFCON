@@ -52,7 +52,13 @@
 			            <td><button value="reload_sm" onclick="send_command(this.value)">Reload State Machine</button></td>
 			        </tr>
 			    </table>
-			    <script>sse();</script>
+			    <script>
+			    	sse();
+			    	var sm_selector = document.getElementById("sm_selector");
+					sm_selector.onchange = function(){
+						location.reload();
+					};
+			    </script>
 			</footer>
 		</div>
 	</body>

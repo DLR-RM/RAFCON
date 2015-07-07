@@ -9,7 +9,7 @@ from awesome_server.mvc.controller.debug_view import DebugViewController
 from awesome_server.connections.connection_manager import ConnectionManager
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
-from awesome_server.statemachine.singleton import library_manager
+from awesome_tool.statemachine.singleton import library_manager
 
 from awesome_server.utils import log
 

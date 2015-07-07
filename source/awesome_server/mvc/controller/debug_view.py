@@ -4,10 +4,15 @@ from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 from awesome_server.connections.protobuf import yaml_transmission_pb2
 from awesome_server.utils.storage_utils import StorageUtils
 
-from awesome_server.statemachine.states.hierarchy_state import HierarchyState
-from awesome_server.statemachine.states.execution_state import ExecutionState
-from awesome_server.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from awesome_server.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine import interface
+from awesome_tool.mvc import singleton
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
+from awesome_tool.statemachine.singleton import global_storage, state_machine_execution_engine, state_machine_manager
+from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode, StateMachineStatus
 
 from awesome_server.utils import vividict
 from awesome_server.utils import constants
@@ -16,9 +21,10 @@ import gtk
 from twisted.internet import reactor
 
 from awesome_server.utils.config import global_server_config
-from awesome_server.statemachine.singleton import global_storage, state_machine_execution_engine
-from awesome_server.statemachine.execution.statemachine_status import ExecutionMode, StateMachineStatus
 import os
+
+from awesome_server.utils import log
+logger = log.get_logger(__name__)
 
 
 TEMP_FOLDER = os.getenv("HOME") + "/.awesome_server/tmp"
@@ -45,22 +51,34 @@ class DebugViewController(ExtendedController):
 
         view["send_button"].connect("clicked", self.send_button_clicked)
         view["send_ack_button"].connect("clicked", self.send_ack_button_clicked)
+        view["load_statemachine_button"].connect("clicked", self.load_statemachine_from_folder)
 
-        self.state_machine = None
-        self.gui_meta = None
         self.last_active_state_message = ""
         self.storage = StorageUtils("~/")
         if not self.storage.exists_path(TEMP_FOLDER):
             self.storage.create_path(TEMP_FOLDER)
 
-    def handle_command(self, server_html, command, ip, port):
+    @property
+    def active_state_machine(self):
+        return state_machine_manager.get_active_state_machine()
+
+    def handle_command(self, server_html, command, sm_name, ip, port):
         if command in ('run', 'pause', 'stop', 'step_mode', 'step_forward', 'step_backward'):
             self.send_command(command, (ip, port))
-        elif command == 'reload_sm' and self.state_machine:
-            root_state = self.state_machine.root_state
-            root_state_id = root_state.state_id
-            self.send_statemachine_to_browser(self.gui_meta, root_state_id, root_state, 1)
-            self.send_statemachine_connections_to_browser(self.gui_meta, root_state_id, root_state, 1)
+        elif command == 'reload_sm' and self.active_state_machine:
+            root_state = None
+            for sm in state_machine_manager.state_machines.itervalues():
+                if sm.root_state.name == sm_name:
+                    root_state = sm.root_state
+                    break
+            # root_state = self.active_state_machine.root_state
+            if root_state:
+                print root_state.name
+                root_state_id = root_state.state_id
+                sm_name = root_state.name
+                self.send_statemachine_to_browser(sm_name, root_state_id, root_state, 1)
+                self.send_statemachine_connections_to_browser(sm_name, root_state_id, root_state, 1)
+                self.model.connection_manager.server_html.send_sm_transmission_end()
         elif command == 'resend_active_states' and \
                         state_machine_execution_engine.status.execution_mode != ExecutionMode.RUNNING and \
                         state_machine_execution_engine.status.execution_mode != ExecutionMode.STOPPED:
@@ -107,14 +125,6 @@ class DebugViewController(ExtendedController):
                 else:
                     con.send_non_acknowledged_message(message, (ip, port))
 
-    def on_send_state_to_browser_button_clicked(self, widget, event=None):
-        self.model.connection_manager.server_html.send_state_data("none", "my_state_id", "Test_State",
-                                                                  500, 20, 250, 250)
-
-    def on_send_nested_state_to_browser_button_clicked(self, widget, event=None):
-        self.model.connection_manager.server_html.send_state_data("my_state_id", "my_nested_state_id", "Nested",
-                                                                  75, 60, 100, 100)
-
     @ExtendedController.observe("_new_udp_client_signal", signal=True)
     def new_udp_client_added(self, model, prop_name, info):
         if self.view:
@@ -130,53 +140,106 @@ class DebugViewController(ExtendedController):
         self.process_yaml_files(files.files)
         tmp_sm_path = str(TEMP_FOLDER + "/" + files.files[0].file_path.rsplit('/')[1])
         [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(tmp_sm_path)
-        self.state_machine = state_machine
+        state_machine_manager.add_state_machine(state_machine)
+        state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
-        self.gui_meta = global_storage.load_graphical_meta_data_from_yaml(tmp_sm_path)
         root_state_id = state_machine.root_state.state_id
+        sm_name = state_machine.root_state.name
+        self.send_statemachine_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
+        self.send_statemachine_connections_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
+        self.model.connection_manager.server_html.send_sm_transmission_end()
 
-        self.send_statemachine_to_browser(self.gui_meta, root_state_id, state_machine.root_state, 1)
-        self.send_statemachine_connections_to_browser(self.gui_meta, root_state_id, state_machine.root_state, 1)
+    def load_statemachine_from_folder(self, widget=None, data=None, path=None):
+        if path is None:
+            if interface.open_folder_func is None:
+                logger.error("No function defined for opening a folder")
+                return
+            load_path = interface.open_folder_func("Please choose the folder of the state-machine")
+            if load_path is None:
+                return
+        else:
+            load_path = path
 
-    def send_statemachine_to_browser(self, gui_meta, state_id, state, hierarchy_level):
-        rel_pos = gui_meta[state_id][2]["gui"]["editor"]["rel_pos"]
+        try:
+            [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(load_path)
+            state_machine_manager.add_state_machine(state_machine)
+
+            root_state_id = state_machine.root_state.state_id
+            sm_name = state_machine.root_state.name
+            self.send_statemachine_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
+            self.send_statemachine_connections_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
+            self.model.connection_manager.server_html.send_sm_transmission_end()
+        except AttributeError as e:
+            logger.error('Error while trying to open state-machine: {0}'.format(e))
+
+    def send_statemachine_to_browser(self, sm_name, state_id, state, hierarchy_level):
+        meta_path = os.path.join(state.script.path, StateMachineStorage.GRAPHICS_FILE)
+        tmp_meta = None
+        if os.path.exists(meta_path):
+            tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
+
+        if not tmp_meta:
+            raise AttributeError("Meta data could not be loaded from %s" % meta_path)
+
+        rel_pos = tmp_meta["gui"]["editor"]["rel_pos"]
         if isinstance(rel_pos, dict):
             rel_pos = (5, 5)
-        size = gui_meta[state_id][2]["gui"]["editor"]["size"]
-        self.model.connection_manager.server_html.send_state_data(gui_meta[state_id][0],
+        size = tmp_meta["gui"]["editor"]["size"]
+
+        parent_id = "none"
+        if state.parent:
+            parent_id = state.parent.state_id
+
+        self.model.connection_manager.server_html.send_state_data(sm_name,
+                                                                  parent_id,
                                                                   state_id,
-                                                                  gui_meta[state_id][1].name,
+                                                                  state.name,
                                                                   abs(rel_pos[0] * constants.BROWSER_SIZE_MULTIPLIER),
                                                                   abs(rel_pos[1] * constants.BROWSER_SIZE_MULTIPLIER),
                                                                   size[0] * constants.BROWSER_SIZE_MULTIPLIER,
                                                                   size[1] * constants.BROWSER_SIZE_MULTIPLIER,
                                                                   hierarchy_level,
-                                                                  gui_meta[state_id][1].outcomes)
+                                                                  state.outcomes)
         if isinstance(state, ContainerState):
             for child_id, child in state.states.iteritems():
-                self.send_statemachine_to_browser(gui_meta, child_id, child, hierarchy_level + 1)
+                self.send_statemachine_to_browser(sm_name, child_id, child, hierarchy_level + 1)
 
-    def send_statemachine_connections_to_browser(self, gui_meta, state_id, state, hierarchy_level):
+    def send_statemachine_connections_to_browser(self, sm_name, state_id, state, hierarchy_level):
         if isinstance(state, ContainerState):
-            transitions = gui_meta[state_id][1].transitions
+            transitions = state.transitions
+
+            meta_path = os.path.join(state.script.path, StateMachineStorage.GRAPHICS_FILE)
+            tmp_meta = None
+            if os.path.exists(meta_path):
+                tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
+
+            if not tmp_meta:
+                raise AttributeError("Meta data could not be loaded from %s" % meta_path)
+
             for transition_id, transition in transitions.iteritems():
-                transition_waypoints = gui_meta[state_id][2]["transition%d" % transition_id]["gui"]["editor"]["waypoints"]
+                transition_waypoints = tmp_meta["transition%d" % transition_id]["gui"]["editor"]["waypoints"]
                 if len(transition_waypoints) == 0:
                     transition_waypoints = None
                 if transition.from_state:
                     from_state = transition.from_state
-                    from_outcome = gui_meta[transition.from_state][1].outcomes[transition.from_outcome].name
+                    from_outcome = None
+                    for child_state in state.states.itervalues():
+                        if child_state.state_id == from_state:
+                            from_outcome = child_state.outcomes[transition.from_outcome].name
                 else:
                     from_state = state_id
                     from_outcome = ""
-                if not transition.to_state:
-                    to_outcome = gui_meta[state_id][1].outcomes[transition.to_outcome].name
-                    to_state = state_id
+                if transition.to_outcome is not None:
+                    to_outcome = state.outcomes[transition.to_outcome].name
                 else:
                     to_outcome = ""
-                    to_state = transition.to_state
+                to_state = transition.to_state
 
-                self.model.connection_manager.server_html.send_connection_data(state_id,
+                if from_outcome is None:
+                    raise AttributeError("From outcome needs to be set")
+
+                self.model.connection_manager.server_html.send_connection_data(sm_name,
+                                                                               state_id,
                                                                                from_outcome,
                                                                                from_state,
                                                                                to_outcome,
@@ -184,7 +247,7 @@ class DebugViewController(ExtendedController):
                                                                                transition_waypoints)
 
             for child_id, child in state.states.iteritems():
-                self.send_statemachine_connections_to_browser(gui_meta, child_id, child, hierarchy_level + 1)
+                self.send_statemachine_connections_to_browser(sm_name, child_id, child, hierarchy_level + 1)
 
     @ExtendedController.observe("_udp_messages_received", after=True)
     def handle_udp_message_received(self, mode, prop_name, info):
