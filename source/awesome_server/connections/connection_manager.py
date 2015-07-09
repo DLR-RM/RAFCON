@@ -3,8 +3,6 @@ from gtkmvc import Observable
 from awesome_server.mvc.controller.sm_network_controller import SmNetworkController, NetworkMode
 from awesome_server.mvc.controller.html_network_controller import HtmlNetworkController
 
-from awesome_server.utils.messaging import Message
-
 
 class ConnectionManager(Observable):
     """

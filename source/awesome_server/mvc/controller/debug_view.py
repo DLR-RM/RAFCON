@@ -3,6 +3,7 @@ from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
 from awesome_server.connections.protobuf import yaml_transmission_pb2
 from awesome_server.utils.storage_utils import StorageUtils
+from awesome_server.utils import constants
 
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
@@ -10,12 +11,10 @@ from awesome_tool.statemachine.states.preemptive_concurrency_state import Preemp
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine import interface
 from awesome_tool.mvc import singleton
-from awesome_tool.statemachine.storage.storage import StateMachineStorage
+from awesome_tool.statemachine.storage.storage import StateMachineStorage, logger as storage_logger
 from awesome_tool.statemachine.singleton import global_storage, state_machine_execution_engine, state_machine_manager
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode, StateMachineStatus
-
-from awesome_server.utils import vividict
-from awesome_server.utils import constants
+from awesome_tool.utils import vividict
 
 import gtk
 from twisted.internet import reactor
@@ -71,9 +70,8 @@ class DebugViewController(ExtendedController):
                 if sm.root_state.name == sm_name:
                     root_state = sm.root_state
                     break
-            # root_state = self.active_state_machine.root_state
+
             if root_state:
-                print root_state.name
                 root_state_id = root_state.state_id
                 sm_name = root_state.name
                 self.send_statemachine_to_browser(sm_name, root_state_id, root_state, 1)
@@ -82,8 +80,16 @@ class DebugViewController(ExtendedController):
         elif command == 'resend_active_states' and \
                         state_machine_execution_engine.status.execution_mode != ExecutionMode.RUNNING and \
                         state_machine_execution_engine.status.execution_mode != ExecutionMode.STOPPED:
-            self.model.connection_manager.server_html.send_data(self.last_active_state_message, "none", 0, "ASC")
-            self.model.connection_manager.server_html.send_data("-", "none", 0, "ASC")
+            root_state = None
+            for sm in state_machine_manager.state_machines.itervalues():
+                if sm.root_state.name == sm_name:
+                    root_state = sm.root_state
+                    break
+
+            if root_state:
+                sm_name = root_state.name
+                self.model.connection_manager.server_html.send_data(self.last_active_state_message, "none", 0, "ASC", sm_name)
+                self.model.connection_manager.server_html.send_data("-", "none", 0, "ASC", sm_name)
 
     def on_command_button_clicked(self, widget, data=None):
         command = command_mapping[widget.get_label()]
