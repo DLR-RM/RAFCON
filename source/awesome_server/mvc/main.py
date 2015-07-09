@@ -11,7 +11,7 @@ from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
 from awesome_tool.statemachine.singleton import library_manager
 
-from awesome_server.utils import log
+from awesome_tool.utils import log
 
 import gtk
 

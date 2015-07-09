@@ -8,7 +8,7 @@ from twisted.internet import reactor
 from awesome_server.utils.config import global_server_config
 from awesome_server.utils import constants
 
-from awesome_server.utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

@@ -5,7 +5,7 @@ from awesome_server.mvc.controller.html_network_controller import HtmlNetworkCon
 
 from awesome_tool.statemachine.singleton import state_machine_manager
 
-from awesome_server.utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

@@ -1,9 +1,9 @@
 import yaml
 import os
 
-from awesome_server.utils.storage_utils import StorageUtils
+from awesome_tool.utils.storage_utils import StorageUtils
 from awesome_server.utils import helper
-from awesome_server.utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

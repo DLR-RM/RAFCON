@@ -3,7 +3,7 @@ from enum import Enum
 from awesome_server.connections.tcp_connection import TCPFactory
 from awesome_server.connections.udp_connection import UDPConnection
 
-from awesome_server.utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

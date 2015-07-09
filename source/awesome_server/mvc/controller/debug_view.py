@@ -2,7 +2,7 @@ from awesome_server.mvc.controller.extended_controller import ExtendedController
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
 from awesome_server.connections.protobuf import yaml_transmission_pb2
-from awesome_server.utils.storage_utils import StorageUtils
+from awesome_tool.utils.storage_utils import StorageUtils
 from awesome_server.utils import constants
 
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
@@ -22,7 +22,7 @@ from twisted.internet import reactor
 from awesome_server.utils.config import global_server_config
 import os
 
-from awesome_server.utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 

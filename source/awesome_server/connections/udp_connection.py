@@ -9,7 +9,7 @@ from awesome_tool.utils.network.network_messaging import Message
 
 from awesome_server.utils.config import global_server_config
 
-from awesome_server.utils import log
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
