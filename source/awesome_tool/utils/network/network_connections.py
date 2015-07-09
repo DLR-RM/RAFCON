@@ -6,17 +6,18 @@ from twisted.internet.error import CannotListenError
 from gtkmvc import Observer
 import gobject
 
-from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.models.container_state import ContainerStateModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state import StateModel
+
 from awesome_tool.statemachine.storage.network_storage import NetworkStorageReader
 from awesome_tool.statemachine.enums import StateExecutionState
+import awesome_tool.statemachine.singleton
+
 from awesome_tool.utils.network.protobuf import yaml_transmission_pb2
 from awesome_tool.utils.network.network_messaging import Message
-from awesome_tool.mvc.config_network import global_net_config
-import awesome_tool.statemachine.singleton
+from awesome_tool.utils.network.config_network import global_net_config
 from awesome_tool.utils import log
 
 logger = log.get_logger(__name__)
@@ -46,8 +47,6 @@ class NetworkConnections(Observer, gobject.GObject):
         self.udp_registered = False
         self.tcp_connected = False
 
-        self.menu_bar_controller = None
-
         self.net_storage_reader = NetworkStorageReader(base_path=sm_base_path)
 
         # execution engine
@@ -69,10 +68,6 @@ class NetworkConnections(Observer, gobject.GObject):
     def register_statemachine_model(self, sm_model):
         assert isinstance(sm_model, StateMachineModel)
         self.observe_model(sm_model)
-
-    def register_menu_bar_controller(self, menu_bar_controller):
-        assert isinstance(menu_bar_controller, MenuBarController)
-        self.menu_bar_controller = menu_bar_controller
 
     def register_udp(self):
         if not self.udp_registered:
@@ -118,21 +113,27 @@ class NetworkConnections(Observer, gobject.GObject):
         :param new_mode:
         :return:
         """
-        if self.menu_bar_controller:
-            if new_mode == 'run':
-                self.menu_bar_controller.on_start_activate(None)
-            elif new_mode == 'stop':
-                self.menu_bar_controller.on_stop_activate(None)
-            elif new_mode == 'pause':
-                self.menu_bar_controller.on_pause_activate(None)
-            elif new_mode == 'step_mode':
-                self.menu_bar_controller.on_step_mode_activate(None)
-            elif new_mode == 'step_forward':
-                self.menu_bar_controller.on_step_activate(None)
-            elif new_mode == 'step_backward':
-                self.menu_bar_controller.on_backward_step_activate(None)
-            else:
-                logger.warning("Unrecognized mode detected.")
+        if new_mode == 'run':
+            logger.debug("Start execution engine ...")
+            selected_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id
+            awesome_tool.statemachine.singleton.state_machine_execution_engine.start(selected_sm_id)
+        elif new_mode == 'stop':
+            logger.debug("Stop execution engine ...")
+            awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+        elif new_mode == 'pause':
+            logger.debug("Pause execution engine ...")
+            awesome_tool.statemachine.singleton.state_machine_execution_engine.pause()
+        elif new_mode == 'step_mode':
+            logger.debug("Activate execution engine step mode ...")
+            awesome_tool.statemachine.singleton.state_machine_execution_engine.step_mode()
+        elif new_mode == 'step_forward':
+            logger.debug("Execution step ...")
+            awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
+        elif new_mode == 'step_backward':
+            logger.debug("Executing backward step ...")
+            awesome_tool.statemachine.singleton.state_machine_execution_engine.backward_step()
+        else:
+            logger.warning("Unrecognized mode detected.")
 
     @Observer.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):

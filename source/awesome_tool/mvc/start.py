@@ -1,25 +1,21 @@
 #!/opt/python/python2.7/bin/python
 
 import logging
-
 import os
-import gtk
 import signal
 import argparse
 
-from awesome_tool.mvc.controllers import MainWindowController
+import gtk
 
+from awesome_tool.mvc.controllers import MainWindowController
 from awesome_tool.utils import log
 from awesome_tool.mvc.views.logging import LoggingView
 from awesome_tool.mvc.views.main_window import MainWindowView
-
 import awesome_tool.statemachine.singleton as sm_singletons
 import awesome_tool.mvc.singleton as mvc_singletons
-
 from awesome_tool.mvc.config_gui import global_gui_config
-from awesome_tool.mvc.config_network import global_net_config
+from awesome_tool.utils.network.config_network import global_net_config
 from awesome_tool.statemachine.config import global_config
-
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState

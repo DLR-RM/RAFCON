@@ -211,7 +211,6 @@ class MainWindowController(ExtendedController):
                                                 view.get_top_widget(),
                                                 self.shortcut_manager)
         self.add_controller("menu_bar_controller", menu_bar_controller)
-        network_connections_ctrl.network_connections.register_menu_bar_controller(menu_bar_controller)
 
         ######################################################
         # tool bar
