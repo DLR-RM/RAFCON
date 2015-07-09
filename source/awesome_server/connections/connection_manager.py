@@ -45,8 +45,6 @@ class ConnectionManager(Observable):
         Method called by 'udp_data_received'. It processes the received data of the filtered message.
         :param msg: Received message
         """
-        from awesome_tool.utils.network.network_messaging import Message
-        assert isinstance(msg, Message)
         sm_id = state_machine_manager.get_sm_id_for_root_state_id(msg.root_id)
         if sm_id is not None:
             if msg.flag == "ASC" and not msg.message.startswith('-'):
