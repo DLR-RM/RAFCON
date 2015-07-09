@@ -47,6 +47,15 @@ class StateMachineManager(Observable):
                 global_storage.load_statemachine_from_yaml(state_machine_id_to_path[sm_ids[sm_idx]])
             self.add_state_machine(state_machine)
 
+    def get_sm_id_for_root_state_id(self, root_state_id):
+        for sm_id, sm in self.state_machines.iteritems():
+            if sm.root_state.state_id == root_state_id:
+
+                return sm_id
+
+        logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
+        return None
+
     def get_sm_id_for_state(self, state, get_state_by_identity=False):
         """
         Calculate the state_machine_id for the state
