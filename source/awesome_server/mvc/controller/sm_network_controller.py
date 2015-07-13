@@ -1,7 +1,8 @@
 from enum import Enum
 
-from awesome_server.connections.tcp_connection import TCPFactory
-from awesome_server.connections.udp_connection import UDPConnection
+from awesome_tool.network.udp_connection import UDPConnection
+from awesome_tool.network.tcp_connection import TCPFactory
+from awesome_tool.network.enums import ConnectionMode
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -55,7 +56,7 @@ class SmNetworkController:
         :return: True if port was added, no if port already existing
         """
         if port not in self.udp_connections.keys():
-            udp_con = UDPConnection()
+            udp_con = UDPConnection(ConnectionMode.SERVER)
             self.udp_connections[port] = udp_con
             try:
                 reactor.listenUDP(port, udp_con)

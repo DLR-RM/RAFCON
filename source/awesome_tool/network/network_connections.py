@@ -1,7 +1,6 @@
-from threading import Event, Thread, Timer
+from threading import Timer
 
-from twisted.internet import reactor, protocol
-from twisted.internet.protocol import DatagramProtocol
+from twisted.internet import reactor
 from twisted.internet.error import CannotListenError
 from gtkmvc import Observer
 import gobject
@@ -12,13 +11,13 @@ from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.states.state import State
 import awesome_tool.statemachine.singleton
 
-from awesome_tool.network.protobuf import yaml_transmission_pb2
-from awesome_tool.network.network_messaging import Message
 from awesome_tool.network.config_network import global_net_config
 
+from awesome_tool.network.udp_connection import UDPConnection
+from awesome_tool.network.tcp_connection import TCPClientFactory
+from awesome_tool.network.enums import ConnectionMode
+
 from awesome_tool.utils import log
-
-
 logger = log.get_logger(__name__)
 
 
@@ -33,9 +32,6 @@ class NetworkConnections(Observer, gobject.GObject):
     def __init__(self):
         self.__gobject_init__()
         Observer.__init__(self)
-
-        self.tcp_connection_factory = TCPFactory(self)
-        self.udp_connection = UDPConnection(self)
 
         self.udp_connection_reactor_port = None
         self.tcp_connector = None
@@ -55,6 +51,15 @@ class NetworkConnections(Observer, gobject.GObject):
         self.observe_model(self.state_machine_manager)
         self.state_machine_manager.register_observer(self)
 
+        self.tcp_connection_factory = TCPClientFactory()
+        self.tcp_connection_factory.connect('tcp_connected', self.tcp_connected_signal)
+        self.tcp_connection_factory.connect('tcp_disconnected', self.tcp_disconnected_signal)
+
+        self.udp_connection = UDPConnection(ConnectionMode.CLIENT)
+        self.udp_connection.connect('udp_response_received', self.udp_response_received)
+        self.udp_connection.connect('udp_no_response_received', self.udp_no_response_received)
+        self.udp_connection.connect('execution_command_received', self.change_execution_mode)
+
         self.previous_execution_message = ""
 
         if global_net_config.get_config_value("AUTOCONNECT_UDP_TO_SERVER"):
@@ -62,8 +67,26 @@ class NetworkConnections(Observer, gobject.GObject):
         if global_net_config.get_config_value("AUTOCONNECT_TCP_TO_SERVER"):
             self.connect_tcp()
 
+    def tcp_connected_signal(self, tcp_conn):
+        self.tcp_connected = True
+        self.emit('tcp_connected')
+
+    def tcp_disconnected_signal(self, tcp_conn):
+        self.tcp_connected = False
+        self.emit('tcp_disconnected')
+
+    def udp_response_received(self, udp_conn):
+        self.emit('udp_response_received')
+
+    def udp_no_response_received(self, udp_conn):
+        self.udp_registered = False
+        self.udp_connection_reactor_port.stopListening()
+        self.emit('udp_no_response_received')
+
     def set_storage_base_path(self, base_path):
         self.net_storage_reader = NetworkStorageReader(base_path)
+        if self.tcp_connection_factory:
+            self.tcp_connection_factory.net_storage_reader = self.net_storage_reader
 
     def register_udp(self):
         if not self.udp_registered:
@@ -103,7 +126,7 @@ class NetworkConnections(Observer, gobject.GObject):
         else:
             self.tcp_connector.disconnect()
 
-    def change_execution_mode(self, new_mode):
+    def change_execution_mode(self, udp_conn, new_mode):
         """
         This method handles the change of the execution state and activates the corresponding execution mode.
         :param new_mode:
@@ -209,215 +232,3 @@ gobject.signal_new('tcp_connected', NetworkConnections, gobject.SIGNAL_RUN_FIRST
 gobject.signal_new('tcp_disconnected', NetworkConnections, gobject.SIGNAL_RUN_FIRST, None, ())
 gobject.signal_new('udp_response_received', NetworkConnections, gobject.SIGNAL_RUN_FIRST, None, ())
 gobject.signal_new('udp_no_response_received', NetworkConnections, gobject.SIGNAL_RUN_FIRST, None, ())
-
-
-class TCPClient(protocol.Protocol):
-
-    def __init__(self, factory):
-        self.factory = factory
-
-    def connectionMade(self):
-        if not self.factory.network_connection.net_storage_reader:
-            logger.error("Cannot send state machine as no storage reader is available.")
-            self.transport.close()
-            return
-        self.factory.network_connection.tcp_connected = True
-
-        files = yaml_transmission_pb2.Files()
-        sm_name = self.factory.network_connection.state_machine_manager.get_active_state_machine().root_state.name
-        files.sm_name = sm_name
-        for path, content in self.factory.network_connection.net_storage_reader.file_storage.iteritems():
-            my_file = files.files.add()
-            my_file.file_path = str(path)
-            my_file.file_content = content
-        self.transport.write(files.SerializeToString() + "TRANSMISSION_END")
-        self.factory.emit_connected()
-
-    def connectionLost(self, reason):
-        self.factory.network_connection.tcp_connected = False
-        self.factory.emit_disconnected()
-
-
-class TCPFactory(protocol.ClientFactory):
-
-    def __init__(self, network_connection):
-        self.network_connection = network_connection
-
-    def buildProtocol(self, addr):
-        return TCPClient(self)
-
-    def emit_connected(self):
-        self.network_connection.emit('tcp_connected')
-
-    def emit_disconnected(self):
-        self.network_connection.emit('tcp_disconnected')
-
-
-class UDPConnection(DatagramProtocol):
-    """
-    This class represents the UDP connection listener.
-    """
-
-    def __init__(self, network_connection):
-        self.network_connection = network_connection
-
-        self._rcvd_udp_messages_history = [""] * global_net_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY")
-        self._current_rcvd_index = 0
-
-        self.messages_to_be_acknowledged = {}
-
-    @property
-    def sm_name(self):
-        return self.network_connection.state_machine_manager.get_active_state_machine().root_state.name
-
-    @property
-    def root_id(self):
-        return self.network_connection.state_machine_manager.get_active_state_machine().root_state.state_id
-
-    def emit_udp_response_received(self):
-        self.network_connection.emit('udp_response_received')
-
-    def emit_udp_no_response_received(self):
-        self.network_connection.emit('udp_no_response_received')
-
-    def startProtocol(self):
-        """
-        Starts the UDP connection with the server and sends an initial "Register Statemachine" message
-        """
-        if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
-            logger.warning("Register UDP connection without acknowledge - Spacebot Cup Mode")
-            self.send_non_acknowledged_message("",
-                                               (global_net_config.get_server_ip(),
-                                                global_net_config.get_server_udp_port()),
-                                               "REG")
-            self.emit_udp_response_received()
-        else:
-            self.send_acknowledged_message("",
-                                           (global_net_config.get_server_ip(),
-                                            global_net_config.get_server_udp_port()),
-                                           "REG")
-
-    def datagramReceived(self, data, addr):
-        """
-        Receives data via UDP connection and performs the initial processing (check if checksum correct, checks for
-        messages to stop sending as they are acknowledged, sends acknowledgement if necessary.)
-        :param data: Received data
-        :param addr: Sender address
-        """
-        msg = Message.parse_from_string(data)
-        if msg.check_checksum() and not self.check_for_message_in_history(msg):
-            self.emit_udp_response_received()
-            self.check_and_execute_flag(msg)
-            self.check_send_acknowledge(msg, addr)
-
-    def check_for_message_in_history(self, msg):
-        """
-        Checks if received message has already been received. Also keeps track of received messages and stores them
-        until NUMBER_UDP_MESSAGES_HISTORY is reached. After reaching this number the entries are overwritten.
-        :param msg: Message to check
-        :return: True if message has already been received, False if it is a new message
-        """
-        msg_already_received = msg.message_id in self._rcvd_udp_messages_history
-        if not msg_already_received:
-            self._rcvd_udp_messages_history[self._current_rcvd_index] = msg.message_id
-            self._current_rcvd_index += 1
-            if self._current_rcvd_index >= global_net_config.get_config_value("NUMBER_UDP_MESSAGES_HISTORY"):
-                self._current_rcvd_index = 0
-        return msg_already_received
-
-    def send_message(self, message, addr):
-        """
-        This method sends the specified message to the given address as many times as specified in configuration.
-        It does not expect an acknowledge and does not send the data again.
-        :param message: Message to be sent
-        :param addr: Receiver address
-        :return:
-        """
-        assert isinstance(message, Message)
-        if not self.transport:
-            return
-        logger.debug("Send message %s" % message.message_id)
-        for i in range(0, global_net_config.get_config_value("NUMBER_UDP_MESSAGES_SENT")):
-            self.transport.write(str(message), addr)
-
-    def send_acknowledge(self, message_id, addr):
-        """
-        Sends acknowledge to sender for given message
-        :param message_id: Message_ID of message to be acknowledged
-        :param addr: Address of sender
-        """
-        msg = Message(sm_name=self.sm_name, root_id=self.root_id, message=message_id, ack_msg=False, flag="ACK")
-        logger.debug("Send acknowledge message for received message: %s with acknowledge id: %s" % (message_id,
-                                                                                                    msg.message_id))
-        self.send_message(msg, addr)
-
-    def send_non_acknowledged_message(self, message, addr, flag="   "):
-        msg = Message(sm_name=self.sm_name, root_id=self.root_id, message=message, ack_msg=False, flag=flag)
-        self.send_message(msg, addr)
-
-    def send_acknowledged_message(self, message, addr, flag="   "):
-        """
-        Sends the message repeatedly until it is acknowledged or timeout occurred.
-        In list "messages_to_be_acknowledged" the Event 'stop_event' stops the sending when set() (see
-        'check_acknowledge_and_stop_sending'), the boolean indicates if the message was acknowledged 'True'
-        or aborted due to timeout 'False'.
-        :param message: Message to be sent
-        :param addr: Receiver address
-        """
-        msg = Message(sm_name=self.sm_name, root_id=self.root_id, message=message, ack_msg=True, flag=flag)
-        stop_event = Event()
-
-        self.messages_to_be_acknowledged[msg.message_id] = (stop_event, False)
-
-        acknowledge_thread = Thread(target=self.repeat_sending_message, args=(msg, addr, stop_event))
-        acknowledge_thread.start()
-
-    def repeat_sending_message(self, message, addr, stop_event):
-        """
-        Sends the given message to the given address every x seconds (specified in config) until timeout occurs.
-        :param message: Message to send
-        :param addr: Receiver address
-        :param stop_event: Event to stop thread/sending
-        """
-        number_of_repetitions = int(global_net_config.get_config_value("NUMBER_OF_UDP_PACKAGES_UNTIL_TIMEOUT"))
-        current_repetition = 0
-        while not stop_event.is_set() and current_repetition < number_of_repetitions:
-            current_repetition += 1
-            self.send_message(message, addr)
-            stop_event.wait(global_net_config.get_config_value("SECONDS_BETWEEN_UDP_RESEND"))
-
-        if current_repetition == number_of_repetitions:
-            logger.warning("Connection Timeout: Server not reachable.")
-            self.emit_udp_no_response_received()
-            self.network_connection.udp_registered = False
-            self.network_connection.udp_connection_reactor_port.stopListening()
-
-    def check_and_execute_flag(self, msg):
-        """
-        This method checks the flag of the incoming received data and executes the corresponding code.
-        :param msg: Received message to execute
-        """
-        if msg.flag == "ACK" and msg.message in self.messages_to_be_acknowledged.iterkeys():
-            logger.debug("Message %s acknowledged" % msg.message)
-            stop_event = self.messages_to_be_acknowledged[msg.message][0]
-            stop_event.set()
-            self.messages_to_be_acknowledged[msg.message] = (stop_event, True)
-        elif msg.flag == "EXE":
-            self.network_connection.change_execution_mode(msg.message)
-        elif msg.flag == "ALR":  # ALR = already registered
-            logger.error("Statemachine with name of this statemachine already registered at server - change name and"
-                         "try again")
-            stop_event = self.messages_to_be_acknowledged[msg.message][0]
-            stop_event.set()
-            self.network_connection.udp_registered = False
-            self.network_connection.udp_connection_reactor_port.stopListening()
-            self.emit_udp_no_response_received()
-
-    def check_send_acknowledge(self, msg, addr):
-        """
-        Sends an acknowledge message to the sender for the given message, if the message needs to be acknowledged
-        :param msg: Message to check
-        :param addr: Address of sender
-        """
-        if msg.akg_msg:
-            self.send_acknowledge(msg.message_id, addr)
