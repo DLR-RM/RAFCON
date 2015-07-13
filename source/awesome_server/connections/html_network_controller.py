@@ -21,7 +21,6 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
 
         self.path_to_static_files = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                  os.pardir,
-                                                 os.pardir,
                                                  "html_files")
 
         self.connection_manager = connection_manager
@@ -145,7 +144,6 @@ class DefaultPage(resource.Resource):
 
     def __init__(self, controller, page_name):
         self.path_to_static_files = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                 os.pardir,
                                                  os.pardir,
                                                  "html_files")
 

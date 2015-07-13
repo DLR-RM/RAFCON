@@ -13,7 +13,7 @@ from awesome_tool.statemachine import interface
 from awesome_tool.mvc import singleton  # Keep for loading statemachines from folder
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.singleton import global_storage, state_machine_execution_engine, state_machine_manager
-from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode, StateMachineStatus
+from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.utils import vividict
 
 import gtk
@@ -263,15 +263,7 @@ class DebugViewController(ExtendedController):
         else:
             message = msg.message
 
-        if message == 'RUNNING':
-            state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.RUNNING)
-        elif message == 'PAUSED':
-            state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.PAUSED)
-        elif message == 'STOPPED':
-            state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.STOPPED)
-        elif message == 'STEPPING':
-            state_machine_execution_engine.status = StateMachineStatus(ExecutionMode.STEPPING)
-        elif not message.startswith('-'):
+        if not message.startswith('-'):
             self.last_active_state_message = message
         self.print_msg("%s: %s" % (msg.sm_name, message))
 

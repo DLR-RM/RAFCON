@@ -1,5 +1,3 @@
-from threading import Timer
-
 from twisted.internet import reactor
 from twisted.internet.error import CannotListenError
 from gtkmvc import Observer
@@ -29,15 +27,17 @@ class NetworkConnections(Observer, gobject.GObject):
     :param view: View to control network connections
     """
 
-    def __init__(self):
+    def __init__(self, udp_net_controller, tcp_net_controller):
         self.__gobject_init__()
         Observer.__init__(self)
 
-        self.udp_connection_reactor_port = None
-        self.tcp_connector = None
-
-        self.udp_registered = False
+        # self.udp_registered = False
         self.tcp_connected = False
+
+        self._udp_net_controller = udp_net_controller
+        self._tcp_net_controller = tcp_net_controller
+
+        self.udp_port = global_net_config.get_config_value("SELF_UDP_PORT")
 
         self.net_storage_reader = None
 
@@ -54,11 +54,6 @@ class NetworkConnections(Observer, gobject.GObject):
         self.tcp_connection_factory = TCPClientFactory()
         self.tcp_connection_factory.connect('tcp_connected', self.tcp_connected_signal)
         self.tcp_connection_factory.connect('tcp_disconnected', self.tcp_disconnected_signal)
-
-        self.udp_connection = UDPConnection(ConnectionMode.CLIENT)
-        self.udp_connection.connect('udp_response_received', self.udp_response_received)
-        self.udp_connection.connect('udp_no_response_received', self.udp_no_response_received)
-        self.udp_connection.connect('execution_command_received', self.change_execution_mode)
 
         self.previous_execution_message = ""
 
@@ -79,52 +74,63 @@ class NetworkConnections(Observer, gobject.GObject):
         self.emit('udp_response_received')
 
     def udp_no_response_received(self, udp_conn):
-        self.udp_registered = False
-        self.udp_connection_reactor_port.stopListening()
+        # self.udp_registered = False
+        self._udp_net_controller.stop(self.udp_port)
         self.emit('udp_no_response_received')
+
+    @property
+    def udp_registered(self):
+        return self.udp_port in self._udp_net_controller.get_connections().iterkeys()
 
     def set_storage_base_path(self, base_path):
         self.net_storage_reader = NetworkStorageReader(base_path)
-        if self.tcp_connection_factory:
-            self.tcp_connection_factory.net_storage_reader = self.net_storage_reader
+        ip, port = global_net_config.get_server_ip(), global_net_config.get_server_tcp_port()
+        try:
+            client_factory = self._tcp_net_controller.get_tcp_clients()[(ip, port)]
+            if client_factory:
+                client_factory.net_storage_reader = self.net_storage_reader
+        except KeyError:
+            pass
 
     def register_udp(self):
         if not self.udp_registered:
             try:
-                self.udp_connection_reactor_port = reactor.listenUDP(global_net_config.get_config_value("SELF_UDP_PORT"),
-                                                                     self.udp_connection)
+                udp_connection = self._udp_net_controller.start(self.udp_port, ConnectionMode.CLIENT)
+                self.connect_udp_connection(udp_connection)
             except CannotListenError:
                 logger.error("Cannot establish UDP connection - Port already in use")
-            else:
-                self.udp_registered = True
         else:
             self.emit('udp_no_response_received')
-            self.udp_connection_reactor_port.stopListening()
-            self.udp_registered = False
-            self.reconnect_udp()
+            self._udp_net_controller.stop(self.udp_port)
+            self._udp_net_controller.restart(self.udp_port)
 
-    def reconnect_udp(self):
-        try:
-            self.udp_connection_reactor_port = reactor.listenUDP(global_net_config.get_config_value("SELF_UDP_PORT"),
-                                                                 self.udp_connection)
-        except CannotListenError:
-            timer = Timer(.1, self.reconnect_udp)
-            timer.start()
-        else:
-            self.udp_registered = True
+    def connect_udp_connection(self, udp_connection):
+        udp_connection.connect('udp_response_received', self.udp_response_received)
+        udp_connection.connect('udp_no_response_received', self.udp_no_response_received)
+        udp_connection.connect('execution_command_received', self.change_execution_mode)
+
+    def connect_tcp_connection(self, tcp_connection):
+        tcp_connection.connect('tcp_connected', self.tcp_connected_signal)
+        tcp_connection.connect('tcp_disconnected', self.tcp_disconnected_signal)
 
     def connect_tcp(self):
         if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
             logger.error("No TCP connection possible in Spacebot Cup Mode")
             return
-        if not self.tcp_connected and self.tcp_connector is None:
-            self.tcp_connector = reactor.connectTCP(global_net_config.get_server_ip(),
-                                                    global_net_config.get_server_tcp_port(),
-                                                    self.tcp_connection_factory)
+
+        ip, port = global_net_config.get_server_ip(), global_net_config.get_server_tcp_port()
+
+        if not self.tcp_connected and (ip, port) not in self._tcp_net_controller.get_reactor_ports().iterkeys():
+            self._tcp_net_controller.connect_tcp(ip, port)
+            self.connect_tcp_connection(self._tcp_net_controller.get_tcp_clients()[(ip, port)])
+            if self.net_storage_reader:
+                self._tcp_net_controller.get_tcp_clients()[(ip, port)].net_storage_reader = self.net_storage_reader
         elif not self.tcp_connected:
-            self.tcp_connector.connect()
+            # self.tcp_connector.connect()
+            self._tcp_net_controller.get_reactor_ports()[(ip, port)].connect()
         else:
-            self.tcp_connector.disconnect()
+            # self.tcp_connector.disconnect()
+            self._tcp_net_controller.get_reactor_ports()[(ip, port)].disconnect()
 
     def change_execution_mode(self, udp_conn, new_mode):
         """
@@ -180,23 +186,28 @@ class NetworkConnections(Observer, gobject.GObject):
                 if kwargs_args[1] == StateExecutionState.ACTIVE:
                     self.send_current_active_states(model.root_state)
                     if not self.previous_execution_message.startswith("-"):
-                        self.udp_connection.send_non_acknowledged_message("------------------------------------",
-                                                                          (global_net_config.get_server_ip(),
-                                                                           global_net_config.get_server_udp_port()),
-                                                                          "ASC")  # ASC = Active State Changed
+                        udp_connection = self._udp_net_controller.get_connections()[self.udp_port]
+                        udp_connection.send_non_acknowledged_message("------------------------------------",
+                                                                     (global_net_config.get_server_ip(),
+                                                                      global_net_config.get_server_udp_port()),
+                                                                      "ASC")  # ASC = Active State Changed
                         self.previous_execution_message = "------------------------------------"
 
     @Observer.observe("execution_engine", after=True)
     def execution_mode_changed(self, model, prop_name, info):
+
+
+
         execution_mode = str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         execution_mode = execution_mode.replace("EXECUTION_MODE.", "")
+        udp_connection = self._udp_net_controller.get_connections()[self.udp_port]
         if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
-            self.udp_connection.send_non_acknowledged_message(execution_mode,
+            udp_connection.send_non_acknowledged_message(execution_mode,
                                                               (global_net_config.get_server_ip(),
                                                                global_net_config.get_server_udp_port()),
                                                               "EXE")
         else:
-            self.udp_connection.send_acknowledged_message(execution_mode,
+            udp_connection.send_acknowledged_message(execution_mode,
                                                           (global_net_config.get_server_ip(),
                                                            global_net_config.get_server_udp_port()),
                                                           "EXE")
@@ -217,10 +228,11 @@ class NetworkConnections(Observer, gobject.GObject):
 
         if state.state_execution_status == StateExecutionState.ACTIVE:
             if not self.state_has_content(state):
-                self.udp_connection.send_non_acknowledged_message(state.get_path(),
-                                                                  (global_net_config.get_server_ip(),
-                                                                   global_net_config.get_server_udp_port()),
-                                                                  "ASC")  # ASC = Active State Changed
+                udp_connection = self._udp_net_controller.get_connections()[self.udp_port]
+                udp_connection.send_non_acknowledged_message(state.get_path(),
+                                                             (global_net_config.get_server_ip(),
+                                                              global_net_config.get_server_udp_port()),
+                                                             "ASC")  # ASC = Active State Changed
                 self.previous_execution_message = state.get_path()
 
         if self.state_has_content(state):

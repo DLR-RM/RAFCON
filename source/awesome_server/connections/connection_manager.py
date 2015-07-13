@@ -1,11 +1,11 @@
 from gtkmvc import Observable
-
-from awesome_server.mvc.controller.sm_network_controller import SmNetworkController, NetworkMode
-from awesome_server.mvc.controller.html_network_controller import HtmlNetworkController
-
 from awesome_tool.statemachine.singleton import state_machine_manager
-
+from awesome_tool.network.singleton import udp_net_controller, tcp_net_controller
+from awesome_tool.network.enums import ConnectionMode
 from awesome_tool.utils import log
+
+from awesome_server.connections.html_network_controller import HtmlNetworkController
+
 logger = log.get_logger(__name__)
 
 
@@ -19,8 +19,8 @@ class ConnectionManager(Observable):
         self._udp_connections = []
         self._tcp_connections = []
 
-        self.server_udp = SmNetworkController(NetworkMode.UDP)
-        self.server_tcp = SmNetworkController(NetworkMode.TCP)
+        self.server_udp = udp_net_controller
+        self.server_tcp = tcp_net_controller
 
         self.server_html = HtmlNetworkController(self)
         self.server_html.start_html_server()
@@ -64,7 +64,7 @@ class ConnectionManager(Observable):
         Adds new TCP Factory to manager
         :param port: Port to listen for incoming TCP connections
         """
-        tcp_con = self.server_tcp.start(port)
+        tcp_con = self.server_tcp.start(port, ConnectionMode.SERVER)
         if tcp_con:
             tcp_con.connect("data_received", self.tcp_data_received)
             self._tcp_connections.append(tcp_con)
@@ -76,7 +76,7 @@ class ConnectionManager(Observable):
         :param port: Port to listen for incoming UDP connections
         :return: New UDP connection if successfully created, None otherwise
         """
-        udp_con = self.server_udp.start(port)
+        udp_con = self.server_udp.start(port, ConnectionMode.SERVER)
         if udp_con:
             udp_con.connect("data_received", self.udp_data_received)
             self._udp_connections.append(udp_con)

@@ -193,6 +193,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
             stop_event = self.messages_to_be_acknowledged[msg.message][0]
             stop_event.set()
             self.messages_to_be_acknowledged[msg.message] = (stop_event, True)
+            self.emit('udp_response_received')
         elif msg.flag == "EXE" and self._connection_mode == ConnectionMode.CLIENT:
             self.emit('execution_command_received', msg.message)
         elif msg.flag == "ALR" and self._connection_mode == ConnectionMode.CLIENT:  # ALR = already registered
