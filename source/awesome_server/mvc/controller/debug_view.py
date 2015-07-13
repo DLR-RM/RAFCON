@@ -1,7 +1,7 @@
 from awesome_server.mvc.controller.extended_controller import ExtendedController
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
-from awesome_server.connections.protobuf import yaml_transmission_pb2
+from awesome_tool.network.protobuf import yaml_transmission_pb2
 from awesome_tool.utils.storage_utils import StorageUtils
 from awesome_server.utils import constants
 
@@ -10,8 +10,8 @@ from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine import interface
-from awesome_tool.mvc import singleton
-from awesome_tool.statemachine.storage.storage import StateMachineStorage, logger as storage_logger
+from awesome_tool.mvc import singleton  # Keep for loading statemachines from folder
+from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.singleton import global_storage, state_machine_execution_engine, state_machine_manager
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode, StateMachineStatus
 from awesome_tool.utils import vividict

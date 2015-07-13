@@ -334,6 +334,8 @@ class UDPConnection(DatagramProtocol):
         :return:
         """
         assert isinstance(message, Message)
+        if not self.transport:
+            return
         logger.debug("Send message %s" % message.message_id)
         for i in range(0, global_net_config.get_config_value("NUMBER_UDP_MESSAGES_SENT")):
             self.transport.write(str(message), addr)
