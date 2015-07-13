@@ -3,7 +3,7 @@ from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerMod
 from awesome_tool.mvc.views.network_connections import NetworkConnectionsView
 from awesome_tool.utils import log
 
-from awesome_tool.utils.network.network_connections import NetworkConnections
+from awesome_tool.network.singleton import network_connections
 
 logger = log.get_logger(__name__)
 
@@ -15,8 +15,7 @@ class NetworkController(ExtendedController):
         assert isinstance(view, NetworkConnectionsView)
         ExtendedController.__init__(self, model, view)
 
-        base_path = model.get_selected_state_machine_model().state_machine.base_path
-        self._network_connections = NetworkConnections(base_path, model)
+        self._network_connections = network_connections
 
         self._network_connections.connect('tcp_connected', self.tcp_connected)
         self._network_connections.connect('tcp_disconnected', self.tcp_disconnected)

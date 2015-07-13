@@ -19,7 +19,7 @@ from awesome_tool.statemachine.states.preemptive_concurrency_state import Preemp
 import awesome_tool.statemachine.singleton
 import awesome_tool.mvc.singleton
 from awesome_tool.mvc.config_gui import global_gui_config
-from awesome_tool.utils.network.config_network import global_net_config
+from awesome_tool.network.config_network import global_net_config
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.states.library_state import LibraryState
 

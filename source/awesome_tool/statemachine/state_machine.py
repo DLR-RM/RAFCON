@@ -8,7 +8,7 @@
 
 """
 
-from gtkmvc import Observable
+from gtkmvc import ModelMT, Observable
 import threading
 
 from awesome_tool.statemachine.id_generator import generate_state_machine_id
@@ -18,7 +18,7 @@ from awesome_tool.statemachine.execution.execution_history import ExecutionHisto
 from awesome_tool.statemachine.enums import StateExecutionState
 
 
-class StateMachine(Observable):
+class StateMachine(ModelMT, Observable):
 
     """A class for to organizing all main components of a state machine
 
@@ -30,12 +30,18 @@ class StateMachine(Observable):
 
     """
 
-    def __init__(self, root_state=None):
+    state_machine = None
 
+    __observables__ = ("state_machine",)
+
+    def __init__(self, root_state=None):
+        ModelMT.__init__(self)
         Observable.__init__(self)
 
         # if root_state is not None:
         #     assert isinstance(root_state, State)
+
+        self.state_machine = self
 
         self.state_machine_id = generate_state_machine_id()
         self._root_state = None

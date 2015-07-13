@@ -14,7 +14,7 @@ from awesome_tool.mvc.views.main_window import MainWindowView
 import awesome_tool.statemachine.singleton as sm_singletons
 import awesome_tool.mvc.singleton as mvc_singletons
 from awesome_tool.mvc.config_gui import global_gui_config
-from awesome_tool.utils.network.config_network import global_net_config
+from awesome_tool.network.config_network import global_net_config
 from awesome_tool.statemachine.config import global_config
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.state_machine import StateMachine

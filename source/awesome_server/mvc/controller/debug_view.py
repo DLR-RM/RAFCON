@@ -166,17 +166,17 @@ class DebugViewController(ExtendedController):
         else:
             load_path = path
 
-        try:
-            [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(load_path)
-            state_machine_manager.add_state_machine(state_machine)
+        # try:
+        [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(load_path)
+        state_machine_manager.add_state_machine(state_machine)
 
-            root_state_id = state_machine.root_state.state_id
-            sm_name = state_machine.root_state.name
-            self.send_statemachine_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
-            self.send_statemachine_connections_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
-            self.model.connection_manager.server_html.send_sm_transmission_end()
-        except AttributeError as e:
-            logger.error('Error while trying to open state-machine: {0}'.format(e))
+        root_state_id = state_machine.root_state.state_id
+        sm_name = state_machine.root_state.name
+        self.send_statemachine_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
+        self.send_statemachine_connections_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
+        self.model.connection_manager.server_html.send_sm_transmission_end()
+        # except AttributeError as e:
+        #     logger.error('Error while trying to open state-machine: {0}'.format(e))
 
     def send_statemachine_to_browser(self, sm_name, state_id, state, hierarchy_level):
         meta_path = os.path.join(state.script.path, StateMachineStorage.GRAPHICS_FILE)

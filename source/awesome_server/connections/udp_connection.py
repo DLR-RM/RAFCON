@@ -5,7 +5,7 @@ from threading import Thread, Event
 
 import gobject
 
-from awesome_tool.utils.network.network_messaging import Message
+from awesome_tool.network.network_messaging import Message
 
 from awesome_server.utils.config import global_server_config
 

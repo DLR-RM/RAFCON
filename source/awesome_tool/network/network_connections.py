@@ -6,19 +6,18 @@ from twisted.internet.error import CannotListenError
 from gtkmvc import Observer
 import gobject
 
-from awesome_tool.mvc.models.container_state import ContainerStateModel
-from awesome_tool.mvc.models.state_machine import StateMachineModel
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
-from awesome_tool.mvc.models.state import StateModel
-
 from awesome_tool.statemachine.storage.network_storage import NetworkStorageReader
 from awesome_tool.statemachine.enums import StateExecutionState
+from awesome_tool.statemachine.states.container_state import ContainerState
+from awesome_tool.statemachine.states.state import State
 import awesome_tool.statemachine.singleton
 
-from awesome_tool.utils.network.protobuf import yaml_transmission_pb2
-from awesome_tool.utils.network.network_messaging import Message
-from awesome_tool.utils.network.config_network import global_net_config
+from awesome_tool.network.protobuf import yaml_transmission_pb2
+from awesome_tool.network.network_messaging import Message
+from awesome_tool.network.config_network import global_net_config
+
 from awesome_tool.utils import log
+
 
 logger = log.get_logger(__name__)
 
@@ -31,12 +30,9 @@ class NetworkConnections(Observer, gobject.GObject):
     :param view: View to control network connections
     """
 
-    def __init__(self, sm_base_path, sm_manager_model):
+    def __init__(self):
         self.__gobject_init__()
         Observer.__init__(self)
-
-        assert isinstance(sm_manager_model, StateMachineManagerModel)
-        self._sm_manager_model = sm_manager_model
 
         self.tcp_connection_factory = TCPFactory(self)
         self.udp_connection = UDPConnection(self)
@@ -47,12 +43,17 @@ class NetworkConnections(Observer, gobject.GObject):
         self.udp_registered = False
         self.tcp_connected = False
 
-        self.net_storage_reader = NetworkStorageReader(base_path=sm_base_path)
+        self.net_storage_reader = None
 
         # execution engine
         self.state_machine_execution_engine = awesome_tool.statemachine.singleton.state_machine_execution_engine
         self.observe_model(self.state_machine_execution_engine)
         self.state_machine_execution_engine.register_observer(self)
+
+        # state_machine_manager
+        self.state_machine_manager = awesome_tool.statemachine.singleton.state_machine_manager
+        self.observe_model(self.state_machine_manager)
+        self.state_machine_manager.register_observer(self)
 
         self.previous_execution_message = ""
 
@@ -61,13 +62,8 @@ class NetworkConnections(Observer, gobject.GObject):
         if global_net_config.get_config_value("AUTOCONNECT_TCP_TO_SERVER"):
             self.connect_tcp()
 
-    @property
-    def sm_manager_model(self):
-        return self._sm_manager_model
-
-    def register_statemachine_model(self, sm_model):
-        assert isinstance(sm_model, StateMachineModel)
-        self.observe_model(sm_model)
+    def set_storage_base_path(self, base_path):
+        self.net_storage_reader = NetworkStorageReader(base_path)
 
     def register_udp(self):
         if not self.udp_registered:
@@ -135,6 +131,12 @@ class NetworkConnections(Observer, gobject.GObject):
         else:
             logger.warning("Unrecognized mode detected.")
 
+    @Observer.observe("state_machine_manager", after=True)
+    def after_add_state_machine(self, model, prop_name, info):
+        if 'method_name' in info and info['method_name'] == 'add_state_machine':
+            self.observe_model(info['args'][1])
+            info['args'][1].register_observer(self)
+
     @Observer.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
         """Called on any change within th state machine
@@ -147,10 +149,12 @@ class NetworkConnections(Observer, gobject.GObject):
         :param info: Information about the change
         """
         if 'method_name' in info and info['method_name'] == 'root_state_after_change' and self.udp_registered:
-            kw_info = info['kwargs']['info']
-            if 'method_name' in kw_info and kw_info['method_name'] == 'state_execution_status':
-                kw_info_args = kw_info['args']
-                if kw_info_args[1] == StateExecutionState.ACTIVE:
+            kwargs = info['kwargs']
+            if 'method_name' in kwargs and kwargs['method_name'] == 'state_change':
+                kwargs = kwargs['info']
+            if 'method_name' in kwargs and kwargs['method_name'] == 'state_execution_status':
+                kwargs_args = kwargs['args']
+                if kwargs_args[1] == StateExecutionState.ACTIVE:
                     self.send_current_active_states(model.root_state)
                     if not self.previous_execution_message.startswith("-"):
                         self.udp_connection.send_non_acknowledged_message("------------------------------------",
@@ -175,29 +179,29 @@ class NetworkConnections(Observer, gobject.GObject):
                                                           "EXE")
 
     @staticmethod
-    def state_has_content(state_m):
-        if isinstance(state_m, ContainerStateModel):
+    def state_has_content(state):
+        if isinstance(state, ContainerState):
             return True
         return False
 
-    def send_current_active_states(self, state_m):
+    def send_current_active_states(self, state):
         """
         This method recursively checks all states if they are active. If yes the path within the statemachine is sent
         to the server.
         :param state_m: StateModel to check
         """
-        assert isinstance(state_m, StateModel)
+        assert isinstance(state, State)
 
-        if state_m.state.state_execution_status == StateExecutionState.ACTIVE:
-            if not self.state_has_content(state_m):
-                self.udp_connection.send_non_acknowledged_message(state_m.state.get_path(),
+        if state.state_execution_status == StateExecutionState.ACTIVE:
+            if not self.state_has_content(state):
+                self.udp_connection.send_non_acknowledged_message(state.get_path(),
                                                                   (global_net_config.get_server_ip(),
                                                                    global_net_config.get_server_udp_port()),
                                                                   "ASC")  # ASC = Active State Changed
-                self.previous_execution_message = state_m.state.get_path()
+                self.previous_execution_message = state.get_path()
 
-        if self.state_has_content(state_m):
-            for child_state in state_m.states.itervalues():
+        if self.state_has_content(state):
+            for child_state in state.states.itervalues():
                 self.send_current_active_states(child_state)
 
 gobject.type_register(NetworkConnections)
@@ -213,10 +217,14 @@ class TCPClient(protocol.Protocol):
         self.factory = factory
 
     def connectionMade(self):
+        if not self.factory.network_connection.net_storage_reader:
+            logger.error("Cannot send state machine as no storage reader is available.")
+            self.transport.close()
+            return
         self.factory.network_connection.tcp_connected = True
 
         files = yaml_transmission_pb2.Files()
-        sm_name = self.factory.network_connection.sm_manager_model.get_selected_state_machine_model().root_state.state.name
+        sm_name = self.factory.network_connection.state_machine_manager.get_active_state_machine().root_state.name
         files.sm_name = sm_name
         for path, content in self.factory.network_connection.net_storage_reader.file_storage.iteritems():
             my_file = files.files.add()
@@ -260,11 +268,11 @@ class UDPConnection(DatagramProtocol):
 
     @property
     def sm_name(self):
-        return self.network_connection.sm_manager_model.get_selected_state_machine_model().root_state.state.name
+        return self.network_connection.state_machine_manager.get_active_state_machine().root_state.name
 
     @property
     def root_id(self):
-        return self.network_connection.sm_manager_model.get_selected_state_machine_model().root_state.state.state_id
+        return self.network_connection.state_machine_manager.get_active_state_machine().root_state.state_id
 
     def emit_udp_response_received(self):
         self.network_connection.emit('udp_response_received')

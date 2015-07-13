@@ -9,12 +9,12 @@
 """
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-from gtkmvc import Observable
+from gtkmvc import ModelMT, Observable
 from awesome_tool.statemachine.state_machine import StateMachine
 import awesome_tool.statemachine.singleton
 
 
-class StateMachineManager(Observable):
+class StateMachineManager(ModelMT, Observable):
 
     """A class to organize all main components of a state machine
 
@@ -25,11 +25,17 @@ class StateMachineManager(Observable):
 
     """
 
-    def __init__(self, state_machines=None):
+    state_machine_manager = None
 
+    __observables__ = ("state_machine_manager",)
+
+    def __init__(self, state_machines=None):
+        ModelMT.__init__(self)
         Observable.__init__(self)
         self._state_machines = {}
         self._active_state_machine_id = None
+
+        self.state_machine_manager = self
 
         if state_machines is not None:
             for state_machine in state_machines:
@@ -166,4 +172,7 @@ class StateMachineManager(Observable):
             if state_machine_id not in self.state_machines.keys():
                 raise AttributeError("State machine not in list of all state machines")
         self._active_state_machine_id = state_machine_id
+        active_state_machine = self.get_active_state_machine()
+        from awesome_tool.network.singleton import network_connections
+        network_connections.set_storage_base_path(active_state_machine.base_path)
 

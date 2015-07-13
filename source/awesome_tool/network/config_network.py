@@ -1,5 +1,4 @@
 from awesome_tool.utils.config import DefaultConfig, ConfigError
-from awesome_tool.utils import helper
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 

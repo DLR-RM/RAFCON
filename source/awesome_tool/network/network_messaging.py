@@ -1,11 +1,11 @@
 import uuid
 import hashlib
 
-from awesome_tool.utils import constants
-from awesome_tool.utils.network.protobuf.udp_message_pb2 import UDPMessage
-
 import gobject
 
+from awesome_tool.network.protobuf.udp_message_pb2 import UDPMessage
+
+from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
