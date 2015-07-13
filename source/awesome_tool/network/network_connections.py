@@ -11,8 +11,6 @@ import awesome_tool.statemachine.singleton
 
 from awesome_tool.network.config_network import global_net_config
 
-from awesome_tool.network.udp_connection import UDPConnection
-from awesome_tool.network.tcp_connection import TCPClientFactory
 from awesome_tool.network.enums import ConnectionMode
 
 from awesome_tool.utils import log
@@ -50,10 +48,6 @@ class NetworkConnections(Observer, gobject.GObject):
         self.state_machine_manager = awesome_tool.statemachine.singleton.state_machine_manager
         self.observe_model(self.state_machine_manager)
         self.state_machine_manager.register_observer(self)
-
-        self.tcp_connection_factory = TCPClientFactory()
-        self.tcp_connection_factory.connect('tcp_connected', self.tcp_connected_signal)
-        self.tcp_connection_factory.connect('tcp_disconnected', self.tcp_disconnected_signal)
 
         self.previous_execution_message = ""
 

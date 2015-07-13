@@ -4,17 +4,12 @@ from threading import Timer
 
 from awesome_tool.network.udp_connection import UDPConnection
 from awesome_tool.network.tcp_connection import TCPFactory, TCPClientFactory
-from awesome_tool.network.enums import ConnectionMode
+
+from twisted.internet import reactor
+from twisted.internet.error import CannotListenError
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-
-
-# --------------------------------------------
-#               TWISTED
-# --------------------------------------------
-from twisted.internet import reactor
-from twisted.internet.error import CannotListenError
 
 NetworkMode = Enum('NETWORK_MODE', 'TCP UDP')
 
