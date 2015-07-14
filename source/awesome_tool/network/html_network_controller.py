@@ -5,8 +5,6 @@ import gobject
 from twisted.web import server, resource, static
 from twisted.internet import reactor
 
-# from awesome_tool.network.singleton import udp_net_controller
-
 from awesome_tool.network.config_network import global_net_config
 from awesome_tool.utils import constants
 
