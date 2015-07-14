@@ -33,11 +33,10 @@ class Config(DefaultConfig):
 
     def __init__(self):
         super(Config, self).__init__(DEFAULT_CONFIG)
+        self.load(CONFIG_FILE)
         if self.get_config_value("TYPE") != "SM_CONFIG":
             raise ConfigError("Type should be SM_CONFIG for statemachine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")
-
-        self.load(CONFIG_FILE)
 
     def load(self, config_file=None, path=None):
         if config_file is None:
