@@ -1,26 +1,23 @@
-from awesome_server.mvc.controller.extended_controller import ExtendedController
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
 from awesome_tool.network.protobuf import yaml_transmission_pb2
+from awesome_tool.network.config_network import global_net_config
+
 from awesome_tool.utils.storage_utils import StorageUtils
 from awesome_tool.utils import constants
 
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine import interface
-from awesome_tool.mvc import singleton  # Keep for loading statemachines from folder
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.singleton import global_storage, state_machine_execution_engine, state_machine_manager
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
-from awesome_tool.utils import vividict
+
+from awesome_tool.mvc import singleton  # Keep for loading statemachines from folder
+from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 
 import gtk
-from twisted.internet import reactor
-
-from awesome_tool.network.config_network import global_net_config
 import os
+from twisted.internet import reactor
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -166,17 +163,17 @@ class DebugViewController(ExtendedController):
         else:
             load_path = path
 
-        # try:
-        [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(load_path)
-        state_machine_manager.add_state_machine(state_machine)
+        try:
+            [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(load_path)
+            state_machine_manager.add_state_machine(state_machine)
 
-        root_state_id = state_machine.root_state.state_id
-        sm_name = state_machine.root_state.name
-        self.send_statemachine_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
-        self.send_statemachine_connections_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
-        self.model.connection_manager.server_html.send_sm_transmission_end()
-        # except AttributeError as e:
-        #     logger.error('Error while trying to open state-machine: {0}'.format(e))
+            root_state_id = state_machine.root_state.state_id
+            sm_name = state_machine.root_state.name
+            self.send_statemachine_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
+            self.send_statemachine_connections_to_browser(sm_name, root_state_id, state_machine.root_state, 1)
+            self.model.connection_manager.server_html.send_sm_transmission_end()
+        except AttributeError as e:
+            logger.error('Error while trying to open state-machine: {0}'.format(e))
 
     def send_statemachine_to_browser(self, sm_name, state_id, state, hierarchy_level):
         meta_path = os.path.join(state.script.path, StateMachineStorage.GRAPHICS_FILE)
