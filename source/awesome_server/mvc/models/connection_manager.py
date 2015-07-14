@@ -1,6 +1,6 @@
 from gtkmvc import Model, Observable, Signal
 
-from awesome_server.connections.connection_manager import ConnectionManager
+from awesome_server.mvc.controller.connection_manager import ConnectionManager
 from awesome_server.mvc.models.udp_connection import UDPConnectionModel
 
 

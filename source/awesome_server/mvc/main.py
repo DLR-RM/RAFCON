@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from awesome_server.mvc.views.debug_view import DebugView
 from awesome_server.mvc.controller.debug_view import DebugViewController
 
-from awesome_server.connections.connection_manager import ConnectionManager
+from awesome_server.mvc.controller.connection_manager import ConnectionManager
 from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
 from awesome_tool.statemachine.singleton import library_manager

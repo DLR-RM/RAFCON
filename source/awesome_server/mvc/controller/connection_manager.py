@@ -14,8 +14,6 @@ class ConnectionManager(Observable):
 
     def __init__(self):
         Observable.__init__(self)
-        self._udp_connections = []
-        self._tcp_connections = []
 
         self.server_udp = udp_net_controller
         self.server_tcp = tcp_net_controller
@@ -65,7 +63,6 @@ class ConnectionManager(Observable):
         tcp_con = self.server_tcp.start(port, ConnectionMode.SERVER)
         if tcp_con:
             tcp_con.connect("data_received", self.tcp_data_received)
-            self._tcp_connections.append(tcp_con)
 
     @Observable.observed
     def add_udp_connection(self, port):
@@ -77,14 +74,5 @@ class ConnectionManager(Observable):
         udp_con = self.server_udp.start(port, ConnectionMode.SERVER)
         if udp_con:
             udp_con.connect("data_received", self.udp_data_received)
-            self._udp_connections.append(udp_con)
             return udp_con
         return None
-
-    @property
-    def udp_connections(self):
-        return self._udp_connections
-
-    @property
-    def tcp_connections(self):
-        return self._tcp_connections
