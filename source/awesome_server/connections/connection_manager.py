@@ -4,7 +4,9 @@ from awesome_tool.network.singleton import udp_net_controller, tcp_net_controlle
 from awesome_tool.network.enums import ConnectionMode
 from awesome_tool.utils import log
 
-from awesome_server.connections.html_network_controller import HtmlNetworkController
+# from awesome_server.connections.html_network_controller import HtmlNetworkController
+
+from awesome_tool.network.html_network_controller import HtmlNetworkController
 
 logger = log.get_logger(__name__)
 
@@ -22,7 +24,7 @@ class ConnectionManager(Observable):
         self.server_udp = udp_net_controller
         self.server_tcp = tcp_net_controller
 
-        self.server_html = HtmlNetworkController(self)
+        self.server_html = HtmlNetworkController()
         self.server_html.start_html_server()
 
     @Observable.observed

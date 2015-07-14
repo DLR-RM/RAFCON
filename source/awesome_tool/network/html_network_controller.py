@@ -5,8 +5,10 @@ import gobject
 from twisted.web import server, resource, static
 from twisted.internet import reactor
 
-from awesome_server.utils.config import global_server_config
-from awesome_server.utils import constants
+from awesome_tool.network.singleton import udp_net_controller
+
+from awesome_tool.network.config_network import global_net_config
+from awesome_tool.utils import constants
 
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -14,16 +16,13 @@ logger = log.get_logger(__name__)
 
 class HtmlNetworkController(resource.Resource, gobject.GObject):
 
-    def __init__(self, connection_manager):
+    def __init__(self):
         self.__gobject_init__()
         self.isLeaf = True
         self.sse_conns = weakref.WeakSet()
 
         self.path_to_static_files = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                 os.pardir,
                                                  "html_files")
-
-        self.connection_manager = connection_manager
 
     def render_GET(self, request):
         request.setHeader('Content-Type', 'text/event-stream')
@@ -126,7 +125,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
             conn.write(json_pkg)
 
     def start_html_server(self):
-        port = global_server_config.get_config_value("HTML_SERVER_PORT")
+        port = global_net_config.get_config_value("HTML_SERVER_PORT", 8889)
         logger.debug("Starting HTML server at port %d" % port)
 
         root = resource.Resource()
@@ -144,7 +143,6 @@ class DefaultPage(resource.Resource):
 
     def __init__(self, controller, page_name):
         self.path_to_static_files = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                 os.pardir,
                                                  "html_files")
 
         self.controller = controller
@@ -157,7 +155,7 @@ class DefaultPage(resource.Resource):
 
         selector = ""
 
-        for conn in self.controller.connection_manager.udp_connections:
+        for conn in udp_net_controller.get_connections().itervalues():
             for client_name, client_addr in conn.clients.iteritems():
                 selector += "<option value=\"%s:%d\">%s</option>\n" % (client_addr[0], client_addr[1], client_name)
 

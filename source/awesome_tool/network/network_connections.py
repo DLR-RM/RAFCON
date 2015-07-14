@@ -1,5 +1,3 @@
-from twisted.internet import reactor
-from twisted.internet.error import CannotListenError
 from gtkmvc import Observer
 import gobject
 
@@ -29,7 +27,6 @@ class NetworkConnections(Observer, gobject.GObject):
         self.__gobject_init__()
         Observer.__init__(self)
 
-        # self.udp_registered = False
         self.tcp_connected = False
 
         self._udp_net_controller = udp_net_controller
@@ -68,7 +65,6 @@ class NetworkConnections(Observer, gobject.GObject):
         self.emit('udp_response_received')
 
     def udp_no_response_received(self, udp_conn):
-        # self.udp_registered = False
         self._udp_net_controller.stop(self.udp_port)
         self.emit('udp_no_response_received')
 
@@ -88,11 +84,8 @@ class NetworkConnections(Observer, gobject.GObject):
 
     def register_udp(self):
         if not self.udp_registered:
-            try:
-                udp_connection = self._udp_net_controller.start(self.udp_port, ConnectionMode.CLIENT)
-                self.connect_udp_connection(udp_connection)
-            except CannotListenError:
-                logger.error("Cannot establish UDP connection - Port already in use")
+            udp_connection = self._udp_net_controller.start(self.udp_port, ConnectionMode.CLIENT)
+            self.connect_udp_connection(udp_connection)
         else:
             self.emit('udp_no_response_received')
             self._udp_net_controller.stop(self.udp_port)
@@ -120,10 +113,8 @@ class NetworkConnections(Observer, gobject.GObject):
             if self.net_storage_reader:
                 self._tcp_net_controller.get_tcp_clients()[(ip, port)].net_storage_reader = self.net_storage_reader
         elif not self.tcp_connected:
-            # self.tcp_connector.connect()
             self._tcp_net_controller.get_reactor_ports()[(ip, port)].connect()
         else:
-            # self.tcp_connector.disconnect()
             self._tcp_net_controller.get_reactor_ports()[(ip, port)].disconnect()
 
     def change_execution_mode(self, udp_conn, new_mode):
@@ -189,22 +180,19 @@ class NetworkConnections(Observer, gobject.GObject):
 
     @Observer.observe("execution_engine", after=True)
     def execution_mode_changed(self, model, prop_name, info):
-
-
-
         execution_mode = str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         execution_mode = execution_mode.replace("EXECUTION_MODE.", "")
         udp_connection = self._udp_net_controller.get_connections()[self.udp_port]
         if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
             udp_connection.send_non_acknowledged_message(execution_mode,
-                                                              (global_net_config.get_server_ip(),
-                                                               global_net_config.get_server_udp_port()),
-                                                              "EXE")
+                                                         (global_net_config.get_server_ip(),
+                                                          global_net_config.get_server_udp_port()),
+                                                         "EXE")
         else:
             udp_connection.send_acknowledged_message(execution_mode,
-                                                          (global_net_config.get_server_ip(),
-                                                           global_net_config.get_server_udp_port()),
-                                                          "EXE")
+                                                     (global_net_config.get_server_ip(),
+                                                      global_net_config.get_server_udp_port()),
+                                                     "EXE")
 
     @staticmethod
     def state_has_content(state):
