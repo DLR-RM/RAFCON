@@ -159,7 +159,7 @@ def run_turtle_demo():
     home_path = os.path.join(os.path.expanduser('~'), '.awesome_tool')
     global_config.load(path=home_path)
     global_gui_config.load(path=home_path)
-    global_net_config.load(path=home_path)
+    global_net_config.load()
 
     awesome_tool.statemachine.singleton.library_manager.initialize()
 

@@ -1,3 +1,4 @@
+import os
 from awesome_tool.utils.config import DefaultConfig, ConfigError
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -19,7 +20,7 @@ NUMBER_OF_UDP_PACKAGES_UNTIL_TIMEOUT: 15
 SECONDS_BETWEEN_UDP_RESEND: 2
 
 SPACEBOT_CUP_MODE: False
-AUTOCONNECT_UDP_TO_SERVER: True
+AUTOCONNECT_UDP_TO_SERVER: False
 AUTOCONNECT_TCP_TO_SERVER: False
 """
 
@@ -33,8 +34,6 @@ class NetworkConfig(DefaultConfig):
 
     def __init__(self):
         super(NetworkConfig, self).__init__(DEFAULT_CONFIG)
-        # sm_path, gui_path, net_path = helper.get_opt_paths()
-        # DefaultConfig.__init__(self, CONFIG_FILE, DEFAULT_CONFIG, net_path)
         if self.get_config_value("TYPE") != "NETWORK_CONFIG":
             raise ConfigError("Type should be NETWORK_CONFIG for Network configuration. "
                               "Please add \"TYPE: NETWORK_CONFIG\" to your net_config.yaml file.")
@@ -44,6 +43,8 @@ class NetworkConfig(DefaultConfig):
     def load(self, config_file=None, path=None):
         if config_file is None:
             config_file = CONFIG_FILE
+        if path is None:
+            path = os.path.join(os.path.expanduser('~'), '.awesome_network')
         super(NetworkConfig, self).load(config_file, path)
 
     def get_server_ip(self):

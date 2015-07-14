@@ -3,7 +3,7 @@ from awesome_server.mvc.models.connection_manager import ConnectionManagerModel
 
 from awesome_tool.network.protobuf import yaml_transmission_pb2
 from awesome_tool.utils.storage_utils import StorageUtils
-from awesome_server.utils import constants
+from awesome_tool.utils import constants
 
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
@@ -19,7 +19,7 @@ from awesome_tool.utils import vividict
 import gtk
 from twisted.internet import reactor
 
-from awesome_server.utils.config import global_server_config
+from awesome_tool.network.config_network import global_net_config
 import os
 
 from awesome_tool.utils import log
@@ -44,8 +44,8 @@ class DebugViewController(ExtendedController):
         assert isinstance(model, ConnectionManagerModel)
         ExtendedController.__init__(self, model, view)
 
-        model.connection_manager.add_tcp_connection(global_server_config.get_config_value("TCP_PORT"))
-        model.connection_manager.add_udp_connection(global_server_config.get_config_value("UDP_PORT"))
+        model.connection_manager.add_tcp_connection(global_net_config.get_config_value("SERVER_TCP_PORT"))
+        model.connection_manager.add_udp_connection(global_net_config.get_config_value("SERVER_UDP_PORT"))
         model.connection_manager.server_html.connect("command_received", self.handle_command)
 
         view["send_button"].connect("clicked", self.send_button_clicked)
