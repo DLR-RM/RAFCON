@@ -5,7 +5,7 @@ import gobject
 from twisted.web import server, resource, static
 from twisted.internet import reactor
 
-from awesome_tool.network.singleton import udp_net_controller
+# from awesome_tool.network.singleton import udp_net_controller
 
 from awesome_tool.network.config_network import global_net_config
 from awesome_tool.utils import constants
@@ -16,13 +16,15 @@ logger = log.get_logger(__name__)
 
 class HtmlNetworkController(resource.Resource, gobject.GObject):
 
-    def __init__(self):
+    def __init__(self, udp_net_controller):
         self.__gobject_init__()
         self.isLeaf = True
         self.sse_conns = weakref.WeakSet()
 
         self.path_to_static_files = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                  "html_files")
+
+        self.udp_net_controller = udp_net_controller
 
     def render_GET(self, request):
         request.setHeader('Content-Type', 'text/event-stream')
@@ -155,7 +157,7 @@ class DefaultPage(resource.Resource):
 
         selector = ""
 
-        for conn in udp_net_controller.get_connections().itervalues():
+        for conn in self.controller.udp_net_controller.get_connections().itervalues():
             for client_name, client_addr in conn.clients.iteritems():
                 selector += "<option value=\"%s:%d\">%s</option>\n" % (client_addr[0], client_addr[1], client_name)
 
