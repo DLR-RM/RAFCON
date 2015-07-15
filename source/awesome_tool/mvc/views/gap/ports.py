@@ -449,7 +449,7 @@ class ScopedVariablePortView(PortView):
 
         name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
 
-        cc.set_source_color(Color('#ededee'))
+        cc.set_source_color(Color('#121921'))
 
         rot_angle = .0
         draw_pos = self._get_draw_position(name_size[0], outcome_side)

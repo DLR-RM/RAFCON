@@ -299,17 +299,18 @@ class GraphicalEditorController(ExtendedController):
                     if scoped_variable_m.scoped_variable.data_port_id == result:
                         state_v.add_scoped_variable(scoped_variable_m)
                         self.canvas.request_update(state_v)
-            elif method_name == 'remove_scoped_variable':
-                state_m = model
-                state_v = self.get_view_for_model(state_m)
-                for scoped_variable_v in state_v.scoped_variables:
-                    if scoped_variable_v.port_id == arguments[1]:
-                        scoped_variable_v.remove_keep_rect_within_constraint_from_parent()
-                        self.canvas.remove(scoped_variable_v)
+            # elif method_name == 'remove_scoped_variable':
+            #     state_m = model
+            #     state_v = self.get_view_for_model(state_m)
+            #     for scoped_variable_v in state_v.scoped_variables:
+            #         if scoped_variable_v.port_id == arguments[1]:
+            #             scoped_variable_v.remove_keep_rect_within_constraint_from_parent()
+            #             self.canvas.remove(scoped_variable_v)
             elif method_name == 'scoped_variable_change':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 self.canvas.request_update(state_v)
+
             # ----------------------------------
             #            STATE NAME
             # ----------------------------------
@@ -449,10 +450,10 @@ class GraphicalEditorController(ExtendedController):
 
         if isinstance(from_port_m, ScopedVariableModel):
             new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
-                                                             from_port_m.scoped_variable.name)
+                                                             from_port_m.scoped_variable)
         elif isinstance(to_port_m, ScopedVariableModel):
             new_data_flow_v = ToScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
-                                                           to_port_m.scoped_variable.name)
+                                                           to_port_m.scoped_variable)
         else:
             new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
 
@@ -718,11 +719,11 @@ class GraphicalEditorController(ExtendedController):
             to_port_m = to_state_m.get_data_port_model(to_key)
 
             if isinstance(from_port_m, ScopedVariableModel):
-                name = from_port_m.scoped_variable.name
-                data_flow_v = FromScopedVariableDataFlowView(data_flow_m, hierarchy_level, name)
+                scoped_variable = from_port_m.scoped_variable
+                data_flow_v = FromScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
             elif isinstance(to_port_m, ScopedVariableModel):
-                name = to_port_m.scoped_variable.name
-                data_flow_v = ToScopedVariableDataFlowView(data_flow_m, hierarchy_level, name)
+                scoped_variable = to_port_m.scoped_variable
+                data_flow_v = ToScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
             else:
                 data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
             self.canvas.add(data_flow_v, parent_state_v)

@@ -14,6 +14,8 @@ from awesome_tool.utils import constants
 
 from awesome_tool.mvc.controllers.gap import gap_draw_helper
 
+from awesome_tool.statemachine.scope import ScopedVariable
+
 from gtkmvc import Observer
 
 import cairo
@@ -111,7 +113,7 @@ class DataFlowView(ConnectionView):
 
 class ScopedVariableDataFlowView(DataFlowView, Observer):
 
-    def __init__(self, data_flow_m, hierarchy_level, name):
+    def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
         Observer.__init__(self)
         super(ScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level)
 
@@ -121,8 +123,8 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
         self._print_side = SnappedSide.LEFT
         self._label_selection_waypoint = None
 
-        self._name = None
-        self.name = name
+        assert isinstance(scoped_variable, ScopedVariable)
+        self._scoped_variable = scoped_variable
 
     @property
     def from_port(self):
@@ -172,12 +174,12 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
 
     @property
     def name(self):
-        return self._name
+        return self._scoped_variable.name
 
-    @name.setter
-    def name(self, name):
-        assert isinstance(name, str)
-        self._name = name
+    # @name.setter
+    # def name(self, name):
+    #     assert isinstance(name, str)
+    #     self._name = name
         
     @property
     def connected(self):
@@ -202,8 +204,8 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
 
 class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
-    def __init__(self, data_flow_m, hierarchy_level, name):
-        super(FromScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level, name)
+    def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
+        super(FromScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level, scoped_variable)
 
     @property
     def connected(self):
@@ -361,7 +363,7 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
         c.move_to(move_x, move_y)
         if self.to_port:
-            c.set_source_color(Color("#3c414b"))
+            c.set_source_color(Color("#121921"))
         else:
             c.set_source_color(Color("#ffbf00"))
 
@@ -387,8 +389,8 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
 class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
-    def __init__(self, data_flow_m, hierarchy_level, name):
-        super(ToScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level, name)
+    def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
+        super(ToScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level, scoped_variable)
 
     @property
     def connected(self):
@@ -535,7 +537,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
         c.move_to(move_x, move_y)
         if self.from_port:
-            c.set_source_color(Color("#3c414b"))
+            c.set_source_color(Color("#121921"))
         else:
             c.set_source_color(Color("#ffbf00"))
 
