@@ -32,7 +32,7 @@ class NetworkConnections(Observer, gobject.GObject):
         self._udp_net_controller = udp_net_controller
         self._tcp_net_controller = tcp_net_controller
 
-        self.udp_port = global_net_config.get_config_value("SELF_UDP_PORT")
+        self.udp_port = global_net_config.get_config_value("CLIENT_UDP_PORT", 7777)
 
         self.net_storage_reader = None
 
