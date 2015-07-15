@@ -485,7 +485,7 @@ class StateView(Element):
         self._ports.append(scoped_variable_port_v.port)
         self._handles.append(scoped_variable_port_v.handle)
 
-        scoped_variable_port_v.handle.pos = self.width / 2, 0
+        scoped_variable_port_v.handle.pos = self.width * (0.1 * len(self._scoped_variables_ports)), 0
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)
 

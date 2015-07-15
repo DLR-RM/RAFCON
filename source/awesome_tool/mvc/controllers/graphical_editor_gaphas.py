@@ -300,7 +300,7 @@ class GraphicalEditorController(ExtendedController):
                         min_wh = min(state_v.width, state_v.height)
                         width = min_wh / 5.
                         height = min_wh / 15.
-                        state_v.add_scoped_variable(scoped_variable_m, (width, height))
+                        state_v.add_scoped_variable(scoped_variable_m)
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_scoped_variable':
                 state_m = model
@@ -309,6 +309,10 @@ class GraphicalEditorController(ExtendedController):
                     if scoped_variable_v.port_id == arguments[1]:
                         scoped_variable_v.remove_keep_rect_within_constraint_from_parent()
                         self.canvas.remove(scoped_variable_v)
+            elif method_name == 'scoped_variable_change':
+                state_m = model
+                state_v = self.get_view_for_model(state_m)
+                self.canvas.request_update(state_v)
             # ----------------------------------
             #            STATE NAME
             # ----------------------------------
