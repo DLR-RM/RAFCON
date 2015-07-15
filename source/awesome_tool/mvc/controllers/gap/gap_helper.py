@@ -1,7 +1,6 @@
 from awesome_tool.mvc.views.gap.state import StateView, NameView
-from awesome_tool.mvc.views.gap.scope import ScopedVariableView
-from awesome_tool.mvc.views.gap.ports import InputPortView, OutputPortView, ScopedDataInputPortView,\
-    ScopedDataOutputPortView, IncomeView, OutcomeView, ScopedVariablePortView
+from awesome_tool.mvc.views.gap.ports import InputPortView, OutputPortView, IncomeView, OutcomeView,\
+    ScopedVariablePortView
 from awesome_tool.mvc.views.gap.connection import TransitionView
 
 from awesome_tool.statemachine.states.container_state import ContainerState
@@ -39,8 +38,6 @@ def get_state_id_for_port(port):
     parent = port.parent
     if isinstance(parent, StateView):
         return parent.model.state.state_id
-    elif isinstance(parent, ScopedVariableView):
-        return parent.parent_state.model.state.state_id
 
 
 def get_port_for_handle(handle, state):
@@ -66,11 +63,6 @@ def get_port_for_handle(handle, state):
             for scoped in state.scoped_variables:
                 if scoped.handle == handle:
                     return scoped
-    elif isinstance(state, ScopedVariableView):
-        if state.input_port.handle == handle:
-            return state.input_port
-        elif state.output_port.handle == handle:
-            return state.output_port
 
 
 def create_new_connection(start_state, from_port, to_port, drop_state=None):
@@ -84,9 +76,6 @@ def create_new_connection(start_state, from_port, to_port, drop_state=None):
 
     def is_input_or_output(port):
         return isinstance(port, InputPortView) or isinstance(port, OutputPortView)
-
-    def is_scoped_input_or_input_or_output(port):
-        return isinstance(port, ScopedDataInputPortView) or is_input_or_output(port)
 
     # Ensure from_port is an outcome and
     # from_port as well as to_port are connected to transition and
@@ -224,25 +213,7 @@ def add_data_flow_to_port_parent(to_port, from_port):
 
 
 def add_scoped_data_flow_to_port_parent(to_port, from_port):
-    if isinstance(from_port, ScopedDataOutputPortView):
-        scoped_variable_v = from_port.parent
-        # if from and to port are part of same scoped variable no connection is created
-        if isinstance(to_port, ScopedDataInputPortView) and scoped_variable_v is to_port.parent:
-            return
-        elif isinstance(to_port, InputPortView) and scoped_variable_v.parent_state is to_port.parent:
-            return
-        elif isinstance(to_port, OutputPortView) and scoped_variable_v.parent_state is not to_port.parent:
-            return
-        responsible_parent_m = scoped_variable_v.parent_state.model
-        from_state_id = scoped_variable_v.parent_state.model.state.state_id
-        from_data_port_id = scoped_variable_v.port_id
-        if isinstance(to_port, ScopedDataInputPortView):
-            to_state_id = to_port.parent.parent_state.model.state.state_id
-            to_data_port_id = to_port.parent.port_id
-        else:
-            to_state_id = to_port.parent.model.state.state_id
-            to_data_port_id = to_port.port_id
-    elif isinstance(from_port, InputPortView):
+    if isinstance(from_port, InputPortView):
         if from_port.parent is not to_port.parent.parent_state:
             return
         responsible_parent_m = from_port.parent.model

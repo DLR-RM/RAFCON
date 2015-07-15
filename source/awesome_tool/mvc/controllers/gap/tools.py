@@ -5,9 +5,8 @@ from gaphas.item import NW
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView,\
     DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
-    ScopedDataInputPortView, ScopedDataOutputPortView, ScopedVariablePortView
+    ScopedVariablePortView
 from awesome_tool.mvc.views.gap.state import StateView, NameView
-from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 
 from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
 from awesome_tool.mvc.controllers.gap import gap_helper
@@ -48,11 +47,6 @@ class MyDeleteTool(Tool):
             if isinstance(self.view.focused_item, StateView):
                 if self.view.has_focus():
                     self._graphical_editor_view.emit('remove_state_from_state_machine')
-                    return True
-            # Delete selected ScopedVariable from state machine
-            if isinstance(self.view.focused_item, ScopedVariableView):
-                if self.view.has_focus():
-                    self._graphical_editor_view.emit('remove_scoped_variable_from_state', self.view.focused_item)
                     return True
 
 
@@ -114,10 +108,6 @@ class MyItemTool(ItemTool):
                     state_m = self.view.canvas.get_parent(inmotion.item).model
                     state_m.meta['name']['gui']['editor']['rel_pos'] = rel_pos
                     self._graphical_editor_view.emit('meta_data_changed', state_m, "Move name", False)
-                elif isinstance(inmotion.item, ScopedVariableView):
-                    scoped_variable_m = inmotion.item.model
-                    scoped_variable_m.meta['gui']['editor']['rel_pos'] = rel_pos
-                    self._graphical_editor_view.emit('meta_data_changed', scoped_variable_m, "Move scoped", False)
 
             return True
 
@@ -305,7 +295,7 @@ class MyHandleTool(HandleTool):
         if isinstance(self._active_connection_view, TransitionView):
             gap_helper.update_transition_waypoints(self._graphical_editor_view, self._active_connection_view, self._waypoint_list)
 
-        if isinstance(self.grabbed_item, (StateView, NameView, ScopedVariableView)):
+        if isinstance(self.grabbed_item, (StateView, NameView)):
 
             if self._child_resize and isinstance(self.grabbed_item, StateView):
 
@@ -346,8 +336,7 @@ class MyHandleTool(HandleTool):
         # inserted into canvas
         # This is the default case if one starts to pull from a port handle
         if (not self._new_connection and self.grabbed_handle and event.state & gtk.gdk.BUTTON_PRESS_MASK and
-                (isinstance(self.grabbed_item, StateView) or isinstance(self.grabbed_item, ScopedVariableView)) and
-                not event.state & gtk.gdk.CONTROL_MASK):
+                isinstance(self.grabbed_item, StateView) and not event.state & gtk.gdk.CONTROL_MASK):
             canvas = view.canvas
             # start_state = self.grabbed_item
             start_state = self._start_state
@@ -610,12 +599,7 @@ class MyHandleTool(HandleTool):
             else:
                 start_parent.connect_to_outcome(start_outcome_id, connection, handle)
         elif isinstance(connection, DataFlowView):
-            if isinstance(start_parent, ScopedVariableView):
-                if isinstance(self._start_port, ScopedDataInputPortView):
-                    start_parent.parent_state.connect_to_scoped_variable_input(self._start_port.port_id, connection, handle)
-                if isinstance(self._start_port, ScopedDataOutputPortView):
-                    start_parent.parent_state.connect_to_scoped_variable_output(self._start_port.port_id, connection, handle)
-            elif isinstance(start_parent, StateView):
+            if isinstance(start_parent, StateView):
                 if isinstance(self._start_port, InputPortView):
                     start_parent.connect_to_input_port(self._start_port.port_id, connection, handle)
                 if isinstance(self._start_port, OutputPortView):
@@ -635,8 +619,6 @@ class MyHandleTool(HandleTool):
         port_parent = port.parent
         if isinstance(port_parent, StateView):
             return self.view.canvas.get_parent(port_parent)
-        elif isinstance(port_parent, ScopedVariableView):
-            return port_parent.parent_state
         else:
             return None
 
@@ -751,8 +733,6 @@ class MyHandleTool(HandleTool):
         """
         if isinstance(item, ItemConnectionSink):
             state = item.item
-            if isinstance(state, ScopedVariableView):
-                state = state.parent_state
             if isinstance(state, StateView):
                 if (isinstance(connection, TransitionView) or
                         (isinstance(connection, ConnectionPlaceholderView) and connection.transition_placeholder)):
@@ -806,14 +786,7 @@ class MyHandleTool(HandleTool):
         port_to_handle = None
 
         for port in port_list:
-            if isinstance(port, ScopedVariableView):
-                if port.input_port.port is matching_port:
-                    port_to_handle = port.input_port
-                    break
-                elif port.output_port.port is matching_port:
-                    port_to_handle = port.output_port
-                    break
-            elif port.port is matching_port:
+            if port.port is matching_port:
                 port_to_handle = port
                 break
 

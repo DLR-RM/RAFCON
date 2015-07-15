@@ -2,8 +2,7 @@ from gaphas.item import Line, NW, SE
 from gaphas.segment import Segment
 
 from awesome_tool.mvc.views.gap.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
-from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView,\
-    ScopedDataInputPortView, ScopedDataOutputPortView, PortView
+from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, PortView
 
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide
 
@@ -261,11 +260,11 @@ class PerpLine(Line):
 
     @staticmethod
     def is_in_port(port):
-        return isinstance(port, (IncomeView, InputPortView, ScopedDataInputPortView))
+        return isinstance(port, (IncomeView, InputPortView))
 
     @staticmethod
     def is_out_port(port):
-        return isinstance(port, (OutcomeView, OutputPortView, ScopedDataOutputPortView))
+        return isinstance(port, (OutcomeView, OutputPortView))
 
     def _get_tail_pos(self):
         if self.to_port is None:

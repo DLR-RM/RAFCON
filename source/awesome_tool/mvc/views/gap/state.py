@@ -13,7 +13,6 @@ from gaphas.connector import Position
 from awesome_tool.mvc.views.gap.constraint import KeepRectangleWithinConstraint, PortRectConstraint
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
-from awesome_tool.mvc.views.gap.scope import ScopedVariableView
 from awesome_tool.mvc.views.gap.connection import TransitionView
 
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide

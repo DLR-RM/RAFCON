@@ -526,47 +526,6 @@ class ScopedVariablePortView(PortView):
         return layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
 
 
-class ScopedDataPortView(PortView):
-
-    def __init__(self, in_port, parent, scoped_variable_m, side):
-
-        super(ScopedDataPortView, self).__init__(in_port=in_port, port_side_size=0, parent=parent, side=side)
-
-        assert isinstance(scoped_variable_m, ScopedVariableModel)
-        self._scoped_variable_m = ref(scoped_variable_m)
-
-        self.update_port_side_size()
-
-    @property
-    def scoped_variable_m(self):
-        return self._scoped_variable_m()
-
-    @property
-    def port_id(self):
-        return self.scoped_variable_m.scoped_variable.data_port_id
-
-    def draw(self, context, state):
-        self.draw_port(context, '#ffc926')
-
-    def update_port_side_size(self):
-        if self._parent:
-            self._port_side_size = min(self._parent.width, self._parent.height) / 5.
-        else:
-            self._port_side_size = 5.
-
-
-class ScopedDataInputPortView(ScopedDataPortView):
-
-    def __init__(self, parent, scoped_variable_m):
-        super(ScopedDataInputPortView, self).__init__(True, parent, scoped_variable_m, SnappedSide.LEFT)
-
-
-class ScopedDataOutputPortView(ScopedDataPortView):
-
-    def __init__(self, parent, scoped_variable_m):
-        super(ScopedDataOutputPortView, self).__init__(False, parent, scoped_variable_m, SnappedSide.RIGHT)
-
-
 class DataPortView(PortView):
 
     def __init__(self, in_port, parent, port_m, side, port_side_size):
