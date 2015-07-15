@@ -297,9 +297,6 @@ class GraphicalEditorController(ExtendedController):
                 state_v = self.get_view_for_model(state_m)
                 for scoped_variable_m in state_m.scoped_variables:
                     if scoped_variable_m.scoped_variable.data_port_id == result:
-                        min_wh = min(state_v.width, state_v.height)
-                        width = min_wh / 5.
-                        height = min_wh / 15.
                         state_v.add_scoped_variable(scoped_variable_m)
                         self.canvas.request_update(state_v)
             elif method_name == 'remove_scoped_variable':

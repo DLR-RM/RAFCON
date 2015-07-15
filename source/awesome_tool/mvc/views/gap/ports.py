@@ -396,7 +396,7 @@ class ScopedVariablePortView(PortView):
         outcome_side = self.port_side_size
 
         self._draw_rectangle(c, name_size[0], outcome_side)
-        c.set_source_color(Color('#f00'))
+        c.set_source_color(Color('#ffbf00'))
         c.fill_preserve()
         c.stroke()
 

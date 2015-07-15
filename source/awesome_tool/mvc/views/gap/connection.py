@@ -594,7 +594,7 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
         handle_pos = self.to_handle().pos
         port_side_size = self._to_head_length
 
-        c.set_source_color(Color('#f00'))
+        c.set_source_color(Color('#ffbf00'))
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
         if isinstance(c, CairoContext):
@@ -627,7 +627,7 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
         if self.to_port:
             self._print_side = self.to_port.side
 
-        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, '#00f', name_size, handle_pos,
+        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, '#ffbf00', name_size, handle_pos,
                                                                     self._print_side, port_side_size)
 
         c.move_to(move_x, move_y)
@@ -725,7 +725,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
         handle_pos = self.from_handle().pos
         port_side_size = self._head_length
 
-        c.set_source_color(Color('#f00'))
+        c.set_source_color(Color('#ffbf00'))
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
         if isinstance(c, CairoContext):
@@ -758,7 +758,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
         if self.from_port:
             self._print_side = self.from_port.side
 
-        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, '#f00', name_size, handle_pos,
+        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, '#ffbf00', name_size, handle_pos,
                                                                     self._print_side, port_side_size)
 
         c.move_to(move_x, move_y)
