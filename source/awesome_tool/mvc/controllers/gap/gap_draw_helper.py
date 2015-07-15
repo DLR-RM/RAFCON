@@ -1,7 +1,6 @@
 from math import pi
 from gtk.gdk import Color
 
-# from awesome_tool.mvc.views.gap.ports import SnappedSide
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide
 
 
