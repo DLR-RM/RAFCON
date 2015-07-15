@@ -182,7 +182,7 @@ class HierarchyState(ContainerState):
             if str(e) == "child_state stopped" or str(e) == "state stopped":
                 logger.debug("State '{0}' was stopped!".format(self.name))
             else:
-                logger.error("State '{0}' had an internal error: {1}\n{2}".finalize(
+                logger.error("State '{0}' had an internal error: {1}\n{2}".format(
                     self.name, str(e), str(traceback.format_exc())))
 
             self.output_data["error"] = e
