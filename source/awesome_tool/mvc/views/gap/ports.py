@@ -47,6 +47,7 @@ class PortView(Model, object):
 
         self._incoming_handles = []
         self._outgoing_handles = []
+        self._connected_connections = []
         self._tmp_incoming_connected = False
         self._tmp_outgoing_connected = False
 
@@ -107,15 +108,27 @@ class PortView(Model, object):
         assert isinstance(connection_view, ConnectionView)
         if not moving and handle is connection_view.from_handle() and handle not in self._outgoing_handles:
             self._outgoing_handles.append(handle)
+            self._add_connection(connection_view)
         elif not moving and handle is connection_view.to_handle() and handle not in self._incoming_handles:
             self._incoming_handles.append(handle)
+            self._add_connection(connection_view)
+
+    def _add_connection(self, connection_view):
+        if connection_view not in self._connected_connections:
+            self._connected_connections.append(connection_view)
 
     def remove_connected_handle(self, handle):
         assert isinstance(handle, Handle)
         if handle in self._incoming_handles:
             self._incoming_handles.remove(handle)
+            for conn in self._connected_connections:
+                if conn.to_handle() is handle:
+                    self._connected_connections.remove(conn)
         elif handle in self._outgoing_handles:
             self._outgoing_handles.remove(handle)
+            for conn in self._connected_connections:
+                if conn.from_handle() is handle:
+                    self._connected_connections.remove(conn)
 
     def tmp_connect(self, handle, connection_view):
         if handle is connection_view.from_handle():
@@ -138,6 +151,13 @@ class PortView(Model, object):
         if len(self._incoming_handles) == 0:
             return self._tmp_incoming_connected
         return True
+
+    def is_connected_to_scoped_variable(self):
+        from awesome_tool.mvc.views.gap.connection import ScopedVariableDataFlowView
+        for conn in self._connected_connections:
+            if isinstance(conn, ScopedVariableDataFlowView):
+                return True
+        return False
 
     def draw(self, context, state):
         raise NotImplementedError
@@ -184,6 +204,9 @@ class PortView(Model, object):
             self.draw_name(context)
 
     def draw_name(self, context):
+        if self.is_connected_to_scoped_variable():
+            return
+
         outcome_side = self.port_side_size
         c = context.cairo
 

@@ -468,17 +468,6 @@ class StateView(Element):
         if output_port_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
-    # def add_scoped_variable(self, scoped_variable_m, size):
-    #     scoped_variable_v = ScopedVariableView(scoped_variable_m, size, self)
-    #     self._scoped_variables.append(scoped_variable_v)
-    #
-    #     canvas = self.canvas
-    #     canvas.add(scoped_variable_v, self)
-    #
-    #     self.add_keep_rect_within_constraint(canvas, self, scoped_variable_v)
-    #
-    #     return scoped_variable_v
-
     def add_scoped_variable(self, scoped_variable_m):
         scoped_variable_port_v = ScopedVariablePortView(self, self.port_side_size, scoped_variable_m)
         self._scoped_variables_ports.append(scoped_variable_port_v)
