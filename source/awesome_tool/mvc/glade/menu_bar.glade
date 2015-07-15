@@ -234,6 +234,14 @@
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_view">
             <child>
+              <object class="GtkCheckMenuItem" id="data_flow_mode">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Data Flow Mode</property>
+                <property name="use_underline">True</property>
+                <signal name="toggled" handler="on_data_flow_mode_toggled"/>
+              </object>
+            </child>
+            <child>
               <object class="GtkImageMenuItem" id="expert_view">
                 <property name="label" translatable="yes">expert view</property>
                 <property name="visible">True</property>

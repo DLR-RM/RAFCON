@@ -4,6 +4,18 @@ from gtk.gdk import Color
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide
 
 
+def get_col_rgba(col, transparent=False):
+        r, g, b = col.red, col.green, col.blue
+        r /= 65535.
+        g /= 65535.
+        b /= 65535.
+        if transparent:
+            a = .25
+        else:
+            a = 1.
+        return r, g, b, a
+
+
 def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side, port_side_size,
                                 draw_connection_to_port=True):
     c = context.cairo
@@ -91,7 +103,7 @@ def draw_name_label(context, color, name_size, handle_pos, port_side, port_side_
     c = context.cairo
     c.set_line_width(port_side_size * .03)
 
-    c.set_source_color(Color(color))
+    c.set_source_rgba(*color)
 
     rot_angle = .0
     move_x = 0.

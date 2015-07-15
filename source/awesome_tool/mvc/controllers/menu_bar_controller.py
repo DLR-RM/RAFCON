@@ -7,6 +7,8 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.utils import log
 from awesome_tool.mvc.views.about_dialog import MyAboutDialog
 
+from awesome_tool.mvc.config import global_gui_config
+
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.utils import helper
@@ -30,7 +32,8 @@ class MenuBarController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered
         """
-        pass
+        data_flow_mode = global_gui_config.get_config_value("DATA_FLOW_MODE", True)
+        view["data_flow_mode"].set_active(data_flow_mode)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -316,6 +319,13 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - View
     ######################################################
+    def on_data_flow_mode_toggled(self, widget, data=None):
+        if widget.get_active():
+            global_gui_config.set_config_value("DATA_FLOW_MODE", True)
+        else:
+            global_gui_config.set_config_value("DATA_FLOW_MODE", False)
+        global_gui_config.save_configuration()
+
     def on_expert_view_activate(self, widget, data=None):
         pass
 

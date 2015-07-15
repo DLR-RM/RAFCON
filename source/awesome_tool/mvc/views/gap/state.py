@@ -16,6 +16,7 @@ from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortV
 from awesome_tool.mvc.views.gap.connection import TransitionView
 
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide
+from awesome_tool.mvc.controllers.gap.gap_draw_helper import get_col_rgba
 
 from awesome_tool.mvc.models.state import StateModel
 from awesome_tool.mvc.models.container_state import ContainerStateModel
@@ -55,6 +56,8 @@ class StateView(Element):
         self.hovered = False
         self.selected = False
         self._moving = False
+        self._transparent = False
+        self.show_data_port_label = False
 
         if not isinstance(state_m.meta['name']['gui']['editor']['size'], tuple):
             name_width = self.width * 0.8
@@ -186,6 +189,10 @@ class StateView(Element):
         return self._name_view
 
     @property
+    def transparent(self):
+        return self._transparent
+
+    @property
     def child_state_vs(self):
         child_state_vs = []
         for child in self.canvas.get_children(self):
@@ -207,6 +214,12 @@ class StateView(Element):
 
         return state_nw_pos, state_se_pos
 
+    def foreground(self):
+        self._transparent = False
+
+    def background(self):
+        self._transparent = True
+
     def draw(self, context):
         if self.moving and self.parent and self.parent.moving:
             return
@@ -215,22 +228,20 @@ class StateView(Element):
         c.set_line_width(0.1 / self.hierarchy_level)
         nw = self._handles[NW].pos
         c.rectangle(nw.x, nw.y, self.width, self.height)
-        # if context.hovered:
-        #     c.set_source_rgba(.8, .8, 1, .8)
-        # else:
+
         if self.model.state.active:
             c.set_source_color(Color(constants.STATE_ACTIVE_COLOR))
         elif self.selected:
             c.set_source_color(Color(constants.STATE_SELECTED_COLOR))
         else:
-            c.set_source_color(Color(constants.STATE_BORDER_COLOR))
+            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
         c.fill_preserve()
         c.set_source_color(Color('#000'))
         c.stroke()
 
         inner_nw, inner_se = self.get_state_drawing_area(self)
         c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-        c.set_source_color(Color(constants.STATE_BACKGROUND_COLOR))
+        c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR), self._transparent))
         c.fill_preserve()
         c.set_source_color(Color('#000'))
         c.stroke()
@@ -732,6 +743,6 @@ class NameView(Element):
             set_font_description()
 
         c.move_to(0, 0)
-        cc.set_source_color(Color('#ededee'))
+        cc.set_source_rgba(*get_col_rgba(Color('#ededee'), self.parent.transparent))
         pcc.update_layout(layout)
         pcc.show_layout(layout)

@@ -61,11 +61,11 @@ class ConnectionPlaceholderView(ConnectionView):
         self.transition_placeholder = transition_placeholder
 
         if transition_placeholder:
-            self._line_color = '#81848b'
-            self._arrow_color = '#ffffff'
+            self._line_color = gap_draw_helper.get_col_rgba(Color('#81848b'))
+            self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffffff'))
         else:
-            self._line_color = '#6c5e3c'
-            self._arrow_color = '#ffC926'
+            self._line_color = gap_draw_helper.get_col_rgba(Color('#6c5e3c'))
+            self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffC926'))
 
 
 class TransitionView(ConnectionView):
@@ -76,9 +76,6 @@ class TransitionView(ConnectionView):
         self.model = transition_m
         self.line_width = .5 / hierarchy_level
 
-        self._line_color = '#81848b'
-        self._arrow_color = '#ffffff'
-
     @property
     def model(self):
         return self._transition_m()
@@ -87,6 +84,11 @@ class TransitionView(ConnectionView):
     def model(self, transition_model):
         assert isinstance(transition_model, TransitionModel)
         self._transition_m = ref(transition_model)
+
+    def draw(self, context):
+        self._line_color = gap_draw_helper.get_col_rgba(Color('#81848b'), self.parent.transparent)
+        self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffffff'), self.parent.transparent)
+        super(TransitionView, self).draw(context)
 
 
 class DataFlowView(ConnectionView):
@@ -98,8 +100,10 @@ class DataFlowView(ConnectionView):
         self.model = data_flow_m
         self.line_width = .5 / hierarchy_level
 
-        self._line_color = '#6c5e3c'
-        self._arrow_color = '#ffC926'
+        self._show = False
+
+        self._line_color = gap_draw_helper.get_col_rgba(Color('#6c5e3c'))
+        self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffC926'))
 
     @property
     def model(self):
@@ -109,6 +113,17 @@ class DataFlowView(ConnectionView):
     def model(self, data_flow_m):
         assert isinstance(data_flow_m, DataFlowModel)
         self._data_flow_m = ref(data_flow_m)
+
+    def show(self):
+        self._show = True
+
+    def hide(self):
+        self._show = False
+
+    def draw(self, context):
+        if not self._show:
+            return
+        super(DataFlowView, self).draw(context)
 
 
 class ScopedVariableDataFlowView(DataFlowView, Observer):
@@ -175,11 +190,6 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
     @property
     def name(self):
         return self._scoped_variable.name
-
-    # @name.setter
-    # def name(self, name):
-    #     assert isinstance(name, str)
-    #     self._name = name
         
     @property
     def connected(self):
@@ -193,6 +203,8 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
             return self._head_length * 1.5
 
     def draw(self, context):
+        if not self._show:
+            return
         if not self.connected:
             super(ScopedVariableDataFlowView, self).draw(context)
         else:
@@ -224,7 +236,6 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
     @from_port.setter
     def from_port(self, port):
-        # TODO: change ScopedDataInputPortView to port type of scoped variable in state border
         if isinstance(port, ScopedVariablePortView):
             self._from_port = port
             self._head_length = port.port_side_size
@@ -238,7 +249,6 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
             else:
                 self.line_width = port.port_side_size * .2
 
-            self._name = port.model.scoped_variable.name
             if len(self.handles()) == 4:
                 self._update_label_selection_waypoint(True)
                 # self.add_waypoint((self.to_handle().x + 2 * self._head_length + self._name_width, self.to_handle().y))
@@ -412,7 +422,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
                 self.canvas.solver.add_constraint(self._to_port_constraint)
             if self.from_port:
                 self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
-            self._name = port.model.scoped_variable.name
+
             if len(self.handles()) == 4:
                 self._update_label_selection_waypoint(True)
                 # self.add_waypoint((self.from_handle().x + 2 * self._head_length + self._name_width, self.from_handle().y))

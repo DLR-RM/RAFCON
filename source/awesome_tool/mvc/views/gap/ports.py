@@ -162,7 +162,7 @@ class PortView(Model, object):
     def draw(self, context, state):
         raise NotImplementedError
 
-    def draw_port(self, context, fill_color):
+    def draw_port(self, context, fill_color, transparent, draw_label=True):
         self.update_port_side_size()
         c = context.cairo
         outcome_side = self.port_side_size
@@ -185,7 +185,8 @@ class PortView(Model, object):
         c.move_to(0, 0)
         c.set_source_color(Color('#000'))
         c.fill_preserve()
-        c.set_source_color(Color(fill_color))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(fill_color), transparent))
+        # c.set_source_color(Color(fill_color))
         c.stroke()
 
         # Inner part
@@ -195,15 +196,16 @@ class PortView(Model, object):
             self._draw_triangle_half(self.pos, direction, c, outcome_side, front_part=False)
         elif self.connected_outgoing:
             self._draw_triangle_half(self.pos, direction, c, outcome_side, front_part=True)
-        c.set_source_color(Color(fill_color))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(fill_color), transparent))
+        # c.set_source_color(Color(fill_color))
         c.fill_preserve()
-        c.set_source_rgba(0, 0, 0, 0)
+        c.set_source_color(Color('#000'))
         c.stroke()
 
-        if self.name and not self.has_outgoing_connection():  # and self.parent.parent:
-            self.draw_name(context)
+        if self.name and not self.has_outgoing_connection() and draw_label:  # and self.parent.parent:
+            self.draw_name(context, transparent)
 
-    def draw_name(self, context):
+    def draw_name(self, context, transparent):
         if self.is_connected_to_scoped_variable():
             return
 
@@ -232,13 +234,14 @@ class PortView(Model, object):
 
         print_side = self.side if not self.parent.selected else self.side.opposite()
 
-        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, self.fill_color, text_size, self.pos,
+        fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparent)
+        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, fill_color, text_size, self.pos,
                                                                     print_side, self.port_side_size,
                                                                     self._draw_connection_to_port, self._fill)
 
         c.move_to(move_x, move_y)
 
-        cc.set_source_color(Color(self.text_color))
+        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(self.text_color), transparent))
 
         pcc.update_layout(layout)
         pcc.rotate(rot_angle)
@@ -356,7 +359,7 @@ class IncomeView(PortView):
         super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent, side=SnappedSide.LEFT)
 
     def draw(self, context, state):
-        self.draw_port(context, "#fff")
+        self.draw_port(context, "#fff", state.transparent)
 
 
 class OutcomeView(PortView):
@@ -388,7 +391,7 @@ class OutcomeView(PortView):
         else:
             fill_color = '#fff'
 
-        self.draw_port(context, fill_color)
+        self.draw_port(context, fill_color, state.transparent)
 
 
 class ScopedVariablePortView(PortView):
@@ -419,13 +422,13 @@ class ScopedVariablePortView(PortView):
         outcome_side = self.port_side_size
 
         self._draw_rectangle(c, name_size[0], outcome_side)
-        c.set_source_color(Color('#ffbf00'))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color('#ffbf00'), state.transparent))
         c.fill_preserve()
         c.stroke()
 
-        self.draw_name(context)
+        self.draw_name(context, state.transparent)
 
-    def draw_name(self, context):
+    def draw_name(self, context, transparent):
         outcome_side = self.port_side_size
         c = context.cairo
 
@@ -449,7 +452,7 @@ class ScopedVariablePortView(PortView):
 
         name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
 
-        cc.set_source_color(Color('#121921'))
+        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color('#121921'), transparent))
 
         rot_angle = .0
         draw_pos = self._get_draw_position(name_size[0], outcome_side)
@@ -555,7 +558,8 @@ class DataPortView(PortView):
         return self.port_m.data_port.name
 
     def draw(self, context, state):
-        self.draw_port(context, constants.DATA_PORT_COLOR)
+        draw_label = state.selected or state.show_data_port_label
+        self.draw_port(context, constants.DATA_PORT_COLOR, state.transparent, draw_label)
 
 
 class InputPortView(DataPortView):

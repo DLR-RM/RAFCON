@@ -32,8 +32,8 @@ class PerpLine(Line):
         self._to_waypoint = None
         self._to_port_constraint = None
 
-        self._arrow_color = ""
-        self._line_color = ""
+        self._arrow_color = None
+        self._line_color = None
         self._head_length = 0.
         self._to_head_length = 0.
         self._head_draw_offset = 0.
@@ -125,7 +125,7 @@ class PerpLine(Line):
 
     def draw_head(self, context):
         cr = context.cairo
-        cr.set_source_color(Color(self._arrow_color))
+        cr.set_source_rgba(*self._arrow_color)
         cr.move_to(0, 0)
         cr.line_to(self._head_length, 0)
         cr.stroke()
@@ -133,10 +133,10 @@ class PerpLine(Line):
 
     def draw_tail(self, context):
         cr = context.cairo
-        cr.set_source_color(Color(self._line_color))
+        cr.set_source_rgba(*self._line_color)
         cr.line_to(2 * self._to_head_length, 0)
         cr.stroke()
-        cr.set_source_color(Color(self._arrow_color))
+        cr.set_source_rgba(*self._arrow_color)
         cr.move_to(2 * self._to_head_length, 0)
         cr.line_to(self._head_draw_offset, 0)
         cr.line_to(self._to_head_length / 2. + self._head_draw_offset, self._to_head_length / 2.)
@@ -220,7 +220,7 @@ class PerpLine(Line):
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
 
-        cc.set_source_color(Color('#ededee'))
+        cc.set_source_rgba(*self._arrow_color)
         pcc.update_layout(layout)
         c.save()
 
