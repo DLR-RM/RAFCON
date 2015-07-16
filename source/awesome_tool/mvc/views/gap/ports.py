@@ -20,6 +20,8 @@ from gtk.gdk import Color, CairoContext
 
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide, Direction
 
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+
 
 class PortView(Model, object):
 
@@ -35,8 +37,12 @@ class PortView(Model, object):
         self.side = side
         self._parent = parent
 
+        self._is_execution_state_port = None
+        if parent:
+            self._is_execution_state_port = isinstance(parent.model.state, ExecutionState)
+
         self._fill = False
-        self._draw_connection_to_port = True
+        self._draw_connection_to_port = False
 
         if self._fill:
             self.text_color = constants.STATE_BACKGROUND_COLOR
@@ -179,28 +185,12 @@ class PortView(Model, object):
         elif self.side is SnappedSide.BOTTOM:
             direction = Direction.UP if self._is_in_port else Direction.DOWN
 
-        # Outer part
-        self._draw_triangle(self.pos, direction, c, outcome_side, draw_inner=False)
-        # c.rectangle(self.pos.x - outcome_side / 2, self.pos.y - outcome_side / 2, outcome_side, outcome_side)
-        c.move_to(0, 0)
-        c.set_source_color(Color('#000'))
-        c.fill_preserve()
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(fill_color), transparent))
-        # c.set_source_color(Color(fill_color))
-        c.stroke()
-
-        # Inner part
-        if self.connected_incoming and self.connected_outgoing:
-            self._draw_triangle(self.pos, direction, c, outcome_side, draw_inner=True)
-        elif self.connected_incoming:
-            self._draw_triangle_half(self.pos, direction, c, outcome_side, front_part=False)
-        elif self.connected_outgoing:
-            self._draw_triangle_half(self.pos, direction, c, outcome_side, front_part=True)
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(fill_color), transparent))
-        # c.set_source_color(Color(fill_color))
-        c.fill_preserve()
-        c.set_source_color(Color('#000'))
-        c.stroke()
+        if self._is_execution_state_port:
+            self._draw_execution_state_port(self.pos, direction, c, outcome_side, transparent,
+                                            self.connected_incoming or self.connected_outgoing, fill_color)
+        else:
+            self._draw_container_state_port(self.pos, direction, c, outcome_side, transparent, self.connected_incoming,
+                                            self.connected_outgoing, fill_color)
 
         if self.name and not self.has_outgoing_connection() and draw_label:  # and self.parent.parent:
             self.draw_name(context, transparent)
@@ -251,99 +241,117 @@ class PortView(Model, object):
         c.move_to(outcome_side, outcome_side)
 
     @staticmethod
-    def _draw_triangle(pos, direction, context_cairo, outcome_side, draw_inner):
+    def _draw_execution_state_port(pos, direction, context_cairo, outcome_side, transparent, filled, color):
         c = context_cairo
 
         side_half = outcome_side / 2.
+        side_sixth = outcome_side / 6.
 
-        if draw_inner:
-            multiplier = .8
-            multiplier_comp_1 = multiplier * 1.125
-            multiplier_comp_2 = multiplier * 1.05
-        else:
-            multiplier = 1.
-            multiplier_comp_1 = 1.
-            multiplier_comp_2 = 1.
+        port_draw_width_half = outcome_side / 3.
 
         if direction is Direction.UP:
-            c.move_to(pos.x, pos.y - side_half * multiplier)
-            c.line_to(pos.x - side_half * multiplier_comp_2, pos.y + side_half * multiplier_comp_1)
-            c.line_to(pos.x + side_half * multiplier_comp_2, pos.y + side_half * multiplier_comp_1)
-            c.line_to(pos.x, pos.y - side_half * multiplier)
-        elif direction is Direction.DOWN:
-            c.move_to(pos.x, pos.y + side_half * multiplier)
-            c.line_to(pos.x - side_half * multiplier_comp_2, pos.y - side_half * multiplier_comp_1)
-            c.line_to(pos.x + side_half * multiplier_comp_2, pos.y - side_half * multiplier_comp_1)
-            c.line_to(pos.x, pos.y + side_half * multiplier)
-        elif direction is Direction.LEFT:
-            c.move_to(pos.x - side_half * multiplier, pos.y)
-            c.line_to(pos.x + side_half * multiplier_comp_1, pos.y - side_half * multiplier_comp_2)
-            c.line_to(pos.x + side_half * multiplier_comp_1, pos.y + side_half * multiplier_comp_2)
-            c.line_to(pos.x - side_half * multiplier, pos.y)
+            c.move_to(pos.x - port_draw_width_half, pos.y + side_half)
+            c.line_to(pos.x - port_draw_width_half, pos.y - side_sixth)
+            c.line_to(pos.x, pos.y - side_half)
+            c.line_to(pos.x + port_draw_width_half, pos.y - side_sixth)
+            c.line_to(pos.x + port_draw_width_half, pos.y + side_half)
+            c.line_to(pos.x - port_draw_width_half, pos.y + side_half)
         elif direction is Direction.RIGHT:
-            c.move_to(pos.x + side_half * multiplier, pos.y)
-            c.line_to(pos.x - side_half * multiplier_comp_1, pos.y - side_half * multiplier_comp_2)
-            c.line_to(pos.x - side_half * multiplier_comp_1, pos.y + side_half * multiplier_comp_2)
-            c.line_to(pos.x + side_half * multiplier, pos.y)
+            c.move_to(pos.x - side_half, pos.y - port_draw_width_half)
+            c.line_to(pos.x + side_sixth, pos.y - port_draw_width_half)
+            c.line_to(pos.x + side_half, pos.y)
+            c.line_to(pos.x + side_sixth, pos.y + port_draw_width_half)
+            c.line_to(pos.x - side_half, pos.y + port_draw_width_half)
+            c.line_to(pos.x - side_half, pos.y - port_draw_width_half)
+        elif direction is Direction.DOWN:
+            c.move_to(pos.x - port_draw_width_half, pos.y - side_half)
+            c.line_to(pos.x - port_draw_width_half, pos.y + side_sixth)
+            c.line_to(pos.x, pos.y + side_half)
+            c.line_to(pos.x + port_draw_width_half, pos.y + side_sixth)
+            c.line_to(pos.x + port_draw_width_half, pos.y - side_half)
+            c.line_to(pos.x - port_draw_width_half, pos.y - side_half)
+        elif direction is Direction.LEFT:
+            c.move_to(pos.x + side_half, pos.y - port_draw_width_half)
+            c.line_to(pos.x - side_sixth, pos.y - port_draw_width_half)
+            c.line_to(pos.x - side_half, pos.y)
+            c.line_to(pos.x - side_sixth, pos.y + port_draw_width_half)
+            c.line_to(pos.x + side_half, pos.y + port_draw_width_half)
+            c.line_to(pos.x + side_half, pos.y - port_draw_width_half)
+
+        if filled:
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        else:
+            c.set_source_color(Color('#000'))
+        c.fill_preserve()
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        c.stroke()
 
     @staticmethod
-    def _draw_triangle_half(pos, direction, context_cairo, outcome_side, front_part):
+    def _draw_container_state_port(pos, direction, context_cairo, outcome_side, transparent, incoming_conn,
+                                   outgoing_conn, color):
         c = context_cairo
 
-        multiplier_comp_1 = 1.125
-        multiplier_comp_2 = 1.05
+        side_half = outcome_side / 2.
+        side_third = outcome_side / 3.
+        side_sixth = outcome_side / 6.
 
-        side_half = outcome_side / 2. * .8
-        side_quarter = outcome_side / 4. * .8
+        port_draw_width_half = outcome_side / 3.
 
+        # Rectangle (incoming port)
         if direction is Direction.UP:
-            if front_part:
-                c.move_to(pos.x - side_quarter, pos.y)
-                c.line_to(pos.x, pos.y - side_half)
-                c.line_to(pos.x + side_quarter, pos.y)
-                c.line_to(pos.x - side_quarter, pos.y)
-            else:
-                c.move_to(pos.x - side_quarter, pos.y)
-                c.line_to(pos.x + side_quarter, pos.y)
-                c.line_to(pos.x + side_half * multiplier_comp_2, pos.y + side_half * multiplier_comp_1)
-                c.line_to(pos.x - side_half * multiplier_comp_2, pos.y + side_half * multiplier_comp_1)
-                c.line_to(pos.x - side_quarter, pos.y)
-        elif direction is Direction.DOWN:
-            if front_part:
-                c.move_to(pos.x - side_quarter, pos.y)
-                c.line_to(pos.x, pos.y + side_half)
-                c.line_to(pos.x + side_quarter, pos.y)
-                c.line_to(pos.x - side_quarter, pos.y)
-            else:
-                c.move_to(pos.x - side_quarter, pos.y)
-                c.line_to(pos.x + side_quarter, pos.y)
-                c.line_to(pos.x + side_half * multiplier_comp_2, pos.y - side_half * multiplier_comp_1)
-                c.line_to(pos.x - side_half * multiplier_comp_2, pos.y - side_half * multiplier_comp_1)
-                c.line_to(pos.x - side_quarter, pos.y)
-        elif direction is Direction.LEFT:
-            if front_part:
-                c.move_to(pos.x, pos.y - side_quarter)
-                c.line_to(pos.x - side_half, pos.y)
-                c.line_to(pos.x, pos.y + side_quarter)
-                c.line_to(pos.x, pos.y - side_quarter)
-            else:
-                c.move_to(pos.x, pos.y - side_quarter)
-                c.line_to(pos.x, pos.y + side_quarter)
-                c.line_to(pos.x + side_half * multiplier_comp_1, pos.y + side_half * multiplier_comp_2)
-                c.line_to(pos.x + side_half * multiplier_comp_1, pos.y - side_half * multiplier_comp_2)
-                c.line_to(pos.x, pos.y - side_quarter)
+            c.rectangle(pos.x - port_draw_width_half, pos.y + side_sixth, 2 * port_draw_width_half, side_third)
         elif direction is Direction.RIGHT:
-            if front_part:
-                c.move_to(pos.x, pos.y - side_quarter)
-                c.line_to(pos.x + side_half, pos.y)
-                c.line_to(pos.x, pos.y + side_quarter)
-                c.line_to(pos.x, pos.y - side_quarter)
-            else:
-                c.move_to(pos.x, pos.y - side_quarter)
-                c.line_to(pos.x, pos.y + side_quarter)
-                c.line_to(pos.x - side_half * multiplier_comp_1, pos.y + side_half * multiplier_comp_2)
-                c.line_to(pos.x - side_half * multiplier_comp_1, pos.y - side_half * multiplier_comp_2)
-                c.line_to(pos.x, pos.y - side_quarter)
+            c.rectangle(pos.x - side_half, pos.y - port_draw_width_half, side_third, 2 * port_draw_width_half)
+        elif direction is Direction.DOWN:
+            c.rectangle(pos.x - port_draw_width_half, pos.y - side_half, 2 * port_draw_width_half, side_third)
+        elif direction is Direction.LEFT:
+            c.rectangle(pos.x + side_sixth, pos.y - port_draw_width_half, side_third, 2 * port_draw_width_half)
+
+        if incoming_conn:
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        else:
+            c.set_source_color(Color('#000'))
+        c.fill_preserve()
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        c.stroke()
+
+        # Triangle (outgoing port)
+        if direction is Direction.UP:
+            c.move_to(pos.x - port_draw_width_half, pos.y)
+            c.line_to(pos.x - port_draw_width_half, pos.y - side_sixth)
+            c.line_to(pos.x, pos.y - side_half)
+            c.line_to(pos.x + port_draw_width_half, pos.y - side_sixth)
+            c.line_to(pos.x + port_draw_width_half, pos.y)
+            c.line_to(pos.x - port_draw_width_half, pos.y)
+        elif direction is Direction.RIGHT:
+            c.move_to(pos.x, pos.y - port_draw_width_half)
+            c.line_to(pos.x + side_sixth, pos.y - port_draw_width_half)
+            c.line_to(pos.x + side_half, pos.y)
+            c.line_to(pos.x + side_sixth, pos.y + port_draw_width_half)
+            c.line_to(pos.x, pos.y + port_draw_width_half)
+            c.line_to(pos.x, pos.y - port_draw_width_half)
+        elif direction is Direction.DOWN:
+            c.move_to(pos.x - port_draw_width_half, pos.y)
+            c.line_to(pos.x - port_draw_width_half, pos.y + side_sixth)
+            c.line_to(pos.x, pos.y + side_half)
+            c.line_to(pos.x + port_draw_width_half, pos.y + side_sixth)
+            c.line_to(pos.x + port_draw_width_half, pos.y)
+            c.line_to(pos.x - port_draw_width_half, pos.y)
+        elif direction is Direction.LEFT:
+            c.move_to(pos.x, pos.y - port_draw_width_half)
+            c.line_to(pos.x - side_sixth, pos.y - port_draw_width_half)
+            c.line_to(pos.x - side_half, pos.y)
+            c.line_to(pos.x - side_sixth, pos.y + port_draw_width_half)
+            c.line_to(pos.x, pos.y + port_draw_width_half)
+            c.line_to(pos.x, pos.y - port_draw_width_half)
+
+        if outgoing_conn:
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        else:
+            c.set_source_color(Color('#000'))
+        c.fill_preserve()
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        c.stroke()
 
     def update_port_side_size(self):
         return
@@ -385,9 +393,9 @@ class OutcomeView(PortView):
 
     def draw(self, context, state):
         if self.outcome_id == -2:
-            fill_color = '#00f'
+            fill_color = '#359dff'
         elif self.outcome_id == -1:
-            fill_color = '#f00'
+            fill_color = '#f21000'
         else:
             fill_color = '#fff'
 
@@ -422,7 +430,7 @@ class ScopedVariablePortView(PortView):
         outcome_side = self.port_side_size
 
         self._draw_rectangle(c, name_size[0], outcome_side)
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color('#ffbf00'), state.transparent))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR), state.transparent))
         c.fill_preserve()
         c.stroke()
 

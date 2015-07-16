@@ -79,7 +79,7 @@ class PerpLine(Line):
         if not self._to_waypoint:
             self._to_waypoint = self.add_perp_waypoint(begin=False)
             self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos,
-                                                                  port, 2 * self._to_head_length, self.is_in_port(port))
+                                                                  port, self._to_head_length, self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
         if self.from_port:
             self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
@@ -134,14 +134,11 @@ class PerpLine(Line):
     def draw_tail(self, context):
         cr = context.cairo
         cr.set_source_rgba(*self._line_color)
-        cr.line_to(2 * self._to_head_length, 0)
+        cr.line_to(self._to_head_length, 0)
         cr.stroke()
         cr.set_source_rgba(*self._arrow_color)
-        cr.move_to(2 * self._to_head_length, 0)
+        cr.move_to(self._to_head_length, 0)
         cr.line_to(self._head_draw_offset, 0)
-        cr.line_to(self._to_head_length / 2. + self._head_draw_offset, self._to_head_length / 2.)
-        cr.move_to(self._head_draw_offset, 0)
-        cr.line_to(self._to_head_length / 2. + self._head_draw_offset, -self._to_head_length / 2.)
         cr.stroke()
 
     def draw(self, context):

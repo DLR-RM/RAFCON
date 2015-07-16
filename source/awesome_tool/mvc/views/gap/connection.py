@@ -87,8 +87,8 @@ class TransitionView(ConnectionView):
         self._transition_m = ref(transition_model)
 
     def draw(self, context):
-        self._line_color = gap_draw_helper.get_col_rgba(Color('#81848b'), self.parent.transparent or self.parent.selected)
-        self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffffff'), self.parent.transparent or self.parent.selected)
+        self._line_color = gap_draw_helper.get_col_rgba(Color('#81848b'), self.parent.transparent)
+        self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffffff'), self.parent.transparent)
         super(TransitionView, self).draw(context)
 
 
@@ -311,7 +311,7 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
         handle_pos = self.to_handle().pos
         port_side_size = self._to_head_length
 
-        c.set_source_color(Color('#ffbf00'))
+        c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
         if isinstance(c, CairoContext):
@@ -330,8 +330,8 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
             self._print_side = self.to_port.side
             has_to_port = True
             port_layout = pcc.create_layout()
-            port_layout.set_text(self.to_port.name)
-        scoped_layout.set_text(self.name)
+            port_layout.set_text(" " + self.to_port.name + " ")
+        scoped_layout.set_text(" " + self.name + " ")
 
         font_name = constants.FONT_NAMES[0]
         font_size = 20
@@ -365,18 +365,18 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
         self._update_label_selection_waypoint()
 
         if not has_to_port:
-            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, '#ffbf00', name_size, handle_pos,
-                                                                        self._print_side, port_side_size)
+            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, constants.DATA_PORT_COLOR, name_size,
+                                                                        handle_pos, self._print_side, port_side_size)
         else:
-            rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, '#ffbf00', name_size,
-                                                                                    handle_pos, self._print_side,
-                                                                                    port_side_size)
+            rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, constants.DATA_PORT_COLOR,
+                                                                                    name_size, handle_pos,
+                                                                                    self._print_side, port_side_size)
 
         c.move_to(move_x, move_y)
         if self.to_port:
             c.set_source_color(Color("#121921"))
         else:
-            c.set_source_color(Color("#ffbf00"))
+            c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
         pcc.update_layout(scoped_layout)
         pcc.rotate(rot_angle)
@@ -390,7 +390,7 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
                 c.move_to(move_x - scoped_name_size[1], move_y)
             elif self._print_side is SnappedSide.TOP:
                 c.move_to(move_x + scoped_name_size[1], move_y)
-            c.set_source_color(Color("#ffbf00"))
+            c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
             pcc.update_layout(port_layout)
             pcc.rotate(rot_angle)
@@ -485,7 +485,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
         handle_pos = self.from_handle().pos
         port_side_size = self._head_length
 
-        c.set_source_color(Color('#ffbf00'))
+        c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
         if isinstance(c, CairoContext):
@@ -504,8 +504,8 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
             self._print_side = self.from_port.side
             has_from_port = True
             port_layout = pcc.create_layout()
-            port_layout.set_text(self.from_port.name)
-        scoped_layout.set_text(self.name)
+            port_layout.set_text(" " + self.from_port.name + " ")
+        scoped_layout.set_text(" " + self.name + " ")
 
         font_name = constants.FONT_NAMES[0]
         font_size = 20
@@ -539,18 +539,18 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
         self._update_label_selection_waypoint()
 
         if not has_from_port:
-            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, '#ffbf00', name_size, handle_pos,
-                                                                        self._print_side, port_side_size)
+            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, constants.DATA_PORT_COLOR, name_size,
+                                                                        handle_pos, self._print_side, port_side_size)
         else:
-            rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, '#ffbf00', name_size,
-                                                                                    handle_pos, self._print_side,
-                                                                                    port_side_size)
+            rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, constants.DATA_PORT_COLOR,
+                                                                                    name_size, handle_pos,
+                                                                                    self._print_side, port_side_size)
 
         c.move_to(move_x, move_y)
         if self.from_port:
             c.set_source_color(Color("#121921"))
         else:
-            c.set_source_color(Color("#ffbf00"))
+            c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
         pcc.update_layout(scoped_layout)
         pcc.rotate(rot_angle)
@@ -564,7 +564,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
                 c.move_to(move_x - scoped_name_size[1], move_y)
             elif self._print_side is SnappedSide.TOP:
                 c.move_to(move_x + scoped_name_size[1], move_y)
-            c.set_source_color(Color("#ffbf00"))
+            c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
             pcc.update_layout(port_layout)
             pcc.rotate(rot_angle)
