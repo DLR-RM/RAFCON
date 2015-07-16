@@ -365,7 +365,8 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
         self._update_label_selection_waypoint()
 
         if not has_to_port:
-            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, constants.DATA_PORT_COLOR, name_size,
+            col = gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR))
+            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, col, name_size,
                                                                         handle_pos, self._print_side, port_side_size)
         else:
             rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, constants.DATA_PORT_COLOR,
@@ -539,7 +540,8 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
         self._update_label_selection_waypoint()
 
         if not has_from_port:
-            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, constants.DATA_PORT_COLOR, name_size,
+            col = gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR))
+            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, col, name_size,
                                                                         handle_pos, self._print_side, port_side_size)
         else:
             rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, constants.DATA_PORT_COLOR,
