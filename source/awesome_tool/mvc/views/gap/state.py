@@ -236,8 +236,13 @@ class StateView(Element):
         else:
             c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
         c.fill_preserve()
-        c.set_source_color(Color('#000'))
+        if self.selected:
+            c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
+            c.set_line_width(.25 / self.hierarchy_level)
+        else:
+            c.set_source_color(Color('#000'))
         c.stroke()
+        c.set_line_width(0.1 / self.hierarchy_level)
 
         inner_nw, inner_se = self.get_state_drawing_area(self)
         c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)

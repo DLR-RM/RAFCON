@@ -17,7 +17,7 @@ def get_col_rgba(col, transparent=False):
 
 
 def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side, port_side_size,
-                                draw_connection_to_port=True):
+                                draw_connection_to_port=False):
     c = context.cairo
     c.set_line_width(port_side_size * .03)
 
@@ -40,6 +40,8 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
         if draw_connection_to_port:
             c.line_to(handle_pos.x + port_side_size / 2., handle_pos.y)
             c.line_to(handle_pos.x + port_side_size, handle_pos.y)
+        else:
+            c.move_to(handle_pos.x + port_side_size, handle_pos.y)
         c.line_to(move_x, move_y + name_size[1])
         c.line_to(move_x + name_size[0], move_y + name_size[1])
         c.line_to(move_x + name_size[0], move_y + name_size[1] / 2.)
@@ -57,6 +59,8 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
         if draw_connection_to_port:
             c.line_to(handle_pos.x, handle_pos.y + port_side_size / 2.)
             c.line_to(handle_pos.x, move_y - port_side_size)
+        else:
+            c.move_to(handle_pos.x, move_y - port_side_size)
         c.line_to(move_x - name_size[1], move_y)
         c.line_to(move_x - name_size[1], move_y + name_size[0])
         c.line_to(move_x - name_size[1] / 2., move_y + name_size[0])
@@ -73,6 +77,8 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
         if draw_connection_to_port:
             c.line_to(handle_pos.x - port_side_size / 2., handle_pos.y)
             c.line_to(handle_pos.x - port_side_size, handle_pos.y)
+        else:
+            c.move_to(handle_pos.x - port_side_size, move_y + name_size[1] / 2.)
         c.line_to(move_x + name_size[0], move_y + name_size[1])
         c.line_to(move_x, move_y + name_size[1])
         c.line_to(move_x, move_y + name_size[1] / 2.)
@@ -90,6 +96,8 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
         if draw_connection_to_port:
             c.line_to(handle_pos.x, handle_pos.y - port_side_size / 2.)
             c.line_to(handle_pos.x, move_y + port_side_size)
+        else:
+            c.move_to(handle_pos.x, move_y + port_side_size)
         c.line_to(move_x + name_size[1], move_y)
         c.line_to(move_x + name_size[1], move_y - name_size[0])
         c.line_to(move_x + name_size[1] / 2., move_y - name_size[0])
@@ -98,7 +106,7 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     return rot_angle, move_x, move_y
 
 
-def draw_name_label(context, color, name_size, handle_pos, port_side, port_side_size, draw_connection_to_port=True,
+def draw_name_label(context, color, name_size, handle_pos, port_side, port_side_size, draw_connection_to_port=False,
                     fill=False):
     c = context.cairo
     c.set_line_width(port_side_size * .03)
