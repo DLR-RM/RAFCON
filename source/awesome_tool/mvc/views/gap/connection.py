@@ -5,6 +5,7 @@ from awesome_tool.mvc.views.gap.line import PerpLine
 
 from awesome_tool.mvc.models.transition import TransitionModel
 from awesome_tool.mvc.models.data_flow import DataFlowModel
+from awesome_tool.mvc.config import global_gui_config
 
 from awesome_tool.mvc.views.gap.ports import PortView, ScopedVariablePortView
 
@@ -86,8 +87,8 @@ class TransitionView(ConnectionView):
         self._transition_m = ref(transition_model)
 
     def draw(self, context):
-        self._line_color = gap_draw_helper.get_col_rgba(Color('#81848b'), self.parent.transparent)
-        self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffffff'), self.parent.transparent)
+        self._line_color = gap_draw_helper.get_col_rgba(Color('#81848b'), self.parent.transparent or self.parent.selected)
+        self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffffff'), self.parent.transparent or self.parent.selected)
         super(TransitionView, self).draw(context)
 
 
@@ -100,7 +101,7 @@ class DataFlowView(ConnectionView):
         self.model = data_flow_m
         self.line_width = .5 / hierarchy_level
 
-        self._show = False
+        self._show = global_gui_config.get_config_value("SHOW_DATA_FLOWS", False)
 
         self._line_color = gap_draw_helper.get_col_rgba(Color('#6c5e3c'))
         self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffC926'))

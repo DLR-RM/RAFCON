@@ -308,7 +308,7 @@ class GraphicalEditorController(ExtendedController):
                 self._handle_new_waypoint()
 
             # Check, whether a port (input, output, scope) was clicked on
-            if global_gui_config.get_config_value('show_data_flows', True):
+            if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
                 # Check, whether port (connector) was clicked on
                 port_model, port_type, is_connector = self._check_for_port_selection(new_selection,
                                                                                      self.mouse_move_start_coords)
@@ -1278,8 +1278,8 @@ class GraphicalEditorController(ExtendedController):
         (opengl_id, income_pos, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
             state_m.state.name, pos, size,
             state_m.state.outcomes,
-            state_m.input_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
-            state_m.output_data_ports if global_gui_config.get_config_value('show_data_flows', True) else [],
+            state_m.input_data_ports if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
+            state_m.output_data_ports if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
             selected, active, depth)
         state_temp['id'] = opengl_id
         state_temp['income_pos'] = income_pos
@@ -1312,17 +1312,17 @@ class GraphicalEditorController(ExtendedController):
 
                 self.draw_state(child_state, child_rel_pos, child_size, depth + 1)
 
-            if global_gui_config.get_config_value('show_data_flows', True):
+            if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
                 self.draw_inner_data_ports(state_m, depth)
 
             self.draw_transitions(state_m, depth)
 
-            if global_gui_config.get_config_value('show_data_flows', True):
+            if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
                 self.draw_data_flows(state_m, depth)
 
         self._handle_new_transition(state_m, depth)
 
-        if global_gui_config.get_config_value('show_data_flows', True):
+        if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
             self._handle_new_data_flow(state_m, depth)
 
     def draw_inner_data_ports(self, parent_state_m, parent_depth):
@@ -1809,8 +1809,8 @@ class GraphicalEditorController(ExtendedController):
 
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.has_focus():
-            global_gui_config.set_config_value('show_data_flows',
-                                               not global_gui_config.get_config_value("show_data_flows"))
+            global_gui_config.set_config_value('SHOW_DATA_FLOWS',
+                                               not global_gui_config.get_config_value("SHOW_DATA_FLOWS"))
             self._redraw()
 
     def _abort(self, *args):

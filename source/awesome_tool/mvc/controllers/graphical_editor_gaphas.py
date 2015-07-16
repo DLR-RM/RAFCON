@@ -55,7 +55,6 @@ class GraphicalEditorController(ExtendedController):
         view.setup_canvas(self.canvas, self.zoom)
 
         self._control_pressed = False
-        self._show_all_data_flows = False
 
         view.editor.connect('key-press-event', self._on_key_press)
         view.editor.connect('key-release-event', self._on_key_release)
@@ -65,8 +64,8 @@ class GraphicalEditorController(ExtendedController):
         if key_name == "Control_L" or key_name == "Control_R":
             self._control_pressed = True
         elif self._control_pressed and key_name == "d":
-            if not self._show_all_data_flows:
-                self._show_all_data_flows = True
+            if not global_gui_config.get_config_value("SHOW_DATA_FLOWS"):
+                global_gui_config.set_config_value("SHOW_DATA_FLOWS", True)
                 for root_item in self.canvas.get_root_items():
                     for child in self.canvas.get_all_children(root_item):
                         if isinstance(child, DataFlowView):
@@ -75,7 +74,7 @@ class GraphicalEditorController(ExtendedController):
                             child.show_data_port_label = True
                     self.canvas.request_update(root_item)
             else:
-                self._show_all_data_flows = False
+                global_gui_config.set_config_value("SHOW_DATA_FLOWS", False)
                 for root_item in self.canvas.get_root_items():
                     for child in self.canvas.get_all_children(root_item):
                         if isinstance(child, DataFlowView):
@@ -83,6 +82,7 @@ class GraphicalEditorController(ExtendedController):
                         elif isinstance(child, StateView):
                             child.show_data_port_label = False
                     self.canvas.request_update(root_item)
+            global_gui_config.save_configuration()
 
     def _on_key_release(self, widget, event):
         key_name = keyval_name(event.keyval)
@@ -465,9 +465,9 @@ class GraphicalEditorController(ExtendedController):
             if isinstance(item, StateView):
                 item.selected = False
                 item.foreground()
-                if not self._show_all_data_flows:
+                if not global_gui_config.get_config_value("SHOW_DATA_FLOWS"):
                     item.show_data_port_label = False
-            elif isinstance(item, DataFlowView) and not self._show_all_data_flows:
+            elif isinstance(item, DataFlowView) and not global_gui_config.get_config_value("SHOW_DATA_FLOWS"):
                 item.hide()
         self.view.editor.unselect_all()
 
