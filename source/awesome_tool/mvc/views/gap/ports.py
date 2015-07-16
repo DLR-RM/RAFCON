@@ -281,7 +281,7 @@ class PortView(Model, object):
         if filled:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
         else:
-            c.set_source_color(Color('#000'))
+            c.set_source_color(Color(constants.BLACK_COLOR))
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
         c.stroke()
@@ -310,7 +310,7 @@ class PortView(Model, object):
         if incoming_conn:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
         else:
-            c.set_source_color(Color('#000'))
+            c.set_source_color(Color(constants.BLACK_COLOR))
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
         c.stroke()
@@ -348,7 +348,7 @@ class PortView(Model, object):
         if outgoing_conn:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
         else:
-            c.set_source_color(Color('#000'))
+            c.set_source_color(Color(constants.BLACK_COLOR))
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
         c.stroke()
@@ -367,7 +367,7 @@ class IncomeView(PortView):
         super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent, side=SnappedSide.LEFT)
 
     def draw(self, context, state):
-        self.draw_port(context, "#fff", state.transparent)
+        self.draw_port(context, constants.LABEL_COLOR, state.transparent)
 
 
 class OutcomeView(PortView):
@@ -393,11 +393,11 @@ class OutcomeView(PortView):
 
     def draw(self, context, state):
         if self.outcome_id == -2:
-            fill_color = '#359dff'
+            fill_color = constants.PREEMPTED_COLOR
         elif self.outcome_id == -1:
-            fill_color = '#f21000'
+            fill_color = constants.ABORTED_COLOR
         else:
-            fill_color = '#fff'
+            fill_color = constants.LABEL_COLOR
 
         self.draw_port(context, fill_color, state.transparent)
 
@@ -460,7 +460,7 @@ class ScopedVariablePortView(PortView):
 
         name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
 
-        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color('#121921'), transparent))
+        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparent))
 
         rot_angle = .0
         draw_pos = self._get_draw_position(name_size[0], outcome_side)

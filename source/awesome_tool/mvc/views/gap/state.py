@@ -240,7 +240,7 @@ class StateView(Element):
             c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
             c.set_line_width(.25 / self.hierarchy_level)
         else:
-            c.set_source_color(Color('#000'))
+            c.set_source_color(Color(constants.BLACK_COLOR))
         c.stroke()
         c.set_line_width(0.1 / self.hierarchy_level)
 
@@ -248,7 +248,7 @@ class StateView(Element):
         c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
         c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR), self._transparent))
         c.fill_preserve()
-        c.set_source_color(Color('#000'))
+        c.set_source_color(Color(constants.BLACK_COLOR))
         c.stroke()
 
         self._income.port_side_size = self.port_side_size
@@ -307,7 +307,7 @@ class StateView(Element):
 
         c.move_to(self.width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
                   self.height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
-        cc.set_source_color(Color('#ededee'))
+        cc.set_source_color(Color(constants.STATE_NAME_COLOR))
         pcc.update_layout(layout)
         pcc.show_layout(layout)
 
@@ -346,20 +346,6 @@ class StateView(Element):
         port_v.add_connected_handle(handle, item)
         item.set_port_for_handle(port_v, handle)
         self._connect_to_port(port_v.port, item, handle)
-
-    # def connect_to_scoped_variable_input(self, scoped_variable_id, item, handle):
-    #     scoped_variable_v = self.scoped_variable(scoped_variable_id)
-    #     scoped_variable_v.input_port.add_connected_handle(handle, item)
-    #     item.set_port_for_handle(scoped_variable_v.input_port, handle)
-    #     c = scoped_variable_v.input_port_port.constraint(self.canvas, item, handle, scoped_variable_v)
-    #     self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.input_port_port, c)
-    #
-    # def connect_to_scoped_variable_output(self, scoped_variable_id, item, handle):
-    #     scoped_variable_v = self.scoped_variable(scoped_variable_id)
-    #     scoped_variable_v.output_port.add_connected_handle(handle, item)
-    #     item.set_port_for_handle(scoped_variable_v.output_port, handle)
-    #     c = scoped_variable_v.output_port_port.constraint(self.canvas, item, handle, scoped_variable_v)
-    #     self.canvas.connect_item(item, handle, scoped_variable_v, scoped_variable_v.output_port_port, c)
 
     def _connect_to_port(self, port, item, handle):
         c = port.constraint(self.canvas, item, handle, self)
@@ -748,6 +734,6 @@ class NameView(Element):
             set_font_description()
 
         c.move_to(0, 0)
-        cc.set_source_rgba(*get_col_rgba(Color('#ededee'), self.parent.transparent))
+        cc.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
         pcc.update_layout(layout)
         pcc.show_layout(layout)

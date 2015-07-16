@@ -62,11 +62,11 @@ class ConnectionPlaceholderView(ConnectionView):
         self.transition_placeholder = transition_placeholder
 
         if transition_placeholder:
-            self._line_color = gap_draw_helper.get_col_rgba(Color('#81848b'))
-            self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffffff'))
+            self._line_color = gap_draw_helper.get_col_rgba(Color(constants.LINE_COLOR))
+            self._arrow_color = gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR))
         else:
-            self._line_color = gap_draw_helper.get_col_rgba(Color('#6c5e3c'))
-            self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffC926'))
+            self._line_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_LINE_COLOR))
+            self._arrow_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR))
 
 
 class TransitionView(ConnectionView):
@@ -87,8 +87,8 @@ class TransitionView(ConnectionView):
         self._transition_m = ref(transition_model)
 
     def draw(self, context):
-        self._line_color = gap_draw_helper.get_col_rgba(Color('#81848b'), self.parent.transparent)
-        self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffffff'), self.parent.transparent)
+        self._line_color = gap_draw_helper.get_col_rgba(Color(constants.LINE_COLOR), self.parent.transparent)
+        self._arrow_color = gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), self.parent.transparent)
         super(TransitionView, self).draw(context)
 
 
@@ -103,8 +103,8 @@ class DataFlowView(ConnectionView):
 
         self._show = global_gui_config.get_config_value("SHOW_DATA_FLOWS", False)
 
-        self._line_color = gap_draw_helper.get_col_rgba(Color('#6c5e3c'))
-        self._arrow_color = gap_draw_helper.get_col_rgba(Color('#ffC926'))
+        self._line_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_LINE_COLOR))
+        self._arrow_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR))
 
     @property
     def model(self):
@@ -374,7 +374,7 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
         c.move_to(move_x, move_y)
         if self.to_port:
-            c.set_source_color(Color("#121921"))
+            c.set_source_color(Color(constants.SCOPED_VARIABLE_TEXT_COLOR))
         else:
             c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
@@ -548,7 +548,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
         c.move_to(move_x, move_y)
         if self.from_port:
-            c.set_source_color(Color("#121921"))
+            c.set_source_color(Color(constants.SCOPED_VARIABLE_TEXT_COLOR))
         else:
             c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
