@@ -76,6 +76,8 @@ def trigger_gui_signals(*args):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
+    glib.idle_add(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+
     glib.idle_add(menubar_ctrl.on_stop_activate, None)
     glib.idle_add(menubar_ctrl.on_quit_activate, None)
 

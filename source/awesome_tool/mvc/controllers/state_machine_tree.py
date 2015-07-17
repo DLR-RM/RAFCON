@@ -188,7 +188,7 @@ class StateMachineTreeController(ExtendedController):
                 actual_path = self.tree_store.get_path(actual_iter)
             # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_path, selected_path))
             if not selected_path == actual_path:
-                logger.debug("reselect state machine tree-selection")
+                # logger.debug("reselect state machine tree-selection")
                 # if single selection-mode is set no unselect is needed
                 #self.view.get_selection().unselect_path(actual_path)
                 self.view.expand_to_path(selected_path)

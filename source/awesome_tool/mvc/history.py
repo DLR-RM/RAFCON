@@ -661,7 +661,7 @@ class History(ModelMT):
             print overview['level']
             print overview['prop_name'][-1]
         # exit(1)
-        logger.debug("History stores BEFORE")
+        # logger.debug("History stores BEFORE")
         result = True
         cause = overview['method_name'][-1]
         if isinstance(overview['instance'][-1], DataFlow) or \
@@ -759,7 +759,7 @@ class History(ModelMT):
         return result
 
     def finish_new_action(self, model, prop_name, info):
-        logger.debug("History stores AFTER")
+        # logger.debug("History stores AFTER")
         self.actual_action.set_after(model, prop_name, info)
         self.state_machine_model.history.changes.insert_action(self.actual_action)
         # logger.debug("history is now: %s" % self.state_machine_model.history.changes.single_trail_history())
@@ -771,7 +771,7 @@ class History(ModelMT):
         if self.busy:  # if doing undo and redo's
             return
         else:
-            logger.debug("History states_BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
+            # logger.debug("History states_BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = self.parent_state_of_notification_source(model, prop_name, info, before_after='before')
 
@@ -817,7 +817,7 @@ class History(ModelMT):
                         info.kwargs.method_name in ['active', 'state_execution_status']:
             return
         else:
-            logger.debug("History states_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
+            # logger.debug("History states_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = self.parent_state_of_notification_source(model, prop_name, info, before_after='after')
             if overview['method_name'][0] == 'state_change' and \
@@ -864,7 +864,7 @@ class History(ModelMT):
         #                                                        "output_data_ports", "scoped_variables"]
         # third (and last element) should be prop_name in ["data_flow", "transition",
         else:
-            logger.debug("History BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
+            # logger.debug("History BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = self.parent_state_of_notification_source(model, prop_name, info, before_after='before')
             cause = overview['method_name'][-1]
@@ -917,7 +917,7 @@ class History(ModelMT):
         if self.busy or info.method_name in ['active', 'child_execution', 'state_execution_status']:
             return
         else:
-            logger.debug("History state_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
+            # logger.debug("History state_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = self.parent_state_of_notification_source(model, prop_name, info, before_after='before')
             cause = overview['method_name'][-1]

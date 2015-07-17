@@ -7,8 +7,9 @@ data_flows:
 description: null
 filename: script.py
 input_data_ports:
-    30: !DataPort {data_port_id: 30, data_type: float, default_value: 0.1, name: input_data_port1}
-    31: !DataPort {data_port_id: 31, data_type: float, default_value: 0.1, name: input_data_port2}
+    30: !DataPort {data_port_id: 30, data_type: &id001 !!python/name:__builtin__.float '',
+        default_value: 0.1, name: input_data_port1}
+    31: !DataPort {data_port_id: 31, data_type: *id001, default_value: 0.1, name: input_data_port2}
 name: FirstConcurrencyState
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}
@@ -17,8 +18,8 @@ outcomes:
     3: !Outcome {name: success_outcome, outcome_id: 3}
     4: !Outcome {name: error_outcome, outcome_id: 4}
 output_data_ports:
-    34: !DataPort {data_port_id: 34, data_type: str, default_value: default_output_value,
-        name: output_data_port1}
+    34: !DataPort {data_port_id: 34, data_type: !!python/name:__builtin__.str '',
+        default_value: default_output_value, name: output_data_port1}
 path: barrier_state_id
 scoped_variables: {}
 state_id: barrier_state_id
