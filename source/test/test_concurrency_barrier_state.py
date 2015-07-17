@@ -79,7 +79,7 @@ def test_concurrency_barrier_save_load():
 
     state_machine = StateMachine(concurrency_barrier_state)
     test_storage = StateMachineStorage("../test_scripts/decider_test_statemachine")
-    test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
+    # test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
     test_storage.save_statemachine_as_yaml(state_machine, "/tmp/decider_test_statemachine")
     sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml()
 

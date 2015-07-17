@@ -7,6 +7,7 @@
 
 
 """
+import signal
 
 from gtkmvc import Observable
 from gtkmvc import ModelMT
@@ -43,6 +44,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         logger.debug("Statemachine execution engine initialized")
         self._execution_started = False
         self._forward_step = True
+        self.start_state_paths = []
 
     #TODO: pause all external modules
     @Observable.observed
@@ -52,20 +54,35 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._status.execution_mode = ExecutionMode.PAUSED
 
     @Observable.observed
-    def start(self, state_machine_id=None):
-        """Set the execution mode to started
+    def start(self, state_machine_id=None, start_state_path=None):
+        """
+        Start a specific state machine. If no state machine is provided the currently active state machine is started.
+        :param state_machine_id: The id if the state machine to be started
+        :param start_state_path: The path of the state in the state machine, from which the execution will start
+        :return:
         """
         if self._execution_started:
-            logger.debug("Start statemachine and notify all threads waiting ")
+            logger.debug("Resume state machine and notify all threads waiting ")
             self._status.execution_mode = ExecutionMode.RUNNING
             self._status.execution_condition_variable.acquire()
             self._status.execution_condition_variable.notify_all()
             self._status.execution_condition_variable.release()
         else:
-            logger.debug("Restart the state machine")
+            logger.debug("Start the state machine")
             self._status.execution_mode = ExecutionMode.RUNNING
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
+
+            if start_state_path:
+                path_list = start_state_path.split("/")
+                cur_path = ""
+                for path in path_list:
+                    if cur_path == "":
+                        cur_path = curr_path = path
+                    else:
+                        cur_path = cur_path + "/" + path
+                    self.start_state_paths.append(cur_path)
+
             self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
             self._execution_started = True
 
@@ -184,6 +201,31 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def _start_tree(self):
         #TODO: implement
         pass
+
+    @staticmethod
+    def execute_state_machine_from_path(path, start_state_path=None):
+        """
+        A helper function to start an arbitrary state machine at a given path.
+        :param path: The path where the state machine resides
+        :param start_state_path: The path to the state from which the execution will start
+        :return: a reference to the created state machine
+        """
+
+        import awesome_tool.statemachine.singleton
+        awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+        signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
+
+        awesome_tool.statemachine.singleton.library_manager.initialize()
+        [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+            global_storage.load_statemachine_from_yaml(path)
+        awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
+        sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
+        if sm:
+            sm.root_state.join()
+        awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+
+        return sm
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

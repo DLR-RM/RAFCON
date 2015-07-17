@@ -11,7 +11,7 @@ logger = log.get_logger(__name__)
 from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.utils import helper
 from awesome_tool.statemachine import interface
-
+import awesome_tool.mvc.singleton
 
 class MenuBarController(ExtendedController):
     """
@@ -325,6 +325,16 @@ class MenuBarController(ExtendedController):
     def on_start_activate(self, widget, data=None):
         logger.debug("Start execution engine ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.start(self.model.selected_state_machine_id)
+
+    def on_start_from_selected_state_activate(self, widget, data=None):
+        logger.debug("Start from selected state ...")
+        sel = awesome_tool.mvc.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        state_list = sel.get_states()
+        if len(state_list) is not 1:
+            logger.error("Exactly one state must be selected!")
+        else:
+            awesome_tool.statemachine.singleton.state_machine_execution_engine.start(
+                self.model.selected_state_machine_id, state_list[0].state.get_path())
 
     def on_pause_activate(self, widget, data=None):
         logger.debug("Pause execution engine ...")
