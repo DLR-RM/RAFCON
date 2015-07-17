@@ -10,6 +10,7 @@
 
 import traceback
 
+from gtkmvc import Observable
 from awesome_tool.statemachine.states.state import State
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -139,3 +140,9 @@ class ExecutionState(State):
         except (ValueError, TypeError, KeyError):
             pass
         return state
+
+    @State.name.setter
+    @Observable.observed
+    def name(self, name):
+        State.name.fset(self, name)
+        self.logger = log.get_logger(self.name)

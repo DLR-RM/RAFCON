@@ -524,7 +524,7 @@ class State(Observable, yaml.YAMLObject):
     @name.setter
     @Observable.observed
     def name(self, name):
-        if not name is None:
+        if name is not None:
             if not isinstance(name, str):
                 raise TypeError("Name must be of type str")
             if len(name) < 1:
