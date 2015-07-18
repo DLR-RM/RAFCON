@@ -81,7 +81,7 @@ class HierarchyState(ContainerState):
                 if self.preempted:
                     break
 
-                if execution_signal is StateMachineExecutionStatus.STOP:
+                if execution_signal is StateMachineExecutionStatus.STOPPED:
                     # this will be caught at the end of the run method
                     raise RuntimeError("child_state stopped")
                 elif execution_signal == StateMachineExecutionStatus.BACKWARD_STEP:

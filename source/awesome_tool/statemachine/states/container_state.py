@@ -141,7 +141,7 @@ class ContainerState(State):
 
             # depending on the execution mode pause execution
             execution_signal = awesome_tool.statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
-            if execution_signal is StateMachineExecutionStatus.STOP:
+            if execution_signal is StateMachineExecutionStatus.STOPPED:
                 # this will be caught at the end of the run method
                 raise RuntimeError("state stopped")
 

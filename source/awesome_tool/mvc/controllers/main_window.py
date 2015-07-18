@@ -19,7 +19,6 @@ from awesome_tool.mvc.controllers.menu_bar_controller import MenuBarController
 from awesome_tool.mvc.controllers.tool_bar_controller import ToolBarController
 from awesome_tool.mvc.controllers.top_tool_bar_controller import TopToolBarController
 from awesome_tool.utils import constants
-from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.mvc.controllers.execution_history import ExecutionHistoryTreeController
 import threading
 

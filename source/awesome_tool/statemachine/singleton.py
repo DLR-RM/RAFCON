@@ -13,8 +13,8 @@ from awesome_tool.statemachine.library_manager import LibraryManager
 from awesome_tool.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
 from awesome_tool.statemachine.state_machine_manager import StateMachineManager
-from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.utils import helper
+from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
 import sys
 
@@ -22,7 +22,7 @@ import sys
 def signal_handler(signal, frame):
     # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
     print 'SIGINT received! Execution engine will be stopped and program will be shutdown!'
-    if state_machine_execution_engine.status.execution_mode is not ExecutionMode.STOPPED:
+    if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
         state_machine_execution_engine.stop()
         active_state_machine_id = state_machine_execution_engine.state_machine_manager.active_state_machine_id
         state_machine_execution_engine.state_machine_manager.state_machines[active_state_machine_id].root_state.join()
