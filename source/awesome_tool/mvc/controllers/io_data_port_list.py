@@ -106,7 +106,6 @@ class DataPortListController(ExtendedController):
         """Delete the selected port and select the next one
         """
         path = self.get_path()
-        print path
         data_port_id = self.get_data_port_id_from_selection()
         if data_port_id is not None:
             if self.type == "input":

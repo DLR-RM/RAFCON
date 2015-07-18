@@ -205,7 +205,7 @@ class ContainerState(State):
             self._states[state.state_id] = state
 
     @Observable.observed
-    def remove_state(self, state_id, recursive_deletion=True):
+    def remove_state(self, state_id, recursive_deletion=True, force=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
@@ -246,7 +246,7 @@ class ContainerState(State):
             # Recursively delete all transitions, data flows and states within the state to be deleted
             if isinstance(self.states[state_id], ContainerState):
                 for child_state_id in self.states[state_id].states.keys():
-                    self.states[state_id].remove_state(child_state_id)
+                    self.states[state_id].remove_state(child_state_id, force=True)
                 for transition_id in self.states[state_id].transitions.keys():
                     self.states[state_id].remove_transition(transition_id)
                 for data_flow_id in self.states[state_id].data_flows.keys():
@@ -756,7 +756,6 @@ class ContainerState(State):
         # consistency check
         if to_state == self.state_id:
             if not (to_key in self.scoped_variables or to_key in self.output_data_ports):
-                print to_key, self.scoped_variables.keys(), self.input_data_ports.keys()
                 raise AttributeError("to_key must be in list of child-state input_data_ports or own scoped_variables")
         else:  # child
             if not to_state in self.states:

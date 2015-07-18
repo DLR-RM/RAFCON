@@ -123,6 +123,13 @@ class Clipboard(Observable):
         self.clipboard_type = ClipboardType.CUT
         self.__create_core_object_copies(selection)
 
+    def copy_meta_data_of_state_model(self, orig_state, state_copy):
+        state_copy.copy_meta_data_from_state_model(orig_state)
+        state_copy.meta["gui"]["editor"]["rel_pos"] = [1, 1]
+        if hasattr(state_copy, "states"):
+            for s_id, state_m in state_copy.states.iteritems():
+                self.copy_meta_data_of_state_model(state_m, orig_state.states[s_id])
+
     def paste(self, target_state_m):
         assert isinstance(target_state_m, ContainerStateModel)
 
@@ -143,6 +150,9 @@ class Clipboard(Observable):
         state_copy.parent = target_state
 
         state_copy_m = target_state_m.states[state_copy.state_id]
+
+        # paste the meta data of the original state to the state copy
+        self.copy_meta_data_of_state_model(state_orig_m, state_copy_m)
 
         if self.clipboard_type is ClipboardType.CUT:
             # delete the original state

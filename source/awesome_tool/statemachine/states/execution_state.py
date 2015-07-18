@@ -35,14 +35,6 @@ class ExecutionState(State):
         self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
         self.logger = log.get_logger(self.name)
 
-    def print_state_information(self):
-        """Prints information about the state
-
-        """
-        print "---  \nState information of state: %s" % self.name
-        print "Id of the state: " + self.state_id
-        print "---"
-
     def _execute(self, execute_inputs, execute_outputs, backward_execution=False):
         """Calls the custom execute function of the script.py of the state
 
