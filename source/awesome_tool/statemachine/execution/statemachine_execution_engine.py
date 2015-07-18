@@ -94,7 +94,8 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """
         logger.debug("Stop execution ...")
         self._status.execution_mode = StateMachineExecutionStatus.STOPPED
-        self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
+        if self.state_machine_manager.get_active_state_machine() is not None:
+            self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
         self._execution_started = False
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
@@ -170,7 +171,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             else:
                 return_value = StateMachineExecutionStatus.BACKWARD_STEP
 
-        elif self._status.execution_mode is StateMachineExecutionStatus.STEPPING:
+        elif self._status.execution_mode is StateMachineExecutionStatus.STEP:
             logger.debug("Stepping mode: wait for next step")
             try:
                 self._status.execution_condition_variable.acquire()
