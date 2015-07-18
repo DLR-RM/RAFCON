@@ -15,6 +15,7 @@ from awesome_tool.statemachine.execution.execution_history import ExecutionHisto
 from awesome_tool.statemachine.execution.statemachine_status import StateMachineStatus, ExecutionMode
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
 
 class StatemachineExecutionEngine(ModelMT, Observable):
@@ -141,9 +142,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
         This functions is called by the hierarchy states.
         """
-        return_value = "run"
+        return_value = StateMachineExecutionStatus.RUN
         if self._status.execution_mode is ExecutionMode.RUNNING:
-            return_value = "run"
+            return_value = StateMachineExecutionStatus.RUN
 
         elif self._status.execution_mode is ExecutionMode.STOPPED:
             # try:
@@ -152,7 +153,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             # finally:
             #     self._status.execution_condition_variable.release()
             logger.debug("Execution engine stopped. State %s is going to quit!", state.name)
-            return_value = "stop"
+            return_value = StateMachineExecutionStatus.STOP
 
         elif self._status.execution_mode is ExecutionMode.PAUSED:
             try:
@@ -162,11 +163,11 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 self._status.execution_condition_variable.release()
 
             if self._status.execution_mode is ExecutionMode.RUNNING:
-                return_value = "run"
+                return_value = StateMachineExecutionStatus.RUN
             elif self._forward_step:
-                return_value = "step"
+                return_value = StateMachineExecutionStatus.STEP
             else:
-                return_value = "backward_step"
+                return_value = StateMachineExecutionStatus.BACKWARD_STEP
 
         elif self._status.execution_mode is ExecutionMode.STEPPING:
             logger.debug("Stepping mode: wait for next step")
@@ -177,13 +178,13 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 self._status.execution_condition_variable.release()
 
             if self._forward_step:
-                return_value = "step"
+                return_value = StateMachineExecutionStatus.STEP
             else:
-                return_value = "backward_step"
+                return_value = StateMachineExecutionStatus.BACKWARD_STEP
 
         # this is the case when the stop method wakes up the paused or step mode
         if self._status.execution_mode is ExecutionMode.STOPPED:
-            return "stop"
+            return StateMachineExecutionStatus.STOP
         return return_value
 
     def start_from_selected_state(self, state):

@@ -24,6 +24,7 @@ import awesome_tool.statemachine.singleton
 from awesome_tool.utils.type_helpers import type_inherits_of_type
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
 
 class ContainerState(State):
@@ -140,7 +141,7 @@ class ContainerState(State):
 
             # depending on the execution mode pause execution
             execution_signal = awesome_tool.statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
-            if execution_signal == "stop":
+            if execution_signal is StateMachineExecutionStatus.STOP:
                 # this will be caught at the end of the run method
                 raise RuntimeError("state stopped")
 

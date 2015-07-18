@@ -17,7 +17,7 @@ from awesome_tool.statemachine.enums import StateExecutionState
 import awesome_tool.statemachine.singleton as singleton
 from awesome_tool.statemachine.enums import MethodName
 from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem
-
+from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
 class HierarchyState(ContainerState):
 
@@ -81,10 +81,10 @@ class HierarchyState(ContainerState):
                 if self.preempted:
                     break
 
-                if execution_signal == "stop":
+                if execution_signal is StateMachineExecutionStatus.STOP:
                     # this will be caught at the end of the run method
                     raise RuntimeError("child_state stopped")
-                elif execution_signal == "backward_step":
+                elif execution_signal == StateMachineExecutionStatus.BACKWARD_STEP:
                     self.backward_execution = True
                     last_history_item = self.execution_history.pop_last_item()
                     if last_history_item.state_reference is self:
