@@ -94,6 +94,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """
         logger.debug("Stop execution ...")
         self._status.execution_mode = StateMachineExecutionStatus.STOPPED
+        self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
         self._execution_started = False
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()

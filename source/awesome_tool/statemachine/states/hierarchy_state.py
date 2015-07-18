@@ -53,6 +53,7 @@ class HierarchyState(ContainerState):
 
             child_state = None
             last_error = None
+            last_state = None
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             if self.backward_execution:
                 logger.debug("Backward executing hierarchy child_state with id %s and name %s" % (self._state_id, self.name))
@@ -79,6 +80,8 @@ class HierarchyState(ContainerState):
 
                 self.backward_execution = False
                 if self.preempted:
+                    # TODO only preempt if the last state did not exit with a preemptive outcome, where a transition
+                    # is connected!
                     break
 
                 if execution_signal is StateMachineExecutionStatus.STOPPED:
@@ -153,7 +156,7 @@ class HierarchyState(ContainerState):
                     if transition is None:
                         break
 
-                    # set the old child_state execution status to inactive as the new child_state will be executed next
+                    last_state = child_state
                     child_state = self.get_state_for_transition(transition)
                     if transition is not None and child_state is self:
                         self.final_outcome = self.outcomes[transition.to_outcome]
