@@ -96,6 +96,8 @@ class ContainerState(State):
         # print "---------------------- scoped data 1-----------------------"
         # for key, value in self.scoped_data.iteritems():
         #     print key, value
+        # reset the scoped data
+        self._scoped_data = {}
         self.add_default_values_of_scoped_variables_to_scoped_data()
         self.add_input_data_to_scoped_data(self.input_data)
 

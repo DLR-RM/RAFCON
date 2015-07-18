@@ -34,6 +34,8 @@ class ExecutionState(State):
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
         self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
         self.logger = log.get_logger(self.name)
+        # here all persistent variables that should be available for the next state run should be stored
+        self.persistent_variables = {}
 
     def _execute(self, execute_inputs, execute_outputs, backward_execution=False):
         """Calls the custom execute function of the script.py of the state
