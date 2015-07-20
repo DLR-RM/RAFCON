@@ -8,6 +8,10 @@ from awesome_tool.mvc.views.gap.constraint import KeepRectangleWithinConstraint
 
 class MyCanvas(Canvas):
 
+    def update_root_items(self):
+        for root_item in self.get_root_items():
+            self.request_update(root_item)
+
     @async(single=True, priority=PRIORITY_HIGH_IDLE)
     def update(self):
         """

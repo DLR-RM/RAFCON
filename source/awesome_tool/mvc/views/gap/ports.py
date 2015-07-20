@@ -2,6 +2,7 @@ from weakref import ref
 
 from gaphas.connector import PointPort, Handle
 
+from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.mvc.models.outcome import OutcomeModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
@@ -168,7 +169,7 @@ class PortView(Model, object):
     def draw(self, context, state):
         raise NotImplementedError
 
-    def draw_port(self, context, fill_color, transparent, draw_label=True):
+    def draw_port(self, context, fill_color, transparent, draw_label=True, value=None):
         self.update_port_side_size()
         c = context.cairo
         outcome_side = self.port_side_size
@@ -192,10 +193,10 @@ class PortView(Model, object):
             self._draw_container_state_port(self.pos, direction, c, outcome_side, transparent, self.connected_incoming,
                                             self.connected_outgoing, fill_color)
 
-        if self.name and not self.has_outgoing_connection() and draw_label:  # and self.parent.parent:
-            self.draw_name(context, transparent)
+        if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
+            self.draw_name(context, transparent, value)
 
-    def draw_name(self, context, transparent):
+    def draw_name(self, context, transparent, value):
         if self.is_connected_to_scoped_variable():
             return
 
@@ -237,6 +238,26 @@ class PortView(Model, object):
         pcc.rotate(rot_angle)
         pcc.show_layout(layout)
         pcc.rotate(-rot_angle)
+
+        if global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value:
+            value_layout = pcc.create_layout()
+            value_layout.set_text(" " + str(value) + " ")
+            value_layout.set_font_description(font)
+
+            value_text_size = (value_layout.get_size()[0] / float(SCALE), text_size[1])
+
+            fill_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR))
+            rot_angle, move_x, move_y = gap_draw_helper.draw_data_value_rect(context, fill_color, value_text_size,
+                                                                             text_size, (move_x, move_y), print_side)
+
+            c.move_to(move_x, move_y)
+
+            cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
+
+            pcc.update_layout(value_layout)
+            pcc.rotate(rot_angle)
+            pcc.show_layout(value_layout)
+            pcc.rotate(-rot_angle)
 
         c.move_to(outcome_side, outcome_side)
 
@@ -546,6 +567,8 @@ class DataPortView(PortView):
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
 
+        self._value = None
+
         if self._fill:
             self.text_color = constants.STATE_BACKGROUND_COLOR
             self.fill_color = constants.DATA_PORT_COLOR
@@ -567,7 +590,7 @@ class DataPortView(PortView):
 
     def draw(self, context, state):
         draw_label = state.selected or state.show_data_port_label
-        self.draw_port(context, constants.DATA_PORT_COLOR, state.transparent, draw_label)
+        self.draw_port(context, constants.DATA_PORT_COLOR, state.transparent, draw_label, self._value)
 
 
 class InputPortView(DataPortView):
@@ -575,8 +598,20 @@ class InputPortView(DataPortView):
     def __init__(self, parent, port_m, port_side_size):
         super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size)
 
+    def draw(self, context, state):
+        input_data = self.parent.model.state.input_data
+        if len(self.parent.model.state.input_data) > 0 and self.name in input_data.iterkeys():
+            self._value = input_data[self.name]
+        super(InputPortView, self).draw(context, state)
+
 
 class OutputPortView(DataPortView):
 
     def __init__(self, parent, port_m, port_side_size):
         super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT, port_side_size)
+
+    def draw(self, context, state):
+        output_data = self.parent.model.state.output_data
+        if len(self.parent.model.state.input_data) > 0 and self.name in output_data.iterkeys():
+            self._value = output_data[self.name]
+        super(OutputPortView, self).draw(context, state)

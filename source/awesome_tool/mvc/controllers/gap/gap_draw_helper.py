@@ -2,6 +2,7 @@ from math import pi
 from gtk.gdk import Color
 
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide
+from awesome_tool.utils import constants
 
 
 def get_col_rgba(col, transparent=False):
@@ -14,6 +15,44 @@ def get_col_rgba(col, transparent=False):
         else:
             a = 1.
         return r, g, b, a
+
+
+def draw_data_value_rect(context, color, value_size, name_size, pos, port_side):
+    c = context.cairo
+
+    rot_angle = .0
+    move_x = 0.
+    move_y = 0.
+
+    if port_side is SnappedSide.RIGHT:
+        move_x = pos[0] + name_size[0]
+        move_y = pos[1]
+
+        c.rectangle(move_x, move_y, value_size[0], value_size[1])
+    elif port_side is SnappedSide.BOTTOM:
+        move_x = pos[0] - value_size[1]
+        move_y = pos[1] + name_size[0]
+        rot_angle = pi / 2.
+
+        c.rectangle(move_x, move_y, value_size[1], value_size[0])
+    elif port_side is SnappedSide.LEFT:
+        move_x = pos[0] - value_size[0]
+        move_y = pos[1]
+
+        c.rectangle(move_x, move_y, value_size[0], value_size[1])
+    elif port_side is SnappedSide.TOP:
+        move_x = pos[0] - value_size[1]
+        move_y = pos[1] - value_size[0]
+        rot_angle = -pi / 2.
+
+        c.rectangle(move_x, move_y, value_size[1], value_size[0])
+
+    c.set_source_rgba(*color)
+    c.fill_preserve()
+    c.set_source_color(Color(constants.BLACK_COLOR))
+    c.stroke()
+
+    return rot_angle, move_x, move_y
 
 
 def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side, port_side_size,

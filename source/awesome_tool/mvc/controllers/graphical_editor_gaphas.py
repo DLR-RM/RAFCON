@@ -83,6 +83,13 @@ class GraphicalEditorController(ExtendedController):
                             child.show_data_port_label = False
                     self.canvas.request_update(root_item)
             global_gui_config.save_configuration()
+        elif self._control_pressed and key_name == "l":
+            if not global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS"):
+                global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
+            else:
+                global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+            self.canvas.update_root_items()
+            global_gui_config.save_configuration()
 
     def _on_key_release(self, widget, event):
         key_name = keyval_name(event.keyval)

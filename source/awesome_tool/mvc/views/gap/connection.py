@@ -16,6 +16,7 @@ from awesome_tool.utils import constants
 from awesome_tool.mvc.controllers.gap import gap_draw_helper
 
 from awesome_tool.statemachine.scope import ScopedVariable
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 
 from gtkmvc import Observer
 
@@ -204,15 +205,145 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
             return self._head_length * 1.5
 
     def draw(self, context):
-        if not self._show:
-            return
-        if not self.connected:
-            super(ScopedVariableDataFlowView, self).draw(context)
-        else:
-            self._draw_label(context)
-
-    def _draw_label(self, context):
         raise NotImplementedError
+
+    def _update_label_selection_waypoint(self):
+        raise NotImplementedError
+
+    def _draw_label(self, context, from_scoped=True):
+        if self.parent and self.parent.moving:
+            return
+
+        c = context.cairo
+        c.set_line_width(self._head_length * .03)
+
+        if from_scoped:
+            handle_pos = self.to_handle().pos
+            port_side_size = self._to_head_length
+        else:
+            handle_pos = self.from_handle().pos
+            port_side_size = self._head_length
+
+        c.set_source_color(Color(constants.DATA_PORT_COLOR))
+
+        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
+        if isinstance(c, CairoContext):
+            cc = c
+        else:
+            cc = c._cairo
+
+        pcc = CairoContext(cc)
+        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        scoped_layout = pcc.create_layout()
+        port_layout = None
+
+        has_connected_port = False
+        if from_scoped and self.to_port:
+            self._print_side = self.to_port.side
+            has_connected_port = True
+            port_layout = pcc.create_layout()
+            port_layout.set_text(" " + self.to_port.name + " ")
+        elif not from_scoped and self.from_port:
+            self._print_side = self.from_port.side
+            has_connected_port = True
+            port_layout = pcc.create_layout()
+            port_layout.set_text(" " + self.from_port.name + " ")
+        scoped_layout.set_text(" " + self.name + " ")
+
+        font_name = constants.FONT_NAMES[0]
+        font_size = 20
+
+        def set_font_description(layout):
+            font = FontDescription(font_name + " " + str(font_size))
+            layout.set_font_description(font)
+
+        if port_layout:
+            set_font_description(scoped_layout)
+            while scoped_layout.get_size()[1] / float(SCALE) > self.desired_name_height / 2.:
+                font_size *= 0.9
+                set_font_description(scoped_layout)
+            scoped_name_size = scoped_layout.get_size()[0] / float(SCALE), scoped_layout.get_size()[1] / float(SCALE)
+
+            set_font_description(port_layout)
+            while port_layout.get_size()[1] / float(SCALE) > self.desired_name_height / 2.:
+                font_size *= 0.9
+                set_font_description(port_layout)
+            port_name_size = port_layout.get_size()[0] / float(SCALE), port_layout.get_size()[1] / float(SCALE)
+            name_size = max(scoped_name_size[0], port_name_size[0]), scoped_name_size[1] + port_name_size[1]
+        else:
+            set_font_description(scoped_layout)
+            while scoped_layout.get_size()[1] / float(SCALE) > self.desired_name_height:
+                font_size *= 0.9
+                set_font_description(scoped_layout)
+            scoped_name_size = scoped_layout.get_size()[0] / float(SCALE), scoped_layout.get_size()[1] / float(SCALE)
+            name_size = scoped_name_size
+
+        self._name_width = name_size[0]
+        self._update_label_selection_waypoint()
+
+        if not has_connected_port:
+            col = gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR))
+            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, col, name_size,
+                                                                        handle_pos, self._print_side, port_side_size)
+        else:
+            rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, constants.DATA_PORT_COLOR,
+                                                                                    name_size, handle_pos,
+                                                                                    self._print_side, port_side_size)
+
+        c.move_to(move_x, move_y)
+        if has_connected_port:
+            c.set_source_color(Color(constants.SCOPED_VARIABLE_TEXT_COLOR))
+        else:
+            c.set_source_color(Color(constants.DATA_PORT_COLOR))
+
+        pcc.update_layout(scoped_layout)
+        pcc.rotate(rot_angle)
+        pcc.show_layout(scoped_layout)
+        pcc.rotate(-rot_angle)
+
+        if port_layout:
+            if self._print_side is SnappedSide.RIGHT or self._print_side is SnappedSide.LEFT:
+                c.move_to(move_x, move_y + scoped_name_size[1])
+            elif self._print_side is SnappedSide.BOTTOM:
+                c.move_to(move_x - scoped_name_size[1], move_y)
+            elif self._print_side is SnappedSide.TOP:
+                c.move_to(move_x + scoped_name_size[1], move_y)
+            c.set_source_color(Color(constants.DATA_PORT_COLOR))
+
+            pcc.update_layout(port_layout)
+            pcc.rotate(rot_angle)
+            pcc.show_layout(port_layout)
+            pcc.rotate(-rot_angle)
+
+        parent_state = self.parent.model.state
+        if (global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and port_layout and
+                isinstance(parent_state, HierarchyState)):
+            scoped_data_id = str(self._scoped_variable.data_port_id) + parent_state.state_id
+            if scoped_data_id in parent_state.scoped_data.iterkeys():
+                value = parent_state.scoped_data[scoped_data_id].value
+
+                value_layout = pcc.create_layout()
+                value_layout.set_text(" " + str(value) + " ")
+                set_font_description(value_layout)
+                font = FontDescription(font_name + " " + str(name_size[1] * .9))
+                value_layout.set_font_description(font)
+
+                value_text_size = value_layout.get_size()[0] / float(SCALE), name_size[1]
+
+                fill_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR))
+                rot_angle, move_x, move_y = gap_draw_helper.draw_data_value_rect(context, fill_color, value_text_size,
+                                                                                 name_size, (move_x, move_y),
+                                                                                 self._print_side)
+
+                c.move_to(move_x, move_y)
+
+                cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
+
+                pcc.update_layout(value_layout)
+                pcc.rotate(rot_angle)
+                pcc.show_layout(value_layout)
+                pcc.rotate(-rot_angle)
 
 
 class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
@@ -301,102 +432,13 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
             self._label_selection_waypoint = None
             self._update_ports()
 
-    def _draw_label(self, context):
-        if self.parent and self.parent.moving:
+    def draw(self, context):
+        if not self._show:
             return
-
-        c = context.cairo
-        c.set_line_width(self._head_length * .03)
-
-        handle_pos = self.to_handle().pos
-        port_side_size = self._to_head_length
-
-        c.set_source_color(Color(constants.DATA_PORT_COLOR))
-
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
+        if not self.connected:
+            super(ScopedVariableDataFlowView, self).draw(context)
         else:
-            cc = c._cairo
-
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        scoped_layout = pcc.create_layout()
-        port_layout = None
-
-        has_to_port = False
-        if self.to_port:
-            self._print_side = self.to_port.side
-            has_to_port = True
-            port_layout = pcc.create_layout()
-            port_layout.set_text(" " + self.to_port.name + " ")
-        scoped_layout.set_text(" " + self.name + " ")
-
-        font_name = constants.FONT_NAMES[0]
-        font_size = 20
-
-        def set_font_description(layout):
-            font = FontDescription(font_name + " " + str(font_size))
-            layout.set_font_description(font)
-
-        if port_layout:
-            set_font_description(scoped_layout)
-            while scoped_layout.get_size()[1] / float(SCALE) > self.desired_name_height / 2.:
-                font_size *= 0.9
-                set_font_description(scoped_layout)
-            scoped_name_size = scoped_layout.get_size()[0] / float(SCALE), scoped_layout.get_size()[1] / float(SCALE)
-
-            set_font_description(port_layout)
-            while port_layout.get_size()[1] / float(SCALE) > self.desired_name_height / 2.:
-                font_size *= 0.9
-                set_font_description(port_layout)
-            port_name_size = port_layout.get_size()[0] / float(SCALE), port_layout.get_size()[1] / float(SCALE)
-            name_size = max(scoped_name_size[0], port_name_size[0]), scoped_name_size[1] + port_name_size[1]
-        else:
-            set_font_description(scoped_layout)
-            while scoped_layout.get_size()[1] / float(SCALE) > self.desired_name_height:
-                font_size *= 0.9
-                set_font_description(scoped_layout)
-            scoped_name_size = scoped_layout.get_size()[0] / float(SCALE), scoped_layout.get_size()[1] / float(SCALE)
-            name_size = scoped_name_size
-
-        self._name_width = name_size[0]
-        self._update_label_selection_waypoint()
-
-        if not has_to_port:
-            col = gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR))
-            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, col, name_size,
-                                                                        handle_pos, self._print_side, port_side_size)
-        else:
-            rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, constants.DATA_PORT_COLOR,
-                                                                                    name_size, handle_pos,
-                                                                                    self._print_side, port_side_size)
-
-        c.move_to(move_x, move_y)
-        if self.to_port:
-            c.set_source_color(Color(constants.SCOPED_VARIABLE_TEXT_COLOR))
-        else:
-            c.set_source_color(Color(constants.DATA_PORT_COLOR))
-
-        pcc.update_layout(scoped_layout)
-        pcc.rotate(rot_angle)
-        pcc.show_layout(scoped_layout)
-        pcc.rotate(-rot_angle)
-
-        if port_layout:
-            if self._print_side is SnappedSide.RIGHT or self._print_side is SnappedSide.LEFT:
-                c.move_to(move_x, move_y + scoped_name_size[1])
-            elif self._print_side is SnappedSide.BOTTOM:
-                c.move_to(move_x - scoped_name_size[1], move_y)
-            elif self._print_side is SnappedSide.TOP:
-                c.move_to(move_x + scoped_name_size[1], move_y)
-            c.set_source_color(Color(constants.DATA_PORT_COLOR))
-
-            pcc.update_layout(port_layout)
-            pcc.rotate(rot_angle)
-            pcc.show_layout(port_layout)
-            pcc.rotate(-rot_angle)
+            self._draw_label(context)
 
 
 class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
@@ -476,99 +518,10 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
             self._label_selection_waypoint = None
             self._update_ports()
 
-    def _draw_label(self, context):
-        if self.parent and self.parent.moving:
+    def draw(self, context):
+        if not self._show:
             return
-
-        c = context.cairo
-        c.set_line_width(self._head_length * .03)
-
-        handle_pos = self.from_handle().pos
-        port_side_size = self._head_length
-
-        c.set_source_color(Color(constants.DATA_PORT_COLOR))
-
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
+        if not self.connected:
+            super(ScopedVariableDataFlowView, self).draw(context)
         else:
-            cc = c._cairo
-
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        scoped_layout = pcc.create_layout()
-        port_layout = None
-
-        has_from_port = False
-        if self.from_port:
-            self._print_side = self.from_port.side
-            has_from_port = True
-            port_layout = pcc.create_layout()
-            port_layout.set_text(" " + self.from_port.name + " ")
-        scoped_layout.set_text(" " + self.name + " ")
-
-        font_name = constants.FONT_NAMES[0]
-        font_size = 20
-
-        def set_font_description(layout):
-            font = FontDescription(font_name + " " + str(font_size))
-            layout.set_font_description(font)
-
-        if port_layout:
-            set_font_description(scoped_layout)
-            while scoped_layout.get_size()[1] / float(SCALE) > self.desired_name_height / 2.:
-                font_size *= 0.9
-                set_font_description(scoped_layout)
-            scoped_name_size = scoped_layout.get_size()[0] / float(SCALE), scoped_layout.get_size()[1] / float(SCALE)
-
-            set_font_description(port_layout)
-            while port_layout.get_size()[1] / float(SCALE) > self.desired_name_height / 2.:
-                font_size *= 0.9
-                set_font_description(port_layout)
-            port_name_size = port_layout.get_size()[0] / float(SCALE), port_layout.get_size()[1] / float(SCALE)
-            name_size = max(scoped_name_size[0], port_name_size[0]), scoped_name_size[1] + port_name_size[1]
-        else:
-            set_font_description(scoped_layout)
-            while scoped_layout.get_size()[1] / float(SCALE) > self.desired_name_height:
-                font_size *= 0.9
-                set_font_description(scoped_layout)
-            scoped_name_size = scoped_layout.get_size()[0] / float(SCALE), scoped_layout.get_size()[1] / float(SCALE)
-            name_size = scoped_name_size
-
-        self._name_width = name_size[0]
-        self._update_label_selection_waypoint()
-
-        if not has_from_port:
-            col = gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR))
-            rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, col, name_size,
-                                                                        handle_pos, self._print_side, port_side_size)
-        else:
-            rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context, constants.DATA_PORT_COLOR,
-                                                                                    name_size, handle_pos,
-                                                                                    self._print_side, port_side_size)
-
-        c.move_to(move_x, move_y)
-        if self.from_port:
-            c.set_source_color(Color(constants.SCOPED_VARIABLE_TEXT_COLOR))
-        else:
-            c.set_source_color(Color(constants.DATA_PORT_COLOR))
-
-        pcc.update_layout(scoped_layout)
-        pcc.rotate(rot_angle)
-        pcc.show_layout(scoped_layout)
-        pcc.rotate(-rot_angle)
-
-        if port_layout:
-            if self._print_side is SnappedSide.RIGHT or self._print_side is SnappedSide.LEFT:
-                c.move_to(move_x, move_y + scoped_name_size[1])
-            elif self._print_side is SnappedSide.BOTTOM:
-                c.move_to(move_x - scoped_name_size[1], move_y)
-            elif self._print_side is SnappedSide.TOP:
-                c.move_to(move_x + scoped_name_size[1], move_y)
-            c.set_source_color(Color(constants.DATA_PORT_COLOR))
-
-            pcc.update_layout(port_layout)
-            pcc.rotate(rot_angle)
-            pcc.show_layout(port_layout)
-            pcc.rotate(-rot_angle)
+            self._draw_label(context, False)
