@@ -242,6 +242,27 @@
               </object>
             </child>
             <child>
+              <object class="GtkCheckMenuItem" id="show_all_data_flows">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Show All Data Flows</property>
+                <property name="use_underline">True</property>
+                <signal name="toggled" handler="on_show_all_data_flows_toggled"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckMenuItem" id="show_data_flow_values">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Show Data Flow Values</property>
+                <property name="use_underline">True</property>
+                <signal name="toggled" handler="on_show_data_flow_values_toggled"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem" id="separator">
+                <property name="visible">True</property>
+              </object>
+            </child>
+            <child>
               <object class="GtkImageMenuItem" id="expert_view">
                 <property name="label" translatable="yes">expert view</property>
                 <property name="visible">True</property>

@@ -36,7 +36,7 @@ class ShortcutManager():
             'paste': '<Control>V',
             'cut': '<Control>X',
             'add': '<Control>A',
-            'delete': ['<Control>D', 'Delete'],
+            'delete': 'Delete',
             'group': '<Control>G',
             'ungroup': '<Control>U',
             'entry': '<Control>E',
@@ -55,7 +55,10 @@ class ShortcutManager():
             'left': ['<Control>Left', '<Control><Shift>Left'],
             'right': ['<Control>Right', '<Control><Shift>Right'],
             'up': ['<Control>Up', '<Control><Shift>Up'],
-            'down': ['<Control>Down', '<Control><Shift>Down']
+            'down': ['<Control>Down', '<Control><Shift>Down'],
+            'show_data_flows': '<Control>D',
+            'show_data_values': '<Control>L',
+            'data_flow_mode': '<Control><Shift>D'
         }
 
     def __register_shortcuts(self):

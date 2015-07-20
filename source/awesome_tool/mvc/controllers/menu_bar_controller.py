@@ -35,6 +35,12 @@ class MenuBarController(ExtendedController):
         data_flow_mode = global_gui_config.get_config_value("DATA_FLOW_MODE", True)
         view["data_flow_mode"].set_active(data_flow_mode)
 
+        show_all_data_flows = global_gui_config.get_config_value("SHOW_DATA_FLOWS", True)
+        view["show_all_data_flows"].set_active(show_all_data_flows)
+
+        show_data_flow_values = global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+        view["show_data_flow_values"].set_active(show_data_flow_values)
+
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
@@ -59,6 +65,10 @@ class MenuBarController(ExtendedController):
         shortcut_manager.add_callback_for_action('backward_step', self.on_backward_step_activate)
 
         shortcut_manager.add_callback_for_action('reload', self.on_refresh_all_activate)
+
+        shortcut_manager.add_callback_for_action('show_data_flows', self.show_all_data_flows_toggled_shortcut)
+        shortcut_manager.add_callback_for_action('show_data_values', self.show_show_data_flow_values_toggled_shortcut)
+        shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode_toggled_shortcut)
 
     ######################################################
     # menu bar functionality - File
@@ -319,11 +329,43 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - View
     ######################################################
+    def data_flow_mode_toggled_shortcut(self, *args):
+        if self.view["data_flow_mode"].get_active():
+            self.view["data_flow_mode"].set_active(False)
+        else:
+            self.view["data_flow_mode"].set_active(True)
+
+    def show_all_data_flows_toggled_shortcut(self, *args):
+        if self.view["show_all_data_flows"].get_active():
+            self.view["show_all_data_flows"].set_active(False)
+        else:
+            self.view["show_all_data_flows"].set_active(True)
+
+    def show_show_data_flow_values_toggled_shortcut(self, *args):
+        if self.view["show_data_flow_values"].get_active():
+            self.view["show_data_flow_values"].set_active(False)
+        else:
+            self.view["show_data_flow_values"].set_active(True)
+
     def on_data_flow_mode_toggled(self, widget, data=None):
         if widget.get_active():
             global_gui_config.set_config_value("DATA_FLOW_MODE", True)
         else:
             global_gui_config.set_config_value("DATA_FLOW_MODE", False)
+        global_gui_config.save_configuration()
+
+    def on_show_all_data_flows_toggled(self, widget, data=None):
+        if widget.get_active():
+            global_gui_config.set_config_value("SHOW_DATA_FLOWS", True)
+        else:
+            global_gui_config.set_config_value("SHOW_DATA_FLOWS", False)
+        global_gui_config.save_configuration()
+
+    def on_show_data_flow_values_toggled(self, widget, data=None):
+        if widget.get_active():
+            global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
+        else:
+            global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
         global_gui_config.save_configuration()
 
     def on_expert_view_activate(self, widget, data=None):

@@ -3,7 +3,6 @@ logger = log.get_logger(__name__)
 
 from awesome_tool.mvc.controllers.gap import segment
 
-# from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.mvc.clipboard import global_clipboard
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
@@ -18,8 +17,6 @@ from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView, 
     ToScopedVariableDataFlowView
 
 from awesome_tool.mvc.config import global_gui_config
-
-# from awesome_tool.mvc.controllers.gap.enums import Direction
 
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.mvc.views.gap.canvas import MyCanvas
@@ -54,48 +51,6 @@ class GraphicalEditorController(ExtendedController):
 
         view.setup_canvas(self.canvas, self.zoom)
 
-        self._control_pressed = False
-
-        view.editor.connect('key-press-event', self._on_key_press)
-        view.editor.connect('key-release-event', self._on_key_release)
-
-    def _on_key_press(self, widget, event):
-        key_name = keyval_name(event.keyval)
-        if key_name == "Control_L" or key_name == "Control_R":
-            self._control_pressed = True
-        elif self._control_pressed and key_name == "d":
-            if not global_gui_config.get_config_value("SHOW_DATA_FLOWS"):
-                global_gui_config.set_config_value("SHOW_DATA_FLOWS", True)
-                for root_item in self.canvas.get_root_items():
-                    for child in self.canvas.get_all_children(root_item):
-                        if isinstance(child, DataFlowView):
-                            child.show()
-                        elif isinstance(child, StateView):
-                            child.show_data_port_label = True
-                    self.canvas.request_update(root_item)
-            else:
-                global_gui_config.set_config_value("SHOW_DATA_FLOWS", False)
-                for root_item in self.canvas.get_root_items():
-                    for child in self.canvas.get_all_children(root_item):
-                        if isinstance(child, DataFlowView):
-                            child.hide()
-                        elif isinstance(child, StateView):
-                            child.show_data_port_label = False
-                    self.canvas.request_update(root_item)
-            global_gui_config.save_configuration()
-        elif self._control_pressed and key_name == "l":
-            if not global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS"):
-                global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
-            else:
-                global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
-            self.canvas.update_root_items()
-            global_gui_config.save_configuration()
-
-    def _on_key_release(self, widget, event):
-        key_name = keyval_name(event.keyval)
-        if key_name == "Control_L" or key_name == "Control_R":
-            self._control_pressed = False
-
     def register_view(self, view):
         """Called when the View was registered
         """
@@ -122,6 +77,17 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("copy", self._copy_selection)
         shortcut_manager.add_callback_for_action("paste", self._paste_clipboard)
         shortcut_manager.add_callback_for_action("cut", self._cut_selection)
+
+        shortcut_manager.add_callback_for_action('show_data_flows', self.update_view)
+        shortcut_manager.add_callback_for_action('show_data_values', self.update_view)
+        shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode)
+
+    def update_view(self, *args):
+        self.canvas.update_root_items()
+
+    def data_flow_mode(self, *args):
+        self.handle_selected_states(self.model.selection.get_states())
+        self.canvas.update_root_items()
 
     def _add_execution_state(self, *args):
         from awesome_tool.statemachine.enums import StateType
@@ -193,11 +159,6 @@ class GraphicalEditorController(ExtendedController):
             new_state_v = self.get_view_for_model(state_copy_m)
             new_state_v.width = new_size[0]
             new_state_v.height = new_size[1]
-
-            print state_orig_m
-            print state_orig_m.meta
-            print state_copy_m
-            print state_copy_m.meta
 
             new_state_v.resize_all_children(old_size)
 
@@ -406,32 +367,44 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         self.deselect_all_items()
+
+        self.handle_selected_states(info['args'][0].get_states())
+
+    def handle_selected_states(self, selected_state_m_list):
         state_v = None
 
-        for state_m in info['args'][0].get_states():
+        for state_m in selected_state_m_list:
             state_v = self.get_view_for_model(state_m)
             state_v.selected = True
             self.view.editor.select_item(state_v)
             if global_gui_config.get_config_value("DATA_FLOW_MODE"):
                 for data_flow in self.get_connected_data_flows(state_v):
                     data_flow.show()
-                self.set_non_active_states_transparent(state_v)
+                self.set_non_active_states_transparent(True, state_v)
+            else:
+                for data_flow in self.get_connected_data_flows(state_v):
+                    data_flow.hide()
+                self.set_non_active_states_transparent(False, state_v)
 
         self.view.editor.focused_item = state_v
 
-    def set_non_active_states_transparent(self, state_v):
-        for root_item in self.canvas.get_root_items():
-            if isinstance(root_item, StateView):
-                if root_item is not state_v:
-                    root_item.background()
-                else:
-                    root_item.show_data_port_label = True
-            for child in self.canvas.get_all_children(root_item):
-                if isinstance(child, StateView):
-                    if child is not state_v:
-                        child.background()
-                    else:
-                        child.show_data_port_label = True
+    def set_non_active_states_transparent(self, transparent, state_v):
+        if transparent:
+            for root_item in self.canvas.get_root_items():
+                if isinstance(root_item, StateView):
+                    if root_item is not state_v:
+                        root_item.background()
+                for child in self.canvas.get_all_children(root_item):
+                    if isinstance(child, StateView):
+                        if child is not state_v:
+                            child.background()
+        else:
+            for root_item in self.canvas.get_root_items():
+                if isinstance(root_item, StateView):
+                    root_item.foreground()
+                for child in self.canvas.get_all_children(root_item):
+                    if isinstance(child, StateView):
+                        child.foreground()
 
     def get_connected_data_flows(self, state_v):
         parent_v = self.canvas.get_parent(state_v)
@@ -472,8 +445,6 @@ class GraphicalEditorController(ExtendedController):
             if isinstance(item, StateView):
                 item.selected = False
                 item.foreground()
-                if not global_gui_config.get_config_value("SHOW_DATA_FLOWS"):
-                    item.show_data_port_label = False
             elif isinstance(item, DataFlowView) and not global_gui_config.get_config_value("SHOW_DATA_FLOWS"):
                 item.hide()
         self.view.editor.unselect_all()

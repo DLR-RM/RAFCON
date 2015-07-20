@@ -14,6 +14,7 @@ from awesome_tool.mvc.views.gap.constraint import KeepRectangleWithinConstraint,
 from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
 from awesome_tool.mvc.views.gap.connection import TransitionView
+from awesome_tool.mvc.config import global_gui_config
 
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide
 from awesome_tool.mvc.controllers.gap.gap_draw_helper import get_col_rgba
@@ -57,7 +58,6 @@ class StateView(Element):
         self.selected = False
         self._moving = False
         self._transparent = False
-        self.show_data_port_label = False
 
         if not isinstance(state_m.meta['name']['gui']['editor']['size'], tuple):
             name_width = self.width * 0.8
@@ -134,6 +134,10 @@ class StateView(Element):
             if isinstance(child, StateView) and child.selected:
                 return True
         return False
+
+    @property
+    def show_data_port_label(self):
+        return global_gui_config.get_config_value("SHOW_DATA_FLOWS")
 
     @property
     def moving(self):

@@ -116,6 +116,10 @@ class DataFlowView(ConnectionView):
         assert isinstance(data_flow_m, DataFlowModel)
         self._data_flow_m = ref(data_flow_m)
 
+    @property
+    def show_connection(self):
+        return global_gui_config.get_config_value("SHOW_DATA_FLOWS", False) or self._show
+
     def show(self):
         self._show = True
 
@@ -123,7 +127,7 @@ class DataFlowView(ConnectionView):
         self._show = False
 
     def draw(self, context):
-        if not self._show:
+        if not self.show_connection:
             return
         super(DataFlowView, self).draw(context)
 
@@ -433,7 +437,7 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
             self._update_ports()
 
     def draw(self, context):
-        if not self._show:
+        if not self.show_connection:
             return
         if not self.connected:
             super(ScopedVariableDataFlowView, self).draw(context)
@@ -519,7 +523,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
             self._update_ports()
 
     def draw(self, context):
-        if not self._show:
+        if not self.show_connection:
             return
         if not self.connected:
             super(ScopedVariableDataFlowView, self).draw(context)
