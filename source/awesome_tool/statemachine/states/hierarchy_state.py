@@ -54,6 +54,7 @@ class HierarchyState(ContainerState):
             child_state = None
             last_error = None
             last_state = None
+            last_transition = None
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             if self.backward_execution:
                 logger.debug("Backward executing hierarchy child_state with id %s and name %s" % (self._state_id, self.name))
@@ -80,9 +81,12 @@ class HierarchyState(ContainerState):
 
                 self.backward_execution = False
                 if self.preempted:
-                    # TODO only preempt if the last state did not exit with a preemptive outcome, where a transition
-                    # is connected!
-                    break
+                    logger.debug("Preempted flag: True")
+                    if last_transition.from_outcome == -2:
+                        # normally execute the next state
+                        logger.debug("Execute the preemption handling state for state %s" % str(last_state.name))
+                    else:
+                        break
 
                 if execution_signal is StateMachineExecutionStatus.STOPPED:
                     # this will be caught at the end of the run method
@@ -157,6 +161,7 @@ class HierarchyState(ContainerState):
                         break
 
                     last_state = child_state
+                    last_transition = transition
                     child_state = self.get_state_for_transition(transition)
                     if transition is not None and child_state is self:
                         self.final_outcome = self.outcomes[transition.to_outcome]
