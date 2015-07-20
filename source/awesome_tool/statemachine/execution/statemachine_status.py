@@ -15,10 +15,7 @@ from threading import Condition
 from execution_history import ExecutionHistory
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
-
-
-ExecutionMode = Enum('EXECUTION_MODE', 'PAUSED RUNNING STOPPED STEPPING')
-
+from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
 class StateMachineStatus(Observable):
 
@@ -40,6 +37,7 @@ class StateMachineStatus(Observable):
 
         # these fields are not supposed to be written by the GUI directly, but via the methods of the
         # StateMachineExecutionEngine class
+        self._execution_mode = None
         self.execution_mode = execution_mode
         logger.debug("Statemachine status is set to %s" % str(execution_mode))
         self.execution_condition_variable = Condition()
@@ -83,3 +81,19 @@ class StateMachineStatus(Observable):
 
         """
         return self._thread_histories
+
+    @property
+    def execution_mode(self):
+        """Property for the _execution_mode field
+
+        """
+        return self._execution_mode
+
+    @execution_mode.setter
+    @Observable.observed
+    def execution_mode(self, execution_mode):
+        if execution_mode is not None:
+            if not isinstance(execution_mode, StateMachineExecutionStatus):
+                raise TypeError("execution_mode must be of type StateMachineExecutionStatus")
+
+        self._execution_mode = execution_mode

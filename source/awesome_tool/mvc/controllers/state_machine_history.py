@@ -100,20 +100,20 @@ class StateMachineHistoryController(ExtendedController):
     def undo(self, key_value, modifier_mask):
         logger.debug("Run history UNDO")
         self._selected_sm_model.history.undo()
-        print len(self._selected_sm_model.history.changes.single_trail_history()), \
-            self._selected_sm_model.history.changes.single_trail_history()
+        # print len(self._selected_sm_model.history.changes.single_trail_history()), \
+        #     self._selected_sm_model.history.changes.single_trail_history()
         self.update(None, None, None)
 
     def redo(self, key_value, modifier_mask):
         logger.debug("Run history REDO")
         self._selected_sm_model.history.redo()
-        print len(self._selected_sm_model.history.changes.single_trail_history()), \
-            self._selected_sm_model.history.changes.single_trail_history()
+        # print len(self._selected_sm_model.history.changes.single_trail_history()), \
+        #     self._selected_sm_model.history.changes.single_trail_history()
         self.update(None, None, None)
 
     @ExtendedController.observe("changes", after=True)
     def update(self, model, prop_name, info):
-        print "History changed %s\n%s\n%s" % (model, prop_name, info)
+        # print "History changed %s\n%s\n%s" % (model, prop_name, info)
         if self._selected_sm_model.history.fake or info is not None and not info.method_name == "insert_action":
             return
         self.list_store.clear()

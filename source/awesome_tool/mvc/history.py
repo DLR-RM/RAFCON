@@ -629,8 +629,8 @@ class History(ModelMT):
         :return:
         """
         # store meta data
-        print "\n\n\n Meta Changed \n\n\n"
-
+        # print "\n\n\n Meta Changed \n\n\n"
+        pass
         # -> in case of undo/redo overwrite Model.meta-dict
 
     def undo(self):
@@ -778,7 +778,7 @@ class History(ModelMT):
             # skipped state changes
             if overview['method_name'][0] == 'state_change' and \
                     overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status']:
-                print overview['method_name']
+                # print overview['method_name']
                 return
 
             # lock changes
@@ -834,9 +834,10 @@ class History(ModelMT):
                     self.locked = False
                     if self.with_prints:
                         print "IN HISTORY", model, prop_name, info
-                    if prop_name == "states" and info.kwargs.result == "CRASH in FUNCTION":
-                        if self.with_prints:
-                            print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
+                    # SEG-FAULT
+                    # if prop_name == "states" and info.kwargs.result == "CRASH in FUNCTION":
+                    #     if self.with_prints:
+                    #         print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
                     else:
                         self.finish_new_action(model, prop_name, info)
                         if self.with_prints:
@@ -945,7 +946,8 @@ class History(ModelMT):
                         if self.with_prints:
                             print "HISTORY COUNT WAS OF SUCCESS"
             else:
-                print "HISTORY after not count"
+                # print "HISTORY after not count"
+                pass
 
     def parent_state_of_notification_source(self, model, prop_name, info, before_after):
         if self.with_prints:
@@ -979,7 +981,7 @@ class History(ModelMT):
                 set_dict(info, elem)
             else:
                 # if self.with_prints:
-                print 'assert'
+                # print 'assert'
                 assert True
             return elem
 
@@ -998,7 +1000,7 @@ class History(ModelMT):
             print "prop-: ", overview['prop_name'][-1]
 
         if overview['prop_name'][-1] == 'state':
-            print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
+            # print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
             assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
         else:
             if overview['model'][-1].parent is None:  # is root_state
@@ -1055,8 +1057,8 @@ class ChangeHistory(Observable):
                 self.trail_history.pop()
         self.trail_history.append(action)
 
-        print '\n\n\n\n\n################ PUT pointer ON: Trail: %s All Time History: %s\n\n\n\n\n' % \
-              (len(self.trail_history) - 1, len(self.all_time_history) - 1)
+        # print '\n\n\n\n\n################ PUT pointer ON: Trail: %s All Time History: %s\n\n\n\n\n' % \
+        #       (len(self.trail_history) - 1, len(self.all_time_history) - 1)
         self.trail_pointer = len(self.trail_history) - 1
         self.all_time_pointer = len(self.all_time_history) - 1
 

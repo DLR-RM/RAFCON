@@ -34,7 +34,8 @@ class StorageUtils(object):
         yaml.dump(object, f, indent=4)
         f.close()
 
-    def save_object_to_yaml_abs(self, object, abs_path):
+    @staticmethod
+    def save_object_to_yaml_abs(object, abs_path):
         """
         Saves an object, which inherits from yaml.YAMLObject, to yaml file
         :param object: the object to be saved
@@ -56,7 +57,8 @@ class StorageUtils(object):
         state = yaml.load(stream)
         return state
 
-    def load_object_from_yaml_abs(self, abs_path):
+    @staticmethod
+    def load_object_from_yaml_abs(abs_path):
         """
         Loads an object, which inherits from yaml.YAMLObject, from a yaml file
         :param object: the object to be saved
@@ -67,7 +69,8 @@ class StorageUtils(object):
         state = yaml.load(stream)
         return state
 
-    def write_dict_to_yaml(self, dict_to_write, path, **kwords):
+    @staticmethod
+    def write_dict_to_yaml(dict_to_write, path, **kwords):
         """
         Writes a dictionary to a yaml file
         :param dict_to_write:  the dictionary to be written
@@ -78,7 +81,8 @@ class StorageUtils(object):
         yaml.dump(dict_to_write, f, indent=4, **kwords)
         f.close()
 
-    def load_dict_from_yaml(self, path):
+    @staticmethod
+    def load_dict_from_yaml(path):
         """
         Loads a dictionary from a yaml file
         :param path: the absolute path of the target yaml file
@@ -110,16 +114,18 @@ class StorageUtils(object):
         f.close()
         return result
 
-    def create_path(self, path):
+    @staticmethod
+    def create_path(path):
         """ Creats a absolute path in the file system.
 
         :param path: The path to be created
         :return:
         """
-        if not self.exists_path(path):
+        if not StorageUtils.exists_path(path):
             os.makedirs(path)
 
-    def remove_path(self, path):
+    @staticmethod
+    def remove_path(path):
         """ Removes an absolute path in the file system
 
         :param path: The path to be removed
@@ -127,7 +133,8 @@ class StorageUtils(object):
         """
         shutil.rmtree(path)
 
-    def _remove_file(self, path):
+    @staticmethod
+    def _remove_file(path):
         """
         Removes a file in the file system.
         :param path: The absolute path of the file to be removed.
@@ -135,7 +142,8 @@ class StorageUtils(object):
         """
         os.remove(path)
 
-    def exists_path(self, path):
+    @staticmethod
+    def exists_path(path):
         """
         Checks if a certain path exists in the file system.
         :param path: The path to be checked

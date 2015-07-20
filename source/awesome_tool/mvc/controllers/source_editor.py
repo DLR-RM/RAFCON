@@ -47,7 +47,6 @@ class SourceEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("cut", self._cut)
 
     def _copy(self, *args):
-        print "copy text"
         pass
 
     def _paste(self, *args):

@@ -7,7 +7,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.states.library_state import LibraryState
-from statemachine.states.state_helper import StateHelper
+from awesome_tool.statemachine.states.state_helper import StateHelper
 
 class LibraryTreeController(ExtendedController):
 

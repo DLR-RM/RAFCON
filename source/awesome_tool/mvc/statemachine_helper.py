@@ -1,4 +1,5 @@
 from awesome_tool.utils import log
+from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 logger = log.get_logger(__name__)
 
@@ -153,92 +154,90 @@ class StateMachineHelper():
         return True
 
     @staticmethod
-    def duplicate_state_with_other_state_type(state, new_state_class):
-        current_state_is_container = isinstance(state, ContainerState)
-        new_state_is_container = new_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
+    def duplicate_state_with_other_state_type(source_state, target_state_class):
+        current_state_is_container = isinstance(source_state, ContainerState)
+        new_state_is_container = target_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
         if current_state_is_container and new_state_is_container:
-            assert isinstance(state, ContainerState)
+            assert isinstance(source_state, ContainerState)
 
             # if new_state_class in [BarrierConcurrencyState, PreemptiveConcurrencyState]:
-            # remove transitions -> is been done here, because sometimes the TransitionsModels remain
-            for t_id in state.transitions.keys():
-                state.remove_transition(t_id)
+            for t_id in source_state.transitions.keys():
+                source_state.remove_transition(t_id)
             state_transitions = {}
             state_start_state_id = None
-            # else:
-            #     state_transitions = state.transitions
-            #     state_start_state_id = state.start_state_id
-            new_state = new_state_class(name=state.name, state_id=state.state_id,
-                                        input_data_ports=state.input_data_ports, output_data_ports=state.output_data_ports,
-                                        outcomes=state.outcomes, states=state.states,
-                                        transitions=state_transitions, data_flows=state.data_flows,
-                                        start_state_id=state_start_state_id, scoped_variables=state.scoped_variables,
-                                        v_checker=state.v_checker,
-                                        path=state.script.path, filename=state.script.filename,
-                                        check_path=False)
+            new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
+                                           input_data_ports=source_state.input_data_ports,
+                                           output_data_ports=source_state.output_data_ports,
+                                           outcomes=source_state.outcomes, states=source_state.states,
+                                           transitions=state_transitions, data_flows=source_state.data_flows,
+                                           start_state_id=state_start_state_id,
+                                           scoped_variables=source_state.scoped_variables,
+                                           v_checker=source_state.v_checker,
+                                           path=source_state.script.path, filename=source_state.script.filename,
+                                           check_path=False)
         else:
-            if hasattr(state, "states"):
-                # logger.debug("Delete states to prepare ExecutionState %s" % state.states.keys())
-                # print state.states
-                for child_state_id in state.states.keys():
-                    state.remove_state(child_state_id)
-            new_state = new_state_class(name=state.name, state_id=state.state_id,
-                                        input_data_ports=state.input_data_ports, output_data_ports=state.output_data_ports,
-                                        outcomes=state.outcomes)  # , path=state.script.path, filename=state.script.filename,
+            if hasattr(source_state, "states"):
+                # remove old child states
+                for child_state_id in source_state.states.keys():
+                    source_state.remove_state(child_state_id, force=True)
+            new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
+                                           input_data_ports=source_state.input_data_ports,
+                                           output_data_ports=source_state.output_data_ports,
+                                           outcomes=source_state.outcomes)  # , path=state.script.path, filename=state.script.filename,
                                         # check_path=False)
 
-        new_state._used_data_port_ids = state._used_data_port_ids
-        new_state._used_outcome_ids = state._used_outcome_ids
+        new_state._used_data_port_ids = source_state._used_data_port_ids
+        new_state._used_outcome_ids = source_state._used_outcome_ids
 
-        if state.description is not None and len(state.description) > 0:
-            new_state.description = state.description
+        if source_state.description is not None and len(source_state.description) > 0:
+            new_state.description = source_state.description
 
         return new_state
 
     @staticmethod
-    def do_model_before(state_m, new_state_class):
+    def save_data_of_old_state(old_state_m, new_state_class):
         # BEFORE MODEL
-        assert isinstance(state_m, StateModel)
+        assert isinstance(old_state_m, StateModel)
         assert issubclass(new_state_class, State)
-        state = state_m.state  # only here to get the input parameter of the Core-function
+        old_state = old_state_m.state  # only here to get the input parameter of the Core-function
 
-        is_root_state = state_m.parent is None
+        is_root_state = old_state_m.parent is None
 
-        current_state_is_container = isinstance(state, ContainerState)
+        current_state_is_container = isinstance(old_state, ContainerState)
         new_state_is_container = new_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
         # remove selection from StateMachineModel.selection -> find state machine model
-        state_machine_m = state_machine_manager_model.get_sm_m_for_state_model(state_m)
-        state_machine_m.selection.remove(state_m)
+        state_machine_m = state_machine_manager_model.get_sm_m_for_state_model(old_state_m)
+        state_machine_m.selection.remove(old_state_m)
 
-        state_id = state_m.state.state_id
+        state_id = old_state_m.state.state_id
 
         # store old meta information of linkage
-        state_data_m = {'transitions': {}, 'data_flows': {}}
+        old_model_properties_meta_data = {'transitions': {}, 'data_flows': {}}
 
         if not is_root_state:
-            parent_m = state_m.parent
+            parent_m = old_state_m.parent
             assert isinstance(parent_m.state, ContainerState)
 
             for transition_m in parent_m.transitions:
                 transition = transition_m.transition
                 if transition.from_state == state_id or transition.to_state == state_id:
-                    state_data_m['transitions'][transition.transition_id] = transition_m.meta
+                    old_model_properties_meta_data['transitions'][transition.transition_id] = transition_m.meta
             for data_flow_m in parent_m.data_flows:
                 data_flow = data_flow_m.data_flow
                 if data_flow.from_state == state_id or data_flow.to_state == state_id:
-                    state_data_m['data_flows'][data_flow.data_flow_id] = data_flow_m.meta
+                    old_model_properties_meta_data['data_flows'][data_flow.data_flow_id] = data_flow_m.meta
 
         copy_from_model = ['meta', 'input_data_ports', 'output_data_ports']
         if current_state_is_container and new_state_is_container:
             copy_from_model.extend(['states', 'transitions', 'data_flows', 'scoped_variables'])
 
-        model_properties = {}
+        old_model_properties = {}
         for prop_name in copy_from_model:
-            model_properties[prop_name] = state_m.__getattribute__(prop_name)
+            old_model_properties[prop_name] = old_state_m.__getattribute__(prop_name)
 
-        return state_machine_m, model_properties, state_data_m
+        return state_machine_m, old_model_properties, old_model_properties_meta_data
 
     @staticmethod
     def do_core_functionality(state, new_state_class):
@@ -270,13 +269,11 @@ class StateMachineHelper():
             new_state = StateMachineHelper.duplicate_state_with_other_state_type(state, new_state_class)
 
             # substitute old state with new state
-            state_id = state.state_id
-
             new_state.parent = parent_state
-            parent_state.remove_state(state_id, recursive_deletion=False)
+            parent_state.remove_state(state.state_id, recursive_deletion=False, force=True)
             parent_state.add_state(new_state)
 
-            # re-implement  related transitions and data flows
+            # re-implement external transitions and data flows
             if not (isinstance(parent_state, BarrierConcurrencyState) or
                         isinstance(parent_state, PreemptiveConcurrencyState)):
                 for t in connected_transitions:
@@ -296,68 +293,74 @@ class StateMachineHelper():
             state_machine_manager.state_machines[sm_id].root_state = new_state
 
     @staticmethod
-    def do_model_after(state_m, state_machine_m, model_properties, state_data_m):
+    def load_data_from_old_state_into_new_state(new_state_m, state_machine_m, old_model_properties, old_model_properties_meta_data):
 
-        is_root_state = state_m.parent is None
+        is_root_state = new_state_m.parent is None
 
         if not is_root_state:
-            parent_m = state_m.parent
+            parent_m = new_state_m.parent
             assert isinstance(parent_m.state, ContainerState)
         else:
             parent_m = state_machine_m
 
-        def link_models_to_new_model(new_state_model, old_state_model_properties):
+        def link_models_to_new_model(target_state_model, source_state_model_properties):
             # link old models to new state model (the new parent)
-            for prop_name, value in old_state_model_properties.iteritems():
-                new_state_model.__setattr__(prop_name, value)
+            for prop_name, value in source_state_model_properties.iteritems():
+                # look_out: all model properties get overwritten here
+                target_state_model.__setattr__(prop_name, value)
                 # Set the parent of all child models to the new state model
                 if prop_name == "states":
                     for state_m in new_state_m.states.itervalues():
-                        state_m.parent = new_state_model
+                        state_m.parent = target_state_model
                 if prop_name in ['input_data_ports', 'output_data_ports', 'transitions', 'data_flows', 'scoped_variables']:
-                    for model in new_state_model.__getattribute__(prop_name):
-                        model.parent = new_state_model
+                    for model in target_state_model.__getattribute__(prop_name):
+                        model.parent = target_state_model
 
-        # CONTAINER STATE MODEL
-        state_id = state_m.state.state_id
+        state_id = new_state_m.state.state_id
+        # CONTAINER STATE MODEL CASE
         if not is_root_state:
             # get new StateModel
             new_state_m = parent_m.states[state_id]
             new_state_m.parent = parent_m  # sollte schon passiert sein oder?
-
-            # insert again meta data of external related linkage elements
-            link_models_to_new_model(new_state_m, model_properties)
-
-            if not (isinstance(new_state_m.state, PreemptiveConcurrencyState) or
-                    isinstance(new_state_m.state, BarrierConcurrencyState)):
-                for t_id, t_meta in state_data_m['transitions'].iteritems():
-                    parent_m.get_transition_model(t_id).meta = t_meta
-
-            for df_id, df_meta in state_data_m['data_flows'].iteritems():
-                parent_m.get_data_flow_model(df_id).meta = df_meta
-
-        # STATE MACHINE MODEL
-        else:
+        else:  # STATE MACHINE MODEL CASE
             new_state_m = parent_m.root_state
             state_machine_manager_model.selected_state_machine_id = state_machine_m.state_machine.state_machine_id
 
-            # insert again meta data of external linkage elements
-            link_models_to_new_model(new_state_m, model_properties)
+        if isinstance(new_state_m.state, BarrierConcurrencyState):
+            decider_state_m = new_state_m.states[UNIQUE_DECIDER_STATE_ID]
+
+        # insert again meta data of external related linkage elements
+        link_models_to_new_model(new_state_m, old_model_properties)
+
+        if isinstance(new_state_m.state, BarrierConcurrencyState):
+            decider_state_m.parent = new_state_m
+            new_state_m.states[decider_state_m.state.state_id] = decider_state_m
+
+        # CONTAINER STATE MODEL CASE
+        if not is_root_state:
+            # skip meta data for preemptive concurrency states and barrier concurrency states
+            if not (isinstance(new_state_m.state, PreemptiveConcurrencyState) or
+                    isinstance(new_state_m.state, BarrierConcurrencyState)):
+                for t_id, t_meta in old_model_properties_meta_data['transitions'].iteritems():
+                    parent_m.get_transition_model(t_id).meta = t_meta
+
+            for df_id, df_meta in old_model_properties_meta_data['data_flows'].iteritems():
+                parent_m.get_data_flow_model(df_id).meta = df_meta
 
         return new_state_m
 
     @staticmethod
-    def change_state_type(state_m, new_state_class):
+    def change_state_type(old_state_m, new_state_class):
 
-        [state_machine_m, model_properties, state_data_m] = StateMachineHelper.do_model_before(state_m, new_state_class)
+        [state_machine_m, old_model_properties, old_model_properties_meta_data] = \
+            StateMachineHelper.save_data_of_old_state(old_state_m, new_state_class)
 
-        # --------------------------------------------------------------------------------------------------------------
-        StateMachineHelper.do_core_functionality(state_m.state, new_state_class)
+        StateMachineHelper.do_core_functionality(old_state_m.state, new_state_class)
 
-        # --------------------------------------------------------------------------------------------------------------
-        # MODEL
-        new_state_m = StateMachineHelper.do_model_after(state_m, state_machine_m, model_properties, state_data_m)
-        # ------------------
+        new_state_m = StateMachineHelper.load_data_from_old_state_into_new_state(old_state_m,
+                                                                                 state_machine_m,
+                                                                                 old_model_properties,
+                                                                                 old_model_properties_meta_data)
 
         # TODO: different types of states have different constraints, e. g. barrier concurrency states can only have
         # one outcome. Shell the restrictions be checked here?
