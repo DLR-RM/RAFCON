@@ -7,7 +7,7 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.statemachine.states.library_state import LibraryState
-
+from statemachine.states.state_helper import StateHelper
 
 class LibraryTreeController(ExtendedController):
 
@@ -152,9 +152,10 @@ class LibraryTreeController(ExtendedController):
         state_machine, lib_version, creation_time = awesome_tool.statemachine.singleton.library_manager.storage.\
             load_statemachine_from_yaml(target_lib_dict[library_name])
 
-        state_machine.root_state.change_state_id()
+        state_copy = StateHelper.get_state_copy(state_machine.root_state)
+        state_copy.change_state_id()
 
-        current_state.add_state(state_machine.root_state)
+        current_state.add_state(state_copy)
         current_state_model = current_selection.get_states()[0]
         current_state_model.states[state_machine.root_state.state_id].load_meta_data_for_state()
         current_state_model.states[state_machine.root_state.state_id].temp['gui']['editor']['recalc'] = True

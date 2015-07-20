@@ -277,8 +277,16 @@ class ContainerState(State):
         """Get the start state of the container state
 
         """
+
+        if self.get_path() in awesome_tool.statemachine.singleton.state_machine_execution_engine.start_state_paths:
+            for state_id, state in self.states.iteritems():
+                if state.get_path() in awesome_tool.statemachine.singleton.state_machine_execution_engine.start_state_paths:
+                    logger.debug("Forward execution to state " + state.name)
+                    return state
+
         if self.start_state_id is None:
             return None
+
         # It is possible to connect the income directly with an outcome
         if self.start_state_id == self.state_id:
             if set_final_outcome:
@@ -288,10 +296,8 @@ class ContainerState(State):
                         self.final_outcome = self.outcomes[to_outcome_id]
                         break
             return self
-        return self.states[self.start_state_id]
 
-        # If there is a value in the dependency tree for this state start with the this one
-        #TODO: start execution with the state provided by the dependency tree
+        return self.states[self.start_state_id]
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- transition functions -------------------------------------
