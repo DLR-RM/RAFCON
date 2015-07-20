@@ -619,12 +619,12 @@ class StateView(Element):
             else:
                 return pos + 1.25 * port_size
 
-    def resize_all_children(self, old_size):
+    def resize_all_children(self, old_size, paste=False):
         from awesome_tool.mvc.controllers.gap import gap_helper
         new_size = (self.width, self.height)
         canvas = self.canvas
 
-        def resize_child(state, old_size, new_size):
+        def resize_child(state, old_size, new_size, paste):
             def calc_abs_pos(item, pos):
                 projection = canvas.project(item, pos)
                 return projection[0].value, projection[1].value
@@ -670,19 +670,28 @@ class StateView(Element):
                         handle_set_rel_pos(transition_v, waypoint.pos, new_rel_pos, state_abs_pos)
 
                 for child_state_v in self.child_state_vs:
-                    old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, child_state_v, child_state_v.handles()[NW])
-                    new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
-                    handle_set_rel_pos(child_state_v, child_state_v.handles()[NW].pos, new_rel_pos, state_abs_pos,
-                                       (child_state_v.width, child_state_v.height))
+                    if not paste:
+                        old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, child_state_v, child_state_v.handles()[NW])
+                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
+                        handle_set_rel_pos(child_state_v, child_state_v.handles()[NW].pos, new_rel_pos, state_abs_pos,
+                                           (child_state_v.width, child_state_v.height))
 
-                    old_size = (child_state_v.width, child_state_v.height)
+                        old_size = (child_state_v.width, child_state_v.height)
+                    else:
+                        meta_rel_pos = child_state_v.model.meta['gui']['editor']['rel_pos']
+                        new_rel_pos = calc_new_rel_pos(meta_rel_pos, old_size, new_size)
+
+                        child_state_v.matrix.translate(*new_rel_pos)
+
+                        old_size = child_state_v.model.meta['gui']['editor']['size']
+                        
                     new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
                     child_state_v.width = new_size[0]
                     child_state_v.height = new_size[1]
 
-                    resize_child(child_state_v, old_size, new_size)
+                    resize_child(child_state_v, old_size, new_size, paste)
 
-        resize_child(self, old_size, new_size)
+        resize_child(self, old_size, new_size, paste)
 
 
 class NameView(Element):

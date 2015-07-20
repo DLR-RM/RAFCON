@@ -45,6 +45,14 @@ class PerpLine(Line):
         return None
 
     @property
+    def waypoints(self):
+        waypoints = []
+        for handle in self.handles():
+            if handle not in self.end_handles_perp():
+                waypoints.append(handle)
+        return waypoints
+
+    @property
     def parent(self):
         return self.canvas.get_parent(self)
 
