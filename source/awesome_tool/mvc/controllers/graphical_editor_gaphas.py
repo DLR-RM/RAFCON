@@ -306,13 +306,13 @@ class GraphicalEditorController(ExtendedController):
                     if scoped_variable_m.scoped_variable.data_port_id == result:
                         state_v.add_scoped_variable(scoped_variable_m)
                         self.canvas.request_update(state_v)
-            # elif method_name == 'remove_scoped_variable':
-            #     state_m = model
-            #     state_v = self.get_view_for_model(state_m)
-            #     for scoped_variable_v in state_v.scoped_variables:
-            #         if scoped_variable_v.port_id == arguments[1]:
-            #             scoped_variable_v.remove_keep_rect_within_constraint_from_parent()
-            #             self.canvas.remove(scoped_variable_v)
+            elif method_name == 'remove_scoped_variable':
+                state_m = model
+                state_v = self.get_view_for_model(state_m)
+                for scoped_variable_v in state_v.scoped_variables:
+                    if scoped_variable_v.port_id == arguments[1]:
+                        state_v.remove_scoped_variable(scoped_variable_v)
+                        self.canvas.request_update(state_v)
             elif method_name == 'scoped_variable_change':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)

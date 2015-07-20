@@ -483,6 +483,14 @@ class StateView(Element):
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)
 
+    def remove_scoped_variable(self, scoped_variable_port_v):
+        self._scoped_variables_ports.remove(scoped_variable_port_v)
+        self._ports.remove(scoped_variable_port_v.port)
+        self._handles.remove(scoped_variable_port_v.handle)
+
+        if scoped_variable_port_v in self.port_constraints:
+            self.canvas.solver.remove_constraint(self.port_constraints[scoped_variable_port_v])
+
     def add_rect_constraint_for_port(self, port):
         constraint = PortRectConstraint((self.handles()[NW].pos, self.handles()[SE].pos), port.pos, port)
         solver = self.canvas.solver
