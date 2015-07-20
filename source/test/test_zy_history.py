@@ -1373,6 +1373,7 @@ def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
         time.sleep(sleep_time_short)
         glib.idle_add(menubar_ctrl.on_save_activate, None)
         time.sleep(sleep_time_short)
+        glib.idle_add(menubar_ctrl.on_stop_activate, None)
         glib.idle_add(menubar_ctrl.on_quit_activate, None)
 
 

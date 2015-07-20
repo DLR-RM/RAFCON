@@ -6,11 +6,11 @@ import awesome_tool.statemachine.singleton
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.utils import log
 from awesome_tool.mvc.views.about_dialog import MyAboutDialog
+from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
 from awesome_tool.mvc.config import global_gui_config
 
 logger = log.get_logger(__name__)
-from awesome_tool.statemachine.execution.statemachine_status import ExecutionMode
 from awesome_tool.utils import helper
 from awesome_tool.statemachine import interface
 import awesome_tool.mvc.singleton
@@ -244,7 +244,7 @@ class MenuBarController(ExtendedController):
 
     def check_sm_running(self):
         if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode \
-                is not ExecutionMode.STOPPED:
+                is not StateMachineExecutionStatus.STOPPED:
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
             message_string = "The state machine is still running. Do you want to stop the state machine before closing?"
             message.set_markup(message_string)
@@ -260,7 +260,7 @@ class MenuBarController(ExtendedController):
         if response_id == 42:
             widget.destroy()
             if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode \
-                    is not ExecutionMode.STOPPED:
+                    is not StateMachineExecutionStatus.STOPPED:
                 self.check_sm_running()
             else:
                 self.destroy(None)

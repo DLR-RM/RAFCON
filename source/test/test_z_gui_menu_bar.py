@@ -139,6 +139,8 @@ def trigger_gui_signals(*args):
     glib.idle_add(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
 
     #glib.idle_add(main_window_controller.view["main_window"].emit, "destroy")
+
+    glib.idle_add(menubar_ctrl.on_stop_activate, None)
     glib.idle_add(menubar_ctrl.on_quit_activate, None)
 
 

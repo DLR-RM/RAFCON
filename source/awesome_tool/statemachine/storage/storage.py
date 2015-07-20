@@ -20,7 +20,6 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.utils.storage_utils import StorageUtils
 
-
 class StateMachineStorage(Observable):
 
     """This class implements the Storage interface by using a file system on the disk.
@@ -120,18 +119,22 @@ class StateMachineStorage(Observable):
         :param state_path: The path of the state meta file
         :return:
         """
-        state_path_full = os.path.join(self.base_path, state_path)
-        source_script_file = os.path.join(state.script.path, state.script.filename)
-        destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
-        if not source_script_file == destination_script_file:
-            shutil.copyfile(source_script_file,
-                            destination_script_file)
-            state.script.path = state_path
-            state.script.filename = self.SCRIPT_FILE
-        else:  # load text into script file
-            script_file = open(source_script_file, 'w')
-            script_file.write(state.script.script)
-            script_file.close()
+        # only save the script file if the state is not a library state
+        # if not hasattr(state, "library_name"):  # ugly!
+        from awesome_tool.statemachine.states.library_state import LibraryState
+        if not isinstance(state, LibraryState):
+            state_path_full = os.path.join(self.base_path, state_path)
+            source_script_file = os.path.join(state.script.path, state.script.filename)
+            destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
+            if not source_script_file == destination_script_file:
+                shutil.copyfile(source_script_file,
+                                destination_script_file)
+                state.script.path = state_path
+                state.script.filename = self.SCRIPT_FILE
+            else:  # load text into script file
+                script_file = open(source_script_file, 'w')
+                script_file.write(state.script.script)
+                script_file.close()
 
     @staticmethod
     def save_script_file(state):

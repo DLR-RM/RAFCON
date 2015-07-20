@@ -12,9 +12,10 @@ import signal
 from gtkmvc import Observable
 from gtkmvc import ModelMT
 from awesome_tool.statemachine.execution.execution_history import ExecutionHistory
-from awesome_tool.statemachine.execution.statemachine_status import StateMachineStatus, ExecutionMode
+from awesome_tool.statemachine.execution.statemachine_status import StateMachineStatus
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
 
 class StatemachineExecutionEngine(ModelMT, Observable):
@@ -38,7 +39,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self.state_machine_manager = state_machine_manager
         self.execution_engine = self
         self._status = None
-        self.status = StateMachineStatus(ExecutionMode.STOPPED)
+        self.status = StateMachineStatus(StateMachineExecutionStatus.STOPPED)
         # TODO: write validity checker of the statemachine
         self._validity_checker = None
         logger.debug("Statemachine execution engine initialized")
@@ -51,7 +52,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def pause(self):
         """Set the execution mode to paused
         """
-        self._status.execution_mode = ExecutionMode.PAUSED
+        self._status.execution_mode = StateMachineExecutionStatus.PAUSED
 
     @Observable.observed
     def start(self, state_machine_id=None, start_state_path=None):
@@ -63,13 +64,13 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """
         if self._execution_started:
             logger.debug("Resume state machine and notify all threads waiting ")
-            self._status.execution_mode = ExecutionMode.RUNNING
+            self._status.execution_mode = StateMachineExecutionStatus.STARTED
             self._status.execution_condition_variable.acquire()
             self._status.execution_condition_variable.notify_all()
             self._status.execution_condition_variable.release()
         else:
             logger.debug("Start the state machine")
-            self._status.execution_mode = ExecutionMode.RUNNING
+            self._status.execution_mode = StateMachineExecutionStatus.STARTED
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
 
@@ -92,7 +93,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """Set the execution mode to stopped
         """
         logger.debug("Stop execution ...")
-        self._status.execution_mode = ExecutionMode.STOPPED
+        self._status.execution_mode = StateMachineExecutionStatus.STOPPED
+        if self.state_machine_manager.get_active_state_machine() is not None:
+            self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
         self._execution_started = False
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
@@ -104,9 +107,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """
         logger.debug("Activate step mode")
         if self._execution_started:
-            self._status.execution_mode = ExecutionMode.STEPPING
+            self._status.execution_mode = StateMachineExecutionStatus.STEP
         else:
-            self._status.execution_mode = ExecutionMode.STEPPING
+            self._status.execution_mode = StateMachineExecutionStatus.STEP
             self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
             self._execution_started = True
 
@@ -141,34 +144,34 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
         This functions is called by the hierarchy states.
         """
-        return_value = "run"
-        if self._status.execution_mode is ExecutionMode.RUNNING:
-            return_value = "run"
+        return_value = StateMachineExecutionStatus.STARTED
+        if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
+            return_value = StateMachineExecutionStatus.STARTED
 
-        elif self._status.execution_mode is ExecutionMode.STOPPED:
+        elif self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
             # try:
             #     self._status.execution_condition_variable.acquire()
             #     self._status.execution_condition_variable.wait()
             # finally:
             #     self._status.execution_condition_variable.release()
             logger.debug("Execution engine stopped. State %s is going to quit!", state.name)
-            return_value = "stop"
+            return_value = StateMachineExecutionStatus.STOPPED
 
-        elif self._status.execution_mode is ExecutionMode.PAUSED:
+        elif self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
             try:
                 self._status.execution_condition_variable.acquire()
                 self._status.execution_condition_variable.wait()
             finally:
                 self._status.execution_condition_variable.release()
 
-            if self._status.execution_mode is ExecutionMode.RUNNING:
-                return_value = "run"
+            if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
+                return_value = StateMachineExecutionStatus.STARTED
             elif self._forward_step:
-                return_value = "step"
+                return_value = StateMachineExecutionStatus.STEP
             else:
-                return_value = "backward_step"
+                return_value = StateMachineExecutionStatus.BACKWARD_STEP
 
-        elif self._status.execution_mode is ExecutionMode.STEPPING:
+        elif self._status.execution_mode is StateMachineExecutionStatus.STEP:
             logger.debug("Stepping mode: wait for next step")
             try:
                 self._status.execution_condition_variable.acquire()
@@ -177,13 +180,13 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 self._status.execution_condition_variable.release()
 
             if self._forward_step:
-                return_value = "step"
+                return_value = StateMachineExecutionStatus.STEP
             else:
-                return_value = "backward_step"
+                return_value = StateMachineExecutionStatus.BACKWARD_STEP
 
         # this is the case when the stop method wakes up the paused or step mode
-        if self._status.execution_mode is ExecutionMode.STOPPED:
-            return "stop"
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+            return StateMachineExecutionStatus.STOPPED
         return return_value
 
     def start_from_selected_state(self, state):
@@ -193,14 +196,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """
         self._create_dependency_tree(state)
         self._start_tree()
-
-    def _create_dependency_tree(self, state):
-        #TODO: implement
-        pass
-
-    def _start_tree(self):
-        #TODO: implement
-        pass
 
     @staticmethod
     def execute_state_machine_from_path(path, start_state_path=None):

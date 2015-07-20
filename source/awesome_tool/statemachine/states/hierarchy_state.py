@@ -17,7 +17,7 @@ from awesome_tool.statemachine.enums import StateExecutionState
 import awesome_tool.statemachine.singleton as singleton
 from awesome_tool.statemachine.enums import MethodName
 from awesome_tool.statemachine.execution.execution_history import CallItem, ReturnItem
-
+from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
 class HierarchyState(ContainerState):
 
@@ -53,6 +53,7 @@ class HierarchyState(ContainerState):
 
             child_state = None
             last_error = None
+            last_state = None
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             if self.backward_execution:
                 logger.debug("Backward executing hierarchy child_state with id %s and name %s" % (self._state_id, self.name))
@@ -79,12 +80,14 @@ class HierarchyState(ContainerState):
 
                 self.backward_execution = False
                 if self.preempted:
+                    # TODO only preempt if the last state did not exit with a preemptive outcome, where a transition
+                    # is connected!
                     break
 
-                if execution_signal == "stop":
+                if execution_signal is StateMachineExecutionStatus.STOPPED:
                     # this will be caught at the end of the run method
                     raise RuntimeError("child_state stopped")
-                elif execution_signal == "backward_step":
+                elif execution_signal == StateMachineExecutionStatus.BACKWARD_STEP:
                     self.backward_execution = True
                     last_history_item = self.execution_history.pop_last_item()
                     if last_history_item.state_reference is self:
@@ -153,7 +156,7 @@ class HierarchyState(ContainerState):
                     if transition is None:
                         break
 
-                    # set the old child_state execution status to inactive as the new child_state will be executed next
+                    last_state = child_state
                     child_state = self.get_state_for_transition(transition)
                     if transition is not None and child_state is self:
                         self.final_outcome = self.outcomes[transition.to_outcome]
