@@ -19,6 +19,7 @@ from awesome_tool.statemachine.id_generator import *
 import awesome_tool.statemachine.singleton
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
+from awesome_tool.statemachine.enums import DEFAULT_SCRIPT_PATH
 
 
 ScriptType = Enum('SCRIPT_TYPE', 'EXECUTION CONTAINER LIBRARY')
@@ -63,8 +64,6 @@ def execute(self, inputs, outputs, gvm):
 
 """
 
-    DEFAULT_SCRIPT_PATH = "/tmp/DFC/"
-
     yaml_tag = u'!Script'
 
     def __init__(self, path=None, filename=None, script_type=None, check_path=True, state=None):
@@ -84,7 +83,7 @@ def execute(self, inputs, outputs, gvm):
         else:
             self.script = Script.DEFAULT_SCRIPT_CONTAINER
         if path is None:
-            self.path = Script.DEFAULT_SCRIPT_PATH + state.get_path()
+            self.path = DEFAULT_SCRIPT_PATH + state.get_path()
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
             self.filename = "Script_%s.file" % str(self._script_id)
@@ -103,7 +102,7 @@ def execute(self, inputs, outputs, gvm):
             self.load_and_build_module()
 
     def reset_script(self, state_path):
-        self.path = Script.DEFAULT_SCRIPT_PATH + state_path
+        self.path = DEFAULT_SCRIPT_PATH + state_path
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         self.filename = "Script_%s.file" % str(self._script_id)

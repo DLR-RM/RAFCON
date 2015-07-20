@@ -17,4 +17,5 @@ StateExecutionState = Enum('STATE_EXECUTION_STATE', 'INACTIVE ACTIVE EXECUTE_CHI
 StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED STEP BACKWARD_STEP')
 
 # Constants
-UNIQUE_DECIDER_STATE_ID = "unique_decider_sate_id"
+UNIQUE_DECIDER_STATE_ID = "unique_decider_state_id"
+DEFAULT_SCRIPT_PATH = "/tmp/DFC/"
