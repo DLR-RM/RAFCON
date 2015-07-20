@@ -1,6 +1,7 @@
 import pango
 
 import gtk
+import traceback
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 
@@ -18,7 +19,8 @@ try:
     from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
     from awesome_tool.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
         GraphicalEditorGaphasController
-except:
+except Exception as e:
+    logger.error("%s, %s" % (e.message, traceback.format_exc()))
     GAPHAS_AVAILABLE = False
 
 import awesome_tool.statemachine.singleton
