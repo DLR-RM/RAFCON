@@ -3,6 +3,8 @@ logger = log.get_logger(__name__)
 
 from awesome_tool.mvc.controllers.gap import segment
 
+from gaphas.item import NW
+
 from awesome_tool.mvc.clipboard import global_clipboard
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
@@ -336,6 +338,8 @@ class GraphicalEditorController(ExtendedController):
                 state_v = self.get_view_for_model(model)
                 self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'change_state_type':
+                state_v = self.get_view_for_model(result)
+                self.update_meta_data(state_v, result.meta)
                 for child_m in result.states.itervalues():
                     self.add_state_view_to_parent(child_m, result)
             else:
@@ -405,6 +409,13 @@ class GraphicalEditorController(ExtendedController):
                 for child in self.canvas.get_all_children(root_item):
                     if isinstance(child, StateView):
                         child.foreground()
+
+    def update_meta_data(self, state_v, state_meta):
+        rel_pos = self.canvas.project(state_v, state_v.handles()[NW].pos)
+        rel_pos[0].value, rel_pos[1].value = 0, 0
+        state_v.matrix.translate(*state_meta['gui']['editor']['rel_pos'])
+        state_v.width = state_meta['gui']['editor']['size'][0]
+        state_v.height = state_meta['gui']['editor']['size'][1]
 
     def get_connected_data_flows(self, state_v):
         parent_v = self.canvas.get_parent(state_v)
@@ -542,8 +553,6 @@ class GraphicalEditorController(ExtendedController):
                     return child
 
     def add_state_view_to_parent(self, state_m, parent_state_m):
-        print state_m
-        print state_m.meta
         parent_state_v = self.get_view_for_model(parent_state_m)
 
         new_state_side_size = min(parent_state_v.width * 0.2, parent_state_v.height * 0.2)

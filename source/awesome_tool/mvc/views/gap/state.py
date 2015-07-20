@@ -725,8 +725,6 @@ class NameView(Element):
         else:
             cc = c._cairo
 
-        # c.move_to(*self.)
-
         pcc = CairoContext(cc)
         pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
@@ -745,7 +743,7 @@ class NameView(Element):
             font_size *= 0.9
             set_font_description()
 
-        c.move_to(0, 0)
+        c.move_to(*self.handles()[NW].pos)
         cc.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
         pcc.update_layout(layout)
         pcc.show_layout(layout)
