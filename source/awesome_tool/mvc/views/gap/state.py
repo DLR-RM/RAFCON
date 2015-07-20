@@ -240,7 +240,10 @@ class StateView(Element):
         else:
             c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
         c.fill_preserve()
-        if self.selected:
+        if self.model.state.active:
+            c.set_source_color(Color(constants.STATE_ACTIVE_BORDER_COLOR))
+            c.set_line_width(.25 / self.hierarchy_level)
+        elif self.selected:
             c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
             c.set_line_width(.25 / self.hierarchy_level)
         else:
@@ -684,7 +687,7 @@ class StateView(Element):
                         child_state_v.matrix.translate(*new_rel_pos)
 
                         old_size = child_state_v.model.meta['gui']['editor']['size']
-                        
+
                     new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
                     child_state_v.width = new_size[0]
                     child_state_v.height = new_size[1]
