@@ -1,0 +1,14 @@
+CTRL+D:             Toggle show data flows
+CTRL+L:             Toggle show values at data ports when running
+CTRL+SHIFT+D:       Toggle data flow mode (show all data flows connected to selected state and highlight them)
+Hold CTRL pressed:  Move ports in state border with left mouse click
+CTRL+A:             Add new state to selected container state
+CTRL+Z:             Undo (if history enabled)
+CTRL+Y:             Redo (if history enabled)
+CTRL+C:             Copy selected state (only for single selection)
+CTRL+X:             Cut selected state (only for single selection)
+CTRL+V:             Print copied/cut state
+CTRL+S:             Save
+CTRL+SHIFT+S:       Save As
+CTRL+N:             Create new state machine
+CTRL+Q:             Quit program

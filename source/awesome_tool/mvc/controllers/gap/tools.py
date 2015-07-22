@@ -820,10 +820,11 @@ class MyConnectHandleTool(MyHandleTool):
         location for connecting.
         """
 
+        # glue_distance is the snapping radius
         if item.from_handle() is handle:
-            glue_distance = 5.0 / ((item.hierarchy_level + 1) * 2)
+            glue_distance = 1.0 / ((item.hierarchy_level + 1) * 2)
         else:
-            glue_distance = 5.0 / (item.hierarchy_level * 2)
+            glue_distance = 1.0 / (item.hierarchy_level * 2)
 
         if self.motion_handle:
             return self.motion_handle.glue(vpos, glue_distance)
