@@ -253,7 +253,7 @@ class StateView(Element):
 
         inner_nw, inner_se = self.get_state_drawing_area(self)
         c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-        c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR), self._transparent))
+        c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR)))
         c.fill_preserve()
         c.set_source_color(Color(constants.BLACK_COLOR))
         c.stroke()
