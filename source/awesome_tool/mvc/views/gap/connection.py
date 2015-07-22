@@ -63,7 +63,7 @@ class ConnectionPlaceholderView(ConnectionView):
         self.transition_placeholder = transition_placeholder
 
         if transition_placeholder:
-            self._line_color = gap_draw_helper.get_col_rgba(Color(constants.LINE_COLOR))
+            self._line_color = gap_draw_helper.get_col_rgba(Color(constants.TRANSITION_LINE_COLOR))
             self._arrow_color = gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR))
         else:
             self._line_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_LINE_COLOR))
@@ -88,7 +88,12 @@ class TransitionView(ConnectionView):
         self._transition_m = ref(transition_model)
 
     def draw(self, context):
-        self._line_color = gap_draw_helper.get_col_rgba(Color(constants.LINE_COLOR), self.parent.transparent)
+        if context.selected:
+            self._line_color = gap_draw_helper.get_col_rgba(Color(constants.TRANSITION_LINE_COLOR_SELECTED),
+                                                            self.parent.transparent)
+        else:
+            self._line_color = gap_draw_helper.get_col_rgba(Color(constants.TRANSITION_LINE_COLOR),
+                                                            self.parent.transparent)
         self._arrow_color = gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), self.parent.transparent)
         super(TransitionView, self).draw(context)
 
@@ -129,6 +134,10 @@ class DataFlowView(ConnectionView):
     def draw(self, context):
         if not self.show_connection:
             return
+        if context.selected:
+            self._line_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_LINE_COLOR_SELECTED))
+        else:
+            self._line_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_LINE_COLOR))
         super(DataFlowView, self).draw(context)
 
 

@@ -67,7 +67,8 @@ class MyItemTool(ItemTool):
 
         if not self.view.is_focus():
             self.view.grab_focus()
-        self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
+        if isinstance(self.view.focused_item, StateView):
+            self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
 
         if event.button == 3:
             self._graphical_editor_view.emit('deselect_states')
