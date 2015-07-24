@@ -576,7 +576,7 @@ class GraphicalEditorController(ExtendedController):
 
     def setup_canvas(self):
 
-        self.setup_state(self.root_state_m)
+        self.setup_state(self.root_state_m, rel_pos=(10, 10))
 
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
 
