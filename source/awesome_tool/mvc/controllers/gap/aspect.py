@@ -3,12 +3,11 @@ from simplegeneric import generic
 from gaphas.aspect import ConnectionSink, Connector
 
 
-class MyItemHandleInMotion(object):
+class ItemHandleInMotion(object):
     """
-    Move a handle (role is applied to the handle)
+    Move a handle (role is applied to the handle).
+    This class replaces the default one in order to adjust the snap distance in move()
     """
-
-    GLUE_DISTANCE = 5.0
 
     def __init__(self, item, handle, view):
         self.item = item
@@ -46,7 +45,7 @@ class MyItemHandleInMotion(object):
     def stop_move(self):
         pass
 
-    def glue(self, pos, distance=GLUE_DISTANCE):
+    def glue(self, pos, distance):
         """
         Glue to an item near a specific point.
 
@@ -77,4 +76,4 @@ class MyItemHandleInMotion(object):
                 return sink
         return None
 
-MyHandleInMotion = generic(MyItemHandleInMotion)
+HandleInMotion = generic(ItemHandleInMotion)

@@ -1,7 +1,6 @@
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
-from gaphas.geometry import distance_point_point
 from gaphas.constraint import Constraint
 from awesome_tool.mvc.views.gap.ports import PortView
 

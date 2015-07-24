@@ -12,6 +12,10 @@ from awesome_tool.mvc.views.gap.connection import ConnectionView, DataFlowView
 
 @Segment.when_type(ConnectionView)
 class TransitionSegment(LineSegment):
+    """
+    This class is used to redefine the behavior of transitions and how new waypoints may be added.
+    It checks if the waypoint that should be created is not between the perpendicular connectors to the ports.
+    """
 
     def split(self, pos):
         item = self.item

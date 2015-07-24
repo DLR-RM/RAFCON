@@ -6,18 +6,35 @@ from awesome_tool.utils import constants
 
 
 def get_col_rgba(col, transparent=False):
-        r, g, b = col.red, col.green, col.blue
-        r /= 65535.
-        g /= 65535.
-        b /= 65535.
-        if transparent:
-            a = .25
-        else:
-            a = 1.
-        return r, g, b, a
+    """
+    This class converts a gtk.gdk.Color into its r, g, b parts and adds an alpha according to needs
+    :param col: Color to extract r, g and b from
+    :param transparent: Whether the color shoud be tranparent or not (used for selection in "data-flow-mode"
+    :return: Red, Green, Blue and Alpha value (all betwenn 0.0 - 1.0)
+    """
+    r, g, b = col.red, col.green, col.blue
+    r /= 65535.
+    g /= 65535.
+    b /= 65535.
+    if transparent:
+        a = .25
+    else:
+        a = 1.
+    return r, g, b, a
 
 
 def draw_data_value_rect(context, color, value_size, name_size, pos, port_side):
+    """
+    This method draws the containing rect for the data port value, depending on the side and size of the label.
+    :param context: Draw Context
+    :param color: Background color of value part
+    :param value_size: Size (width, height) of label holding the value
+    :param name_size: Size (width, height) of label holding the name
+    :param pos: Position of name label start point (upper left corner of label)
+    :param port_side: Side on which the value part should be drawn
+    :return: Rotation Angle (to rotate value accordingly), X-Position of value label start point, Y-Position
+             of value label start point
+    """
     c = context.cairo
 
     rot_angle = .0
@@ -57,6 +74,19 @@ def draw_data_value_rect(context, color, value_size, name_size, pos, port_side):
 
 def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side, port_side_size,
                                 draw_connection_to_port=False):
+    """
+    This method draws the label of a scoped variable connected to a data port. This is represented by drawing a bigger
+    label where the top part is filled and the bottom part isn't.
+    :param context: Draw Context
+    :param color: Color to draw the label in (border and background fill color)
+    :param name_size: Size of the name labels (scoped variable and port name) combined
+    :param handle_pos: Position of port which label is connected to
+    :param port_side: Side on which the label should be drawn
+    :param port_side_size: Size of port (to have a relative size)
+    :param draw_connection_to_port: Whether there should be a line connecting the label to the port
+    :return: Rotation Angle (to rotate names accordingly), X-Position of name labels start point, Y-Position
+             of name labels start point
+    """
     c = context.cairo
     c.set_line_width(port_side_size * .03)
 
@@ -147,6 +177,19 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
 
 def draw_name_label(context, color, name_size, handle_pos, port_side, port_side_size, draw_connection_to_port=False,
                     fill=False):
+    """
+    Draws a normal label indicating the port name.
+    :param context: Draw Context
+    :param color: Color to draw the label in (border and background fill color)
+    :param name_size: Size of the name labels (scoped variable and port name) combined
+    :param handle_pos: Position of port which label is connected to
+    :param port_side: Side on which the label should be drawn
+    :param port_side_size: Size of port (to have a relative size)
+    :param draw_connection_to_port: Whether there should be a line connecting the label to the port
+    :param fill: Whether the label should be filled or not
+    :return: Rotation Angle (to rotate name accordingly), X-Position of name label start point, Y-Position
+             of name label start point
+    """
     c = context.cairo
     c.set_line_width(port_side_size * .03)
 

@@ -8,7 +8,7 @@ from awesome_tool.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortV
     ScopedVariablePortView
 from awesome_tool.mvc.views.gap.state import StateView, NameView
 
-from awesome_tool.mvc.controllers.gap.aspect import MyHandleInMotion
+from awesome_tool.mvc.controllers.gap.aspect import HandleInMotion
 from awesome_tool.mvc.controllers.gap import gap_helper
 
 import gtk
@@ -24,13 +24,13 @@ logger = log.get_logger(__name__)
 PortMoved = Enum('PORT', 'FROM TO')
 
 
-class MyDeleteTool(Tool):
+class RemoveItemTool(Tool):
     """
     This tool is responsible of deleting the selected item
     """
 
     def __init__(self, graphical_editor_view, view=None):
-        super(MyDeleteTool, self).__init__(view)
+        super(RemoveItemTool, self).__init__(view)
         self._graphical_editor_view = graphical_editor_view
 
     def on_key_release(self, event):
@@ -50,16 +50,19 @@ class MyDeleteTool(Tool):
                     return True
 
 
-class MyItemTool(ItemTool):
+class MoveItemTool(ItemTool):
+    """
+    This class is responsible of moving states, names, connections, etc.
+    """
 
     def __init__(self, graphical_editor_view, view=None, buttons=(1,)):
-        super(MyItemTool, self).__init__(view, buttons)
+        super(MoveItemTool, self).__init__(view, buttons)
         self._graphical_editor_view = graphical_editor_view
 
         self._item = None
 
     def on_button_press(self, event):
-        super(MyItemTool, self).on_button_press(event)
+        super(MoveItemTool, self).on_button_press(event)
 
         item = self.get_item()
         if isinstance(item, StateView):
@@ -81,7 +84,7 @@ class MyItemTool(ItemTool):
             self.view.canvas.request_update(self._item)
             self._item = None
 
-        return super(MyItemTool, self).on_button_release(event)
+        return super(MoveItemTool, self).on_button_release(event)
 
     def on_motion_notify(self, event):
         """
@@ -94,6 +97,7 @@ class MyItemTool(ItemTool):
                 self._item.moving = True
 
             if not self._movable_items:
+                # Start moving
                 self._movable_items = set(self.movable_items())
                 for inmotion in self._movable_items:
                     inmotion.start_move((event.x, event.y))
@@ -113,14 +117,14 @@ class MyItemTool(ItemTool):
             return True
 
 
-class MyHoverTool(HoverTool):
+class HoverItemTool(HoverTool):
 
     def __init__(self, view=None):
-        super(MyHoverTool, self).__init__(view)
+        super(HoverItemTool, self).__init__(view)
         self._prev_hovered_item = None
 
     def on_motion_notify(self, event):
-        super(MyHoverTool, self).on_motion_notify(event)
+        super(HoverItemTool, self).on_motion_notify(event)
 
         if self._prev_hovered_item and self.view.hovered_item is not self._prev_hovered_item:
             self._prev_hovered_item.hovered = False
@@ -173,10 +177,10 @@ class MultiselectionTool(RubberbandTool):
         return True
 
 
-class MyHandleTool(HandleTool):
+class HandleMoveTool(HandleTool):
 
     def __init__(self, graphical_editor_view, view=None):
-        super(MyHandleTool, self).__init__(view)
+        super(HandleMoveTool, self).__init__(view)
 
         self._graphical_editor_view = graphical_editor_view
 
@@ -204,6 +208,8 @@ class MyHandleTool(HandleTool):
         item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
 
         if isinstance(item, ConnectionView):
+            # If moved handles item is a connection save all necessary information (where did the handle start,
+            # what is the connections other end)
             if handle is item.handles()[1] or handle is item.handles()[len(item.handles()) - 2]:
                 return False
             self._active_connection_view = item
@@ -219,7 +225,7 @@ class MyHandleTool(HandleTool):
             self._waypoint_list = item.model.meta['gui']['editor']['waypoints']
 
         # Set start state
-        if isinstance(item, StateView):  # or isinstance(item, ScopedVariableView):
+        if isinstance(item, StateView):
             self._start_state = item
             self._start_width = item.width
             self._start_height = item.height
@@ -324,7 +330,7 @@ class MyHandleTool(HandleTool):
         self._glue_distance = 0
         self._last_hovered_state = None
 
-        super(MyHandleTool, self).on_button_release(event)
+        super(HandleMoveTool, self).on_button_release(event)
 
     def on_motion_notify(self, event):
         """
@@ -719,7 +725,7 @@ class MyHandleTool(HandleTool):
         item = self.grabbed_item
         handle = self.grabbed_handle
         pos = event.x, event.y
-        self.motion_handle = MyHandleInMotion(item, handle, self.view)
+        self.motion_handle = HandleInMotion(item, handle, self.view)
         self.motion_handle.start_move(pos)
 
     def check_sink_item(self, item, handle, connection):
@@ -803,7 +809,7 @@ class MyHandleTool(HandleTool):
         return False
 
 
-class MyConnectHandleTool(MyHandleTool):
+class ConnectHandleMoveTool(HandleMoveTool):
     """
     Tool for connecting two items.
 
@@ -829,7 +835,7 @@ class MyConnectHandleTool(MyHandleTool):
         if self.motion_handle:
             return self.motion_handle.glue(vpos, glue_distance)
         else:
-            return MyHandleInMotion(item, handle, self.view).glue(vpos, glue_distance)
+            return HandleInMotion(item, handle, self.view).glue(vpos, glue_distance)
 
     def connect(self, item, handle, vpos):
         """
@@ -865,4 +871,4 @@ class MyConnectHandleTool(MyHandleTool):
             if handle and handle.connectable:
                 self.connect(item, handle, (event.x, event.y))
         finally:
-            return super(MyConnectHandleTool, self).on_button_release(event)
+            return super(ConnectHandleMoveTool, self).on_button_release(event)

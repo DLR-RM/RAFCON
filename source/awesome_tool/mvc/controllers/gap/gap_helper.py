@@ -12,6 +12,13 @@ logger = log.get_logger(__name__)
 
 
 def calc_rel_pos_to_parent(canvas, item, handle):
+    """
+    This method calculates the relative position of the given item's handle to its parent
+    :param canvas: Canvas to find relative position in
+    :param item: Item to find relative position to parent
+    :param handle: Handle of item to find relative position to
+    :return: Relative position (x, y)
+    """
     parent = canvas.get_parent(item)
     if parent:
         c_pos = canvas.project(item, handle.pos)
@@ -26,6 +33,11 @@ def calc_rel_pos_to_parent(canvas, item, handle):
 
 
 def assert_exactly_one_true(bool_list):
+    """
+    This method asserts that only one value of the provided list is True.
+    :param bool_list: List of booleans to check
+    :return: True if only one value is True, False otherwise
+    """
     assert isinstance(bool_list, list)
     counter = 0
     for item in bool_list:
@@ -35,6 +47,11 @@ def assert_exactly_one_true(bool_list):
 
 
 def get_state_id_for_port(port):
+    """
+    This method returns the state ID of the state containing the given port
+    :param port: Port to check for containing state ID
+    :return: State ID of state containing port
+    """
     parent = port.parent
     if isinstance(parent, StateView):
         return parent.model.state.state_id
@@ -106,12 +123,6 @@ def create_new_connection(start_state, from_port, to_port, drop_state=None):
         # - output to output (child state to parent state)
         elif is_input_or_output(from_port) and is_input_or_output(to_port):
             add_data_flow_to_port_parent(to_port, from_port)
-        # # It is possible to create a new connection beginning at a scoped variable output to a scoped variable
-        # # input, input or output and it is possible to create a new connection beginning at an input or output to a
-        # # scoped variable input
-        # elif ((isinstance(from_port, ScopedDataOutputPortView) and is_scoped_input_or_input_or_output(to_port))
-        #       or (is_input_or_output(from_port) and isinstance(to_port, ScopedDataInputPortView))):
-        #     add_scoped_data_flow_to_port_parent(to_port, from_port)
         elif isinstance(from_port, ScopedVariablePortView) and is_input_or_output(to_port):
             add_from_scoped_variable_data_flow_to_port_parent(to_port, from_port)
         elif is_input_or_output(from_port) and isinstance(to_port, ScopedVariablePortView):
@@ -122,6 +133,9 @@ def create_new_connection(start_state, from_port, to_port, drop_state=None):
 
 
 def add_from_scoped_variable_data_flow_to_port_parent(to_port, from_port):
+    """
+    This method adds a new data flow from a scoped variable to a data port.
+    """
     from_state_v = from_port.parent
     to_state_v = to_port.parent
 
@@ -148,6 +162,9 @@ def add_from_scoped_variable_data_flow_to_port_parent(to_port, from_port):
 
 
 def add_to_scoped_variable_data_flow_to_port_parent(to_port, from_port):
+    """
+    This method adds a new data flow to a scoped variable from a data port.
+    """
     from_state_v = from_port.parent
     to_state_v = to_port.parent
 
@@ -172,7 +189,9 @@ def add_to_scoped_variable_data_flow_to_port_parent(to_port, from_port):
 
 
 def add_data_flow_to_port_parent(to_port, from_port):
-
+    """
+    This method adds a new data flow.
+    """
     from_state_v = from_port.parent
     to_state_v = to_port.parent
 
@@ -212,35 +231,10 @@ def add_data_flow_to_port_parent(to_port, from_port):
             logger.warn(e)
 
 
-def add_scoped_data_flow_to_port_parent(to_port, from_port):
-    if isinstance(from_port, InputPortView):
-        if from_port.parent is not to_port.parent.parent_state:
-            return
-        responsible_parent_m = from_port.parent.model
-        from_state_id = from_port.parent.model.state.state_id
-        from_data_port_id = from_port.port_id
-        to_state_id = to_port.parent.parent_state.model.state.state_id
-        to_data_port_id = to_port.parent.port_id
-    elif isinstance(from_port, OutputPortView):
-        if from_port.parent is to_port.parent.parent_state:
-            return
-        responsible_parent_m = to_port.parent.parent_state.model
-        from_state_id = from_port.parent.model.state.state_id
-        from_data_port_id = from_port.port_id
-        to_state_id = to_port.parent.parent_state.model.state.state_id
-        to_data_port_id = to_port.parent.port_id
-    else:
-        return
-
-    if isinstance(responsible_parent_m.state, ContainerState):
-        try:
-            responsible_parent_m.state.add_data_flow(from_state_id, from_data_port_id, to_state_id, to_data_port_id)
-        except AttributeError as e:
-            logger.warn(e)
-
-
 def add_transition_to_state(start_state, to_port, from_port):
-    # canvas = self.view.canvas
+    """
+    This method adds a new transition.
+    """
     from_state_v = from_port.parent
     to_state_v = to_port.parent
 
@@ -282,6 +276,12 @@ def add_transition_to_state(start_state, to_port, from_port):
 
 
 def convert_handles_pos_list_to_rel_pos_list(canvas, transition):
+    """
+    This method takes the waypoints of a connection and returns all relative positions of these waypoints.
+    :param canvas: Canvas to check relative position in
+    :param transition: Transition to extract all relative waypoint positions
+    :return: List with all relative positions of the given transition
+    """
     handles_list = transition.handles()
     rel_pos_list = []
     for handle in handles_list:
@@ -292,6 +292,12 @@ def convert_handles_pos_list_to_rel_pos_list(canvas, transition):
 
 
 def update_transition_waypoints(graphical_editor_view, transition_v, last_waypoint_list):
+    """
+    This method updates the relative position meta data of the transitions waypoints if they changed
+    :param graphical_editor_view: Graphical Editor the change occurred in
+    :param transition_v: Transition that changed
+    :param last_waypoint_list: List of waypoints before change
+    """
     assert isinstance(transition_v, TransitionView)
     transition_m = transition_v.model
     transition_meta = transition_m.meta['gui']['editor']
@@ -302,6 +308,12 @@ def update_transition_waypoints(graphical_editor_view, transition_v, last_waypoi
 
 
 def update_port_position_meta_data(graphical_editor_view, item, handle):
+    """
+    This method updates the meta data of the states ports if they changed.
+    :param graphical_editor_view: Graphical Editor the change occurred in
+    :param item: State the port was moved in
+    :param handle: Handle of moved port
+    """
     rel_pos = (handle.pos.x.value, handle.pos.y.value)
     port_meta = None
     for port in item.get_all_ports():
@@ -323,6 +335,13 @@ def update_port_position_meta_data(graphical_editor_view, item, handle):
 
 
 def update_meta_data_for_item(graphical_editor_view, grabbed_handle, item, child_resize=False):
+    """
+    This method updates the meta data of state and name views.
+    :param graphical_editor_view: Graphical Editor the change occurred in
+    :param grabbed_handle: The handle that has been moved
+    :param item: The item which has been changed/moved
+    :param child_resize: Whether the children of the item have been resized or not
+    """
     size_msg = "Change size"
     affect_children = False
 

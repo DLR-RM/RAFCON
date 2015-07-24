@@ -5,10 +5,13 @@ from awesome_tool.mvc.views.gap.connection import ConnectionView, ScopedVariable
 from cairo import ANTIALIAS_NONE
 
 
-class MyHandlePainter(HandlePainter):
+class CustomColorHandlePainter(HandlePainter):
+    """
+    This class overwrites the default HandlePainter Class in order to be able to adjust the color of the handles.
+    """
 
     def __init__(self, view=None):
-        super(MyHandlePainter, self).__init__(view)
+        super(HandlePainter, self).__init__(view)
 
     def _draw_handles(self, item, cairo, opacity=None, inner=False):
         view = self.view
