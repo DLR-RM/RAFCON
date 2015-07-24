@@ -119,7 +119,7 @@ class StateMachineStorage(Observable):
         statemachine.base_path = self.base_path
         logger.debug("Successfully saved statemachine!")
 
-    def save_script_file_for_state_and_source_path(self, state, state_path):
+    def save_script_file_for_state_and_source_path(self, state, state_path, force_full_load=False):
         """
         Saves the script file for a state to the directory of the state. The script name will be set to the SCRIPT_FILE
         constant.
@@ -130,7 +130,7 @@ class StateMachineStorage(Observable):
         # only save the script file if the state is not a library state
         # if not hasattr(state, "library_name"):  # ugly!
         from awesome_tool.statemachine.states.library_state import LibraryState
-        if not isinstance(state, LibraryState):
+        if not isinstance(state, LibraryState) or force_full_load:
             state_path_full = os.path.join(self.base_path, state_path)
             source_script_file = os.path.join(state.script.path, state.script.filename)
             destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
@@ -151,7 +151,7 @@ class StateMachineStorage(Observable):
         script_file.write(state.script.script)
         script_file.close()
 
-    def save_state_recursively(self, state, parent_path):
+    def save_state_recursively(self, state, parent_path, force_full_load=False):
         """
         Recursively saves a state to a yaml file. It calls this method on all its substates.
         :param state:
@@ -161,7 +161,7 @@ class StateMachineStorage(Observable):
         state_path = os.path.join(parent_path, str(state.state_id))
         state_path_full = os.path.join(self.base_path, state_path)
         StorageUtils.create_path(state_path_full)
-        self.save_script_file_for_state_and_source_path(state, state_path)
+        self.save_script_file_for_state_and_source_path(state, state_path, force_full_load)
         StorageUtils.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
         state.script.path = state_path_full
         state.script.filename = self.SCRIPT_FILE
@@ -169,7 +169,7 @@ class StateMachineStorage(Observable):
         #create yaml files for all children
         if hasattr(state, 'states'):
             for key, state in state.states.iteritems():
-                self.save_state_recursively(state, state_path)
+                self.save_state_recursively(state, state_path, force_full_load)
 
     def clean_transitions_of_sm(self, root_state):
         affected_sm = False
