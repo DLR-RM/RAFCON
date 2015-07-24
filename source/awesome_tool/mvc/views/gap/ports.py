@@ -241,14 +241,7 @@ class PortView(Model, object):
 
         if global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value:
             value_layout = pcc.create_layout()
-            if isinstance(value, str) and len(value) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
-                value = value[:constants.MAX_VALUE_LABEL_TEXT_LENGTH] + "..."
-                value_layout.set_text(" " + value + " ")
-            elif isinstance(value, (dict, list)) and len(str(value)) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
-                value_text = str(value)[:constants.MAX_VALUE_LABEL_TEXT_LENGTH] + "..."
-                value_layout.set_text(" " + value_text + " ")
-            else:
-                value_layout.set_text(" " + str(value) + " ")
+            value_layout.set_text(gap_draw_helper.limit_value_string_length(value))
             value_layout.set_font_description(font)
 
             value_text_size = (value_layout.get_size()[0] / float(SCALE), text_size[1])

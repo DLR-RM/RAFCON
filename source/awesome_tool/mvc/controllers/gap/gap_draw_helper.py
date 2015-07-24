@@ -5,6 +5,24 @@ from awesome_tool.mvc.controllers.gap.enums import SnappedSide
 from awesome_tool.utils import constants
 
 
+def limit_value_string_length(value):
+    """
+    This method limits the string representation of the value to MAX_VALUE_LABEL_TEXT_LENGTH + 3 characters.
+    :param value: Value to limit string representation
+    :return: String holding the value with a maximum length of MAX_VALUE_LABEL_TEXT_LENGTH + 3
+    """
+    if isinstance(value, str) and len(value) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
+        value = value[:constants.MAX_VALUE_LABEL_TEXT_LENGTH] + "..."
+        final_string = " " + value + " "
+    elif isinstance(value, (dict, list)) and len(str(value)) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
+        value_text = str(value)[:constants.MAX_VALUE_LABEL_TEXT_LENGTH] + "..."
+        final_string = " " + value_text + " "
+    else:
+        final_string = " " + str(value) + " "
+
+    return final_string
+
+
 def get_col_rgba(col, transparent=False):
     """
     This class converts a gtk.gdk.Color into its r, g, b parts and adds an alpha according to needs
