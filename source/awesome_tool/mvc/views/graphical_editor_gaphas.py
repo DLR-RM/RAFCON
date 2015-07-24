@@ -60,7 +60,5 @@ gobject.signal_new('deselect_states', GraphicalEditorView, gobject.SIGNAL_RUN_FI
                    ())
 gobject.signal_new('remove_state_from_state_machine', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
                    ())
-gobject.signal_new('remove_scoped_variable_from_state', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
-                   (gobject.TYPE_PYOBJECT, ))
 gobject.signal_new('meta_data_changed', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
                    (gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, ))

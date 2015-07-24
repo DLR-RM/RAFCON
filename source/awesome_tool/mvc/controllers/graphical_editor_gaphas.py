@@ -1,7 +1,7 @@
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
-from awesome_tool.mvc.controllers.gap import segment
+from awesome_tool.mvc.controllers.gap import segment  # do not remove - needed for GUI to work
 
 from gaphas.item import NW
 
@@ -20,7 +20,6 @@ from awesome_tool.mvc.views.gap.connection import DataFlowView, TransitionView, 
 
 from awesome_tool.mvc.config import global_gui_config
 
-from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.mvc.views.gap.canvas import MyCanvas
 
 from gtk.gdk import keyval_name
@@ -61,7 +60,6 @@ class GraphicalEditorController(ExtendedController):
         self.view.connect('new_state_selection', self._select_new_states)
         self.view.connect('deselect_states', self._deselect_states)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
-        self.view.connect('remove_scoped_variable_from_state', self._remove_scoped_variable_from_state)
         self.view.connect('meta_data_changed', self._meta_data_changed)
 
     def register_adapters(self):
@@ -339,11 +337,11 @@ class GraphicalEditorController(ExtendedController):
                 self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'change_state_type':
                 state_v = self.get_view_for_model(result)
-                self.update_meta_data(state_v, result.meta)
+                self.apply_meta_data_on_state(state_v, result.meta)
                 for child_m in result.states.itervalues():
                     self.add_state_view_to_parent(child_m, result)
             else:
-                print method_name
+                logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
@@ -410,7 +408,7 @@ class GraphicalEditorController(ExtendedController):
                     if isinstance(child, StateView):
                         child.foreground()
 
-    def update_meta_data(self, state_v, state_meta):
+    def apply_meta_data_on_state(self, state_v, state_meta):
         rel_pos = self.canvas.project(state_v, state_v.handles()[NW].pos)
         rel_pos[0].value, rel_pos[1].value = 0, 0
         state_v.matrix.translate(*state_meta['gui']['editor']['rel_pos'])
@@ -567,12 +565,6 @@ class GraphicalEditorController(ExtendedController):
         if len(selection) > 0:
             StateMachineHelper.delete_models(selection)
             self.model.selection.clear()
-
-    @staticmethod
-    def _remove_scoped_variable_from_state(view, scoped_variable_v):
-        parent_state = scoped_variable_v.parent_state.model.state
-        if isinstance(parent_state, ContainerState):
-            parent_state.remove_scoped_variable(scoped_variable_v.port_id)
 
     def setup_canvas(self):
 
