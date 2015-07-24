@@ -8,6 +8,7 @@ from awesome_tool.mvc.views import StatePropertiesView, ContainerStateView, Grap
 from awesome_tool.mvc.views.states_editor import StatesEditorView
 from awesome_tool.mvc.views.state_machines_editor import StateMachinesEditorView
 from awesome_tool.utils import constants
+from awesome_tool.mvc.config import global_gui_config
 
 
 class MainWindowView(View):
@@ -140,6 +141,13 @@ class MainWindowView(View):
         self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         self['state_editor'].set_border_width(constants.BORDER_WIDTH)
+
+        self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
+        self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
+        self['button_show_warning'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True))
+        self['button_show_error'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True))
+
+        logging_view.update_filtered_buffer()
 
     def create_button_label(self, icon):
         label = gtk.Label()

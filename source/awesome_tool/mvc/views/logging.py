@@ -3,6 +3,8 @@ from gtkmvc import View
 import glib
 from awesome_tool.utils import constants
 
+from awesome_tool.mvc.config import global_gui_config
+
 
 class LoggingView(View):
     top = 'main_frame'
@@ -26,14 +28,28 @@ class LoggingView(View):
         scrollable.add(self.textview)
         self.textview.show()
 
-        # TODO: insert default values to config file
-        self.info = True
-        self.debug = True
-        self.warning = True
-        self.error = True
+        self.info = global_gui_config.get_config_value('LOGGING_SHOW_INFO', True)
+        self.debug = global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True)
+        self.warning = global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True)
+        self.error = global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True)
 
         self['scrollable'] = scrollable
         self.quit_flag = False
+
+        self.textview.connect('populate_popup', self.add_clear_menu_item)
+
+    def add_clear_menu_item(self, widget, menu):
+        clear_item = gtk.MenuItem("Clear Logging View")
+        separator_item = gtk.SeparatorMenuItem()
+        menu.append(separator_item)
+        menu.append(clear_item)
+        clear_item.connect('activate', self._clear_buffer)
+        separator_item.show()
+        clear_item.show()
+
+    def _clear_buffer(self, widget, data=None):
+        self.complete_buffer.set_text("")
+        self.update_filtered_buffer()
 
     def apply_tag(self, name):
         self.textview.get_buffer().apply_tag_by_name(name,
@@ -114,13 +130,13 @@ class LoggingView(View):
         buffer.create_tag("set_white_text", foreground="#ffffff")
         return buffer
 
-    def update_filtered_buffer(self, info, debug, warning, error):
-        self.info = info
-        self.debug = debug
-        self.warning = warning
-        self.error = error
+    def update_filtered_buffer(self):
+        self.info = global_gui_config.get_config_value('LOGGING_SHOW_INFO', True)
+        self.debug = global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True)
+        self.warning = global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True)
+        self.error = global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True)
 
-        if info and debug and warning and error:
+        if self.info and self.debug and self.warning and self.error:
             self.textview.set_buffer(self.complete_buffer)
         else:
             self.print_filtered_buffer()

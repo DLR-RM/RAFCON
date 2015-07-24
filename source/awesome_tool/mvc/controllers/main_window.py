@@ -23,6 +23,7 @@ from awesome_tool.mvc.controllers.execution_history import ExecutionHistoryTreeC
 import threading
 from awesome_tool.statemachine.enums import StateMachineExecutionStatus
 
+from awesome_tool.mvc.config import global_gui_config
 
 class MainWindowController(ExtendedController):
 
@@ -403,11 +404,24 @@ class MainWindowController(ExtendedController):
         button.handler_unblock_by_func(func)
 
     def on_debug_content_change(self, widget, data=None):
-        info = self.view['button_show_info'].get_active()
-        debug = self.view['button_show_debug'].get_active()
-        warning = self.view['button_show_warning'].get_active()
-        error = self.view['button_show_error'].get_active()
-        self.view.logging_view.update_filtered_buffer(info, debug, warning, error)
+        if self.view['button_show_info'].get_active():
+            global_gui_config.set_config_value('LOGGING_SHOW_INFO', True)
+        else:
+            global_gui_config.set_config_value('LOGGING_SHOW_INFO', False)
+        if self.view['button_show_debug'].get_active():
+            global_gui_config.set_config_value('LOGGING_SHOW_DEBUG', True)
+        else:
+            global_gui_config.set_config_value('LOGGING_SHOW_DEBUG', False)
+        if self.view['button_show_warning'].get_active():
+            global_gui_config.set_config_value('LOGGING_SHOW_WARNING', True)
+        else:
+            global_gui_config.set_config_value('LOGGING_SHOW_WARNING', False)
+        if self.view['button_show_error'].get_active():
+            global_gui_config.set_config_value('LOGGING_SHOW_ERROR', True)
+        else:
+            global_gui_config.set_config_value('LOGGING_SHOW_ERROR', False)
+        # global_gui_config.save_configuration()
+        self.view.logging_view.update_filtered_buffer()
 
     def delay(self, milliseconds, func):
         thread = threading.Timer(milliseconds / 1000.0, func)
