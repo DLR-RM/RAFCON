@@ -420,7 +420,10 @@ class OutcomeView(PortView):
         else:
             fill_color = constants.LABEL_COLOR
 
-        self.draw_port(context, fill_color, state.transparent)
+        draw_label = True
+        if isinstance(state.model.state, ExecutionState) and self.has_outgoing_connection():
+            draw_label = False
+        self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
 
 
 class ScopedVariablePortView(PortView):
