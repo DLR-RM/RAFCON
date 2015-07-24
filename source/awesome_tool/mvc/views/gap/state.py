@@ -290,7 +290,7 @@ class StateView(Element):
             max_height = self.height - 2 * self.port_side_size
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
 
-    def _draw_symbol(self, context, symbol, transparent, max_size):
+    def _draw_symbol(self, context, symbol, is_library_state, max_size):
         c = context.cairo
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
@@ -321,7 +321,15 @@ class StateView(Element):
 
         c.move_to(self.width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
                   self.height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
-        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), transparent))
+
+        alpha = 1.
+        if is_library_state and self.transparent:
+            alpha = 0.0625
+        elif is_library_state:
+            alpha = 0.25
+
+        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), is_library_state,
+                                                         alpha=alpha))
         pcc.update_layout(layout)
         pcc.show_layout(layout)
 

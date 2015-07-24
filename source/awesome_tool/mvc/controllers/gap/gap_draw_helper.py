@@ -23,7 +23,7 @@ def limit_value_string_length(value):
     return final_string
 
 
-def get_col_rgba(col, transparent=False):
+def get_col_rgba(col, transparent=False, alpha=None):
     """
     This class converts a gtk.gdk.Color into its r, g, b parts and adds an alpha according to needs
     :param col: Color to extract r, g and b from
@@ -38,6 +38,9 @@ def get_col_rgba(col, transparent=False):
         a = .25
     else:
         a = 1.
+
+    if alpha:
+        a = alpha
     return r, g, b, a
 
 
