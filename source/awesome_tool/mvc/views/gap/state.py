@@ -281,12 +281,16 @@ class StateView(Element):
             scoped_variable.draw(context, self)
 
         if isinstance(self.model.state, LibraryState) and not self.moving:
-            self._draw_symbol(context, constants.SIGN_LIB, True)
+            max_width = self.width / 2.
+            max_height = self.height / 2.
+            self._draw_symbol(context, constants.SIGN_LIB, True, (max_width, max_height))
 
         if self.moving:
-            self._draw_symbol(context, constants.SIGN_ARROW, False)
+            max_width = self.width - 2 * self.port_side_size
+            max_height = self.height - 2 * self.port_side_size
+            self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
 
-    def _draw_symbol(self, context, symbol, transparent):
+    def _draw_symbol(self, context, symbol, transparent, max_size):
         c = context.cairo
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
@@ -311,10 +315,7 @@ class StateView(Element):
 
         set_font_description()
 
-        max_width = self.width - 2 * self.port_side_size
-        max_height = self.height - 2 * self.port_side_size
-
-        while layout.get_size()[0] / float(SCALE) > max_width or layout.get_size()[1] / float(SCALE) > max_height:
+        while layout.get_size()[0] / float(SCALE) > max_size[0] or layout.get_size()[1] / float(SCALE) > max_size[1]:
             font_size *= 0.9
             set_font_description()
 
