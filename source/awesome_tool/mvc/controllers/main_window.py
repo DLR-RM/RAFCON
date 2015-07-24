@@ -266,7 +266,7 @@ class MainWindowController(ExtendedController):
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
         label_string = str(awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
-        label_string = label_string.replace("EXECUTION_MODE.", "")
+        label_string = label_string.replace("STATE_MACHINE_EXECUTION_STATUS.", "")
         self.view['execution_status_label'].set_text(label_string)
 
         if awesome_tool.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
