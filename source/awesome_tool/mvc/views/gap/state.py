@@ -406,7 +406,7 @@ class StateView(Element):
             outcome_v.handle.pos = port_meta['rel_pos']
         else:
             pos_x, pos_y, side = self._calculate_unoccupied_position(outcome_v.port_side_size, SnappedSide.RIGHT,
-                                                                     outcome_v)
+                                                                     outcome_v, logic=True)
             if pos_x is None:
                 self.model.state.remove_outcome(outcome_v.outcome_id)
                 return
@@ -433,7 +433,7 @@ class StateView(Element):
             input_port_v.handle.pos = port_meta['rel_pos']
         else:
             pos_x, pos_y, side = self._calculate_unoccupied_position(input_port_v.port_side_size, SnappedSide.LEFT,
-                                                                     input_port_v, logic=False, in_port=True)
+                                                                     input_port_v, in_port=True)
             if pos_x is None:
                 self.model.state.remove_input_data_port(input_port_v.port_id)
                 return
@@ -460,7 +460,7 @@ class StateView(Element):
             output_port_v.handle.pos = port_meta['rel_pos']
         else:
             pos_x, pos_y, side = self._calculate_unoccupied_position(output_port_v.port_side_size, SnappedSide.RIGHT,
-                                                                     output_port_v, logic=False)
+                                                                     output_port_v)
             if pos_x is None:
                 self.model.state.remove_output_data_port(output_port_v.port_id)
                 return
@@ -484,6 +484,19 @@ class StateView(Element):
 
         scoped_variable_port_v.handle.pos = self.width * (0.1 * len(self._scoped_variables_ports)), 0
 
+        port_meta = self.model.meta['scoped%d' % scoped_variable_port_v.port_id]['gui']['editor']
+        if isinstance(port_meta['rel_pos'], tuple):
+            scoped_variable_port_v.handle.pos = port_meta['rel_pos']
+        else:
+            pos_x, pos_y, side = self._calculate_unoccupied_position(scoped_variable_port_v.port_side_size,
+                                                                     SnappedSide.TOP, scoped_variable_port_v,
+                                                                     scoped=True)
+            if pos_x is None:
+                self.model.state.remove_scoped_variable(scoped_variable_port_v.port_id)
+                return
+            scoped_variable_port_v.handle.pos = pos_x, pos_y
+            scoped_variable_port_v.side = side
+
         self.add_rect_constraint_for_port(scoped_variable_port_v)
 
     def remove_scoped_variable(self, scoped_variable_port_v):
@@ -500,13 +513,17 @@ class StateView(Element):
         solver.add_constraint(constraint)
         self.port_constraints[port] = constraint
 
-    def _calculate_unoccupied_position(self, port_size, side, new_port, logic=True, in_port=False):
+    def _calculate_unoccupied_position(self, port_size, side, new_port, logic=False, in_port=False, scoped=False):
         if in_port:
             new_pos_x = 0
+        elif scoped:
+            new_pos_x = self.width * .15
         else:
             new_pos_x = self.width
         if logic:
             new_pos_y = self.height * .15
+        elif scoped:
+            new_pos_y = 0
         else:
             new_pos_y = self.height * .85
 
