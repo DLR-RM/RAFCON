@@ -353,21 +353,18 @@ class MenuBarController(ExtendedController):
             global_gui_config.set_config_value("DATA_FLOW_MODE", True)
         else:
             global_gui_config.set_config_value("DATA_FLOW_MODE", False)
-        global_gui_config.save_configuration()
 
     def on_show_all_data_flows_toggled(self, widget, data=None):
         if widget.get_active():
             global_gui_config.set_config_value("SHOW_DATA_FLOWS", True)
         else:
             global_gui_config.set_config_value("SHOW_DATA_FLOWS", False)
-        global_gui_config.save_configuration()
 
     def on_show_data_flow_values_toggled(self, widget, data=None):
         if widget.get_active():
             global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         else:
             global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
-        global_gui_config.save_configuration()
 
     def on_expert_view_activate(self, widget, data=None):
         pass
