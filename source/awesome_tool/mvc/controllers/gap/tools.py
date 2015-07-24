@@ -84,6 +84,8 @@ class MoveItemTool(ItemTool):
             self.view.canvas.request_update(self._item)
             self._item = None
 
+            self.view.redraw_complete_screen()
+
         return super(MoveItemTool, self).on_button_release(event)
 
     def on_motion_notify(self, event):
