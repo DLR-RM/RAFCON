@@ -9,6 +9,8 @@ from gaphas.aspect import ItemHandleFinder, ItemHandleSelection, ItemPaintFocuse
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, DataFlowView
 
+from math import pow
+
 
 @Segment.when_type(ConnectionView)
 class TransitionSegment(LineSegment):
@@ -28,7 +30,7 @@ class TransitionSegment(LineSegment):
                 continue
             xp = (h1.pos.x + h2.pos.x) / 2
             yp = (h1.pos.y + h2.pos.y) / 2
-            if distance_point_point_fast((x, y), (xp, yp)) <= 2. / item.hierarchy_level:
+            if distance_point_point_fast((x, y), (xp, yp)) <= 1. / pow(2, item.hierarchy_level):
                 segment = handles.index(h1)
                 handles, ports = self.split_segment(segment)
                 return handles and handles[0]

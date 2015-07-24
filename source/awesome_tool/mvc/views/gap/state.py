@@ -310,8 +310,8 @@ class StateView(Element):
         def set_font_description():
             layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
                               (font_name,
-                              font_size,
-                              symbol))
+                               font_size,
+                               symbol))
 
         set_font_description()
 
@@ -549,7 +549,8 @@ class StateView(Element):
         port_limitation_counter = 0
 
         while not position_found and port_limitation_counter < 100:
-            position_found, new_pos_x, new_pos_y, side = self._check_pos(all_ports, port_size, side, new_port, new_pos, logic, in_port)
+            position_found, new_pos_x, new_pos_y, side = self._check_pos(all_ports, port_size, side, new_port, new_pos,
+                                                                         logic, in_port)
             new_pos = (new_pos_x, new_pos_y)
             port_limitation_counter += 1
 
