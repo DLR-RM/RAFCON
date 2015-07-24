@@ -337,7 +337,14 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
                 value = parent_state.scoped_data[scoped_data_id].value
 
                 value_layout = pcc.create_layout()
-                value_layout.set_text(" " + str(value) + " ")
+                if isinstance(value, str) and len(value) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
+                    value = value[:constants.MAX_VALUE_LABEL_TEXT_LENGTH] + "..."
+                    value_layout.set_text(" " + value + " ")
+                elif isinstance(value, (dict, list)) and len(str(value)) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
+                    value_text = str(value)[:constants.MAX_VALUE_LABEL_TEXT_LENGTH] + "..."
+                    value_layout.set_text(" " + value_text + " ")
+                else:
+                    value_layout.set_text(" " + str(value) + " ")
                 set_font_description(value_layout)
                 font = FontDescription(font_name + " " + str(name_size[1] * .9))
                 value_layout.set_font_description(font)
