@@ -31,8 +31,8 @@ input_data_port22: !Vividict {}
 name: !Vividict
     gui: !Vividict
         editor: !Vividict
-            rel_pos: !Vividict {}
-            size: !Vividict {}
+            rel_pos: !!python/tuple [40.77200572049625, 25.626575985374785]
+            size: !!python/tuple [6.924413686068874, 5.613563443761585]
 outcome-1: !Vividict
     gui: !Vividict
         editor: !Vividict
@@ -48,4 +48,4 @@ outcome0: !Vividict
 outcome1: !Vividict
     gui: !Vividict
         editor: !Vividict
-            rel_pos: !!python/tuple [3.164399195578575, 0.1875]
+            rel_pos: !!python/tuple [3.1451502862875493, 0.1403390860940396]

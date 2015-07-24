@@ -24,4 +24,4 @@ outcome-2: !Vividict
 outcome0: !Vividict
     gui: !Vividict
         editor: !Vividict
-            rel_pos: !!python/tuple [3.3684176209067296, 5.426063443761585]
+            rel_pos: !!python/tuple [3.3963117845127346, 5.4732243576675454]

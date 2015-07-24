@@ -47,6 +47,7 @@ PANE_MARGIN = 46
 ICON_SIZE_IN_PIXEL = 20
 ICON_MARGIN = 10
 
+# The codes written down here are the codes provided on the font_awesome website
 BUTTON_EXP = "f065"
 BUTTON_NEW = "f016"
 BUTTON_OPEN = "f115"
@@ -76,6 +77,10 @@ BUTTON_LEFTA = "f0d9"
 BUTTON_RIGHTA = "f0da"
 BUTTON_UPA = "f0d8"
 BUTTON_DOWNA = "f0d7"
+
+SIGN_LIB = "f02d"
+SIGN_ARROW = "f047"
+
 
 ICON_SOURCE = "f121"
 ICON_DLINK = "f0c1"

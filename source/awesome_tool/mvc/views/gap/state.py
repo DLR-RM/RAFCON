@@ -22,6 +22,9 @@ from awesome_tool.mvc.controllers.gap.gap_draw_helper import get_col_rgba
 from awesome_tool.mvc.models.state import StateModel
 from awesome_tool.mvc.models.container_state import ContainerStateModel
 
+from awesome_tool.statemachine.states.library_state import LibraryState
+from awesome_tool.mvc.controllers.gap import gap_draw_helper
+
 from awesome_tool.utils import constants, log
 logger = log.get_logger(__name__)
 
@@ -277,10 +280,13 @@ class StateView(Element):
             scoped_variable.port_side_size = self.port_side_size
             scoped_variable.draw(context, self)
 
-        if self.moving:
-            self._draw_moving_symbol(context)
+        if isinstance(self.model.state, LibraryState) and not self.moving:
+            self._draw_symbol(context, constants.SIGN_LIB, True)
 
-    def _draw_moving_symbol(self, context):
+        if self.moving:
+            self._draw_symbol(context, constants.SIGN_ARROW, False)
+
+    def _draw_symbol(self, context, symbol, transparent):
         c = context.cairo
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
@@ -301,7 +307,7 @@ class StateView(Element):
             layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
                               (font_name,
                               font_size,
-                              'f047'))
+                              symbol))
 
         set_font_description()
 
@@ -314,7 +320,7 @@ class StateView(Element):
 
         c.move_to(self.width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
                   self.height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
-        cc.set_source_color(Color(constants.STATE_NAME_COLOR))
+        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), transparent))
         pcc.update_layout(layout)
         pcc.show_layout(layout)
 

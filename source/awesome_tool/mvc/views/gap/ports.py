@@ -22,6 +22,7 @@ from gtk.gdk import Color, CairoContext
 from awesome_tool.mvc.controllers.gap.enums import SnappedSide, Direction
 
 from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.library_state import LibraryState
 
 
 class PortView(Model, object):
@@ -38,9 +39,9 @@ class PortView(Model, object):
         self.side = side
         self._parent = parent
 
-        self._is_execution_state_port = None
+        self._draw_single_port_arrow = None
         if parent:
-            self._is_execution_state_port = isinstance(parent.model.state, ExecutionState)
+            self._draw_single_port_arrow = isinstance(parent.model.state, (ExecutionState, LibraryState))
 
         self._fill = False
         self._draw_connection_to_port = False
@@ -186,7 +187,7 @@ class PortView(Model, object):
         elif self.side is SnappedSide.BOTTOM:
             direction = Direction.UP if self._is_in_port else Direction.DOWN
 
-        if self._is_execution_state_port:
+        if self._draw_single_port_arrow:
             self._draw_execution_state_port(self.pos, direction, c, outcome_side, transparent,
                                             self.connected_incoming or self.connected_outgoing, fill_color)
         else:
@@ -421,7 +422,7 @@ class OutcomeView(PortView):
             fill_color = constants.LABEL_COLOR
 
         draw_label = True
-        if isinstance(state.model.state, ExecutionState) and self.has_outgoing_connection():
+        if self.has_outgoing_connection():
             draw_label = False
         self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
 

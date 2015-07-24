@@ -7,7 +7,7 @@ gui: !Vividict
 income: !Vividict
     gui: !Vividict
         editor: !Vividict
-            rel_pos: !!python/tuple [0.375, 6.122748103725884]
+            rel_pos: !!python/tuple [0.375, 4.247502317734668]
 name: !Vividict
     gui: !Vividict
         editor: !Vividict
@@ -31,9 +31,10 @@ transition2: !Vividict
             invert_y: false
             waypoints:
             - !!python/tuple [8.134339874833017, 3.91587651193241]
-            - !!python/tuple [5.954057097398504, 3.9424653262913694]
+            - !!python/tuple [6.358832451058134, 3.898603895716434]
 transition3: !Vividict
     gui: !Vividict
         editor: !Vividict
             invert_y: false
-            waypoints: []
+            waypoints:
+            - !!python/tuple [6.339449205390451, 4.266885563402354]
