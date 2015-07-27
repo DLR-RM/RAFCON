@@ -1,51 +1,56 @@
 !Vividict
 gui: !Vividict
     editor: !Vividict
-        invert_y: false
-        rel_pos: !!python/tuple [5.781877311164404, 5.91483024503789]
+        rel_pos: !!python/tuple [5.781877311164404, -5.91483024503789]
+        size: !!python/tuple [3.744351730878718, 3.2585417108004324]
+    editor_gaphas: !Vividict
+        rel_pos: !!python/tuple [5.781877311164408, 5.914830245037891]
+        size: !!python/tuple [3.744351730878718, 3.2585417108004324]
+    editor_opengl: !Vividict
+        rel_pos: !!python/tuple [5.781877311164408, -5.914830245037891]
         size: !!python/tuple [3.744351730878718, 3.2585417108004324]
 income: !Vividict
     gui: !Vividict
-        editor: !Vividict
-            rel_pos: !!python/tuple [0.5381886485583651, 0.0814635427700108]
+        editor_gaphas: !Vividict
+            rel_pos: !!python/tuple [0.7269827694551454, 0.0814635427700108]
 input14: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_gaphas: !Vividict
             rel_pos: !Vividict {}
 input15: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_gaphas: !Vividict
             rel_pos: !Vividict {}
 input_data_port14: !Vividict {}
 input_data_port15: !Vividict {}
 name: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_gaphas: !Vividict
             rel_pos: !Vividict {}
             size: !Vividict {}
 outcome-1: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_gaphas: !Vividict
             rel_pos: !Vividict {}
 outcome-2: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_gaphas: !Vividict
             rel_pos: !Vividict {}
 outcome0: !Vividict
     gui: !Vividict
-        editor: !Vividict
-            rel_pos: !!python/tuple [2.302064004317245, 0.0814635427700108]
+        editor_gaphas: !Vividict
+            rel_pos: !!python/tuple [3.0745091892074994, 0.0814635427700108]
 output16: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_gaphas: !Vividict
             rel_pos: !Vividict {}
 output17: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_gaphas: !Vividict
             rel_pos: !Vividict {}
 output18: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_gaphas: !Vividict
             rel_pos: !Vividict {}
 output_data_port16: !Vividict {}
 output_data_port17: !Vividict {}

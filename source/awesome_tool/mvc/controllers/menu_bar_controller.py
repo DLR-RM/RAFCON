@@ -41,6 +41,10 @@ class MenuBarController(ExtendedController):
         show_data_flow_values = global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
         view["show_data_flow_values"].set_active(show_data_flow_values)
 
+        if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
+            view["data_flow_mode"].hide()
+            view["show_data_flow_values"].hide()
+
     def register_adapters(self):
         """Adapters should be registered in this method call
         """

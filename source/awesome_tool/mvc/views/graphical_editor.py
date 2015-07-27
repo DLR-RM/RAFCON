@@ -737,10 +737,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         return hits
 
     def transition_stroke_width(self, parent_state_m):
-        return min(parent_state_m.meta['gui']['editor']['size']) / 25.0
+        return min(parent_state_m.meta['gui']['editor_opengl']['size']) / 25.0
 
     def data_flow_stroke_width(self, parent_state_m):
-        return min(parent_state_m.meta['gui']['editor']['size']) / 25.0
+        return min(parent_state_m.meta['gui']['editor_opengl']['size']) / 25.0
 
     def _set_closest_stroke_width(self, width):
         """Sets the line width to the closest supported one

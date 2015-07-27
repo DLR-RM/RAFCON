@@ -300,10 +300,10 @@ def update_transition_waypoints(graphical_editor_view, transition_v, last_waypoi
     """
     assert isinstance(transition_v, TransitionView)
     transition_m = transition_v.model
-    transition_meta = transition_m.meta['gui']['editor']
+    transition_meta_gaphas = transition_m.meta['gui']['editor_gaphas']
     waypoint_list = convert_handles_pos_list_to_rel_pos_list(graphical_editor_view.editor.canvas, transition_v)
     if waypoint_list != last_waypoint_list:
-        transition_meta['waypoints'] = waypoint_list
+        transition_meta_gaphas['waypoints'] = waypoint_list
         graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
 
 
@@ -319,15 +319,15 @@ def update_port_position_meta_data(graphical_editor_view, item, handle):
     for port in item.get_all_ports():
         if handle is port.handle:
             if isinstance(port, IncomeView):
-                port_meta = item.model.meta['income']['gui']['editor']
+                port_meta = item.model.meta['income']['gui']['editor_gaphas']
             elif isinstance(port, OutcomeView):
-                port_meta = item.model.meta['outcome%d' % port.outcome_id]['gui']['editor']
+                port_meta = item.model.meta['outcome%d' % port.outcome_id]['gui']['editor_gaphas']
             elif isinstance(port, InputPortView):
-                port_meta = item.model.meta['input%d' % port.port_id]['gui']['editor']
+                port_meta = item.model.meta['input%d' % port.port_id]['gui']['editor_gaphas']
             elif isinstance(port, OutputPortView):
-                port_meta = item.model.meta['output%d' % port.port_id]['gui']['editor']
+                port_meta = item.model.meta['output%d' % port.port_id]['gui']['editor_gaphas']
             elif isinstance(port, ScopedVariablePortView):
-                port_meta = item.model.meta['scoped%d' % port.port_id]['gui']['editor']
+                port_meta = item.model.meta['scoped%d' % port.port_id]['gui']['editor_gaphas']
             break
     if rel_pos != port_meta['rel_pos']:
         port_meta['rel_pos'] = rel_pos
@@ -343,7 +343,11 @@ def update_meta_data_for_item(graphical_editor_view, grabbed_handle, item, child
     :param child_resize: Whether the children of the item have been resized or not
     """
     size_msg = "Change size"
+    move_msg = "Move"
     affect_children = False
+
+    meta_gaphas = None
+    meta_opengl = None
 
     if isinstance(item, StateView):
         # If handle for state resize was pulled
@@ -351,7 +355,8 @@ def update_meta_data_for_item(graphical_editor_view, grabbed_handle, item, child
             # Update all port meta data to match with new position and size of parent
             for port in item.get_all_ports():
                 update_port_position_meta_data(graphical_editor_view, item, port.handle)
-            meta = item.model.meta['gui']['editor']
+            meta_gaphas = item.model.meta['gui']['editor_gaphas']
+            meta_opengl = item.model.meta['gui']['editor_opengl']
             move_msg = "Move state"
             affect_children = True
         # If pulled handle is port update port meta data and return
@@ -363,14 +368,17 @@ def update_meta_data_for_item(graphical_editor_view, grabbed_handle, item, child
         item = parent
         assert isinstance(parent, StateView)
 
-        meta = parent.model.meta['name']['gui']['editor']
+        meta_gaphas = parent.model.meta['name']['gui']['editor_gaphas']
         size_msg = "Change name size"
         move_msg = "Move name"
-    else:
-        meta = item.model.meta['gui']['editor']
-        move_msg = "Move scoped"
 
-    meta['size'] = (item.width, item.height)
-    graphical_editor_view.emit('meta_data_changed', item.model, size_msg, affect_children)
-    meta['rel_pos'] = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, item, item.handles()[NW])
-    graphical_editor_view.emit('meta_data_changed', item.model, move_msg, affect_children)
+    rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, item, item.handles()[NW])
+
+    if meta_gaphas:
+        meta_gaphas['size'] = (item.width, item.height)
+        graphical_editor_view.emit('meta_data_changed', item.model, size_msg, affect_children)
+        meta_gaphas['rel_pos'] = rel_pos
+        graphical_editor_view.emit('meta_data_changed', item.model, move_msg, affect_children)
+    if meta_opengl:
+        meta_opengl['size'] = (item.width, item.height)
+        meta_opengl['rel_pos'] = (rel_pos[0], -rel_pos[1])

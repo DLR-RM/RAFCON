@@ -62,17 +62,17 @@ class StateView(Element):
         self._moving = False
         self._transparent = False
 
-        if not isinstance(state_m.meta['name']['gui']['editor']['size'], tuple):
+        if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['size'], tuple):
             name_width = self.width * 0.8
             name_height = self.height * 0.2
             name_size = (name_width, name_height)
         else:
-            name_size = state_m.meta['name']['gui']['editor']['size']
+            name_size = state_m.meta['name']['gui']['editor_gaphas']['size']
 
         self._name_view = NameView(state_m.state.name, name_size)
 
-        if isinstance(state_m.meta['name']['gui']['editor']['rel_pos'], tuple):
-            name_pos = state_m.meta['name']['gui']['editor']['rel_pos']
+        if isinstance(state_m.meta['name']['gui']['editor_gaphas']['rel_pos'], tuple):
+            name_pos = state_m.meta['name']['gui']['editor_gaphas']['rel_pos']
             self._name_view.matrix.translate(*name_pos)
 
     def setup_canvas(self):
@@ -402,7 +402,7 @@ class StateView(Element):
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
 
-        port_meta = self.model.meta['income']['gui']['editor']
+        port_meta = self.model.meta['income']['gui']['editor_gaphas']
         if isinstance(port_meta['rel_pos'], tuple):
             income_v.handle.pos = port_meta['rel_pos']
         else:
@@ -416,7 +416,7 @@ class StateView(Element):
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
 
-        port_meta = self.model.meta['outcome%d' % outcome_v.outcome_id]['gui']['editor']
+        port_meta = self.model.meta['outcome%d' % outcome_v.outcome_id]['gui']['editor_gaphas']
         if isinstance(port_meta['rel_pos'], tuple):
             outcome_v.handle.pos = port_meta['rel_pos']
         else:
@@ -443,7 +443,7 @@ class StateView(Element):
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
 
-        port_meta = self.model.meta['input%d' % input_port_v.port_id]['gui']['editor']
+        port_meta = self.model.meta['input%d' % input_port_v.port_id]['gui']['editor_gaphas']
         if isinstance(port_meta['rel_pos'], tuple):
             input_port_v.handle.pos = port_meta['rel_pos']
         else:
@@ -470,7 +470,7 @@ class StateView(Element):
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
 
-        port_meta = self.model.meta['output%d' % output_port_v.port_id]['gui']['editor']
+        port_meta = self.model.meta['output%d' % output_port_v.port_id]['gui']['editor_gaphas']
         if isinstance(port_meta['rel_pos'], tuple):
             output_port_v.handle.pos = port_meta['rel_pos']
         else:
@@ -499,7 +499,7 @@ class StateView(Element):
 
         scoped_variable_port_v.handle.pos = self.width * (0.1 * len(self._scoped_variables_ports)), 0
 
-        port_meta = self.model.meta['scoped%d' % scoped_variable_port_v.port_id]['gui']['editor']
+        port_meta = self.model.meta['scoped%d' % scoped_variable_port_v.port_id]['gui']['editor_gaphas']
         if isinstance(port_meta['rel_pos'], tuple):
             scoped_variable_port_v.handle.pos = port_meta['rel_pos']
         else:
@@ -714,12 +714,12 @@ class StateView(Element):
 
                         old_size = (child_state_v.width, child_state_v.height)
                     else:
-                        meta_rel_pos = child_state_v.model.meta['gui']['editor']['rel_pos']
+                        meta_rel_pos = child_state_v.model.meta['gui']['editor_gaphas']['rel_pos']
                         new_rel_pos = calc_new_rel_pos(meta_rel_pos, old_size, new_size)
 
                         child_state_v.matrix.translate(*new_rel_pos)
 
-                        old_size = child_state_v.model.meta['gui']['editor']['size']
+                        old_size = child_state_v.model.meta['gui']['editor_gaphas']['size']
 
                     new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
                     child_state_v.width = new_size[0]

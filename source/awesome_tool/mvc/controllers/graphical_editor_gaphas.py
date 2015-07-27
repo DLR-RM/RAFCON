@@ -141,8 +141,8 @@ class GraphicalEditorController(ExtendedController):
                 return
 
             # Adjust size of new state
-            old_size = state_orig_m.meta['gui']['editor']['size']
-            target_size = target_state_m.meta['gui']['editor']['size']
+            old_size = state_orig_m.meta['gui']['editor_gaphas']['size']
+            target_size = target_state_m.meta['gui']['editor_gaphas']['size']
 
             # Use the old size, if it is smaller than the target state
             if old_size[0] < target_size[0] and old_size[1] < target_size[1]:
@@ -411,9 +411,9 @@ class GraphicalEditorController(ExtendedController):
     def apply_meta_data_on_state(self, state_v, state_meta):
         rel_pos = self.canvas.project(state_v, state_v.handles()[NW].pos)
         rel_pos[0].value, rel_pos[1].value = 0, 0
-        state_v.matrix.translate(*state_meta['gui']['editor']['rel_pos'])
-        state_v.width = state_meta['gui']['editor']['size'][0]
-        state_v.height = state_meta['gui']['editor']['size'][1]
+        state_v.matrix.translate(*state_meta['gui']['editor_gaphas']['rel_pos'])
+        state_v.width = state_meta['gui']['editor_gaphas']['size'][0]
+        state_v.height = state_meta['gui']['editor_gaphas']['size'][1]
 
     def get_connected_data_flows(self, state_v):
         parent_v = self.canvas.get_parent(state_v)
@@ -583,34 +583,28 @@ class GraphicalEditorController(ExtendedController):
         :param float depth: The hierarchy level of the state
         """
         assert isinstance(state_m, StateModel)
-        state_meta = state_m.meta['gui']['editor']
+        state_meta_gaphas = state_m.meta['gui']['editor_gaphas']
+        state_meta_opengl = state_m.meta['gui']['editor_opengl']
         state_temp = state_m.temp['gui']['editor']
 
         # Use default values if no size information is stored
-        if not isinstance(state_meta['size'], tuple):
-            state_meta['size'] = size
+        if isinstance(state_m.meta['gui']['editor']['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):
+            state_meta_gaphas['size'] = state_m.meta['gui']['editor']['size']
+            state_meta_opengl['size'] = state_m.meta['gui']['editor']['size']
+            self.model.state_machine.marked_dirty = True
+        if not isinstance(state_meta_gaphas['size'], tuple):
+            state_meta_gaphas['size'] = size
 
-        size = state_meta['size']
+        size = state_meta_gaphas['size']
 
-        if isinstance(state_meta['rel_pos'], tuple):
-            rel_pos = state_meta['rel_pos']
-            if not isinstance(state_meta['invert_y'], bool) or state_meta['invert_y']:
-                rel_pos = (rel_pos[0], -rel_pos[1])
-                state_meta['rel_pos'] = rel_pos
-                state_meta['invert_y'] = False
-                self.model.state_machine.marked_dirty = True
+        if isinstance(state_m.meta['gui']['editor']['rel_pos'], tuple) and not isinstance(state_meta_gaphas['rel_pos'], tuple):
+            rel_pos = state_m.meta['gui']['editor']['rel_pos']
+            state_meta_gaphas['rel_pos'] = (rel_pos[0], -rel_pos[1])
+            state_meta_opengl['rel_pos'] = rel_pos
+            self.model.state_machine.marked_dirty = True
 
-        # # Was the state selected?
-        # selected_states = self.model.selection.get_states()
-        # selected = False if state_m not in selected_states else True
-        #
-        # # Is the state active (executing)?
-        # active = 0
-        # if state_m.state.active:
-        #     if self.has_content(state_m) and state_m.state.child_execution:
-        #         active = 0.5
-        #     else:
-        #         active = 1
+        if isinstance(state_meta_gaphas['rel_pos'], tuple):
+            rel_pos = state_meta_gaphas['rel_pos']
 
         state_v = StateView(state_m, size, hierarchy_level)
         self.canvas.add(state_v, parent)
@@ -680,22 +674,27 @@ class GraphicalEditorController(ExtendedController):
             self.draw_transition(transition_m, transition_v, parent_state_m, parent_state_v)
 
     def draw_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
+
+        transition_meta_gaphas = transition_m.meta['gui']['editor_gaphas']
+        transition_meta_opengl = transition_m.meta['gui']['editor_opengl']
+
         try:
             if use_waypoints:
-                waypoint_list = transition_m.meta['gui']['editor']['waypoints']
-                new_waypoint_list = []
-                for waypoint in waypoint_list:
-                    if not isinstance(transition_m.meta['gui']['editor']['invert_y'], bool) or \
-                            transition_m.meta['gui']['editor']['invert_y']:
-                        waypoint = (waypoint[0], -waypoint[1])
-                        new_waypoint_list.append(waypoint)
-                    transition_v.add_waypoint(waypoint)
-
-                if not isinstance(transition_m.meta['gui']['editor']['invert_y'], bool) or \
-                        transition_m.meta['gui']['editor']['invert_y']:
-                    transition_m.meta['gui']['editor']['invert_y'] = False
-                    transition_m.meta['gui']['editor']['waypoints'] = new_waypoint_list
+                if (isinstance(transition_m.meta['gui']['editor']['waypoints'], list) and
+                        isinstance(transition_meta_gaphas['waypoints'], dict)):
+                    old_waypoint_list = transition_m.meta['gui']['editor']['waypoints']
+                    new_waypoint_list = []
+                    for wp in old_waypoint_list:
+                        wp = (wp[0], -wp[1])
+                        new_waypoint_list.append(wp)
+                    transition_meta_gaphas['waypoints'] = new_waypoint_list
+                    transition_meta_opengl['waypoints'] = old_waypoint_list
                     self.model.state_machine.marked_dirty = True
+
+                waypoint_list = transition_meta_gaphas['waypoints']
+
+                for waypoint in waypoint_list:
+                    transition_v.add_waypoint(waypoint)
 
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
@@ -719,11 +718,6 @@ class GraphicalEditorController(ExtendedController):
                 to_state_m = parent_state_m.states[to_state_id]
                 to_state_v = to_state_m.temp['gui']['editor']['view']
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
-
-            # Let the view draw the transition and store the returned OpenGL object id
-            # if transition_m in self.model.selection.get_transitions():
-            #     transition_v.selected = True
-            # line_width = self.view.editor.transition_stroke_width(parent_state_m)
 
         except AttributeError as e:
             logger.error("Cannot connect transition: {0}".format(e))

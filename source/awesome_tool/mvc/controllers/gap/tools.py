@@ -109,11 +109,13 @@ class MoveItemTool(ItemTool):
                 rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item, inmotion.item.handles()[NW])
                 if isinstance(inmotion.item, StateView):
                     state_m = inmotion.item.model
-                    state_m.meta['gui']['editor']['rel_pos'] = rel_pos
+                    state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
+                    state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
                     self._graphical_editor_view.emit('meta_data_changed', state_m, "Move state", True)
                 elif isinstance(inmotion.item, NameView):
                     state_m = self.view.canvas.get_parent(inmotion.item).model
-                    state_m.meta['name']['gui']['editor']['rel_pos'] = rel_pos
+                    state_m.meta['name']['gui']['editor_gaphas']['rel_pos'] = rel_pos
+                    state_m.meta['name']['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
                     self._graphical_editor_view.emit('meta_data_changed', state_m, "Move name", False)
 
             return True
@@ -224,7 +226,7 @@ class HandleMoveTool(HandleTool):
                 self._check_port = item.from_port
 
         if isinstance(item, TransitionView):
-            self._waypoint_list = item.model.meta['gui']['editor']['waypoints']
+            self._waypoint_list = item.model.meta['gui']['editor_gaphas']['waypoints']
 
         # Set start state
         if isinstance(item, StateView):
