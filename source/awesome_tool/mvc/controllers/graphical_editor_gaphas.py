@@ -204,11 +204,12 @@ class GraphicalEditorController(ExtendedController):
             if method_name == 'remove_state':
                 state_m = model.states[arguments[1]]
                 state_v = self.get_view_for_model(state_m)
-                state_v.remove_keep_rect_within_constraint_from_parent()
-                parent_v = self.canvas.get_parent(state_v)
-                self.canvas.remove(state_v)
-                if parent_v:
-                    self.canvas.request_update(parent_v)
+                if state_v:
+                    state_v.remove_keep_rect_within_constraint_from_parent()
+                    parent_v = self.canvas.get_parent(state_v)
+                    self.canvas.remove(state_v)
+                    if parent_v:
+                        self.canvas.request_update(parent_v)
 
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
