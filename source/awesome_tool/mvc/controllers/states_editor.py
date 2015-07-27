@@ -94,6 +94,15 @@ class StatesEditorController(ExtendedController):
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
         self.register()
+        selected_sm_model = self.model.get_selected_state_machine_model()
+        selected_states = selected_sm_model.selection.get_states()
+        if len(selected_states) == 0:
+            selected_state = None
+        else:
+            selected_state = selected_states[0]
+
+        if selected_state:
+            self.change_state_editor_selection(selected_state)
 
     @ExtendedController.observe("state_machines", after=True)
     def state_machines_notification(self, model, prop_name, info):
