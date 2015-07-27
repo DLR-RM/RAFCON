@@ -12,7 +12,7 @@ gui: !Vividict
 income: !Vividict
     gui: !Vividict
         editor_gaphas: !Vividict
-            rel_pos: !Vividict {}
+            rel_pos: !!python/tuple [0.1403390860940396, 0.9448592495886672]
 name: !Vividict
     gui: !Vividict
         editor_gaphas: !Vividict
@@ -21,11 +21,11 @@ name: !Vividict
 outcome-1: !Vividict
     gui: !Vividict
         editor_gaphas: !Vividict
-            rel_pos: !Vividict {}
+            rel_pos: !!python/tuple [6.784074599974835, 1.1928822317993366]
 outcome-2: !Vividict
     gui: !Vividict
         editor_gaphas: !Vividict
-            rel_pos: !Vividict {}
+            rel_pos: !!python/tuple [6.784074599974835, 0.8420345165642377]
 outcome0: !Vividict
     gui: !Vividict
         editor_gaphas: !Vividict

@@ -29,7 +29,7 @@ outcome-2: !Vividict
 outcome0: !Vividict
     gui: !Vividict
         editor_gaphas: !Vividict
-            rel_pos: !!python/tuple [126.16489361702106, 46.001078271954576]
+            rel_pos: !!python/tuple [42.820892917349354, 62.33510638297866]
 transition3: !Vividict
     gui: !Vividict
         editor: !Vividict
