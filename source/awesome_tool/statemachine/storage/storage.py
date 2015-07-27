@@ -10,6 +10,7 @@
 
 import os
 import shutil
+import glob
 from time import gmtime, strftime
 
 import yaml
@@ -19,6 +20,13 @@ from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 from awesome_tool.utils.storage_utils import StorageUtils
+# clean the DEFAULT_SCRIPT_PATH folder at each program start
+
+from awesome_tool.statemachine.enums import DEFAULT_SCRIPT_PATH
+if StorageUtils.exists_path(DEFAULT_SCRIPT_PATH):
+    files = glob.glob(DEFAULT_SCRIPT_PATH + "*")
+    for f in files:
+        shutil.rmtree(f)
 
 class StateMachineStorage(Observable):
 
@@ -85,16 +93,16 @@ class StateMachineStorage(Observable):
         # remove all paths that were marked to be removed
         if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
             for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
-                if self.storage_utils.exists_path(path):
-                    self.storage_utils.remove_path(path)
+                if StorageUtils.exists_path(path):
+                    StorageUtils.remove_path(path)
 
         root_state = statemachine.root_state
         # clean old path first
-        if self.storage_utils.exists_path(self.base_path):
+        if StorageUtils.exists_path(self.base_path):
             if delete_old_state_machine:
-                self.storage_utils.remove_path(self.base_path)
-        if not self.storage_utils.exists_path(self.base_path):
-            self.storage_utils.create_path(self.base_path)
+                StorageUtils.remove_path(self.base_path)
+        if not StorageUtils.exists_path(self.base_path):
+            StorageUtils.create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
         last_update = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         creation_time = last_update
@@ -111,7 +119,7 @@ class StateMachineStorage(Observable):
         statemachine.base_path = self.base_path
         logger.debug("Successfully saved statemachine!")
 
-    def save_script_file_for_state_and_source_path(self, state, state_path):
+    def save_script_file_for_state_and_source_path(self, state, state_path, force_full_load=False):
         """
         Saves the script file for a state to the directory of the state. The script name will be set to the SCRIPT_FILE
         constant.
@@ -122,7 +130,7 @@ class StateMachineStorage(Observable):
         # only save the script file if the state is not a library state
         # if not hasattr(state, "library_name"):  # ugly!
         from awesome_tool.statemachine.states.library_state import LibraryState
-        if not isinstance(state, LibraryState):
+        if not isinstance(state, LibraryState) or force_full_load:
             state_path_full = os.path.join(self.base_path, state_path)
             source_script_file = os.path.join(state.script.path, state.script.filename)
             destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
@@ -143,7 +151,7 @@ class StateMachineStorage(Observable):
         script_file.write(state.script.script)
         script_file.close()
 
-    def save_state_recursively(self, state, parent_path):
+    def save_state_recursively(self, state, parent_path, force_full_load=False):
         """
         Recursively saves a state to a yaml file. It calls this method on all its substates.
         :param state:
@@ -152,16 +160,16 @@ class StateMachineStorage(Observable):
         """
         state_path = os.path.join(parent_path, str(state.state_id))
         state_path_full = os.path.join(self.base_path, state_path)
-        self.storage_utils.create_path(state_path_full)
-        self.save_script_file_for_state_and_source_path(state, state_path)
-        self.storage_utils.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
+        StorageUtils.create_path(state_path_full)
+        self.save_script_file_for_state_and_source_path(state, state_path, force_full_load)
+        StorageUtils.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
         state.script.path = state_path_full
         state.script.filename = self.SCRIPT_FILE
 
         #create yaml files for all children
         if hasattr(state, 'states'):
             for key, state in state.states.iteritems():
-                self.save_state_recursively(state, state_path)
+                self.save_state_recursively(state, state_path, force_full_load)
 
     def clean_transitions_of_sm(self, root_state):
         affected_sm = False

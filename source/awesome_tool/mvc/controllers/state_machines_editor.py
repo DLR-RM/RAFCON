@@ -104,6 +104,9 @@ class StateMachinesEditorController(ExtendedController):
         for identifier, meta in self.tabs.iteritems():
             if meta['page'] is page:
                 model = meta['state_machine_model']
+                # set active state machine id
+                awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = \
+                    model.state_machine.state_machine_id
                 logger.debug("state machine id of current state machine page %s" % model.state_machine.state_machine_id)
                 if not model.state_machine.state_machine_id == self.model.selected_state_machine_id:
                     self.model.selected_state_machine_id = model.state_machine.state_machine_id
