@@ -66,7 +66,7 @@ class StateView(Element):
 
         if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['size'], tuple):
             name_width = self.width * 0.8
-            name_height = self.height * 0.2
+            name_height = self.height * 0.4
             name_size = (name_width, name_height)
         else:
             name_size = state_m.meta['name']['gui']['editor_gaphas']['size']
@@ -770,6 +770,24 @@ class NameView(Element):
     def parent(self):
         return self.canvas.get_parent(self)
 
+    def get_name_string(self, name):
+        if len(name) > constants.MAX_TITLE_LENGTH_PER_LINE:
+            multi_line_name = ""
+            split = name.split(" ")
+            line = ""
+
+            for sub_string in split:
+                if len(line) + len(sub_string) < constants.MAX_TITLE_LENGTH_PER_LINE:
+                    line = line + sub_string + " "
+                else:
+                    multi_line_name = multi_line_name + line + "\n"
+                    line = sub_string + " "
+            multi_line_name += line
+
+            return multi_line_name
+        else:
+            return name
+
     def draw(self, context):
         if self.moving:
             return
@@ -793,7 +811,7 @@ class NameView(Element):
         pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
         layout = pcc.create_layout()
-        layout.set_text(self.name)
+        layout.set_text(self.get_name_string(self.name))
 
         font_name = constants.FONT_NAMES[0]
         font_size = 20
@@ -806,6 +824,9 @@ class NameView(Element):
         while layout.get_size()[0] / float(SCALE) > self.width or layout.get_size()[1] / float(SCALE) > self.height:
             font_size *= 0.9
             set_font_description()
+
+        self.width = layout.get_size()[0] / float(SCALE)
+        self.height = layout.get_size()[1] / float(SCALE)
 
         c.move_to(*self.handles()[NW].pos)
         cc.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
