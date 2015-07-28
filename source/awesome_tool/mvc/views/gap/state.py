@@ -648,24 +648,24 @@ class StateView(Element):
     def _move_pos_one_step(pos, port_size, side, logic, in_port):
         if side is SnappedSide.RIGHT:
             if logic or (not logic and in_port):
-                return pos + 1.25 * port_size
+                return pos + constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
             else:
-                return pos - 1.25 * port_size
+                return pos - constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
         elif side is SnappedSide.LEFT:
             if logic or (not logic and in_port):
-                return pos - 1.25 * port_size
+                return pos - constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
             else:
-                return pos + 1.25 * port_size
+                return pos + constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
         elif side is SnappedSide.BOTTOM:
             if not in_port and not logic:
-                return pos + 1.25 * port_size
+                return pos + constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
             else:
-                return pos - 1.25 * port_size
+                return pos - constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
         elif side is SnappedSide.TOP:
             if not in_port and not logic:
-                return pos - 1.25 * port_size
+                return pos - constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
             else:
-                return pos + 1.25 * port_size
+                return pos + constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
 
     def resize_all_children(self, old_size, paste=False):
         from awesome_tool.mvc.controllers.gap import gap_helper
