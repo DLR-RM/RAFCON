@@ -211,7 +211,6 @@ class GuidedItemInMotion(GuideMixin, ItemInMotion):
         for child in self.view.canvas.get_all_children(root_items[0]):
             if (isinstance(child, StateView) and isinstance(self.item, StateView) and
                     self.item.hierarchy_level == child.hierarchy_level and child is not self.item):
-                print child
                 exclude_items.remove(child)
 
         return exclude_items
