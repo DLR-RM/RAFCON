@@ -98,8 +98,8 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
 
-    global_config.load(setup_config['config_path'])
-    global_gui_config.load(setup_config['gui_config_path'])
+    global_config.load(path=setup_config['config_path'])
+    global_gui_config.load(path=setup_config['gui_config_path'])
 
     # Initialize library
     sm_singletons.library_manager.initialize()
