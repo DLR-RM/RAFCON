@@ -24,12 +24,5 @@ class ExtendedGtkView(GtkView):
                 return item
         return None
 
-    # def do_expose_event(self, event):
-    #     import gtk
-    #     print event.area, self.allocation
-    #         #self.queue_draw_area()
-    #     # event.area = gtk.gdk.Rectangle(0, 0, self.get_size_request())
-    #     super(ExtendedGtkView, self).do_expose_event(event)
-
     def redraw_complete_screen(self):
         self.queue_draw_area(0, 0, self.allocation[2], self.allocation[3])
