@@ -22,10 +22,8 @@ from awesome_tool.mvc.config import global_gui_config
 
 from awesome_tool.mvc.views.gap.canvas import MyCanvas
 
-from gtk.gdk import keyval_name
-
 from gaphas import Canvas
-import gaphas.guide
+import awesome_tool.mvc.controllers.gap.guide
 
 
 class GraphicalEditorController(ExtendedController):
