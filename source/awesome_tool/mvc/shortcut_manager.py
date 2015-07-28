@@ -58,7 +58,8 @@ class ShortcutManager():
             'down': ['<Control>Down', '<Control><Shift>Down'],
             'show_data_flows': '<Control>D',
             'show_data_values': '<Control>L',
-            'data_flow_mode': '<Control><Shift>D'
+            'data_flow_mode': '<Control><Shift>D',
+            'show_aborted_preempted': '<Control>P'
         }
 
     def __register_shortcuts(self):

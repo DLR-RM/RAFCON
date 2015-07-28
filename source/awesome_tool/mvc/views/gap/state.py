@@ -4,6 +4,7 @@ import cairo
 from pango import SCALE, FontDescription
 
 from gtk.gdk import CairoContext, Color
+from math import pow
 
 from copy import copy
 
@@ -61,6 +62,7 @@ class StateView(Element):
         self.selected = False
         self._moving = False
         self._transparent = False
+        self._show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
 
         if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['size'], tuple):
             name_width = self.width * 0.8
@@ -139,6 +141,10 @@ class StateView(Element):
         return False
 
     @property
+    def show_aborted_preempted(self):
+        return global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
+
+    @property
     def show_data_port_label(self):
         return global_gui_config.get_config_value("SHOW_DATA_FLOWS")
 
@@ -156,8 +162,8 @@ class StateView(Element):
 
     @property
     def port_side_size(self):
-        return min(min(self.width, self.height) / 20., 3. / self.hierarchy_level)
-        # return 3. / self.hierarchy_level
+        # dynamic_width = min(self.width, self.height) / 20.
+        return constants.ROOT_WIDTH / pow(constants.WIDTH_HIERARCHY_FACTOR, self.hierarchy_level - 1)
 
     @property
     def parent(self):
@@ -166,6 +172,10 @@ class StateView(Element):
     @property
     def corner_handles(self):
         return [self.handles()[NW], self.handles()[NE], self.handles()[SW], self.handles()[SE]]
+
+    @property
+    def aborted_preempted_handles(self):
+        return [self.outcomes[-1].handle, self.outcomes[-2].handle]
 
     @property
     def model(self):
@@ -265,6 +275,8 @@ class StateView(Element):
         self._income.draw(context, self)
 
         for outcome in self._outcomes:
+            if not self.show_aborted_preempted and (outcome.outcome_id == -1 or outcome.outcome_id == -2):
+                continue
             outcome.port_side_size = self.port_side_size
             outcome.draw(context, self)
 
@@ -769,6 +781,13 @@ class NameView(Element):
             cc = c
         else:
             cc = c._cairo
+
+        if context.selected:
+            c.rectangle(0, 0, self.width, self.height)
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), alpha=.1))
+            c.fill_preserve()
+            c.set_source_rgba(0, 0, 0, 0)
+            c.stroke()
 
         pcc = CairoContext(cc)
         pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)

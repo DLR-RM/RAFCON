@@ -81,6 +81,7 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action('show_data_flows', self.update_view)
         shortcut_manager.add_callback_for_action('show_data_values', self.update_view)
         shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode)
+        shortcut_manager.add_callback_for_action('show_aborted_preempted', self.update_view)
 
     def update_view(self, *args):
         self.canvas.update_root_items()
@@ -555,7 +556,7 @@ class GraphicalEditorController(ExtendedController):
         parent_state_v = self.get_view_for_model(parent_state_m)
 
         new_state_side_size = min(parent_state_v.width * 0.2, parent_state_v.height * 0.2)
-        new_state_hierarchy_level = parent_state_v.hierarchy_level * 2
+        new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
         new_state_size = (new_state_side_size, new_state_side_size)
 
         self.setup_state(state_m, parent_state_v, size=new_state_size, hierarchy_level=new_state_hierarchy_level)
@@ -650,7 +651,7 @@ class GraphicalEditorController(ExtendedController):
                 child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
                 num_child_state += 1
 
-                self.setup_state(child_state, state_v, (0, 0), child_size, hierarchy_level * 2)
+                self.setup_state(child_state, state_v, (0, 0), child_size, hierarchy_level + 1)
 
             self.draw_transitions(state_m, hierarchy_level)
 

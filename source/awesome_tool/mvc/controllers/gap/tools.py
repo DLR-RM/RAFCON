@@ -10,10 +10,12 @@ from awesome_tool.mvc.views.gap.state import StateView, NameView
 
 from awesome_tool.mvc.controllers.gap.aspect import HandleInMotion
 from awesome_tool.mvc.controllers.gap import gap_helper
+from awesome_tool.mvc.singleton import state_machine_manager_model
 
 import gtk
 from gtk.gdk import CONTROL_MASK
 from enum import Enum
+from math import pow
 
 from awesome_tool.mvc.statemachine_helper import StateMachineHelper
 
@@ -67,6 +69,12 @@ class MoveItemTool(ItemTool):
         item = self.get_item()
         if isinstance(item, StateView):
             self._item = item
+
+        if (isinstance(self.view.focused_item, NameView) and not
+                state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
+                    self.view.focused_item.parent.model)):
+            self.view.focused_item = self.view.focused_item.parent
+            self._item = self.view.focused_item
 
         if not self.view.is_focus():
             self.view.grab_focus()
@@ -832,9 +840,9 @@ class ConnectHandleMoveTool(HandleMoveTool):
 
         # glue_distance is the snapping radius
         if item.from_handle() is handle:
-            glue_distance = 1.0 / ((item.hierarchy_level + 1) * 2)
+            glue_distance = 1.0 / pow(2, item.hierarchy_level)
         else:
-            glue_distance = 1.0 / (item.hierarchy_level * 2)
+            glue_distance = 1.0 / pow(2, item.hierarchy_level - 1)
 
         if self.motion_handle:
             return self.motion_handle.glue(vpos, glue_distance)

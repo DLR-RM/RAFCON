@@ -41,6 +41,9 @@ class MenuBarController(ExtendedController):
         show_data_flow_values = global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
         view["show_data_flow_values"].set_active(show_data_flow_values)
 
+        show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
+        view["show_aborted_preempted"].set_active(show_aborted_preempted)
+
         if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
             view["data_flow_mode"].hide()
             view["show_data_flow_values"].hide()
@@ -73,6 +76,7 @@ class MenuBarController(ExtendedController):
         shortcut_manager.add_callback_for_action('show_data_flows', self.show_all_data_flows_toggled_shortcut)
         shortcut_manager.add_callback_for_action('show_data_values', self.show_show_data_flow_values_toggled_shortcut)
         shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode_toggled_shortcut)
+        shortcut_manager.add_callback_for_action('show_aborted_preempted', self.show_aborted_preempted)
 
     ######################################################
     # menu bar functionality - File
@@ -352,6 +356,12 @@ class MenuBarController(ExtendedController):
         else:
             self.view["show_data_flow_values"].set_active(True)
 
+    def show_aborted_preempted(self, *args):
+        if self.view["show_aborted_preempted"].get_active():
+            self.view["show_aborted_preempted"].set_active(False)
+        else:
+            self.view["show_aborted_preempted"].set_active(True)
+
     def on_data_flow_mode_toggled(self, widget, data=None):
         if widget.get_active():
             global_gui_config.set_config_value("DATA_FLOW_MODE", True)
@@ -369,6 +379,12 @@ class MenuBarController(ExtendedController):
             global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         else:
             global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+
+    def on_show_aborted_preempted_toggled(self, widget, data=None):
+        if widget.get_active():
+            global_gui_config.set_config_value("SHOW_ABORTED_PREEMPTED", True)
+        else:
+            global_gui_config.set_config_value("SHOW_ABORTED_PREEMPTED", False)
 
     def on_expert_view_activate(self, widget, data=None):
         pass

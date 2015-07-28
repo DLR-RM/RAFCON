@@ -1,6 +1,7 @@
 from gaphas.painter import HandlePainter
 
 from awesome_tool.mvc.views.gap.connection import ConnectionView, ScopedVariableDataFlowView
+from awesome_tool.mvc.views.gap.state import StateView
 
 from cairo import ANTIALIAS_NONE
 
@@ -24,6 +25,8 @@ class CustomColorHandlePainter(HandlePainter):
 
         get_connection = view.canvas.get_connection
         for h in item.handles():
+            if isinstance(item, StateView) and h in item.aborted_preempted_handles and not item.show_aborted_preempted:
+                continue
             if not h.visible or isinstance(item, ConnectionView) and h in item.perp_waypoint_handles():
                 continue
             if isinstance(item, ScopedVariableDataFlowView) and h not in item.end_handles():
@@ -42,6 +45,11 @@ class CustomColorHandlePainter(HandlePainter):
             cairo.identity_matrix()
             cairo.set_antialias(ANTIALIAS_NONE)
             cairo.translate(*i2v.transform_point(*h.pos))
+            # if isinstance(item, StateView) and h in item.corner_handles:
+            #     size = item.port_side_size * 2
+            #     size_half = size / 2.
+            #     cairo.rectangle(-size_half, -size_half, size, size)
+            # else:
             cairo.rectangle(-4, -4, 8, 8)
             if inner:
                 cairo.rectangle(-3, -3, 6, 6)
