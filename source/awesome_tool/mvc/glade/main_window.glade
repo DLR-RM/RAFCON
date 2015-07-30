@@ -384,7 +384,7 @@
                                       <object class="GtkEventBox" id="eventbox3">
                                         <property name="visible">True</property>
                                         <child>
-                                          <object class="GtkEventBox" id="eventbox4">
+                                          <object class="GtkEventBox" id="graphical_editor_label_event_box">
                                             <property name="visible">True</property>
                                             <property name="border_width">10</property>
                                             <child>
@@ -834,7 +834,7 @@
                       <object class="GtkEventBox" id="eventbox5">
                         <property name="visible">True</property>
                         <child>
-                          <object class="GtkHBox" id="hbox5">
+                          <object class="GtkHBox" id="state_editor_label_hbox">
                             <property name="visible">True</property>
                             <property name="border_width">10</property>
                             <child>

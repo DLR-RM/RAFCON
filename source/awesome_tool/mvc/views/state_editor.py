@@ -38,6 +38,8 @@ class StateEditorView(View):
         self['data_flows_view'] = StateDataFlowsEditorView()
         self['linkage_overview'] = LinkageOverviewView()
 
+        self['properties_viewport'].set_border_width(constants.BORDER_WIDTH)
+
         self['properties_viewport'].add(self['properties_view'].get_top_widget())
         self['input_ports_scroller'].add(self['inputs_view'].get_top_widget())
         self['output_ports_scroller'].add(self['outputs_view'].get_top_widget())

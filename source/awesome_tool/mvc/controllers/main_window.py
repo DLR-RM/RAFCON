@@ -121,6 +121,16 @@ class MainWindowController(ExtendedController):
                                                          view.states_editor,
                                                          editor_type)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
+
+        state_editor_label = view['state_editor_label']
+        view['state_editor_label_hbox'].remove(state_editor_label)
+        new_label = gui_helper.create_label_with_text_and_spacing(state_editor_label.get_text(),
+                                                                  font_size=constants.FONT_SIZE_BIG,
+                                                                  letter_spacing=constants.LETTER_SPACING_1PT)
+        new_label.set_alignment(0., .5)
+        view['state_editor_label_hbox'].pack_start(new_label, True, True, 0)
+        view['state_editor_label_hbox'].reorder_child(new_label, 0)
+
         ######################################################
         # state machines editor
         ######################################################
@@ -128,6 +138,14 @@ class MainWindowController(ExtendedController):
                                                                         view.state_machines_editor,
                                                                         states_editor_ctrl)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
+
+        graphical_editor_label = view['graphical_editor_label']
+        view['graphical_editor_label_event_box'].remove(graphical_editor_label)
+        new_label = gui_helper.create_label_with_text_and_spacing(graphical_editor_label.get_text(),
+                                                                  font_size=constants.FONT_SIZE_BIG,
+                                                                  letter_spacing=constants.LETTER_SPACING_1PT)
+        new_label.set_alignment(0., .5)
+        view['graphical_editor_label_event_box'].add(new_label)
 
         ######################################################
         # global variable editor
@@ -321,11 +339,8 @@ class MainWindowController(ExtendedController):
 
     def create_label_box(self, text):
         hbox = gtk.HBox()
-        label = gtk.Label()
-        label.set_markup('<span font_desc="%s %s" letter_spacing="%s">%s</span>' % (constants.FONT_NAMES[0],
-                                                                                    constants.FONT_SIZE_BIG,
-                                                                                    constants.LETTER_SPACING_1PT,
-                                                                                    text))
+        label = gui_helper.create_label_with_text_and_spacing(text, font_size=constants.FONT_SIZE_BIG,
+                                                              letter_spacing=constants.LETTER_SPACING_1PT)
         label.set_alignment(0.0, 0.5)
         inner_eventbox = gtk.EventBox()
         inner_label = gtk.Label()
