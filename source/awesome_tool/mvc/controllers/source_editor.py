@@ -45,6 +45,8 @@ class SourceEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("copy", self._copy)
         shortcut_manager.add_callback_for_action("paste", self._paste)
         shortcut_manager.add_callback_for_action("cut", self._cut)
+        shortcut_manager.add_callback_for_action("undo", self._undo)
+        shortcut_manager.add_callback_for_action("redo", self._redo)
 
     def _copy(self, *args):
         pass
@@ -53,6 +55,14 @@ class SourceEditorController(ExtendedController):
         pass
 
     def _cut(self, *args):
+        pass
+
+    def _undo(self, *args):
+        logger.debug('run Undo on script editor')
+        pass
+
+    def _redo(self, *args):
+        logger.debug('run Redo on script editor')
         pass
 
     #===============================================================
@@ -68,8 +78,14 @@ class SourceEditorController(ExtendedController):
             return
 
         logger.debug("Apply button pressed!")
+
+        ###############
+        # get script
         tbuffer = self.view.get_buffer()
         current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+
+        ###############
+        # do syntax-check on script
         text_file = open("/tmp/file_to_get_pylinted.py", "w")
         text_file.write(current_text)
         text_file.close()
@@ -110,8 +126,8 @@ class SourceEditorController(ExtendedController):
         else:
             if self.model.state.set_script_text(current_text):
                 logger.debug("File saved")
-                awesome_tool.statemachine.singleton.global_storage.save_script_file(self.model.state)
-            self.view.set_text(self.model.state.script.script)
+                # awesome_tool.statemachine.singleton.global_storage.save_script_file(self.model.state)  # why we store it to a file here???
+            # self.view.set_text(self.model.state.script.script)
 
     def filter_out_not_compatible_modules(self, pylint_msg):
         """
@@ -138,10 +154,23 @@ class SourceEditorController(ExtendedController):
 
     def on_message_dialog_response_signal(self, widget, response_id, current_text):
         if response_id == 42:
-            self.model.state.script.script = current_text
-            awesome_tool.statemachine.singleton.global_storage.save_script_file(self.model.state)
-            self.view.set_text(self.model.state.script.script)
+            # # we make it observable !!!!
+            # script = self.model.state.script
+            # script.script = current_text
+            # self.model.state.script = script  # so we use the setter !!!
+            self.model.state.set_script_text(current_text)
+            # awesome_tool.statemachine.singleton.global_storage.save_script_file(self.model.state)  # why do we save it to file???
             logger.debug("File saved")
         else:
             logger.debug("File not saved")
         widget.destroy()
+
+    @ExtendedController.observe("state", after=True)
+    def after_notification_of_script_text_was_changed(self, model, prop_name, info):
+
+        if hasattr(info, "method_name") and "set_script_text" == info.method_name:
+            # logger.debug('after_notification_of_script_text_was_changed' + str(info) + "\n" + self.model.state.script.script)
+            self.view.set_text(self.model.state.script.script)
+        if hasattr(info, "method_name") and "script" == info.method_name:
+            # logger.debug('after_notification_of_script_was_exchanged' + str(info) + "\n" + self.model.state.script.script)
+            self.view.set_text(self.model.state.script.script)

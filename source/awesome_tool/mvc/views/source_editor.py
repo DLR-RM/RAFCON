@@ -8,8 +8,6 @@ from gtkmvc import View
 from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.utils import constants
 
-# TODO: comment
-
 
 class SourceEditorView(View):
     top = 'source_editor_frame'

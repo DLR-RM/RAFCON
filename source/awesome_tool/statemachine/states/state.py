@@ -473,6 +473,7 @@ class State(Observable, yaml.YAMLObject):
                     if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
                         raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
 
+    @Observable.observed
     def set_script_text(self, new_text):
         """
         Sets the text of the script. This function can be overridden to prevent setting the script under certain
