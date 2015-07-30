@@ -22,10 +22,20 @@ from awesome_tool.utils import constants
 from awesome_tool.mvc.controllers.execution_history import ExecutionHistoryTreeController
 import threading
 from awesome_tool.statemachine.enums import StateMachineExecutionStatus
+from awesome_tool.mvc import gui_helper
 
 from awesome_tool.mvc.config import global_gui_config
 
+
 class MainWindowController(ExtendedController):
+
+    icons = {
+        "Libraries":            constants.SIGN_LIB,
+        "State Tree":           constants.ICON_TREE,
+        "Global Variables":     constants.ICON_GLOB,
+        "History":              constants.ICON_HIST,
+        "Execution History":    constants.ICON_EHIST
+    }
 
     def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
         ExtendedController.__init__(self, state_machine_manager_model, view)
@@ -70,7 +80,8 @@ class MainWindowController(ExtendedController):
         view["tree_notebook_1"].remove_page(page_num)
 
         library_tab_label = gtk.Label('Libraries')
-        library_notebook_widget = self.create_notebook_widget('LIBRARIES', view.library_tree)
+        library_notebook_widget = self.create_notebook_widget('LIBRARIES', view.library_tree,
+                                                              border=constants.BORDER_WIDTH_TEXTVIEW)
         view["tree_notebook_1"].insert_page(library_notebook_widget, library_tab_label, page_num)
 
         # view['add_link_button'].connect("clicked", library_controller.add_link_button_clicked,
@@ -99,7 +110,8 @@ class MainWindowController(ExtendedController):
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 
         state_machine_tab_label = gtk.Label('State Tree')
-        state_machine_notebook_widget = self.create_notebook_widget('STATE TREE', view.state_machine_tree)
+        state_machine_notebook_widget = self.create_notebook_widget('STATE TREE', view.state_machine_tree,
+                                                                    border=constants.BORDER_WIDTH_TEXTVIEW)
         view["tree_notebook_1"].insert_page(state_machine_notebook_widget, state_machine_tab_label, page_num)
 
         ######################################################
@@ -130,7 +142,8 @@ class MainWindowController(ExtendedController):
 
         global_variables_tab_label = gtk.Label('Global Variables')
         global_variables_notebook_widget = self.create_notebook_widget('GLOBAL VARIABLES',
-                                                                       view.global_var_manager_view.get_top_widget())
+                                                                       view.global_var_manager_view.get_top_widget(),
+                                                                       border=constants.BORDER_WIDTH_TEXTVIEW)
         view["tree_notebook_1"].insert_page(global_variables_notebook_widget, global_variables_tab_label, page_num)
 
         view["tree_notebook_1"].set_current_page(0)
@@ -146,8 +159,9 @@ class MainWindowController(ExtendedController):
         state_machine_history_controller = StateMachineHistoryController(state_machine_manager_model,
                                                                          view.state_machine_history)
         self.add_controller('state_machine_history_controller', state_machine_history_controller)
-        history_label = gtk.Label('HISTORY')
-        history_notebook_widget = self.create_notebook_widget("HISTORY", view.state_machine_history.get_top_widget())
+        history_label = gtk.Label('History')
+        history_notebook_widget = self.create_notebook_widget("HISTORY", view.state_machine_history.get_top_widget(),
+                                                              border=constants.BORDER_WIDTH_TEXTVIEW)
         view["tree_notebook_2"].insert_page(history_notebook_widget, history_label, page_num)
 
         # history_tab_label = gtk.Label('History')
@@ -171,7 +185,8 @@ class MainWindowController(ExtendedController):
         execution_history_tab_label = gtk.Label('Execution History')
         execution_history_notebook_widget = self.create_notebook_widget('EXECUTION HISTORY',
                                                                         view.execution_history_view.get_top_widget(),
-                                                                        use_scroller=False)
+                                                                        use_scroller=False,
+                                                                        border=constants.BORDER_WIDTH_TEXTVIEW)
         view["tree_notebook_2"].insert_page(execution_history_notebook_widget, execution_history_tab_label, page_num)
 
         ######################################################
@@ -181,14 +196,18 @@ class MainWindowController(ExtendedController):
         for i in range(view["tree_notebook_1"].get_n_pages()):
             child = view["tree_notebook_1"].get_nth_page(i)
             tab_label = view["tree_notebook_1"].get_tab_label(child)
-            tab_label.set_angle(90)
+            # tab_label.set_angle(90)
+            tab_label_text = tab_label.get_text()
+            view["tree_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
             view["tree_notebook_1"].set_tab_reorderable(child, True)
             view["tree_notebook_1"].set_tab_detachable(child, True)
 
         for i in range(view["tree_notebook_2"].get_n_pages()):
             child = view["tree_notebook_2"].get_nth_page(i)
             tab_label = view["tree_notebook_2"].get_tab_label(child)
-            tab_label.set_angle(90)
+            # tab_label.set_angle(90)
+            tab_label_text = tab_label.get_text()
+            view["tree_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
             view["tree_notebook_2"].set_tab_reorderable(child, True)
             view["tree_notebook_2"].set_tab_detachable(child, True)
 
@@ -296,7 +315,11 @@ class MainWindowController(ExtendedController):
 
     def create_label_box(self, text):
         hbox = gtk.HBox()
-        label = gtk.Label(text)
+        label = gtk.Label()
+        label.set_markup('<span font_desc="%s %s" letter_spacing="%s">%s</span>' % (constants.FONT_NAMES[0],
+                                                                                    constants.FONT_SIZE_BIG,
+                                                                                    constants.LETTER_SPACING_1PT,
+                                                                                    text))
         label.set_alignment(0.0, 0.5)
         inner_eventbox = gtk.EventBox()
         inner_label = gtk.Label()
@@ -334,7 +357,7 @@ class MainWindowController(ExtendedController):
         self.view['left_v_pane_2'].remove(self.console_child)
         self.view['console_return_button'].show()
 
-    def create_notebook_widget(self, title, widget, use_scroller=True):
+    def create_notebook_widget(self, title, widget, use_scroller=True, border=10):
         title_label = self.create_label_box(title)
         event_box = gtk.EventBox()
         vbox = gtk.VBox()
@@ -342,7 +365,11 @@ class MainWindowController(ExtendedController):
         if use_scroller:
             scroller = gtk.ScrolledWindow()
             scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            scroller.add_with_viewport(widget)
+            alig = gtk.Alignment(0., 0., 1., 1.)
+            alig.set_padding(0, 0, border, 0)
+            alig.add(widget)
+            alig.show()
+            scroller.add_with_viewport(alig)
             vbox.pack_start(scroller, True, True, 0)
         else:
             vbox.pack_start(widget, True, True, 0)

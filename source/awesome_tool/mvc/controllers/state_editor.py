@@ -8,6 +8,7 @@ from awesome_tool.mvc.controllers import StateOverviewController, SourceEditorCo
 from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEditorController
 from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
 from awesome_tool.mvc.models import ContainerStateModel
+from awesome_tool.mvc import gui_helper
 from awesome_tool.statemachine.states.library_state import LibraryState
 from awesome_tool.utils import constants
 from awesome_tool.utils import log
@@ -61,7 +62,7 @@ class StateEditorController(ExtendedController):
             child = view["main_notebook_1"].get_nth_page(i)
             tab_label = view["main_notebook_1"].get_tab_label(child)
             tab_label_text = tab_label.get_text()
-            view["main_notebook_1"].set_tab_label(child, self.create_tab_header_label(tab_label_text))
+            view["main_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
             view["main_notebook_1"].set_tab_reorderable(child, True)
             view["main_notebook_1"].set_tab_detachable(child, True)
 
@@ -69,26 +70,12 @@ class StateEditorController(ExtendedController):
             child = view["main_notebook_2"].get_nth_page(i)
             tab_label = view["main_notebook_2"].get_tab_label(child)
             tab_label_text = tab_label.get_text()
-            view["main_notebook_2"].set_tab_label(child, self.create_tab_header_label(tab_label_text))
+            view["main_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
             view["main_notebook_2"].set_tab_reorderable(child, True)
             view["main_notebook_2"].set_tab_detachable(child, True)
 
         if isinstance(model, ContainerStateModel):
             self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
-
-    def create_tab_header_label(self, tab_name):
-        tooltip_event_box = gtk.EventBox()
-        tooltip_event_box.set_tooltip_text(tab_name)
-        tab_label = gtk.Label()
-        tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
-                             (constants.ICON_FONT,
-                              constants.FONT_SIZE_BIG,
-                              self.icons[tab_name]))
-        tab_label.show()
-        tooltip_event_box.add(tab_label)
-        tooltip_event_box.set_visible_window(False)
-        tooltip_event_box.show()
-        return tooltip_event_box
 
     def register_view(self, view):
         """Called when the View was registered

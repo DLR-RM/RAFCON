@@ -22,6 +22,15 @@
       </packing>
     </child>
     <child>
+      <object class="GtkSeparatorToolItem" id="separatortoolitem1">
+        <property name="visible">True</property>
+        <property name="draw">False</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkToolButton" id="button_open">
         <property name="visible">True</property>
         <property name="is_important">True</property>
@@ -33,6 +42,15 @@
       <packing>
         <property name="expand">False</property>
         <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparatorToolItem" id="separatortoolitem2">
+        <property name="visible">True</property>
+        <property name="draw">False</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
       </packing>
     </child>
     <child>
@@ -50,6 +68,15 @@
       </packing>
     </child>
     <child>
+      <object class="GtkSeparatorToolItem" id="separatortoolitem3">
+        <property name="visible">True</property>
+        <property name="draw">False</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkToolButton" id="button_refresh">
         <property name="visible">True</property>
         <property name="is_important">True</property>
@@ -61,6 +88,15 @@
       <packing>
         <property name="expand">False</property>
         <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparatorToolItem" id="separatortoolitem4">
+        <property name="visible">True</property>
+        <property name="draw">False</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
       </packing>
     </child>
     <child>

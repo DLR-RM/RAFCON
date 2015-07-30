@@ -17,7 +17,7 @@ class ToolBarView(View):
         button_refresh.set_label_widget(self.get_label_widget(constants.BUTTON_REFR, "Refresh"))
 
         button_open = self['button_open']
-        button_open.set_label_widget(self.get_label_widget(constants.BUTTON_OPEN, "Open"))
+        button_open.set_label_widget(self.get_label_widget(constants.BUTTON_OPEN, "Open Statemachine"))
 
         button_save = self['button_save']
         button_save.set_label_widget(self.get_label_widget(constants.BUTTON_SAVE, "Save Statemachine"))
@@ -37,7 +37,11 @@ class ToolBarView(View):
         icon_label.show()
         hbox.pack_start(icon_label, False, True, 2)
 
-        text_label = gtk.Label(text)
+        text_label = gtk.Label()
+        text_label.set_markup('<span font_desc="%s %s" letter_spacing="%s">%s</span>' % (constants.FONT_NAMES[0],
+                                                                                         constants.FONT_SIZE_NORMAL,
+                                                                                         constants.LETTER_SPACING_075PT,
+                                                                                         text))
         text_label.show()
         hbox.pack_start(text_label, True, True, 2)
 
