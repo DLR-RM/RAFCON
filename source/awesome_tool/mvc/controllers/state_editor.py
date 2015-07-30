@@ -9,6 +9,7 @@ from awesome_tool.mvc.controllers.state_transitions import StateTransitionsEdito
 from awesome_tool.mvc.controllers.state_data_flows import StateDataFlowsEditorController
 from awesome_tool.mvc.models import ContainerStateModel
 from awesome_tool.mvc import gui_helper
+from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.statemachine.states.library_state import LibraryState
 from awesome_tool.utils import constants
 from awesome_tool.utils import log
@@ -61,16 +62,24 @@ class StateEditorController(ExtendedController):
         for i in range(view["main_notebook_1"].get_n_pages()):
             child = view["main_notebook_1"].get_nth_page(i)
             tab_label = view["main_notebook_1"].get_tab_label(child)
-            tab_label_text = tab_label.get_text()
-            view["main_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
+            if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+                tab_label_text = tab_label.get_text()
+                view["main_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
+                                                                                                self.icons))
+            else:
+                tab_label.set_angle(270)
             view["main_notebook_1"].set_tab_reorderable(child, True)
             view["main_notebook_1"].set_tab_detachable(child, True)
 
         for i in range(view["main_notebook_2"].get_n_pages()):
             child = view["main_notebook_2"].get_nth_page(i)
             tab_label = view["main_notebook_2"].get_tab_label(child)
-            tab_label_text = tab_label.get_text()
-            view["main_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
+            if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+                tab_label_text = tab_label.get_text()
+                view["main_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
+                                                                                                self.icons))
+            else:
+                tab_label.set_angle(270)
             view["main_notebook_2"].set_tab_reorderable(child, True)
             view["main_notebook_2"].set_tab_detachable(child, True)
 

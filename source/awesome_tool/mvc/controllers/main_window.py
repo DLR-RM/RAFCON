@@ -196,18 +196,24 @@ class MainWindowController(ExtendedController):
         for i in range(view["tree_notebook_1"].get_n_pages()):
             child = view["tree_notebook_1"].get_nth_page(i)
             tab_label = view["tree_notebook_1"].get_tab_label(child)
-            # tab_label.set_angle(90)
-            tab_label_text = tab_label.get_text()
-            view["tree_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
+            if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+                tab_label_text = tab_label.get_text()
+                view["tree_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
+                                                                                                self.icons))
+            else:
+                tab_label.set_angle(90)
             view["tree_notebook_1"].set_tab_reorderable(child, True)
             view["tree_notebook_1"].set_tab_detachable(child, True)
 
         for i in range(view["tree_notebook_2"].get_n_pages()):
             child = view["tree_notebook_2"].get_nth_page(i)
             tab_label = view["tree_notebook_2"].get_tab_label(child)
-            # tab_label.set_angle(90)
-            tab_label_text = tab_label.get_text()
-            view["tree_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
+            if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+                tab_label_text = tab_label.get_text()
+                view["tree_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
+                                                                                                self.icons))
+            else:
+                tab_label.set_angle(90)
             view["tree_notebook_2"].set_tab_reorderable(child, True)
             view["tree_notebook_2"].set_tab_detachable(child, True)
 
