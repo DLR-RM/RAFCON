@@ -7,23 +7,16 @@
 
 
 """
-from awesome_tool.utils.config import DefaultConfig, ConfigError
-from awesome_tool.utils import helper
+from os import path
+
+from awesome_tool.utils.config import DefaultConfig, ConfigError, read_file
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
-DEFAULT_CONFIG = """
-
-TYPE: SM_CONFIG
-
-LIBRARY_PATHS: {"generic": "../../libraries/generic",
-                "test_libraries": "../../test_scripts/test_libraries",
-                 "ros_libraries": "../../test_scripts/ros_libraries",
-                 "turtle_libraries": "../../test_scripts/turtle_libraries"}
-"""
-
 CONFIG_FILE = "config.yaml"
+
+DEFAULT_CONFIG = read_file(path.dirname(__file__), CONFIG_FILE)
 
 
 class Config(DefaultConfig):

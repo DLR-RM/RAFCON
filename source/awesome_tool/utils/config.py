@@ -6,6 +6,17 @@ from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
+def read_file(path, filename):
+    file_path = os.path.join(os.path.realpath(path), filename)
+
+    file_content = ""
+    if os.path.isfile(file_path):
+        file_pointer = open(file_path, 'r')
+        file_content = file_pointer.read()
+
+    return file_content
+
+
 class DefaultConfig(object):
     """
     Class to hold and load the global configurations.

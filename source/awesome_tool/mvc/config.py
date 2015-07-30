@@ -3,11 +3,12 @@ import os
 import sys
 import shutil
 
-from awesome_tool.utils.config import DefaultConfig, ConfigError
+from awesome_tool.utils.config import DefaultConfig, ConfigError, read_file
 from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
+<<<<<<< Updated upstream
 DEFAULT_CONFIG = """
 
 TYPE: GUI_CONFIG
@@ -25,7 +26,11 @@ show_data_flows: True
 HISTORY_ENABLED: False
 """
 
+=======
+>>>>>>> Stashed changes
 CONFIG_FILE = "gui_config.yaml"
+
+DEFAULT_CONFIG = read_file(os.path.dirname(__file__), CONFIG_FILE)
 
 
 class GuiConfig(DefaultConfig):
