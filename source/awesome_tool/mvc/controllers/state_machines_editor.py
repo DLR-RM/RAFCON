@@ -185,7 +185,7 @@ class StateMachinesEditorController(ExtendedController):
         # Check for removed state machines
         for sm_id in self.registered_state_machines:
             if sm_id not in self.model.state_machine_manager.state_machines:
-                self.on_close_clicked()
+                self.remove_state_machine(self.registered_state_machines[sm_id])
 
 
     @ExtendedController.observe("state_machine_mark_dirty", assign=True)

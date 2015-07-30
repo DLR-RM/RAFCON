@@ -101,7 +101,11 @@ class StateMachineManager(Observable):
         """
         if not isinstance(state_machine, StateMachine):
             raise AttributeError("state_machine must be of type StateMachine")
-        logger.debug("Add new state machine with id %s" % str(state_machine.state_machine_id))
+        if state_machine.base_path is not None:
+            for loaded_sm in self._state_machines.itervalues():
+                if loaded_sm.base_path == state_machine.base_path:
+                    raise AttributeError("The state-machine is already open")
+        logger.debug("Add new state machine with id {0}".format(state_machine.state_machine_id))
         self._state_machines[state_machine.state_machine_id] = state_machine
         if self.active_state_machine_id is None:
             self.active_state_machine_id = state_machine.state_machine_id
