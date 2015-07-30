@@ -76,7 +76,7 @@ class StateMachinesEditorController(ExtendedController):
         self._view['notebook'].connect("close_state_machine", self.close_state_machine)
 
     def add_state_machine(self, widget, event=None):
-        logger.debug("Creating new statemachine ...")
+        logger.debug("Creating new state-machine ...")
         root_state = HierarchyState("new_root_state")
         sm = StateMachine(root_state)
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
@@ -95,9 +95,22 @@ class StateMachinesEditorController(ExtendedController):
         for sm_id, sm in self.model.state_machines.iteritems():
             self.add_graphical_state_machine_editor(sm)
 
-    # def on_switch_page(self, mynotebook, notebook, page, page_num):
+    def register_actions(self, shortcut_manager):
+        shortcut_manager.add_callback_for_action('close', self.on_close_shortcut)
+
+        # Call register_action of parent in order to register actions for child controllers
+        super(StateMachinesEditorController, self).register_actions(shortcut_manager)
+
+    def on_close_shortcut(self, *args):
+        """Close active state machine
+        """
+        state_machine_m = self.model.get_selected_state_machine_model()
+        if state_machine_m is None:
+            return
+        self.on_close_clicked(None, state_machine_m, None, force=False)
+
     def on_switch_page(self, notebook, page, page_num):
-        logger.debug("switch to page number %s (for page %s)" % (page_num, page))
+        # logger.debug("switch to page number %s (for page %s)" % (page_num, page))
         page = notebook.get_nth_page(page_num)
         for identifier, meta in self.tabs.iteritems():
             if meta['page'] is page:
@@ -105,7 +118,7 @@ class StateMachinesEditorController(ExtendedController):
                 # set active state machine id
                 awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = \
                     model.state_machine.state_machine_id
-                logger.debug("state machine id of current state machine page %s" % model.state_machine.state_machine_id)
+                # logger.debug("state machine id of current state machine page %s" % model.state_machine.state_machine_id)
                 if not model.state_machine.state_machine_id == self.model.selected_state_machine_id:
                     self.model.selected_state_machine_id = model.state_machine.state_machine_id
                 return
@@ -164,10 +177,16 @@ class StateMachinesEditorController(ExtendedController):
     # TODO observe name of root_state for updating tab name
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
-        logger.debug("State machine model changed!")
+        # Check for new state machines
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
             if sm_id not in self.registered_state_machines:
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
+
+        # Check for removed state machines
+        for sm_id in self.registered_state_machines:
+            if sm_id not in self.model.state_machine_manager.state_machines:
+                self.on_close_clicked()
+
 
     @ExtendedController.observe("state_machine_mark_dirty", assign=True)
     def sm_marked_dirty(self, model, prop_name, info):
@@ -215,7 +234,7 @@ class StateMachinesEditorController(ExtendedController):
         if response_id == 42:
             self.remove_state_machine(state_machine_model)
         else:
-            logger.debug("Close state machine model canceled")
+            logger.debug("Closing of state machine model canceled")
         widget.destroy()
 
     def remove_state_machine(self, state_machine_model):
