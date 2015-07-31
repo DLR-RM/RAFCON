@@ -90,9 +90,14 @@ class MoveItemTool(ItemTool):
         if isinstance(self._item, StateView):
             self._item.moving = False
             self.view.canvas.request_update(self._item)
+            self._graphical_editor_view.emit('meta_data_changed', self._item.model, "Move state", True)
+
             self._item = None
 
             self.view.redraw_complete_screen()
+
+        if isinstance(self.view.focused_item, NameView):
+            self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model, "Move name", False)
 
         return super(MoveItemTool, self).on_button_release(event)
 
@@ -119,12 +124,10 @@ class MoveItemTool(ItemTool):
                     state_m = inmotion.item.model
                     state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
                     state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
-                    self._graphical_editor_view.emit('meta_data_changed', state_m, "Move state", True)
                 elif isinstance(inmotion.item, NameView):
                     state_m = self.view.canvas.get_parent(inmotion.item).model
                     state_m.meta['name']['gui']['editor_gaphas']['rel_pos'] = rel_pos
                     state_m.meta['name']['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
-                    self._graphical_editor_view.emit('meta_data_changed', state_m, "Move name", False)
 
             return True
 

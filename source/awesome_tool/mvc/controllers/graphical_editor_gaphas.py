@@ -184,6 +184,7 @@ class GraphicalEditorController(ExtendedController):
 
     def _meta_data_changed(self, view, model, name, affects_children):
         self.model.state_machine.marked_dirty = True
+        logger.info("meta data changed")
         # History.meta_changed_notify_after(self, model, name, affects_children)
 
     @ExtendedController.observe("state_machine", after=True)
