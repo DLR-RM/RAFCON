@@ -95,6 +95,10 @@ class StatesEditorController(ExtendedController):
     def state_machine_manager_notification(self, model, property, info):
         self.register()
         selected_sm_model = self.model.get_selected_state_machine_model()
+
+        if selected_sm_model is None:
+            return
+
         selected_states = selected_sm_model.selection.get_states()
         if len(selected_states) == 0:
             selected_state = None
