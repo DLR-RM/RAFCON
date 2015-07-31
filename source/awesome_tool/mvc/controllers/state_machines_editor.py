@@ -192,9 +192,12 @@ class StateMachinesEditorController(ExtendedController):
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
 
         # Check for removed state machines
+        state_machines_to_be_deleted = []
         for sm_id in self.tabs:
             if sm_id not in self.model.state_machine_manager.state_machines:
-                self.remove_state_machine(self.tabs[sm_id]['state_machine_m'])
+                state_machines_to_be_deleted.append(self.tabs[sm_id]['state_machine_m'])
+        for state_machine_m in state_machines_to_be_deleted:
+            self.remove_state_machine(state_machine_m)
 
     @ExtendedController.observe("state_machine_mark_dirty", assign=True)
     def sm_marked_dirty(self, model, prop_name, info):
