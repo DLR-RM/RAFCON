@@ -720,7 +720,7 @@ class History(ModelMT):
         :return:
         """
         # store meta data
-        logger.debug("state %s %s history got notification that Meta data has changed" %
+        logger.debug("state %s '%s' history got notification that Meta data has changed" %
                      (changed_parent_model.state.state_id, changed_parent_model.state.name))
         # -> in case of undo/redo overwrite Model.meta-dict
 

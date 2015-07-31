@@ -1787,7 +1787,7 @@ class GraphicalEditorController(ExtendedController):
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
         self.model.state_machine.marked_dirty = True
         # logger.info("META_DATA HAS BEEN CHANGED")
-        # self.model.history.meta_changed_notify_after(self, model, name, affects_children)
+        # self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
 
     def _delete_selection(self, *args):
         if self.view.editor.has_focus():
