@@ -1,16 +1,12 @@
-import pango
-
 import gtk
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
-
 from awesome_tool.mvc.views.graphical_editor import GraphicalEditorView
-
 from awesome_tool.mvc.controllers.graphical_editor import GraphicalEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel, StateMachine
-from awesome_tool.utils import log
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
+from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 GAPHAS_AVAILABLE = True
@@ -18,7 +14,7 @@ try:
     from awesome_tool.mvc.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
     from awesome_tool.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
         GraphicalEditorGaphasController
-except:
+except Exception:
     GAPHAS_AVAILABLE = False
 
 import awesome_tool.statemachine.singleton
@@ -27,22 +23,22 @@ from awesome_tool.mvc.config import global_gui_config
 
 
 def create_tab_close_button(callback, *additional_parameters):
-    closebutton = gtk.Button()
+    close_button = gtk.Button()
     close_label = gtk.Label()
     close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
                                                                       constants.BUTTON_CLOSE))
-    closebutton.set_relief(gtk.RELIEF_NONE)
-    closebutton.set_focus_on_click(True)
-    closebutton.add(close_label)
+    close_button.set_relief(gtk.RELIEF_NONE)
+    close_button.set_focus_on_click(True)
+    close_button.add(close_label)
 
     style = gtk.RcStyle()
     style.xthickness = 0
     style.ythickness = 0
-    closebutton.modify_style(style)
+    close_button.modify_style(style)
 
-    closebutton.connect('released', callback, *additional_parameters)
+    close_button.connect('released', callback, *additional_parameters)
 
-    return closebutton
+    return close_button
 
 
 def create_tab_header(title, close_callback, *additional_parameters):
@@ -56,7 +52,26 @@ def create_tab_header(title, close_callback, *additional_parameters):
     hbox.add(close_button)
     hbox.show_all()
 
-    return hbox, label
+    return hbox
+
+
+def compose_tab_title(state_machine_id, root_state_name, appendix=''):
+    title = "{0}|{1} {2}".format(state_machine_id, root_state_name, appendix)
+    title.strip()
+    return title
+
+
+def get_state_machine_id(state_machine_m):
+    return state_machine_m.state_machine.state_machine_id
+
+
+def add_state_machine(widget, event=None):
+    """Create a new state-machine when the user clicks on the '+' next to the tabs
+    """
+    logger.debug("Creating new state-machine...")
+    root_state = HierarchyState("new root state")
+    state_machine = StateMachine(root_state)
+    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 
 
 class StateMachinesEditorController(ExtendedController):
@@ -68,32 +83,15 @@ class StateMachinesEditorController(ExtendedController):
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         self.tabs = {}
-        self.act_model = None
-        self._view = view
-        self.registered_state_machines = {}
-
-        self._view['notebook'].connect("add_state_machine", self.add_state_machine)
-        self._view['notebook'].connect("close_state_machine", self.close_state_machine)
-
-    def add_state_machine(self, widget, event=None):
-        logger.debug("Creating new state-machine ...")
-        root_state = HierarchyState("new_root_state")
-        sm = StateMachine(root_state)
-        awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-
-    def close_state_machine(self, widget, page_number):
-        page = widget.get_nth_page(page_number)
-        for identifier, meta in self.tabs.iteritems():
-            if meta['page'] is page:
-                model = meta['state_machine_model']
-                sm_id = model.state_machine.state_machine_id
-                self.on_close_clicked(None, self.tabs[sm_id]["state_machine_model"], None)
-                return
 
     def register_view(self, view):
-        self.view.notebook.connect('switch-page', self.on_switch_page)
-        for sm_id, sm in self.model.state_machines.iteritems():
-            self.add_graphical_state_machine_editor(sm)
+        self.view['notebook'].connect("add_state_machine", add_state_machine)
+        self.view['notebook'].connect("close_state_machine", self.close_state_machine)
+        self.view['notebook'].connect('switch-page', self.on_switch_page)
+
+        # Add all already open state machines
+        for state_machine in self.model.state_machines.itervalues():
+            self.add_graphical_state_machine_editor(state_machine)
 
     def register_actions(self, shortcut_manager):
         shortcut_manager.add_callback_for_action('close', self.on_close_shortcut)
@@ -101,155 +99,161 @@ class StateMachinesEditorController(ExtendedController):
         # Call register_action of parent in order to register actions for child controllers
         super(StateMachinesEditorController, self).register_actions(shortcut_manager)
 
+    def close_state_machine(self, widget, page_number):
+        """Triggered when the close button in the tab is clicked
+        """
+        page = widget.get_nth_page(page_number)
+        for tab_info in self.tabs.itervalues():
+            if tab_info['page'] is page:
+                state_machine_m = tab_info['state_machine_m']
+                self.on_close_clicked(None, state_machine_m, None, force=False)
+                return
+
     def on_close_shortcut(self, *args):
-        """Close active state machine
+        """Close active state machine (triggered by shortcut)
         """
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:
             return
         self.on_close_clicked(None, state_machine_m, None, force=False)
 
-    def on_switch_page(self, notebook, page, page_num):
-        # logger.debug("switch to page number %s (for page %s)" % (page_num, page))
+    def on_switch_page(self, notebook, page_pointer, page_num):
+        # From documentation: Note the page parameter is a GPointer and not usable within PyGTK. Use the page_num
+        # parameter to retrieve the new current page using the get_nth_page() method.
         page = notebook.get_nth_page(page_num)
-        for identifier, meta in self.tabs.iteritems():
-            if meta['page'] is page:
-                model = meta['state_machine_model']
+        for tab_info in self.tabs.itervalues():
+            if tab_info['page'] is page:
+                state_machine_m = tab_info['state_machine_m']
+                new_sm_id = get_state_machine_id(state_machine_m)
                 # set active state machine id
-                awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = \
-                    model.state_machine.state_machine_id
-                # logger.debug("state machine id of current state machine page %s" % model.state_machine.state_machine_id)
-                if not model.state_machine.state_machine_id == self.model.selected_state_machine_id:
-                    self.model.selected_state_machine_id = model.state_machine.state_machine_id
+                awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = new_sm_id
+                if self.model.selected_state_machine_id != new_sm_id:
+                    self.model.selected_state_machine_id = new_sm_id
                 return
 
-    def add_graphical_state_machine_editor(self, state_machine_model):
+    def get_page_id(self, state_machine_id):
+        page = self.tabs[state_machine_id]['page']
+        page_id = self.view.notebook.page_num(page)
+        return page_id
 
-        assert isinstance(state_machine_model, StateMachineModel)
+    def add_graphical_state_machine_editor(self, state_machine_m):
+        """Add to for new state machine
 
-        sm_identifier = state_machine_model.state_machine.state_machine_id
-        logger.debug("Create new graphical editor for state machine model with sm id %s" % str(sm_identifier))
+        If a new state machine was added, a new tab is created with a graphical editor for this state machine.
+        :param state_machine_m: The enw state machine model
+        """
+
+        assert isinstance(state_machine_m, StateMachineModel)
+
+        sm_id = get_state_machine_id(state_machine_m)
+        logger.debug("Create new graphical editor for state machine with id %s" % str(sm_id))
 
         if global_gui_config.get_config_value('GAPHAS_EDITOR', False) and GAPHAS_AVAILABLE:
             graphical_editor_view = GraphicalEditorGaphasView()
-            graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_model, graphical_editor_view)
+            graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_m, graphical_editor_view)
         else:
             graphical_editor_view = GraphicalEditorView()
-            graphical_editor_ctrl = GraphicalEditorController(state_machine_model, graphical_editor_view)
+            graphical_editor_ctrl = GraphicalEditorController(state_machine_m, graphical_editor_view)
 
-        self.add_controller(sm_identifier, graphical_editor_ctrl)
-        name_add_on = ""
-        if state_machine_model.state_machine.marked_dirty:
-            name_add_on = "*"
-        (event_box, new_label) = create_tab_header("%s|%s" % (sm_identifier,
-                                                              state_machine_model.root_state.state.name + name_add_on),
-                                                   self.on_close_clicked,
-                                                   state_machine_model,
-                                                   'refused')
-        graphical_editor_view.get_top_widget().title_label = new_label
+        self.add_controller(sm_id, graphical_editor_ctrl)
 
-        idx = self._view.notebook.append_page(graphical_editor_view['main_frame'], event_box)
-        page = self._view.notebook.get_nth_page(idx)
+        unsaved_changed = '*' if state_machine_m.state_machine.marked_dirty else ''
+        tab_title = compose_tab_title(sm_id, state_machine_m.root_state.state.name, unsaved_changed)
+        tab_label = create_tab_header(tab_title, self.on_close_clicked, state_machine_m, 'refused')
+
+        page = graphical_editor_view['main_frame']
+        self.view.notebook.append_page(page, tab_label)
         self.view.notebook.set_tab_reorderable(page, True)
         page.show_all()
 
-        self.tabs[sm_identifier] = {'page': page,
-                                    'state_machine_model': state_machine_model,
-                                    'ctrl': graphical_editor_ctrl,
-                                    'connected': False}
+        self.tabs[sm_id] = {'page': page,
+                            'state_machine_m': state_machine_m}
 
         graphical_editor_view.show()
-        self._view.notebook.show()
-
-        self.registered_state_machines[state_machine_model.state_machine.state_machine_id] = graphical_editor_ctrl
-        return idx
+        self.view.notebook.show()
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
-    def notifcation_selected_sm_changed(self, model, prop_name, info):
-        if self.model.selected_state_machine_id is None:
+    def notification_selected_sm_changed(self, model, prop_name, info):
+        """If a new state machine is selected, make sure the tab is open
+        """
+        selected_state_machine_id = self.model.selected_state_machine_id
+        if selected_state_machine_id is None:
             return
-        page = self.tabs[self.model.selected_state_machine_id]['page']
-        idx = self.view.notebook.page_num(page)
-        # print idx, self.view.notebook.get_current_page()
-        if not self.view.notebook.get_current_page() == idx:
-            self.view.notebook.set_current_page(idx)
 
-    # TODO observe name of root_state for updating tab name
+        page_id = self.get_page_id(selected_state_machine_id)
+        if not self.view.notebook.get_current_page() == page_id:
+            self.view.notebook.set_current_page(page_id)
+
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
         # Check for new state machines
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
-            if sm_id not in self.registered_state_machines:
+            if sm_id not in self.tabs:
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
 
         # Check for removed state machines
-        for sm_id in self.registered_state_machines:
+        for sm_id in self.tabs:
             if sm_id not in self.model.state_machine_manager.state_machines:
-                self.remove_state_machine(self.registered_state_machines[sm_id])
-
+                self.remove_state_machine(self.tabs[sm_id]['state_machine_m'])
 
     @ExtendedController.observe("state_machine_mark_dirty", assign=True)
     def sm_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_mark_dirty
-        if sm_id in self.model.state_machine_manager.state_machines.iterkeys():
-            #logger.debug("State machine mark dirty!")
-            (header_h_box, new_label) = \
-                create_tab_header("%s|%s" % (sm_id,
-                                             self.tabs[sm_id]["state_machine_model"].root_state.state.name + "*"),
-                                  self.on_close_clicked, self.tabs[sm_id]["state_machine_model"], 'refused')
-            self._view.notebook.set_tab_label(self.tabs[sm_id]["page"], header_h_box)
+        if sm_id in self.model.state_machine_manager.state_machines:
+            tab_title = compose_tab_title(sm_id, self.tabs[sm_id]["state_machine_m"].root_state.state.name, '*')
+            tab_label = \
+                create_tab_header(tab_title, self.on_close_clicked, self.tabs[sm_id]["state_machine_m"], 'refused')
+            self.view.notebook.set_tab_label(self.tabs[sm_id]["page"], tab_label)
 
     @ExtendedController.observe("state_machine_un_mark_dirty", assign=True)
     def sm_un_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_un_mark_dirty
-        if sm_id in self.model.state_machine_manager.state_machines.iterkeys():
-            #logger.debug("State machine un mark dirty!")
-            (header_h_box, new_label) = \
-                create_tab_header("%s|%s" % (sm_id,
-                                             self.tabs[sm_id]["state_machine_model"].root_state.state.name),
-                                  self.on_close_clicked, self.tabs[sm_id]["state_machine_model"], 'refused')
-            self._view.notebook.set_tab_label(self.tabs[sm_id]["page"], header_h_box)
+        if sm_id in self.model.state_machine_manager.state_machines:
+            tab_title = compose_tab_title(sm_id, self.tabs[sm_id]["state_machine_m"].root_state.state.name)
+            tab_label = \
+                create_tab_header(tab_title, self.on_close_clicked, self.tabs[sm_id]["state_machine_m"], 'refused')
+            self.view.notebook.set_tab_label(self.tabs[sm_id]["page"], tab_label)
 
-    def on_close_clicked(self, event, state_machine_model, result, force=False):
+    def on_close_clicked(self, event, state_machine_m, result, force=False):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
-        # print event, state_model, result
-
-        sm_identifier = state_machine_model.state_machine.state_machine_id
 
         if force:
-            self.remove_state_machine(state_machine_model)
-        elif state_machine_model.state_machine.marked_dirty:
+            self.remove_state_machine(state_machine_m)
+        elif state_machine_m.state_machine.marked_dirty:
+            sm_id = get_state_machine_id(state_machine_m)
+            root_state_name = state_machine_m.root_state.state.name
             message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-            message_string = "Are you sure you want to close the state machine with id %s ?" % str(sm_identifier)
+            message_string = "There are unsaved changed in the state machine. Do you want to close the " \
+                             "state machine '{0}' with id {1} anyway?".format(root_state_name, sm_id)
             message.set_markup(message_string)
             message.add_button("Yes", 42)
             message.add_button("No", 43)
-            message.connect('response', self.on_close_message_dialog_response_signal, state_machine_model)
+            message.connect('response', self.on_close_message_dialog_response_signal, state_machine_m)
             helper.set_button_children_size_request(message)
             message.show()
         else:
-            self.remove_state_machine(state_machine_model)
+            self.remove_state_machine(state_machine_m)
 
-    def on_close_message_dialog_response_signal(self, widget, response_id, state_machine_model):
+    def on_close_message_dialog_response_signal(self, widget, response_id, state_machine_m):
         if response_id == 42:
-            self.remove_state_machine(state_machine_model)
+            self.remove_state_machine(state_machine_m)
         else:
             logger.debug("Closing of state machine model canceled")
         widget.destroy()
 
-    def remove_state_machine(self, state_machine_model):
-        sm_identifier = state_machine_model.state_machine.state_machine_id
-        self.remove_controller(self.registered_state_machines[sm_identifier])
+    def remove_state_machine(self, state_machine_m):
+        sm_id = get_state_machine_id(state_machine_m)
 
-        del self.registered_state_machines[sm_identifier]
+        self.remove_controller(sm_id)
 
-        page = self.tabs[sm_identifier]['page']
-        current_idx = self.view.notebook.page_num(page)
+        # Close tab and remove info
+        page_id = self.get_page_id(sm_id)
+        self.view.notebook.remove_page(page_id)
+        del self.tabs[sm_id]
 
-        self.view.notebook.remove_page(current_idx)  # current_idx)  # utils.find_tab(self.notebook, page))
-        del self.tabs[sm_identifier]
+        self.model.state_machine_manager.remove_state_machine(sm_id)
 
-        self.model.state_machine_manager.remove_state_machine(sm_identifier)
+        # Open tab with next state machine
         sm_keys = self.model.state_machine_manager.state_machines.keys()
         if len(sm_keys) > 0:
             self.model.selected_state_machine_id = \
@@ -257,16 +261,14 @@ class StateMachinesEditorController(ExtendedController):
         else:
             self.model.selected_state_machine_id = None
 
-        if state_machine_model.state_machine.marked_dirty:
-            state_machine_model.state_machine.marked_dirty = False
+        # if state_machine_m.state_machine.marked_dirty:
+        #     state_machine_m.state_machine.marked_dirty = False
 
     def close_all_tabs(self):
+        """Closes all tabs of the state machines editor
         """
-        Closes all tabs of the state machines editor
-        :return:
-        """
-        state_machine_model_list = []
-        for s_id, tab in self.tabs.iteritems():
-            state_machine_model_list.append(tab['state_machine_model'])
-        for state_model in state_machine_model_list:
-            self.on_close_clicked(None, state_model, None, force=True)
+        state_machine_m_list = []
+        for tab in self.tabs.itervalues():
+            state_machine_m_list.append(tab['state_machine_m'])
+        for state_machine_m in state_machine_m_list:
+            self.on_close_clicked(None, state_machine_m, None, force=True)

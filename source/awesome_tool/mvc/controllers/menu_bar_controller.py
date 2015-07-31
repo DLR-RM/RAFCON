@@ -61,8 +61,8 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - File
     ######################################################
     def on_new_activate(self, widget=None, data=None):
-        logger.debug("Creating new statemachine ...")
-        root_state = HierarchyState("new_root_state")
+        logger.debug("Creating new state-machine...")
+        root_state = HierarchyState("new root state")
         sm = StateMachine(root_state)
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
