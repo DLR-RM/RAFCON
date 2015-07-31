@@ -116,7 +116,7 @@ class StatesEditorController(ExtendedController):
                     tabs_to_be_removed.append(state_identifier)
 
             for state_identifier in tabs_to_be_removed:
-                self.on_destroy_clicked(event=None, state_model=self.tabs[state_identifier]['state_model'], result=None)
+                self.on_destroy_clicked(event=None, state_m=self.tabs[state_identifier]['state_m'], result=None)
 
     def register(self):
         """
@@ -188,36 +188,36 @@ class StatesEditorController(ExtendedController):
         if state_identifier in self.tabs:
             del self.tabs[state_identifier]
 
-    def find_page_of_state_model(self, state_model):
-        #print event, state_model, result
+    def find_page_of_state_m(self, state_m):
+        #print event, state_m, result
         # TODO use sm_id - the sm_id is not found while remove_state
         # TODO           -> work-around is to use only the path to find the page
-        # sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
-        # state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
+        # sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
+        # state_identifier = "%s|%s" % (sm_id, state_m.state.get_path())
         searched_page = None
         state_identifier = None
         for key, items in self.tabs.iteritems():
-            if key.split('|')[1] == state_model.state.get_path():  # state_identifier.split('|')[1]:
+            if key.split('|')[1] == state_m.state.get_path():  # state_identifier.split('|')[1]:
                 searched_page = items['page']
                 state_identifier = key
                 break
 
         return searched_page, state_identifier
 
-    def on_destroy_clicked(self, event, state_model, result):
-        [page, state_identifier] = self.find_page_of_state_model(state_model)
+    def on_destroy_clicked(self, event, state_m, result):
+        [page, state_identifier] = self.find_page_of_state_m(state_m)
         if page:
             self.close_page(page, state_identifier)
 
-    def on_toogle_sticky_clicked(self, event, state_model, result):
+    def on_toogle_sticky_clicked(self, event, state_m, result):
         """ Callback for the "toogle-sticky-check-button" emitted by custom TabLabel widget. """
-        [page, state_identifier] = self.find_page_of_state_model(state_model)
+        [page, state_identifier] = self.find_page_of_state_m(state_m)
         if self.tabs[state_identifier]['is_sticky']:
             self.tabs[state_identifier]['is_sticky'] = False
         else:
             self.tabs[state_identifier]['is_sticky'] = True
 
-        # find actual active page and close it if of this state_model
+        # find actual active page and close it if of this state_m
 
         self.close_page(page)
         self.destroy_state_editor_page(state_identifier)
@@ -229,9 +229,9 @@ class StatesEditorController(ExtendedController):
         """
         state_model_list = []
         for identifier, tab in self.tabs.iteritems():
-            state_model_list.append(tab['state_model'])
-        for state_model in state_model_list:
-            self.on_destroy_clicked(event=None, state_model=state_model, result=None)
+            state_model_list.append(tab['state_m'])
+        for state_m in state_model_list:
+            self.on_destroy_clicked(event=None, state_m=state_m, result=None)
 
     def on_switch_page(self, notebook, page, page_num, user_param1=None):
         #logger.debug("switch page %s %s" % (page_num, page))
