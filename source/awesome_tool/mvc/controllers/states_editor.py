@@ -58,7 +58,6 @@ def create_tab_header(title, close_callback, *additional_parameters):
 
     return hbox, label
 
-
 class StatesEditorController(ExtendedController):
 
     def __init__(self, model, view, editor_type):
@@ -79,6 +78,18 @@ class StatesEditorController(ExtendedController):
         self.act_model = None
         self.__buffered_root_state = None  # needed to handle exchange of root_state
         self.register()
+
+    def get_state_identifier(self, state_m):
+        state_machine_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
+        state_path = state_m.state.get_path()
+        state_identifier = "{0}|{1}".format(state_machine_id, state_path)
+        return state_identifier
+
+    def get_state_tab_name(self, state_m):
+        state_machine_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
+        state_name = state_m.state.name
+        tab_name = "{0}|{1}".format(state_machine_id, state_name)
+        return tab_name
 
     def close_state_tab(self, widget, page_num):
         page_to_close = widget.get_nth_page(page_num)
@@ -139,33 +150,33 @@ class StatesEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
 
-    def add_state_editor(self, state_model, editor_type=None):
-        sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_model.state)
-        state_identifier = "%s|%s" % (sm_id, state_model.state.get_path())
-        # new StateEditor*View
-        # new StateEditor*Controller
+    def add_state_editor(self, state_m, editor_type=None):
+        state_identifier = self.get_state_identifier(state_m)
+        sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
 
         state_editor_view = StateEditorView()
-        state_editor_ctrl = StateEditorController(state_model, state_editor_view)
+        state_editor_ctrl = StateEditorController(state_m, state_editor_view)
 
 
-        tab_label_text = limit_tab_label_text("%s|%s" % (sm_id, str(state_model.state.name)))
-        (evtbox, new_label) = create_tab_header(tab_label_text, self.on_destroy_clicked,
-                                                state_model, 'refused')
-        new_label.set_tooltip_text("%s|%s" % (sm_id, str(state_model.state.name)))
+        tab_label_text = self.get_state_tab_name(state_m)
+        tab_label_text_trimmed = limit_tab_label_text(tab_label_text)
 
-        state_editor_view.get_top_widget().title_label = new_label
+        (tab, inner_label) = create_tab_header(tab_label_text_trimmed, self.on_destroy_clicked,
+                                                state_m, 'refused')
+        inner_label.set_tooltip_text(tab_label_text)
 
-        idx = self.view.notebook.prepend_page(state_editor_view.get_top_widget(), evtbox)
+        state_editor_view.get_top_widget().title_label = inner_label
+
+        idx = self.view.notebook.prepend_page(state_editor_view.get_top_widget(), tab)
         page = self.view.notebook.get_nth_page(idx)
         self.view.notebook.set_tab_reorderable(page, True)
         page.show_all()
 
         state_editor_view.show()
         self.view.notebook.show()
-        self.tabs[state_identifier] = {'page': page, 'state_model': state_model,
+        self.tabs[state_identifier] = {'page': page, 'state_m': state_m,
                                        'ctrl': state_editor_ctrl, 'sm_id': self.__my_selected_state_machine_id,
-                                       'view': state_editor_view, 'is_sticky': False, 'event_box': evtbox}
+                                       'view': state_editor_view, 'is_sticky': False, 'event_box': tab}
         return idx
 
     def close_page(self, page_to_close, state_identifier):
@@ -227,7 +238,7 @@ class StatesEditorController(ExtendedController):
         page = notebook.get_nth_page(page_num)
         for identifier, meta in self.tabs.iteritems():
             if meta['page'] is page:
-                model = meta['state_model']
+                model = meta['state_m']
                 # logger.debug("switch-page %s" % model.state.name)
                 if not self._selected_state_machine_model.selection.get_selected_state() == model and \
                         int(identifier.split('|')[0]) in self.model.state_machine_manager.state_machines:
@@ -293,19 +304,19 @@ class StatesEditorController(ExtendedController):
                 sm_id = self.model.state_machine_manager.get_sm_id_for_state(info.kwargs.args[0])
                 identifier = str(sm_id) + '|' + info.kwargs.args[0].get_path() + '/' + info.kwargs.args[1]
                 if identifier in self.tabs:
-                    state_model = self.tabs[identifier]['state_model']
-                    self.on_destroy_clicked(event=None, state_model=state_model, result=None)
+                    state_m = self.tabs[identifier]['state_m']
+                    self.on_destroy_clicked(event=None, state_m=state_m, result=None)
         if info.method_name in ['__delitem__']:  # , 'remove_state']: taken by state_change
             # self.remove_search()  # this could remove pages of states that are from the other open state machines
             sm_id = self.model.state_machine_manager.get_sm_id_for_state(model.state)
             parent_identifier = str(sm_id) + '|' + model.state.get_path()
             if info.method_name == '__delitem__' and parent_identifier + '/' + info.args[0] in self.tabs:
-                state_model = self.tabs[parent_identifier + '/' + info.args[0]]['state_model']
-                self.on_destroy_clicked(event=None, state_model=state_model, result=None)
+                state_m = self.tabs[parent_identifier + '/' + info.args[0]]['state_m']
+                self.on_destroy_clicked(event=None, state_m=state_m, result=None)
             else:  # state
                 if len(info.args) > 1 and parent_identifier + '/' + info.args[1] in self.tabs:
-                    state_model = self.tabs[parent_identifier + '/' + info.args[1]]['state_model']
-                    self.on_destroy_clicked(event=None, state_model=state_model, result=None)
+                    state_m = self.tabs[parent_identifier + '/' + info.args[1]]['state_m']
+                    self.on_destroy_clicked(event=None, state_m=state_m, result=None)
 
     @ExtendedController.observe("state", after=True)
     @ExtendedController.observe("states", after=True)
@@ -322,21 +333,21 @@ class StatesEditorController(ExtendedController):
     def remove_search(self):
         to_remove = []
         for path, page_dict in self.tabs.items():
-            if page_dict['state_model'].parent and \
-                    not page_dict['state_model'].state.state_id in page_dict['state_model'].parent.states:
-                logger.debug("remove: ", page_dict['state_model'].state.state_id)
-                to_remove.append(page_dict['state_model'])
-        for state_model in to_remove:
-            self.on_destroy_clicked(event=None, state_model=state_model, result=None)
+            if page_dict['state_m'].parent and \
+                    not page_dict['state_m'].state.state_id in page_dict['state_m'].parent.states:
+                logger.debug("remove: ", page_dict['state_m'].state.state_id)
+                to_remove.append(page_dict['state_m'])
+        for state_m in to_remove:
+            self.on_destroy_clicked(event=None, state_m=state_m, result=None)
 
     def check_name(self):
         for identifier, page_dict in self.tabs.items():
             identifier_list = identifier.split('|')
-            tab_label = identifier_list[0] + '|' + page_dict['state_model'].state.name
+            tab_label = identifier_list[0] + '|' + page_dict['state_m'].state.name
             if not page_dict['page'].title_label.get_tooltip_text() == tab_label:
                 page_dict['page'].title_label.set_text(limit_tab_label_text(tab_label))
-                fontdesc = pango.FontDescription("Serif Bold 12")
-                page_dict['page'].title_label.modify_font(fontdesc)
+                # fontdesc = pango.FontDescription("Serif Bold 12")
+                # page_dict['page'].title_label.modify_font(fontdesc)
                 page_dict['page'].title_label.set_tooltip_text(tab_label)
 
     def get_state_identifier_for_page(self, page):
@@ -356,6 +367,6 @@ class StatesEditorController(ExtendedController):
         if selection.get_num_states() == 1 and len(selection) == 1:
             selected_state = selection.get_states()[0]
             self.change_state_editor_selection(selected_state)
-            _, state_identifier = self.find_page_of_state_model(selected_state)
+            _, state_identifier = self.find_page_of_state_m(selected_state)
             state_controller = self.tabs[state_identifier]['ctrl']
             state_controller.rename()
