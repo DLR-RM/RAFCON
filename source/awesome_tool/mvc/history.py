@@ -14,9 +14,11 @@ from awesome_tool.statemachine.data_flow import DataFlow
 from awesome_tool.statemachine.transition import Transition
 from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.mvc.models.container_state import ContainerState
+from awesome_tool.statemachine.states.execution_state import ExecutionState
+from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-
+import awesome_tool.mvc.statemachine_helper
 from awesome_tool.mvc.models import ContainerStateModel
 from awesome_tool.mvc.models.state import StateModel
 
@@ -32,6 +34,7 @@ def get_state_tuple(state, state_m=None):
         [2] script of state,
         [3] dict of model_meta-data of self and elements
         [4] path of state in state machine
+        [5] script_text
     #   states-meta - [state-, transitions-, data_flows-, outcomes-, inputs-, outputs-, scopes, states-meta]
     :param awesome_tool.statemachine.states.state.State state: The state that should be stored
     :return: state_tuple tuple
@@ -51,32 +54,72 @@ def get_state_tuple(state, state_m=None):
     else:
         state_meta_dict = {}
 
-    state_tuple = (state_str, state_tuples_dict, state.script, state_meta_dict, state.get_path())
+    import copy
+    state_tuple = (state_str, state_tuples_dict, state.script, state_meta_dict, state.get_path(), copy.copy(state.script.script))
 
     return state_tuple
 
 
+def do_storage_test(state):
+    import os
+    # # logger.debug(state.script.path + "         " + str(state.script.path.split('/')))
+    # #if child_state.script.path.split('/')[1] == "tmp" and not os.path.exists(state.script.path):
+    # if not os.path.exists(state.script.path):
+    #     # logger.debug("is tmp")
+    #     os.makedirs(state.script.path)
+    #     script_file = open(os.path.join(state.script.path, state.script.filename), "w")
+    #     script_file.write(state.script.script)
+    #     script_file.close()
+
+
 def get_state_from_state_tuple(state_tuple):
+
     # print "++++ new state", state_tuple
     state = yaml.load(state_tuple[0])
+
     if isinstance(state, BarrierConcurrencyState):
+        # logger.debug("\n\ninsert decider_state\n\n")
         child_state = get_state_from_state_tuple(state_tuple[1][UNIQUE_DECIDER_STATE_ID])
-        state.add_state(child_state)
+        do_storage_test(child_state)
+        for t in state.transitions.values():
+            if UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
+                state.remove_transition(t.transition_id)
+        try:
+            state.add_state(child_state)
+        except:
+            logger.error("Could not insert DeciderState!!! %s" % UNIQUE_DECIDER_STATE_ID in state.states)
 
     state.script = state_tuple[2]
+    state.script.script = state_tuple[5]
     #print "------------- ", state
     for child_state_id, child_state_tuple in state_tuple[1].iteritems():
         child_state = get_state_from_state_tuple(child_state_tuple)
+        do_storage_test(child_state)
+
         # print "++++ new cild", child_state  # child_state_tuple, child_state
-        if not child_state_id == UNIQUE_DECIDER_STATE_ID:
-            state.add_state(child_state)
+        if not child_state.state_id == UNIQUE_DECIDER_STATE_ID:
+            try:
+                state.add_state(child_state)
+            except Exception as e:
+                logger.debug(str(e))
+                logger.error("try to add state %s to state %s with states %s" % (child_state, state, state.states.keys()))
+
+        def print_states(state):
+            if hasattr(state, "states"):
+                for state_id, child_state in state.states.iteritems():
+                    print child_state.get_path()
+                    print_states(child_state)
+        # print "got from tuple:"
+        # print_states(state)
 
     return state
 
+import copy
+
 
 def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=False):
-    meta_dict = {'state': state_model.meta, 'is_start': False, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
-                 'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}, 'states':  {},
+    meta_dict = {'state': copy.deepcopy(state_model.meta), 'is_start': False, 'data_flows': {}, 'transitions': {},
+                 'outcomes': {}, 'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}, 'states':  {},
                  'related_parent_transitions': {}, 'related_parent_data_flows': {}}
     if with_parent_linkage:
         with_parent_linkage = False
@@ -85,44 +128,44 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
             for transition_m in state_model.parent.transitions:
                 transition = transition_m.transition
                 if transition.from_state == state_id or transition.to_state == state_id:
-                    meta_dict['related_parent_transitions'][transition.transition_id] = transition_m.meta
+                    meta_dict['related_parent_transitions'][transition.transition_id] = copy.deepcopy(transition_m.meta)
             for data_flow_m in state_model.parent.data_flows:
                 data_flow = data_flow_m.data_flow
                 if data_flow.from_state == state_id or data_flow.to_state == state_id:
-                    meta_dict['related_parent_data_flows'][data_flow.data_flow_id] = data_flow_m.meta
+                    meta_dict['related_parent_data_flows'][data_flow.data_flow_id] = copy.deepcopy(data_flow_m.meta)
 
     if with_prints:
         print "STORE META for STATE: ", state_model.state.state_id, state_model.state.name
     meta_dict['is_start'] = state_model.is_start
     for elem in state_model.outcomes:
-        meta_dict['outcomes'][elem.outcome.outcome_id] = elem.meta
+        meta_dict['outcomes'][elem.outcome.outcome_id] = copy.deepcopy(elem.meta)
         if with_prints:
             print "outcome: ", elem.outcome.outcome_id, elem.parent.state.outcomes.keys(), meta_dict['outcomes'].keys()
     for elem in state_model.input_data_ports:
-        meta_dict['input_data_ports'][elem.data_port.data_port_id] = elem.meta
+        meta_dict['input_data_ports'][elem.data_port.data_port_id] = copy.deepcopy(elem.meta)
         if with_prints:
             print "input: ", elem.data_port.data_port_id, elem.parent.state.input_data_ports.keys(), meta_dict['input_data_ports'].keys()
     for elem in state_model.output_data_ports:
-        meta_dict['output_data_ports'][elem.data_port.data_port_id] = elem.meta
+        meta_dict['output_data_ports'][elem.data_port.data_port_id] = copy.deepcopy(elem.meta)
         if with_prints:
             print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), meta_dict['output_data_ports'].keys()
 
-    meta_dict['state'] = state_model.meta
+    meta_dict['state'] = copy.deepcopy(state_model.meta)
     if hasattr(state_model, 'states'):
         for state_id, state_m in state_model.states.iteritems():
             meta_dict['states'][state_m.state.state_id] = get_state_element_meta(state_m, with_parent_linkage)
             if with_prints:
                 print "FINISHED STORE META for STATE: ", state_id, meta_dict['states'].keys(), state_model.state.state_id
         for elem in state_model.transitions:
-            meta_dict['transitions'][elem.transition.transition_id] = elem.meta
+            meta_dict['transitions'][elem.transition.transition_id] = copy.deepcopy(elem.meta)
             if with_prints:
                 print "transition: ", elem.transition.transition_id, elem.parent.state.transitions.keys(), meta_dict['transitions'].keys(), elem.parent.state.state_id
         for elem in state_model.data_flows:
-            meta_dict['data_flows'][elem.data_flow.data_flow_id] = elem.meta
+            meta_dict['data_flows'][elem.data_flow.data_flow_id] = copy.deepcopy(elem.meta)
             if with_prints:
                 print "data_flow: ", elem.data_flow.data_flow_id, elem.parent.state.data_flows.keys(), meta_dict['data_flows'].keys()
         for elem in state_model.scoped_variables:
-            meta_dict['scoped_variables'][elem.scoped_variable.data_port_id] = elem.meta
+            meta_dict['scoped_variables'][elem.scoped_variable.data_port_id] = copy.deepcopy(elem.meta)
             if with_prints:
                 print "scoped_variable: ", elem.scoped_variable.data_port_id, elem.parent.state.scoped_variables.keys(), meta_dict['scoped_variables'].keys()
     return meta_dict
@@ -146,7 +189,7 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
     #             if data_flow_m.data_flow.from_state == state_id or data_flow_m.data_flow.to_state == state_id:
     #                 data_flow_m.meta = meta_dict['related_parent_data_flows'][df_id]
 
-    state_model.meta = meta_dict['state']
+    state_model.meta = copy.deepcopy(meta_dict['state'])
     if with_prints:
         print "INSERT META for STATE: ", state_model.state.state_id, state_model.state.name
 
@@ -154,17 +197,17 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
         if with_prints:
             print "outcome: ", elem.outcome.outcome_id, meta_dict['outcomes'].keys()
         assert elem.outcome.outcome_id in meta_dict['outcomes']
-        elem.meta = meta_dict['outcomes'][elem.outcome.outcome_id]
+        elem.meta = copy.deepcopy(meta_dict['outcomes'][elem.outcome.outcome_id])
     for elem in state_model.input_data_ports:
         if with_prints:
             print "input: ", elem.data_port.data_port_id, meta_dict['input_data_ports'].keys()
         assert elem.data_port.data_port_id in meta_dict['input_data_ports']
-        elem.meta = meta_dict['input_data_ports'][elem.data_port.data_port_id]
+        elem.meta = copy.deepcopy(meta_dict['input_data_ports'][elem.data_port.data_port_id])
     for elem in state_model.output_data_ports:
         if with_prints:
             print "output: ", elem.data_port.data_port_id, meta_dict['output_data_ports'].keys()
         assert elem.data_port.data_port_id in meta_dict['output_data_ports']
-        elem.meta = meta_dict['output_data_ports'][elem.data_port.data_port_id]
+        elem.meta = copy.deepcopy(meta_dict['output_data_ports'][elem.data_port.data_port_id])
     if hasattr(state_model, 'states'):
         for state_id, state_m in state_model.states.iteritems():
             if with_prints:
@@ -178,24 +221,24 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
                 print "transition: ", elem.transition.transition_id, meta_dict['transitions'].keys(), elem.parent.state.transitions.keys(), elem.parent.state.state_id
             # assert elem.transition.transition_id in meta_dict['transitions']
             if elem.transition.transition_id in meta_dict['transitions']:
-                elem.meta = meta_dict['transitions'][elem.transition.transition_id]
+                elem.meta = copy.deepcopy(meta_dict['transitions'][elem.transition.transition_id])
             else:
                 logger.warning("Transition seems to miss %s %s" % (state_model.state.state_id, state_model.state.name))
         for elem in state_model.data_flows:
             if with_prints:
                 print "data_flow: ", elem.data_flow.data_flow_id, meta_dict['data_flows'].keys()
             assert elem.data_flow.data_flow_id in meta_dict['data_flows']
-            elem.meta = meta_dict['data_flows'][elem.data_flow.data_flow_id]
+            elem.meta = copy.deepcopy(meta_dict['data_flows'][elem.data_flow.data_flow_id])
         for elem in state_model.scoped_variables:
             if with_prints:
                 print "scoped: ", elem.scoped_variable.data_port_id, meta_dict['scoped_variables'].keys()
             assert elem.scoped_variable.data_port_id in meta_dict['scoped_variables']
-            elem.meta = meta_dict['scoped_variables'][elem.scoped_variable.data_port_id]
-    state_model.is_start = meta_dict['is_start']
+            elem.meta = copy.deepcopy(meta_dict['scoped_variables'][elem.scoped_variable.data_port_id])
+    state_model.is_start = copy.deepcopy(meta_dict['is_start'])
     if state_model.is_start and state_model.parent:  # TODO not nice that model stuff does things in core
         if not (isinstance(state_model.parent.state, BarrierConcurrencyState) or
                 isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
-            logger.debug("set start_state_id %s" % state_model.parent.state)
+            # logger.debug("set start_state_id %s" % state_model.parent.state)
             state_model.parent.state.start_state_id = state_model.state.state_id
         else:
             state_model.is_start = False
@@ -256,10 +299,10 @@ class Action:
 
         if not self.state_machine.get_state_by_path(self.parent_path) or \
                 not self.state_machine.get_state_by_path(self.parent_path).parent:
-            if self.state_machine.get_state_by_path(self.parent_path).parent is None:
-                logger.info("state is root_state -> take root_state for redo")
-            else:
-                logger.warning("statemachine could not get state by path -> take root_state for redo")
+            # if self.state_machine.get_state_by_path(self.parent_path).parent is None:
+            #     logger.info("state is root_state -> take root_state for redo")
+            # else:
+            #     logger.warning("statemachine could not get state by path -> take root_state for redo")
             state = self.state_machine.root_state
         else:
             state = self.state_machine.get_state_by_path(self.parent_path)
@@ -276,10 +319,10 @@ class Action:
 
         if not self.state_machine.get_state_by_path(self.parent_path) or \
                 not self.state_machine.get_state_by_path(self.parent_path).parent:
-            if self.state_machine.get_state_by_path(self.parent_path).parent is None:
-                logger.info("state is root_state -> take root_state for undo")
-            else:
-                logger.warning("statemachine could not get state by path -> take root_state for undo")
+            # if self.state_machine.get_state_by_path(self.parent_path).parent is None:
+            #     logger.info("state is root_state -> take root_state for undo")
+            # else:
+            #     logger.warning("statemachine could not get state by path -> take root_state for undo")
             state = self.state_machine.root_state
             actual_state_model = self.state_machine_model.get_state_model_by_path(state.get_path())
         else:
@@ -294,10 +337,10 @@ class Action:
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         assert storage_version_of_state
-        logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
+        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
         self.update_state(state, storage_version_of_state)
 
-        logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
+        # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
 
@@ -305,28 +348,40 @@ class Action:
 
         # # print "\n#H# TRY STATE_HELPER ", type(root_state_version_fom_storage), \
         # #     isinstance(root_state_version_fom_storage, statemachine_helper.HierarchyState), "\n"
-        # if type(stored_state) is not type(state):
-        #     if isinstance(stored_state, statemachine_helper.HierarchyState):
-        #         new_state_class = statemachine_helper.HierarchyState
-        #     elif isinstance(stored_state, statemachine_helper.BarrierConcurrencyState):
-        #         new_state_class = statemachine_helper.BarrierConcurrencyState
-        #     elif isinstance(stored_state, statemachine_helper.PreemptiveConcurrencyState):
-        #         new_state_class = statemachine_helper.PreemptiveConcurrencyState
-        #     else:
-        #         new_state_class = statemachine_helper.ExecutionState
-        #     state = statemachine_helper.StateMachineHelper.duplicate_state_with_other_state_type(state, new_state_class)
+        # logger.debug("UPDATE STATE TYPE %s %s unsame %s" % (type(stored_state), type(state),
+        #                                                     type(stored_state) is not type(state)))
 
+        assert type(stored_state) is type(state)
+        # if type(stored_state) is not type(state):
+        #     logger.debug("CHANGE STATE TYPE WHILE UNDO/REDO")
+        #     if isinstance(stored_state, HierarchyState):
+        #         new_state_class = HierarchyState
+        #     elif isinstance(stored_state, BarrierConcurrencyState):
+        #         new_state_class = BarrierConcurrencyState
+        #     elif isinstance(stored_state, PreemptiveConcurrencyState):
+        #         new_state_class = PreemptiveConcurrencyState
+        #     else:
+        #         new_state_class = ExecutionState
+        #     state = awesome_tool.mvc.statemachine_helper.StateMachineHelper.duplicate_state_with_other_state_type(state, new_state_class)
         is_root = state.parent is None
 
         if hasattr(state, 'states'):
+
             for data_flow_id in state.data_flows.keys():
                 state.remove_data_flow(data_flow_id)
-            for t_id in state.transitions.keys():
-                if not UNIQUE_DECIDER_STATE_ID in [state.transitions[t_id].from_state, state.transitions[t_id].to_state]:
+
+            if not isinstance(state, BarrierConcurrencyState):
+                for t_id in state.transitions.keys():
+                    # if not UNIQUE_DECIDER_STATE_ID in [state.transitions[t_id].from_state, state.transitions[t_id].to_state]: # funst nicht
                     state.remove_transition(t_id)
+
             for old_state_id in state.states.keys():
-                if not old_state_id == UNIQUE_DECIDER_STATE_ID:
-                    state.remove_state(old_state_id)
+                # if not old_state_id == UNIQUE_DECIDER_STATE_ID:
+                    # try:
+                state.remove_state(old_state_id, force=True)
+                    # except Exception as e:
+                    #     print old_state_id, UNIQUE_DECIDER_STATE_ID, state
+                    #     raise e
 
         if is_root:
             for outcome_id in state.outcomes.keys():
@@ -346,11 +401,14 @@ class Action:
                 state.remove_scoped_variable(dp_id)
 
         state.name = stored_state.name
+        state.script = stored_state.script
+        # # logger.debug("script0: " + stored_state.script.script)
+        # state.set_script_text(stored_state.script.script)
 
         if is_root:
             for dp_id, dp in stored_state.input_data_ports.iteritems():
                 # print "generate input data port", dp_id
-                state.add_input_data_port(dp.name, dp.data_type, dp.default_value, dp_id)
+                state.add_input_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 # print "got input data ports", dp_id, state.input_data_ports.keys()
                 assert dp_id in state.input_data_ports.keys()
 
@@ -361,7 +419,7 @@ class Action:
                     scoped_str = str(state.scoped_variables.keys())
                 # print "\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \
                     state.output_data_ports.keys(), scoped_str, state._used_data_port_ids, "\n\n\n"
-                state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp_id)
+                state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 # print "\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n"
                 assert dp_id in state.output_data_ports.keys()
 
@@ -378,22 +436,52 @@ class Action:
         if hasattr(state, 'states'):
 
             for dp_id, sv in stored_state.scoped_variables.iteritems():
-                state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, dp_id)
+                state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
+
+            if UNIQUE_DECIDER_STATE_ID in stored_state.states:
+                state.add_state(stored_state.states[UNIQUE_DECIDER_STATE_ID])
+                sm_id = self.state_machine.state_machine_id
+                s_path = state.states[UNIQUE_DECIDER_STATE_ID].script.path
+                awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
+                # print "unmark from removal: ", s_path
+                do_storage_test(state.states[UNIQUE_DECIDER_STATE_ID])
 
             for new_state in stored_state.states.values():
                 # print "++++ new child", new_state
                 if not new_state.state_id == UNIQUE_DECIDER_STATE_ID:
                     state.add_state(new_state)
+                    state.states[new_state.state_id].script = new_state.script
+                    # # logger.debug("script1: " + new_state.script.script)
+                    # state.states[new_state.state_id].set_script_text(new_state.script.script)
+                    s_path = state.states[new_state.state_id].script.path
+                    sm_id = self.state_machine.state_machine_id
+                    awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
+                    # print "unmark from removal: ", s_path
+                    if hasattr(new_state, 'states'):
+                        def unmark_state(state_, sm_id_):
+                            spath = state_.script.path
+                            awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id_, spath)
+                            # print "unmark from removal: ", spath
+                            if hasattr(state_, 'states'):
+                                for child_state in state_.states.values():
+                                    unmark_state(child_state, sm_id_)
+                            do_storage_test(state_)
+
+                        unmark_state(new_state, sm_id)
+                    # check if tmp folder otherwise everthing is Ok
+
+                    # if is -> do check if exists and write the script if not!!!! TODO
 
             if not (isinstance(state, BarrierConcurrencyState) or
                         isinstance(state, PreemptiveConcurrencyState)):
                 for t_id, t in stored_state.transitions.iteritems():
                     # print "\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ "
+                    # print "### transitions to delete ", [t.from_state, t.to_state], t
                     if not UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
-                        state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t_id)
+                        state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
 
             for df_id, df in stored_state.data_flows.iteritems():
-                state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df_id)
+                state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
 
         # self.before_model.transitions._notify_method_after(state, 'data_flow_change', None, (self.before_model,), {})
 
@@ -449,7 +537,7 @@ class StateMachineAction(Action):
             new_state_class = statemachine_helper.PreemptiveConcurrencyState
         else:
             new_state_class = statemachine_helper.ExecutionState
-
+        # logger.debug("DO root version change")
         new_state = statemachine_helper.StateMachineHelper.duplicate_state_with_other_state_type(state, new_state_class)
         self.update_state(new_state, root_state_version_fom_storage)
 
@@ -621,6 +709,9 @@ class History(ModelMT):
                 if self.with_prints:
                     print "HISTORY after not count"
 
+    def meta_changed_notify_before(self, changed_parent_model, changed_model, recursive_changes):
+        pass
+
     def meta_changed_notify_after(self, changed_parent_model, changed_model, recursive_changes):
         """
         :param changed_parent_model awesome_tool.mvc.models.container_state.ContainerStateModel: model that holds the changed model
@@ -629,8 +720,8 @@ class History(ModelMT):
         :return:
         """
         # store meta data
-        # print "\n\n\n Meta Changed \n\n\n"
-        pass
+        logger.debug("state %s %s history got notification that Meta data has changed" %
+                     (changed_parent_model.state.state_id, changed_parent_model.state.name))
         # -> in case of undo/redo overwrite Model.meta-dict
 
     def undo(self):
@@ -752,8 +843,8 @@ class History(ModelMT):
         else:  # FAILURE  # is root_state
             # self.actual_action = Action(info.method_name, '/',
             #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-            logger.error("tried to start observation of new action that is not classifiable \n%s \n%s \n%s",
-                         overview['model'][0], overview['prop_name'][0], overview['info'][-1])
+            logger.error("tried to start observation of new action that is not classifiable \n%s \n%s \n%s \n%s",
+                         overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
             return False
 
         return result
@@ -946,8 +1037,8 @@ class History(ModelMT):
                         if self.with_prints:
                             print "HISTORY COUNT WAS OF SUCCESS"
             else:
-                # print "HISTORY after not count"
-                pass
+                if self.with_prints:
+                    print "HISTORY after not count"
 
     def parent_state_of_notification_source(self, model, prop_name, info, before_after):
         if self.with_prints:
@@ -980,8 +1071,8 @@ class History(ModelMT):
             elif 'kwargs' in info:
                 set_dict(info, elem)
             else:
-                # if self.with_prints:
-                # print 'assert'
+                if self.with_prints:
+                    print 'assert'
                 assert True
             return elem
 
@@ -1050,7 +1141,7 @@ class ChangeHistory(Observable):
         # do single trail history
         if self.trail_pointer is not None:
             if self.trail_pointer > len(self.trail_history) - 1 or self.trail_pointer < 0:
-                logger.error('History is broken!!! %s' % self.trail_pointer)
+                logger.error('History is broken may!!! %s' % self.trail_pointer)
             while not self.trail_pointer == len(self.trail_history) - 1:
                 if self.with_prints:
                     print "pointer: %s %s" % (self.trail_pointer, len(self.trail_history))
@@ -1060,6 +1151,8 @@ class ChangeHistory(Observable):
         # print '\n\n\n\n\n################ PUT pointer ON: Trail: %s All Time History: %s\n\n\n\n\n' % \
         #       (len(self.trail_history) - 1, len(self.all_time_history) - 1)
         self.trail_pointer = len(self.trail_history) - 1
+        if self.trail_pointer == -1:
+            self.trail_pointer = None
         self.all_time_pointer = len(self.all_time_history) - 1
 
     def recover_specific_version(self, version_pointer):
@@ -1076,7 +1169,7 @@ class ChangeHistory(Observable):
 
     @Observable.observed
     def undo(self):
-        logger.debug("try undo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
+        # logger.debug("try undo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
         if self.trail_pointer is not None and not self.trail_pointer < 0:
             self.trail_history[self.trail_pointer].undo()
             self.trail_pointer -= 1
@@ -1088,7 +1181,7 @@ class ChangeHistory(Observable):
 
     @Observable.observed
     def redo(self):
-        logger.debug("try redo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
+        # logger.debug("try redo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
         if self.trail_history is not None and self.trail_pointer + 1 < len(self.trail_history):
             self.trail_history[self.trail_pointer+1].redo()
             self.trail_pointer += 1
@@ -1100,11 +1193,11 @@ class ChangeHistory(Observable):
 
     def single_trail_history(self):
         if self.is_end():
-            return self.trail_history#[:]
+            return self.trail_history  # [:]
         else:
             if self.with_prints:
                 print "pointer: ", str(self.trail_pointer)
-            return self.trail_history#[:self.trail_pointer + 1]
+            return self.trail_history  # [:self.trail_pointer + 1]
 
     def is_end(self):
         return len(self.trail_history)-1 == self.trail_pointer
