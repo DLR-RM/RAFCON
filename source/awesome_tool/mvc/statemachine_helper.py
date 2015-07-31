@@ -14,7 +14,7 @@ from awesome_tool.statemachine.enums import StateType
 from awesome_tool.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
-from awesome_tool.mvc.singleton import state_machine_manager_model
+import awesome_tool.mvc.singleton
 
 
 class StateMachineHelper():
@@ -133,7 +133,7 @@ class StateMachineHelper():
             return False
         if not isinstance(container_state_m, StateModel) or \
                 (isinstance(container_state_m, StateModel) and not isinstance(container_state_m, ContainerStateModel)):
-            logger.error("Parent state must be a container, for example a Hierarchy State.")
+            logger.error("Parent state must be a container, for example a Hierarchy State." + str(container_state_m))
             return False
 
         new_state = None
@@ -161,11 +161,19 @@ class StateMachineHelper():
         if current_state_is_container and new_state_is_container:
             assert isinstance(source_state, ContainerState)
 
-            # if new_state_class in [BarrierConcurrencyState, PreemptiveConcurrencyState]:
-            for t_id in source_state.transitions.keys():
-                source_state.remove_transition(t_id)
+            if target_state_class in [BarrierConcurrencyState, PreemptiveConcurrencyState]:
+                for t_id in source_state.transitions.keys():
+                    source_state.remove_transition(t_id)
             state_transitions = {}
             state_start_state_id = None
+            logger.info("type change from %s to %s" % (type(source_state), target_state_class))
+            logger.info("\n\n ##xxxxx## %s %s %s %s" % ( isinstance(source_state, BarrierConcurrencyState), type(source_state) == BarrierConcurrencyState, source_state.states, source_state))
+            if isinstance(source_state, BarrierConcurrencyState):
+                source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
+                if UNIQUE_DECIDER_STATE_ID in source_state.states:
+                    logger.info("\n\n ########## %s %s" % (source_state.states, source_state))
+                    assert False
+            logger.info("\n\n ########## %s %s" % (source_state.states, source_state))
             new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                            input_data_ports=source_state.input_data_ports,
                                            output_data_ports=source_state.output_data_ports,
@@ -208,7 +216,7 @@ class StateMachineHelper():
         new_state_is_container = new_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
         # remove selection from StateMachineModel.selection -> find state machine model
-        state_machine_m = state_machine_manager_model.get_sm_m_for_state_model(old_state_m)
+        state_machine_m = awesome_tool.mvc.singleton.state_machine_manager_model.get_sm_m_for_state_model(old_state_m)
         state_machine_m.selection.remove(old_state_m)
 
         state_id = old_state_m.state.state_id
@@ -324,7 +332,7 @@ class StateMachineHelper():
             new_state_m.parent = parent_m  # sollte schon passiert sein oder?
         else:  # STATE MACHINE MODEL CASE
             new_state_m = parent_m.root_state
-            state_machine_manager_model.selected_state_machine_id = state_machine_m.state_machine.state_machine_id
+            awesome_tool.mvc.singleton.state_machine_manager_model.selected_state_machine_id = state_machine_m.state_machine.state_machine_id
 
         if isinstance(new_state_m.state, BarrierConcurrencyState):
             decider_state_m = new_state_m.states[UNIQUE_DECIDER_STATE_ID]
@@ -411,7 +419,7 @@ class StateMachineHelper():
         assert isinstance(state, State)
         from awesome_tool.statemachine.singleton import state_machine_manager
         state_machine_id = state_machine_manager.get_sm_id_for_state(state)
-        state_machine_m = state_machine_manager_model.state_machines[state_machine_id]
+        state_machine_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[state_machine_id]
         state_m = state_machine_m.root_state
         state_path = state.get_path()
         path_item_list = state_path.split('/')
@@ -435,5 +443,5 @@ class StateMachineHelper():
         assert isinstance(state, State)
         from awesome_tool.statemachine.singleton import state_machine_manager
         state_machine_id = state_machine_manager.get_sm_id_for_state(state)
-        state_machine_m = state_machine_manager_model.state_machines[state_machine_id]
+        state_machine_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[state_machine_id]
         return state_machine_m

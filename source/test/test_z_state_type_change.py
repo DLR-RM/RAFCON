@@ -372,7 +372,9 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             if not hasattr(s_m, "state"):
                 print s_m
             assert s_m_id == s_m.state.state_id
-            if s_m_id is not UNIQUE_DECIDER_STATE_ID:
+            if not s_m_id == UNIQUE_DECIDER_STATE_ID:
+                if not s_m_id in stored_state_elements['states']:
+                    print "missing state: ", s_m_id, stored_state_elements['states']
                 assert s_m_id in stored_state_elements['states']
 
                 assert s_m.state.state_id in stored_state_elements['states']
@@ -665,6 +667,11 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
+    ###################################
+    # Test Preemptive Concurrency State
+    # RULES
+    # - no start states
+
     # HS -> PCS
     state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
     glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
@@ -706,15 +713,15 @@ def test_state_type_change_with_gui():
     state_type_change_test(with_gui=True)
 
 
-# def _test_state_type_change_without_gui():
-#     state_type_change_test(with_gui=False)
+def _test_state_type_change_without_gui():
+    state_type_change_test(with_gui=False)
 
 
 def state_type_change_test(with_gui=False):
 
     variables_for_pytest.test_multithrading_lock.acquire()
     awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir("../awesome_tool/mvc/")
+    os.chdir(awesome_tool.__path__[0] + "/mvc")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
     logging_view = LoggingView()
@@ -754,13 +761,14 @@ def state_type_change_test(with_gui=False):
             logger.debug("Joined currently executing state machine!")
             thread.join()
             logger.debug("Joined test triggering thread!")
-        os.chdir("../../test")
+        os.chdir(awesome_tool.__path__[0] + "/../test")
         variables_for_pytest.test_multithrading_lock.release()
     else:
+        os.chdir(awesome_tool.__path__[0] + "/../test")
         thread.join()
 
 
 if __name__ == '__main__':
-    # test_state_type_change_without_gui()
+    # _test_state_type_change_without_gui()
 
     test_state_type_change_with_gui()
