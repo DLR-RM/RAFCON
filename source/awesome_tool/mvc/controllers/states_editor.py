@@ -6,6 +6,7 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.views.state_editor import StateEditorView
 from awesome_tool.mvc.controllers.state_editor import StateEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
+from awesome_tool.mvc.models.state import StateModel
 from awesome_tool.mvc.selection import Selection
 from awesome_tool.utils import constants
 from awesome_tool.utils import log
@@ -13,22 +14,22 @@ logger = log.get_logger(__name__)
 
 
 def create_tab_close_button(callback, *additional_parameters):
-    closebutton = gtk.Button()
+    close_button = gtk.Button()
     close_label = gtk.Label()
     close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
                                                                       constants.BUTTON_CLOSE))
-    closebutton.set_relief(gtk.RELIEF_NONE)
-    closebutton.set_focus_on_click(True)
-    closebutton.add(close_label)
+    close_button.set_relief(gtk.RELIEF_NONE)
+    close_button.set_focus_on_click(True)
+    close_button.add(close_label)
 
     style = gtk.RcStyle()
     style.xthickness = 0
     style.ythickness = 0
-    closebutton.modify_style(style)
+    close_button.modify_style(style)
 
-    closebutton.connect('released', callback, *additional_parameters)
+    close_button.connect('released', callback, *additional_parameters)
 
-    return closebutton
+    return close_button
 
 
 def limit_tab_label_text(text):
@@ -109,9 +110,7 @@ class StatesEditorController(ExtendedController):
     @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, property, info):
         old_root_state_m = info['old']
-        # new_root_state_m = info['new']
         self.on_destroy_clicked(None, old_root_state_m, None)
-        # self.add_state_editor(new_root_state_m)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
@@ -149,7 +148,6 @@ class StatesEditorController(ExtendedController):
             self.observe_model(self._selected_state_machine_model)  # for selection
 
     def register_view(self, view):
-        # sniffing the graphical viewer selection
         self.view.notebook.connect('switch-page', self.on_switch_page)
         if self._selected_state_machine_model:
             self.add_state_editor(self._selected_state_machine_model.root_state, self.editor_type)
@@ -185,7 +183,7 @@ class StatesEditorController(ExtendedController):
         self.view.notebook.show()
         self.tabs[state_identifier] = {'page': page, 'state_m': state_m,
                                        'ctrl': state_editor_ctrl, 'sm_id': self.__my_selected_state_machine_id,
-                                       'view': state_editor_view, 'is_sticky': False, 'event_box': tab}
+                                       'is_sticky': False}
         return page_id
 
     def close_page(self, page_to_close, state_identifier):
@@ -226,10 +224,6 @@ class StatesEditorController(ExtendedController):
             return
 
         self.tabs[state_identifier]['is_sticky'] = not self.tabs[state_identifier]['is_sticky']
-
-        # find currently active page and close it
-        # self.close_page(page)
-        # self.destroy_state_editor_page(state_identifier)
 
     def close_all_tabs(self):
         """Closes all tabs of the states editor
@@ -327,29 +321,23 @@ class StatesEditorController(ExtendedController):
         """Checks whether the name of s state was changed and changes the tab label accordingly
         """
         # TODO in combination with state type change (remove - add -state) there exist sometimes inconsistencies
+        affected_model = None
         # A child state is affected
         if hasattr(info, "kwargs") and info.method_name == 'state_change':
             if info.kwargs.method_name == 'name':
-                self.check_name(info.kwargs.model)
+                affected_model = info.kwargs.model
         # The root state is affected
         elif info.method_name == 'name':
-            self.check_name(model)
+            affected_model = model
+        if isinstance(affected_model, StateModel):
+            self.update_tab_label(affected_model)
 
-    # Seems not be be used, finally remove in this case
-    # def remove_search(self):
-    #     to_remove = []
-    #     for path, page_info in self.tabs.items():
-    #         if page_info['state_m'].parent and \
-    #                 not page_info['state_m'].state.state_id in page_info['state_m'].parent.states:
-    #             logger.debug("remove: ", page_info['state_m'].state.state_id)
-    #             to_remove.append(page_info['state_m'])
-    #     for state_m in to_remove:
-    #         self.on_destroy_clicked(event=None, state_m=state_m, result=None)
-
-    def check_name(self, state_m):
+    def update_tab_label(self, state_m):
         """Update all tab labels
         """
         state_identifier = self.get_state_identifier(state_m)
+        if state_identifier not in self.tabs:
+            return
         page = self.tabs[state_identifier]['page']
         tab_label_text = self.get_state_tab_name(state_m)
         tab_label_text_trimmed = limit_tab_label_text(tab_label_text)
