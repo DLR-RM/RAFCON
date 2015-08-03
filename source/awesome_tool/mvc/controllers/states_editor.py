@@ -1,4 +1,3 @@
-import pango
 
 import gtk
 
@@ -8,28 +7,68 @@ from awesome_tool.mvc.controllers.state_editor import StateEditorController
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state import StateModel
 from awesome_tool.mvc.selection import Selection
+from awesome_tool.mvc.config import global_gui_config
 from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
 
-def create_tab_close_button(callback, *additional_parameters):
-    close_button = gtk.Button()
-    close_label = gtk.Label()
-    close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
-                                                                      constants.BUTTON_CLOSE))
-    close_button.set_relief(gtk.RELIEF_NONE)
-    close_button.set_focus_on_click(True)
-    close_button.add(close_label)
+def create_button(toggle, font, font_size, icon_code, release_callback=None, *additional_parameters):
+    if toggle:
+        button = gtk.ToggleButton()
+    else:
+        button = gtk.Button()
+    label = gtk.Label()
+    label.set_markup("<span font_desc='{0} {1}'>&#x{2};</span>".format(font, font_size, icon_code))
+
+    button.set_relief(gtk.RELIEF_NONE)
+    button.set_focus_on_click(False)
+    button.add(label)
 
     style = gtk.RcStyle()
     style.xthickness = 0
     style.ythickness = 0
-    close_button.modify_style(style)
+    button.modify_style(style)
 
-    close_button.connect('released', callback, *additional_parameters)
+    if release_callback:
+        button.connect('released', release_callback, *additional_parameters)
+
+    return button
+
+
+def create_tab_close_button(callback, *additional_parameters):
+    close_button = create_button(False, constants.ICON_FONT, constants.FONT_SIZE_SMALL, constants.BUTTON_CLOSE,
+                                 callback, *additional_parameters)
 
     return close_button
+
+
+def create_sticky_button(callback, *additional_parameters):
+    sticky_button = create_button(True, constants.ICON_FONT, constants.FONT_SIZE_SMALL, constants.ICON_STICKY,
+                                  callback, *additional_parameters)
+
+    return sticky_button
+
+
+def create_tab_header(title, close_callback, sticky_callback, *additional_parameters):
+    hbox = gtk.HBox()
+    # hbox.set_size_request(width=-1, height=14)  # safe two pixel
+
+    if global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
+        sticky_button = create_sticky_button(sticky_callback, *additional_parameters)
+        hbox.add(sticky_button)
+    else:
+        sticky_button = None
+
+    label = generate_tab_label(title)
+    hbox.add(label)
+
+    # add close button
+    close_button = create_tab_close_button(close_callback, *additional_parameters)
+    hbox.add(close_button)
+    hbox.show_all()
+
+    return hbox, label, sticky_button
 
 
 def limit_tab_label_text(text):
@@ -44,20 +83,6 @@ def generate_tab_label(title):
     label = gtk.Label(title)
 
     return label
-
-
-def create_tab_header(title, close_callback, *additional_parameters):
-    hbox = gtk.HBox()
-    hbox.set_size_request(width=-1, height=14)  # safe two pixel
-    label = generate_tab_label(title)
-    hbox.add(label)
-
-    # add close button
-    close_button = create_tab_close_button(close_callback, *additional_parameters)
-    hbox.add(close_button)
-    hbox.show_all()
-
-    return hbox, label
 
 
 class StatesEditorController(ExtendedController):
@@ -99,13 +124,12 @@ class StatesEditorController(ExtendedController):
         if page_id == -1:
             return None
         page = self.view.notebook.get_nth_page(page_id)
-        print page
         state_identifier = self.get_state_identifier_for_page(page)
         return self.tabs[state_identifier]['state_m']
 
     def close_state_tab(self, widget, page_num):
         page_to_close = widget.get_nth_page(page_num)
-        self.close_page(page_to_close, self.get_state_identifier_for_page(page_to_close))
+        self.close_page(self.get_state_identifier_for_page(page_to_close))
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, property, info):
@@ -119,7 +143,6 @@ class StatesEditorController(ExtendedController):
     @ExtendedController.observe("state_machines", after=True)
     def state_machines_notification(self, model, prop_name, info):
         if info['method_name'] == '__delitem__':
-            logger.debug("Remove state machine states from states-editor tab list ... ")
             tabs_to_be_removed = []
             for state_identifier, tab_dict in self.tabs.iteritems():
                 if tab_dict['sm_id'] not in self.model.state_machines:
@@ -168,11 +191,12 @@ class StatesEditorController(ExtendedController):
         tab_label_text = self.get_state_tab_name(state_m)
         tab_label_text_trimmed = limit_tab_label_text(tab_label_text)
 
-        (tab, inner_label) = create_tab_header(tab_label_text_trimmed, self.on_destroy_clicked,
-                                               state_m, 'refused')
+        (tab, inner_label, sticky_button) = create_tab_header(tab_label_text_trimmed, self.on_destroy_clicked,
+                                                              self.on_toggle_sticky_clicked, state_m)
         inner_label.set_tooltip_text(tab_label_text)
 
         state_editor_view.get_top_widget().title_label = inner_label
+        state_editor_view.get_top_widget().sticky_button = sticky_button
 
         page_content = state_editor_view.get_top_widget()
         page_id = self.view.notebook.prepend_page(page_content, tab)
@@ -186,10 +210,10 @@ class StatesEditorController(ExtendedController):
                                        'is_sticky': False}
         return page_id
 
-    def close_page(self, page_to_close, state_identifier):
+    def close_page(self, state_identifier):
         """Callback for the "close-clicked" emitted by custom TabLabel widget.
         """
-
+        page_to_close = self.tabs[state_identifier]['page']
         if page_to_close:
             current_page_id = self.view.notebook.page_num(page_to_close)
             self.view.notebook.remove_page(current_page_id)
@@ -211,19 +235,19 @@ class StatesEditorController(ExtendedController):
                 return searched_page, state_identifier
         return None, None
 
-    def on_destroy_clicked(self, event, state_m, result):
+    def on_destroy_clicked(self, event, state_m):
         [page, state_identifier] = self.find_page_of_state_m(state_m)
         if page:
-            self.close_page(page, state_identifier)
+            self.close_page(state_identifier)
 
-    def on_toggle_sticky_clicked(self, event, state_m, result):
+    def on_toggle_sticky_clicked(self, event, state_m):
         """Callback for the "toggle-sticky-check-button" emitted by custom TabLabel widget.
         """
         [page, state_identifier] = self.find_page_of_state_m(state_m)
         if not page:
             return
-
         self.tabs[state_identifier]['is_sticky'] = not self.tabs[state_identifier]['is_sticky']
+        page.sticky_button.set_active(self.tabs[state_identifier]['is_sticky'])
 
     def close_all_tabs(self):
         """Closes all tabs of the states editor
@@ -275,6 +299,39 @@ class StatesEditorController(ExtendedController):
                 page = self.tabs[state_identifier]['page']
                 page_id = self.view.notebook.page_num(page)
                 self.view.notebook.set_current_page(page_id)
+
+        self.keep_only_sticked_and_selected_tabs()
+
+    def keep_only_sticked_and_selected_tabs(self):
+        """Close all tabs, except the currently active one and all sticked ones
+        """
+        # Only if the user didn't deactivate this behaviour
+        if not global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
+            return
+
+        page_id = self.view.notebook.get_current_page()
+        # No tabs are open
+        if page_id == -1:
+            return
+
+        page = self.view.notebook.get_nth_page(page_id)
+        current_state_identifier = self.get_state_identifier_for_page(page)
+
+        states_to_be_closed = []
+        # Iterate over all tabs
+        for state_identifier, tab_info in self.tabs.iteritems():
+            # If the tab is currently open, keep it open
+            if current_state_identifier == state_identifier:
+                continue
+            # If the tab is sticky, keep it open
+            if tab_info['is_sticky']:
+                continue
+            # Otherwise close it
+            states_to_be_closed.append(state_identifier)
+
+        for state_identifier in states_to_be_closed:
+            self.close_page(state_identifier)
+
 
     @ExtendedController.observe("selection", after=True)
     def selection_notification(self, model, property, info):
