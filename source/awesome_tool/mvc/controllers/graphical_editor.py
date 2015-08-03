@@ -458,7 +458,7 @@ class GraphicalEditorController(ExtendedController):
                     self.single_selection.temp['gui']['editor']['original_rel_pos'] = \
                         copy(self.single_selection.meta['gui']['editor']['rel_pos'])
                 new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-                self._move_state(self.single_selection, new_pos)
+                self._move_state(self.single_selection, new_pos, publish_changes=False)
 
             # Move current data port, if the user didn't click on the connector (i. e. wants to create a data flow)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)) and \
@@ -1259,7 +1259,7 @@ class GraphicalEditorController(ExtendedController):
         # Keep state within parent if default values are used
         if recalc and state_m.parent is not None:
             state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
-            self._move_state(state_m, state_abs_pos, redraw=True)
+            self._move_state(state_m, state_abs_pos, redraw=True, publish_changes=False)
 
         # Was the state selected?
         selected_states = self.model.selection.get_states()
@@ -1787,7 +1787,9 @@ class GraphicalEditorController(ExtendedController):
     def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
         self.model.state_machine.marked_dirty = True
         # logger.info("META_DATA HAS BEEN CHANGED")
-        # self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
+        self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
+        logger.debug("publish changes to history")
+        # History.meta_changed_notify_after(self, model, name, affects_children)
 
     def _delete_selection(self, *args):
         if self.view.editor.has_focus():

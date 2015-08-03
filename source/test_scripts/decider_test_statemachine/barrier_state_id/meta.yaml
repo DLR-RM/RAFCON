@@ -25,18 +25,18 @@ scoped_variables: {}
 state_id: barrier_state_id
 transitions:
     15: !Transition {from_outcome: 0, from_state: id_of_state_1, to_outcome: null,
-        to_state: unique_decider_sate_id, transition_id: 15}
+        to_state: unique_decider_state_id, transition_id: 15}
     16: !Transition {from_outcome: 3, from_state: id_of_state_1, to_outcome: null,
-        to_state: unique_decider_sate_id, transition_id: 16}
+        to_state: unique_decider_state_id, transition_id: 16}
     17: !Transition {from_outcome: 4, from_state: id_of_state_1, to_outcome: null,
-        to_state: unique_decider_sate_id, transition_id: 17}
+        to_state: unique_decider_state_id, transition_id: 17}
     18: !Transition {from_outcome: 0, from_state: id_of_state_2, to_outcome: null,
-        to_state: unique_decider_sate_id, transition_id: 18}
+        to_state: unique_decider_state_id, transition_id: 18}
     19: !Transition {from_outcome: 3, from_state: id_of_state_2, to_outcome: null,
-        to_state: unique_decider_sate_id, transition_id: 19}
+        to_state: unique_decider_state_id, transition_id: 19}
     20: !Transition {from_outcome: 4, from_state: id_of_state_2, to_outcome: null,
-        to_state: unique_decider_sate_id, transition_id: 20}
-    21: !Transition {from_outcome: 3, from_state: unique_decider_sate_id, to_outcome: 3,
+        to_state: unique_decider_state_id, transition_id: 20}
+    21: !Transition {from_outcome: 3, from_state: unique_decider_state_id, to_outcome: 3,
         to_state: barrier_state_id, transition_id: 21}
-    22: !Transition {from_outcome: 4, from_state: unique_decider_sate_id, to_outcome: 4,
+    22: !Transition {from_outcome: 4, from_state: unique_decider_state_id, to_outcome: 4,
         to_state: barrier_state_id, transition_id: 22}
