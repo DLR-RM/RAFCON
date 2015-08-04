@@ -133,18 +133,20 @@ def execute(self, inputs, outputs, gvm):
     def load_and_build_module(self):
         """Loads and builds the module given by the path and the filename
         """
-        script_path = os.path.join(self.path, self.filename)
-
-        try:
-            script_file = open(script_path, 'r')
-        except:
-            logger.error("The script file could not be opened (path: %s)" % str(script_path))
-            raise IOError("Script file could not be opened!")
-
-        # reset script
-        self.script = None
-        self.script = script_file.read()
-        script_file.close()
+        # NO script from drive, only from memory
+        ###########################################
+        # script_path = os.path.join(self.path, self.filename)
+        #
+        # try:
+        #     script_file = open(script_path, 'r')
+        # except:
+        #     logger.error("The script file could not be opened (path: %s)" % str(script_path))
+        #     raise IOError("Script file could not be opened!")
+        #
+        # # reset script
+        # self.script = None
+        # self.script = script_file.read()
+        # script_file.close()
 
         module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
 
