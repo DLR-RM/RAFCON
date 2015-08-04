@@ -33,7 +33,7 @@ class Outcome(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Outcome'
 
-    def __init__(self, outcome_id=None, name=None, check_name_func_handle=None):
+    def __init__(self, outcome_id=None, name=None, check_name_func_handle=None, parent=None):
 
         Observable.__init__(self)
 
@@ -44,6 +44,9 @@ class Outcome(Observable, yaml.YAMLObject):
 
         self._name = None
         self.name = name
+
+        self._parent = None
+        self.parent = parent
 
         logger.debug("Outcome with name %s and id %s initialized" % (self.name, self.outcome_id))
 
@@ -103,4 +106,16 @@ class Outcome(Observable, yaml.YAMLObject):
             self._name = self.check_name(name, self)
         else:
             self._name = name
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    @Observable.observed
+    def parent(self, parent):
+        if parent is not None:
+            from awesome_tool.statemachine.states.state import State
+            assert isinstance(parent, State)
+        self._parent = parent
 

@@ -8,7 +8,6 @@
 
 """
 
-import sys
 from gtkmvc import Observable
 import yaml
 
@@ -28,7 +27,7 @@ class DataPort(Observable, yaml.YAMLObject):
     :ivar default_value: the default value of the data port
 
     """
-    def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None):
+    def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None):
 
         Observable.__init__(self)
 
@@ -44,6 +43,9 @@ class DataPort(Observable, yaml.YAMLObject):
             self.data_type = data_type
         self._default_value = None
         self.default_value = default_value
+
+        self._parent = None
+        self.parent = parent
 
         logger.debug("DataPort with name %s initialized" % self.name)
 
@@ -129,6 +131,18 @@ class DataPort(Observable, yaml.YAMLObject):
             self._default_value = default_value
         except (TypeError, AttributeError) as e:
             raise e
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    @Observable.observed
+    def parent(self, parent):
+        if parent is not None:
+            from awesome_tool.statemachine.states.state import State
+            assert isinstance(parent, State)
+        self._parent = parent
 
     @Observable.observed
     def change_data_type(self, data_type, default_value=None):

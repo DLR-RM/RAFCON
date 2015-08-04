@@ -53,11 +53,11 @@ class ScopedVariable(DataPort):
 
     yaml_tag = u'!ScopedVariable'
 
-    def __init__(self, name=None, data_type=None, default_value=None, scoped_variable_id=None):
+    def __init__(self, name=None, data_type=None, default_value=None, scoped_variable_id=None, parent=None):
 
         Observable.__init__(self)
 
-        DataPort.__init__(self, name, data_type, default_value, scoped_variable_id)
+        DataPort.__init__(self, name, data_type, default_value, scoped_variable_id, parent)
 
     def __str__(self):
         return "ScopedVariable: \n name: %s \n data_type: %s \n default_value: %s " %\

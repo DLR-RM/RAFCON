@@ -375,6 +375,8 @@ def setup_observer_dict_for_state_model(state_model, with_print=False):
 def check_count_of_model_notifications(model_observer, forecast_dict):
     number_of_all_notifications = 0
     for prop_name, nr_of_notifications in forecast_dict.iteritems():
+        if 'parent' in forecast_dict:
+            print model_observer
         print "estimated: %s and occured %s" % (nr_of_notifications, [len(model_observer.log['before'][prop_name]),
                                                                       len(model_observer.log['after'][prop_name])])
         # print "path: ", model_observer.observed_model.state.get_path()
@@ -1207,19 +1209,25 @@ def test_state_add_remove_notification(with_print=False):
 
 def test_state_property_modify_notification(with_print=False):
 
-    def check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=1):
+    def check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=1, child_effects={}):
 
         # check state
         state_model_observer = states_observer_dict[state_dict[sub_state_name].get_path()]
-        check_count_of_model_notifications(state_model_observer, {'state': forecast})
+        check_dict = {'state': forecast}
+        check_dict.update(child_effects)
+        check_count_of_model_notifications(state_model_observer, check_dict)
 
         # check parent
+        num_child_effects = 0
+        for num_prop_effects in child_effects.itervalues():
+            num_child_effects += num_prop_effects
+        check_dict = {'states': forecast + num_child_effects}
         state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-        check_count_of_model_notifications(state_model_observer, {'states': forecast})
+        check_count_of_model_notifications(state_model_observer, check_dict)
 
         # check grand parent
         state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-        check_count_of_model_notifications(state_model_observer, {'states': forecast})
+        check_count_of_model_notifications(state_model_observer, check_dict)
 
 
     # create testbed
@@ -1279,19 +1287,22 @@ def test_state_property_modify_notification(with_print=False):
     # forecast += 4
     state_dict['Nested'].outcomes = state_dict['Nested'].outcomes
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast,
+                               child_effects={'outcomes': 5})
 
     # script(self, script) Script
     state_dict['Nested'].script = Script(script_type=ScriptType.CONTAINER, state=state_dict['Nested'])
     forecast += 1
     state_dict['Nested'].script = Script(script_type=ScriptType.EXECUTION, state=state_dict['Nested'])
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast,
+                               child_effects={'outcomes': 5})
 
     # description(self, description) str
     state_dict['Nested'].description = "awesome"
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast,
+                               child_effects={'outcomes': 5})
 
     # active(self, active) bool
     # IMPORTANT: active flag is not used any more
