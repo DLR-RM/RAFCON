@@ -41,7 +41,7 @@ class ExecutionState(State):
         """Calls the custom execute function of the script.py of the state
 
         """
-        self.script.load_and_build_module()
+        self.script.build_module()
 
         outcome_item = self.script.execute(self, execute_inputs, execute_outputs, backward_execution)
 
