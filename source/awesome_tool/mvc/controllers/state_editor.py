@@ -40,7 +40,6 @@ class StateEditorController(ExtendedController):
         self.add_controller('scoped_ctrl', ScopedVariableListController(model, view['scopes_view']))
         self.add_controller('outcomes_ctrl', StateOutcomesEditorController(model, view['outcomes_view']))
 
-        self.add_controller('source_ctrl', SourceEditorController(model, view['source_view']))
         self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view['transitions_view']))
         self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view['data_flows_view']))
 
@@ -50,9 +49,17 @@ class StateEditorController(ExtendedController):
         view['outputs_view'].show()
         view['scopes_view'].show()
         view['outcomes_view'].show()
-        view['source_view'].show()
         view['transitions_view'].show()
         view['data_flows_view'].show()
+
+        # Container states do not have a source editor
+        # Thus, for those states we do not have to add the source controller and can hide the source code tab
+        if not isinstance(model, ContainerStateModel):
+            self.add_controller('source_ctrl', SourceEditorController(model, view['source_view']))
+            view['source_view'].show()
+        else:
+            source_page = view['main_notebook_1'].page_num(view['source_viewport'])
+            view['main_notebook_1'].remove_page(source_page)
 
         view['description_text_view'].connect('focus-out-event', self.change_description)
         view['description_text_view'].connect('size-allocate', self.scroll_to_bottom)
