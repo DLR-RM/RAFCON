@@ -54,7 +54,7 @@ class StateMachineTreeController(ExtendedController):
         if self.__my_selected_sm_id is not None:
             # observe new models
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
-            logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
+            # logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
             self.__buffered_root_state = self._selected_sm_model.root_state
             self.observe_model(self._selected_sm_model.root_state)
             self.observe_model(self._selected_sm_model)  # for selection

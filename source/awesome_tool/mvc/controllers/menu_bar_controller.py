@@ -187,8 +187,8 @@ class MenuBarController(ExtendedController):
                 state_machine_id_to_path[sm_id] = new_path
                 sm_keys.append(sm_id)
 
-        self.states_editor_ctrl.close_all_tabs()
-        self.state_machines_editor_ctrl.close_all_tabs()
+        self.states_editor_ctrl.close_all_pages()
+        self.state_machines_editor_ctrl.close_all_pages()
 
         # reload state machines from file system
         awesome_tool.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys,

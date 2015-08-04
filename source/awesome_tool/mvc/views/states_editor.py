@@ -4,7 +4,7 @@ from awesome_tool.utils import constants
 import gobject
 
 
-gobject.signal_new("close_state_tab", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int, ))
+gobject.signal_new("tab_close_event", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int, ))
 
 
 class StatesEditorView(View):
@@ -29,7 +29,7 @@ class StatesEditorView(View):
             widget_position = widget.get_allocation()
             mouse_x = widget_position.x + x
             mouse_y = widget_position.y + y
-            if mouse_x > alloc.x and mouse_x < alloc.x + alloc.width and mouse_y > alloc.y\
-                    and mouse_y < alloc.y + alloc.height and event.button == 2:
-                self.notebook.emit("close_state_tab", i)
+            if alloc.x < mouse_x < alloc.x + alloc.width and alloc.y < mouse_y < alloc.y + alloc.height and \
+                            event.button == 2:
+                self.notebook.emit("tab_close_event", i)
                 return

@@ -268,7 +268,7 @@ class StateMachinesEditorController(ExtendedController):
         # if state_machine_m.state_machine.marked_dirty:
         #     state_machine_m.state_machine.marked_dirty = False
 
-    def close_all_tabs(self):
+    def close_all_pages(self):
         """Closes all tabs of the state machines editor
         """
         state_machine_m_list = []

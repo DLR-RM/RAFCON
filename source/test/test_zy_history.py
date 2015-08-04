@@ -1459,7 +1459,7 @@ def trigger_state_type_change_tests(*args):
         # - get states-editor controller
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         # - find right rows in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
@@ -1533,7 +1533,7 @@ def trigger_state_type_change_tests(*args):
         # - get states-editor controller
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         # - find right rows in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
@@ -1599,7 +1599,7 @@ def trigger_state_type_change_tests(*args):
         # - get states-editor controller
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         # - find right rows in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
@@ -1662,7 +1662,7 @@ def trigger_state_type_change_tests(*args):
         # - get states-editor controller
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         # - find right rows in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
@@ -1734,8 +1734,8 @@ def trigger_state_type_change_tests(*args):
         time.sleep(sleep_time_short)
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]
-        print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+        print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         print state_editor_ctrl.get_controller('properties_ctrl')
         print state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
 
@@ -1798,7 +1798,7 @@ def trigger_state_type_change_tests(*args):
         # - get states-editor controller
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         # - find right rows in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
@@ -1847,7 +1847,7 @@ def trigger_state_type_change_tests(*args):
         # - get states-editor controller
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         # - find right rows in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
@@ -1896,7 +1896,7 @@ def trigger_state_type_change_tests(*args):
         # - get states-editor controller
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         # - find right rows in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
