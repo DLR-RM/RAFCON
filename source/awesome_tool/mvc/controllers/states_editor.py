@@ -94,7 +94,7 @@ class StatesEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
 
         self.__my_selected_state_machine_id = None
-        self._selected_state_machine_model = None
+        self.__selected_state_machine_model = None
         self.editor_type = editor_type
 
         # TODO: Workaround used for tab-close on middle click
@@ -105,7 +105,7 @@ class StatesEditorController(ExtendedController):
         self.tabs = {}
         self.current_state_m = None
         self.__buffered_root_state = None  # needed to handle exchange of root_state
-        self.register()
+        self.register_current_state_machine()
 
     def get_state_identifier(self, state_m):
         state_machine_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
@@ -140,42 +140,50 @@ class StatesEditorController(ExtendedController):
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
-        self.register()
+        """Check for changed open state machine
+
+        Register the model of the new state machine, to get notifications about changes in the selection. In
+        addition, open the selected state of the new state machine.
+        """
+        self.register_current_state_machine()
+
+        selection = self.__selected_state_machine_model.selection
+        if selection.get_num_states() == 1 and len(selection) == 1:
+            self.activate_state_tab(selection.get_states()[0])
 
     @ExtendedController.observe("state_machines", after=True)
     def state_machines_notification(self, model, prop_name, info):
+        """Check for closed state machine and close according states
+        """
         if info['method_name'] == '__delitem__':
-            tabs_to_be_removed = []
-            for state_identifier, tab_dict in self.tabs.iteritems():
-                if tab_dict['sm_id'] not in self.model.state_machines:
-                    tabs_to_be_removed.append(state_identifier)
+            states_to_be_removed = []
+            for state_identifier, tab_info in self.tabs.iteritems():
+                if tab_info['sm_id'] not in self.model.state_machines:
+                    states_to_be_removed.append(state_identifier)
 
-            for state_identifier in tabs_to_be_removed:
-                self.on_destroy_clicked(event=None, state_m=self.tabs[state_identifier]['state_m'], result=None)
+            for state_identifier in states_to_be_removed:
+                self.close_page(state_identifier)
 
-    def register(self):
+    def register_current_state_machine(self):
+        """Change the state machine that is observed for new selected states to the selected state machine.
         """
-        Change the state machine that is observed for new selected states to the selected state machine.
-        :return:
-        """
-        # print "states_editor register state_machine"
         # relieve old models
         if self.__my_selected_state_machine_id is not None:  # no old models available
             self.relieve_model(self.__buffered_root_state)
-            self.relieve_model(self._selected_state_machine_model)
+            self.relieve_model(self.__selected_state_machine_model)
         # set own selected state machine id
         self.__my_selected_state_machine_id = self.model.selected_state_machine_id
         if self.__my_selected_state_machine_id is not None:
             # observe new models
-            self._selected_state_machine_model = self.model.state_machines[self.__my_selected_state_machine_id]
-            self.__buffered_root_state = self._selected_state_machine_model.root_state
-            self.observe_model(self._selected_state_machine_model.root_state)
-            self.observe_model(self._selected_state_machine_model)  # for selection
+            self.__selected_state_machine_model = self.model.state_machines[self.__my_selected_state_machine_id]
+            self.__buffered_root_state = self.__selected_state_machine_model.root_state
+            self.observe_model(self.__selected_state_machine_model.root_state)
+            self.observe_model(self.__selected_state_machine_model)  # for selection
 
     def register_view(self, view):
         self.view.notebook.connect('switch-page', self.on_switch_page)
-        if self._selected_state_machine_model:
-            self.add_state_editor(self._selected_state_machine_model.root_state, self.editor_type)
+        if self.__selected_state_machine_model:
+            self.add_state_editor(self.__selected_state_machine_model.root_state, self.editor_type)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -270,12 +278,12 @@ class StatesEditorController(ExtendedController):
             if tab_info['page'] is page:
                 state_m = tab_info['state_m']
                 sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
-                selected_state_m = self._selected_state_machine_model.selection.get_selected_state()
+                selected_state_m = self.__selected_state_machine_model.selection.get_selected_state()
 
                 # If the state of the selected tab is not in the selection, set it there
                 if selected_state_m is not state_m and sm_id in self.model.state_machine_manager.state_machines:
                     self.model.selected_state_machine_id = sm_id
-                    self._selected_state_machine_model.selection.set(state_m)
+                    self.__selected_state_machine_model.selection.set(state_m)
                 return
 
     def activate_state_tab(self, state_m):
@@ -418,7 +426,7 @@ class StatesEditorController(ExtendedController):
         :param key_value:
         :param modifier_mask:
         """
-        selection = self._selected_state_machine_model.selection
+        selection = self.__selected_state_machine_model.selection
         if selection.get_num_states() == 1 and len(selection) == 1:
             selected_state = selection.get_states()[0]
             self.activate_state_tab(selected_state)
