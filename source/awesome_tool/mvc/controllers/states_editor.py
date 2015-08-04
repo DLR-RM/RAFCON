@@ -136,7 +136,7 @@ class StatesEditorController(ExtendedController):
     @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, property, info):
         old_root_state_m = info['old']
-        self.on_destroy_clicked(None, old_root_state_m, None)
+        self.on_destroy_clicked(None, old_root_state_m)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
@@ -151,7 +151,7 @@ class StatesEditorController(ExtendedController):
                     tabs_to_be_removed.append(state_identifier)
 
             for state_identifier in tabs_to_be_removed:
-                self.on_destroy_clicked(event=None, state_m=self.tabs[state_identifier]['state_m'], result=None)
+                self.on_destroy_clicked(event=None, state_m=self.tabs[state_identifier]['state_m'])
 
     def register(self):
         """
@@ -258,7 +258,7 @@ class StatesEditorController(ExtendedController):
         for identifier, tab in self.tabs.iteritems():
             state_model_list.append(tab['state_m'])
         for state_m in state_model_list:
-            self.on_destroy_clicked(event=None, state_m=state_m, result=None)
+            self.on_destroy_clicked(event=None, state_m=state_m)
 
     def on_switch_page(self, notebook, page_pointer, page_num, user_param1=None):
         """Update state selection when the active tab was changed
@@ -359,7 +359,7 @@ class StatesEditorController(ExtendedController):
                 state_m = tab_info['state_m']
                 # The state id is only unique within the parent
                 if state_m.state.state_id == state_id and state_m.parent is parent_state_m:
-                    self.on_destroy_clicked(event=None, state_m=state_m, result=None)
+                    self.on_destroy_clicked(event=None, state_m=state_m)
                     return True
             return False
         # A child state is affected

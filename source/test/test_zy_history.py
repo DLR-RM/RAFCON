@@ -1726,6 +1726,12 @@ def trigger_state_type_change_tests(*args):
     # HS -> BCS
     if with_gui:
         # do state_type_change with gui
+        sm_m.selection.set([state_m])
+        time.sleep(sleep_time_short)
+        sm_m.selection.clear()
+        time.sleep(sleep_time_short)
+        sm_m.selection.set([state_m])
+        time.sleep(sleep_time_short)
         tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]
         print main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['ctrl']
