@@ -24,6 +24,7 @@ from awesome_tool.mvc.config import global_gui_config
 
 def create_tab_close_button(callback, *additional_parameters):
     close_button = gtk.Button()
+    close_button.set_size_request(width=18, height=18)
     close_label = gtk.Label()
     close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
                                                                       constants.BUTTON_CLOSE))
@@ -43,7 +44,7 @@ def create_tab_close_button(callback, *additional_parameters):
 
 def create_tab_header(title, close_callback, *additional_parameters):
     hbox = gtk.HBox()
-    hbox.set_size_request(width=-1, height=14)  # safe two pixel
+    hbox.set_size_request(width=-1, height=20)  # safe two pixel
     label = gtk.Label(title)
     hbox.add(label)
 

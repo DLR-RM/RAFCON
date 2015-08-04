@@ -16,7 +16,7 @@ class StatesEditorView(View):
         self.notebook.set_scrollable(True)
         self.notebook.show()
         self.notebook.set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self.notebook.set_tab_vborder(constants.BORDER_WIDTH * 3)
+        self.notebook.set_tab_vborder(constants.BORDER_WIDTH * 2)
 
         self.notebook.connect("button_press_event", self.button_released)
 

@@ -18,17 +18,19 @@ def create_button(toggle, font, font_size, icon_code, release_callback=None, *ad
         button = gtk.ToggleButton()
     else:
         button = gtk.Button()
-    label = gtk.Label()
-    label.set_markup("<span font_desc='{0} {1}'>&#x{2};</span>".format(font, font_size, icon_code))
 
     button.set_relief(gtk.RELIEF_NONE)
     button.set_focus_on_click(False)
-    button.add(label)
+    button.set_size_request(width=18, height=18)
 
     style = gtk.RcStyle()
     style.xthickness = 0
     style.ythickness = 0
     button.modify_style(style)
+
+    label = gtk.Label()
+    label.set_markup("<span font_desc='{0} {1}'>&#x{2};</span>".format(font, font_size, icon_code))
+    button.add(label)
 
     if release_callback:
         button.connect('released', release_callback, *additional_parameters)
@@ -52,20 +54,23 @@ def create_sticky_button(callback, *additional_parameters):
 
 def create_tab_header(title, close_callback, sticky_callback, *additional_parameters):
     hbox = gtk.HBox()
-    # hbox.set_size_request(width=-1, height=14)  # safe two pixel
+    hbox.set_size_request(width=-1, height=20)  # safe two pixel
 
     if global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
         sticky_button = create_sticky_button(sticky_callback, *additional_parameters)
-        hbox.add(sticky_button)
+        # hbox.add(sticky_button)
+        hbox.pack_start(sticky_button, expand=False, fill=False, padding=0)
     else:
         sticky_button = None
 
     label = generate_tab_label(title)
-    hbox.add(label)
+    # hbox.add(label)
+    hbox.pack_start(label, expand=True, fill=True, padding=0)
 
     # add close button
     close_button = create_tab_close_button(close_callback, *additional_parameters)
-    hbox.add(close_button)
+    # hbox.add(close_button)
+    hbox.pack_start(close_button, expand=False, fill=False, padding=0)
     hbox.show_all()
 
     return hbox, label, sticky_button
