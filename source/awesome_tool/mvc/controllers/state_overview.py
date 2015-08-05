@@ -74,8 +74,11 @@ class StateOverviewController(ExtendedController, Model):
         # Library states cannot be changed
         if isinstance(self.model.state, LibraryState):
             l_store.prepend(['LIBRARY'])
+            self.view['library_name'].set_text(self.model.state.library_name)
             combo.set_sensitive(False)
         else:
+            self.view['label_library_name'].hide()
+            self.view['library_name'].hide()
             for key, value in self.state_types_dict.iteritems():
                 if value['class'] == type(self.model.state):
                     l_store.prepend([key])

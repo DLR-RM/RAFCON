@@ -32,7 +32,7 @@ class Transition(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Transition'
 
-    def __init__(self, from_state, from_outcome, to_state, to_outcome, transition_id):
+    def __init__(self, from_state, from_outcome, to_state, to_outcome, transition_id, parent=None):
         Observable.__init__(self)
 
         self._transition_id = None
@@ -56,6 +56,9 @@ class Transition(Observable, yaml.YAMLObject):
 
         self._to_outcome = None
         self.to_outcome = to_outcome
+
+        self._parent = None
+        self.parent = parent
 
         logger.debug(self.__str__())
 
@@ -180,3 +183,15 @@ class Transition(Observable, yaml.YAMLObject):
                 raise TypeError("transition_id must be of type int")
 
         self._transition_id = transition_id
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    @Observable.observed
+    def parent(self, parent):
+        if parent is not None:
+            from awesome_tool.statemachine.states.state import State
+            assert isinstance(parent, State)
+        self._parent = parent

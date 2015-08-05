@@ -44,6 +44,7 @@ class StateMachineHistoryController(ExtendedController):
         self._selected_sm_model = None
 
         self.count = 0
+        self.doing_update = False
 
         self.register()
 
@@ -56,21 +57,25 @@ class StateMachineHistoryController(ExtendedController):
         Change the state machine that is observed for new selected states to the selected state machine.
         :return:
         """
-        # print "state_machine_tree register state_machine"
+        # logger.debug("StateMachineEditionChangeHistory register state_machine old/new sm_id %s/%s" %
+        #              (self.__my_selected_sm_id, self.model.selected_state_machine_id))
 
         # relieve old models
         if self.__my_selected_sm_id is not None:  # no old models available
             self.relieve_model(self._selected_sm_model.history)
 
-        # set own selected state machine id
-        self.__my_selected_sm_id = self.model.selected_state_machine_id
-        if self.__my_selected_sm_id is not None:
+        if self.model.selected_state_machine_id is not None:
+
+            # set own selected state machine id
+            self.__my_selected_sm_id = self.model.selected_state_machine_id
 
             # observe new models
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
-            logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
             self.observe_model(self._selected_sm_model.history)
-            # self.update(None, None, None)  # TODO this has to be done, but crash's at the moment
+            self.update(None, None, None)
+        else:
+            self.__my_selected_sm_id = None
+            self._selected_sm_model = None
 
     def register_view(self, view):
         self.view['state_machine_history_tree'].connect('cursor-changed', self.on_cursor_changed)
@@ -89,13 +94,14 @@ class StateMachineHistoryController(ExtendedController):
 
     def on_cursor_changed(self, widget):
         #(model, row) = self.view.get_selection().get_selected()
-        logger.debug("The view jumps to the selected history element that would be situated on a right click menu in future")
-        # get selected element
+        if not self.doing_update:
+            logger.debug("The view jumps to the selected history element that would be situated on a right click menu in future")
+            # get selected element
 
-        # take version_id
-        version_id = 1
-        # do recovery
-        self._selected_sm_model.history.changes.recover_specific_version(version_id)
+            # take version_id
+            version_id = 1
+            # do recovery
+            self._selected_sm_model.history.changes.recover_specific_version(version_id)
 
     def undo(self, key_value, modifier_mask):
         logger.debug("Run history UNDO")
@@ -116,6 +122,7 @@ class StateMachineHistoryController(ExtendedController):
         # print "History changed %s\n%s\n%s" % (model, prop_name, info)
         if self._selected_sm_model.history.fake or info is not None and not info.method_name == "insert_action":
             return
+        self.doing_update = True
         self.list_store.clear()
         self.count = 0
         for action in self._selected_sm_model.history.changes.single_trail_history():
@@ -131,7 +138,7 @@ class StateMachineHistoryController(ExtendedController):
 
             if not 'instance' in action.before_info:
                 logger.warning("Found no instance in before_info")
-                inst =None
+                inst = None
             else:
                 inst = action.before_info['instance']
             self.new_change(action.before_model, action.before_prop_name,
@@ -147,6 +154,7 @@ class StateMachineHistoryController(ExtendedController):
 
         # set colors of Tree
         # - is state full and all element which are open to be re-done gray
+        self.doing_update = False
 
     def new_change(self, model, prop_name, method_name, instance, info):
         # Nr, Instance, Method, Details, model

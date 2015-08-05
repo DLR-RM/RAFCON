@@ -217,7 +217,7 @@ class State(Observable, yaml.YAMLObject):
             while data_port_id in self._used_data_port_ids:
                 data_port_id = generate_data_flow_id()
         self._used_data_port_ids.add(data_port_id)
-        self._input_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id)
+        self._input_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id, self)
         return data_port_id
 
     @Observable.observed
@@ -274,7 +274,7 @@ class State(Observable, yaml.YAMLObject):
             while data_port_id in self._used_data_port_ids:
                 data_port_id = generate_data_flow_id()
         self._used_data_port_ids.add(data_port_id)
-        self._output_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id)
+        self._output_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id, self)
         return data_port_id
 
     @Observable.observed
@@ -360,7 +360,7 @@ class State(Observable, yaml.YAMLObject):
         if outcome_id in self._used_outcome_ids:
             logger.error("Two outcomes cannot have the same outcome_ids")
             return
-        outcome = Outcome(outcome_id, name, self.modify_outcome_name)
+        outcome = Outcome(outcome_id, name, self.modify_outcome_name, self)
         self._outcomes[outcome_id] = outcome
         self._used_outcome_ids.append(outcome_id)
         return outcome_id
@@ -566,14 +566,15 @@ class State(Observable, yaml.YAMLObject):
         else:
             if not isinstance(input_data_ports, dict):
                 raise TypeError("input_data_ports must be of type dict")
-            for key, value in input_data_ports.iteritems():
-                if not isinstance(value, DataPort):
+            for port_id, port in input_data_ports.iteritems():
+                if not isinstance(port, DataPort):
                     raise TypeError("element of input_data_ports must be of type DataPort")
-                if not key == value.data_port_id:
+                if not port_id == port.data_port_id:
                     raise AttributeError("the key of the input dictionary and the name of the data port do not match")
-                if value.data_port_id in self._used_data_port_ids:
-                    raise AttributeError("data_port_id %s already exists" % (str(value.data_port_id)))
-                self._used_data_port_ids.add(value.data_port_id)
+                if port.data_port_id in self._used_data_port_ids:
+                    raise AttributeError("data_port_id %s already exists" % (str(port.data_port_id)))
+                port.parent = self
+                self._used_data_port_ids.add(port.data_port_id)
             self._input_data_ports = input_data_ports
 
     @property
@@ -594,14 +595,15 @@ class State(Observable, yaml.YAMLObject):
         else:
             if not isinstance(output_data_ports, dict):
                 raise TypeError("output_data_ports must be of type dict")
-            for key, value in output_data_ports.iteritems():
-                if not isinstance(value, DataPort):
+            for port_id, port in output_data_ports.iteritems():
+                if not isinstance(port, DataPort):
                     raise TypeError("element of output_data_ports must be of type DataPort")
-                if not key == value.data_port_id:
+                if not port_id == port.data_port_id:
                     raise AttributeError("the key of the output dictionary and the name of the data port do not match")
-                if value.data_port_id in self._used_data_port_ids:
-                    raise AttributeError("data_port_id %s already exists" % (str(value.data_port_id)))
-                self._used_data_port_ids.add(value.data_port_id)
+                if port.data_port_id in self._used_data_port_ids:
+                    raise AttributeError("data_port_id %s already exists" % (str(port.data_port_id)))
+                port.parent = self
+                self._used_data_port_ids.add(port.data_port_id)
             self._output_data_ports = output_data_ports
 
     @property
@@ -616,8 +618,8 @@ class State(Observable, yaml.YAMLObject):
     def outcomes(self, outcomes):
         if outcomes is None:
             if self.outcomes is not None:
-                for id in self.outcomes.keys():
-                    self._used_outcome_ids.remove(id)
+                for outcome_id in self.outcomes.keys():
+                    self._used_outcome_ids.remove(outcome_id)
             self._outcomes = {}
             self.add_outcome("success", 0)
             self.add_outcome("aborted", -1)
@@ -626,17 +628,19 @@ class State(Observable, yaml.YAMLObject):
         else:
             if not isinstance(outcomes, dict):
                 raise TypeError("outcomes must be of type dict")
-            for key, value in outcomes.iteritems():
-                if not isinstance(value, Outcome):
+            for outcome in outcomes.itervalues():
+                if not isinstance(outcome, Outcome):
                     raise TypeError("element of outcomes must be of type Outcome")
+                outcome.parent = self
             self._outcomes = outcomes
+            self._used_outcome_ids = []
+            for outcome_id in outcomes:
+                self._used_outcome_ids.append(outcome_id)
             # aborted and preempted must always exist
             if -1 not in outcomes:
                 self.add_outcome("aborted", -1)
             if -2 not in outcomes:
                 self.add_outcome("preempted", -2)
-            for id, o in outcomes.iteritems():
-                self._used_outcome_ids.append(id)
 
     @property
     def script(self):

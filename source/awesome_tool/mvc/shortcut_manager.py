@@ -31,6 +31,7 @@ class ShortcutManager():
             'open': '<Control>O',
             'new': '<Control>N',
             'quit': '<Control>Q',
+            'close': '<Control>W',
             'abort': 'Escape',
             'copy': '<Control>C',
             'paste': '<Control>V',

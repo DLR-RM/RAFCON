@@ -403,7 +403,7 @@ class ContainerState(State):
                 raise AttributeError("from_state does not have outcome %s", from_state)
         else:
             self.transitions[transition_id] =\
-                Transition(None, None, to_state_id, to_outcome, transition_id)
+                Transition(None, None, to_state_id, to_outcome, transition_id, self)
 
         # notify all states waiting for transition to be connected
         self._transitions_cv.acquire()
@@ -650,7 +650,8 @@ class ContainerState(State):
             raise AttributeError("The from data port and the to data port do not have the same data type (%s and %s)" %
                                  (str(from_data_port.data_type), str(to_data_port.data_type)))
 
-        self.data_flows[data_flow_id] = DataFlow(from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id)
+        self.data_flows[data_flow_id] = DataFlow(from_state_id, from_data_port_id, to_state_id, to_data_port_id,
+                                                 data_flow_id, self)
         return data_flow_id
 
     @Observable.observed
@@ -1101,9 +1102,10 @@ class ContainerState(State):
         else:
             if not isinstance(states, dict):
                 raise TypeError("states must be of type dict")
-            for key, state in states.iteritems():
+            for state in states.itervalues():
                 if not isinstance(state, State):
                     raise TypeError("element of container_state.states must be of type State")
+                state.parent = self
             self._states = states
 
     @property
@@ -1121,9 +1123,10 @@ class ContainerState(State):
         else:
             if not isinstance(transitions, dict):
                 raise TypeError("transitions must be of type dict")
-            for key, value in transitions.iteritems():
-                if not isinstance(value, Transition):
+            for transition in transitions.itervalues():
+                if not isinstance(transition, Transition):
                     raise TypeError("element of transitions must be of type Transition")
+                transition.parent = self
             self._transitions = transitions
 
     @property
@@ -1141,9 +1144,10 @@ class ContainerState(State):
         else:
             if not isinstance(data_flows, dict):
                 raise TypeError("data_flows must be of type dict")
-            for key, value in data_flows.iteritems():
-                if not isinstance(value, DataFlow):
+            for data_flow in data_flows.itervalues():
+                if not isinstance(data_flow, DataFlow):
                     raise TypeError("element of data_flows must be of type DataFlow")
+                data_flow.parent = self
             self._data_flows = data_flows
 
     @property
@@ -1205,9 +1209,10 @@ class ContainerState(State):
         else:
             if not isinstance(scoped_variables, dict):
                 raise TypeError("scoped_variables must be of type dict")
-            for key, svar in scoped_variables.iteritems():
-                if not isinstance(svar, ScopedVariable):
+            for scoped_variable in scoped_variables.itervalues():
+                if not isinstance(scoped_variable, ScopedVariable):
                     raise TypeError("element of scope must be of type ScopedVariable")
+                scoped_variable.parent = self
             self._scoped_variables = scoped_variables
 
     @property

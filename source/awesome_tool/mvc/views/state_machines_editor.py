@@ -149,7 +149,7 @@ class PlusAddNotebook (gtk.Notebook):
         self.pixbuf = gtk.gdk.pixbuf_new_from_xpm_data(self.pixbuf_data)
 
         self.set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self.set_tab_vborder(constants.BORDER_WIDTH * 3)
+        self.set_tab_vborder(constants.BORDER_WIDTH * 2)
 
         self.add_visible = True
 

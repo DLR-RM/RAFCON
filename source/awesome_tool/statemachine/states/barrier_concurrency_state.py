@@ -195,8 +195,6 @@ class BarrierConcurrencyState(ConcurrencyState):
         self.basic_transition_checks(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
         self.check_if_outcome_already_connected(from_state_id, from_outcome)
 
-        print from_state_id, from_outcome, to_state_id, to_outcome
-
         if not disable_consistency_checks:
             if from_state_id == UNIQUE_DECIDER_STATE_ID:
                 if to_outcome is None:
@@ -210,7 +208,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                     raise AttributeError("Only the following transitions are allowed in barrier concurrency states:\n"
                                          "- Transitions from the decider state to the parent state\n"
                                          "- Transitions from not-decider states to the decider state\n"
-                                         "- Transtiions from not_decider states from aborted/preempted outcomes to the "
+                                         "- Transitions from not_decider states from aborted/preempted outcomes to the "
                                          "aborted/preempted outcome of the parent")
 
         self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)

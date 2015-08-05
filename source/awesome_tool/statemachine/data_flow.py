@@ -29,7 +29,7 @@ class DataFlow(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!DataFlow'
 
-    def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None):
+    def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None, parent=None):
 
         Observable.__init__(self)
 
@@ -50,6 +50,9 @@ class DataFlow(Observable, yaml.YAMLObject):
 
         self._to_key = None
         self.to_key = to_key
+
+        self._parent = None
+        self.parent = parent
 
     def __str__(self):
         return "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
@@ -183,3 +186,15 @@ class DataFlow(Observable, yaml.YAMLObject):
                 raise TypeError("data_flow_id must be of type int")
 
         self._data_flow_id = data_flow_id
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    @Observable.observed
+    def parent(self, parent):
+        if parent is not None:
+            from awesome_tool.statemachine.states.container_state import ContainerState
+            assert isinstance(parent, ContainerState)
+        self._parent = parent

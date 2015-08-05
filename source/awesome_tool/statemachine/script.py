@@ -99,16 +99,18 @@ def execute(self, inputs, outputs, gvm):
                     raise RuntimeError("Path %s does not exist" % os.path.join(self.path, self.filename))
 
             # load and build the module per default else the default scripts will be loaded in self.script
-            self.load_and_build_module()
+            self.load_script()
+            self.build_module()
 
-    def reset_script(self, state_path):
-        self.path = DEFAULT_SCRIPT_PATH + state_path
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
-        self.filename = "Script_%s.file" % str(self._script_id)
-        script_file = open(os.path.join(self.path, self.filename), "w")
-        script_file.write(self.script)
-        script_file.close()
+    # never be used anymore -> and miss-giding function name
+    # def reset_script(self, state_path):
+    #     self.path = DEFAULT_SCRIPT_PATH + state_path
+    #     if not os.path.exists(self.path):
+    #         os.makedirs(self.path)
+    #     self.filename = "Script_%s.file" % str(self._script_id)
+    #     script_file = open(os.path.join(self.path, self.filename), "w")
+    #     script_file.write(self.script)
+    #     script_file.close()
 
     def execute(self, state, inputs={}, outputs={}, backward_execution=False):
         """
@@ -130,7 +132,7 @@ def execute(self, inputs, outputs, gvm):
             return self._compiled_module.execute(state, inputs, outputs,
                                                  awesome_tool.statemachine.singleton.global_variable_manager)
 
-    def load_and_build_module(self):
+    def load_script(self):
         """Loads and builds the module given by the path and the filename
         """
         script_path = os.path.join(self.path, self.filename)
@@ -145,6 +147,10 @@ def execute(self, inputs, outputs, gvm):
         self.script = None
         self.script = script_file.read()
         script_file.close()
+
+    def build_module(self):
+        """Loads and builds the module given by the path and the filename
+        """
 
         module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
 

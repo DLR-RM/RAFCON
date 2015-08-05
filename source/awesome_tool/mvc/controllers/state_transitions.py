@@ -493,7 +493,11 @@ class StateTransitionsListController(ExtendedController):
         if self.no_update:
             return
         # print "DO_UPDATE TRANSITION WIDGET"
-        # self.update()
+        try:
+            self.update()
+        except:
+            logger.warning("update of transition widget fails while detecting list change state %s %s" %
+                           (self.model.state.name, self.model.state.state_id))
 
     def notification_logs(self, model, prop_name, info):
         #logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %

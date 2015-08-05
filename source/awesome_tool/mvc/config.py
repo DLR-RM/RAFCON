@@ -3,7 +3,7 @@ import os
 import sys
 import shutil
 
-from awesome_tool.utils.config import DefaultConfig, ConfigError
+from awesome_tool.utils.config import DefaultConfig, ConfigError, read_file
 from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -38,6 +38,8 @@ HISTORY_ENABLED: False
 
 CONFIG_FILE = "gui_config.yaml"
 
+DEFAULT_CONFIG = read_file(os.path.dirname(__file__), CONFIG_FILE)
+
 
 class GuiConfig(DefaultConfig):
     """
@@ -54,12 +56,8 @@ class GuiConfig(DefaultConfig):
         self.configure_fonts()
         self.configure_source_view_styles()
 
-        self.load(CONFIG_FILE)
-
-    def load(self, config_file=None, path=None):
-        if config_file is None:
-            config_file = CONFIG_FILE
-        super(GuiConfig, self).load(config_file, path)
+    def load(self, path=None):
+        super(GuiConfig, self).load(CONFIG_FILE, path)
 
     def configure_gtk(self):
         import gtk

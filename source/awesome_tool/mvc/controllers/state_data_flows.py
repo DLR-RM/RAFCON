@@ -292,8 +292,12 @@ class StateDataFlowsListController(ExtendedController):
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         # self.notification_logs(model, prop_name, info)
 
-        self.update_internal_data_base()
-        self.update_tree_store()
+        try:
+            self.update_internal_data_base()
+            self.update_tree_store()
+        except:
+            logger.warning("update of data_flow widget fails while detecting change in state %s %s" %
+                           (self.model.state.name, self.model.state.state_id))
 
     def notification_logs(self, model, prop_name, info):
 

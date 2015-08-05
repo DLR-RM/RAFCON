@@ -221,7 +221,24 @@ def test_storage_without_gui():
     with_gui=False
 
     awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir("../awesome_tool/mvc/")
+    # logging_view = LoggingView()
+    # setup_logger(logging_view)
+    # time.sleep(1)
+    print "create model"
+    [logger, state, sm_m, state_dict] = create_models()
+    print "init libs"
+    awesome_tool.statemachine.singleton.library_manager.initialize()
+
+    save_state_machine(sm_model=sm_m, path="/tmp/dfc_test_storage", logger=logger, with_gui=with_gui, menubar_ctrl=None)
+
+    missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
+
+
+def _test_storage_with_gui():
+    with_gui = True
+
+    awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    os.chdir(awesome_tool.__path__[0] + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
     # logging_view = LoggingView()
@@ -232,8 +249,7 @@ def test_storage_without_gui():
     print "init libs"
     awesome_tool.statemachine.singleton.library_manager.initialize()
 
-    # state_dict
-
     save_state_machine(sm_model=sm_m, path="/tmp/dfc_test_storage", logger=logger, with_gui=with_gui, menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
+    os.chdir(awesome_tool.__path__[0] + "/../test")

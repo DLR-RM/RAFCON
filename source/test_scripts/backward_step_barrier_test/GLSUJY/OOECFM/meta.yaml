@@ -27,11 +27,11 @@ path: ../../test_scripts/backward_step_barrier_test/GLSUJY/OOECFM
 scoped_variables: {}
 state_id: OOECFM
 transitions:
-    1: !Transition {from_outcome: 0, from_state: YVNWJU, to_outcome: null, to_state: unique_decider_sate_id,
+    1: !Transition {from_outcome: 0, from_state: YVNWJU, to_outcome: null, to_state: unique_decider_state_id,
         transition_id: 1}
-    2: !Transition {from_outcome: 0, from_state: GOLRUX, to_outcome: null, to_state: unique_decider_sate_id,
+    2: !Transition {from_outcome: 0, from_state: GOLRUX, to_outcome: null, to_state: unique_decider_state_id,
         transition_id: 2}
-    3: !Transition {from_outcome: 0, from_state: TTJNXL, to_outcome: null, to_state: unique_decider_sate_id,
+    3: !Transition {from_outcome: 0, from_state: TTJNXL, to_outcome: null, to_state: unique_decider_state_id,
         transition_id: 3}
-    4: !Transition {from_outcome: 0, from_state: unique_decider_sate_id, to_outcome: 0,
+    4: !Transition {from_outcome: 0, from_state: unique_decider_state_id, to_outcome: 0,
         to_state: OOECFM, transition_id: 4}
