@@ -196,7 +196,6 @@ class StateMachineHelper():
                                         # check_path=False)
 
         new_state._used_data_port_ids = source_state._used_data_port_ids
-        new_state._used_outcome_ids = source_state._used_outcome_ids
 
         if source_state.description is not None and len(source_state.description) > 0:
             new_state.description = source_state.description

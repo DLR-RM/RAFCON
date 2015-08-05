@@ -70,7 +70,6 @@ class State(Observable, yaml.YAMLObject):
         self._output_data_ports = None
         self.output_data_ports = output_data_ports
 
-        self._used_outcome_ids = []
         self._outcomes = None
         self.outcomes = outcomes
 
@@ -353,16 +352,15 @@ class State(Observable, yaml.YAMLObject):
 
         """
         if outcome_id is None:
-            outcome_id = generate_outcome_id(self._used_outcome_ids)
+            outcome_id = generate_outcome_id(self.outcomes.keys())
         if name in self._outcomes:
             logger.error("Two outcomes cannot have the same names")
             return
-        if outcome_id in self._used_outcome_ids:
+        if outcome_id in self.outcomes:
             logger.error("Two outcomes cannot have the same outcome_ids")
             return
-        outcome = Outcome(outcome_id, name, self.modify_outcome_name, self)
+        outcome = Outcome(outcome_id, name, self)
         self._outcomes[outcome_id] = outcome
-        self._used_outcome_ids.append(outcome_id)
         return outcome_id
 
     @Observable.observed
@@ -372,11 +370,11 @@ class State(Observable, yaml.YAMLObject):
         :param outcome_id: the id of the outcome to remove
 
         """
-        if outcome_id not in self._used_outcome_ids:
+        if outcome_id not in self.outcomes:
             raise AttributeError("There is no outcome_id %s" % str(outcome_id))
 
         if outcome_id == -1 or outcome_id == -2:
-            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to"
+            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to "
                                  "return aborted or preempted")
 
         self.remove_outcome_hook(outcome_id)
@@ -389,7 +387,6 @@ class State(Observable, yaml.YAMLObject):
                     break  # found the one outgoing transition
 
         # delete outcome it self
-        self._used_outcome_ids.remove(outcome_id)
         self._outcomes.pop(outcome_id, None)
 
     def remove_outcome_hook(self, outcome_id):
@@ -416,36 +413,25 @@ class State(Observable, yaml.YAMLObject):
             raise AttributeError("outcome_id %s has to be in container_state %s outcomes-list" %
                                  (outcome_id, self.state_id))
 
-    def modify_outcome_name(self, name, outcome):
-        """Checks if the outcome name already exists. If this is the case a unique number is appended to the name
-
-        :param name: the desired name of a possibly new outcome
-        :return: name: a unique outcome name for the state
-        """
-        def define_unique_name(name, dict_of_names, count=0):
-            count += 1
-            if name + str(count) in dict_of_names.values():
-                count = define_unique_name(name, dict_of_names, count)
-            return count
-
-        dict_of_names = {}
-        for o_id, o in self._outcomes.items():
-            dict_of_names[o_id] = o.name
-
-        if name in dict_of_names.values() and not outcome.name == name:
-            name += str(define_unique_name(name, dict_of_names))
-        return name
-
-    def connect_all_outcome_function_handles(self):
-        """In case of the outcomes were created by loading from a yaml file, the function handlers are not set.
-            This method allows to set the handlers for all outcomes.
-        """
-        for outcome_id, outcome in self.outcomes.iteritems():
-            outcome.check_name = self.modify_outcome_name
-
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- misc functions ---------------------------------------
     # ---------------------------------------------------------------------------------------------
+
+    def check_child_validity(self, child):
+        if isinstance(child, Outcome):
+            child_outcome = child
+            for outcome_id, outcome in self.outcomes.iteritems():
+                # Do not compare outcome with itself when checking for existing name/id
+                if child_outcome is not outcome:
+                    if child_outcome.outcome_id == outcome_id:
+                        logger.warn("outcome id '{0}' existing: {1}".format(child_outcome.outcome_id,
+                                                                            self.outcomes.keys()))
+                        return False
+                    if child_outcome.name == outcome.name:
+                        logger.warn("outcome name '{0}' existing: {1}".format(child_outcome.name,
+                                                                              self.outcomes.values()))
+                        return False
+        return True
 
     def check_input_data_type(self, input_data):
         """Check the input data types of the state
@@ -617,9 +603,6 @@ class State(Observable, yaml.YAMLObject):
     @Observable.observed
     def outcomes(self, outcomes):
         if outcomes is None:
-            if self.outcomes is not None:
-                for outcome_id in self.outcomes.keys():
-                    self._used_outcome_ids.remove(outcome_id)
             self._outcomes = {}
             self.add_outcome("success", 0)
             self.add_outcome("aborted", -1)
@@ -633,9 +616,6 @@ class State(Observable, yaml.YAMLObject):
                     raise TypeError("element of outcomes must be of type Outcome")
                 outcome.parent = self
             self._outcomes = outcomes
-            self._used_outcome_ids = []
-            for outcome_id in outcomes:
-                self._used_outcome_ids.append(outcome_id)
             # aborted and preempted must always exist
             if -1 not in outcomes:
                 self.add_outcome("aborted", -1)

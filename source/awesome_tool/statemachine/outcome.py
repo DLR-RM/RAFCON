@@ -33,20 +33,21 @@ class Outcome(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Outcome'
 
-    def __init__(self, outcome_id=None, name=None, check_name_func_handle=None, parent=None):
+    def __init__(self, outcome_id=None, name=None, parent=None):
 
         Observable.__init__(self)
+        self._parent = None
 
         self._outcome_id = None
         self.outcome_id = outcome_id
 
-        self.check_name = check_name_func_handle
-
         self._name = None
         self.name = name
 
-        self._parent = None
         self.parent = parent
+
+        if not self._check_validity():
+            raise AttributeError("The properties of the outcome are not valid")
 
         logger.debug("Outcome with name %s and id %s initialized" % (self.name, self.outcome_id))
 
@@ -87,7 +88,12 @@ class Outcome(Observable, yaml.YAMLObject):
         if not isinstance(outcome_id, int):
             raise TypeError("outcome_id must be of type int")
 
+        old_outcome_id = self.outcome_id
         self._outcome_id = outcome_id
+
+        if not self._check_validity():
+            self._outcome_id = old_outcome_id
+            raise ValueError("The desired outcome id {0} is not valid".format(outcome_id))
 
     @property
     def name(self):
@@ -102,10 +108,18 @@ class Outcome(Observable, yaml.YAMLObject):
         if not isinstance(name, str):
             raise TypeError("name must be of type str")
 
-        if self.check_name is not None:
-            self._name = self.check_name(name, self)
-        else:
-            self._name = name
+        old_name = self.name
+
+        self._name = name
+
+        if not self._check_validity():
+            self._name = old_name
+            raise ValueError("The desired outcome name '{0}' is not valid".format(name))
+
+        # if self.check_name is not None:
+        #     self._name = self.check_name(name, self)
+        # else:
+        #     self._name = name
 
     @property
     def parent(self):
@@ -118,4 +132,22 @@ class Outcome(Observable, yaml.YAMLObject):
             from awesome_tool.statemachine.states.state import State
             assert isinstance(parent, State)
         self._parent = parent
+
+    def _check_validity(self):
+        """Checks the validity of the Outcome properties
+
+        The validity of the Outcome can only be checked by the parent, to see if there are other outcomes with the
+        same name or id. Thus, the existence of a parent and a check function must be ensured and this function be
+        queried.
+
+        :return: True if valid, False else
+        """
+        if not self.parent:
+            return True
+        if not hasattr(self.parent, 'check_child_validity') or \
+                not callable(getattr(self.parent, 'check_child_validity')):
+            return True
+        if self.parent.check_child_validity(self):
+            return True
+
 

@@ -1,4 +1,5 @@
-import gtk, gobject
+import gtk
+import gobject
 
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.statemachine.states.library_state import LibraryState
@@ -74,20 +75,26 @@ class StateOutcomesListController(ExtendedController):
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
 
         view['name_cell'].connect('edited', self.on_name_modification)
-        view.tree_view.connect("grab-focus", self.on_focus)
+        # view.tree_view.connect("grab-focus", self.on_focus)
 
-    def on_focus(self, widget, data=None):
-        logger.debug("OUTCOMES_LIST get new FOCUS")
-        path = self.view.tree_view.get_cursor()
-        self.update_internal_data_base()
-        self.update_tree_store()
-        if path[0]:  # if valid
-            self.view.tree_view.set_cursor(path[0])
+    # def on_focus(self, widget, data=None):
+    #     # pass
+    #     logger.debug("OUTCOMES_LIST get new FOCUS")
+    #     path = self.view.tree_view.get_cursor()
+    #     self.update_internal_data_base()
+    #     self.update_tree_store()
+    #     # if path[0]:  # if valid
+    #     #     self.view.tree_view.set_cursor(path[0])
 
     def on_name_modification(self, widget, path, text):
-        logger.debug("change name of outcome: %s %s" % (path, self.model.state.outcomes[self.tree_store[path][6].outcome_id].name))
-        self.tree_store[path][1] = text
-        self.model.state.outcomes[self.tree_store[path][6].outcome_id].name = text
+        outcome_id = self.tree_store[path][6].outcome_id
+        outcome = self.model.state.outcomes[outcome_id]
+        try:
+            outcome.name = text
+            logger.debug("Outcome name changed to '{0}'".format(outcome.name))
+        except (ValueError, TypeError) as e:
+            logger.error("The name of the outcome could not be changed: {0}".format(e))
+        self.tree_store[path][1] = outcome.name
 
     def on_to_state_modification(self, widget, path, text):
 
@@ -137,7 +144,11 @@ class StateOutcomesListController(ExtendedController):
 
     def on_add(self, button, info=None):
         # logger.debug("add outcome")
-        outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
+        try:
+            outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
+        except AttributeError as e:
+            logger.error("The outcome couldn't be added: {0}".format(e))
+            return
         # Search for new entry and select it
         ctr = 0
         for outcome_entry in self.tree_store:
