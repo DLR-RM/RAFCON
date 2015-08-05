@@ -101,8 +101,15 @@ class Transition(Observable, yaml.YAMLObject):
             if not isinstance(from_outcome, int):
                 raise TypeError("from_outcome must be of type int")
 
+        old_from_state = self.from_state
+        old_from_outcome = self.from_outcome
         self._from_state = from_state
         self._from_outcome = from_outcome
+
+        if not self._check_validity():
+            self._from_state = old_from_state
+            self._from_outcome = old_from_outcome
+            raise ValueError("The parent state refused to change the origin of the data flow")
 
     @property
     def from_state(self):
@@ -117,7 +124,7 @@ class Transition(Observable, yaml.YAMLObject):
         if from_state is not None and not isinstance(from_state, str):
             raise TypeError("from_state must be of type str")
 
-        self._from_state = from_state
+        self.__change_property_with_validity_check('_from_state', from_state)
 
     @property
     def from_outcome(self):
@@ -132,7 +139,7 @@ class Transition(Observable, yaml.YAMLObject):
         if from_outcome is not None and not isinstance(from_outcome, int):
             raise TypeError("from_outcome must be of type int")
 
-        self._from_outcome = from_outcome
+        self.__change_property_with_validity_check('_from_outcome', from_outcome)
 
     @property
     def to_state(self):
@@ -147,7 +154,7 @@ class Transition(Observable, yaml.YAMLObject):
         if to_state is not None and not isinstance(to_state, str):
             raise TypeError("to_state must be of type str")
 
-        self._to_state = to_state
+        self.__change_property_with_validity_check('_to_state', to_state)
 
     @property
     def to_outcome(self):
@@ -162,7 +169,7 @@ class Transition(Observable, yaml.YAMLObject):
         if to_outcome is not None and not isinstance(to_outcome, int):
             raise TypeError("to_outcome must be of type int")
 
-        self._to_outcome = to_outcome
+        self.__change_property_with_validity_check('_to_outcome', to_outcome)
 
     @property
     def transition_id(self):
@@ -174,11 +181,11 @@ class Transition(Observable, yaml.YAMLObject):
     @transition_id.setter
     @Observable.observed
     def transition_id(self, transition_id):
-        if not transition_id is None:
+        if transition_id is not None:
             if not isinstance(transition_id, int):
                 raise TypeError("transition_id must be of type int")
 
-        self._transition_id = transition_id
+        self.__change_property_with_validity_check('_transition_id', transition_id)
 
     @property
     def parent(self):
@@ -191,6 +198,17 @@ class Transition(Observable, yaml.YAMLObject):
             from awesome_tool.statemachine.states.state import State
             assert isinstance(parent, State)
         self._parent = parent
+
+    def __change_property_with_validity_check(self, property, value):
+        """Helper method to change a property and reset it if the validity check fails
+        """
+        assert isinstance(property, str)
+        old_value = getattr(self, property)
+        setattr(self, property, value)
+
+        if not self._check_validity():
+            setattr(self, property, old_value)
+            raise ValueError("The parent state refused to change the '{0}' of the data flow".format(property[1:]))
 
     def _check_validity(self):
         """Checks the validity of the transition properties
