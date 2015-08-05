@@ -8,34 +8,6 @@ from awesome_tool.utils import constants
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
-DEFAULT_CONFIG = """
-
-TYPE: GUI_CONFIG
-
-SOURCE_EDITOR_STYLE: awesome-style
-
-GAPHAS_EDITOR: True
-
-WAYPOINT_SNAP_ANGLE: 45
-WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
-WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
-
-LOGGING_SHOW_DEBUG: True
-LOGGING_SHOW_INFO: True
-LOGGING_SHOW_WARNING: True
-LOGGING_SHOW_ERROR: True
-
-SHOW_DATA_FLOWS: True
-DATA_FLOW_MODE: True
-SHOW_DATA_FLOW_VALUE_LABELS: False
-SHOW_ABORTED_PREEMPTED: False
-
-USE_ICONS_AS_TAB_LABELS: True
-
-ROTATE_NAMES_ON_CONNECTIONS: False
-HISTORY_ENABLED: False
-"""
-
 CONFIG_FILE = "gui_config.yaml"
 
 DEFAULT_CONFIG = read_file(os.path.dirname(__file__), CONFIG_FILE)
