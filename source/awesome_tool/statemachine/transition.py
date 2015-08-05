@@ -34,6 +34,7 @@ class Transition(Observable, yaml.YAMLObject):
 
     def __init__(self, from_state, from_outcome, to_state, to_outcome, transition_id, parent=None):
         Observable.__init__(self)
+        self._parent = None
 
         self._transition_id = None
         if transition_id is None:
@@ -50,14 +51,9 @@ class Transition(Observable, yaml.YAMLObject):
         self._to_state = None
         self.to_state = to_state
 
-        # if to_state is None:
-        #     raise TypeError("to_state must not be None")
-        #     exit(-1)
-
         self._to_outcome = None
         self.to_outcome = to_outcome
 
-        self._parent = None
         self.parent = parent
 
         logger.debug(self.__str__())
@@ -195,3 +191,19 @@ class Transition(Observable, yaml.YAMLObject):
             from awesome_tool.statemachine.states.state import State
             assert isinstance(parent, State)
         self._parent = parent
+
+    def _check_validity(self):
+        """Checks the validity of the transition properties
+
+        Some validity checks can only be performed by the parent, e.g. whether the from  outcome is already connected.
+        Thus, the existence of a parent and a check function must be ensured and this function be queried.
+
+        :return: True if valid, False else
+        """
+        if not self.parent:
+            return True
+        if not hasattr(self.parent, 'check_child_validity') or \
+                not callable(getattr(self.parent, 'check_child_validity')):
+            return True
+        if self.parent.check_child_validity(self):
+            return True

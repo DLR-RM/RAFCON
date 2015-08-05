@@ -30,6 +30,7 @@ class DataPort(Observable, yaml.YAMLObject):
     def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None):
 
         Observable.__init__(self)
+        self._parent = None
 
         if data_port_id is None:
             self._data_port_id = generate_data_port_id()
@@ -38,13 +39,14 @@ class DataPort(Observable, yaml.YAMLObject):
 
         self._name = None
         self.name = name
+
         self._data_type = type(None)
         if data_type is not None:
             self.data_type = data_type
+
         self._default_value = None
         self.default_value = default_value
 
-        self._parent = None
         self.parent = parent
 
         logger.debug("DataPort with name %s initialized" % self.name)
@@ -111,10 +113,16 @@ class DataPort(Observable, yaml.YAMLObject):
     @Observable.observed
     def data_type(self, data_type):
         try:
-            # self.check_data_type(data_type)
-            self._data_type = type_helpers.convert_string_to_type(data_type)
+            new_data_type = type_helpers.convert_string_to_type(data_type)
         except ValueError as e:
             raise e
+
+        old_data_type = self.data_type
+        self._data_type = new_data_type
+
+        if not self._check_validity():
+            self._data_type = old_data_type
+            raise ValueError("The parent state refused to change the data type")
 
     @property
     def default_value(self):
@@ -158,14 +166,19 @@ class DataPort(Observable, yaml.YAMLObject):
         if default_value is None:
             default_value = self.default_value
         try:
+            old_data_type = self.data_type
             self._data_type = type_helpers.convert_string_to_type(data_type)
+
+            if not self._check_validity():
+                raise ValueError("The parent state refused to change the data type")
 
             if type_helpers.type_inherits_of_type(type(default_value), self._data_type):
                 self._default_value = default_value
             else:
                 self._default_value = None
         except (TypeError, AttributeError, ValueError) as e:
-            logger.error("Could not change data type: {0}".format(e))
+            self._data_type = old_data_type
+            logger.error("Could not change data type to '{0}': {1}".format(data_type, e))
 
     def check_default_value(self, default_value, data_type=None):
         """Checks the default value
@@ -194,3 +207,19 @@ class DataPort(Observable, yaml.YAMLObject):
                         default_value, data_type))
 
         return default_value
+
+    def _check_validity(self):
+        """Checks the validity of the data port properties
+
+        Some validity checks can only be performed by the parent, e.g. data type changes when data flows are connected.
+        Thus, the existence of a parent and a check function must be ensured and this function be queried.
+
+        :return: True if valid, False else
+        """
+        if not self.parent:
+            return True
+        if not hasattr(self.parent, 'check_child_validity') or \
+                not callable(getattr(self.parent, 'check_child_validity')):
+            return True
+        if self.parent.check_child_validity(self):
+            return True

@@ -32,6 +32,7 @@ class DataFlow(Observable, yaml.YAMLObject):
     def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None, parent=None):
 
         Observable.__init__(self)
+        self._parent = None
 
         self._data_flow_id = None
         if data_flow_id is None:
@@ -51,7 +52,6 @@ class DataFlow(Observable, yaml.YAMLObject):
         self._to_key = None
         self.to_key = to_key
 
-        self._parent = None
         self.parent = parent
 
     def __str__(self):
@@ -198,3 +198,19 @@ class DataFlow(Observable, yaml.YAMLObject):
             from awesome_tool.statemachine.states.container_state import ContainerState
             assert isinstance(parent, ContainerState)
         self._parent = parent
+
+    def _check_validity(self):
+        """Checks the validity of the data flow properties
+
+        Some validity checks can only be performed by the parent, e.g. checks for already connected data ports.
+        Thus, the existence of a parent and a check function must be ensured and this function be queried.
+
+        :return: True if valid, False else
+        """
+        if not self.parent:
+            return True
+        if not hasattr(self.parent, 'check_child_validity') or \
+                not callable(getattr(self.parent, 'check_child_validity')):
+            return True
+        if self.parent.check_child_validity(self):
+            return True
