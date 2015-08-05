@@ -26,9 +26,7 @@ class Outcome(Observable, yaml.YAMLObject):
 
     :ivar outcome_id: the id of the outcome, must be unique on one hierarchy level
     :ivar name: the human readable name of the outcome
-    :ivar check_name: a function handle to a function checking the integrity of the outcome name. Used in the setter
-            of the name
-
+    :ivar parent: reference to the parent state
     """
 
     yaml_tag = u'!Outcome'
@@ -115,11 +113,6 @@ class Outcome(Observable, yaml.YAMLObject):
         if not self._check_validity():
             self._name = old_name
             raise ValueError("The desired outcome name '{0}' is not valid".format(name))
-
-        # if self.check_name is not None:
-        #     self._name = self.check_name(name, self)
-        # else:
-        #     self._name = name
 
     @property
     def parent(self):
