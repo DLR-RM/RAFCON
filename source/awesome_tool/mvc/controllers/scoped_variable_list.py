@@ -68,10 +68,10 @@ class ScopedVariableListController(ExtendedController):
         self.reload_scoped_variables_list_store()
 
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
-        new_sv_name = "a_new_scoped_variable%s" % str(self.new_sv_counter)
+        new_sv_name = "scoped_%s" % str(self.new_sv_counter)
         if hasattr(self.model, 'states'):
             self.new_sv_counter += 1
-            self.model.state.add_scoped_variable(new_sv_name, "str", "val")
+            self.model.state.add_scoped_variable(new_sv_name, "int", 0)
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
         tree_view = self.view["scoped_variables_tree_view"]
@@ -100,7 +100,15 @@ class ScopedVariableListController(ExtendedController):
         if hasattr(self.model, 'scoped_variables'):
             tmp = ListStore(str, str, str, int)
             for sv_model in self.model.scoped_variables:
-                tmp.append([sv_model.scoped_variable.name, sv_model.scoped_variable.data_type,
+                data_type = sv_model.scoped_variable.data_type
+                # get name of type (e.g. ndarray)
+                data_type_name = data_type.__name__
+                # get module of type, e.g. numpy
+                data_type_module = data_type.__module__
+                # if the type is not a builtin type, also show the module
+                if data_type_module != '__builtin__':
+                    data_type_name = data_type_module + '.' + data_type_name
+                tmp.append([sv_model.scoped_variable.name, data_type_name,
                             sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
             tms = gtk.TreeModelSort(tmp)
             tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
