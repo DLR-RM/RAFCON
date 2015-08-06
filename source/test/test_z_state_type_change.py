@@ -26,6 +26,9 @@ from awesome_tool.statemachine.states.preemptive_concurrency_state import Preemp
 from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
+from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.statemachine.config import global_config
+
 
 def create_models(*args, **kargs):
 
@@ -546,7 +549,7 @@ def trigger_state_type_change_tests(*args):
     sm_m = args[2]
     state_dict = args[3]
     with_gui = args[4]
-    sleep_time = 1
+    sleep_time = 1.5
 
     time.sleep(sleep_time)
 
@@ -726,6 +729,8 @@ def state_type_change_test(with_gui=False):
     os.chdir(awesome_tool.__path__[0] + "/mvc")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
+    global_config.load()  # load the default config from ~/.awesome_tool/config.yaml
+    global_gui_config.load()  # load the default config from ~/.awesome_tool/config.yaml
     logging_view = LoggingView()
     setup_logger(logging_view)
 
