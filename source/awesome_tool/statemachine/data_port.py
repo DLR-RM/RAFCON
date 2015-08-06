@@ -48,9 +48,8 @@ class DataPort(Observable, yaml.YAMLObject):
         self._default_value = None
         self.default_value = default_value
 
+        # Checks for validity
         self.parent = parent
-        if not self._check_validity():
-            raise AttributeError("Could not create data port. The parameters for the new data port are not valid.")
 
         logger.debug("DataPort with name %s initialized" % self.name)
 
@@ -103,6 +102,7 @@ class DataPort(Observable, yaml.YAMLObject):
     def name(self, name):
         if not isinstance(name, str):
             raise TypeError("Name must be of type str")
+
         self._name = name
 
     @property
@@ -120,12 +120,7 @@ class DataPort(Observable, yaml.YAMLObject):
         except ValueError as e:
             raise e
 
-        old_data_type = self.data_type
-        self._data_type = new_data_type
-
-        if not self._check_validity():
-            self._data_type = old_data_type
-            raise ValueError("The parent state refused to change the data type")
+        self.__change_property_with_validity_check('_data_type', new_data_type)
 
     @property
     def default_value(self):
@@ -153,7 +148,23 @@ class DataPort(Observable, yaml.YAMLObject):
         if parent is not None:
             from awesome_tool.statemachine.states.state import State
             assert isinstance(parent, State)
-        self._parent = parent
+
+        self.__change_property_with_validity_check('_parent', parent)
+
+    def __change_property_with_validity_check(self, property_name, value):
+        """Helper method to change a property and reset it if the validity check fails
+
+        :param str property_name: The name of the property to be changed, e.g. '_data_port_id'
+        :param value: The new desired value for this property
+        """
+        assert isinstance(property_name, str)
+        old_value = getattr(self, property_name)
+        setattr(self, property_name, value)
+
+        valid, message = self._check_validity()
+        if not valid:
+            setattr(self, property_name, old_value)
+            raise ValueError("The data port's '{0}' could not be changed: {1}".format(property_name[1:], message))
 
     @Observable.observed
     def change_data_type(self, data_type, default_value=None):
@@ -217,12 +228,11 @@ class DataPort(Observable, yaml.YAMLObject):
         Some validity checks can only be performed by the parent, e.g. data type changes when data flows are connected.
         Thus, the existence of a parent and a check function must be ensured and this function be queried.
 
-        :return: True if valid, False else
+        :return: (True, str message) if valid, (False, str reason) else
         """
         if not self.parent:
-            return True
+            return True, "no parent"
         if not hasattr(self.parent, 'check_child_validity') or \
                 not callable(getattr(self.parent, 'check_child_validity')):
-            return True
-        if self.parent.check_child_validity(self):
-            return True
+            return True, "no parental check"
+        return self.parent.check_child_validity(self)

@@ -56,9 +56,8 @@ class Transition(Observable, yaml.YAMLObject):
         self._to_outcome = None
         self.to_outcome = to_outcome
 
+        # Checks for validity
         self.parent = parent
-        if not self._check_validity():
-            raise ValueError("Could not create transition. The parameters for the new transition are not valid.")
 
         logger.debug(self.__str__())
 
@@ -110,10 +109,11 @@ class Transition(Observable, yaml.YAMLObject):
         self._from_state = from_state
         self._from_outcome = from_outcome
 
-        if not self._check_validity():
+        valid, message = self._check_validity()
+        if not valid:
             self._from_state = old_from_state
             self._from_outcome = old_from_outcome
-            raise ValueError("The parent state refused to change the origin of the data flow")
+            raise ValueError("The transition origin could not be changed: {0}".format(message))
 
     @property
     def from_state(self):
@@ -201,7 +201,8 @@ class Transition(Observable, yaml.YAMLObject):
         if parent is not None:
             from awesome_tool.statemachine.states.state import State
             assert isinstance(parent, State)
-        self._parent = parent
+
+        self.__change_property_with_validity_check('_parent', parent)
 
     def __change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
@@ -213,9 +214,10 @@ class Transition(Observable, yaml.YAMLObject):
         old_value = getattr(self, property_name)
         setattr(self, property_name, value)
 
-        if not self._check_validity():
+        valid, message = self._check_validity()
+        if not valid:
             setattr(self, property_name, old_value)
-            raise ValueError("The parent state refused to change the '{0}' of the data flow".format(property_name[1:]))
+            raise ValueError("The transition's '{0}' could not be changed: {1}".format(property_name[1:], message))
 
     def _check_validity(self):
         """Checks the validity of the transition properties
@@ -223,12 +225,11 @@ class Transition(Observable, yaml.YAMLObject):
         Some validity checks can only be performed by the parent, e.g. whether the from  outcome is already connected.
         Thus, the existence of a parent and a check function must be ensured and this function be queried.
 
-        :return: True if valid, False else
+        :return: (True, str message) if valid, (False, str reason) else
         """
         if not self.parent:
-            return True
+            return True, "no parent"
         if not hasattr(self.parent, 'check_child_validity') or \
                 not callable(getattr(self.parent, 'check_child_validity')):
-            return True
-        if self.parent.check_child_validity(self):
-            return True
+            return True, "no parental check"
+        return self.parent.check_child_validity(self)

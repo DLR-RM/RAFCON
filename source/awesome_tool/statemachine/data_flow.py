@@ -53,9 +53,8 @@ class DataFlow(Observable, yaml.YAMLObject):
         self._to_key = None
         self.to_key = to_key
 
+        # Checks for validity
         self.parent = parent
-        if not self._check_validity():
-            raise ValueError("Could not create transition. The parameters for the new transition are not valid.")
 
     def __str__(self):
         return "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
@@ -104,10 +103,11 @@ class DataFlow(Observable, yaml.YAMLObject):
         self._from_state = from_state
         self._from_key = from_key
 
-        if not self._check_validity():
+        valid, message = self._check_validity()
+        if not valid:
             self._from_state = old_from_state
             self._from_key = old_from_key
-            raise ValueError("The parent state refused to change the origin of the data flow")
+            raise ValueError("The data flow origin could not be changed: {0}".format(message))
 
     @property
     def from_state(self):
@@ -121,7 +121,6 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not isinstance(from_state, str):
             raise TypeError("from_state must be of type str")
 
-        self._from_state = from_state
         self.__change_property_with_validity_check('_from_state', from_state)
 
     @property
@@ -155,10 +154,11 @@ class DataFlow(Observable, yaml.YAMLObject):
         self._to_state = to_state
         self._to_key = to_key
 
-        if not self._check_validity():
+        valid, message = self._check_validity()
+        if not valid:
             self._to_state = old_to_state
             self._to_key = old_to_key
-            raise ValueError("The parent state refused to change the target of the data flow")
+            raise ValueError("The data flow target could not be changed: {0}".format(message))
 
     @property
     def to_state(self):
@@ -214,7 +214,8 @@ class DataFlow(Observable, yaml.YAMLObject):
         if parent is not None:
             from awesome_tool.statemachine.states.container_state import ContainerState
             assert isinstance(parent, ContainerState)
-        self._parent = parent
+
+        self.__change_property_with_validity_check('_parent', parent)
 
     def __change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
@@ -226,9 +227,10 @@ class DataFlow(Observable, yaml.YAMLObject):
         old_value = getattr(self, property_name)
         setattr(self, property_name, value)
 
-        if not self._check_validity():
+        valid, message = self._check_validity()
+        if not valid:
             setattr(self, property_name, old_value)
-            raise ValueError("The parent state refused to change the '{0}' of the data flow".format(property_name[1:]))
+            raise ValueError("The data flow's '{0}' could not be changed: {1}".format(property_name[1:], message))
 
     def _check_validity(self):
         """Checks the validity of the data flow properties
@@ -236,12 +238,11 @@ class DataFlow(Observable, yaml.YAMLObject):
         Some validity checks can only be performed by the parent, e.g. checks for already connected data ports.
         Thus, the existence of a parent and a check function must be ensured and this function be queried.
 
-        :return: True if valid, False else
+        :return: (True, str message) if valid, (False, str reason) else
         """
         if not self.parent:
-            return True
+            return True, "no parent"
         if not hasattr(self.parent, 'check_child_validity') or \
                 not callable(getattr(self.parent, 'check_child_validity')):
-            return True
-        if self.parent.check_child_validity(self):
-            return True
+            return True, "no parental check"
+        return self.parent.check_child_validity(self)

@@ -64,13 +64,13 @@ class State(Observable, yaml.YAMLObject):
         self.parent = parent
 
         self._used_data_port_ids = set([])
-        self._input_data_ports = None
+        self._input_data_ports = {}
         self.input_data_ports = input_data_ports
 
-        self._output_data_ports = None
+        self._output_data_ports = {}
         self.output_data_ports = output_data_ports
 
-        self._outcomes = None
+        self._outcomes = {}
         self.outcomes = outcomes
 
         self._script = None
@@ -414,24 +414,34 @@ class State(Observable, yaml.YAMLObject):
                                  (outcome_id, self.state_id))
 
     # ---------------------------------------------------------------------------------------------
-    # -------------------------------------- misc functions ---------------------------------------
+    # -------------------------------------- check methods ---------------------------------------
     # ---------------------------------------------------------------------------------------------
 
     def check_child_validity(self, child):
         if isinstance(child, Outcome):
-            child_outcome = child
-            for outcome_id, outcome in self.outcomes.iteritems():
-                # Do not compare outcome with itself when checking for existing name/id
-                if child_outcome is not outcome:
-                    if child_outcome.outcome_id == outcome_id:
-                        logger.warn("outcome id '{0}' existing: {1}".format(child_outcome.outcome_id,
-                                                                            self.outcomes.keys()))
-                        return False
-                    if child_outcome.name == outcome.name:
-                        logger.warn("outcome name '{0}' existing: {1}".format(child_outcome.name,
-                                                                              self.outcomes.values()))
-                        return False
-        return True
+            return self._check_outcome_validity(child)
+        if isinstance(child, DataPort):
+            return self._check_data_port_validity(child)
+        return True, "no validity checks for child existing"
+
+    def _check_outcome_validity(self, check_outcome):
+        for outcome_id, outcome in self.outcomes.iteritems():
+            # Do not compare outcome with itself when checking for existing name/id
+            if check_outcome is not outcome:
+                if check_outcome.outcome_id == outcome_id:
+                    print "outcome id existing", check_outcome, outcome, hex(id(check_outcome)), hex(id(outcome))
+                    return False, "outcome id '{0}' existing in state".format(check_outcome.outcome_id)
+                if check_outcome.name == outcome.name:
+                    return False, "outcome name '{0}' existing in state".format(check_outcome.name)
+        return True, "valid"
+
+    def _check_data_port_validity(self, check_data_port):
+        for input_port_id, input_port in self.input_data_ports.iteritems():
+            if check_data_port is input_port:
+                # query parent for data flow connection
+                pass
+
+        return True, "valid"
 
     def check_input_data_type(self, input_data):
         """Check the input data types of the state
@@ -458,6 +468,10 @@ class State(Observable, yaml.YAMLObject):
                     #check for classes
                     if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
                         raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
+
+    # ---------------------------------------------------------------------------------------------
+    # -------------------------------------- misc functions ---------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     @Observable.observed
     def set_script_text(self, new_text):
@@ -611,8 +625,12 @@ class State(Observable, yaml.YAMLObject):
         else:
             if not isinstance(outcomes, dict):
                 raise TypeError("outcomes must be of type dict")
+            # Reset outcomes, otherwise outcome checks may fail due to duplicate outcome ids
+            old_outcomes = self.outcomes
+            self._outcomes = {}
             for outcome in outcomes.itervalues():
                 if not isinstance(outcome, Outcome):
+                    self._outcomes = old_outcomes
                     raise TypeError("element of outcomes must be of type Outcome")
                 outcome.parent = self
             self._outcomes = outcomes

@@ -43,9 +43,8 @@ class Outcome(Observable, yaml.YAMLObject):
         self._name = None
         self.name = name
 
+        # Checks for validity
         self.parent = parent
-        if not self._check_validity():
-            raise AttributeError("Could not create outcome. The parameters for the new outcome are not valid.")
 
         logger.debug("Outcome with name %s and id %s initialized" % (self.name, self.outcome_id))
 
@@ -86,17 +85,11 @@ class Outcome(Observable, yaml.YAMLObject):
         if not isinstance(outcome_id, int):
             raise TypeError("outcome_id must be of type int")
 
-        old_outcome_id = self.outcome_id
-        self._outcome_id = outcome_id
-
-        if not self._check_validity():
-            self._outcome_id = old_outcome_id
-            raise ValueError("The desired outcome id {0} is not valid".format(outcome_id))
+        self.__change_property_with_validity_check('_outcome_id', outcome_id)
 
     @property
     def name(self):
         """Property for the _name field
-
         """
         return self._name
 
@@ -106,13 +99,7 @@ class Outcome(Observable, yaml.YAMLObject):
         if not isinstance(name, str):
             raise TypeError("name must be of type str")
 
-        old_name = self.name
-
-        self._name = name
-
-        if not self._check_validity():
-            self._name = old_name
-            raise ValueError("The desired outcome name '{0}' is not valid".format(name))
+        self.__change_property_with_validity_check('_name', name)
 
     @property
     def parent(self):
@@ -124,7 +111,23 @@ class Outcome(Observable, yaml.YAMLObject):
         if parent is not None:
             from awesome_tool.statemachine.states.state import State
             assert isinstance(parent, State)
-        self._parent = parent
+
+        self.__change_property_with_validity_check('_parent', parent)
+
+    def __change_property_with_validity_check(self, property_name, value):
+        """Helper method to change a property and reset it if the validity check fails
+
+        :param str property_name: The name of the property to be changed, e.g. '_name'
+        :param value: The new desired value for this property
+        """
+        assert isinstance(property_name, str)
+        old_value = getattr(self, property_name)
+        setattr(self, property_name, value)
+
+        valid, message = self._check_validity()
+        if not valid:
+            setattr(self, property_name, old_value)
+            raise ValueError("The outcome's '{0}' could not be changed: {1}".format(property_name[1:], message))
 
     def _check_validity(self):
         """Checks the validity of the Outcome properties
@@ -133,14 +136,13 @@ class Outcome(Observable, yaml.YAMLObject):
         same name or id. Thus, the existence of a parent and a check function must be ensured and this function be
         queried.
 
-        :return: True if valid, False else
+        :return: (True, str message) if valid, (False, str reason) else
         """
         if not self.parent:
-            return True
+            return True, "no parent"
         if not hasattr(self.parent, 'check_child_validity') or \
                 not callable(getattr(self.parent, 'check_child_validity')):
-            return True
-        if self.parent.check_child_validity(self):
-            return True
+            return True, "no parental check"
+        return self.parent.check_child_validity(self)
 
 
