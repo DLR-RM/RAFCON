@@ -8,7 +8,7 @@ from awesome_tool.statemachine.enums import StateType
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from awesome_tool.statemachine.states.library_state import LibraryState
 
 
@@ -42,14 +42,20 @@ class StateOverviewController(ExtendedController, Model):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        self.state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {
-            'Enum': StateType.EXECUTION, 'class': ExecutionState}
-        self.state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {
-            'Enum': StateType.HIERARCHY, 'class': HierarchyState}
-        self.state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {
-            'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
-        self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {
-            'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
+        # prepare State Type Change ComboBox
+        if isinstance(self.model.state, DeciderState):
+            # logger.info(str(StateType))
+            self.state_types_dict[str(StateType.DECIDER_STATE).split('.')[1]] = {
+                'Enum': StateType.DECIDER_STATE, 'class': DeciderState}
+        else:
+            self.state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {
+                'Enum': StateType.EXECUTION, 'class': ExecutionState}
+            self.state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {
+                'Enum': StateType.HIERARCHY, 'class': HierarchyState}
+            self.state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {
+                'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
+            self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {
+                'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
 
         view['entry_name'].connect('focus-out-event', self.change_name)
         view['entry_name'].connect('key-press-event', self.check_for_enter)
@@ -71,7 +77,7 @@ class StateOverviewController(ExtendedController, Model):
         view['type_viewport'].add(combo)
         view['type_viewport'].show()
 
-        # Library states cannot be changed
+        # Prepare LAbel for state_name -> Library states cannot be changed
         if isinstance(self.model.state, LibraryState):
             l_store.prepend(['LIBRARY'])
             self.view['library_name'].set_text(self.model.state.library_name)
@@ -84,12 +90,23 @@ class StateOverviewController(ExtendedController, Model):
                     l_store.prepend([key])
                 else:
                     l_store.append([key])
+
         combo.set_active(0)
         view['type_combobox'] = combo
         view['type_combobox'].connect('changed', self.change_type)
 
-        view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
-        view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)
+        # Prepare "is start state check button"
+        # has_no_start_state_state_types = [BarrierConcurrencyState, PreemptiveConcurrencyState]
+        if isinstance(self.model.state, DeciderState):  # \
+            # has to re-initiated if parent becomes HierarchchyState
+            #     or self.model.parent is not None and type(self.model.parent.state) in has_no_start_state_state_types:
+            view['is_start_state_checkbutton'].destroy()  # DeciderState is removed if parent change type
+        else:
+            view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
+            view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)
+
+        if isinstance(self.model.state, DeciderState):
+            combo.set_sensitive(False)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -116,6 +133,8 @@ class StateOverviewController(ExtendedController, Model):
                         logger.debug("Start state unset, no start state defined")
                 except AttributeError as e:
                     logger.warn("Could no change start state: {0}".format(e))
+                    # avoid to toggle button
+                    self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
 
     @Model.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):
@@ -163,6 +182,10 @@ class StateOverviewController(ExtendedController, Model):
             self.relieve_model(self.model)
             self.observe_model(state_model)
             self.model = state_model
+        else:
+            logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(self.model.state.name,
+                                                                             type(self.model.state),
+                                                                             target_class))
 
     def check_for_enter(self, entry, event):
         key_name = keyval_name(event.keyval)
