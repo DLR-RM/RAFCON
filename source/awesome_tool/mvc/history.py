@@ -75,7 +75,17 @@ def do_storage_test(state):
 def get_state_from_state_tuple(state_tuple):
 
     # print "++++ new state", state_tuple
-    state = yaml.load(state_tuple[0])
+
+    # Transitions and data flows are not added, as also states are not added
+    # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
+    # validity checks for transitions and data flows would fail
+    state_info = yaml.load(state_tuple[0])
+    if not isinstance(state_info, tuple):
+        state = state_info
+    else:
+        state = state_info[0]
+        transitions = state_info[1]
+        data_flows = state_info[2]
 
     if isinstance(state, BarrierConcurrencyState):
         # logger.debug("\n\ninsert decider_state\n\n")
@@ -111,6 +121,11 @@ def get_state_from_state_tuple(state_tuple):
                     print_states(child_state)
         # print "got from tuple:"
         # print_states(state)
+
+    # Child states were added, now we can add transitions and data flows
+    if isinstance(state_info, tuple):
+        state.transitions = transitions
+        state.data_flows = data_flows
 
     return state
 
