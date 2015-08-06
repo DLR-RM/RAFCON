@@ -14,6 +14,9 @@ from gtkmvc.observer import Observer
 
 import logging as logger
 
+from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.statemachine.config import global_config
+
 
 class NotificationLogObserver(Observer):
     """ This observer is a abstract class to counts and store notification
@@ -1249,6 +1252,8 @@ def test_type_changes_without_gui():
     os.chdir(awesome_tool.__path__[0] + "/mvc")
     gtk.rc_parse(awesome_tool.__path__[0] + "/mvc/themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
+    global_config.load()  # load the default config from ~/.awesome_tool/config.yaml
+    global_gui_config.load()  # load the default config from ~/.awesome_tool/config.yaml
     logging_view = LoggingView()
     setup_logger(logging_view)
     time.sleep(1)
@@ -1279,6 +1284,8 @@ def test_state_machine_changes_with_gui(with_gui=True):
     os.chdir(awesome_tool.__path__[0] + "/mvc")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
+    global_config.load()  # load the default config from ~/.awesome_tool/config.yaml
+    global_gui_config.load()  # load the default config from ~/.awesome_tool/config.yaml
     logging_view = LoggingView()
     setup_logger(logging_view)
     time.sleep(1)
