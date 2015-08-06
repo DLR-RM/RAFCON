@@ -1,5 +1,9 @@
 #!/opt/python/python2.7/bin/python
 
+from twisted.internet import gtk2reactor
+gtk2reactor.install()
+from twisted.internet import reactor
+
 import logging
 import os
 import signal
@@ -135,6 +139,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO)
     logger.info("Ready")
     logger.setLevel(level)
+    reactor.run()
     gtk.main()
     logger.debug("Gtk main loop exited!")
 

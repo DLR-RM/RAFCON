@@ -39,11 +39,15 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
 
     @property
     def sm_name(self):
-        return self._state_machine_manager.get_active_state_machine().root_state.name
+        if self._state_machine_manager.get_active_state_machine():
+            return self._state_machine_manager.get_active_state_machine().root_state.name
+        return None
 
     @property
     def root_id(self):
-        return self._state_machine_manager.get_active_state_machine().root_state.state_id
+        if self._state_machine_manager.get_active_state_machine():
+            return self._state_machine_manager.get_active_state_machine().root_state.state_id
+        return None
 
     def startProtocol(self):
         """
@@ -111,7 +115,7 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         assert isinstance(message, Message)
         if not self.transport:
             return
-        logger.debug("Send message %s" % message.message_id)
+        logger.debug("Send message %s to %s:%d" % (message.message_id, addr[0], addr[1]))
         for i in range(0, global_net_config.get_config_value("NUMBER_UDP_MESSAGES_SENT")):
             self.transport.write(str(message), addr)
 
@@ -120,7 +124,8 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         if self._connection_mode == ConnectionMode.SERVER:
             msg = Message(message=message, ack_msg=ack_msg, flag=flag)
         elif self._connection_mode == ConnectionMode.CLIENT:
-            msg = Message(sm_name=self.sm_name, root_id=self.root_id, message=message, ack_msg=ack_msg, flag=flag)
+            if self.sm_name and self.root_id:
+                msg = Message(sm_name=self.sm_name, root_id=self.root_id, message=message, ack_msg=ack_msg, flag=flag)
         return msg
 
     def send_acknowledge(self, message_id, addr):
@@ -152,6 +157,9 @@ class UDPConnection(DatagramProtocol, Observable, gobject.GObject):
         :param addr: Receiver address
         """
         msg = self.create_message(message, True, flag)
+        if not isinstance(msg, Message):
+            logger.error("Message not created correctly")
+            return
         stop_event = Event()
 
         self.messages_to_be_acknowledged[msg.message_id] = (stop_event, False)
