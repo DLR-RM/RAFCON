@@ -35,6 +35,9 @@ class Transition(Observable, yaml.YAMLObject):
     def __init__(self, from_state, from_outcome, to_state, to_outcome, transition_id, parent=None):
         Observable.__init__(self)
 
+        # Prevents validity checks by parent before all parameters are set
+        self._parent = None
+
         self._transition_id = None
         if transition_id is None:
             self.transition_id = generate_transition_id()
@@ -50,14 +53,10 @@ class Transition(Observable, yaml.YAMLObject):
         self._to_state = None
         self.to_state = to_state
 
-        # if to_state is None:
-        #     raise TypeError("to_state must not be None")
-        #     exit(-1)
-
         self._to_outcome = None
         self.to_outcome = to_outcome
 
-        self._parent = None
+        # Checks for validity
         self.parent = parent
 
         logger.debug(self.__str__())
@@ -105,8 +104,16 @@ class Transition(Observable, yaml.YAMLObject):
             if not isinstance(from_outcome, int):
                 raise TypeError("from_outcome must be of type int")
 
+        old_from_state = self.from_state
+        old_from_outcome = self.from_outcome
         self._from_state = from_state
         self._from_outcome = from_outcome
+
+        valid, message = self._check_validity()
+        if not valid:
+            self._from_state = old_from_state
+            self._from_outcome = old_from_outcome
+            raise ValueError("The transition origin could not be changed: {0}".format(message))
 
     @property
     def from_state(self):
@@ -121,7 +128,7 @@ class Transition(Observable, yaml.YAMLObject):
         if from_state is not None and not isinstance(from_state, str):
             raise TypeError("from_state must be of type str")
 
-        self._from_state = from_state
+        self.__change_property_with_validity_check('_from_state', from_state)
 
     @property
     def from_outcome(self):
@@ -136,7 +143,7 @@ class Transition(Observable, yaml.YAMLObject):
         if from_outcome is not None and not isinstance(from_outcome, int):
             raise TypeError("from_outcome must be of type int")
 
-        self._from_outcome = from_outcome
+        self.__change_property_with_validity_check('_from_outcome', from_outcome)
 
     @property
     def to_state(self):
@@ -151,7 +158,7 @@ class Transition(Observable, yaml.YAMLObject):
         if to_state is not None and not isinstance(to_state, str):
             raise TypeError("to_state must be of type str")
 
-        self._to_state = to_state
+        self.__change_property_with_validity_check('_to_state', to_state)
 
     @property
     def to_outcome(self):
@@ -166,7 +173,7 @@ class Transition(Observable, yaml.YAMLObject):
         if to_outcome is not None and not isinstance(to_outcome, int):
             raise TypeError("to_outcome must be of type int")
 
-        self._to_outcome = to_outcome
+        self.__change_property_with_validity_check('_to_outcome', to_outcome)
 
     @property
     def transition_id(self):
@@ -178,11 +185,11 @@ class Transition(Observable, yaml.YAMLObject):
     @transition_id.setter
     @Observable.observed
     def transition_id(self, transition_id):
-        if not transition_id is None:
+        if transition_id is not None:
             if not isinstance(transition_id, int):
                 raise TypeError("transition_id must be of type int")
 
-        self._transition_id = transition_id
+        self.__change_property_with_validity_check('_transition_id', transition_id)
 
     @property
     def parent(self):
@@ -194,4 +201,35 @@ class Transition(Observable, yaml.YAMLObject):
         if parent is not None:
             from awesome_tool.statemachine.states.state import State
             assert isinstance(parent, State)
-        self._parent = parent
+
+        self.__change_property_with_validity_check('_parent', parent)
+
+    def __change_property_with_validity_check(self, property_name, value):
+        """Helper method to change a property and reset it if the validity check fails
+
+        :param str property_name: The name of the property to be changed, e.g. '_data_flow_id'
+        :param value: The new desired value for this property
+        """
+        assert isinstance(property_name, str)
+        old_value = getattr(self, property_name)
+        setattr(self, property_name, value)
+
+        valid, message = self._check_validity()
+        if not valid:
+            setattr(self, property_name, old_value)
+            raise ValueError("The transition's '{0}' could not be changed: {1}".format(property_name[1:], message))
+
+    def _check_validity(self):
+        """Checks the validity of the transition properties
+
+        Some validity checks can only be performed by the parent, e.g. whether the from  outcome is already connected.
+        Thus, the existence of a parent and a check function must be ensured and this function be queried.
+
+        :return: (True, str message) if valid, (False, str reason) else
+        """
+        if not self.parent:
+            return True, "no parent"
+        if not hasattr(self.parent, 'check_child_validity') or \
+                not callable(getattr(self.parent, 'check_child_validity')):
+            return True, "no parental check"
+        return self.parent.check_child_validity(self)

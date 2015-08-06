@@ -272,8 +272,6 @@ class StateMachineStorage(Observable):
         """
         state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
         state.script.path = state_path
-        # connect the missing function_handlers for setting the outcome names
-        state.connect_all_outcome_function_handles()
         parent_state.add_state(state, storage_load=True)
         # the library state sets his script file to the script file of the root state of its library, thus it should
         # not be overwritten in this case

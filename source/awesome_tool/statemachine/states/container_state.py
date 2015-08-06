@@ -20,7 +20,7 @@ from awesome_tool.statemachine.data_flow import DataFlow
 from awesome_tool.statemachine.scope import ScopedData, ScopedVariable
 from awesome_tool.statemachine.id_generator import *
 from awesome_tool.statemachine.validity_check.validity_checker import ValidityChecker
-import awesome_tool.statemachine.singleton
+from awesome_tool.statemachine.singleton import global_storage, state_machine_manager, state_machine_execution_engine
 from awesome_tool.utils.type_helpers import type_inherits_of_type
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -49,15 +49,15 @@ class ContainerState(State):
 
         self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
-        self._states = None
+        self._states = {}
         self.states = states
-        self._transitions = None
+        self._transitions = {}
         self.transitions = transitions
-        self._data_flows = None
+        self._data_flows = {}
         self.data_flows = data_flows
         if start_state_id is not None:
             self.start_state_id = start_state_id
-        self._scoped_variables = None
+        self._scoped_variables = {}
         self.scoped_variables = scoped_variables
         self.__scoped_variables_names = []
         self._scoped_data = {}
@@ -93,9 +93,6 @@ class ContainerState(State):
         :return:
         """
         State.setup_run(self)
-        # print "---------------------- scoped data 1-----------------------"
-        # for key, value in self.scoped_data.iteritems():
-        #     print key, value
         # reset the scoped data
         self._scoped_data = {}
         self.add_default_values_of_scoped_variables_to_scoped_data()
@@ -142,7 +139,7 @@ class ContainerState(State):
                 return None
 
             # depending on the execution mode pause execution
-            execution_signal = awesome_tool.statemachine.singleton.state_machine_execution_engine.handle_execution_mode(self)
+            execution_signal = state_machine_execution_engine.handle_execution_mode(self)
             if execution_signal is StateMachineExecutionStatus.STOPPED:
                 # this will be caught at the end of the run method
                 raise RuntimeError("state stopped")
@@ -196,10 +193,9 @@ class ContainerState(State):
 
         if not storage_load:
             # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
-            own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+            own_sm_id = state_machine_manager.get_sm_id_for_state(self)
             if own_sm_id is not None:
-                awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(
-                    own_sm_id, state.script.path)
+                global_storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.script.path)
 
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
@@ -222,13 +218,12 @@ class ContainerState(State):
             self.set_start_state(None)
 
         # remove script folder
-        own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self)
+        own_sm_id = state_machine_manager.get_sm_id_for_state(self)
         if own_sm_id is None:
             logger.warn("Something is going wrong during state removal. State does not belong to "
-                               "a state machine!")
+                        "a state machine!")
         else:
-            awesome_tool.statemachine.singleton.global_storage.mark_path_for_removal_for_sm_id(own_sm_id,
-                                                                                  self.states[state_id].script.path)
+            global_storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].script.path)
 
         #first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
@@ -281,9 +276,9 @@ class ContainerState(State):
 
         """
 
-        if self.get_path() in awesome_tool.statemachine.singleton.state_machine_execution_engine.start_state_paths:
+        if self.get_path() in state_machine_execution_engine.start_state_paths:
             for state_id, state in self.states.iteritems():
-                if state.get_path() in awesome_tool.statemachine.singleton.state_machine_execution_engine.start_state_paths:
+                if state.get_path() in state_machine_execution_engine.start_state_paths:
                     logger.debug("Forward execution to state " + state.name)
                     return state
 
@@ -392,17 +387,17 @@ class ContainerState(State):
             if from_outcome in from_state.outcomes:
                 if to_outcome is not None:
                     if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self
-                        self.transitions[transition_id] =\
-                            Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+                        self.transitions[transition_id] = \
+                            Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id, self)
                     else:
                         raise AttributeError("to_state does not have outcome %s", to_outcome)
                 else:  # to outcome is None but to_state is not None, so the transition is valid
-                    self.transitions[transition_id] =\
-                        Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+                    self.transitions[transition_id] = \
+                        Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id, self)
             else:
                 raise AttributeError("from_state does not have outcome %s", from_state)
         else:
-            self.transitions[transition_id] =\
+            self.transitions[transition_id] = \
                 Transition(None, None, to_state_id, to_outcome, transition_id, self)
 
         # notify all states waiting for transition to be connected
@@ -676,7 +671,7 @@ class ContainerState(State):
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
                 if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
-                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                     data_flow_ids_to_remove.append(data_flow_id)
 
             for data_flow_id in data_flow_ids_to_remove:
@@ -687,7 +682,7 @@ class ContainerState(State):
         data_flow_ids_to_remove = []
         for data_flow_id, data_flow in self.data_flows.iteritems():
             if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
-                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                 data_flow_ids_to_remove.append(data_flow_id)
 
         for data_flow_id in data_flow_ids_to_remove:
@@ -872,6 +867,13 @@ class ContainerState(State):
         else:
             raise AttributeError("Data_Port_id %s is not in input_data_ports, output_data_ports or scoped_variables", data_port_id)
 
+    # def get_connected_data_ports(self, data_port_id):
+    #     connected_data_ports = []
+    #     for data_flow in self.data_flows.itervalues():
+    #         if data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+    #             if data_flow.from_state == self.state_id:
+    #                 connected_data_ports.append(self.get_data_port_by_id(data_flow.from_key))
+
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- input data handling --------------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -917,7 +919,7 @@ class ContainerState(State):
         for dict_key, value in dictionary.iteritems():
             for input_data_port_key, data_port in self.input_data_ports.iteritems():
                 if dict_key == data_port.name:
-                    self.scoped_data[str(input_data_port_key)+self.state_id] =\
+                    self.scoped_data[str(input_data_port_key)+self.state_id] = \
                         ScopedData(data_port.name, value, type(value), self.state_id, DataPortType.INPUT)
                     # forward the data to scoped variables
                     for data_flow_key, data_flow in self.data_flows.iteritems():
@@ -937,7 +939,7 @@ class ContainerState(State):
         for output_name, value in dictionary.iteritems():
             for output_data_port_key, data_port in state.output_data_ports.iteritems():
                 if output_name == data_port.name:
-                    self.scoped_data[str(output_data_port_key)+state.state_id] =\
+                    self.scoped_data[str(output_data_port_key)+state.state_id] = \
                         ScopedData(data_port.name, value, type(value), state.state_id, DataPortType.OUTPUT)
 
     def add_default_values_of_scoped_variables_to_scoped_data(self):
@@ -945,7 +947,7 @@ class ContainerState(State):
 
         """
         for key, scoped_var in self.scoped_variables.iteritems():
-            self.scoped_data[str(scoped_var.data_port_id)+self.state_id] =\
+            self.scoped_data[str(scoped_var.data_port_id)+self.state_id] = \
                 ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id,
                            DataPortType.SCOPED)
 
@@ -1083,9 +1085,33 @@ class ContainerState(State):
     def __str__(self):
         return "{0} [{1} child states]".format(State.__str__(self), len(self.states))
 
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    # ---------------------------------------------------------------------------------------------
+    # -------------------------------------- check methods ---------------------------------------
+    # ---------------------------------------------------------------------------------------------
+
+    def check_child_validity(self, child):
+        # First let the state do validity checks for outcomes and data ports
+        valid, message = super(ContainerState, self).check_child_validity(child)
+        if not valid:
+            return False, message
+        # Continue with checks if previous ones did not fail
+        if isinstance(child, DataFlow):
+            return self._check_data_flow_validity(child)
+        if isinstance(child, Transition):
+            self._check_transition_validity(child)
+        return True, message
+
+    def _check_data_flow_validity(self, check_transition):
+        logger.debug("check_data_flow_validity")
+        return True, "valid"
+
+    def _check_transition_validity(self, check_data_flow):
+        logger.debug("check_transition_validity")
+        return True, "valid"
+
+    #########################################################################
+    # Properties for all class fields that must be observed by gtkmvc
+    #########################################################################
 
     @property
     def states(self):
@@ -1270,10 +1296,10 @@ class ContainerState(State):
         else:
             return False
 
-    # @child_execution.setter
-    # @Observable.observed
-    # def child_execution(self, child_execution):
-    #     if child_execution is not None:
-    #         if not isinstance(child_execution, bool):
-    #             raise TypeError("child_execution must be of type str")
-    #     self._child_execution = child_execution
+            # @child_execution.setter
+            # @Observable.observed
+            # def child_execution(self, child_execution):
+            #     if child_execution is not None:
+            #         if not isinstance(child_execution, bool):
+            #             raise TypeError("child_execution must be of type str")
+            #     self._child_execution = child_execution

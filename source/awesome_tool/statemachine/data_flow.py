@@ -30,8 +30,10 @@ class DataFlow(Observable, yaml.YAMLObject):
     yaml_tag = u'!DataFlow'
 
     def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None, parent=None):
-
         Observable.__init__(self)
+
+        # Prevents validity checks by parent before all parameters are set
+        self._parent = None
 
         self._data_flow_id = None
         if data_flow_id is None:
@@ -51,7 +53,7 @@ class DataFlow(Observable, yaml.YAMLObject):
         self._to_key = None
         self.to_key = to_key
 
-        self._parent = None
+        # Checks for validity
         self.parent = parent
 
     def __str__(self):
@@ -83,7 +85,6 @@ class DataFlow(Observable, yaml.YAMLObject):
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
-    # TODO check for self connections
 
     @Observable.observed
     def modify_origin(self, from_state, from_key):
@@ -97,8 +98,16 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not isinstance(from_key, int):
             raise TypeError("from_key must be of type int")
 
+        old_from_state = self.from_state
+        old_from_key = self.from_key
         self._from_state = from_state
         self._from_key = from_key
+
+        valid, message = self._check_validity()
+        if not valid:
+            self._from_state = old_from_state
+            self._from_key = old_from_key
+            raise ValueError("The data flow origin could not be changed: {0}".format(message))
 
     @property
     def from_state(self):
@@ -112,7 +121,7 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not isinstance(from_state, str):
             raise TypeError("from_state must be of type str")
 
-        self._from_state = from_state
+        self.__change_property_with_validity_check('_from_state', from_state)
 
     @property
     def from_key(self):
@@ -126,7 +135,7 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not isinstance(from_key, int):
             raise TypeError("from_key must be of type int")
 
-        self._from_key = from_key
+        self.__change_property_with_validity_check('_from_key', from_key)
 
     @Observable.observed
     def modify_target(self, to_state, to_key):
@@ -140,8 +149,16 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not isinstance(to_key, int):
             raise TypeError("from_outcome must be of type int")
 
+        old_to_state = self.to_state
+        old_to_key = self.to_key
         self._to_state = to_state
         self._to_key = to_key
+
+        valid, message = self._check_validity()
+        if not valid:
+            self._to_state = old_to_state
+            self._to_key = old_to_key
+            raise ValueError("The data flow target could not be changed: {0}".format(message))
 
     @property
     def to_state(self):
@@ -155,7 +172,7 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not isinstance(to_state, str):
             raise TypeError("to_state must be of type str")
 
-        self._to_state = to_state
+        self.__change_property_with_validity_check('_to_state', to_state)
 
     @property
     def to_key(self):
@@ -169,7 +186,7 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not isinstance(to_key, int):
             raise TypeError("to_key must be of type int")
 
-        self._to_key = to_key
+        self.__change_property_with_validity_check('_to_key', to_key)
 
     @property
     def data_flow_id(self):
@@ -181,11 +198,11 @@ class DataFlow(Observable, yaml.YAMLObject):
     @data_flow_id.setter
     @Observable.observed
     def data_flow_id(self, data_flow_id):
-        if not data_flow_id is None:
+        if data_flow_id is not None:
             if not isinstance(data_flow_id, int):
                 raise TypeError("data_flow_id must be of type int")
 
-        self._data_flow_id = data_flow_id
+        self.__change_property_with_validity_check('_data_flow_id', data_flow_id)
 
     @property
     def parent(self):
@@ -197,4 +214,35 @@ class DataFlow(Observable, yaml.YAMLObject):
         if parent is not None:
             from awesome_tool.statemachine.states.container_state import ContainerState
             assert isinstance(parent, ContainerState)
-        self._parent = parent
+
+        self.__change_property_with_validity_check('_parent', parent)
+
+    def __change_property_with_validity_check(self, property_name, value):
+        """Helper method to change a property and reset it if the validity check fails
+
+        :param str property_name: The name of the property to be changed, e.g. '_data_flow_id'
+        :param value: The new desired value for this property
+        """
+        assert isinstance(property_name, str)
+        old_value = getattr(self, property_name)
+        setattr(self, property_name, value)
+
+        valid, message = self._check_validity()
+        if not valid:
+            setattr(self, property_name, old_value)
+            raise ValueError("The data flow's '{0}' could not be changed: {1}".format(property_name[1:], message))
+
+    def _check_validity(self):
+        """Checks the validity of the data flow properties
+
+        Some validity checks can only be performed by the parent, e.g. checks for already connected data ports.
+        Thus, the existence of a parent and a check function must be ensured and this function be queried.
+
+        :return: (True, str message) if valid, (False, str reason) else
+        """
+        if not self.parent:
+            return True, "no parent"
+        if not hasattr(self.parent, 'check_child_validity') or \
+                not callable(getattr(self.parent, 'check_child_validity')):
+            return True, "no parental check"
+        return self.parent.check_child_validity(self)
