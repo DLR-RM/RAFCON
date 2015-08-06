@@ -127,31 +127,31 @@ def test_create_container_state():
     t3 = container.add_transition(state2.state_id, -1, container.state_id, -1)
     assert len(container.transitions) == 3
 
-    with raises(AttributeError):
+    with raises(ValueError):
         # Transition from connected outcome
         container.add_transition(state1.state_id, -1, state2.state_id, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Non-existing from state id
         container.add_transition(-1, -1, state2.state_id, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Non-existing from outcome
         container.add_transition(state1.state_id, -3, state2.state_id, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Non-existing to state id
         container.add_transition(state1.state_id, -1, -1, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Non-existing to outcome
         container.add_transition(state1.state_id, -1, container.state_id, -3)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Transition pointing to the state itself
         container.add_transition(state1.state_id, -2, state1.state_id, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # to_state_id and to_outcome not None
         container.add_transition(state1.state_id, -2, state1.state_id, -1)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Transition from connected outcome
         container.add_transition(state2.state_id, -1, state2.state_id, -2)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Transition going from one outcome to another outcome of the same state
         container.add_transition(state2.state_id, -1, state2.state_id, -2)
 
