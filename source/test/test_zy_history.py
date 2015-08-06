@@ -1420,8 +1420,8 @@ def trigger_state_type_change_tests(*args):
     state_dict = args[3]
     with_gui = args[4]
 
-    sleep_time_short = 2
-    sleep_time = 4  # 0.5
+    sleep_time_short = 3
+    sleep_time = 5  # 0.5
 
     time.sleep(sleep_time_short)
 
