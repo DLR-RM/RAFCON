@@ -258,7 +258,7 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
             port_layout = pcc.create_layout()
             port_layout.set_text(" " + self.to_port.name + " ")
         elif not from_scoped and self.from_port:
-            self._print_side = self.from_port.side
+            self._print_side = self.from_port.side.opposite()
             has_connected_port = True
             port_layout = pcc.create_layout()
             port_layout.set_text(" " + self.from_port.name + " ")
@@ -498,17 +498,17 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
             pos_x = 0.
             pos_y = 0.
             if self.from_port.side is SnappedSide.LEFT:
-                pos_x = self.from_handle().x - 2 * self._head_length - self._name_width
+                pos_x = self.from_handle().x + 2 * self._head_length + self._name_width
                 pos_y = self.from_handle().y
             elif self.from_port.side is SnappedSide.RIGHT:
-                pos_x = self.from_handle().x + 2 * self._head_length + self._name_width
+                pos_x = self.from_handle().x - 2 * self._head_length - self._name_width
                 pos_y = self.from_handle().y
             elif self.from_port.side is SnappedSide.TOP:
                 pos_x = self.from_handle().x
-                pos_y = self.from_handle().y - 2 * self._head_length - self._name_width
+                pos_y = self.from_handle().y + 2 * self._head_length + self._name_width
             elif self.from_port.side is SnappedSide.BOTTOM:
                 pos_x = self.from_handle().x
-                pos_y = self.from_handle().y + 2 * self._head_length + self._name_width
+                pos_y = self.from_handle().y - 2 * self._head_length - self._name_width
             self.add_waypoint((pos_x, pos_y))
 
     def add_waypoint(self, pos):
