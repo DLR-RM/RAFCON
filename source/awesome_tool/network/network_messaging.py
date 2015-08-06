@@ -12,7 +12,7 @@ logger = log.get_logger(__name__)
 
 def create_unique_checksum(msg):
     salt = uuid.uuid4().hex
-    checksum = hashlib.md5(salt.encode() + msg.content_str.encode()).hexdigest()[:6] + ":" + salt
+    checksum = hashlib.md5(salt.encode() + msg.content_str).hexdigest()[:6] + ":" + salt
     if not len(checksum) == constants.CHECKSUM_LENGTH:
         raise AttributeError("MessageID has to be exact %d characters" % constants.CHECKSUM_LENGTH)
     return checksum
@@ -20,7 +20,7 @@ def create_unique_checksum(msg):
 
 def check_checksum(message_id, content_str):
     checksum, salt = message_id.split(":")
-    current_checksum = hashlib.md5(salt.encode() + content_str.encode()).hexdigest()[:6]
+    current_checksum = hashlib.md5(salt.encode() + content_str).hexdigest()[:6]
     return checksum == current_checksum
 
 
