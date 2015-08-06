@@ -45,6 +45,7 @@ class StateMachineHistoryController(ExtendedController):
 
         self.count = 0
         self.doing_update = False
+        self.no_cursor_observation = False
 
         self.register()
 
@@ -93,15 +94,26 @@ class StateMachineHistoryController(ExtendedController):
         shortcut_manager.add_callback_for_action("redo", self.redo)
 
     def on_cursor_changed(self, widget):
-        #(model, row) = self.view.get_selection().get_selected()
+        if self.no_cursor_observation:
+            return
+        (model, row) = self.view['state_machine_history_tree'].get_selection().get_selected()
+        self.no_cursor_observation = True
         if not self.doing_update:
             logger.debug("The view jumps to the selected history element that would be situated on a right click menu in future")
             # get selected element
+            logger.debug("%s, %s" % (model, row))
+            for elem in model[row]:
+                logger.debug(str(elem))
 
             # take version_id
-            version_id = 1
+            version_id = model[row][1]
             # do recovery
-            self._selected_sm_model.history.changes.recover_specific_version(version_id)
+            self.doing_update = True
+            self._selected_sm_model.history.recover_specific_version(version_id)
+            self.doing_update = False
+            self.update(None, None, None)
+        self.no_cursor_observation = False
+
 
     def undo(self, key_value, modifier_mask):
         logger.debug("Run history UNDO")
@@ -142,7 +154,7 @@ class StateMachineHistoryController(ExtendedController):
             else:
                 inst = action.before_info['instance']
             self.new_change(action.before_model, action.before_prop_name,
-                            method_name, inst, info)
+                            method_name, inst, info, action.version_id)
 
             # self.new_change(action.before_model, action.before_prop_name,
             #                 action.before_info['method_name'], action.before_info['instance'], info)
@@ -156,7 +168,7 @@ class StateMachineHistoryController(ExtendedController):
         # - is state full and all element which are open to be re-done gray
         self.doing_update = False
 
-    def new_change(self, model, prop_name, method_name, instance, info):
+    def new_change(self, model, prop_name, method_name, instance, info, version_id):
         # Nr, Instance, Method, Details, model
         if not self._selected_sm_model.history.locked:
             row_number = self._selected_sm_model.history.changes.trail_pointer
@@ -167,7 +179,7 @@ class StateMachineHistoryController(ExtendedController):
                 # foreground = "gray"
                 foreground = "#707070"
             self.list_store.prepend((self.count,
-                                     prop_name,  # '',  # version
+                                     version_id,  # '',  # version
                                      method_name,
                                      instance,
                                      info,
