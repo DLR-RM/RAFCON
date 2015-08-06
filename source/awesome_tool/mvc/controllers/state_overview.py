@@ -44,7 +44,7 @@ class StateOverviewController(ExtendedController, Model):
         """
         # prepare State Type Change ComboBox
         if isinstance(self.model.state, DeciderState):
-            logger.info(str(StateType))
+            # logger.info(str(StateType))
             self.state_types_dict[str(StateType.DECIDER_STATE).split('.')[1]] = {
                 'Enum': StateType.DECIDER_STATE, 'class': DeciderState}
         else:
