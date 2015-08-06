@@ -775,14 +775,14 @@ class GraphicalEditorController(ExtendedController):
                                                                           to_outcome_id)
                 transition_m = responsible_parent_m.get_transition_model(transition_id)
                 transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
-        except AttributeError as e:
-            import traceback
+        except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
-            logger.error("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
+            # import traceback
+            # logger.debug("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
         except Exception as e:
-            import traceback
             logger.error("Unexpected exception while creating transition: {0}".format(e))
-            logger.error("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
+            # import traceback
+            # logger.debug("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
 
         self._abort()
 
