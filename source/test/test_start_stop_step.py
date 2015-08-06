@@ -54,11 +54,11 @@ def test_start_stop_pause_step():
     awesome_tool.statemachine.singleton.state_machine_execution_engine.step_mode()
 
     for i in range(5):
-        time.sleep(0.01)
+        time.sleep(0.05)
         awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
 
     # give the state machine time to execute
-    time.sleep(0.01)
+    time.sleep(0.05)
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     sm_loaded.root_state.join()
 

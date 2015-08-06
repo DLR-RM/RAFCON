@@ -1,5 +1,5 @@
 import pytest
-
+from pytest import raises
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
@@ -33,17 +33,25 @@ def create_statemachine():
     state4.add_transition(state2.state_id, 3, state4.state_id, 5)
     state4.add_transition(state3.state_id, 3, state4.state_id, 5)
 
-    t = state4.add_transition(state2.state_id, 4, state1.state_id, 5)
+    t = state4.add_transition(state2.state_id, 4, state1.state_id, None)
 
     state4.remove_transition(t)
     state4.add_transition(state2.state_id, 4, state1.state_id, None)
 
-    try:
+    # no target at all
+    with raises(ValueError):
         state4.add_transition(state3.state_id, 4, None, None)
-    except AttributeError:
-        state4.add_transition(state3.state_id, 4, state1.state_id, None)
-    else:
-        raise StandardError("Should not be able to create transition")
+
+    # no to_state
+    with raises(ValueError):
+        state4.add_transition(state3.state_id, 4, None, 5)
+
+    # start transition already existing
+    with raises(ValueError):
+        state4.add_transition(None, None, state3.state_id, None)
+
+    state4.start_state_id = None
+    state4.add_transition(None, None, state1.state_id, None)
 
     return StateMachine(state4)
 

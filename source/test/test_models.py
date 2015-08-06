@@ -1288,9 +1288,10 @@ def test_transition_property_changes_history(with_print=False):
     sm_model.history.redo()
 
     # to_outcome(self, to_outcome)
-    state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
-    sm_model.history.undo()
-    sm_model.history.redo()
+    # Invalid change of outcome! to_outcome must be None as transition goes to child state
+    # state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
+    # sm_model.history.undo()
+    # sm_model.history.redo()
 
     # transition_id(self, transition_id)
     # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
@@ -1321,9 +1322,10 @@ def test_transition_property_changes_history(with_print=False):
     sm_model.history.redo()
 
     # modify_transition_to_outcome(self, transition_id, to_outcome)
-    state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
-    sm_model.history.undo()
-    sm_model.history.redo()
+    # Invalid target: to_outcome must be None as transition goes to child state
+    # state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
+    # sm_model.history.undo()
+    # sm_model.history.redo()
 
     # modify_transition_to_state(self, transition_id, to_state, to_outcome)
     state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)

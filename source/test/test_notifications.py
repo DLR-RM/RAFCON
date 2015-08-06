@@ -1116,12 +1116,13 @@ def test_transition_modify_notification(with_print=False):
     check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=3)
 
     # to_outcome(self, to_outcome)
-    state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
-    check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=4)
+    # Invalid test: to_outcome must be None as transition goes to child state
+    # state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
+    # check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
     # transition_id(self, transition_id)
     state_dict['Nested'].transitions[new_trans_id].transition_id += 1
-    check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=5)
+    check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
     # reset observer and testbed
     state_dict['Nested'].remove_transition(new_trans_id)
@@ -1150,12 +1151,13 @@ def test_transition_modify_notification(with_print=False):
     check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=2)
 
     # modify_transition_to_outcome(self, transition_id, to_outcome)
-    state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
-    check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=3)
+    # Invalid test: to_outcome must be None as transition goes to child state
+    # state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
+    # check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=3)
 
     # modify_transition_to_state(self, transition_id, to_state, to_outcome)
     state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
-    check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=4)
+    check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=3)
 
 
 def test_state_add_remove_notification(with_print=False):
