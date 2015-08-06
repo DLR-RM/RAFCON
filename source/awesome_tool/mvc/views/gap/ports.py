@@ -31,7 +31,7 @@ class PortView(Model, object):
 
     __observables__ = ('side', )
 
-    def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
+    def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT, label_print_inside=True):
         Model.__init__(self)
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
@@ -65,6 +65,8 @@ class PortView(Model, object):
 
         self._port_side_size = port_side_size
         self.update_port_side_size()
+
+        self.label_print_inside = label_print_inside
 
     @property
     def side(self):
@@ -224,7 +226,7 @@ class PortView(Model, object):
 
         text_size = (layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE))
 
-        print_side = self.side if not self.parent.selected else self.side.opposite()
+        print_side = self.side if not self.label_print_inside else self.side.opposite()
 
         fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparent)
         rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, fill_color, text_size, self.pos,
@@ -564,9 +566,10 @@ class ScopedVariablePortView(PortView):
 
 class DataPortView(PortView):
 
-    def __init__(self, in_port, parent, port_m, side, port_side_size):
+    def __init__(self, in_port, parent, port_m, side, port_side_size, label_print_inside=True):
         assert isinstance(port_m, DataPortModel)
-        super(DataPortView, self).__init__(in_port=in_port, port_side_size=port_side_size, name=port_m.data_port.name, parent=parent, side=side)
+        super(DataPortView, self).__init__(in_port=in_port, port_side_size=port_side_size, name=port_m.data_port.name,
+                                           parent=parent, side=side, label_print_inside=label_print_inside)
 
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
@@ -600,7 +603,7 @@ class DataPortView(PortView):
 class InputPortView(DataPortView):
 
     def __init__(self, parent, port_m, port_side_size):
-        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size)
+        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size, False)
 
     def draw(self, context, state):
         input_data = self.parent.model.state.input_data
