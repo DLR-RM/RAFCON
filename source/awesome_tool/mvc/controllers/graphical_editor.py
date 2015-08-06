@@ -1200,6 +1200,8 @@ class GraphicalEditorController(ExtendedController):
         """
         assert isinstance(state_m, StateModel)
 
+        state_meta = state_m.meta['gui']['editor']
+
         # Use default values if no size information is stored
         if not isinstance(state_meta['size'], tuple):
             state_meta['size'] = size
