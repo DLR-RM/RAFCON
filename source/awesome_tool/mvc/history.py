@@ -501,12 +501,17 @@ class Action:
                     # if is -> do check if exists and write the script if not!!!! TODO
 
             if not (isinstance(state, BarrierConcurrencyState) or
-                        isinstance(state, PreemptiveConcurrencyState)):
+                    isinstance(state, PreemptiveConcurrencyState)):
                 for t_id, t in stored_state.transitions.iteritems():
                     # print "\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ "
                     # print "### transitions to delete ", [t.from_state, t.to_state], t
                     if not UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
                         state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
+
+            if isinstance(state, BarrierConcurrencyState):
+                for t in state.transitions.values():
+                    if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
+                        state.remove_transition(t.transition_id)
 
             for df_id, df in stored_state.data_flows.iteritems():
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
@@ -919,8 +924,8 @@ class History(ModelMT):
             #     overview['model'][-1].parent.state.get_path()
             assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
             # the model should be StateModel or ContainerStateModel and "info" from those model notification
-            logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                                                                   overview['model'][-1].parent.state.get_path()))
+            # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+            #                                                        overview['model'][-1].parent.state.get_path()))
             # self.actual_action = Action(info.method_name, model.state.get_path(),
             #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
             self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),  # instance path of parent
@@ -944,8 +949,8 @@ class History(ModelMT):
                 if self.with_prints:
                     print "Path_root: ", overview['model'][-1].state.get_path()
                 # exit(1)
-                logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                                                                       overview['model'][-1].state.get_path()))
+                # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+                #                                                        overview['model'][-1].state.get_path()))
                 # self.actual_action = Action(info.method_name, model.state.get_path(),
                 #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
                 self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
@@ -955,8 +960,8 @@ class History(ModelMT):
                 if self.with_prints:
                     print "Path_root: ", overview['model'][-1].parent.state.get_path()
                 # exit(1)
-                logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                                                                       overview['model'][-1].parent.state.get_path()))
+                # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+                #                                                        overview['model'][-1].parent.state.get_path()))
                 # self.actual_action = Action(info.method_name, model.state.get_path(),
                 #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
                 self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),  # instance path of parent
@@ -973,8 +978,8 @@ class History(ModelMT):
                         overview['model'][-1].parent.state.get_path()
                 assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.parent.state.get_path().split('/')[0]
                 # the model should be StateModel or ContainerStateModel and "info" from those model notification
-                logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                                                                       overview['model'][-1].parent.state.get_path()))
+                # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+                #                                                        overview['model'][-1].parent.state.get_path()))
                 # self.actual_action = Action(info.method_name, model.state.get_path(),
                 #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
                 self.actual_action = Action(cause, overview['model'][-1].parent.parent.state.get_path(),  # instance path of parent
@@ -986,8 +991,8 @@ class History(ModelMT):
             if self.with_prints:
                 print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
             assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
-            logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                                                                   overview['model'][-1].state.get_path()))
+            # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+            #                                                        overview['model'][-1].state.get_path()))
             self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
                                         overview['model'][0], overview['prop_name'][0], overview['info'][-1],
                                         state_machine_model=self.state_machine_model)
@@ -1323,7 +1328,7 @@ class ChangeHistory(Observable):
 
     @Observable.observed
     def undo(self):
-        logger.debug("try undo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
+        # logger.debug("try undo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
         if self.trail_pointer is not None and not self.trail_pointer < 0:
             self.trail_history[self.trail_pointer].undo()
             self.trail_pointer -= 1
@@ -1335,7 +1340,7 @@ class ChangeHistory(Observable):
 
     @Observable.observed
     def redo(self):
-        logger.debug("try redo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
+        # logger.debug("try redo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
         if self.trail_history is not None and self.trail_pointer + 1 < len(self.trail_history):
             self.trail_history[self.trail_pointer+1].redo()
             self.trail_pointer += 1
