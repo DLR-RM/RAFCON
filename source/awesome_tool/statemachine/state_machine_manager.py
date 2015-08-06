@@ -173,6 +173,6 @@ class StateMachineManager(ModelMT, Observable):
                 raise AttributeError("State machine not in list of all state machines")
         self._active_state_machine_id = state_machine_id
         active_state_machine = self.get_active_state_machine()
-        from awesome_tool.network.singleton import network_connections
-        network_connections.set_storage_base_path(active_state_machine.base_path)
-
+        if active_state_machine.base_path:
+            from awesome_tool.network.singleton import network_connections
+            network_connections.set_storage_base_path(active_state_machine.base_path)
