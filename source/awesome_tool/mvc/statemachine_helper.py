@@ -167,13 +167,13 @@ class StateMachineHelper():
             state_transitions = {}
             state_start_state_id = None
             logger.info("type change from %s to %s" % (type(source_state), target_state_class))
-            logger.info("\n\n ##xxxxx## %s %s %s %s" % ( isinstance(source_state, BarrierConcurrencyState), type(source_state) == BarrierConcurrencyState, source_state.states, source_state))
+            # logger.info("\n\n ##xxxxx## %s %s %s %s" % ( isinstance(source_state, BarrierConcurrencyState), type(source_state) == BarrierConcurrencyState, source_state.states, source_state))
             if isinstance(source_state, BarrierConcurrencyState):
                 source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
                 if UNIQUE_DECIDER_STATE_ID in source_state.states:
-                    logger.info("\n\n ########## %s %s" % (source_state.states, source_state))
+                    # logger.info("\n\n ########## %s %s" % (source_state.states, source_state))
                     assert False
-            logger.info("\n\n ########## %s %s" % (source_state.states, source_state))
+            # logger.info("\n\n ########## %s %s" % (source_state.states, source_state))
             new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                            input_data_ports=source_state.input_data_ports,
                                            output_data_ports=source_state.output_data_ports,
@@ -277,7 +277,7 @@ class StateMachineHelper():
             new_state = StateMachineHelper.duplicate_state_with_other_state_type(state, new_state_class)
 
             # substitute old state with new state
-            new_state.parent = parent_state
+            new_state.parent = parent_state  # TODO remove - unnecessary as long done in add_state
             parent_state.remove_state(state.state_id, recursive_deletion=False, force=True)
             parent_state.add_state(new_state)
 
