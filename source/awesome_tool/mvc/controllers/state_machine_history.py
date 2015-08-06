@@ -101,9 +101,9 @@ class StateMachineHistoryController(ExtendedController):
         if not self.doing_update:
             logger.debug("The view jumps to the selected history element that would be situated on a right click menu in future")
             # get selected element
-            logger.debug("%s, %s" % (model, row))
-            for elem in model[row]:
-                logger.debug(str(elem))
+            # logger.debug("%s, %s" % (model, row))
+            # for elem in model[row]:
+                # logger.debug(str(elem))
 
             # take version_id
             version_id = model[row][1]
