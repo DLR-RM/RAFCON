@@ -223,16 +223,17 @@ class StateMachineStorage(Observable):
         sm.creation_time = creation_time
         sm.last_update = last_update
         sm.base_path = base_path
-        sm.root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
+        sm.root_state = self.load_state_recursively(parent_state=None, state_path=tmp_base_path)
+        # sm.root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
-        sm.root_state.script.path = tmp_base_path
-        self.load_script_file(sm.root_state)
-        for p in os.listdir(tmp_base_path):
-            if os.path.isdir(os.path.join(tmp_base_path, p)):
-                elem = os.path.join(tmp_base_path, p)
-                logger.debug("Going down the statemachine hierarchy recursively to state %s" % str(elem))
-                self.load_state_recursively(sm.root_state, elem)
-                logger.debug("Going up back to state %s" % str(tmp_base_path))
+        # sm.root_state.script.path = tmp_base_path
+        # self.load_script_file(sm.root_state)
+        # for p in os.listdir(tmp_base_path):
+        #     if os.path.isdir(os.path.join(tmp_base_path, p)):
+        #         elem = os.path.join(tmp_base_path, p)
+        #         logger.debug("Going down the statemachine hierarchy recursively to state %s" % str(elem))
+        #         self.load_state_recursively(sm.root_state, elem)
+        #         logger.debug("Going up back to state %s" % str(tmp_base_path))
 
         sm.base_path = self.base_path
         sm.marked_dirty = False
@@ -250,38 +251,62 @@ class StateMachineStorage(Observable):
         :param state_path: The path of the state on the file system.
         :return: the loaded state
         """
-        root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
-        # set path after loading the state, as the yaml parser did not know the path during state creation
-        root_state.script.path = state_path
-        # load_and_build the module to load the correct content into root_state.script.script
-        self.load_script_file(root_state)
-        for p in os.listdir(state_path):
-            if os.path.isdir(os.path.join(state_path, p)):
-                elem = os.path.join(state_path, p)
-                logger.debug("Going down the statemachine hierarchy recursively to state %s" % str(elem))
-                self.load_state_recursively(root_state, elem)
-                logger.debug("Going up back to state %s" % str(state_path))
-        return root_state
+        return self.load_state_recursively(parent_state=None, state_path=state_path)
+        # root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
+        # # set path after loading the state, as the yaml parser did not know the path during state creation
+        # root_state.script.path = state_path
+        # # load_and_build the module to load the correct content into root_state.script.script
+        # self.load_script_file(root_state)
+        # for p in os.listdir(state_path):
+        #     if os.path.isdir(os.path.join(state_path, p)):
+        #         elem = os.path.join(state_path, p)
+        #         logger.debug("Going down the statemachine hierarchy recursively to state %s" % str(elem))
+        #         self.load_state_recursively(root_state, elem)
+        #         logger.debug("Going up back to state %s" % str(state_path))
+        # return root_state
 
-    def load_state_recursively(self, parent_state, state_path=None):
+    def load_state_recursively(self, parent_state, state_path):
         """
         Recursively loads the state. It calls this method on each sub-state of a container state.
         :param parent_state:  the root state of the last load call to which the loaded state will be added
         :param state_path: the path on the filesystem where to find eht meta file for the state
         :return:
         """
-        state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
+        yaml_file = os.path.join(state_path, self.META_FILE)
+
+        # Transitions and data flows are not added when loading a state, as also states are not added.
+        # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
+        # validity checks for transitions and data flows would fail
+        state_info = self.storage_utils.load_object_from_yaml_abs(yaml_file)
+        if not isinstance(state_info, tuple):
+            state = state_info
+        else:
+            state = state_info[0]
+            transitions = state_info[1]
+            data_flows = state_info[2]
+
         state.script.path = state_path
-        parent_state.add_state(state, storage_load=True)
+        if parent_state is not None:
+            parent_state.add_state(state, storage_load=True)
+
         # the library state sets his script file to the script file of the root state of its library, thus it should
         # not be overwritten in this case
         from awesome_tool.statemachine.states.library_state import LibraryState
         if not isinstance(state, LibraryState):
             self.load_script_file(state)
+
+        # load child states
         for p in os.listdir(state_path):
-            if os.path.isdir(os.path.join(state_path, p)):
-                elem = os.path.join(state_path, p)
-                self.load_state_recursively(state, elem)
+            child_state_path = os.path.join(state_path, p)
+            if os.path.isdir(child_state_path):
+                self.load_state_recursively(state, child_state_path)
+
+        # Now we can add transitions and data flows, as all child states were added
+        if isinstance(state_info, tuple):
+            state.transitions = transitions
+            state.data_flows = data_flows
+
+        return state
 
     def load_script_file(self, state):
         script_file = open(os.path.join(state.script.path, self.SCRIPT_FILE), 'r')

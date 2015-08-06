@@ -161,8 +161,8 @@ class PreemptiveConcurrencyState(ConcurrencyState):
                                            output_data_ports=dict_representation['output_data_ports'],
                                            outcomes=dict_representation['outcomes'],
                                            states=None,
-                                           transitions=dict_representation['transitions'],
-                                           data_flows=dict_representation['data_flows'],
+                                           transitions=None,
+                                           data_flows=None,
                                            scoped_variables=dict_representation['scoped_variables'],
                                            v_checker=None,
                                            path=dict_representation['path'],
@@ -172,4 +172,4 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             state.description = dict_representation['description']
         except (ValueError, TypeError, KeyError):
             pass
-        return state
+        return state, dict_representation['transitions'], dict_representation['data_flows']
