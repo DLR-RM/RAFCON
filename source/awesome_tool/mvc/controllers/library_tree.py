@@ -163,7 +163,7 @@ class LibraryTreeController(ExtendedController):
     def open_button_clicked(self, widget):
         try:
             self.open_library_as_state_machine()
-        except AttributeError as e:
+        except (AttributeError, ValueError) as e:
             logger.error("Could not open library: {0}".format(e))
 
     def open_run_button_clicked(self, widget):
