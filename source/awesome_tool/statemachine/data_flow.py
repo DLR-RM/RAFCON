@@ -30,8 +30,9 @@ class DataFlow(Observable, yaml.YAMLObject):
     yaml_tag = u'!DataFlow'
 
     def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None, parent=None):
-
         Observable.__init__(self)
+
+        # Prevents validity checks by parent before all parameters are set
         self._parent = None
 
         self._data_flow_id = None
@@ -53,6 +54,8 @@ class DataFlow(Observable, yaml.YAMLObject):
         self.to_key = to_key
 
         self.parent = parent
+        if not self._check_validity():
+            raise ValueError("Could not create transition. The parameters for the new transition are not valid.")
 
     def __str__(self):
         return "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
@@ -83,7 +86,6 @@ class DataFlow(Observable, yaml.YAMLObject):
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
-    # TODO check for self connections
 
     @Observable.observed
     def modify_origin(self, from_state, from_key):
@@ -214,16 +216,19 @@ class DataFlow(Observable, yaml.YAMLObject):
             assert isinstance(parent, ContainerState)
         self._parent = parent
 
-    def __change_property_with_validity_check(self, property, value):
+    def __change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
+
+        :param str property_name: The name of the property to be changed, e.g. '_data_flow_id'
+        :param value: The new desired value for this property
         """
-        assert isinstance(property, str)
-        old_value = getattr(self, property)
-        setattr(self, property, value)
+        assert isinstance(property_name, str)
+        old_value = getattr(self, property_name)
+        setattr(self, property_name, value)
 
         if not self._check_validity():
-            setattr(self, property, old_value)
-            raise ValueError("The parent state refused to change the '{0}' of the data flow".format(property[1:]))
+            setattr(self, property_name, old_value)
+            raise ValueError("The parent state refused to change the '{0}' of the data flow".format(property_name[1:]))
 
     def _check_validity(self):
         """Checks the validity of the data flow properties

@@ -34,6 +34,8 @@ class Transition(Observable, yaml.YAMLObject):
 
     def __init__(self, from_state, from_outcome, to_state, to_outcome, transition_id, parent=None):
         Observable.__init__(self)
+
+        # Prevents validity checks by parent before all parameters are set
         self._parent = None
 
         self._transition_id = None
@@ -55,6 +57,8 @@ class Transition(Observable, yaml.YAMLObject):
         self.to_outcome = to_outcome
 
         self.parent = parent
+        if not self._check_validity():
+            raise ValueError("Could not create transition. The parameters for the new transition are not valid.")
 
         logger.debug(self.__str__())
 
@@ -199,16 +203,19 @@ class Transition(Observable, yaml.YAMLObject):
             assert isinstance(parent, State)
         self._parent = parent
 
-    def __change_property_with_validity_check(self, property, value):
+    def __change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
+
+        :param str property_name: The name of the property to be changed, e.g. '_data_flow_id'
+        :param value: The new desired value for this property
         """
-        assert isinstance(property, str)
-        old_value = getattr(self, property)
-        setattr(self, property, value)
+        assert isinstance(property_name, str)
+        old_value = getattr(self, property_name)
+        setattr(self, property_name, value)
 
         if not self._check_validity():
-            setattr(self, property, old_value)
-            raise ValueError("The parent state refused to change the '{0}' of the data flow".format(property[1:]))
+            setattr(self, property_name, old_value)
+            raise ValueError("The parent state refused to change the '{0}' of the data flow".format(property_name[1:]))
 
     def _check_validity(self):
         """Checks the validity of the transition properties

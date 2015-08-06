@@ -28,8 +28,9 @@ class DataPort(Observable, yaml.YAMLObject):
 
     """
     def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None):
-
         Observable.__init__(self)
+
+        # Prevents validity checks by parent before all parameters are set
         self._parent = None
 
         if data_port_id is None:
@@ -48,6 +49,8 @@ class DataPort(Observable, yaml.YAMLObject):
         self.default_value = default_value
 
         self.parent = parent
+        if not self._check_validity():
+            raise AttributeError("Could not create data port. The parameters for the new data port are not valid.")
 
         logger.debug("DataPort with name %s initialized" % self.name)
 

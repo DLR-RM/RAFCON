@@ -32,8 +32,9 @@ class Outcome(Observable, yaml.YAMLObject):
     yaml_tag = u'!Outcome'
 
     def __init__(self, outcome_id=None, name=None, parent=None):
-
         Observable.__init__(self)
+
+        # Prevents validity checks by parent before all parameters are set
         self._parent = None
 
         self._outcome_id = None
@@ -43,14 +44,13 @@ class Outcome(Observable, yaml.YAMLObject):
         self.name = name
 
         self.parent = parent
-
         if not self._check_validity():
-            raise AttributeError("The properties of the outcome are not valid")
+            raise AttributeError("Could not create outcome. The parameters for the new outcome are not valid.")
 
         logger.debug("Outcome with name %s and id %s initialized" % (self.name, self.outcome_id))
 
     def __str__(self):
-        return "Outcome - outcome_id: %s, name: %s" % (self._outcome_id, self._name)
+        return "Outcome '{0}' [{1}]".format(self.name, self.outcome_id)
 
     @classmethod
     def to_yaml(cls, dumper, data):
