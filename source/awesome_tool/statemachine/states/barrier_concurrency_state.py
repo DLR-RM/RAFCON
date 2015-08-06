@@ -49,6 +49,16 @@ class BarrierConcurrencyState(ConcurrencyState):
         if not load_from_storage and UNIQUE_DECIDER_STATE_ID not in self.states:
             self.add_state(DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
 
+        for state_id, state in self.states.iteritems():
+            logger.info("generate transitons for state %s" % state_id)
+            if not state_id == UNIQUE_DECIDER_STATE_ID:
+                for outcome in self.states[state_id].outcomes.values():
+                    if not outcome.outcome_id < 0:
+                        logger.info("generate transitons for state %s outcome %s" % (state_id, outcome.outcome_id))
+                        self.add_transition(from_state_id=state_id, from_outcome=outcome.outcome_id,
+                                            to_state_id=UNIQUE_DECIDER_STATE_ID, to_outcome=None)
+
+
     def run(self):
         """ This defines the sequence of actions that are taken when the barrier concurrency state is executed
 
