@@ -1126,6 +1126,10 @@ class ContainerState(State):
     def _check_transition_validity(self, check_transition):
         logger.debug("check_transition_validity")
 
+        valid, message = self._check_transition_id(check_transition)
+        if not valid:
+            return False, message
+
         # Separate check for start transitions
         if check_transition.from_state is None:
             return self._check_start_transition(check_transition)
@@ -1139,6 +1143,12 @@ class ContainerState(State):
             return False, message
 
         return self._check_transition_connection(check_transition)
+
+    def _check_transition_id(self, transition):
+        transition_id = transition.transition_id
+        if transition_id in self.transitions and transition is not self.transitions[transition_id]:
+            return False, "transition_id already existing"
+        return True, "valid"
 
     def _check_start_transition(self, start_transition):
         for transition in self.transitions.itervalues():
