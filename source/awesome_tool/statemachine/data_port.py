@@ -54,8 +54,7 @@ class DataPort(Observable, yaml.YAMLObject):
         logger.debug("DataPort with name %s initialized" % self.name)
 
     def __str__(self):
-        return "DataPort: \n name: %s \n data_type: %s \n default_value: %s " % (self.name, self.data_type,
-                                                                                 self.default_value)
+        return "DataPort '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type, self.default_value)
 
     yaml_tag = u'!DataPort'
 
