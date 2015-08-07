@@ -50,23 +50,24 @@ class ContainerState(State):
         self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
         self._states = {}
-        self.states = states
         self._transitions = {}
-        self.transitions = transitions
         self._data_flows = {}
-        self.data_flows = data_flows
-        if start_state_id is not None:
-            self.start_state_id = start_state_id
         self._scoped_variables = {}
-        self.scoped_variables = scoped_variables
-        self.__scoped_variables_names = []
         self._scoped_data = {}
+        self.__scoped_variables_names = []
         # reference to an object that checks the validity of this container state
         self._v_checker = v_checker
         self._current_state = None
         # condition variable to wait for not connected states
         self._transitions_cv = Condition()
         self._child_execution = False
+
+        self.states = states
+        self.transitions = transitions
+        self.data_flows = data_flows
+        if start_state_id is not None:
+            self.start_state_id = start_state_id
+        self.scoped_variables = scoped_variables
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
