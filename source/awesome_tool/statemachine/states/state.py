@@ -49,32 +49,14 @@ class State(Observable, yaml.YAMLObject):
                  parent=None):
 
         Observable.__init__(self)
-        self.thread = None
-
-        if name is None:
-            name = "Untitled"
-        self._name = None
-        self.name = name
-        if state_id is None:
-            self._state_id = state_id_generator()
-        else:
-            self._state_id = state_id
-
+        self._state_id = None
         self._parent = None
-        self.parent = parent
-
+        self._name = None
         self._used_data_port_ids = set([])
         self._input_data_ports = {}
-        self.input_data_ports = input_data_ports
-
         self._output_data_ports = {}
-        self.output_data_ports = output_data_ports
-
         self._outcomes = {}
-        self.outcomes = outcomes
-
         self._script = None
-
         # the input data of the state during execution
         self._input_data = {}
         # the output data of the state during execution
@@ -88,6 +70,22 @@ class State(Observable, yaml.YAMLObject):
         self._description = None
         # detailed execution status of the state
         self._state_execution_status = None
+
+        self.thread = None
+
+        if name is None:
+            name = "Untitled"
+        self.name = name
+        if state_id is None:
+            self._state_id = state_id_generator()
+        else:
+            self._state_id = state_id
+
+        self.parent = parent
+        self.input_data_ports = input_data_ports
+        self.output_data_ports = output_data_ports
+
+        self.outcomes = outcomes
         self.state_execution_status = StateExecutionState.INACTIVE
 
         self.edited_since_last_execution = False
