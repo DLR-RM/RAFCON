@@ -306,17 +306,18 @@ class State(Observable, yaml.YAMLObject):
                     return op_id
             raise AttributeError("Name %s is not in output_data_ports", name)
 
-    def get_data_port_by_id(self, id):
-        """ Returns the io-data_port or scoped_variable with a certain id
-        :param id: the id of the target data port
-        :return: the data port specified by the id
+    def get_data_port_by_id(self, data_port_id):
+        """Search for the given data port id in the data ports of the state
+
+        The method tries to find a data port in the input and output data ports.
+        :param data_port_id: the unique id of the data port
+        :return: the data port with the searched id or None if it is not found
         """
-        if id in self.input_data_ports:
-            return self.input_data_ports[id]
-        elif id in self.output_data_ports:
-            return self.output_data_ports[id]
-        else:
-            raise AttributeError("Data_Port_id %s is not in input_data_ports or output_data_ports", id)
+        if data_port_id in self.input_data_ports:
+            return self.input_data_ports[data_port_id]
+        elif data_port_id in self.output_data_ports:
+            return self.output_data_ports[data_port_id]
+        return None
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------------ outcome functions --------------------------------------
@@ -403,7 +404,7 @@ class State(Observable, yaml.YAMLObject):
         :param int outcome_id:
         :return:
         """
-        #check if types are valid
+        # check if types are valid
         if not isinstance(outcome_id, int):
             raise TypeError("outcome_id must be of type int")
         # consistency check
@@ -427,13 +428,16 @@ class State(Observable, yaml.YAMLObject):
             # Do not compare outcome with itself when checking for existing name/id
             if check_outcome is not outcome:
                 if check_outcome.outcome_id == outcome_id:
-                    print "outcome id existing", check_outcome, outcome, hex(id(check_outcome)), hex(id(outcome))
                     return False, "outcome id '{0}' existing in state".format(check_outcome.outcome_id)
                 if check_outcome.name == outcome.name:
                     return False, "outcome name '{0}' existing in state".format(check_outcome.name)
         return True, "valid"
 
     def _check_data_port_validity(self, check_data_port):
+        if self.parent:
+            valid, message = self.parent.check_data_port_connection(check_data_port)
+            if not valid:
+                return False, message
         for input_port_id, input_port in self.input_data_ports.iteritems():
             if check_data_port is input_port:
                 # query parent for data flow connection

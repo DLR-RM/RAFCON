@@ -839,27 +839,39 @@ class ContainerState(State):
                 return state.outcomes[outcome_id]
         return None
 
-    def get_data_port_by_id(self, data_port_id):
-        """ Returns the io-data_port or scoped_variable with a certain data_id
+    def get_data_port(self, state_id, port_id):
+        """Searches for a data port
 
-        :param data_port_id: the unique id of the target data port
-        :return: the data port specified by the data port
+        The data port specified the the state id and data port id is searched in the state itself and in its children.
+
+        :param str state_id: The id of the state the port is in
+        :param int port_id:  The id of the port
+        :return: The searched port or None if it is not found
         """
-        if data_port_id in self.input_data_ports:
-            return self.input_data_ports[data_port_id]
-        elif data_port_id in self.output_data_ports:
-            return self.output_data_ports[data_port_id]
-        elif data_port_id in self.scoped_variables:
-            return self.scoped_variables[data_port_id]
-        else:
-            raise AttributeError("Data_Port_id %s is not in input_data_ports, output_data_ports or scoped_variables", data_port_id)
+        port = self.get_data_port_by_id(port_id)
+        if port:
+            return port
+        for child_state_id, child_state in self.states.iteritems():
+            if state_id != child_state_id:
+                continue
+            port = child_state.get_data_port_by_id(port_id)
+            if port:
+                return port
+        return None
 
-    # def get_connected_data_ports(self, data_port_id):
-    #     connected_data_ports = []
-    #     for data_flow in self.data_flows.itervalues():
-    #         if data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
-    #             if data_flow.from_state == self.state_id:
-    #                 connected_data_ports.append(self.get_data_port_by_id(data_flow.from_key))
+    def get_data_port_by_id(self, data_port_id):
+        """Search for the given data port id in the data ports of the state
+
+        The method tries to find a data port in the input and output data ports as well as in the scoped variables.
+        :param data_port_id: the unique id of the data port
+        :return: the data port with the searched id or None if not found
+        """
+        data_port = super(ContainerState, self).get_data_port_by_id(data_port_id)
+        if data_port:
+            return data_port
+        if data_port_id in self.scoped_variables:
+            return self.scoped_variables[data_port_id]
+        return None
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- input data handling --------------------------------------
@@ -1088,6 +1100,25 @@ class ContainerState(State):
             return self._check_transition_validity(child)
         return True, message
 
+    def check_data_port_connection(self, check_data_port):
+        """Checks the connection validity of a data port
+
+        The method is called by a child state to check the validity of a data port in case it is connected with data
+        flows. Thus, the data port does not belong to 'self', but to one of self.states.
+        If the data port is connected to a data flow, the method checks, whether these connect consistent data types
+        of ports.
+        :param awesome_tool.statemachine.data_port.DataPort check_data_port: The port to check
+        :return: valid, message
+        """
+        for data_flow in self.data_flows.itervalues():
+            # Check whether the data flow connects the given port
+            from_port = self.get_data_port(data_flow.from_state, data_flow.from_key)
+            to_port = self.get_data_port(data_flow.to_state, data_flow.to_key)
+            if check_data_port is from_port or check_data_port is to_port:
+                if not type_inherits_of_type(from_port.data_type, to_port.data_type):
+                    return False, "Connection of two non-compatible data types"
+        return True, "valid"
+
     def _check_data_flow_validity(self, check_data_flow):
         logger.debug("check_data_flow_validity")
         return True, "valid"
@@ -1097,7 +1128,6 @@ class ContainerState(State):
 
         # Separate check for start transitions
         if check_transition.from_state is None:
-            print "start transition"
             return self._check_start_transition(check_transition)
 
         valid, message = self._check_transition_origin(check_transition)
@@ -1142,7 +1172,6 @@ class ContainerState(State):
         from_outcome_id = transition.from_outcome
 
         if from_state_id != self.state_id and from_state_id not in self.states:
-            print from_state_id, self.state_id, self.states.keys()
             return False, "from_state not existing"
 
         from_outcome = self.get_outcome(from_state_id, from_outcome_id)
