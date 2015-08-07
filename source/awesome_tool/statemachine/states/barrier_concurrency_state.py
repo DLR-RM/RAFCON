@@ -38,11 +38,15 @@ class BarrierConcurrencyState(ConcurrencyState):
                  v_checker=None, path=None, filename=None, check_path=True, decider_state=None,
                  load_from_storage=False):
 
+        if not load_from_storage:
+            if states is not None and UNIQUE_DECIDER_STATE_ID not in states:
+                states[UNIQUE_DECIDER_STATE_ID] = (DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
+
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables, v_checker, path,
                                   filename, check_path=check_path)
 
-        if not load_from_storage:
+        if not load_from_storage and UNIQUE_DECIDER_STATE_ID not in self.states:
             self.add_state(DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
 
         for state_id, state in self.states.iteritems():
