@@ -217,6 +217,8 @@ class Transition(Observable, yaml.YAMLObject):
         valid, message = self._check_validity()
         if not valid:
             setattr(self, property_name, old_value)
+            if property_name == '_parent':
+                raise ValueError("Transition invalid: {1}".format(message))
             raise ValueError("The transition's '{0}' could not be changed: {1}".format(property_name[1:], message))
 
     def _check_validity(self):
