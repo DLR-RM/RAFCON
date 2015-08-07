@@ -273,6 +273,27 @@ class BarrierConcurrencyState(ConcurrencyState):
             for state in states.itervalues():
                 self.add_state(state)
 
+    @ContainerState.states.setter
+    @Observable.observed
+    def states(self, states):
+        # First safely remove all existing states (recursively!), as they will be replaced
+        state_ids = self.states.keys()
+        for state_id in state_ids:
+            # Do not remove decider state, if teh new list of states doesn't contain an alternative one
+            if state_id == UNIQUE_DECIDER_STATE_ID and UNIQUE_DECIDER_STATE_ID not in states:
+                continue
+            self.remove_state(state_id)
+        if states is not None:
+            if not isinstance(states, dict):
+                raise TypeError("states must be of type dict")
+            # Ensure that the decider state is added first, as transition to this states will automatically be
+            # created when adding further states
+            decider_state = states.pop(UNIQUE_DECIDER_STATE_ID, None)
+            if decider_state is not None:
+                self.add_state(decider_state)
+            for state in states.itervalues():
+                self.add_state(state)
+
     @Observable.observed
     def remove_state(self, state_id, recursive_deletion=True, force=False):
         """ Overwrite the parent class remove state method by checking if the user tries to delete the decider state
