@@ -192,41 +192,34 @@ class BarrierConcurrencyState(ConcurrencyState):
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
 
-    @Observable.observed
-    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None,
-                       disable_consistency_checks=False):
-        """Adds a transition to the container state.
+    def _check_transition_validity(self, check_transition):
+        # Transition of BarrierConcurrencyStates must least fulfill the condition of a ContainerState
+        # Start transitions are already forbidden in the ConcurrencyState
+        valid, message = super(BarrierConcurrencyState, self)._check_transition_validity(check_transition)
+        if not valid:
+            return False, message
 
-        :param from_state_id: The source state of the transition
-        :param from_outcome: The outcome of the source state to connect the transition to
-        :param to_state_id: The target state of the transition
-        :param to_outcome: The target outcome of a container state
-        :param transition_id: An optional transition id for the new transition
-        :param disable_consistency_checks: If True all special consistency checks for the barrier concurrency state are skipped
-        """
+        # Only the following transitions are allowed in barrier concurrency states:
+        # - Transitions from the decider state to the parent state\n"
+        # - Transitions from not-decider states to the decider state\n"
+        # - Transitions from not_decider states from aborted/preempted outcomes to the
+        #   aborted/preempted outcome of the parent
 
-        transition_id = self.check_transition_id(transition_id)
-        self.basic_transition_checks(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
-        self.check_if_outcome_already_connected(from_state_id, from_outcome)
+        from_state_id = check_transition.from_state
+        to_state_id = check_transition.to_state
+        from_outcome_id = check_transition.from_outcome
+        to_outcome_id = check_transition.to_outcome
 
-        if not disable_consistency_checks:
-            if from_state_id == UNIQUE_DECIDER_STATE_ID:
-                if to_outcome is None:
-                    raise AttributeError("Transition from the decider state must have the parent state as target!")
-            else:
-                if (from_outcome == -2 or from_outcome == -1) and (to_outcome == -2 or to_outcome == -1):
-                    pass
-                elif to_state_id == UNIQUE_DECIDER_STATE_ID and to_outcome is None:
-                    pass
-                else:
-                    raise AttributeError("Only the following transitions are allowed in barrier concurrency states:\n"
-                                         "- Transitions from the decider state to the parent state\n"
-                                         "- Transitions from not-decider states to the decider state\n"
-                                         "- Transitions from not_decider states from aborted/preempted outcomes to the "
-                                         "aborted/preempted outcome of the parent")
+        if from_state_id == UNIQUE_DECIDER_STATE_ID:
+            if to_state_id != self.state_id:
+                return False, "Transition from the decider state must go to the parent state"
+        else:
+            if to_state_id != UNIQUE_DECIDER_STATE_ID:
+                if from_outcome_id not in [-2, -1] or to_outcome_id not in [-2, -1]:
+                    return False, "Transition from this state must go to the decider state. The only exception are " \
+                                  "transition from aborted/preempted to the parent aborted/preempted outcomes"
 
-        self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
-        return transition_id
+        return True, message
 
     @Observable.observed
     def remove_transition(self, transition_id, force=False):
@@ -239,13 +232,10 @@ class BarrierConcurrencyState(ConcurrencyState):
 
         transition = self.transitions[transition_id]
 
-        if not transition.from_state == UNIQUE_DECIDER_STATE_ID and not force:
-            # if not transition.from_outcome == -1 and not transition.from_outcome == -2:
-            #     raise AttributeError("You are not allowed to remove a transition from a non-decider state!")
-            # else:
-            ContainerState.remove_transition(self, transition_id)
-        else:
-            ContainerState.remove_transition(self, transition_id)
+        if transition.to_state == UNIQUE_DECIDER_STATE_ID and not force:
+            raise ValueError("Transitions to the decider state cannot be removed")
+
+        ContainerState.remove_transition(self, transition_id)
 
     @Observable.observed
     def add_state(self, state, storage_load=False):
@@ -260,7 +250,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             # the transitions must only be created for the inital add_state call and not during each load procedure
             for o_id, o in state.outcomes.iteritems():
                 if not o_id == -1 and not o_id == -2:
-                    self.add_transition(state.state_id, o_id, self.states[UNIQUE_DECIDER_STATE_ID].state_id, disable_consistency_checks=True)
+                    self.add_transition(state.state_id, o_id, self.states[UNIQUE_DECIDER_STATE_ID].state_id, None)
 
     @ContainerState.states.setter
     @Observable.observed
