@@ -221,21 +221,21 @@ class BarrierConcurrencyState(ConcurrencyState):
 
         return True, message
 
-    @Observable.observed
-    def remove_transition(self, transition_id, force=False):
-        """ Overwrite the parent class remove_transition method by checking if the user tries to delete a transition of
-        a non decider state and prevents the operation in this case.
-
-        :param transition_id: the id of the transition to remove
-        :return:
-        """
-
-        transition = self.transitions[transition_id]
-
-        if transition.to_state == UNIQUE_DECIDER_STATE_ID and not force:
-            raise ValueError("Transitions to the decider state cannot be removed")
-
-        ContainerState.remove_transition(self, transition_id)
+    # @Observable.observed
+    # def remove_transition(self, transition_id, force=False):
+    #     """ Overwrite the parent class remove_transition method by checking if the user tries to delete a transition of
+    #     a non decider state and prevents the operation in this case.
+    #
+    #     :param transition_id: the id of the transition to remove
+    #     :return:
+    #     """
+    #
+    #     transition = self.transitions[transition_id]
+    #
+    #     if transition.to_state == UNIQUE_DECIDER_STATE_ID and not force:
+    #         raise ValueError("Transitions to the decider state cannot be removed")
+    #
+    #     ContainerState.remove_transition(self, transition_id)
 
     @Observable.observed
     def add_state(self, state, storage_load=False):
