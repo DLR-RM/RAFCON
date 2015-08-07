@@ -602,7 +602,7 @@ def test_input_port_modify_notification(with_print=False):
     # check for modification of change_datatype
     state_dict['Nested2'].input_data_ports[new_input_data_port_id].change_data_type(data_type='str',
                                                                                     default_value='awesome_tool')
-    check_input_notifications(input_port_observer, states_m_observer_dict, state_dict, forecast=4)
+    check_input_notifications(input_port_observer, states_m_observer_dict, state_dict, forecast=5)
 
 
 def test_output_port_add_remove_notification(with_print=False):
@@ -702,7 +702,7 @@ def test_output_port_modify_notification(with_print=False):
     # check for modification of change_datatype
     state_dict['Nested2'].output_data_ports[new_output_data_port_id].change_data_type(data_type='str',
                                                                                       default_value='awesome_tool')
-    check_output_notifications(output_port_observer, states_m_observer_dict, state_dict, forecast=4)
+    check_output_notifications(output_port_observer, states_m_observer_dict, state_dict, forecast=5)
 
 
 def test_scoped_variable_add_remove_notification(with_print=False):
@@ -802,7 +802,7 @@ def test_scoped_variable_modify_notification(with_print=False):
     # check for modification of change_datatype
     state_dict['Nested'].scoped_variables[new_scoped_variable_id].change_data_type(data_type='str',
                                                                                    default_value='awesome_tool')
-    check_output_notifications(scoped_variable_observer, states_m_observer_dict, state_dict, forecast=4)
+    check_output_notifications(scoped_variable_observer, states_m_observer_dict, state_dict, forecast=5)
 
 # add state
 # - change state
