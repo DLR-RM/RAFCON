@@ -1221,8 +1221,10 @@ def test_state_property_modify_notification(with_print=False):
 
         # check parent
         num_child_effects = 0
-        for num_prop_effects in child_effects.itervalues():
-            num_child_effects += num_prop_effects
+        # for num_prop_effects in child_effects.itervalues():
+        #     num_child_effects += num_prop_effects
+        if 'outcomes' in child_effects:
+            num_child_effects = child_effects['outcomes']
         check_dict = {'states': forecast + num_child_effects}
         state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
         check_count_of_model_notifications(state_model_observer, check_dict)
@@ -1357,23 +1359,27 @@ def test_state_property_modify_notification(with_print=False):
 
     # states(self, states) None or dict
     state_dict['Nested'].states = None
-    forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    forecast += 4
+    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
+        'states': 2, 'transitions': 1})
 
     # transitions(self, transitions) None or dict
     state_dict['Nested'].transitions = None
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
+        'states': 2, 'transitions': 1})
 
     # data_flows(self, data_flows) None or dict
     state_dict['Nested'].data_flows = None
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
+        'states': 2, 'transitions': 1})
 
     # scoped_variables(self, scoped_variables) None or dict
     state_dict['Nested'].scoped_variables = None
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
+        'states': 2, 'transitions': 1})
 
     # child_execution(self, child_execution) bool
     # IMPORTANT: child_execution flag is not used any more
