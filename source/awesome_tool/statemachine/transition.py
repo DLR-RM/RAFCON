@@ -100,9 +100,9 @@ class Transition(Observable, yaml.YAMLObject):
         """
         if not (from_state is None and from_outcome is None):
             if not isinstance(from_state, str):
-                raise TypeError("from_state must be of type str")
+                raise ValueError("from_state must be of type str")
             if not isinstance(from_outcome, int):
-                raise TypeError("from_outcome must be of type int")
+                raise ValueError("from_outcome must be of type int")
 
         old_from_state = self.from_state
         old_from_outcome = self.from_outcome
@@ -126,7 +126,7 @@ class Transition(Observable, yaml.YAMLObject):
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
         if from_state is not None and not isinstance(from_state, str):
-            raise TypeError("from_state must be of type str")
+            raise ValueError("from_state must be of type str")
 
         self.__change_property_with_validity_check('_from_state', from_state)
 
@@ -141,7 +141,7 @@ class Transition(Observable, yaml.YAMLObject):
     @Observable.observed
     def from_outcome(self, from_outcome):
         if from_outcome is not None and not isinstance(from_outcome, int):
-            raise TypeError("from_outcome must be of type int")
+            raise ValueError("from_outcome must be of type int")
 
         self.__change_property_with_validity_check('_from_outcome', from_outcome)
 
@@ -156,7 +156,7 @@ class Transition(Observable, yaml.YAMLObject):
     @Observable.observed
     def to_state(self, to_state):
         if to_state is not None and not isinstance(to_state, str):
-            raise TypeError("to_state must be of type str")
+            raise ValueError("to_state must be of type str")
 
         self.__change_property_with_validity_check('_to_state', to_state)
 
@@ -171,7 +171,7 @@ class Transition(Observable, yaml.YAMLObject):
     @Observable.observed
     def to_outcome(self, to_outcome):
         if to_outcome is not None and not isinstance(to_outcome, int):
-            raise TypeError("to_outcome must be of type int")
+            raise ValueError("to_outcome must be of type int")
 
         self.__change_property_with_validity_check('_to_outcome', to_outcome)
 
@@ -187,7 +187,7 @@ class Transition(Observable, yaml.YAMLObject):
     def transition_id(self, transition_id):
         if transition_id is not None:
             if not isinstance(transition_id, int):
-                raise TypeError("transition_id must be of type int")
+                raise ValueError("transition_id must be of type int")
 
         self.__change_property_with_validity_check('_transition_id', transition_id)
 
