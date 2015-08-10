@@ -62,12 +62,12 @@ class ContainerState(State):
         self._transitions_cv = Condition()
         self._child_execution = False
 
+        self.scoped_variables = scoped_variables
         self.states = states
         self.transitions = transitions
         self.data_flows = data_flows
         if start_state_id is not None:
             self.start_state_id = start_state_id
-        self.scoped_variables = scoped_variables
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
