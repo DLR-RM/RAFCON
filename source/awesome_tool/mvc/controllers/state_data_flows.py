@@ -92,7 +92,7 @@ class StateDataFlowsListController(ExtendedController):
 
     def on_focus(self, widget, data=None):
         path = self.view.tree_view.get_cursor()
-        logger.debug("DATAFLOWS_LIST get new FOCUS %s" % str(path[0]))
+        # logger.debug("DATAFLOWS_LIST get new FOCUS %s" % str(path[0]))
         self.update_internal_data_base()
         self.update_tree_store()
         if path[0]:
@@ -181,7 +181,7 @@ class StateDataFlowsListController(ExtendedController):
             self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
 
     def on_combo_changed_from_state(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        # logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         if text is None:
             return
         text = text.split('.')
@@ -205,21 +205,27 @@ class StateDataFlowsListController(ExtendedController):
                 self.model.state.modify_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
 
     def on_combo_changed_from_key(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        # logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         if text is None:
             return
         text = text.split('.')
-        df_id = self.tree_store[path][0]
-        if self.tree_store[path][5]:  # external
-            self.model.parent.state.modify_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
+        data_flow_id = self.tree_store[path][0]
+        new_from_outcome_id = text[-1]
+        is_external_data_flow = self.tree_store[path][5]
+        if is_external_data_flow:
+            data_flow_parent_state = self.model.parent.state
         else:
-            self.model.state.modify_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
+            data_flow_parent_state = self.model.state
+
+        try:
+            data_flow_parent_state.data_flows[data_flow_id].from_key = new_from_outcome_id
+        except ValueError as e:
+            logger.error("Could not change from outcome: {0}".format(e))
 
     def on_combo_changed_to_state(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        # logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         if text is None:
             return
-        #self.combo['free_ext_from_outcomes_dict']
         text = text.split('.')
         df_id = self.tree_store[path][0]
         if self.tree_store[path][5]:  # external
@@ -230,15 +236,21 @@ class StateDataFlowsListController(ExtendedController):
             self.model.state.modify_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
 
     def on_combo_changed_to_key(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
+        # logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         if text is None:
             return
         text = text.split('.')
-        df_id = self.tree_store[path][0]
-        if self.tree_store[path][5]:  # external
-            self.model.parent.state.modify_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
+        data_flow_id = self.tree_store[path][0]
+        new_to_outcome_id = text[-1]
+        is_external_data_flow = self.tree_store[path][5]
+        if is_external_data_flow:
+            data_flow_parent_state = self.model.parent.state
         else:
-            self.model.state.modify_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
+            data_flow_parent_state = self.model.state
+        try:
+            data_flow_parent_state.data_flows[data_flow_id].to_key = new_to_outcome_id
+        except ValueError as e:
+            logger.error("Could not change to outcome: {0}".format(e))
 
     def update_internal_data_base(self):
         [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
