@@ -417,6 +417,16 @@ class State(Observable, yaml.YAMLObject):
     # ---------------------------------------------------------------------------------------------
 
     def check_child_validity(self, child):
+        """Check validity of passed child object
+
+        The method is called by state child objects (outcomes, data ports) when these are initialized or changed. The
+        method checks the type of the child and then checks its validity in the context of the state.
+
+        :param object child: The child of the state that is to be tested
+        :return bool validity, str message: validity is True, when the child is valid, False else. message gives more
+            information especially if the child is not valid
+        """
+        # Check type of child and call appropriate validity test
         if isinstance(child, Outcome):
             return self._check_outcome_validity(child)
         if isinstance(child, DataPort):
@@ -424,6 +434,14 @@ class State(Observable, yaml.YAMLObject):
         return False, "no valid child type"
 
     def _check_outcome_validity(self, check_outcome):
+        """Checks the validity of an outcome
+
+        Checks whether the id or the name of the outcome is already used by another outcome within the state.
+
+        :param check_outcome: The outcome to be checked
+        :return bool validity, str message: validity is True, when the outcome is valid, False else. message gives more
+            information especially if the outcome is not valid
+        """
         for outcome_id, outcome in self.outcomes.iteritems():
             # Do not compare outcome with itself when checking for existing name/id
             if check_outcome is not outcome:
@@ -434,14 +452,20 @@ class State(Observable, yaml.YAMLObject):
         return True, "valid"
 
     def _check_data_port_validity(self, check_data_port):
+        """Checks the validity of a data port
+
+        Checks whether the data flows connected to the port do not conflict with the data types.
+
+        :param check_data_port: The data port to be checked
+        :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
+            more information especially if the data port is not valid
+        """
+        # Only relevant, if there is a parent state, otherwise the cannot be connected data flows
         if self.parent:
+            # Call the check in the parent state, where the data flows are stored
             valid, message = self.parent.check_data_port_connection(check_data_port)
             if not valid:
                 return False, message
-        for input_port_id, input_port in self.input_data_ports.iteritems():
-            if check_data_port is input_port:
-                # query parent for data flow connection
-                pass
 
         return True, "valid"
 
