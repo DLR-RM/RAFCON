@@ -45,7 +45,6 @@ def create_statemachine():
                          state2.state_id,
                          scoped_variable_state2)
 
-
     return StateMachine(state2)
 
 

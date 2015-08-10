@@ -1,4 +1,5 @@
 import pytest
+import time
 from pytest import raises
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
@@ -72,7 +73,9 @@ def test_transition_creation():
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    time.sleep(0.2)
     root_state.join()
+    time.sleep(0.2)
     awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
