@@ -421,7 +421,7 @@ class State(Observable, yaml.YAMLObject):
             return self._check_outcome_validity(child)
         if isinstance(child, DataPort):
             return self._check_data_port_validity(child)
-        return True, "no validity checks for child existing"
+        return False, "no valid child type"
 
     def _check_outcome_validity(self, check_outcome):
         for outcome_id, outcome in self.outcomes.iteritems():

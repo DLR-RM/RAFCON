@@ -566,61 +566,10 @@ class ContainerState(State):
         :param data_flow_id: an optional id for the data flow
 
         """
-        if data_flow_id is not None:
-            if data_flow_id in self._data_flows.iterkeys():
-                raise AttributeError("The data flow id %s already exists. Cannot add data flow!", data_flow_id)
-        else:
+        if data_flow_id is None:
             data_flow_id = generate_data_flow_id()
             while data_flow_id in self._data_flows.iterkeys():
                 data_flow_id = generate_data_flow_id()
-
-        if not (from_state_id in self.states or from_state_id == self.state_id):
-            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id)
-        if not (to_state_id in self.states or to_state_id == self.state_id):
-            raise AttributeError("To_state %s does not exit in the container state" % to_state_id)
-
-        if from_state_id == self.state_id:  # data_flow originates in container state
-            from_state = self
-            if from_data_port_id in from_state.scoped_variables:
-                from_data_port = from_state.scoped_variables[from_data_port_id]
-            elif from_data_port_id in from_state.input_data_ports:
-                from_data_port = from_state.input_data_ports[from_data_port_id]
-            else:
-                raise AttributeError("from_data_port_id not in scoped_variables or input_data_ports")
-        else:  # data flow originates in child state
-            from_state = self.states[from_state_id]
-            if from_data_port_id in from_state.output_data_ports:
-                from_data_port = from_state.output_data_ports[from_data_port_id]
-            else:
-                raise AttributeError("from_data_port_id not in output_data_ports")
-
-        if to_state_id == self.state_id:  # data_flow ends in container state
-            to_state = self
-            if to_data_port_id in to_state.scoped_variables:
-                to_data_port = to_state.scoped_variables[to_data_port_id]
-            elif to_data_port_id in to_state.output_data_ports:
-                to_data_port = to_state.output_data_ports[to_data_port_id]
-            else:
-                raise AttributeError("to_data_port_id not in scoped_variables or output_data_ports")
-        else:  # data_flow ends in child state
-            to_state = self.states[to_state_id]
-            if to_data_port_id in to_state.input_data_ports:
-                to_data_port = to_state.input_data_ports[to_data_port_id]
-            else:
-                raise AttributeError("to_data_port_id not in input_data_ports")
-
-        # check if to_dataport_id of to_state has already a data_flow
-        for flow_id, data_flow in self.data_flows.iteritems():
-            # scoped variables are allowed to have several data_flows connecte to them
-            if data_flow.to_state == to_state_id and not data_flow.to_state == self.state_id:
-                if data_flow.to_key == to_data_port_id:
-                    raise AttributeError("port %s of state %s already has a connection" %
-                                         (str(to_data_port_id), str(to_state_id)))
-
-        # check if the data types of the tow ports are the same
-        if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
-            raise AttributeError("The from data port and the to data port do not have the same data type (%s and %s)" %
-                                 (str(from_data_port.data_type), str(to_data_port.data_type)))
 
         self.data_flows[data_flow_id] = DataFlow(from_state_id, from_data_port_id, to_state_id, to_data_port_id,
                                                  data_flow_id, self)
@@ -1091,20 +1040,20 @@ class ContainerState(State):
     def check_child_validity(self, child):
         # First let the state do validity checks for outcomes and data ports
         valid, message = super(ContainerState, self).check_child_validity(child)
-        if not valid:
+        if not valid and message != "no valid child type":
             return False, message
         # Continue with checks if previous ones did not fail
         if isinstance(child, DataFlow):
             return self._check_data_flow_validity(child)
         if isinstance(child, Transition):
             return self._check_transition_validity(child)
-        return True, message
+        return valid, message
 
     def check_data_port_connection(self, check_data_port):
         """Checks the connection validity of a data port
 
         The method is called by a child state to check the validity of a data port in case it is connected with data
-        flows. Thus, the data port does not belong to 'self', but to one of self.states.
+        flows. The data port does not belong to 'self', but to one of self.states.
         If the data port is connected to a data flow, the method checks, whether these connect consistent data types
         of ports.
         :param awesome_tool.statemachine.data_port.DataPort check_data_port: The port to check
@@ -1121,6 +1070,72 @@ class ContainerState(State):
 
     def _check_data_flow_validity(self, check_data_flow):
         logger.debug("check_data_flow_validity")
+
+        valid, message = self._check_data_flow_id(check_data_flow)
+        if not valid:
+            return False, message
+
+        valid, message = self._check_data_flow_ports(check_data_flow)
+        if not valid:
+            return False, message
+
+        return self._check_data_flow_types(check_data_flow), "valid"
+
+    def _check_data_flow_id(self, data_flow):
+        data_flow_id = data_flow.data_flow_id
+        if data_flow_id in self.data_flows and data_flow is not self.data_flows[data_flow_id]:
+            return False, "data_flow_id already existing"
+        return True, "valid"
+
+    def _check_data_flow_ports(self, data_flow):
+
+        from_state_id = data_flow.from_state
+        to_state_id = data_flow.to_state
+        from_data_port_id = data_flow.from_key
+        to_data_port_id = data_flow.to_key
+
+        # Check whether to and from port are existing
+        from_data_port = self.get_data_port(from_state_id, from_data_port_id)
+        if not from_data_port:
+            return False, "Data flow origin not existing"
+        to_data_port = self.get_data_port(to_state_id, to_data_port_id)
+        if not to_data_port:
+            return False, "Data flow target not existing"
+
+        if from_state_id == self.state_id:  # data_flow originates in container state
+            if from_data_port_id not in self.input_data_ports and from_data_port_id not in self.scoped_variables:
+                return False, "Data flow origin port must be an input port or scoped variable, when the data flow " \
+                              "starts in the parent state"
+        else:  # data flow originates in child state
+            if from_data_port_id not in from_data_port.parent.output_data_ports:
+                return False, "Data flow origin port must be an output port, when the data flow " \
+                              "starts in the child state"
+
+        if to_state_id == self.state_id:  # data_flow ends in container state
+            if to_data_port_id not in self.output_data_ports and to_data_port_id not in self.scoped_variables:
+                return False, "Data flow target port must be an output port or scoped variable, when the data flow " \
+                              "goes to the parent state"
+        else:  # data_flow ends in child state
+            if to_data_port_id not in to_data_port.parent.input_data_ports:
+                return False, "Data flow target port must be an input port, when the data flow goes to a child state"
+
+        # Check whether target port is already connected
+        for existing_data_flow in self.data_flows.itervalues():
+            to_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
+            if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
+                # Scoped variables are an exception, they can be connected several times
+                if not to_data_port.parent or to_data_port_id not in to_data_port.parent.scoped_variables:
+                    return False, "Data flow target is already connected to another data flow"
+
+        return True, "valid"
+
+    def _check_data_flow_types(self, check_data_flow):
+        # Check whether the data types or origin and target fit
+        from_data_port = self.get_data_port(check_data_flow.from_state, check_data_flow.from_key)
+        to_data_port = self.get_data_port(check_data_flow.to_state, check_data_flow.to_key)
+        if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
+            raise AttributeError("The from data port and the to data port do not have the same data type (%s and %s)" %
+                                 (str(from_data_port.data_type), str(to_data_port.data_type)))
         return True, "valid"
 
     def _check_transition_validity(self, check_transition):
