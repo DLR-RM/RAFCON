@@ -1038,11 +1038,21 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
 
     def check_child_validity(self, child):
+        """Check validity of passed child object
+
+        The method is called by state child objects (transitions, data flows) when these are initialized or changed. The
+        method checks the type of the child and then checks its validity in the context of the state.
+
+        :param object child: The child of the state that is to be tested
+        :return bool validity, str message: validity is True, when the child is valid, False else. message gives more
+            information especially if the child is not valid
+        """
         # First let the state do validity checks for outcomes and data ports
         valid, message = super(ContainerState, self).check_child_validity(child)
         if not valid and message != "no valid child type":
             return False, message
         # Continue with checks if previous ones did not fail
+        # Check type of child and call appropriate validity test
         if isinstance(child, DataFlow):
             return self._check_data_flow_validity(child)
         if isinstance(child, Transition):
@@ -1069,8 +1079,14 @@ class ContainerState(State):
         return True, "valid"
 
     def _check_data_flow_validity(self, check_data_flow):
-        logger.debug("check_data_flow_validity")
+        """Checks the validity of a data flow
 
+        Calls further checks to inspect the id, ports and data types.
+
+        :param awesome_tool.statemachine.data_flow.DataFlow check_data_flow: The data flow to be checked
+        :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
+            more information especially if the data flow is not valid
+        """
         valid, message = self._check_data_flow_id(check_data_flow)
         if not valid:
             return False, message
@@ -1082,13 +1098,28 @@ class ContainerState(State):
         return self._check_data_flow_types(check_data_flow), "valid"
 
     def _check_data_flow_id(self, data_flow):
+        """Checks the validity of a data flow id
+
+        Checks whether the id of the given data flow is already by anther data flow used within the state.
+
+        :param awesome_tool.statemachine.data_flow.DataFlow data_flow: The data flow to be checked
+        :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
+            more information especially if the outcome is not valid
+        """
         data_flow_id = data_flow.data_flow_id
         if data_flow_id in self.data_flows and data_flow is not self.data_flows[data_flow_id]:
             return False, "data_flow_id already existing"
         return True, "valid"
 
     def _check_data_flow_ports(self, data_flow):
+        """Checks the validity of the ports of a data flow
 
+        Checks whether the ports of a data flow are existing and whether it is allowed to connect these ports.
+
+        :param awesome_tool.statemachine.data_flow.DataFlow data_flow: The data flow to be checked
+        :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
+            more information especially if the data flow is not valid
+        """
         from_state_id = data_flow.from_state
         to_state_id = data_flow.to_state
         from_data_port_id = data_flow.from_key
@@ -1102,6 +1133,7 @@ class ContainerState(State):
         if not to_data_port:
             return False, "Data flow target not existing"
 
+        # Check, whether the origin of the data flow is valid
         if from_state_id == self.state_id:  # data_flow originates in container state
             if from_data_port_id not in self.input_data_ports and from_data_port_id not in self.scoped_variables:
                 return False, "Data flow origin port must be an input port or scoped variable, when the data flow " \
@@ -1111,6 +1143,7 @@ class ContainerState(State):
                 return False, "Data flow origin port must be an output port, when the data flow " \
                               "starts in the child state"
 
+        # Check, whether the target of a data flow is valid
         if to_state_id == self.state_id:  # data_flow ends in container state
             if to_data_port_id not in self.output_data_ports and to_data_port_id not in self.scoped_variables:
                 return False, "Data flow target port must be an output port or scoped variable, when the data flow " \
@@ -1119,7 +1152,7 @@ class ContainerState(State):
             if to_data_port_id not in to_data_port.parent.input_data_ports:
                 return False, "Data flow target port must be an input port, when the data flow goes to a child state"
 
-        # Check whether target port is already connected
+        # Check, whether the target port is already connected
         for existing_data_flow in self.data_flows.itervalues():
             to_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
             if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
@@ -1130,6 +1163,14 @@ class ContainerState(State):
         return True, "valid"
 
     def _check_data_flow_types(self, check_data_flow):
+        """Checks the validity of the data flow connection
+
+        Checks whether the ports of a data flow have matching data types.
+
+        :param awesome_tool.statemachine.data_flow.DataFlow check_data_flow: The data flow to be checked
+        :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
+            more information especially if the data flow is not valid
+        """
         # Check whether the data types or origin and target fit
         from_data_port = self.get_data_port(check_data_flow.from_state, check_data_flow.from_key)
         to_data_port = self.get_data_port(check_data_flow.to_state, check_data_flow.to_key)
@@ -1139,8 +1180,14 @@ class ContainerState(State):
         return True, "valid"
 
     def _check_transition_validity(self, check_transition):
-        logger.debug("check_transition_validity")
+        """Checks the validity of a transition
 
+        Calls further checks to inspect the id, origin, target and connection of the transition.
+
+        :param awesome_tool.statemachine.transition.Transition check_transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
         valid, message = self._check_transition_id(check_transition)
         if not valid:
             return False, message
@@ -1160,12 +1207,28 @@ class ContainerState(State):
         return self._check_transition_connection(check_transition)
 
     def _check_transition_id(self, transition):
+        """Checks the validity of a transition id
+
+        Checks whether the transition id is already used by another transition within the state
+
+        :param awesome_tool.statemachine.transition.Transition transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
         transition_id = transition.transition_id
         if transition_id in self.transitions and transition is not self.transitions[transition_id]:
             return False, "transition_id already existing"
         return True, "valid"
 
     def _check_start_transition(self, start_transition):
+        """Checks the validity of a start transition
+
+        Checks whether the given transition is a start transition a whether it is the only one within the state.
+
+        :param awesome_tool.statemachine.transition.Transition start_transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
         for transition in self.transitions.itervalues():
             if transition.from_state is None:
                 if start_transition is not transition:
@@ -1177,6 +1240,14 @@ class ContainerState(State):
         return self._check_transition_target(start_transition)
 
     def _check_transition_target(self, transition):
+        """Checks the validity of a transition target
+
+        Checks whether the transition target is valid.
+
+        :param awesome_tool.statemachine.transition.Transition transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
 
         to_state_id = transition.to_state
         to_outcome_id = transition.to_outcome
@@ -1193,6 +1264,14 @@ class ContainerState(State):
         return True, "valid"
 
     def _check_transition_origin(self, transition):
+        """Checks the validity of a transition origin
+
+        Checks whether the transition origin is valid.
+
+        :param awesome_tool.statemachine.transition.Transition transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
         from_state_id = transition.from_state
         from_outcome_id = transition.from_outcome
 
@@ -1206,6 +1285,14 @@ class ContainerState(State):
         return True, "valid"
 
     def _check_transition_connection(self, check_transition):
+        """Checks the validity of a transition connection
+
+        Checks whether the transition is allowed to connect the origin with the target.
+
+        :param awesome_tool.statemachine.transition.Transition check_transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
         from_state_id = check_transition.from_state
         from_outcome_id = check_transition.from_outcome
         to_state_id = check_transition.to_state
