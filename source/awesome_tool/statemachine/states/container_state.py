@@ -848,9 +848,8 @@ class ContainerState(State):
         :param int port_id:  The id of the port
         :return: The searched port or None if it is not found
         """
-        port = self.get_data_port_by_id(port_id)
-        if port:
-            return port
+        if state_id == self.state_id:
+            return self.get_data_port_by_id(port_id)
         for child_state_id, child_state in self.states.iteritems():
             if state_id != child_state_id:
                 continue
