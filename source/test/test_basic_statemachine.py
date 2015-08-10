@@ -95,21 +95,21 @@ def test_create_container_state():
     container.add_data_flow(state1.state_id, output_state1, state2.state_id, input_state2)
     assert len(container.data_flows) == 1
 
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow to connected input port
         container.add_data_flow(state1.state_id, input_state1, state2.state_id, input_state2)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow to non-existing port
         wrong_data_port_id = 218347
         container.add_data_flow(state1.state_id, output_state1, state2.state_id, wrong_data_port_id)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow from non-existing port
         wrong_data_port_id = 239847
         container.add_data_flow(state1.state_id, wrong_data_port_id, state2.state_id, input_state2)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow from non-existing state
         container.add_data_flow(-1, output_state1, state2.state_id, input_state2)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow to non-existing state
         container.add_data_flow(state1.state_id, output_state1, -1, input_state2)
 
