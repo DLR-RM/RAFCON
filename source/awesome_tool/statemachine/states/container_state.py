@@ -796,7 +796,8 @@ class ContainerState(State):
         if name in self.__scoped_variables_names:
             raise AttributeError("A scoped variable with name %s already exists", name)
         self.__scoped_variables_names.append(name)
-        self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value, scoped_variable_id)
+        self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value,
+                                                                    scoped_variable_id, self)
         return scoped_variable_id
 
     @Observable.observed
