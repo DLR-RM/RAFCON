@@ -37,7 +37,7 @@ class StateMachineHistoryController(ExtendedController):
         # Nr, version_id, Method, Instance, Details, model
         self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
         if view is not None:
-            view['state_machine_history_tree'].set_model(self.list_store)
+            view['history_tree'].set_model(self.list_store)
         #view.set_hover_expand(True)
 
         self.__my_selected_sm_id = None
@@ -79,7 +79,10 @@ class StateMachineHistoryController(ExtendedController):
             self._selected_sm_model = None
 
     def register_view(self, view):
-        self.view['state_machine_history_tree'].connect('cursor-changed', self.on_cursor_changed)
+        view['history_tree'].connect('cursor-changed', self.on_cursor_changed)
+        view['undo_button'].connect('clicked', self.on_undo_button_clicked)
+        view['redo_button'].connect('clicked', self.on_redo_button_clicked)
+        view['reset_button'].connect('clicked', self.on_reset_button_clicked)
         self.view_is_registered = True
 
     def register_adapters(self):
@@ -93,20 +96,26 @@ class StateMachineHistoryController(ExtendedController):
         shortcut_manager.add_callback_for_action("undo", self.undo)
         shortcut_manager.add_callback_for_action("redo", self.redo)
 
+    def on_undo_button_clicked(self, widget, event=None):
+        self.undo(None, None)
+
+    def on_redo_button_clicked(self, widget, event=None):
+        self.redo(None, None)
+
+    def on_reset_button_clicked(self, widget, event=None):
+        # logger.debug("do reset")
+        self._selected_sm_model.history.changes.reset()
+
     def on_cursor_changed(self, widget):
         if self.no_cursor_observation:
             return
-        (model, row) = self.view['state_machine_history_tree'].get_selection().get_selected()
+        (model, row) = self.view['history_tree'].get_selection().get_selected()
         self.no_cursor_observation = True
         if not self.doing_update:
             logger.debug("The view jumps to the selected history element that would be situated on a right click menu in future")
-            # get selected element
-            # logger.debug("%s, %s" % (model, row))
-            # for elem in model[row]:
-                # logger.debug(str(elem))
 
-            # take version_id
             version_id = model[row][1]
+
             # do recovery
             self.doing_update = True
             self._selected_sm_model.history.recover_specific_version(version_id)
@@ -114,25 +123,19 @@ class StateMachineHistoryController(ExtendedController):
             self.update(None, None, None)
         self.no_cursor_observation = False
 
-
     def undo(self, key_value, modifier_mask):
-        logger.debug("Run history UNDO")
+        # logger.debug("Run history UNDO")
         self._selected_sm_model.history.undo()
-        # print len(self._selected_sm_model.history.changes.single_trail_history()), \
-        #     self._selected_sm_model.history.changes.single_trail_history()
-        self.update(None, None, None)
 
     def redo(self, key_value, modifier_mask):
-        logger.debug("Run history REDO")
+        # logger.debug("Run history REDO")
         self._selected_sm_model.history.redo()
-        # print len(self._selected_sm_model.history.changes.single_trail_history()), \
-        #     self._selected_sm_model.history.changes.single_trail_history()
-        self.update(None, None, None)
 
     @ExtendedController.observe("changes", after=True)
     def update(self, model, prop_name, info):
-        # print "History changed %s\n%s\n%s" % (model, prop_name, info)
-        if self._selected_sm_model.history.fake or info is not None and not info.method_name == "insert_action":
+        # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))
+        if self._selected_sm_model.history.fake or \
+                info is not None and not info.method_name in ["insert_action", "undo", "redo", "reset"]:
             return
         self.doing_update = True
         self.list_store.clear()
@@ -162,7 +165,7 @@ class StateMachineHistoryController(ExtendedController):
         # set selection of Tree
         row_number = self._selected_sm_model.history.changes.trail_pointer
         if len(self.list_store) > 0:
-            self.view['state_machine_history_tree'].set_cursor(len(self.list_store) - 1 - row_number)
+            self.view['history_tree'].set_cursor(len(self.list_store) - 1 - row_number)
 
         # set colors of Tree
         # - is state full and all element which are open to be re-done gray
