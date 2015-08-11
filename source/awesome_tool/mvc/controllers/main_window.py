@@ -167,7 +167,7 @@ class MainWindowController(ExtendedController):
         view["tree_notebook_1"].set_current_page(0)
 
         ######################################################
-        # history
+        # state machine edition history
         ######################################################
         #remove placeholder tab
         history_tab = view['history_vbox_placeholder']
@@ -187,7 +187,7 @@ class MainWindowController(ExtendedController):
         # view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
 
         ######################################################
-        # execution history
+        # state machine execution history
         ######################################################
         #remove placeholder tab
         execution_history_tab = view['execution_history_placeholder']

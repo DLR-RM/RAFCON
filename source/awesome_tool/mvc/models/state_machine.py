@@ -152,6 +152,8 @@ class StateMachineModel(ModelMT):
             if state_id in current_state_model.states:
                 current_state_model = current_state_model.states[state_id]
             else:
-                logger.error("path element %s of '%s' could not be found" % (current_state_model.state.get_path(), path.split('/')))
+                logger.error("path element %s of '%s' could not be found root_state is %s %s" %
+                             (current_state_model.state.get_path(), path.split('/'),
+                              self.root_state.state.name, self.root_state.state.state_id))
                 assert False
         return current_state_model

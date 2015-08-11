@@ -143,16 +143,15 @@ class Clipboard(Observable):
 
         target_state = target_state_m.state
 
-        state_copy = StateHelper.get_state_copy(self.state_core_object_copies[0])
-        state_orig_m = self.state_model_copies[0]
+        orig_state_copy = StateHelper.get_state_copy(self.state_core_object_copies[0])
+        orig_state_copy_m = self.state_model_copies[0]
 
-        target_state.add_state(state_copy)
-        state_copy.parent = target_state
+        target_state.add_state(orig_state_copy)
+        orig_state_copy.parent = target_state
 
-        state_copy_m = target_state_m.states[state_copy.state_id]
+        new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
 
-        # paste the meta data of the original state to the state copy
-        self.copy_meta_data_of_state_model(state_orig_m, state_copy_m)
+        self.copy_meta_data_of_state_model(orig_state_copy_m, new_state_copy_m)
 
         if self.clipboard_type is ClipboardType.CUT:
             # delete the original state
@@ -163,7 +162,7 @@ class Clipboard(Observable):
                 parent_of_source_state.remove_state(source_state_id)
                 self.selected_state_models.remove(self.selected_state_models[0])
 
-        return state_copy_m, state_orig_m
+        return new_state_copy_m, orig_state_copy_m
 
     def reset_clipboard(self):
         """
