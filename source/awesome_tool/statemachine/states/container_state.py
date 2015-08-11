@@ -50,7 +50,6 @@ class ContainerState(State):
         self._data_flows = {}
         self._scoped_variables = {}
         self._scoped_data = {}
-        self.__scoped_variables_names = []
         # reference to an object that checks the validity of this container state
         self._v_checker = v_checker
         self._current_state = None
@@ -589,9 +588,6 @@ class ContainerState(State):
         """
         if scoped_variable_id is None:
             scoped_variable_id = generate_data_flow_id()
-        if name in self.__scoped_variables_names:
-            raise AttributeError("A scoped variable with name %s already exists", name)
-        self.__scoped_variables_names.append(name)
         self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value,
                                                                     scoped_variable_id, self)
         return scoped_variable_id
@@ -608,19 +604,8 @@ class ContainerState(State):
         # delete all data flows connected to scoped_variable
         self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
 
-        # remove scoped variable name
-        if self._scoped_variables[scoped_variable_id].name in self.__scoped_variables_names:
-            self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
-
-    def modify_scoped_variable_name(self, name, scoped_variable_id):
-        if name in self.__scoped_variables_names:
-            logger.warning("A scoped variable with name %s already exists", name)
-            return
-        self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
-        self._scoped_variables[scoped_variable_id].name = name
-        self.__scoped_variables_names.append(name)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------
@@ -925,6 +910,14 @@ class ContainerState(State):
                     return False, "Connection of two non-compatible data types"
         return True, "valid"
 
+    def _check_data_port_validity(self, check_data_port):
+        valid, message = super(ContainerState, self)._check_data_port_validity(check_data_port)
+        if not valid:
+            return False, message
+        if check_data_port.data_port_id not in self.scoped_variables:
+            return True, message
+        return self._check_scoped_variable_name(check_data_port)
+
     def _check_data_port_id(self, data_port):
         """Checks the validity of a data port id
 
@@ -944,6 +937,20 @@ class ContainerState(State):
             if data_port.data_port_id == scoped_variable_id and data_port is not scoped_variable:
                 return False, "data port id already existing in state"
         return True, message
+
+    def _check_scoped_variable_name(self, check_scoped_variable):
+        """Checks the validity of a scoped variable name
+
+        Checks whether the name of the given scoped variable is already used by anther scoped variable within the state.
+
+        :param awesome_tool.statemachine.scope.ScopedVariable check_scoped_variable: The scoped variable to be checked
+        :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
+            more information especially if the scoped variable is not valid
+        """
+        for scoped_variable in self.scoped_variables.values():
+            if check_scoped_variable.name == scoped_variable.name and check_scoped_variable is not scoped_variable:
+                return False, "Name of scoped variable already used by another scoped variable within the state"
+        return True, "valid"
 
     def _check_data_flow_validity(self, check_data_flow):
         """Checks the validity of a data flow

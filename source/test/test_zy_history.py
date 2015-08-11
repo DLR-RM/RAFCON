@@ -1075,7 +1075,8 @@ def test_scoped_variable_modify_notification(with_print=False):
 
     ################################
     # check for modification of name
-    state_dict['Nested'].modify_scoped_variable_name('changed_new_scoped_var_name', new_scoped_variable_id)
+    # state_dict['Nested'].modify_scoped_variable_name('changed_new_scoped_var_name', new_scoped_variable_id)
+    state_dict['Nested'].scoped_variables[new_scoped_variable_id].name = 'changed_new_scoped_var_name'
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
