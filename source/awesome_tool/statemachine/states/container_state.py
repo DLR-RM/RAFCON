@@ -482,59 +482,6 @@ class ContainerState(State):
             raise AttributeError("state_id %s has to be child of container_state %s" %
                                  (state_id, self.state_id))
 
-    def modify_transition_from_state(self, transition_id, from_state, from_outcome):
-        """The function accepts consistent transition changes of from_state with respective from_outcome.
-
-        :param int transition_id: a valid transition_id of ContainerState.transitions
-        :param str from_state: string of one of self.states-state_id's
-        :param int from_outcome: the for respective from_state unique outcome_id
-        """
-        # validity checks
-        self.is_valid_transition_id(transition_id)
-        if from_state is not None:
-            self.is_valid_state_id(from_state)
-            self.states[from_state].is_valid_outcome_id(from_outcome)
-        elif from_outcome is not None:
-            raise AttributeError("from_outcome must be None id from_state is None")
-        # set properties
-        self.transitions[transition_id].modify_origin(from_state, from_outcome)
-
-    def modify_transition_from_outcome(self, transition_id, from_outcome):
-        """The function accepts consistent transition changes of from_outcome.
-
-        :param int transition_id: a valid transition_id of ContainerState.transitions
-        :param int from_outcome: the for respective from_state unique outcome_id
-        """
-        # validity checks
-        self.is_valid_transition_id(transition_id)
-        self.states[self.transitions[transition_id].from_state].is_valid_outcome_id(from_outcome)
-        # set properties
-        self.transitions[transition_id].from_outcome = from_outcome
-
-    def modify_transition_to_state(self, transition_id, to_state):
-        """The function accepts consistent transition changes of to_state.
-
-        :param int transition_id: a valid transition_id of ContainerState.transitions
-        :param str to_state: string of one of self.states-state_id's
-        """
-        # validity checks
-        self.is_valid_transition_id(transition_id)
-        self.is_valid_state_id(to_state)
-        # set properties
-        self.transitions[transition_id].to_state = to_state
-
-    def modify_transition_to_outcome(self, transition_id, to_outcome):
-        """The function accepts consistent transition changes of to_outcome.
-
-        :param int transition_id: a valid transition_id of ContainerState.transitions
-        :param int to_outcome: a in self existing outcome
-        """
-        # validity checks
-        self.is_valid_transition_id(transition_id)
-        self.is_valid_outcome_id(to_outcome)
-        # set properties
-        self.transitions[transition_id].to_outcome = to_outcome
-
     def remove_outcome_hook(self, outcome_id):
         """Removes internal transition going to the outcome
         """

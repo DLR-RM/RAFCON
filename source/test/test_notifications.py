@@ -983,19 +983,23 @@ def test_data_flow_modify_notification(with_print=False):
 
     ##### modify from parent state #######
     # modify_data_flow_from_state(self, data_flow_id, from_state, from_key)
-    state_dict['Nested'].modify_data_flow_from_state(new_df_id, from_state=state1.state_id, from_key=output_state1)
+    # state_dict['Nested'].modify_data_flow_from_state(new_df_id, from_state=state1.state_id, from_key=output_state1)
+    state_dict['Nested'].data_flows[new_df_id].modify_origin(state1.state_id, output_count_state1)
     check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=1)
 
     # modify_data_flow_from_key(self, data_flow_id, from_key)
-    state_dict['Nested'].modify_data_flow_from_key(new_df_id, from_key=output_count_state1)
+    # state_dict['Nested'].modify_data_flow_from_key(new_df_id, from_key=output_count_state1)
+    state_dict['Nested'].data_flows[new_df_id].from_key = output_count_state1
     check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=2)
 
     # modify_data_flow_to_state(self, data_flow_id, to_state, to_key)
-    state_dict['Nested'].modify_data_flow_to_state(new_df_id, to_state=state2.state_id, to_key=input_par_state2)
+    # state_dict['Nested'].modify_data_flow_to_state(new_df_id, to_state=state2.state_id, to_key=input_par_state2)
+    state_dict['Nested'].data_flows[new_df_id].modify_target(state2.state_id, input_par_state2)
     check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=3)
 
     # modify_data_flow_to_key(self, data_flow_id, to_key)
-    state_dict['Nested'].modify_data_flow_to_key(new_df_id, to_key=input_number_state2)
+    # state_dict['Nested'].modify_data_flow_to_key(new_df_id, to_key=input_number_state2)
+    state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
     check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
 
@@ -1142,12 +1146,14 @@ def test_transition_modify_notification(with_print=False):
 
     ##### modify from parent state #######
     # modify_transition_from_state(self, transition_id, from_state, from_outcome)
-    state_dict['Nested'].modify_transition_from_state(new_df_id, from_state=state2.state_id,
-                                                      from_outcome=oc_full_state2)
+    # state_dict['Nested'].modify_transition_from_state(new_df_id, from_state=state2.state_id,
+    #                                                   from_outcome=oc_full_state2)
+    state_dict['Nested'].transitions[new_df_id].modify_origin(state2.state_id, oc_full_state2)
     check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=1)
 
     # modify_transition_from_outcome(self, transition_id, from_outcome)
-    state_dict['Nested'].modify_transition_from_outcome(new_df_id, from_outcome=oc_done_state2)
+    # state_dict['Nested'].modify_transition_from_outcome(new_df_id, from_outcome=oc_done_state2)
+    state_dict['Nested'].transitions[new_df_id].from_outcome = oc_done_state2
     check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=2)
 
     # modify_transition_to_outcome(self, transition_id, to_outcome)
@@ -1156,7 +1162,8 @@ def test_transition_modify_notification(with_print=False):
     # check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=3)
 
     # modify_transition_to_state(self, transition_id, to_state, to_outcome)
-    state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
+    # state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
+    state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
     check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=3)
 
 

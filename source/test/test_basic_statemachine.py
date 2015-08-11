@@ -114,9 +114,11 @@ def test_create_container_state():
         container.add_data_flow(state1.state_id, output_state1, -1, input_state2)
 
     container.add_data_flow(container.state_id, input_container_state, state1.state_id, input_state1)
-    container.add_data_flow(state2.state_id, output_state2, state2.state_id, input2_state2)
 
-    assert len(container.data_flows) == 3
+    with raises(ValueError):  # cannot connect data flow to same child state
+        container.add_data_flow(state2.state_id, output_state2, state2.state_id, input2_state2)
+
+    assert len(container.data_flows) == 2
 
     assert len(container.transitions) == 0
 
@@ -170,7 +172,7 @@ def test_create_container_state():
     container.remove_state(state1.state_id)
     assert len(container.states) == 1
     assert len(container.transitions) == 1
-    assert len(container.data_flows) == 1
+    assert len(container.data_flows) == 0
 
 
 def test_port_and_outcome_removal():
