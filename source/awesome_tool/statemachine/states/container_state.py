@@ -45,10 +45,6 @@ class ContainerState(State):
                  states=None, transitions=None, data_flows=None, start_state_id=None,
                  scoped_variables=None, v_checker=None, path=None, filename=None, check_path=True):
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
-
-        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
-
         self._states = {}
         self._transitions = {}
         self._data_flows = {}
@@ -61,6 +57,10 @@ class ContainerState(State):
         # condition variable to wait for not connected states
         self._transitions_cv = Condition()
         self._child_execution = False
+
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
+
+        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
         self.scoped_variables = scoped_variables
         self.states = states
