@@ -52,7 +52,6 @@ class State(Observable, yaml.YAMLObject):
         self._state_id = None
         self._parent = None
         self._name = None
-        self._used_data_port_ids = set([])
         self._input_data_ports = {}
         self._output_data_ports = {}
         self._outcomes = {}
@@ -206,14 +205,8 @@ class State(Observable, yaml.YAMLObject):
         :param default_value: the default value of the data port
 
         """
-        if data_port_id is None or data_port_id in self._used_data_port_ids:
-            if data_port_id in self._used_data_port_ids:
-                logger.warning("handed data_port_id is already in list of _used_data_port_ids id: %s list: %s" %
-                               (data_port_id, self._used_data_port_ids))
+        if data_port_id is None:
             data_port_id = generate_data_flow_id()
-            while data_port_id in self._used_data_port_ids:
-                data_port_id = generate_data_flow_id()
-        self._used_data_port_ids.add(data_port_id)
         self._input_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id, self)
         return data_port_id
 
@@ -227,7 +220,6 @@ class State(Observable, yaml.YAMLObject):
         if data_port_id in self._input_data_ports:
             self.remove_data_flows_with_data_port_id(data_port_id)
             del self._input_data_ports[data_port_id]
-            self._used_data_port_ids.remove(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
 
@@ -260,17 +252,8 @@ class State(Observable, yaml.YAMLObject):
 
         """
 
-        if data_port_id is None or data_port_id in self._used_data_port_ids:
-            if data_port_id in self._used_data_port_ids:
-                logger.warning("handed data_port_id is already in list of _used_data_port_ids id: %s list: %s" %
-                               (data_port_id, self._used_data_port_ids))
-                logger.warning("%s %s %s" % (self._input_data_ports.keys(),
-                                             self._output_data_ports.keys(),
-                                             self._scoped_variables.keys()))
+        if data_port_id is None:
             data_port_id = generate_data_flow_id()
-            while data_port_id in self._used_data_port_ids:
-                data_port_id = generate_data_flow_id()
-        self._used_data_port_ids.add(data_port_id)
         self._output_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id, self)
         return data_port_id
 
@@ -284,7 +267,6 @@ class State(Observable, yaml.YAMLObject):
         if data_port_id in self._output_data_ports:
             self.remove_data_flows_with_data_port_id(data_port_id)
             del self._output_data_ports[data_port_id]
-            self._used_data_port_ids.remove(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
 
@@ -460,13 +442,34 @@ class State(Observable, yaml.YAMLObject):
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
             more information especially if the data port is not valid
         """
+        valid, message = self._check_data_port_id(check_data_port)
+        if not valid:
+            return False, message
+
+        # Check whether the type matches any connected data port type
         # Only relevant, if there is a parent state, otherwise the cannot be connected data flows
         if self.parent:
             # Call the check in the parent state, where the data flows are stored
-            valid, message = self.parent.check_data_port_connection(check_data_port)
-            if not valid:
-                return False, message
+            return self.parent.check_data_port_connection(check_data_port)
 
+        return True, "valid"
+
+    def _check_data_port_id(self, data_port):
+        """Checks the validity of a data port id
+
+        Checks whether the id of the given data port is already used by anther data port (input, output) within the
+        state.
+
+        :param awesome_tool.statemachine.data_port.DataPort data_port: The data port to be checked
+        :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
+            more information especially if the data port is not valid
+        """
+        for input_data_port_id, input_data_port in self.input_data_ports.iteritems():
+            if data_port.data_port_id == input_data_port_id and data_port is not input_data_port:
+                return False, "data port id already existing in state"
+        for output_data_port_id, output_data_port in self.output_data_ports.iteritems():
+            if data_port.data_port_id == output_data_port_id and data_port is not output_data_port:
+                return False, "data port id already existing in state"
         return True, "valid"
 
     def check_input_data_type(self, input_data):
@@ -584,24 +587,18 @@ class State(Observable, yaml.YAMLObject):
     @input_data_ports.setter
     @Observable.observed
     def input_data_ports(self, input_data_ports):
+        self._input_data_ports = {}
         if input_data_ports is None:
-            if self._input_data_ports is not None:
-                for input_port_id in self._input_data_ports.keys():
-                    self._used_data_port_ids.remove(input_port_id)
-            self._input_data_ports = {}
-        else:
-            if not isinstance(input_data_ports, dict):
-                raise TypeError("input_data_ports must be of type dict")
-            for port_id, port in input_data_ports.iteritems():
-                if not isinstance(port, DataPort):
-                    raise TypeError("element of input_data_ports must be of type DataPort")
-                if not port_id == port.data_port_id:
-                    raise AttributeError("the key of the input dictionary and the name of the data port do not match")
-                if port.data_port_id in self._used_data_port_ids:
-                    raise AttributeError("data_port_id %s already exists" % (str(port.data_port_id)))
-                port.parent = self
-                self._used_data_port_ids.add(port.data_port_id)
-            self._input_data_ports = input_data_ports
+            return
+        if not isinstance(input_data_ports, dict):
+            raise TypeError("input_data_ports must be of type dict")
+        for port_id, port in input_data_ports.iteritems():
+            if not isinstance(port, DataPort):
+                raise TypeError("element of input_data_ports must be of type DataPort")
+            if not port_id == port.data_port_id:
+                raise AttributeError("the key of the input dictionary and the id of the data port do not match")
+            port.parent = self
+        self._input_data_ports = input_data_ports
 
     @property
     def output_data_ports(self):
@@ -613,24 +610,18 @@ class State(Observable, yaml.YAMLObject):
     @output_data_ports.setter
     @Observable.observed
     def output_data_ports(self, output_data_ports):
+        self._output_data_ports = {}
         if output_data_ports is None:
-            if self._output_data_ports is not None:
-                for output_port_id in self._output_data_ports.keys():
-                    self._used_data_port_ids.remove(output_port_id)
-            self._output_data_ports = {}
-        else:
-            if not isinstance(output_data_ports, dict):
-                raise TypeError("output_data_ports must be of type dict")
-            for port_id, port in output_data_ports.iteritems():
-                if not isinstance(port, DataPort):
-                    raise TypeError("element of output_data_ports must be of type DataPort")
-                if not port_id == port.data_port_id:
-                    raise AttributeError("the key of the output dictionary and the name of the data port do not match")
-                if port.data_port_id in self._used_data_port_ids:
-                    raise AttributeError("data_port_id %s already exists" % (str(port.data_port_id)))
-                port.parent = self
-                self._used_data_port_ids.add(port.data_port_id)
-            self._output_data_ports = output_data_ports
+            return
+        if not isinstance(output_data_ports, dict):
+            raise TypeError("output_data_ports must be of type dict")
+        for port_id, port in output_data_ports.iteritems():
+            if not isinstance(port, DataPort):
+                raise TypeError("element of output_data_ports must be of type DataPort")
+            if not port_id == port.data_port_id:
+                raise AttributeError("the key of the output dictionary and the id of the data port do not match")
+            port.parent = self
+        self._output_data_ports = output_data_ports
 
     @property
     def outcomes(self):

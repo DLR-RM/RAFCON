@@ -195,8 +195,6 @@ class StateMachineHelper():
                                            outcomes=source_state.outcomes)  # , path=state.script.path, filename=state.script.filename,
                                         # check_path=False)
 
-        new_state._used_data_port_ids = source_state._used_data_port_ids
-
         if source_state.description is not None and len(source_state.description) > 0:
             new_state.description = source_state.description
 

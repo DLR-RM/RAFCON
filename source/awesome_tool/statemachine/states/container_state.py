@@ -925,6 +925,26 @@ class ContainerState(State):
                     return False, "Connection of two non-compatible data types"
         return True, "valid"
 
+    def _check_data_port_id(self, data_port):
+        """Checks the validity of a data port id
+
+        Checks whether the id of the given data port is already used by anther data port (input, output, scoped vars)
+        within the state.
+
+        :param awesome_tool.statemachine.data_port.DataPort data_port: The data port to be checked
+        :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
+            more information especially if the data port is not valid
+        """
+        # First check inputs and outputs
+        valid, message = super(ContainerState, self)._check_data_port_id(data_port)
+        if not valid:
+            return False, message
+        # Container state also has scoped variables
+        for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
+            if data_port.data_port_id == scoped_variable_id and data_port is not scoped_variable:
+                return False, "data port id already existing in state"
+        return True, message
+
     def _check_data_flow_validity(self, check_data_flow):
         """Checks the validity of a data flow
 
@@ -951,7 +971,7 @@ class ContainerState(State):
 
         :param awesome_tool.statemachine.data_flow.DataFlow data_flow: The data flow to be checked
         :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
-            more information especially if the outcome is not valid
+            more information especially if the data flow is not valid
         """
         data_flow_id = data_flow.data_flow_id
         if data_flow_id in self.data_flows and data_flow is not self.data_flows[data_flow_id]:

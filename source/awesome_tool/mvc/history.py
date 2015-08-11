@@ -446,7 +446,7 @@ class Action:
                 if hasattr(state, "scoped_variables"):
                     scoped_str = str(state.scoped_variables.keys())
                 # print "\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \
-                    state.output_data_ports.keys(), scoped_str, state._used_data_port_ids, "\n\n\n"
+                #     state.output_data_ports.keys(), scoped_str, "\n\n\n"
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 # print "\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n"
                 assert dp_id in state.output_data_ports.keys()
