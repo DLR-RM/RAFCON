@@ -16,6 +16,7 @@ from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 import awesome_tool.mvc.singleton
 from awesome_tool.statemachine.state_machine import StateMachine
+from awesome_tool.mvc.clipboard import global_clipboard
 
 import variables_for_pytest
 
@@ -111,6 +112,20 @@ def wait_for_values_identical_number_state_machines(sm_manager_model, val2):
 
 
 def trigger_gui_signals(*args):
+    """ The function triggers and test basic functions of the menu bar.
+    At the moment those functions are tested:
+    - New State Machine
+    - Open State Machine
+    - Copy State/HierarchyState -> via GraphicalEditor
+    - Cut State/HierarchyState -> via GraphicalEditor
+    - Paste State/HierarchyState -> via GraphicalEditor
+    - Refresh Libraries
+    - Refresh All
+    - Save as
+    - Stop State Machine
+    - Quit GUI
+    """
+
     print "Wait for the gui to initialize"
     time.sleep(2.0)
     sm_manager_model = args[0]
@@ -122,6 +137,7 @@ def trigger_gui_signals(*args):
     # glib.idle_add(sm_manager_model.state_machine_manager.add_state_machine, sm)
     current_sm_length = len(sm_manager_model.state_machines)
     glib.idle_add(menubar_ctrl.on_new_activate, None)
+    first_sm_id = sm_manager_model.state_machines.keys()[0]
 
     wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
@@ -129,6 +145,121 @@ def trigger_gui_signals(*args):
     glib.idle_add(menubar_ctrl.on_open_activate, None, None, "../../test_scripts/tutorials/basic_turtle_demo_sm")
     wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
     assert len(sm_manager_model.state_machines) == current_sm_length+2
+
+    sleep_time_short = 1.0
+    sm_m = sm_manager_model.state_machines[first_sm_id+2]
+    sm_m.history.fake = True
+    time.sleep(sleep_time_short)
+
+    # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
+    main_window_controller.view['main_window'].grab_focus()
+    sm_manager_model.selected_state_machine_id = first_sm_id+2
+    state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+    page_id = state_machines_ctrl.get_page_id(first_sm_id+2)
+    page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
+    page.children()[0].grab_focus()
+
+    time.sleep(sleep_time_short)
+    #########################################################
+    # select a execution state -> and paste it some where
+
+    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/UEPNNW')
+    print "\n\n %s \n\n" % state_m.state.name
+    glib.idle_add(sm_m.selection.set, [state_m])
+    time.sleep(sleep_time_short)
+
+    # copy the state to clipboard
+    glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
+    # global_clipboard.copy(sm_m.selection)
+    time.sleep(sleep_time_short)
+
+    # select other state
+    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
+    print state_m.state.states.keys()
+    print "\n\n %s \n\n" % state_m.state.name
+    glib.idle_add(sm_m.selection.set, [state_m])
+    time.sleep(sleep_time_short)
+
+    old_child_state_count = len(state_m.state.states)
+
+    # paste clipboard element into the new state
+    main_window_controller.view['main_window'].grab_focus()  # refresh focus
+    page.children()[0].grab_focus()
+    # print dir(page.children()[0]), "\n\n", page.children()[0], "\n\n", page.children()[0].has_focus()
+    glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    # global_clipboard.paste(state_m)  # sm_m.selection)
+    time.sleep(sleep_time_short)
+
+    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
+    print state_m.state.states.keys()
+    # IN CASE OF ASSERTION SECURE FOCUS FOR MAIN MAIN WINDOW !!!!
+    assert len(state_m.state.states) == old_child_state_count + 1
+
+    ###########################################################
+    # select a hierarchy state -> and paste it some where
+    sm_m = sm_manager_model.state_machines[first_sm_id+2]
+    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY')
+    print "\n\n %s \n\n" % state_m.state.name
+    glib.idle_add(sm_m.selection.set, [state_m])
+    time.sleep(sleep_time_short)
+
+    # copy the state to clipboard
+    glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
+    # global_clipboard.copy(sm_m.selection)
+    time.sleep(sleep_time_short)
+
+    # select other state
+    state_m = sm_m.get_state_model_by_path('CDMJPK')
+    old_child_state_count = len(state_m.state.states)
+    print "\n\n %s \n\n" % state_m.state.name
+    glib.idle_add(sm_m.selection.set, [state_m])
+    time.sleep(sleep_time_short)
+
+    # paste clipboard element into the new state
+    main_window_controller.view['main_window'].grab_focus()  # refresh focus
+    page.children()[0].grab_focus()
+    glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    # global_clipboard.paste(state_m)  # sm_m.selection)
+    time.sleep(sleep_time_short)
+
+    # verify
+    state_m = sm_m.get_state_model_by_path('CDMJPK')
+    print state_m.state.states.keys()
+    # IN CASE OF ASSERTION SECURE FOCUS FOR MAIN MAIN WINDOW !!!!
+    assert len(state_m.state.states) == old_child_state_count + 1
+
+    ##########################################################
+    # select a library state -> and paste it some where WITH CUT !!!
+    sm_m = sm_manager_model.state_machines[first_sm_id+2]
+    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY')
+    print "\n\n %s \n\n" % state_m.state.name
+    glib.idle_add(sm_m.selection.set, [state_m])
+    time.sleep(sleep_time_short)
+
+    # cut the state to clipboard
+    # glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
+    glib.idle_add(menubar_ctrl.on_cut_selection_activate, None, None)
+
+    # select other state
+    state_m = sm_m.get_state_model_by_path('CDMJPK')
+    old_child_state_count = len(state_m.state.states)
+    print "\n\n %s \n\n" % state_m.state.name
+    glib.idle_add(sm_m.selection.set, [state_m])
+    time.sleep(sleep_time_short)
+
+    # paste clipboard element into the new state
+    main_window_controller.view['main_window'].grab_focus()  # refresh focus
+    page.children()[0].grab_focus()
+    glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    # global_clipboard.paste(state_m)  # sm_m.selection)
+    time.sleep(sleep_time_short)
+
+    # verify
+    state_m = sm_m.get_state_model_by_path('CDMJPK')
+    print state_m.state.states.keys()
+    # IN CASE OF ASSERTION SECURE FOCUS FOR MAIN MAIN WINDOW !!!!
+    assert len(state_m.state.states) == old_child_state_count + 1
+    ##########################################################
 
     glib.idle_add(menubar_ctrl.on_refresh_libraries_activate, None)
     glib.idle_add(menubar_ctrl.on_refresh_all_activate, None, None, True)
