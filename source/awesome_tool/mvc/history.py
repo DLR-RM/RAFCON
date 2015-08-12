@@ -60,16 +60,16 @@ def get_state_tuple(state, state_m=None):
     return state_tuple
 
 
-def do_storage_test(state):
-    import os
-    # # logger.debug(state.script.path + "         " + str(state.script.path.split('/')))
-    # #if child_state.script.path.split('/')[1] == "tmp" and not os.path.exists(state.script.path):
-    # if not os.path.exists(state.script.path):
-    #     # logger.debug("is tmp")
-    #     os.makedirs(state.script.path)
-    #     script_file = open(os.path.join(state.script.path, state.script.filename), "w")
-    #     script_file.write(state.script.script)
-    #     script_file.close()
+# def do_storage_test(state):
+#     import os
+#     # # logger.debug(state.script.path + "         " + str(state.script.path.split('/')))
+#     # #if child_state.script.path.split('/')[1] == "tmp" and not os.path.exists(state.script.path):
+#     # if not os.path.exists(state.script.path):
+#     #     # logger.debug("is tmp")
+#     #     os.makedirs(state.script.path)
+#     #     script_file = open(os.path.join(state.script.path, state.script.filename), "w")
+#     #     script_file.write(state.script.script)
+#     #     script_file.close()
 
 
 def get_state_from_state_tuple(state_tuple):
@@ -80,7 +80,7 @@ def get_state_from_state_tuple(state_tuple):
     if isinstance(state, BarrierConcurrencyState):
         # logger.debug("\n\ninsert decider_state\n\n")
         child_state = get_state_from_state_tuple(state_tuple[1][UNIQUE_DECIDER_STATE_ID])
-        do_storage_test(child_state)
+        # do_storage_test(child_state)
         for t in state.transitions.values():
             if UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
                 state.remove_transition(t.transition_id)
@@ -94,7 +94,7 @@ def get_state_from_state_tuple(state_tuple):
     #print "------------- ", state
     for child_state_id, child_state_tuple in state_tuple[1].iteritems():
         child_state = get_state_from_state_tuple(child_state_tuple)
-        do_storage_test(child_state)
+        # do_storage_test(child_state)
 
         # print "++++ new cild", child_state  # child_state_tuple, child_state
         if not child_state.state_id == UNIQUE_DECIDER_STATE_ID:
@@ -320,10 +320,7 @@ class Action:
         else:
             state = self.state_machine.get_state_by_path(self.parent_path)
 
-        self.update_state(state, get_state_from_state_tuple(self.after_storage))
-        insert_state_meta_data(meta_dict=self.after_storage[3],
-                               state_model=self.state_machine_model.get_state_model_by_path(state.get_path()))
-        # self.set_state_to_version(state, self.after_storage)
+        self.set_state_to_version(state, self.after_storage)
 
     def undo(self):
         """ General Undo, that takes all elements in the parent and
@@ -337,7 +334,6 @@ class Action:
             # else:
             #     logger.warning("statemachine could not get state by path -> take root_state for undo")
             state = self.state_machine.root_state
-            actual_state_model = self.state_machine_model.get_state_model_by_path(state.get_path())
         else:
             state = self.state_machine.get_state_by_path(self.parent_path)
         self.set_state_to_version(state, self.before_storage)
@@ -359,23 +355,8 @@ class Action:
 
     def update_state(self, state, stored_state):
 
-        # # print "\n#H# TRY STATE_HELPER ", type(root_state_version_fom_storage), \
-        # #     isinstance(root_state_version_fom_storage, statemachine_helper.HierarchyState), "\n"
-        # logger.debug("UPDATE STATE TYPE %s %s unsame %s" % (type(stored_state), type(state),
-        #                                                     type(stored_state) is not type(state)))
-
         assert type(stored_state) is type(state)
-        # if type(stored_state) is not type(state):
-        #     logger.debug("CHANGE STATE TYPE WHILE UNDO/REDO")
-        #     if isinstance(stored_state, HierarchyState):
-        #         new_state_class = HierarchyState
-        #     elif isinstance(stored_state, BarrierConcurrencyState):
-        #         new_state_class = BarrierConcurrencyState
-        #     elif isinstance(stored_state, PreemptiveConcurrencyState):
-        #         new_state_class = PreemptiveConcurrencyState
-        #     else:
-        #         new_state_class = ExecutionState
-        #     state = awesome_tool.mvc.statemachine_helper.StateMachineHelper.duplicate_state_with_other_state_type(state, new_state_class)
+
         is_root = state.parent is None
 
         if hasattr(state, 'states'):
@@ -447,17 +428,9 @@ class Action:
                 assert oc_id in state.outcomes
 
         if hasattr(state, 'states'):
-
+            # logger.debug("UPDATE STATES")
             for dp_id, sv in stored_state.scoped_variables.iteritems():
                 state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
-            #
-            # if UNIQUE_DECIDER_STATE_ID in stored_state.states:
-            #     state.add_state(stored_state.states[UNIQUE_DECIDER_STATE_ID])
-            #     sm_id = self.state_machine.state_machine_id
-            #     s_path = state.states[UNIQUE_DECIDER_STATE_ID].script.path
-            #     awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
-            #     # print "unmark from removal: ", s_path
-            #     do_storage_test(state.states[UNIQUE_DECIDER_STATE_ID])
 
             for new_state in stored_state.states.values():
                 # print "++++ new child", new_state
@@ -478,7 +451,7 @@ class Action:
                             if hasattr(state_, 'states'):
                                 for child_state in state_.states.values():
                                     unmark_state(child_state, sm_id_)
-                            do_storage_test(state_)
+                            # do_storage_test(state_)
 
                         unmark_state(new_state, sm_id)
                     # check if tmp folder otherwise everthing is Ok
@@ -492,11 +465,11 @@ class Action:
                     # print "### transitions to delete ", [t.from_state, t.to_state], t
                     if not UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
                         state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
-
-            if isinstance(state, BarrierConcurrencyState):
-                for t in state.transitions.values():
-                    if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
-                        state.remove_transition(t.transition_id)
+            # logger.debug("CHECK TRANSITIONS %s" % state.transitions.keys())
+            for t in state.transitions.values():
+                logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
+                if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
+                    state.remove_transition(t.transition_id)
 
             for df_id, df in stored_state.data_flows.iteritems():
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
