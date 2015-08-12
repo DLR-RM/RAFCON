@@ -826,8 +826,9 @@ class History(ModelMT):
         :return:
         """
         # store meta data
-        logger.debug("state %s '%s' history got notification that Meta data has changed" %
-                     (changed_parent_model.state.state_id, changed_parent_model.state.name))
+        if changed_parent_model is not None:
+            logger.debug("state %s '%s' history got notification that Meta data has changed" %
+                         (changed_parent_model.state.state_id, changed_parent_model.state.name))
         # -> in case of undo/redo overwrite Model.meta-dict
 
         # self.actual_action = Action('meta_data_changed', changed_parent_model.state.get_path(),  # instance path of parent
