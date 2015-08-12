@@ -98,54 +98,51 @@ class StateOutcomesListController(ExtendedController):
 
     def on_to_state_modification(self, widget, path, text):
         # logger.debug("on_to_state_modification %s, %s, %s" % (widget, path, text))
+        to_state_id = text.split('.')[1]
         outcome_id = int(self.tree_store[path][0])
+        transition_parent_state = self.model.parent.state
         if outcome_id in self.dict_to_other_state.keys():
             # logger.debug("1")
             t_id = int(self.dict_to_other_state[outcome_id][2])
             if text is not None:
-                self.model.parent.state.modify_transition_to_state(t_id, to_state=text.split('.')[1])
+                transition_parent_state.transitions[t_id].to_state = to_state_id
             else:
-                self.model.parent.state.remove_outcome(t_id)
+                transition_parent_state.remove_outcome(t_id)
         elif outcome_id in self.dict_to_other_outcome.keys():
             t_id = int(self.dict_to_other_outcome[outcome_id][2])
             if text is not None:
-                self.model.parent.state.modify_transition_to_state(t_id, to_state=text.split('.')[1])
+                transition_parent_state.transitions[t_id].to_state = to_state_id
             else:
-                self.model.parent.state.remove_outcome(t_id)
+                transition_parent_state.remove_outcome(t_id)
         else:  # there is no transition till now
             if text is not None:
-                to_state = text.split('.')[1]
-                self.model.parent.state.add_outcome(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
-                                                    to_state_id=to_state, to_outcome=None, transition_id=None)
+                transition_parent_state.add_outcome(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
+                                                    to_state_id=to_state_id, to_outcome=None, transition_id=None)
             else:
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
 
     def on_to_outcome_modification(self, widget, path, text):
         # logger.debug("on_to_outcome_modification %s, %s, %s" % (widget, path, text))
         outcome_id = int(self.tree_store[path][0])
+        new_to_outcome_id = int(text.split('.')[2])
+        transition_parent_state = self.model.parent.state
         if outcome_id in self.dict_to_other_state.keys():
             # logger.debug("1")
             t_id = int(self.dict_to_other_state[outcome_id][2])
             if text is not None:
-                # logger.debug("11")
-                self.model.parent.state.modify_transition_to_outcome(t_id, to_outcome=int(text.split('.')[2]))
+                transition_parent_state.transitions[t_id].to_key = new_to_outcome_id
             else:
-                # logger.debug("12")
-                self.model.parent.state.remove_transition(t_id)
+                transition_parent_state.remove_transition(t_id)
         elif outcome_id in self.dict_to_other_outcome.keys():
             # logger.debug("2")
             t_id = int(self.dict_to_other_outcome[outcome_id][2])
             if text is not None:
-                # logger.debug("21")
-                self.model.parent.state.modify_transition_to_outcome(t_id, to_outcome=int(text.split('.')[2]))
+                transition_parent_state.transitions[t_id].to_key = new_to_outcome_id
             else:
-                # logger.debug("22")
-                self.model.parent.state.remove_transition(t_id)
+                transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
-            # logger.debug("3")
             if text is not None:
                 to_outcome = int(text.split('.')[2])
-                # logger.debug("31 %s" % str([self.model.state.state_id, outcome_id, self.model.parent.state.state_id, to_outcome]))
                 self.model.parent.state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                     to_state_id=self.model.parent.state.state_id, to_outcome=to_outcome,
                                                     transition_id=None)

@@ -60,8 +60,8 @@ class ScopedVariable(DataPort):
         DataPort.__init__(self, name, data_type, default_value, scoped_variable_id, parent)
 
     def __str__(self):
-        return "ScopedVariable: \n name: %s \n data_type: %s \n default_value: %s " %\
-               (self.name, self.data_type, self.default_value)
+        return "ScopedVariable '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type,
+                                                             self.default_value)
 
     @classmethod
     def to_yaml(cls, dumper, data):

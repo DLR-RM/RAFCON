@@ -68,22 +68,23 @@ class LibraryState(State):
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
 
-        #copy all ports and outcomes of self.state_copy to let the library state appear like the container state
-        self._used_data_port_ids = set([])
+        # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
 
         self.input_data_ports = self.state_copy.input_data_ports
         # copy input_port default values
         if input_data_ports is not None:
             for i_key, i_data_port in input_data_ports.iteritems():
-                if i_key in self.input_data_ports.iterkeys():
+                if i_key in self.input_data_ports:
                     self.input_data_ports[i_key].default_value = i_data_port.default_value
+                    self.input_data_ports[i_key].data_type = i_data_port.data_type
         self.output_data_ports = self.state_copy.output_data_ports
 
         # copy output_port default values
         if output_data_ports is not None:
             for o_key, o_data_port in output_data_ports.iteritems():
-                if o_key in self.output_data_ports.iterkeys():
+                if o_key in self.output_data_ports:
                     self.output_data_ports[o_key].default_value = o_data_port.default_value
+                    self.output_data_ports[o_key].data_type = o_data_port.data_type
 
         self.outcomes = self.state_copy.outcomes
 

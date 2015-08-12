@@ -942,23 +942,27 @@ def test_transition_property_changes_history(with_print=False):
 
     ##### modify from parent state #######
     # modify_transition_from_state(self, transition_id, from_state, from_outcome)
-    state_dict['Nested'].modify_transition_from_state(new_df_id, from_state=state2.state_id,
-                                                      from_outcome=oc_full_state2)
+    # state_dict['Nested'].modify_transition_from_state(new_df_id, from_state=state2.state_id,
+    #                                                   from_outcome=oc_full_state2)
+    state_dict['Nested'].transitions[new_df_id].modify_origin(state2.state_id, oc_full_state2)
     sm_model.history.undo()
     sm_model.history.redo()
 
     # modify_transition_from_outcome(self, transition_id, from_outcome)
-    state_dict['Nested'].modify_transition_from_outcome(new_df_id, from_outcome=oc_done_state2)
+    # state_dict['Nested'].modify_transition_from_outcome(new_df_id, from_outcome=oc_done_state2)
+    state_dict['Nested'].transitions[new_df_id].from_outcome = oc_done_state2
     sm_model.history.undo()
     sm_model.history.redo()
 
     # modify_transition_to_outcome(self, transition_id, to_outcome)
-    state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
-    sm_model.history.undo()
-    sm_model.history.redo()
+    # Invalid test: to_outcome must be None as transition goes to child state
+    # state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
+    # sm_model.history.undo()
+    # sm_model.history.redo()
 
     # modify_transition_to_state(self, transition_id, to_state, to_outcome)
-    state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
+    # state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
+    state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
     sm_model.history.undo()
     sm_model.history.redo()
     save_state_machine(sm_model, "/tmp/DFC_test/history_transition_properties", logger, with_gui=False)
@@ -1071,7 +1075,8 @@ def test_scoped_variable_modify_notification(with_print=False):
 
     ################################
     # check for modification of name
-    state_dict['Nested'].modify_scoped_variable_name('changed_new_scoped_var_name', new_scoped_variable_id)
+    # state_dict['Nested'].modify_scoped_variable_name('changed_new_scoped_var_name', new_scoped_variable_id)
+    state_dict['Nested'].scoped_variables[new_scoped_variable_id].name = 'changed_new_scoped_var_name'
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
@@ -1199,28 +1204,32 @@ def test_data_flow_property_changes_history(with_print=False):
 
     ##### modify from parent state #######
     # modify_data_flow_from_state(self, data_flow_id, from_state, from_key)
-    state_dict['Nested'].modify_data_flow_from_state(new_df_id, from_state=state1.state_id, from_key=output_state1)
+    # state_dict['Nested'].modify_data_flow_from_state(new_df_id, from_state=state1.state_id, from_key=output_state1)
+    state_dict['Nested'].data_flows[new_df_id].modify_origin(state1.state_id, output_state1)
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_from_key(self, data_flow_id, from_key)
-    state_dict['Nested'].modify_data_flow_from_key(new_df_id, from_key=output_count_state1)
+    # state_dict['Nested'].modify_data_flow_from_key(new_df_id, from_key=output_count_state1)
+    state_dict['Nested'].data_flows[new_df_id].from_key = output_count_state1
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_to_state(self, data_flow_id, to_state, to_key)
-    state_dict['Nested'].modify_data_flow_to_state(new_df_id, to_state=state2.state_id, to_key=input_par_state2)
+    # state_dict['Nested'].modify_data_flow_to_state(new_df_id, to_state=state2.state_id, to_key=input_par_state2)
+    state_dict['Nested'].data_flows[new_df_id].modify_target(state2.state_id, input_par_state2)
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_to_key(self, data_flow_id, to_key)
-    state_dict['Nested'].modify_data_flow_to_key(new_df_id, to_key=input_number_state2)
+    # state_dict['Nested'].modify_data_flow_to_key(new_df_id, to_key=input_number_state2)
+    state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
     sm_model.history.undo()
     sm_model.history.redo()
 

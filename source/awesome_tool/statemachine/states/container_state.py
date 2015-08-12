@@ -45,21 +45,10 @@ class ContainerState(State):
                  states=None, transitions=None, data_flows=None, start_state_id=None,
                  scoped_variables=None, v_checker=None, path=None, filename=None, check_path=True):
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
-
-        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
-
         self._states = {}
-        self.states = states
         self._transitions = {}
-        self.transitions = transitions
         self._data_flows = {}
-        self.data_flows = data_flows
-        if start_state_id is not None:
-            self.start_state_id = start_state_id
         self._scoped_variables = {}
-        self.scoped_variables = scoped_variables
-        self.__scoped_variables_names = []
         self._scoped_data = {}
         # reference to an object that checks the validity of this container state
         self._v_checker = v_checker
@@ -67,6 +56,17 @@ class ContainerState(State):
         # condition variable to wait for not connected states
         self._transitions_cv = Condition()
         self._child_execution = False
+
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
+
+        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
+
+        self.scoped_variables = scoped_variables
+        self.states = states
+        self.transitions = transitions
+        self.data_flows = data_flows
+        if start_state_id is not None:
+            self.start_state_id = start_state_id
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
@@ -190,13 +190,14 @@ class ContainerState(State):
         :param state: the state that is going to be added
 
         """
-
+        assert isinstance(state, State)
         if not storage_load:
             # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
             own_sm_id = state_machine_manager.get_sm_id_for_state(self)
             if own_sm_id is not None:
                 global_storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.script.path)
 
+        # TODO: add validity checks for states and then remove this check
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
         else:
@@ -266,7 +267,9 @@ class ContainerState(State):
                     to the container) that will be the start state of this container state.
 
         """
-        if isinstance(state, State):
+        if state is None:
+            self.start_state_id = None
+        elif isinstance(state, State):
             self.start_state_id = state.state_id
         else:
             self.start_state_id = state
@@ -317,37 +320,7 @@ class ContainerState(State):
         return transition_id
 
     def basic_transition_checks(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id):
-        """ Check if transition is starting transition and the start state is already defined
-
-        :param from_state_id: The source state of the transition
-        :param from_outcome: The outcome of the source state to connect the transition to
-        :param to_state_id: The target state of the transition
-        :param to_outcome: The target outcome of a container state
-        :param transition_id: An optional transition id for the new transition
-        :return:
-        """
-
-        # from_state and from_outcome can be None in the start_transition case
-        # to_outcome is None in the normal state case
-
-        if from_state_id is None and self.start_state_id is not None:
-            raise AttributeError("The start state is already defined: {0}".format(self.get_start_state().name))
-
-        # check if states are existing
-        if from_state_id is not None and not (from_state_id in self.states or from_state_id == self.state_id):
-            raise AttributeError("From_state_id {0} does not exist in the container state".format(from_state_id))
-
-        if to_state_id is not None:
-            if not (to_state_id in self.states or to_state_id == self.state_id):
-                raise AttributeError("To_state {0} does not exist in the container state with id {1}".format(
-                    to_state_id, self.state_id))
-
-        if to_state_id is None:
-            raise AttributeError("to_state_id must not be None")
-
-        if from_state_id == to_state_id and to_outcome is not None:
-            raise AttributeError("Transitions are not allowed to go from one outcome to another "
-                                 "outcome of the same state!")
+        pass
 
     def check_if_outcome_already_connected(self, from_state_id, from_outcome):
         """ check if outcome of from state is not already connected
@@ -408,25 +381,28 @@ class ContainerState(State):
         return transition_id
 
     @Observable.observed
-    def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
+    def add_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id=None):
         """Adds a transition to the container state
 
         Note: Either the toState or the toOutcome needs to be "None"
 
         :param from_state_id: The source state of the transition
-        :param from_outcome: The outcome of the source state to connect the transition to
+        :param from_outcome: The outcome id of the source state to connect the transition to
         :param to_state_id: The target state of the transition
-        :param to_outcome: The target outcome of a container state
+        :param to_outcome: The target outcome id of a container state
         :param transition_id: An optional transition id for the new transition
         """
 
         transition_id = self.check_transition_id(transition_id)
 
-        self.basic_transition_checks(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+        new_transition = Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id, self)
+        self.transitions[transition_id] = new_transition
 
-        self.check_if_outcome_already_connected(from_state_id, from_outcome)
-
-        self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
+        # notify all states waiting for transition to be connected
+        self._transitions_cv.acquire()
+        self._transitions_cv.notify_all()
+        self._transitions_cv.release()
+        # self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
 
         return transition_id
 
@@ -505,59 +481,6 @@ class ContainerState(State):
             raise AttributeError("state_id %s has to be child of container_state %s" %
                                  (state_id, self.state_id))
 
-    def modify_transition_from_state(self, transition_id, from_state, from_outcome):
-        """The function accepts consistent transition changes of from_state with respective from_outcome.
-
-        :param int transition_id: a valid transition_id of ContainerState.transitions
-        :param str from_state: string of one of self.states-state_id's
-        :param int from_outcome: the for respective from_state unique outcome_id
-        """
-        # validity checks
-        self.is_valid_transition_id(transition_id)
-        if from_state is not None:
-            self.is_valid_state_id(from_state)
-            self.states[from_state].is_valid_outcome_id(from_outcome)
-        elif from_outcome is not None:
-            raise AttributeError("from_outcome must be None id from_state is None")
-        # set properties
-        self.transitions[transition_id].modify_origin(from_state, from_outcome)
-
-    def modify_transition_from_outcome(self, transition_id, from_outcome):
-        """The function accepts consistent transition changes of from_outcome.
-
-        :param int transition_id: a valid transition_id of ContainerState.transitions
-        :param int from_outcome: the for respective from_state unique outcome_id
-        """
-        # validity checks
-        self.is_valid_transition_id(transition_id)
-        self.states[self.transitions[transition_id].from_state].is_valid_outcome_id(from_outcome)
-        # set properties
-        self.transitions[transition_id].from_outcome = from_outcome
-
-    def modify_transition_to_state(self, transition_id, to_state):
-        """The function accepts consistent transition changes of to_state.
-
-        :param int transition_id: a valid transition_id of ContainerState.transitions
-        :param str to_state: string of one of self.states-state_id's
-        """
-        # validity checks
-        self.is_valid_transition_id(transition_id)
-        self.is_valid_state_id(to_state)
-        # set properties
-        self.transitions[transition_id].to_state = to_state
-
-    def modify_transition_to_outcome(self, transition_id, to_outcome):
-        """The function accepts consistent transition changes of to_outcome.
-
-        :param int transition_id: a valid transition_id of ContainerState.transitions
-        :param int to_outcome: a in self existing outcome
-        """
-        # validity checks
-        self.is_valid_transition_id(transition_id)
-        self.is_valid_outcome_id(to_outcome)
-        # set properties
-        self.transitions[transition_id].to_outcome = to_outcome
-
     def remove_outcome_hook(self, outcome_id):
         """Removes internal transition going to the outcome
         """
@@ -589,61 +512,10 @@ class ContainerState(State):
         :param data_flow_id: an optional id for the data flow
 
         """
-        if data_flow_id is not None:
-            if data_flow_id in self._data_flows.iterkeys():
-                raise AttributeError("The data flow id %s already exists. Cannot add data flow!", data_flow_id)
-        else:
+        if data_flow_id is None:
             data_flow_id = generate_data_flow_id()
             while data_flow_id in self._data_flows.iterkeys():
                 data_flow_id = generate_data_flow_id()
-
-        if not (from_state_id in self.states or from_state_id == self.state_id):
-            raise AttributeError("From_state_id %s does not exist in the container state" % from_state_id)
-        if not (to_state_id in self.states or to_state_id == self.state_id):
-            raise AttributeError("To_state %s does not exit in the container state" % to_state_id)
-
-        if from_state_id == self.state_id:  # data_flow originates in container state
-            from_state = self
-            if from_data_port_id in from_state.scoped_variables:
-                from_data_port = from_state.scoped_variables[from_data_port_id]
-            elif from_data_port_id in from_state.input_data_ports:
-                from_data_port = from_state.input_data_ports[from_data_port_id]
-            else:
-                raise AttributeError("from_data_port_id not in scoped_variables or input_data_ports")
-        else:  # data flow originates in child state
-            from_state = self.states[from_state_id]
-            if from_data_port_id in from_state.output_data_ports:
-                from_data_port = from_state.output_data_ports[from_data_port_id]
-            else:
-                raise AttributeError("from_data_port_id not in output_data_ports")
-
-        if to_state_id == self.state_id:  # data_flow ends in container state
-            to_state = self
-            if to_data_port_id in to_state.scoped_variables:
-                to_data_port = to_state.scoped_variables[to_data_port_id]
-            elif to_data_port_id in to_state.output_data_ports:
-                to_data_port = to_state.output_data_ports[to_data_port_id]
-            else:
-                raise AttributeError("to_data_port_id not in scoped_variables or output_data_ports")
-        else:  # data_flow ends in child state
-            to_state = self.states[to_state_id]
-            if to_data_port_id in to_state.input_data_ports:
-                to_data_port = to_state.input_data_ports[to_data_port_id]
-            else:
-                raise AttributeError("to_data_port_id not in input_data_ports")
-
-        # check if to_dataport_id of to_state has already a data_flow
-        for flow_id, data_flow in self.data_flows.iteritems():
-            # scoped variables are allowed to have several data_flows connecte to them
-            if data_flow.to_state == to_state_id and not data_flow.to_state == self.state_id:
-                if data_flow.to_key == to_data_port_id:
-                    raise AttributeError("port %s of state %s already has a connection" %
-                                         (str(to_data_port_id), str(to_state_id)))
-
-        # check if the data types of the tow ports are the same
-        if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
-            raise AttributeError("The from data port and the to data port do not have the same data type (%s and %s)" %
-                                 (str(from_data_port.data_type), str(to_data_port.data_type)))
 
         self.data_flows[data_flow_id] = DataFlow(from_state_id, from_data_port_id, to_state_id, to_data_port_id,
                                                  data_flow_id, self)
@@ -687,106 +559,6 @@ class ContainerState(State):
 
         for data_flow_id in data_flow_ids_to_remove:
             self.remove_data_flow(data_flow_id)
-            # del self.data_flows[data_flow_id]
-
-    def modify_data_flow_from_state(self, data_flow_id, from_state, from_key):
-        """The function accepts consistent data_flow changes of from_state with respective from_key.
-
-        :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
-        :param str from_state: string of this state- or one of its child-state-state_id
-        :param int from_key: the for respective from_state unique data_port_id
-        """
-        #check if types are valid
-        self.is_valid_data_flow_id(data_flow_id)
-        if from_state is not None and not type(from_state) == str:
-            raise TypeError("from_state must be of type str")
-        if from_key is not None and not type(from_key) == int:
-            raise TypeError("from_key must be of type int")
-
-        # consistency check
-        if from_state == self.state_id:
-            if not (from_key in self.input_data_ports or from_key in self.scoped_variables):
-                raise AttributeError("from_key must be in list of output_data_ports or scoped_variables")
-        else:  # child
-            if not from_state in self.states:
-                raise AttributeError("from_state must be in list of child-states")
-            if not from_key in self.states[from_state].output_data_ports:
-                raise AttributeError("from_key must be in list of child-state output_data_ports")
-        # set properties
-        self.data_flows[data_flow_id].modify_origin(from_state, from_key)
-
-    def modify_data_flow_from_key(self, data_flow_id, from_key):
-        """The function accepts consistent data_flow change of from_key.
-
-        :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
-        :param int from_key: the for respective from_state unique data_port_id
-        """
-        #check if type is valid
-        self.is_valid_data_flow_id(data_flow_id)
-        if from_key is not None and not type(from_key) == int:
-            raise TypeError("from_key must be of type int")
-
-        # consistency check
-        from_state = self.data_flows[data_flow_id].from_state
-        if from_state == self.state_id:
-            if not (from_key in self.input_data_ports or from_key in self.scoped_variables):
-                raise AttributeError("from_key must be in list of input_data_ports or scoped_variables")
-        else:  # child
-            if not from_key in self.states[from_state].output_data_ports:
-                raise AttributeError("from_key must be in list of child-state input_data_ports")
-
-        # set property
-        self.data_flows[data_flow_id].from_key = from_key
-
-    def modify_data_flow_to_state(self, data_flow_id, to_state, to_key):
-        """The function accepts consistent data_flow changes of to_state with respective to_key.
-
-        :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
-        :param str to_state: string of this state- or one of its child-state-state_id
-        :param int to_key: the for respective to_state unique data_port_id
-        """
-        # check if types are valid
-        self.is_valid_data_flow_id(data_flow_id)
-        if not type(to_state) == str:
-            raise TypeError("to_state must be of type str")
-        if not type(to_key) == int:
-            raise TypeError("to_key must be of type int")
-
-        # consistency check
-        if to_state == self.state_id:
-            if not (to_key in self.scoped_variables or to_key in self.output_data_ports):
-                raise AttributeError("to_key must be in list of child-state input_data_ports or own scoped_variables")
-        else:  # child
-            if not to_state in self.states:
-                raise AttributeError("to_state must be in list of child-states")
-            if not to_key in self.states[to_state].input_data_ports:
-                raise AttributeError("to_key must be in list of child-state input_data_ports")
-
-        # set properties
-        self.data_flows[data_flow_id].modify_target(to_state, to_key)
-
-    def modify_data_flow_to_key(self, data_flow_id, to_key):
-        """The function accepts consistent data_flow change of to_key.
-
-        :param int data_flow_id: a valid data_flow_id of ContainerState.data_flows
-        :param int to_key: the for respective to_state unique data_port_id
-        """
-        # check if type is valid
-        self.is_valid_data_flow_id(data_flow_id)
-        if not type(to_key) == int:
-            raise TypeError("from_key must be of type int")
-
-        # consistency check
-        to_state = self.data_flows[data_flow_id].to_state
-        if to_state == self.state_id:
-            if not (to_key in self.output_data_ports or to_key in self.scoped_variables):
-                raise AttributeError("to_key must be in list of child-state output_data_ports or scoped_variables")
-        else:  # child
-            if not to_key in self.states[to_state].input_data_ports:
-                raise AttributeError("to_key must be in list of child-state input_data_ports")
-
-        # set property
-        self.data_flows[data_flow_id].to_key = to_key
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions --------.----------------------------
@@ -816,10 +588,8 @@ class ContainerState(State):
         """
         if scoped_variable_id is None:
             scoped_variable_id = generate_data_flow_id()
-        if name in self.__scoped_variables_names:
-            raise AttributeError("A scoped variable with name %s already exists", name)
-        self.__scoped_variables_names.append(name)
-        self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value, scoped_variable_id)
+        self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value,
+                                                                    scoped_variable_id, self)
         return scoped_variable_id
 
     @Observable.observed
@@ -834,45 +604,55 @@ class ContainerState(State):
         # delete all data flows connected to scoped_variable
         self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
 
-        # remove scoped variable name
-        if self._scoped_variables[scoped_variable_id].name in self.__scoped_variables_names:
-            self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
         # delete scoped variable
         del self._scoped_variables[scoped_variable_id]
-
-    def modify_scoped_variable_name(self, name, scoped_variable_id):
-        if name in self.__scoped_variables_names:
-            logger.warning("A scoped variable with name %s already exists", name)
-            return
-        self.__scoped_variables_names.remove(self._scoped_variables[scoped_variable_id].name)
-        self._scoped_variables[scoped_variable_id].name = name
-        self.__scoped_variables_names.append(name)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------
     # ---------------------------------------------------------------------------------------------
 
-    def get_data_port_by_id(self, data_port_id):
-        """ Returns the io-data_port or scoped_variable with a certain data_id
+    def get_outcome(self, state_id, outcome_id):
+        if state_id == self.state_id:
+            if outcome_id in self.outcomes:
+                return self.outcomes[outcome_id]
+        elif state_id in self.states:
+            state = self.states[state_id]
+            if outcome_id in state.outcomes:
+                return state.outcomes[outcome_id]
+        return None
 
-        :param data_port_id: the unique id of the target data port
-        :return: the data port specified by the data port
+    def get_data_port(self, state_id, port_id):
+        """Searches for a data port
+
+        The data port specified the the state id and data port id is searched in the state itself and in its children.
+
+        :param str state_id: The id of the state the port is in
+        :param int port_id:  The id of the port
+        :return: The searched port or None if it is not found
         """
-        if data_port_id in self.input_data_ports:
-            return self.input_data_ports[data_port_id]
-        elif data_port_id in self.output_data_ports:
-            return self.output_data_ports[data_port_id]
-        elif data_port_id in self.scoped_variables:
-            return self.scoped_variables[data_port_id]
-        else:
-            raise AttributeError("Data_Port_id %s is not in input_data_ports, output_data_ports or scoped_variables", data_port_id)
+        if state_id == self.state_id:
+            return self.get_data_port_by_id(port_id)
+        for child_state_id, child_state in self.states.iteritems():
+            if state_id != child_state_id:
+                continue
+            port = child_state.get_data_port_by_id(port_id)
+            if port:
+                return port
+        return None
 
-    # def get_connected_data_ports(self, data_port_id):
-    #     connected_data_ports = []
-    #     for data_flow in self.data_flows.itervalues():
-    #         if data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
-    #             if data_flow.from_state == self.state_id:
-    #                 connected_data_ports.append(self.get_data_port_by_id(data_flow.from_key))
+    def get_data_port_by_id(self, data_port_id):
+        """Search for the given data port id in the data ports of the state
+
+        The method tries to find a data port in the input and output data ports as well as in the scoped variables.
+        :param data_port_id: the unique id of the data port
+        :return: the data port with the searched id or None if not found
+        """
+        data_port = super(ContainerState, self).get_data_port_by_id(data_port_id)
+        if data_port:
+            return data_port
+        if data_port_id in self.scoped_variables:
+            return self.scoped_variables[data_port_id]
+        return None
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- input data handling --------------------------------------
@@ -1090,23 +870,321 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
 
     def check_child_validity(self, child):
+        """Check validity of passed child object
+
+        The method is called by state child objects (transitions, data flows) when these are initialized or changed. The
+        method checks the type of the child and then checks its validity in the context of the state.
+
+        :param object child: The child of the state that is to be tested
+        :return bool validity, str message: validity is True, when the child is valid, False else. message gives more
+            information especially if the child is not valid
+        """
         # First let the state do validity checks for outcomes and data ports
         valid, message = super(ContainerState, self).check_child_validity(child)
-        if not valid:
+        if not valid and message != "no valid child type":
             return False, message
         # Continue with checks if previous ones did not fail
+        # Check type of child and call appropriate validity test
         if isinstance(child, DataFlow):
             return self._check_data_flow_validity(child)
         if isinstance(child, Transition):
-            self._check_transition_validity(child)
-        return True, message
+            return self._check_transition_validity(child)
+        return valid, message
 
-    def _check_data_flow_validity(self, check_transition):
-        logger.debug("check_data_flow_validity")
+    def check_data_port_connection(self, check_data_port):
+        """Checks the connection validity of a data port
+
+        The method is called by a child state to check the validity of a data port in case it is connected with data
+        flows. The data port does not belong to 'self', but to one of self.states.
+        If the data port is connected to a data flow, the method checks, whether these connect consistent data types
+        of ports.
+        :param awesome_tool.statemachine.data_port.DataPort check_data_port: The port to check
+        :return: valid, message
+        """
+        for data_flow in self.data_flows.itervalues():
+            # Check whether the data flow connects the given port
+            from_port = self.get_data_port(data_flow.from_state, data_flow.from_key)
+            to_port = self.get_data_port(data_flow.to_state, data_flow.to_key)
+            if check_data_port is from_port or check_data_port is to_port:
+                if not type_inherits_of_type(from_port.data_type, to_port.data_type):
+                    return False, "Connection of two non-compatible data types"
         return True, "valid"
 
-    def _check_transition_validity(self, check_data_flow):
-        logger.debug("check_transition_validity")
+    def _check_data_port_validity(self, check_data_port):
+        valid, message = super(ContainerState, self)._check_data_port_validity(check_data_port)
+        if not valid:
+            return False, message
+        if check_data_port.data_port_id not in self.scoped_variables:
+            return True, message
+        return self._check_scoped_variable_name(check_data_port)
+
+    def _check_data_port_id(self, data_port):
+        """Checks the validity of a data port id
+
+        Checks whether the id of the given data port is already used by anther data port (input, output, scoped vars)
+        within the state.
+
+        :param awesome_tool.statemachine.data_port.DataPort data_port: The data port to be checked
+        :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
+            more information especially if the data port is not valid
+        """
+        # First check inputs and outputs
+        valid, message = super(ContainerState, self)._check_data_port_id(data_port)
+        if not valid:
+            return False, message
+        # Container state also has scoped variables
+        for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
+            if data_port.data_port_id == scoped_variable_id and data_port is not scoped_variable:
+                return False, "data port id already existing in state"
+        return True, message
+
+    def _check_scoped_variable_name(self, check_scoped_variable):
+        """Checks the validity of a scoped variable name
+
+        Checks whether the name of the given scoped variable is already used by anther scoped variable within the state.
+
+        :param awesome_tool.statemachine.scope.ScopedVariable check_scoped_variable: The scoped variable to be checked
+        :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
+            more information especially if the scoped variable is not valid
+        """
+        for scoped_variable in self.scoped_variables.values():
+            if check_scoped_variable.name == scoped_variable.name and check_scoped_variable is not scoped_variable:
+                return False, "Name of scoped variable already used by another scoped variable within the state"
+        return True, "valid"
+
+    def _check_data_flow_validity(self, check_data_flow):
+        """Checks the validity of a data flow
+
+        Calls further checks to inspect the id, ports and data types.
+
+        :param awesome_tool.statemachine.data_flow.DataFlow check_data_flow: The data flow to be checked
+        :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
+            more information especially if the data flow is not valid
+        """
+        valid, message = self._check_data_flow_id(check_data_flow)
+        if not valid:
+            return False, message
+
+        valid, message = self._check_data_flow_ports(check_data_flow)
+        if not valid:
+            return False, message
+
+        return self._check_data_flow_types(check_data_flow)
+
+    def _check_data_flow_id(self, data_flow):
+        """Checks the validity of a data flow id
+
+        Checks whether the id of the given data flow is already by anther data flow used within the state.
+
+        :param awesome_tool.statemachine.data_flow.DataFlow data_flow: The data flow to be checked
+        :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
+            more information especially if the data flow is not valid
+        """
+        data_flow_id = data_flow.data_flow_id
+        if data_flow_id in self.data_flows and data_flow is not self.data_flows[data_flow_id]:
+            return False, "data_flow_id already existing"
+        return True, "valid"
+
+    def _check_data_flow_ports(self, data_flow):
+        """Checks the validity of the ports of a data flow
+
+        Checks whether the ports of a data flow are existing and whether it is allowed to connect these ports.
+
+        :param awesome_tool.statemachine.data_flow.DataFlow data_flow: The data flow to be checked
+        :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
+            more information especially if the data flow is not valid
+        """
+        from_state_id = data_flow.from_state
+        to_state_id = data_flow.to_state
+        from_data_port_id = data_flow.from_key
+        to_data_port_id = data_flow.to_key
+
+        # Check whether to and from port are existing
+        from_data_port = self.get_data_port(from_state_id, from_data_port_id)
+        if not from_data_port:
+            return False, "Data flow origin not existing"
+        to_data_port = self.get_data_port(to_state_id, to_data_port_id)
+        if not to_data_port:
+            return False, "Data flow target not existing"
+
+        # Check, whether the origin of the data flow is valid
+        if from_state_id == self.state_id:  # data_flow originates in container state
+            if from_data_port_id not in self.input_data_ports and from_data_port_id not in self.scoped_variables:
+                return False, "Data flow origin port must be an input port or scoped variable, when the data flow " \
+                              "starts in the parent state"
+        else:  # data flow originates in child state
+            if from_data_port_id not in from_data_port.parent.output_data_ports:
+                return False, "Data flow origin port must be an output port, when the data flow " \
+                              "starts in the child state"
+
+        # Check, whether the target of a data flow is valid
+        if to_state_id == self.state_id:  # data_flow ends in container state
+            if to_data_port_id not in self.output_data_ports and to_data_port_id not in self.scoped_variables:
+                return False, "Data flow target port must be an output port or scoped variable, when the data flow " \
+                              "goes to the parent state"
+        else:  # data_flow ends in child state
+            if to_data_port_id not in to_data_port.parent.input_data_ports:
+                return False, "Data flow target port must be an input port, when the data flow goes to a child state"
+
+        # Check, whether origin and target are within the same child state
+        if from_state_id == to_state_id and from_state_id != self.state_id:
+            return False, "Data flow target state cannot be the origin state"
+
+        # Check, whether the target port is already connected
+        for existing_data_flow in self.data_flows.itervalues():
+            to_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
+            if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
+                # Scoped variables are an exception, they can be connected several times
+                if not to_data_port.parent or to_data_port_id not in to_data_port.parent.scoped_variables:
+                    return False, "Data flow target is already connected to another data flow"
+
+        return True, "valid"
+
+    def _check_data_flow_types(self, check_data_flow):
+        """Checks the validity of the data flow connection
+
+        Checks whether the ports of a data flow have matching data types.
+
+        :param awesome_tool.statemachine.data_flow.DataFlow check_data_flow: The data flow to be checked
+        :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
+            more information especially if the data flow is not valid
+        """
+        # Check whether the data types or origin and target fit
+        from_data_port = self.get_data_port(check_data_flow.from_state, check_data_flow.from_key)
+        to_data_port = self.get_data_port(check_data_flow.to_state, check_data_flow.to_key)
+        if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
+            return False, "Data flow origin and target do not have matching data types"
+        return True, "valid"
+
+    def _check_transition_validity(self, check_transition):
+        """Checks the validity of a transition
+
+        Calls further checks to inspect the id, origin, target and connection of the transition.
+
+        :param awesome_tool.statemachine.transition.Transition check_transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
+        valid, message = self._check_transition_id(check_transition)
+        if not valid:
+            return False, message
+
+        # Separate check for start transitions
+        if check_transition.from_state is None:
+            return self._check_start_transition(check_transition)
+
+        valid, message = self._check_transition_origin(check_transition)
+        if not valid:
+            return False, message
+
+        valid, message = self._check_transition_target(check_transition)
+        if not valid:
+            return False, message
+
+        return self._check_transition_connection(check_transition)
+
+    def _check_transition_id(self, transition):
+        """Checks the validity of a transition id
+
+        Checks whether the transition id is already used by another transition within the state
+
+        :param awesome_tool.statemachine.transition.Transition transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
+        transition_id = transition.transition_id
+        if transition_id in self.transitions and transition is not self.transitions[transition_id]:
+            return False, "transition_id already existing"
+        return True, "valid"
+
+    def _check_start_transition(self, start_transition):
+        """Checks the validity of a start transition
+
+        Checks whether the given transition is a start transition a whether it is the only one within the state.
+
+        :param awesome_tool.statemachine.transition.Transition start_transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
+        for transition in self.transitions.itervalues():
+            if transition.from_state is None:
+                if start_transition is not transition:
+                    return False, "Only one start transition is allowed"
+
+        if start_transition.from_outcome is not None:
+            return False, "from_outcome must not be set in start transition"
+
+        return self._check_transition_target(start_transition)
+
+    def _check_transition_target(self, transition):
+        """Checks the validity of a transition target
+
+        Checks whether the transition target is valid.
+
+        :param awesome_tool.statemachine.transition.Transition transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
+
+        to_state_id = transition.to_state
+        to_outcome_id = transition.to_outcome
+
+        if to_state_id == self.state_id:
+            if to_outcome_id not in self.outcomes:
+                return False, "to_outcome is not existing"
+        else:
+            if to_state_id not in self.states:
+                return False, "to_state is not existing"
+            if to_outcome_id is not None:
+                return False, "to_outcome must be None as transition goes to child state"
+
+        return True, "valid"
+
+    def _check_transition_origin(self, transition):
+        """Checks the validity of a transition origin
+
+        Checks whether the transition origin is valid.
+
+        :param awesome_tool.statemachine.transition.Transition transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
+        from_state_id = transition.from_state
+        from_outcome_id = transition.from_outcome
+
+        if from_state_id != self.state_id and from_state_id not in self.states:
+            return False, "from_state not existing"
+
+        from_outcome = self.get_outcome(from_state_id, from_outcome_id)
+        if from_outcome is None:
+            return False, "from_outcome not existing in from_state"
+
+        return True, "valid"
+
+    def _check_transition_connection(self, check_transition):
+        """Checks the validity of a transition connection
+
+        Checks whether the transition is allowed to connect the origin with the target.
+
+        :param awesome_tool.statemachine.transition.Transition check_transition: The transition to be checked
+        :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
+            more information especially if the transition is not valid
+        """
+        from_state_id = check_transition.from_state
+        from_outcome_id = check_transition.from_outcome
+        to_state_id = check_transition.to_state
+        to_outcome_id = check_transition.to_outcome
+
+        # check for connected origin
+        for transition in self.transitions.itervalues():
+            if transition.from_state == from_state_id:
+                if transition.from_outcome == from_outcome_id:
+                    if check_transition is not transition:
+                        return False, "transition origin already connected to another transition"
+
+        if from_state_id in self.states and to_state_id in self.states and to_outcome_id is not None:
+            return False, "no transition from one outcome to another one on the same hierarchy allowed"
+
         return True, "valid"
 
     #########################################################################
@@ -1123,16 +1201,19 @@ class ContainerState(State):
     @states.setter
     @Observable.observed
     def states(self, states):
-        if states is None:
-            self._states = {}
-        else:
+        # First safely remove all existing states (recursively!), as they will be replaced
+        state_ids = self.states.keys()
+        for state_id in state_ids:
+            self.remove_state(state_id)
+        if states is not None:
             if not isinstance(states, dict):
                 raise TypeError("states must be of type dict")
             for state in states.itervalues():
-                if not isinstance(state, State):
-                    raise TypeError("element of container_state.states must be of type State")
-                state.parent = self
-            self._states = states
+                self.add_state(state)
+            #     if not isinstance(state, State):
+            #         raise TypeError("element of container_state.states must be of type State")
+            #     state.parent = self
+            # self._states = states
 
     @property
     def transitions(self):
@@ -1144,9 +1225,11 @@ class ContainerState(State):
     @transitions.setter
     @Observable.observed
     def transitions(self, transitions):
-        if transitions is None:
-            self._transitions = {}
-        else:
+        # First safely remove all existing transitions, as they will be replaced
+        transition_ids = self.transitions.keys()
+        for transition_id in transition_ids:
+            self.remove_transition(transition_id)
+        if transitions is not None:
             if not isinstance(transitions, dict):
                 raise TypeError("transitions must be of type dict")
             for transition in transitions.itervalues():
@@ -1165,9 +1248,11 @@ class ContainerState(State):
     @data_flows.setter
     @Observable.observed
     def data_flows(self, data_flows):
-        if data_flows is None:
-            self._data_flows = {}
-        else:
+        # First safely remove all existing data flows, as they will be replaced
+        data_flow_ids = self.data_flows.keys()
+        for data_flow_id in data_flow_ids:
+            self.remove_data_flow(data_flow_id)
+        if data_flows is not None:
             if not isinstance(data_flows, dict):
                 raise TypeError("data_flows must be of type dict")
             for data_flow in data_flows.itervalues():
@@ -1203,11 +1288,13 @@ class ContainerState(State):
         :param start_state_id: The state id of the state which should be executed first in the Container state
         """
         if start_state_id is not None and start_state_id not in self.states:
-            raise AttributeError("start_state_id does not exist")
+            raise ValueError("start_state_id does not exist")
 
         if start_state_id is None and to_outcome is not None:
             if to_outcome not in self.outcomes:
-                raise AttributeError("to_outcome does not exist")
+                raise ValueError("to_outcome does not exist")
+            if start_state_id != self.state_id:
+                raise ValueError("to_outcome defined but start_state_id is not state_id")
 
         # First we remove the transition to the start state
         for transition_id in self.transitions:
