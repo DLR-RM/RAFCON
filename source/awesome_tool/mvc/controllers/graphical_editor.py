@@ -429,7 +429,7 @@ class GraphicalEditorController(ExtendedController):
                     for model in self.model.selection:
                         offset = None
                         model_meta = model.meta['gui']['editor_opengl']
-                        model_temp = model.meta['gui']['editor_opengl']
+                        model_temp = model.temp['gui']['editor']
                         if isinstance(model, StateModel):
                             offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
                             model_temp['original_rel_pos'] = copy(model_meta['rel_pos'])
