@@ -169,8 +169,8 @@ class StateMachineHelper():
 
         if current_state_is_container and new_state_is_container:  # TRANSFORM from CONTAINER- TO CONTAINER-STATE
 
-            # by default all transitions are left out in the new container state
-            # -> because switch from Barrier, Preemptive or Hierarchy has always different roles
+            # by default all transitions are left out if the new and original state are container states
+            # -> because switch from Barrier, Preemptive or Hierarchy has always different rules
             state_transitions = {}
             state_start_state_id = None
             logger.info("type change from %s to %s" % (type(source_state), target_state_class))
@@ -357,6 +357,12 @@ class StateMachineHelper():
         # handle special case of BarrierConcurrencyState -> secure decider state model to not be overwritten
         if isinstance(new_state_m.state, BarrierConcurrencyState):
             decider_state_m = new_state_m.states[UNIQUE_DECIDER_STATE_ID]
+
+        # by default all transitions are left out if the new and original state are container states
+        # -> because Barrier, Preemptive or Hierarchy has always different rules
+        if isinstance(orig_state_m.state, ContainerState) and isinstance(new_state_m.state, ContainerState):
+            for i in range(len(orig_model_property_refs['transitions'])):
+                orig_model_property_refs['transitions'].pop()
 
         # insert and link original state model attributes (child-models) into/with new state model (the new parent)
         for prop_name, value in orig_model_property_refs.iteritems():
