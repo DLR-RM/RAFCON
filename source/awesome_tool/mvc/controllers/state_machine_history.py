@@ -146,13 +146,13 @@ class StateMachineHistoryController(ExtendedController):
             # else:
             # self.new_change(action.before_model, action.before_prop_name, action.before_info)
             if not 'method_name' in action.before_info:
-                logger.warning("Found no method_name in before_info")
+                logger.warning("Found no method_name in before_info %s" % action.before_info)
                 method_name = None
             else:
                 method_name = action.before_info['method_name']
 
             if not 'instance' in action.before_info:
-                logger.warning("Found no instance in before_info")
+                logger.warning("Found no instance in before_info %s" % action.before_info)
                 inst = None
             else:
                 inst = action.before_info['instance']

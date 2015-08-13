@@ -643,6 +643,9 @@ class HistoryTreeElement:
         self.next_id = next_id
         self.old_next_ids = old_next_ids
 
+    def __str__(self):
+        return "prev_id: %s next_id: %s and other next_ids: %s" % (self.prev_id, self.next_id, self.old_next_ids)
+
 
 class History(ModelMT):
 
@@ -690,7 +693,7 @@ class History(ModelMT):
         :param pointer_on_version_to_recover: the id of the list element which is to recover
         :return:
         """
-        logger.info("recover version %s of full state machine history" % pointer_on_version_to_recover)
+        logger.info("recover version %s of trail state machine edition history" % pointer_on_version_to_recover)
         # search for traceable path -> list of action to undo and list of action to redo
         actual_version_pointer = self.changes.trail_history[self.changes.trail_pointer].version_id
         logger.debug("actual version_id %s and goal version_id %s" %
@@ -700,13 +703,13 @@ class History(ModelMT):
         # logger.debug("actual version id %s " % self.changes.trail_history[self.changes.trail_pointer].version_id)
         while not self.changes.trail_pointer == -1 and not int(pointer_on_version_to_recover) == int(actual_version_pointer):
             undo_redo_list.append((actual_version_pointer, 'undo'))
-            logger.info("%s" % dir(self.changes.all_time_history[actual_version_pointer]))
+            logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
             logger.info(str(self.changes.all_time_history[actual_version_pointer].prev_id))
             actual_version_pointer = self.changes.all_time_history[actual_version_pointer].prev_id
 
             # logger.info("%s %s %s " % (type(pointer_on_version_to_recover), type(actual_version_pointer), pointer_on_version_to_recover == actual_version_pointer))
             if actual_version_pointer is None:
-                logger.warning("version could not be found 'backward'")
+                # logger.warning("version could not be found 'backward'")
                 undo_redo_list = []
                 break
 
@@ -715,6 +718,8 @@ class History(ModelMT):
         if self.changes.trail_pointer == -1:
             actual_version_pointer = self.changes.trail_history[self.changes.trail_pointer + 1].version_id
             undo_redo_list.append((actual_version_pointer, 'redo'))
+        elif self.changes.trail_pointer is None:
+            actual_version_pointer = self.changes.trail_history[0].version_id
         else:
             actual_version_pointer = self.changes.trail_history[self.changes.trail_pointer].version_id
         if not undo_redo_list or self.changes.trail_pointer == -1 \
@@ -722,18 +727,19 @@ class History(ModelMT):
             actual_version_pointer = self.changes.all_time_history[actual_version_pointer].next_id
             undo_redo_list.append((actual_version_pointer, 'redo'))
             while not int(pointer_on_version_to_recover) == int(actual_version_pointer):
-                logger.info("%s" % dir(self.changes.all_time_history[actual_version_pointer]))
+                logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
                 logger.info(str(self.changes.all_time_history[actual_version_pointer].next_id))
                 actual_version_pointer = self.changes.all_time_history[actual_version_pointer].next_id
 
                 # logger.info("%s %s %s " % (type(pointer_on_version_to_recover), type(actual_version_pointer), pointer_on_version_to_recover == actual_version_pointer))
                 if actual_version_pointer is None:
-                    logger.warning("version could not be found 'forward'")
+                    logger.warning("version could not be found 'forward' and 'backward'")
+                    undo_redo_list = []
                     break
                 undo_redo_list.append((actual_version_pointer, 'redo'))
 
 
-        logger.info("steps to perform %s" % undo_redo_list)
+        logger.info("found steps to perform %s to reach version_id %s" % (undo_redo_list, pointer_on_version_to_recover))
         for elem in undo_redo_list:
             if elem[1] == 'undo':
                 # do undo
@@ -756,7 +762,7 @@ class History(ModelMT):
     def undo(self):
         if not self.changes.trail_history or self.changes.trail_pointer < 0 \
                 or not self.changes.trail_pointer < len(self.changes.trail_history):
-            logger.debug("There is no more TrailHistory element to Undo")
+            logger.debug("There is no more TrailEditionHistory element to Undo")
             return
         # else:
         #     logger.debug("do Undo %s %s %s" % (bool(self.changes.trail_history), self.changes.trail_history, (self.changes.trail_pointer, len(self.changes.trail_history))))
@@ -1223,7 +1229,8 @@ class History(ModelMT):
                     print 'kwargs'
                 elem['level'].append('kwargs')
                 set_dict(info, elem)
-                find_parent(info['kwargs'], elem)
+                if 'method_name' in info['kwargs'] and 'instance' in info['kwargs']:
+                    find_parent(info['kwargs'], elem)
             elif 'info' in info and info['info']:
                 if self.with_prints:
                     print 'info'
@@ -1243,8 +1250,10 @@ class History(ModelMT):
         overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
                                       'info': []})
         info_print = ''
+        info_count = 0
         for elem in overview['info']:
-            info_print += "\n" + str(elem)
+            info_print += "\ninfo %s: %s" % (info_count, str(elem))
+            info_count += 1
         if self.with_prints:
             print info_print
             print "model: ", overview['model']
@@ -1319,7 +1328,7 @@ class ChangeHistory(Observable):
         self.trail_pointer = len(self.trail_history) - 1
         if self.trail_pointer == -1:
             self.trail_pointer = None
-        self.all_time_pointer = len(self.all_time_history) - 1
+        self.all_time_pointer = len(self.all_time_history) - 1  # general should be equal to self.counter and version_id
 
     @Observable.observed
     def undo(self):
@@ -1362,6 +1371,6 @@ class ChangeHistory(Observable):
         self.trail_history = []
         self.all_time_history = []
 
-        self.trail_pointer = -1
-        self.all_time_pointer = -1
+        self.trail_pointer = None
+        self.all_time_pointer = None
         self.counter = 0
