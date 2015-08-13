@@ -75,11 +75,11 @@ class StateOutcomesListController(ExtendedController):
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
 
         view['name_cell'].connect('edited', self.on_name_modification)
-        view.tree_view.connect("grab-focus", self.on_focus)
+        # view.tree_view.connect("grab-focus", self.on_focus)
 
     def on_focus(self, widget, data=None):
         # logger.debug("OUTCOMES_LIST get new FOCUS")
-        path = self.view.tree_view.get_cursor()
+        # path = self.view.tree_view.get_cursor()
         try:
             self.update_internal_data_base()
             self.update_tree_store()
@@ -117,12 +117,12 @@ class StateOutcomesListController(ExtendedController):
                 transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
             if text is not None:
-                logger.debug("s31")
+                # logger.debug("s31")
                 to_state_id = text.split('.')[1]
                 transition_parent_state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                        to_state_id=to_state_id, to_outcome=None, transition_id=None)
             else:
-                logger.debug("s32")
+                # logger.debug("s32")
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
 
     def on_to_outcome_modification(self, widget, path, text):
@@ -131,10 +131,10 @@ class StateOutcomesListController(ExtendedController):
         transition_parent_state = self.model.parent.state
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
             if outcome_id in self.dict_to_other_state.keys():
-                logger.debug("o1")
+                # logger.debug("o1")
                 t_id = int(self.dict_to_other_state[outcome_id][2])
             else:
-                logger.debug("o2")
+                # logger.debug("o2")
                 t_id = int(self.dict_to_other_outcome[outcome_id][2])
             if text is not None:
                 new_to_outcome_id = int(text.split('.')[2])
@@ -144,13 +144,13 @@ class StateOutcomesListController(ExtendedController):
                 transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
             if text is not None:
-                logger.debug("o31")
+                # logger.debug("o31")
                 to_outcome = int(text.split('.')[2])
                 self.model.parent.state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                     to_state_id=self.model.parent.state.state_id, to_outcome=to_outcome,
                                                     transition_id=None)
             else:
-                logger.debug("o32")
+                # logger.debug("o32")
                 logger.debug("outcome-editor got None in to_outcome-combo-change no transition is added")
 
     def on_add(self, button, info=None):
