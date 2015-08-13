@@ -75,16 +75,18 @@ class StateOutcomesListController(ExtendedController):
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
 
         view['name_cell'].connect('edited', self.on_name_modification)
-        # view.tree_view.connect("grab-focus", self.on_focus)
+        view.tree_view.connect("grab-focus", self.on_focus)
 
-    # def on_focus(self, widget, data=None):
-    #     # pass
-    #     logger.debug("OUTCOMES_LIST get new FOCUS")
-    #     path = self.view.tree_view.get_cursor()
-    #     self.update_internal_data_base()
-    #     self.update_tree_store()
-    #     # if path[0]:  # if valid
-    #     #     self.view.tree_view.set_cursor(path[0])
+    def on_focus(self, widget, data=None):
+        # logger.debug("OUTCOMES_LIST get new FOCUS")
+        path = self.view.tree_view.get_cursor()
+        try:
+            self.update_internal_data_base()
+            self.update_tree_store()
+        except:
+            logger.debug("update failed")
+        # if path[0]:  # if valid
+        #     self.view.tree_view.set_cursor(path[0])
 
     def on_name_modification(self, widget, path, text):
         outcome_id = self.tree_store[path][6].outcome_id
@@ -98,56 +100,57 @@ class StateOutcomesListController(ExtendedController):
 
     def on_to_state_modification(self, widget, path, text):
         # logger.debug("on_to_state_modification %s, %s, %s" % (widget, path, text))
-        to_state_id = text.split('.')[1]
         outcome_id = int(self.tree_store[path][0])
         transition_parent_state = self.model.parent.state
-        if outcome_id in self.dict_to_other_state.keys():
-            # logger.debug("1")
-            t_id = int(self.dict_to_other_state[outcome_id][2])
-            if text is not None:
-                transition_parent_state.transitions[t_id].to_state = to_state_id
+        if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
+            if outcome_id in self.dict_to_other_state.keys():
+                # logger.debug("1")
+                t_id = int(self.dict_to_other_state[outcome_id][2])
             else:
-                transition_parent_state.remove_outcome(t_id)
-        elif outcome_id in self.dict_to_other_outcome.keys():
-            t_id = int(self.dict_to_other_outcome[outcome_id][2])
+                # logger.debug("2")
+                t_id = int(self.dict_to_other_outcome[outcome_id][2])
             if text is not None:
-                transition_parent_state.transitions[t_id].to_state = to_state_id
+                to_state_id = text.split('.')[1]
+                if not transition_parent_state.transitions[t_id].to_state == to_state_id:
+                    transition_parent_state.transitions[t_id].to_state = to_state_id
             else:
-                transition_parent_state.remove_outcome(t_id)
+                transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
             if text is not None:
-                transition_parent_state.add_outcome(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
-                                                    to_state_id=to_state_id, to_outcome=None, transition_id=None)
+                logger.debug("s31")
+                to_state_id = text.split('.')[1]
+                transition_parent_state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
+                                                       to_state_id=to_state_id, to_outcome=None, transition_id=None)
             else:
+                logger.debug("s32")
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
 
     def on_to_outcome_modification(self, widget, path, text):
         # logger.debug("on_to_outcome_modification %s, %s, %s" % (widget, path, text))
         outcome_id = int(self.tree_store[path][0])
-        new_to_outcome_id = int(text.split('.')[2])
         transition_parent_state = self.model.parent.state
-        if outcome_id in self.dict_to_other_state.keys():
-            # logger.debug("1")
-            t_id = int(self.dict_to_other_state[outcome_id][2])
-            if text is not None:
-                transition_parent_state.transitions[t_id].to_key = new_to_outcome_id
+        if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
+            if outcome_id in self.dict_to_other_state.keys():
+                logger.debug("o1")
+                t_id = int(self.dict_to_other_state[outcome_id][2])
             else:
-                transition_parent_state.remove_transition(t_id)
-        elif outcome_id in self.dict_to_other_outcome.keys():
-            # logger.debug("2")
-            t_id = int(self.dict_to_other_outcome[outcome_id][2])
+                logger.debug("o2")
+                t_id = int(self.dict_to_other_outcome[outcome_id][2])
             if text is not None:
-                transition_parent_state.transitions[t_id].to_key = new_to_outcome_id
+                new_to_outcome_id = int(text.split('.')[2])
+                if not transition_parent_state.transitions[t_id].to_outcome == new_to_outcome_id:
+                    transition_parent_state.transitions[t_id].to_outcome = new_to_outcome_id
             else:
                 transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
             if text is not None:
+                logger.debug("o31")
                 to_outcome = int(text.split('.')[2])
                 self.model.parent.state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                     to_state_id=self.model.parent.state.state_id, to_outcome=to_outcome,
                                                     transition_id=None)
             else:
-                # logger.debug("32")
+                logger.debug("o32")
                 logger.debug("outcome-editor got None in to_outcome-combo-change no transition is added")
 
     def on_add(self, button, info=None):
@@ -195,10 +198,10 @@ class StateOutcomesListController(ExtendedController):
         if hasattr(model, 'parent') and model.parent is not None:
             # check for "to state combos" -> so all states in parent
             parent_id = model.parent.state.state_id
-            for smdl in model.parent.states.values():
-                if not model.state.state_id == smdl.state.state_id:
-                    self.to_state_combo_list.append([smdl.state.name + "." + smdl.state.state_id,
-                                                     smdl.state.state_id, parent_id])
+            for parent_child_state_m in model.parent.states.values():
+                if not model.state.state_id == parent_child_state_m.state.state_id:
+                    self.to_state_combo_list.append([parent_child_state_m.state.name + "." + parent_child_state_m.state.state_id,
+                                                     parent_child_state_m.state.state_id, parent_id])
             # check for "to outcome combos" -> so all outcomes of parent
             for outcome in model.parent.state.outcomes.values():
                 # print "type outcome: ", outcome.name, type(outcome)
