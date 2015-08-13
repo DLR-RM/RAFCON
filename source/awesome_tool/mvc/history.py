@@ -693,18 +693,18 @@ class History(ModelMT):
         :param pointer_on_version_to_recover: the id of the list element which is to recover
         :return:
         """
-        logger.info("recover version %s of trail state machine edition history" % pointer_on_version_to_recover)
+        logger.info("recover version %s of trail state machine edit history" % pointer_on_version_to_recover)
         # search for traceable path -> list of action to undo and list of action to redo
         actual_version_pointer = self.changes.trail_history[self.changes.trail_pointer].version_id
-        logger.debug("actual version_id %s and goal version_id %s" %
-                     (self.changes.all_time_history[actual_version_pointer].action.version_id, pointer_on_version_to_recover))
+        # logger.debug("actual version_id %s and goal version_id %s" %
+        #              (self.changes.all_time_history[actual_version_pointer].action.version_id, pointer_on_version_to_recover))
         undo_redo_list = []
         #backward
         # logger.debug("actual version id %s " % self.changes.trail_history[self.changes.trail_pointer].version_id)
         while not self.changes.trail_pointer == -1 and not int(pointer_on_version_to_recover) == int(actual_version_pointer):
             undo_redo_list.append((actual_version_pointer, 'undo'))
-            logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
-            logger.info(str(self.changes.all_time_history[actual_version_pointer].prev_id))
+            # logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
+            # logger.info(str(self.changes.all_time_history[actual_version_pointer].prev_id))
             actual_version_pointer = self.changes.all_time_history[actual_version_pointer].prev_id
 
             # logger.info("%s %s %s " % (type(pointer_on_version_to_recover), type(actual_version_pointer), pointer_on_version_to_recover == actual_version_pointer))
@@ -727,8 +727,8 @@ class History(ModelMT):
             actual_version_pointer = self.changes.all_time_history[actual_version_pointer].next_id
             undo_redo_list.append((actual_version_pointer, 'redo'))
             while not int(pointer_on_version_to_recover) == int(actual_version_pointer):
-                logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
-                logger.info(str(self.changes.all_time_history[actual_version_pointer].next_id))
+                # logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
+                # logger.info(str(self.changes.all_time_history[actual_version_pointer].next_id))
                 actual_version_pointer = self.changes.all_time_history[actual_version_pointer].next_id
 
                 # logger.info("%s %s %s " % (type(pointer_on_version_to_recover), type(actual_version_pointer), pointer_on_version_to_recover == actual_version_pointer))
@@ -739,7 +739,7 @@ class History(ModelMT):
                 undo_redo_list.append((actual_version_pointer, 'redo'))
 
 
-        logger.info("found steps to perform %s to reach version_id %s" % (undo_redo_list, pointer_on_version_to_recover))
+        # logger.info("found steps to perform %s to reach version_id %s" % (undo_redo_list, pointer_on_version_to_recover))
         for elem in undo_redo_list:
             if elem[1] == 'undo':
                 # do undo
