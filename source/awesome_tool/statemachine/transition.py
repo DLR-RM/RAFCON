@@ -115,6 +115,30 @@ class Transition(Observable, yaml.YAMLObject):
             self._from_outcome = old_from_outcome
             raise ValueError("The transition origin could not be changed: {0}".format(message))
 
+    @Observable.observed
+    def modify_target(self, to_state, to_outcome=None):
+        """ Set from_state and from_outcome at ones to support fully valid transition modifications.
+        :param str from_state: valid origin state
+        :param int from_outcome: valid origin outcome
+        :return:
+        """
+        if not (to_state is None and (to_outcome is not int and to_outcome is not None)):
+            if not isinstance(to_state, str):
+                raise ValueError("to_state must be of type str")
+            if not isinstance(to_outcome, int) and not to_outcome is None:
+                raise ValueError("to_outcome must be of type int or None (if to_state is of type str)")
+
+        old_to_state = self.to_state
+        old_to_outcome = self.to_outcome
+        self._to_state = to_state
+        self._to_outcome = to_outcome
+
+        valid, message = self._check_validity()
+        if not valid:
+            self._from_state = old_to_state
+            self._from_outcome = old_to_outcome
+            raise ValueError("The transition origin could not be changed: {0}".format(message))
+
     @property
     def from_state(self):
         """Property for the _from_state field
