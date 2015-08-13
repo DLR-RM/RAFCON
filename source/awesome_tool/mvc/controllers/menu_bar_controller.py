@@ -405,7 +405,6 @@ class MenuBarController(ExtendedController):
     def on_start_activate(self, widget, data=None):
         logger.debug("Start execution engine ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.start(self.model.selected_state_machine_id)
-        return True
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Start from selected state ...")
@@ -420,27 +419,22 @@ class MenuBarController(ExtendedController):
     def on_pause_activate(self, widget, data=None):
         logger.debug("Pause execution engine ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.pause()
-        return True
 
     def on_stop_activate(self, widget, data=None):
         logger.debug("Stop execution engine ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
-        return True
 
     def on_step_mode_activate(self, widget, data=None):
         logger.debug("Activate execution engine step mode ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.step_mode()
-        return True
 
     def on_step_activate(self, widget, data=None):
         logger.debug("Execution step ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
-        return True
 
     def on_backward_step_activate(self, widget, data=None):
         logger.debug("Executing backward step ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.backward_step()
-        return True
 
     ######################################################
     # menu bar functionality - Help
