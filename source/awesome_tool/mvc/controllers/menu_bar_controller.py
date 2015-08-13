@@ -86,6 +86,7 @@ class MenuBarController(ExtendedController):
         root_state = HierarchyState("new root state")
         sm = StateMachine(root_state)
         awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+        return True
 
     def on_open_activate(self, widget=None, data=None, path=None):
         if path is None:
@@ -102,6 +103,7 @@ class MenuBarController(ExtendedController):
             [state_machine, version, creation_time] = awesome_tool.statemachine.singleton. \
                 global_storage.load_statemachine_from_yaml(load_path)
             awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+            return True
         except AttributeError as e:
             logger.error('Error while trying to open state-machine: {0}'.format(e))
 
@@ -122,6 +124,7 @@ class MenuBarController(ExtendedController):
 
         self.model.get_selected_state_machine_model().root_state.store_meta_data_for_state()
         logger.debug("Successfully saved graphics meta data.")
+        return True
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
         if path is None:
@@ -157,6 +160,7 @@ class MenuBarController(ExtendedController):
         """
         if force:
             self.refresh_libs_and_statemachines()
+            return True
         else:
             if awesome_tool.statemachine.singleton.state_machine_manager.check_if_dirty_sms():
                 message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
@@ -174,6 +178,7 @@ class MenuBarController(ExtendedController):
                 message.show()
             else:
                 self.refresh_libs_and_statemachines()
+                return True
 
     def on_refresh_message_dialog_response_signal(self, widget, response_id):
         if response_id == 42:
@@ -344,24 +349,28 @@ class MenuBarController(ExtendedController):
             self.view["data_flow_mode"].set_active(False)
         else:
             self.view["data_flow_mode"].set_active(True)
+        return True
 
     def show_all_data_flows_toggled_shortcut(self, *args):
         if self.view["show_all_data_flows"].get_active():
             self.view["show_all_data_flows"].set_active(False)
         else:
             self.view["show_all_data_flows"].set_active(True)
+        return True
 
     def show_show_data_flow_values_toggled_shortcut(self, *args):
         if self.view["show_data_flow_values"].get_active():
             self.view["show_data_flow_values"].set_active(False)
         else:
             self.view["show_data_flow_values"].set_active(True)
+        return True
 
     def show_aborted_preempted(self, *args):
         if self.view["show_aborted_preempted"].get_active():
             self.view["show_aborted_preempted"].set_active(False)
         else:
             self.view["show_aborted_preempted"].set_active(True)
+        return True
 
     def on_data_flow_mode_toggled(self, widget, data=None):
         if widget.get_active():
@@ -396,6 +405,7 @@ class MenuBarController(ExtendedController):
     def on_start_activate(self, widget, data=None):
         logger.debug("Start execution engine ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.start(self.model.selected_state_machine_id)
+        return True
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Start from selected state ...")
@@ -410,22 +420,27 @@ class MenuBarController(ExtendedController):
     def on_pause_activate(self, widget, data=None):
         logger.debug("Pause execution engine ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.pause()
+        return True
 
     def on_stop_activate(self, widget, data=None):
         logger.debug("Stop execution engine ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+        return True
 
     def on_step_mode_activate(self, widget, data=None):
         logger.debug("Activate execution engine step mode ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.step_mode()
+        return True
 
     def on_step_activate(self, widget, data=None):
         logger.debug("Execution step ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
+        return True
 
     def on_backward_step_activate(self, widget, data=None):
         logger.debug("Executing backward step ...")
         awesome_tool.statemachine.singleton.state_machine_execution_engine.backward_step()
+        return True
 
     ######################################################
     # menu bar functionality - Help
