@@ -55,6 +55,10 @@ def state_machine_path(path):
 def config_path(path):
     if not path or path == 'None':
         return None
+    # replace ~ with /home/user
+    path = os.path.expanduser(path)
+    # e.g. replace ${RAFCON_PATH} with the root path of RAFCON
+    path = os.path.expandvars(path)
     if not os.path.isdir(path):
         raise argparse.ArgumentTypeError("{0} is not a valid path".format(path))
     if os.access(path, os.R_OK):
@@ -71,9 +75,13 @@ if __name__ == '__main__':
     logger = log.get_logger("start")
     logger.info("Awesome tool launcher")
 
+    if not os.environ.get('RAFCON_PATH', None):
+        # set env variable PYTHON_PATH to the root directory of RAFCON
+        os.environ['RAFCON_PATH'] = os.path.dirname(os.path.dirname(__file__))
+
     home_path = os.path.expanduser('~')
     if home_path:
-        home_path = os.path.join(home_path, ".awesome_tool")
+        home_path = os.path.join(home_path, ".config", "rafcon")
     else:
         home_path = 'None'
 
