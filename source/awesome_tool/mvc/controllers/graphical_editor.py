@@ -89,6 +89,9 @@ class GraphicalEditorController(ExtendedController):
         self.ctrl_modifier = False
         self.space_bar = False
 
+        self.changed_models = []
+        self.changes_affect_children = False
+
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
@@ -384,6 +387,18 @@ class GraphicalEditorController(ExtendedController):
         if self.multi_selection_started:
             self._check_for_multi_selection()
 
+        if self.changed_models:
+            if len(self.changed_models) > 1:
+                self.changes_affect_children = True
+            reduced_list = StateMachineHelper.reduce_to_parent_states(self.changed_models)
+            if len(reduced_list) > 1:
+                state_m = self.root_state_m
+            else:
+                state_m = reduced_list[0]
+            self._publish_changes(state_m, self.changes_affect_children)
+            self.changed_models = []
+            self.changes_affect_children = False
+
         self._redraw()
 
     def _on_mouse_motion(self, widget, event):
@@ -426,14 +441,17 @@ class GraphicalEditorController(ExtendedController):
                 # - the offset of the mouse to the origin, which is kept throughout the movement to prevent jumps
                 if self.drag_origin_offset is None:
                     self.drag_origin_offset = []
+                    self.changes_affect_children = True
                     for model in self.model.selection:
                         offset = None
                         model_meta = model.meta['gui']['editor_opengl']
                         model_temp = model.temp['gui']['editor']
                         if isinstance(model, StateModel):
+                            self.changed_models.append(model)
                             offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
                             model_temp['original_rel_pos'] = copy(model_meta['rel_pos'])
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
+                            self.changed_models.append(model.parent)
                             offset = subtract_pos(self.mouse_move_start_coords, model_temp['inner_pos'])
                             model_temp['original_inner_rel_pos'] = copy(model_meta['inner_rel_pos'])
                         self.drag_origin_offset.append(offset)
@@ -444,37 +462,44 @@ class GraphicalEditorController(ExtendedController):
                             self._move_state(model, new_pos, redraw=False, publish_changes=False)
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
                             self._move_data_port(model, new_pos, redraw=False, publish_changes=False)
-                self._publish_changes(self.root_state_m, "Move multi-selection", affects_children=True)
                 self._redraw()
 
             # Move the current state, if the user didn't click on an outcome (wants to create a transition) or a
             # resize handler (wants to resize the state)
             elif isinstance(self.single_selection, StateModel) and \
                             self.selected_outcome is None and self.selected_resizer is None:
+                selected_state_m = self.single_selection
                 # Initially store starting position and offset (see comment above)
                 if self.drag_origin_offset is None:
-                    offset = self._get_position_relative_to_state(self.single_selection, self.mouse_move_start_coords)
+                    self.changes_affect_children = True
+                    self.changed_models.append(selected_state_m)
+                    offset = self._get_position_relative_to_state(selected_state_m, self.mouse_move_start_coords)
                     self.drag_origin_offset = offset
-                    self.single_selection.temp['gui']['editor']['original_rel_pos'] = \
-                        copy(self.single_selection.meta['gui']['editor_opengl']['rel_pos'])
+                    selected_state_m.temp['gui']['editor']['original_rel_pos'] = \
+                        copy(selected_state_m.meta['gui']['editor_opengl']['rel_pos'])
                 new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-                self._move_state(self.single_selection, new_pos, publish_changes=False)
+                self._move_state(selected_state_m, new_pos, publish_changes=False)
 
             # Move current data port, if the user didn't click on the connector (i. e. wants to create a data flow)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)) and \
                     not self.selected_port_connector:
+                selected_port_m = self.single_selection
                 # Initially store starting position and offset (see comment above)
                 if self.drag_origin_offset is None:
+                    self.changed_models.append(selected_port_m.parent)
                     self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
-                                                           self.single_selection.temp['gui']['editor']['inner_pos'])
-                    self.single_selection.temp['gui']['editor']['original_inner_rel_pos'] = \
-                        copy(self.single_selection.meta['gui']['editor_opengl']['inner_rel_pos'])
+                                                           selected_port_m.temp['gui']['editor']['inner_pos'])
+                    selected_port_m.temp['gui']['editor']['original_inner_rel_pos'] = \
+                        copy(selected_port_m.meta['gui']['editor_opengl']['inner_rel_pos'])
                 new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-                self._move_data_port(self.single_selection, new_pos)
+                self._move_data_port(selected_port_m, new_pos, publish_changes=False)
 
         # Move the selected waypoint (if there is one)
         if self.selected_waypoint is not None:
             # Move selected waypoint within its container state
+            parent_state_m = event.state
+            if parent_state_m not in self.changed_models:
+                self.changed_models.append(parent_state_m)
             self._move_waypoint(mouse_current_coord, event.state)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
@@ -484,6 +509,7 @@ class GraphicalEditorController(ExtendedController):
         if self.selected_resizer is not None:
             state_m = self.selected_resizer
             if self.drag_origin_offset is None:
+                self.changed_models.append(state_m)
                 lower_right_corner = (state_m.temp['gui']['editor']['pos'][0] +
                                       state_m.meta['gui']['editor_opengl']['size'][0],
                                       state_m.temp['gui']['editor']['pos'][1] -
@@ -493,6 +519,8 @@ class GraphicalEditorController(ExtendedController):
             modifier_keys = event.state
             keep_ratio = int(modifier_keys & SHIFT_MASK) > 0
             resize_content = int(modifier_keys & CONTROL_MASK) > 0
+            if resize_content:
+                self.changes_affect_children = True
             self._resize_state(state_m, new_pos, keep_ratio=keep_ratio, resize_content=resize_content)
 
         self.mouse_move_last_pos = (event.x, event.y)
@@ -847,7 +875,7 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor_gaphas']['rel_pos'] = (new_rel_pos[0], -new_rel_pos[1])
 
         if publish_changes:
-            self._publish_changes(state_m, "Move state", affects_children=True)
+            self._publish_changes(state_m, affects_children=True)
         if redraw:
             self._redraw()
 
@@ -881,7 +909,7 @@ class GraphicalEditorController(ExtendedController):
         port_m.meta['gui']['editor_opengl']['inner_rel_pos'] = new_rel_pos
 
         if publish_changes:
-            self._publish_changes(port_m.parent, "Move data port", affects_children=False)
+            self._publish_changes(port_m.parent, affects_children=False)
         if redraw:
             self._redraw()
 
@@ -923,13 +951,20 @@ class GraphicalEditorController(ExtendedController):
             self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
         if self.view.editor.has_focus():
-            if len(self.model.selection) > 0:
+            if self.model.selection:
                 for model in self.model.selection:
                     if isinstance(model, StateModel):
                         move_state(model, redraw=False, publish_changes=False)
                     elif isinstance(model, (DataPortModel, ScopedVariableModel)):
                         move_port(model, redraw=False, publish_changes=False)
-                self._publish_changes(self.root_state_m, "Move multi-selection", affects_children=True)
+
+                affects_children = len(self.model.selection) > 1
+                reduced_list = StateMachineHelper.reduce_to_parent_states(self.model.selection)
+                if len(reduced_list) > 1:
+                    state_m = self.root_state_m
+                else:
+                    state_m = reduced_list[0]
+                self._publish_changes(state_m, affects_children)
                 self._redraw()
             elif isinstance(self.single_selection, StateModel):
                 move_state(self.single_selection)
@@ -1002,10 +1037,9 @@ class GraphicalEditorController(ExtendedController):
             new_rel_pos = calculate_snap_point(prev_point, new_rel_pos, next_point)
 
         waypoints[waypoint_id] = new_rel_pos
-        self._publish_changes(connection_m, "Move waypoint", affects_children=False)
         self._redraw()
 
-    def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False):
+    def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False, publish_changes=False):
         """Resize the state by the given delta width and height
 
         The resize function checks the child states and keeps the state around the children, thus limiting the minimum
@@ -1146,8 +1180,8 @@ class GraphicalEditorController(ExtendedController):
             # Start recursive call of the content resize
             resize_children(state_m, old_size, state_meta['size'])
 
-        affects_children = self.has_content(self.single_selection) and resize_content
-        self._publish_changes(state_m, "Resize state", affects_children)
+        if publish_changes:
+            self._publish_changes(state_m, affects_children=resize_content)
         self._redraw()
 
     def _move_view(self, rel_motion, opengl_coords=False):
@@ -1791,12 +1825,10 @@ class GraphicalEditorController(ExtendedController):
         abs_pos = add_pos(rel_pos, state_pos)
         return abs_pos
 
-    def _publish_changes(self, model, name="Graphical Editor", affects_children=False):
+    def _publish_changes(self, model, affects_children=False):
         self.model.state_machine.marked_dirty = True
-        # logger.info("META_DATA HAS BEEN CHANGED")
         self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
-        logger.debug("publish changes to history")
-        # History.meta_changed_notify_after(self, model, name, affects_children)
+        # logger.debug("publish changes to history")
 
     def _delete_selection(self, *args):
         if self.view.editor.has_focus():
@@ -1908,6 +1940,6 @@ class GraphicalEditorController(ExtendedController):
                     new_size = (new_size[0], new_size[0] / old_size_ratio)
 
             new_corner_pos = add_pos(state_copy_m.temp['gui']['editor']['pos'], new_size)
-            self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True)
+            self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
 
             self._redraw()
