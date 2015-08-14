@@ -12,17 +12,24 @@ from awesome_tool.statemachine.singleton import global_variable_manager
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from awesome_tool.statemachine import interface
+from awesome_tool.mvc.runtime_config import global_runtime_config
+from os.path import expanduser
 
 global_focus = None
 
 
 def open_folder(query):
     import gtk
+    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+    if not last_path:
+        last_path = expanduser('~')
+
     dialog = gtk.FileChooserDialog(query,
                                    None,
                                    gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
                                    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+    dialog.set_current_folder(last_path)
     response = dialog.run()
 
     if response != gtk.RESPONSE_OK:
@@ -32,6 +39,7 @@ def open_folder(query):
     path = dialog.get_filename()
     dialog.destroy()
 
+    global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
     return path
 
 interface.open_folder_func = open_folder
@@ -39,18 +47,26 @@ interface.open_folder_func = open_folder
 
 def create_folder(query):
     import gtk
+    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+    if not last_path:
+        last_path = expanduser('~')
+
     dialog = gtk.FileChooserDialog(query,
                                    None,
                                    gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
                                    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                     gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+    dialog.set_current_folder(last_path)
     response = dialog.run()
+
     if response != gtk.RESPONSE_OK:
         dialog.destroy()
         return None
 
     path = dialog.get_filename()
     dialog.destroy()
+
+    global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
     return path
 
 interface.create_folder_func = create_folder
