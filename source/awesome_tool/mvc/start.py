@@ -17,6 +17,7 @@ import awesome_tool.statemachine.singleton as sm_singletons
 import awesome_tool.mvc.singleton as mvc_singletons
 
 from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.mvc.runtime_config import global_runtime_config
 from awesome_tool.statemachine.config import global_config
 
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
@@ -108,6 +109,7 @@ if __name__ == '__main__':
 
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
+    global_runtime_config.load(path=setup_config['gui_config_path'])
 
     # Initialize library
     sm_singletons.library_manager.initialize()

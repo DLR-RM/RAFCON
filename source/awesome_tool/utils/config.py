@@ -29,7 +29,10 @@ class DefaultConfig(object):
         self.storage = StorageUtils()
         self.path = None
 
-        self.__config_dict = yaml.load(self.default_config)
+        if not default_config:
+            self.__config_dict = {}
+        else:
+            self.__config_dict = yaml.load(self.default_config)
 
     def load(self, config_file, path=None):
         assert isinstance(config_file, str)
