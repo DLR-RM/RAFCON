@@ -202,7 +202,6 @@ class LibraryState(State):
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,
-            'path': data.script.path,
             'filename': data.script.filename
         }
         node = dumper.represent_mapping(cls.yaml_tag, dict_representation)

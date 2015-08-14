@@ -182,7 +182,7 @@ class StateMachineHelper():
                                            start_state_id=state_start_state_id,
                                            scoped_variables=source_state.scoped_variables,
                                            v_checker=source_state.v_checker,
-                                           path=source_state.script.path, filename=source_state.script.filename,
+                                           path=source_state.get_file_system_path(), filename=source_state.script.filename,
                                            check_path=False)
         else:
             if hasattr(source_state, "states"):
@@ -192,7 +192,7 @@ class StateMachineHelper():
             new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                            input_data_ports=source_state.input_data_ports,
                                            output_data_ports=source_state.output_data_ports,
-                                           outcomes=source_state.outcomes)  # , path=state.script.path, filename=state.script.filename,
+                                           outcomes=source_state.outcomes)  # , path=state.get_file_system_path(), filename=state.script.filename,
                                         # check_path=False)
 
         new_state._used_data_port_ids = source_state._used_data_port_ids

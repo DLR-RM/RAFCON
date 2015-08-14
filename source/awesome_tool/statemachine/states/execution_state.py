@@ -103,11 +103,10 @@ class ExecutionState(State):
             'name': data.name,
             'state_id': data.state_id,
             'description': data.description,
+            'filename' : data.script.filename,
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
-            'outcomes': data.outcomes,
-            'path': data.script.path,
-            'filename': data.script.filename
+            'outcomes': data.outcomes
         }
         return dict_representation
 
@@ -125,10 +124,8 @@ class ExecutionState(State):
         input_data_ports = dict_representation['input_data_ports']
         output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']
-        path = dict_representation['path']
         filename = dict_representation['filename']
-        state = ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, path, filename,
-                              check_path=False)
+        state = ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, filename=filename, check_path=False)
         try:
             state.description = dict_representation['description']
         except (ValueError, TypeError, KeyError):

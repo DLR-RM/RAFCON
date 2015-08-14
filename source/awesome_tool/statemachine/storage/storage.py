@@ -116,7 +116,7 @@ class StateMachineStorage(Observable):
         self.save_state_recursively(root_state, "")
         if statemachine.marked_dirty:
             statemachine.marked_dirty = False
-        statemachine.base_path = self.base_path
+        statemachine.file_system_path = self.base_path
         logger.debug("Successfully saved statemachine!")
 
     def save_script_file_for_state_and_source_path(self, state, state_path, force_full_load=False):
@@ -132,7 +132,7 @@ class StateMachineStorage(Observable):
         from awesome_tool.statemachine.states.library_state import LibraryState
         if not isinstance(state, LibraryState) or force_full_load:
             state_path_full = os.path.join(self.base_path, state_path)
-            source_script_file = os.path.join(state.script.path, state.script.filename)
+            source_script_file = os.path.join(state.get_file_system_path(), state.script.filename)
             destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
             if not source_script_file == destination_script_file:
                 #print "destination file: %s source file: %s" % (destination_script_file, source_script_file)
@@ -145,17 +145,17 @@ class StateMachineStorage(Observable):
                     script_file = open(destination_script_file, 'w')
                     script_file.write(state.script.script)
                     script_file.close()
-                state.script.path = state_path
-                state.script.filename = self.SCRIPT_FILE
+                state.script.reload_path()
             else:  # load text into script file
                 #print "destination file == source file: %s" % source_script_file
                 script_file = open(source_script_file, 'w')
                 script_file.write(state.script.script)
                 script_file.close()
 
+
     @staticmethod
     def save_script_file(state):
-        script_file_path = os.path.join(state.script.path, state.script.filename)
+        script_file_path = os.path.join(state.get_file_system_path(), state.script.filename)
         script_file = open(script_file_path, 'w')
         script_file.write(state.script.script)
         script_file.close()
@@ -172,8 +172,7 @@ class StateMachineStorage(Observable):
         StorageUtils.create_path(state_path_full)
         self.save_script_file_for_state_and_source_path(state, state_path, force_full_load)
         StorageUtils.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
-        state.script.path = state_path_full
-        state.script.filename = self.SCRIPT_FILE
+        state.script.reload_path()
 
         #create yaml files for all children
         if hasattr(state, 'states'):
@@ -222,10 +221,10 @@ class StateMachineStorage(Observable):
         sm.version = version
         sm.creation_time = creation_time
         sm.last_update = last_update
-        sm.base_path = base_path
+        sm.file_system_path = base_path
         sm.root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
-        sm.root_state.script.path = tmp_base_path
+        sm.root_state.script.reload_path()
         self.load_script_file(sm.root_state)
         for p in os.listdir(tmp_base_path):
             if os.path.isdir(os.path.join(tmp_base_path, p)):
@@ -234,7 +233,6 @@ class StateMachineStorage(Observable):
                 self.load_state_recursively(sm.root_state, elem)
                 logger.debug("Going up back to state %s" % str(tmp_base_path))
 
-        sm.base_path = self.base_path
         sm.marked_dirty = False
 
         # this is a backward compatibility function to ensure that old libraries are still working
@@ -252,7 +250,7 @@ class StateMachineStorage(Observable):
         """
         root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
-        root_state.script.path = state_path
+        root_state.script.reload_path()
         # load_and_build the module to load the correct content into root_state.script.script
         self.load_script_file(root_state)
         for p in os.listdir(state_path):
@@ -271,8 +269,9 @@ class StateMachineStorage(Observable):
         :return:
         """
         state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
-        state.script.path = state_path
+        # connect the missing function_handlers for setting the outcome names
         parent_state.add_state(state, storage_load=True)
+        state.script.reload_path()
         # the library state sets his script file to the script file of the root state of its library, thus it should
         # not be overwritten in this case
         from awesome_tool.statemachine.states.library_state import LibraryState
@@ -284,7 +283,7 @@ class StateMachineStorage(Observable):
                 self.load_state_recursively(state, elem)
 
     def load_script_file(self, state):
-        script_file = open(os.path.join(state.script.path, self.SCRIPT_FILE), 'r')
+        script_file = open(os.path.join(state.get_file_system_path(), self.SCRIPT_FILE), 'r')
         text = script_file.read()
         script_file.close()
         state.script.script = text

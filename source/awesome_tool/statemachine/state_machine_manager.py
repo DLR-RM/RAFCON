@@ -47,32 +47,6 @@ class StateMachineManager(Observable):
                 global_storage.load_statemachine_from_yaml(state_machine_id_to_path[sm_ids[sm_idx]])
             self.add_state_machine(state_machine)
 
-    def get_sm_id_for_state(self, state, get_state_by_identity=False):
-        """
-        Calculate the state_machine_id for the state
-        :param state: the state to get the state id for
-        :return:
-        """
-        state_path = state.get_path()
-        path_item_list = state_path.split('/')
-        root_state_id = path_item_list[0]
-
-        for sm_id, sm in self.state_machines.iteritems():
-
-            if sm.root_state.state_id == root_state_id:
-
-                if get_state_by_identity:
-                    sm_state = sm.get_state_by_path(state_path)
-                    if sm_state and sm_state is state:
-                        return sm_id
-                    else:
-                        logger.warning("sm_id is not secure as long the identity check of the state and reference failed")
-                else:
-                    return sm_id
-
-        logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
-        return None
-
     def check_if_dirty_sms(self):
         """
         Checks if one of the registered sm has the marked_dirty flag set to True (i.e. the sm was recently modified,
@@ -101,9 +75,9 @@ class StateMachineManager(Observable):
         """
         if not isinstance(state_machine, StateMachine):
             raise AttributeError("state_machine must be of type StateMachine")
-        if state_machine.base_path is not None:
+        if state_machine.file_system_path is not None:
             for loaded_sm in self._state_machines.itervalues():
-                if loaded_sm.base_path == state_machine.base_path:
+                if loaded_sm.file_system_path == state_machine.file_system_path:
                     raise AttributeError("The state-machine is already open")
         logger.debug("Add new state machine with id {0}".format(state_machine.state_machine_id))
         self._state_machines[state_machine.state_machine_id] = state_machine

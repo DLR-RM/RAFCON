@@ -330,7 +330,7 @@ class State(Observable, yaml.YAMLObject):
         :param appendix: the part of the path that was already calculated by previous function calls
         :return: the full path to the root state
         """
-        if self.parent:
+        if isinstance(self.parent, State):
             if appendix is None:
                 return self.parent.get_path(self.state_id)
             else:
@@ -340,6 +340,29 @@ class State(Observable, yaml.YAMLObject):
                 return self.state_id
             else:
                 return self.state_id + PATH_SEPARATOR + appendix
+
+    def get_sm_for_state(self):
+        """
+        Get a reference of the state_machine the state belongs to
+        :param state: the state to get the state machine reference for
+        :return:
+        """
+        if self.parent:
+            if not isinstance(self.parent, State):
+                return self.parent
+            else:
+                return self.parent.get_sm_for_state()
+
+        logger.debug("sm_id is not found as long as the state does not belong to a state machine yet")
+        return None
+
+    def get_file_system_path(self):
+        """
+        Calculates the path in the filesystem where the state is stored
+        :return: the path on the filesystem where the state is stored
+        """
+        from awesome_tool.statemachine.singleton import state_machine_manager
+        return self.get_sm_for_state().file_system_path + "/" + self.get_path()
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
@@ -361,6 +384,7 @@ class State(Observable, yaml.YAMLObject):
             return
         outcome = Outcome(outcome_id, name, self)
         self._outcomes[outcome_id] = outcome
+        print self.outcomes
         return outcome_id
 
     @Observable.observed
@@ -542,9 +566,11 @@ class State(Observable, yaml.YAMLObject):
     @parent.setter
     @Observable.observed
     def parent(self, parent):
-        if not parent is None:
+        if parent is not None:
             if not isinstance(parent, State):
-                raise TypeError("parent must be of type State")
+                from awesome_tool.statemachine.state_machine import StateMachine
+                if not isinstance(parent, StateMachine):
+                    raise TypeError("parent must be of type State OR StateMachine")
 
         self._parent = parent
 
@@ -741,11 +767,12 @@ class State(Observable, yaml.YAMLObject):
     @description.setter
     @Observable.observed
     def description(self, description):
-        if not isinstance(description, str):
-            if not isinstance(description, unicode):
-                raise TypeError("Description must be of type str or unicode")
-        if len(description) < 1:
-            raise ValueError("Description must have at least one character")
+        if description is not None:
+            if not isinstance(description, str):
+                if not isinstance(description, unicode):
+                    raise TypeError("Description must be of type str or unicode")
+            if len(description) < 1:
+                raise ValueError("Description must have at least one character")
 
         self._description = description
 

@@ -40,10 +40,10 @@ class StateMachine(Observable):
         self.state_machine_id = generate_state_machine_id()
         self._root_state = None
         self.root_state = root_state
-        self.base_path = None
         self._marked_dirty = True
         self.old_marked_dirty = True
         self.execution_history = ExecutionHistory()
+        self._file_system_path = None
 
     def start(self):
         """
@@ -88,6 +88,8 @@ class StateMachine(Observable):
     def root_state(self, root_state):
         # if not isinstance(root_state, State):
         #     raise AttributeError("root_state has to be of type State")
+        if root_state is not None:
+            root_state.parent = self
         self._root_state = root_state
 
     @Observable.observed
@@ -138,3 +140,17 @@ class StateMachine(Observable):
     def root_state_after_change(self, **kwargs):
     #def root_state_after_change(self, model, prop_name, instance, method_name, result, args, kwargs):
         pass
+
+    @property
+    def file_system_path(self):
+        """Property for the _file_system_path field
+
+        """
+        return self._file_system_path
+
+    @file_system_path.setter
+    @Observable.observed
+    def file_system_path(self, file_system_path):
+        if not isinstance(file_system_path, str):
+            raise AttributeError("file_system_path has to be of type str")
+        self._file_system_path = file_system_path

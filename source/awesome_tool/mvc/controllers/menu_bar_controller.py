@@ -109,7 +109,7 @@ class MenuBarController(ExtendedController):
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:
             return
-        save_path = state_machine_m.state_machine.base_path
+        save_path = state_machine_m.state_machine.file_system_path
         if save_path is None:
             if not self.on_save_as_activate(widget, data=None):
                 return
@@ -117,7 +117,7 @@ class MenuBarController(ExtendedController):
         logger.debug("Saving state machine to {0}".format(save_path))
         awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
             self.model.get_selected_state_machine_model().state_machine,
-            self.model.get_selected_state_machine_model().state_machine.base_path,
+            self.model.get_selected_state_machine_model().state_machine.file_system_path,
             delete_old_state_machine=False)
 
         self.model.get_selected_state_machine_model().root_state.store_meta_data_for_state()
@@ -198,9 +198,9 @@ class MenuBarController(ExtendedController):
         for sm_id, sm in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
             if sm.base_path is not None:
-                # print sm.root_state.script.path
+                # print sm.root_state.get_file_system_path()
                 # cut the last directory from the path
-                path_items = sm.root_state.script.path.split("/")
+                path_items = sm.root_state.get_file_system_path().split("/")
                 new_path = path_items[0]
                 for i in range(len(path_items) - 2):
                     new_path = "%s/%s" % (new_path, path_items[i + 1])

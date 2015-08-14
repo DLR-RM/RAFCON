@@ -62,12 +62,12 @@ def get_state_tuple(state, state_m=None):
 
 def do_storage_test(state):
     import os
-    # # logger.debug(state.script.path + "         " + str(state.script.path.split('/')))
-    # #if child_state.script.path.split('/')[1] == "tmp" and not os.path.exists(state.script.path):
-    # if not os.path.exists(state.script.path):
+    # # logger.debug(state.get_file_system_path() + "         " + str(state.get_file_system_path().split('/')))
+    # #if child_state.get_file_system_path().split('/')[1] == "tmp" and not os.path.exists(state.get_file_system_path()):
+    # if not os.path.exists(state.get_file_system_path()):
     #     # logger.debug("is tmp")
-    #     os.makedirs(state.script.path)
-    #     script_file = open(os.path.join(state.script.path, state.script.filename), "w")
+    #     os.makedirs(state.get_file_system_path())
+    #     script_file = open(os.path.join(state.get_file_system_path(), state.script.filename), "w")
     #     script_file.write(state.script.script)
     #     script_file.close()
 
@@ -454,7 +454,7 @@ class Action:
             # if UNIQUE_DECIDER_STATE_ID in stored_state.states:
             #     state.add_state(stored_state.states[UNIQUE_DECIDER_STATE_ID])
             #     sm_id = self.state_machine.state_machine_id
-            #     s_path = state.states[UNIQUE_DECIDER_STATE_ID].script.path
+            #     s_path = state.states[UNIQUE_DECIDER_STATE_ID].get_file_system_path()
             #     awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
             #     # print "unmark from removal: ", s_path
             #     do_storage_test(state.states[UNIQUE_DECIDER_STATE_ID])
@@ -466,13 +466,13 @@ class Action:
                     state.states[new_state.state_id].script = new_state.script
                     # # logger.debug("script1: " + new_state.script.script)
                     # state.states[new_state.state_id].set_script_text(new_state.script.script)
-                    s_path = state.states[new_state.state_id].script.path
+                    s_path = state.states[new_state.state_id].get_file_system_path()
                     sm_id = self.state_machine.state_machine_id
                     awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
                     # print "unmark from removal: ", s_path
                     if hasattr(new_state, 'states'):
                         def unmark_state(state_, sm_id_):
-                            spath = state_.script.path
+                            spath = state_.get_file_system_path()
                             awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id_, spath)
                             # print "unmark from removal: ", spath
                             if hasattr(state_, 'states'):

@@ -70,12 +70,11 @@ def execute(self, inputs, outputs, gvm):
 
         Observable.__init__(self)
 
-        self._path = None
-        self.path = path
-        self._filename = None
-        self.filename = filename
+        self._path = path
+        self._filename = filename
         self._compiled_module = None
         self._script_id = generate_script_id()
+        self._state = state
         if script_type == ScriptType.EXECUTION:
             self.script = Script.DEFAULT_SCRIPT_EXECUTION
         elif script_type == ScriptType.LIBRARY:
@@ -86,8 +85,8 @@ def execute(self, inputs, outputs, gvm):
             self.path = DEFAULT_SCRIPT_PATH + state.get_path()
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
-            self.filename = "Script_%s.file" % str(self._script_id)
-            script_file = open(os.path.join(self.path, self.filename), "w")
+            self._filename = "Script_%s.file" % str(self._script_id)
+            script_file = open(os.path.join(self.path, self._filename), "w")
             script_file.write(self.script)
             script_file.close()
 
@@ -95,14 +94,19 @@ def execute(self, inputs, outputs, gvm):
             if not os.path.exists(self.path):
                 raise RuntimeError("Path %s does not exist" % self.path)
             else:
-                if not os.path.exists(os.path.join(self.path, self.filename)):
-                    raise RuntimeError("Path %s does not exist" % os.path.join(self.path, self.filename))
+                if not os.path.exists(os.path.join(self.path, self._filename)):
+                    raise RuntimeError("Path %s does not exist" % os.path.join(self.path, self._filename))
 
             # load and build the module per default else the default scripts will be loaded in self.script
             self.load_script()
             self.build_module()
 
-    # never be used anymore -> and miss-giding function name
+    def reload_path(self):
+        self._path = self._state.get_file_system_path()
+        # if not os.path.exists(self.path):
+        #     os.makedirs(self.path)
+        self._filename = "script.py"
+
     # def reset_script(self, state_path):
     #     self.path = DEFAULT_SCRIPT_PATH + state_path
     #     if not os.path.exists(self.path):
@@ -135,7 +139,7 @@ def execute(self, inputs, outputs, gvm):
     def load_script(self):
         """Loads and builds the module given by the path and the filename
         """
-        script_path = os.path.join(self.path, self.filename)
+        script_path = os.path.join(self.path, self._filename)
 
         try:
             script_file = open(script_path, 'r')
@@ -152,13 +156,13 @@ def execute(self, inputs, outputs, gvm):
         """Loads and builds the module given by the path and the filename
         """
 
-        module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
+        module_name = os.path.splitext(self._filename)[0] + str(self._script_id)
 
         # load module
         tmp_module = imp.new_module(module_name)
         sys.modules[module_name] = tmp_module
 
-        code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
+        code = compile(self.script, '%s (%s)' % (self._filename, self._script_id), 'exec')
 
         try:
             exec code in tmp_module.__dict__
@@ -170,10 +174,8 @@ def execute(self, inputs, outputs, gvm):
 
     @classmethod
     def to_yaml(cls, dumper, data):
-        dict_representation = {
-            'path': data.path,
-            'filename': data.filename,
-        }
+        #TODO:implement
+        dict_representation={}
         node = dumper.represent_mapping(u'!Script', dict_representation)
         return node
 
@@ -187,36 +189,12 @@ def execute(self, inputs, outputs, gvm):
 #########################################################################
 
     @property
-    def path(self):
-        """Property for the _path field
-
-        """
-        return self._path
-
-    @path.setter
-    @Observable.observed
-    def path(self, path):
-        if not path is None:
-            if not isinstance(path, str):
-                raise TypeError("path must be of type str")
-
-        self._path = path
-
-    @property
     def filename(self):
         """Property for the _filename field
 
         """
         return self._filename
 
-    @filename.setter
-    @Observable.observed
-    def filename(self, filename):
-        if not filename is None:
-            if not isinstance(filename, str):
-                raise TypeError("filename must be of type str")
-
-        self._filename = filename
 
     @property
     def compiled_module(self):

@@ -191,17 +191,17 @@ class ContainerState(State):
 
         """
 
-        if not storage_load:
-            # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
-            own_sm_id = state_machine_manager.get_sm_id_for_state(self)
-            if own_sm_id is not None:
-                global_storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.script.path)
-
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
         else:
             state.parent = self
             self._states[state.state_id] = state
+
+        if not storage_load:
+            # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
+            own_sm_id = self.get_sm_for_state().state_machine_id
+            if own_sm_id is not None:
+                global_storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.get_file_system_path())
 
     @Observable.observed
     def remove_state(self, state_id, recursive_deletion=True, force=True):
@@ -223,7 +223,7 @@ class ContainerState(State):
             logger.warn("Something is going wrong during state removal. State does not belong to "
                         "a state machine!")
         else:
-            global_storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].script.path)
+            global_storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].get_file_system_path())
 
         #first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
@@ -1074,7 +1074,6 @@ class ContainerState(State):
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,
-            'path': data.script.path,
             'filename': data.script.filename,
             'transitions': data.transitions,
             'data_flows': data.data_flows,
