@@ -946,7 +946,7 @@ class History(ModelMT):
         :param recursive_changes bool: indicates if the changes are recursive and touch multiple or all recursive childs
         :return:
         """
-        if change_type == 'meta_data_changed':
+        if change_type == 'gui_meta_data_changed':
             # store meta data
 
             logger.debug("state %s '%s' history got notification that Meta data has changed" %
