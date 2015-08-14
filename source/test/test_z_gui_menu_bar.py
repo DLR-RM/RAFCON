@@ -25,8 +25,10 @@ import variables_for_pytest
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
     library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["ros_libraries"] = join(dirname(dirname(__file__)), "test_scripts", "ros_libraries")
-    library_paths["turtle_libraries"] = join(dirname(dirname(__file__)), "test_scripts", "turtle_libraries")
+    print "File: " ,dirname(__file__), dirname(dirname(__file__))
+
+    library_paths["ros_libraries"] = join(dirname(dirname(os.path.realpath(__file__))), "test_scripts", "ros_libraries")
+    library_paths["turtle_libraries"] = join(dirname(dirname(os.path.realpath(__file__))), "test_scripts", "turtle_libraries")
 
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
