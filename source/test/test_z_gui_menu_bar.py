@@ -20,6 +20,7 @@ from awesome_tool.statemachine.state_machine import StateMachine
 from awesome_tool.mvc.clipboard import global_clipboard
 
 import variables_for_pytest
+from variables_for_pytest import call_gui_callback
 
 
 def setup_module(module=None):
@@ -145,14 +146,16 @@ def trigger_gui_signals(*args):
     # sm = StateMachine(ctr_state)
     # glib.idle_add(sm_manager_model.state_machine_manager.add_state_machine, sm)
     current_sm_length = len(sm_manager_model.state_machines)
-    glib.idle_add(menubar_ctrl.on_new_activate, None)
+    # glib.idle_add(menubar_ctrl.on_new_activate, None)
+    call_gui_callback(menubar_ctrl.on_new_activate, None)
     first_sm_id = sm_manager_model.state_machines.keys()[0]
 
-    wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
+    # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
 
-    glib.idle_add(menubar_ctrl.on_open_activate, None, None, "../../test_scripts/tutorials/basic_turtle_demo_sm")
-    wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
+    # glib.idle_add(menubar_ctrl.on_open_activate, None, None, "../../test_scripts/tutorials/basic_turtle_demo_sm")
+    call_gui_callback(menubar_ctrl.on_open_activate, None, None, "../../test_scripts/tutorials/basic_turtle_demo_sm")
+    # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
     assert len(sm_manager_model.state_machines) == current_sm_length+2
 
     sleep_time_short = 1.0
@@ -174,20 +177,23 @@ def trigger_gui_signals(*args):
 
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/UEPNNW')
     print "\n\n %s \n\n" % state_m.state.name
-    glib.idle_add(sm_m.selection.set, [state_m])
-    time.sleep(sleep_time_short)
+    # glib.idle_add(sm_m.selection.set, [state_m])
+    call_gui_callback(sm_m.selection.set, [state_m])
+    # time.sleep(sleep_time_short)
 
     # copy the state to clipboard
-    glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
+    # glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
+    call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
     # global_clipboard.copy(sm_m.selection)
-    time.sleep(sleep_time_short)
+    # time.sleep(sleep_time_short)
 
     # select other state
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
     print state_m.state.states.keys()
     print "\n\n %s \n\n" % state_m.state.name
-    glib.idle_add(sm_m.selection.set, [state_m])
-    time.sleep(sleep_time_short)
+    # glib.idle_add(sm_m.selection.set, [state_m])
+    call_gui_callback(sm_m.selection.set, [state_m])
+    # time.sleep(sleep_time_short)
 
     old_child_state_count = len(state_m.state.states)
 
@@ -195,9 +201,10 @@ def trigger_gui_signals(*args):
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
     page.children()[0].grab_focus()
     # print dir(page.children()[0]), "\n\n", page.children()[0], "\n\n", page.children()[0].has_focus()
-    glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    # glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
     # global_clipboard.paste(state_m)  # sm_m.selection)
-    time.sleep(sleep_time_short)
+    # time.sleep(sleep_time_short)
 
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
     print state_m.state.states.keys()
@@ -209,20 +216,23 @@ def trigger_gui_signals(*args):
     sm_m = sm_manager_model.state_machines[first_sm_id+2]
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY')
     print "\n\n %s \n\n" % state_m.state.name
-    glib.idle_add(sm_m.selection.set, [state_m])
-    time.sleep(sleep_time_short)
+    # glib.idle_add(sm_m.selection.set, [state_m])
+    call_gui_callback(sm_m.selection.set, [state_m])
+    # time.sleep(sleep_time_short)
 
     # copy the state to clipboard
-    glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
+    # glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
+    call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
     # global_clipboard.copy(sm_m.selection)
-    time.sleep(sleep_time_short)
+    # time.sleep(sleep_time_short)
 
     # select other state
     state_m = sm_m.get_state_model_by_path('CDMJPK')
     old_child_state_count = len(state_m.state.states)
     print "\n\n %s \n\n" % state_m.state.name
-    glib.idle_add(sm_m.selection.set, [state_m])
-    time.sleep(sleep_time_short)
+    # glib.idle_add(sm_m.selection.set, [state_m])
+    call_gui_callback(sm_m.selection.set, [state_m])
+    # time.sleep(sleep_time_short)
 
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
@@ -242,26 +252,30 @@ def trigger_gui_signals(*args):
     sm_m = sm_manager_model.state_machines[first_sm_id+2]
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY')
     print "\n\n %s \n\n" % state_m.state.name
-    glib.idle_add(sm_m.selection.set, [state_m])
-    time.sleep(sleep_time_short)
+    # glib.idle_add(sm_m.selection.set, [state_m])
+    call_gui_callback(sm_m.selection.set, [state_m])
+    # time.sleep(sleep_time_short)
 
     # cut the state to clipboard
     # glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
-    glib.idle_add(menubar_ctrl.on_cut_selection_activate, None, None)
+    # glib.idle_add(menubar_ctrl.on_cut_selection_activate, None, None)
+    call_gui_callback(menubar_ctrl.on_cut_selection_activate, None, None)
 
     # select other state
     state_m = sm_m.get_state_model_by_path('CDMJPK')
     old_child_state_count = len(state_m.state.states)
     print "\n\n %s \n\n" % state_m.state.name
-    glib.idle_add(sm_m.selection.set, [state_m])
-    time.sleep(sleep_time_short)
+    # glib.idle_add(sm_m.selection.set, [state_m])
+    call_gui_callback(sm_m.selection.set, [state_m])
+    # time.sleep(sleep_time_short)
 
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
     page.children()[0].grab_focus()
-    glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    # glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
     # global_clipboard.paste(state_m)  # sm_m.selection)
-    time.sleep(sleep_time_short)
+    # time.sleep(sleep_time_short)
 
     # verify
     state_m = sm_m.get_state_model_by_path('CDMJPK')
@@ -270,18 +284,23 @@ def trigger_gui_signals(*args):
     assert len(state_m.state.states) == old_child_state_count + 1
     ##########################################################
 
-    glib.idle_add(menubar_ctrl.on_refresh_libraries_activate, None)
-    glib.idle_add(menubar_ctrl.on_refresh_all_activate, None, None, True)
+    # glib.idle_add(menubar_ctrl.on_refresh_libraries_activate, None)
+    call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
+    # glib.idle_add(menubar_ctrl.on_refresh_all_activate, None, None, True)
+    call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
 
-    wait_for_values_identical_number_state_machines(sm_manager_model, 1)
+    # wait_for_values_identical_number_state_machines(sm_manager_model, 1)
     assert len(sm_manager_model.state_machines) == 1
 
-    glib.idle_add(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+    # glib.idle_add(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
 
     #glib.idle_add(main_window_controller.view["main_window"].emit, "destroy")
 
-    glib.idle_add(menubar_ctrl.on_stop_activate, None)
-    glib.idle_add(menubar_ctrl.on_quit_activate, None)
+    # glib.idle_add(menubar_ctrl.on_stop_activate, None)
+    call_gui_callback(menubar_ctrl.on_stop_activate, None)
+    # glib.idle_add(menubar_ctrl.on_quit_activate, None)
+    call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
 def test_gui():
