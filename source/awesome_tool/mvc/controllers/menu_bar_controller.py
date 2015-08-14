@@ -310,7 +310,7 @@ class MenuBarController(ExtendedController):
         # We decided on not saving the configuration when exiting
         # glib.idle_add(awesome_tool.statemachine.config.global_config.save_configuration)
         # glib.idle_add(awesome_tool.mvc.config.global_gui_config.save_configuration)
-        glib.idle_add(awesome_tool.mvc.runtime_config.global_runtime_config.save_configuration)
+        glib.idle_add(awesome_tool.mvc.runtime_config.global_runtime_config.save_configuration, self.main_window_view)
         glib.idle_add(log.debug_filter.set_logging_test_view, None)
         glib.idle_add(log.error_filter.set_logging_test_view, None)
         self.main_window_view.hide()
