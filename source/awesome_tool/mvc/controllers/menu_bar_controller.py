@@ -14,6 +14,7 @@ logger = log.get_logger(__name__)
 from awesome_tool.utils import helper
 from awesome_tool.statemachine import interface
 import awesome_tool.mvc.singleton
+from functools import partial
 
 class MenuBarController(ExtendedController):
     """
@@ -58,25 +59,38 @@ class MenuBarController(ExtendedController):
 
         :param awesome_tool.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        shortcut_manager.add_callback_for_action('save', self.on_save_activate)
-        shortcut_manager.add_callback_for_action('save_as', self.on_save_as_activate)
-        shortcut_manager.add_callback_for_action('open', self.on_open_activate)
-        shortcut_manager.add_callback_for_action('new', self.on_new_activate)
-        shortcut_manager.add_callback_for_action('quit', self.on_quit_activate)
+        shortcut_manager.add_callback_for_action('save', partial(self.call_action_callback, "on_save_activate"))
+        shortcut_manager.add_callback_for_action('save_as', partial(self.call_action_callback, "on_save_as_activate"))
+        shortcut_manager.add_callback_for_action('open', partial(self.call_action_callback, "on_open_activate"))
+        shortcut_manager.add_callback_for_action('new', partial(self.call_action_callback, "on_new_activate"))
+        shortcut_manager.add_callback_for_action('quit', partial(self.call_action_callback, "on_quit_activate"))
 
-        shortcut_manager.add_callback_for_action('start', self.on_start_activate)
-        shortcut_manager.add_callback_for_action('stop', self.on_stop_activate)
-        shortcut_manager.add_callback_for_action('pause', self.on_pause_activate)
-        shortcut_manager.add_callback_for_action('step_mode', self.on_step_mode_activate)
-        shortcut_manager.add_callback_for_action('step', self.on_step_activate)
-        shortcut_manager.add_callback_for_action('backward_step', self.on_backward_step_activate)
+        shortcut_manager.add_callback_for_action('start', partial(self.call_action_callback, "on_start_activate"))
+        shortcut_manager.add_callback_for_action('stop', partial(self.call_action_callback, "on_stop_activate"))
+        shortcut_manager.add_callback_for_action('pause', partial(self.call_action_callback, "on_pause_activate"))
+        shortcut_manager.add_callback_for_action('step_mode', partial(self.call_action_callback, "on_step_mode_activate"))
+        shortcut_manager.add_callback_for_action('step', partial(self.call_action_callback, "on_step_activate"))
+        shortcut_manager.add_callback_for_action('backward_step', partial(self.call_action_callback, "on_backward_step_activate"))
 
-        shortcut_manager.add_callback_for_action('reload', self.on_refresh_all_activate)
+        shortcut_manager.add_callback_for_action('reload', partial(self.call_action_callback, "on_refresh_all_activate"))
 
         shortcut_manager.add_callback_for_action('show_data_flows', self.show_all_data_flows_toggled_shortcut)
         shortcut_manager.add_callback_for_action('show_data_values', self.show_show_data_flow_values_toggled_shortcut)
         shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         shortcut_manager.add_callback_for_action('show_aborted_preempted', self.show_aborted_preempted)
+
+    def call_action_callback(self, callback_name, *args):
+        """Wrapper for action callbacks
+
+        Returns True after executing the callback. This is needed in order to prevent the shortcut from being passed
+        on to the system. The callback methods itself cannot return True, as they are also used with idle_add,
+        which would call the method over and over again.
+        :param str callback_name: The name of the method to call
+        :param args: Any remaining parameters, which are passed on to the callback method
+        :return: True
+        """
+        getattr(self, callback_name)(*args)
+        return True
 
     ######################################################
     # menu bar functionality - File
@@ -133,7 +147,6 @@ class MenuBarController(ExtendedController):
                 return False
         self.model.get_selected_state_machine_model().state_machine.base_path = path
         self.on_save_activate(widget, data)
-        return True
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement

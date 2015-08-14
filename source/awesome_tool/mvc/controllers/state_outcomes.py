@@ -112,8 +112,8 @@ class StateOutcomesListController(ExtendedController):
     def on_to_state_modification(self, widget, path, text):
         # logger.debug("on_to_state_modification %s, %s, %s" % (widget, path, text))
         outcome_id = int(self.tree_store[path][0])
-        transition_parent_state = self.model.parent.state
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
+            transition_parent_state = self.model.parent.state
             if outcome_id in self.dict_to_other_state.keys():
                 # logger.debug("1")
                 t_id = int(self.dict_to_other_state[outcome_id][2])
@@ -127,8 +127,9 @@ class StateOutcomesListController(ExtendedController):
             else:
                 transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
-            if text is not None:
+            if text is not None and self.model.parent:
                 # logger.debug("s31")
+                transition_parent_state = self.model.parent.state
                 to_state_id = text.split('.')[1]
                 transition_parent_state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
                                                        to_state_id=to_state_id, to_outcome=None, transition_id=None)

@@ -5,6 +5,7 @@ import threading
 import time
 import glib
 import os
+from os.path import dirname, join
 
 from awesome_tool.utils import log
 from awesome_tool.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
@@ -20,6 +21,12 @@ from awesome_tool.mvc.clipboard import global_clipboard
 
 import variables_for_pytest
 
+
+def setup_module(module=None):
+    # set the test_libraries path temporarily to the correct value
+    library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths["ros_libraries"] = join(dirname(dirname(__file__)), "test_scripts", "ros_libraries")
+    library_paths["turtle_libraries"] = join(dirname(dirname(__file__)), "test_scripts", "turtle_libraries")
 
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
@@ -306,4 +313,5 @@ def test_gui():
 
 
 if __name__ == '__main__':
+    setup_module()
     test_gui()

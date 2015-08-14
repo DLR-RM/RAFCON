@@ -69,7 +69,7 @@ def test_transition_creation():
     root_state = sm_loaded.root_state
 
     state_machine = StateMachine(root_state)
-    variables_for_pytest.test_multithrading_lock.acquire()
+    assert variables_for_pytest.test_multithrading_lock.acquire(False)
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     awesome_tool.statemachine.singleton.state_machine_execution_engine.start()

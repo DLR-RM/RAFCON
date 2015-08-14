@@ -1,5 +1,6 @@
 import pytest
 from pytest import raises
+from os.path import dirname, join
 
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
@@ -14,7 +15,7 @@ import awesome_tool.statemachine.config
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
     library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = "../test_scripts/test_libraries"
+    library_paths["test_libraries"] = join(dirname(dirname(__file__)), "test_scripts", "test_libraries")
 
 
 def test_save_libraries():
@@ -169,9 +170,7 @@ def test_nested_library_state_machine():
 
 
 def teardown_module(module=None):
-    library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = "../../test_scripts/test_libraries"
-    awesome_tool.statemachine.config.global_config.save_configuration()
+    pass
 
 
 if __name__ == '__main__':
