@@ -24,6 +24,7 @@ from awesome_tool.mvc.models.state_machine import StateMachineModel
 from awesome_tool.mvc.models.scoped_variable import ScopedVariableModel
 from awesome_tool.mvc.models.data_port import DataPortModel
 from awesome_tool.mvc.views.graphical_editor import Direction
+from awesome_tool.statemachine.states.state import State
 
 
 def check_pos(pos):
@@ -860,7 +861,7 @@ class GraphicalEditorController(ExtendedController):
         :param bool redraw: Flag whether to publish the changes after moving
         """
 
-        if state_m.parent is None:
+        if not isinstance(state_m.parent.state, State):
             return
 
         cur_size = state_m.meta['gui']['editor_opengl']['size']
@@ -939,7 +940,7 @@ class GraphicalEditorController(ExtendedController):
             return pos
 
         def move_state(state_m, redraw=True, publish_changes=True):
-            if state_m.parent is None:
+            if not isinstance(state_m.parent.state, State):
                 return
             cur_pos = state_m.temp['gui']['editor']['pos']
             new_pos = move_pos(cur_pos, state_m.parent.meta['gui']['editor_opengl']['size'])
@@ -1277,7 +1278,7 @@ class GraphicalEditorController(ExtendedController):
 
         recalc = False
         # Root state is always in the origin
-        if state_m.parent is None:
+        if not isinstance(state_m.state.parent, State):
             pos = (0, 0)
         else:
             # Use default values if no size information is stored
@@ -1602,7 +1603,7 @@ class GraphicalEditorController(ExtendedController):
                     origin = parent_state_m.temp['gui']['editor']['income_pos']
                 else:
                     outcome = parent_state_m.temp['gui']['editor']['outcome_pos'][self.selected_outcome[1]]
-                    responsible_parent_m = parent_state_m if parent_state_m.parent is None else parent_state_m.parent
+                    responsible_parent_m = parent_state_m if isinstance(parent_state_m.parent.state, State) else parent_state_m.parent
                     origin = outcome
                 cur = self.mouse_move_last_coords
                 target = self._limit_position_to_state(responsible_parent_m, cur)
@@ -1827,7 +1828,8 @@ class GraphicalEditorController(ExtendedController):
 
     def _publish_changes(self, model, affects_children=False):
         self.model.state_machine.marked_dirty = True
-        self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
+        if model.parent is not None:
+            self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
         # logger.debug("publish changes to history")
 
     def _delete_selection(self, *args):

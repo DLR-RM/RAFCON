@@ -216,8 +216,6 @@ class HierarchyState(ContainerState):
                                data_flows=None,
                                scoped_variables=dict_representation['scoped_variables'],
                                v_checker=None,
-                               path=dict_representation['path'],
-                               filename=dict_representation['filename'],
                                check_path=False)
         try:
             state.description = dict_representation['description']

@@ -21,6 +21,7 @@ from awesome_tool.statemachine.states.preemptive_concurrency_state import Preemp
 import awesome_tool.mvc.statemachine_helper
 from awesome_tool.mvc.models import ContainerStateModel
 from awesome_tool.mvc.models.state import StateModel
+from awesome_tool.statemachine.script import  Script
 
 from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 logger = log.get_logger(__name__)
@@ -55,19 +56,26 @@ def get_state_tuple(state, state_m=None):
         state_meta_dict = {}
 
     import copy
-    state_tuple = (state_str, state_tuples_dict, state.script, state_meta_dict, state.get_path(), copy.copy(state.script.script))
+    # TODO: check this
+    if isinstance(state, ContainerState):
+        script_content = "Dummy Script"
+        script = Script(state=state)
+    else:
+        script_content = state.script.script
+        script = state.script
+    state_tuple = (state_str, state_tuples_dict, script, state_meta_dict, state.get_path(), script_content)
 
     return state_tuple
 
 
 # def do_storage_test(state):
 #     import os
-#     # # logger.debug(state.script.path + "         " + str(state.script.path.split('/')))
-#     # #if child_state.script.path.split('/')[1] == "tmp" and not os.path.exists(state.script.path):
-#     # if not os.path.exists(state.script.path):
+    # # logger.debug(state.get_file_system_path() + "         " + str(state.get_file_system_path().split('/')))
+    # #if child_state.get_file_system_path().split('/')[1] == "tmp" and not os.path.exists(state.get_file_system_path()):
+    # if not os.path.exists(state.get_file_system_path()):
 #     #     # logger.debug("is tmp")
-#     #     os.makedirs(state.script.path)
-#     #     script_file = open(os.path.join(state.script.path, state.script.filename), "w")
+    #     os.makedirs(state.get_file_system_path())
+    #     script_file = open(os.path.join(state.get_file_system_path(), state.script.filename), "w")
 #     #     script_file.write(state.script.script)
 #     #     script_file.close()
 
@@ -372,7 +380,7 @@ class Action:
 
         assert type(stored_state) is type(state)
 
-        is_root = state.parent is None
+        is_root = not isinstance(state.parent, State)
 
         if hasattr(state, 'states'):
 
@@ -454,13 +462,13 @@ class Action:
                     state.states[new_state.state_id].script = new_state.script
                     # # logger.debug("script1: " + new_state.script.script)
                     # state.states[new_state.state_id].set_script_text(new_state.script.script)
-                    s_path = state.states[new_state.state_id].script.path
+                    s_path = state.states[new_state.state_id].get_file_system_path()
                     sm_id = self.state_machine.state_machine_id
                     awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
                     # print "unmark from removal: ", s_path
                     if hasattr(new_state, 'states'):
                         def unmark_state(state_, sm_id_):
-                            spath = state_.script.path
+                            spath = state_.get_file_system_path()
                             awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id_, spath)
                             # print "unmark from removal: ", spath
                             if hasattr(state_, 'states'):
@@ -865,47 +873,48 @@ class History(ModelMT):
                 print overview['level']
                 print overview['prop_name'][-1]
 
-            if overview['model'][-1].parent is None:
-                if self.with_prints:
-                    print "Path_root: ", overview['model'][-1].state.get_path()
-                # exit(1)
-                # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                #                                                        overview['model'][-1].state.get_path()))
-                # self.actual_action = Action(info.method_name, model.state.get_path(),
-                #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-                                            overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                            state_machine_model=self.state_machine_model)
-            elif overview['model'][-1].parent.state.parent is None:  # is root_state
-                if self.with_prints:
-                    print "Path_root: ", overview['model'][-1].parent.state.get_path()
-                # exit(1)
-                # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                #                                                        overview['model'][-1].parent.state.get_path()))
-                # self.actual_action = Action(info.method_name, model.state.get_path(),
-                #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),  # instance path of parent
-                                            overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                            state_machine_model=self.state_machine_model)
-            else:
-                if self.with_prints:
-                    print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                        overview['model'][-1].parent.state.get_path()
-                assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.parent.state.get_path().split('/')[0]
-                overview['model'][-1].parent.state.get_path()
-                if self.with_prints:
-                    print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                        overview['model'][-1].parent.state.get_path()
-                assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.parent.state.get_path().split('/')[0]
-                # the model should be StateModel or ContainerStateModel and "info" from those model notification
-                # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                #                                                        overview['model'][-1].parent.state.get_path()))
-                # self.actual_action = Action(info.method_name, model.state.get_path(),
-                #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                self.actual_action = Action(cause, overview['model'][-1].parent.parent.state.get_path(),  # instance path of parent
-                                            overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                            state_machine_model=self.state_machine_model)
-                # exit(1)
+            if overview['model'][-1].parent:
+                if not isinstance(overview['model'][-1].parent.state, State):
+                    if self.with_prints:
+                        print "Path_root: ", overview['model'][-1].state.get_path()
+                    # exit(1)
+                    # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+                    #                                                        overview['model'][-1].state.get_path()))
+                    # self.actual_action = Action(info.method_name, model.state.get_path(),
+                    #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
+                    self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+                                                overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                state_machine_model=self.state_machine_model)
+                elif not isinstance(overview['model'][-1].parent.state.parent, State):  # is root_state
+                    if self.with_prints:
+                        print "Path_root: ", overview['model'][-1].parent.state.get_path()
+                    # exit(1)
+                    # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+                    #                                                        overview['model'][-1].parent.state.get_path()))
+                    # self.actual_action = Action(info.method_name, model.state.get_path(),
+                    #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
+                    self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),  # instance path of parent
+                                                overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                state_machine_model=self.state_machine_model)
+                else:
+                    if self.with_prints:
+                        print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
+                            overview['model'][-1].parent.state.get_path()
+                    assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.parent.state.get_path().split('/')[0]
+                    overview['model'][-1].parent.state.get_path()
+                    if self.with_prints:
+                        print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
+                            overview['model'][-1].parent.state.get_path()
+                    assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.parent.state.get_path().split('/')[0]
+                    # the model should be StateModel or ContainerStateModel and "info" from those model notification
+                    # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+                    #                                                        overview['model'][-1].parent.state.get_path()))
+                    # self.actual_action = Action(info.method_name, model.state.get_path(),
+                    #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
+                    self.actual_action = Action(cause, overview['model'][-1].parent.parent.state.get_path(),  # instance path of parent
+                                                overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                state_machine_model=self.state_machine_model)
+                    # exit(1)
 
         elif overview['prop_name'][-1] == 'state':
             if self.with_prints:
@@ -1126,7 +1135,7 @@ class History(ModelMT):
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
-            if parent_model.parent is None:
+            if not isinstance(parent_model.state.parent, State):
                 root_cause_is_state = True
             else:
                 root_cause_is_state = False
@@ -1185,7 +1194,7 @@ class History(ModelMT):
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
-            if parent_model.parent is None:
+            if not isinstance(parent_model.state.parent, State):
                 root_cause_is_state = True
             else:
                 root_cause_is_state = False
@@ -1267,16 +1276,17 @@ class History(ModelMT):
             # print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
             assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
         else:
-            if overview['model'][-1].parent is None:  # is root_state
-                overview['model'][-1].state.get_path()
-                if self.with_prints:
-                    print "Path_root: ", overview['model'][-1].state.get_path()
-            else:
-                overview['model'][-1].parent.state.get_path()
-                if self.with_prints:
-                    print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                        overview['model'][-1].parent.state.get_path()
-                assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
+            if overview['model'][-1].parent:
+                if not isinstance(overview['model'][-1].parent.state, State):  # is root_state
+                    overview['model'][-1].state.get_path()
+                    if self.with_prints:
+                        print "Path_root: ", overview['model'][-1].state.get_path()
+                else:
+                    overview['model'][-1].parent.state.get_path()
+                    if self.with_prints:
+                        print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
+                            overview['model'][-1].parent.state.get_path()
+                    assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
         return overview
 
 

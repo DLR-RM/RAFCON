@@ -5,6 +5,7 @@ from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.mvc.models import ContainerStateModel
 from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
 from awesome_tool.mvc.models.state_machine import StateMachineModel
+from awesome_tool.statemachine.states.state import State
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
 
@@ -87,7 +88,7 @@ class StateMachineTreeController(ExtendedController):
             return
 
         if changed_state_model:
-            if changed_state_model.parent is None:
+            if not isinstance(changed_state_model.state.parent, State):
                 parent_iter = self.path_store[changed_state_model.state.get_path()]
             else:
                 parent_iter = self.path_store[changed_state_model.parent.state.get_path()]

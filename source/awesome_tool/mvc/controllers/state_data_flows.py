@@ -685,9 +685,11 @@ class StateDataFlowsEditorController(ExtendedController):
             view['internal_d_checkbutton'].set_sensitive(False)
             view['internal_d_checkbutton'].set_active(False)
 
-        if self.model.parent is None:
-            self.df_list_ctrl.view_dict['data_flows_external'] = False
-            view['connected_to_d_checkbutton'].set_active(False)
+        from awesome_tool.statemachine.states.state import State
+        if self.model.parent:
+            if not isinstance(self.model.parent.state, State):
+                self.df_list_ctrl.view_dict['data_flows_external'] = False
+                view['connected_to_d_checkbutton'].set_active(False)
 
         if not hasattr(self.model, 'states'):
             self.df_list_ctrl.view_dict['data_flows_internal'] = False

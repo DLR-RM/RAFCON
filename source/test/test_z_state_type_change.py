@@ -13,6 +13,7 @@ from awesome_tool.mvc.models import GlobalVariableManagerModel
 from awesome_tool.mvc.controllers import MainWindowController
 from awesome_tool.mvc.views.main_window import MainWindowView
 from awesome_tool.mvc.views import LoggingView
+from awesome_tool.statemachine.states.state import State
 
 # core elements
 from awesome_tool.statemachine.state_machine import StateMachine
@@ -40,19 +41,19 @@ def create_models(*args, **kargs):
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
 
-    state1 = ExecutionState('State1')
+    state1 = ExecutionState('State1', state_id="State1")
     output_state1 = state1.add_output_data_port("output", "int")
     input_state1 = state1.add_input_data_port("input", "str", "zero")
-    state2 = ExecutionState('State2')
+    state2 = ExecutionState('State2', state_id="State2")
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_res_state2 = state2.add_output_data_port("res", "int")
-    state4 = HierarchyState(name='Nested')
+    state4 = HierarchyState(name='Nested', state_id="Nested")
     state4.add_outcome('GoGo')
     output_state4 = state4.add_output_data_port("out", "int")
-    state5 = ExecutionState('Nested2')
+    state5 = ExecutionState('Nested2', state_id="Nested2")
     state5.add_outcome('HereWeGo')
     input_state5 = state5.add_input_data_port("in", "int", 0)
-    state3 = HierarchyState(name='State3')
+    state3 = HierarchyState(name='State3', state_id="State3")
     input_state3 = state3.add_input_data_port("input", "int", 0)
     output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
@@ -68,7 +69,7 @@ def create_models(*args, **kargs):
     # print state3.output_data_ports
     # exit(0)
 
-    ctr_state = HierarchyState(name="Container")
+    ctr_state = HierarchyState(name="Root", state_id="Root")
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
@@ -105,15 +106,15 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
+    # remove existing state machines
     for sm_in in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.values():
         awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    # add new state machine
     awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    # select state machine
     awesome_tool.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
-
+    # get state machine model
     sm_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     global_var_manager_model = GlobalVariableManagerModel()
@@ -265,7 +266,8 @@ def store_state_elements(state, state_m):
     def is_related_data_flow(parent, state_id, df):
         return df.from_state == state_id or df.to_state == state_id
 
-    if hasattr(state, 'parent') and state.parent is not None:
+    # LOOKOUT: root states have their statemachine as parent
+    if hasattr(state, 'parent') and state.parent is not None and isinstance(state.parent, State):
         # collect transitions of parent related and not related to me
         state_elements['transitions_external'] = []
         state_elements['transitions_external_not_related'] = []
@@ -494,8 +496,8 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
                 # - check if meta data is still the same
                 assert stored_state_m_elements['data_flows_external_not_related_meta'][df_id] == df_m.meta
 
-    else:
-        assert state.parent is None
+    # else:
+    #     assert state.parent is None  # root state now has a parent
 
     print "\n check state type"
     # check state type and check source script
@@ -595,16 +597,19 @@ def trigger_state_type_change_tests(*args):
 
         [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, 5.0)
         logger.debug("wait for state's state editor %s" % time_waited)
-
         # - find right row in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
+
+        print "+++++++++++++++++++++++++++++++++++++" + sm_m.state_machine.root_state.state_id
 
     # HS -> BCS
         state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
         state_dict[state_of_type_change].change_state_type(state_m, BarrierConcurrencyState)
+
+    print "+++++++++++++++++++++++++++++++++++++" + sm_m.state_machine.root_state.state_id
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -698,7 +703,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        menubar_ctrl.model.get_selected_state_machine_model().state_machine.base_path = '/tmp/dfc_test_state_type_change'
+        menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = '/tmp/dfc_test_state_type_change'
         call_gui_callback(menubar_ctrl.on_save_activate, None)
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
 

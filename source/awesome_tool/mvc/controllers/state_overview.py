@@ -5,6 +5,7 @@ from gtkmvc import Model
 
 from awesome_tool.statemachine.enums import StateType
 
+from awesome_tool.statemachine.states.state import State
 from awesome_tool.statemachine.states.execution_state import ExecutionState
 from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
 from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
@@ -63,8 +64,9 @@ class StateOverviewController(ExtendedController, Model):
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
 
-        if self.model.parent is None:
-            self.view['is_start_state_checkbutton'].hide()
+        if self.model.parent:
+            if not isinstance(self.model.parent.state, State):
+                self.view['is_start_state_checkbutton'].hide()
 
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
@@ -169,9 +171,9 @@ class StateOverviewController(ExtendedController, Model):
             logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
                                                                              type(self.model.state),
                                                                              target_class))
-            if self.model.state.parent is None:
+            if not isinstance(self.model.state.parent, State):
                 from awesome_tool.mvc.singleton import state_machine_manager_model
-                sm_id = state_machine_manager_model.state_machine_manager.get_sm_id_for_state(self.model.state)
+                sm_id = self.model.state.get_sm_for_state().state_machine_id
                 state_machine = state_machine_manager_model.state_machine_manager.state_machines[sm_id]
                 # TODO: refactor
                 state_model = state_machine.change_root_state_type(self.model, target_class)

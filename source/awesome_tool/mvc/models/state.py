@@ -43,7 +43,7 @@ class StateModel(ModelMT):
         self.state = state
 
         # True if no parent (for root_state) or state is parent start_state_id else False
-        self.is_start = True if state.parent is None or state.state_id == state.parent.start_state_id else False
+        self.is_start = True if not isinstance(state.parent, State) or state.state_id == state.parent.start_state_id else False
 
         if isinstance(meta, Vividict):
             self.meta = meta
@@ -108,9 +108,10 @@ class StateModel(ModelMT):
             # do not track the active flag when marking the sm dirty
             pass
         else:
-            own_sm_id = awesome_tool.statemachine.singleton.state_machine_manager.get_sm_id_for_state(self.state)
-            if own_sm_id is not None:
-                awesome_tool.statemachine.singleton.state_machine_manager.state_machines[own_sm_id].marked_dirty = True
+            if self.state.get_sm_for_state():
+                own_sm_id = self.state.get_sm_for_state().state_machine_id
+                if own_sm_id is not None:
+                    awesome_tool.statemachine.singleton.state_machine_manager.state_machines[own_sm_id].marked_dirty = True
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument
@@ -278,7 +279,7 @@ class StateModel(ModelMT):
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
         #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.script.path, StateMachineStorage.GRAPHICS_FILE)
+        meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
             tmp_meta = awesome_tool.statemachine.singleton.global_storage.storage_utils.load_dict_from_yaml(meta_path)
 
@@ -344,7 +345,7 @@ class StateModel(ModelMT):
 
     def store_meta_data_for_state(self):
         #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.script.path, StateMachineStorage.GRAPHICS_FILE)
+        meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
 
         for input_data_port_model in self.input_data_ports:
             self.meta["input_data_port" + str(input_data_port_model.data_port.data_port_id)] = \

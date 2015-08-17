@@ -205,7 +205,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
     # global_clipboard.paste(state_m)  # sm_m.selection)
     # time.sleep(sleep_time_short)
-
+    # time.sleep(0.2)
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
     print state_m.state.states.keys()
     # IN CASE OF ASSERTION SECURE FOCUS FOR MAIN MAIN WINDOW !!!!

@@ -119,11 +119,11 @@ class MenuBarController(ExtendedController):
         except AttributeError as e:
             logger.error('Error while trying to open state-machine: {0}'.format(e))
 
-    def on_save_activate(self, widget, data=None):
+    def on_save_activate(self, widget, data=None, save_as=False):
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:
             return
-        save_path = state_machine_m.state_machine.base_path
+        save_path = state_machine_m.state_machine.file_system_path
         if save_path is None:
             if not self.on_save_as_activate(widget, data=None):
                 return
@@ -131,8 +131,8 @@ class MenuBarController(ExtendedController):
         logger.debug("Saving state machine to {0}".format(save_path))
         awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
             self.model.get_selected_state_machine_model().state_machine,
-            self.model.get_selected_state_machine_model().state_machine.base_path,
-            delete_old_state_machine=False)
+            self.model.get_selected_state_machine_model().state_machine.file_system_path,
+            delete_old_state_machine=False, save_as=save_as)
 
         self.model.get_selected_state_machine_model().root_state.store_meta_data_for_state()
         logger.debug("Successfully saved graphics meta data.")
@@ -145,8 +145,8 @@ class MenuBarController(ExtendedController):
             path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
             if path is None:
                 return False
-        self.model.get_selected_state_machine_model().state_machine.base_path = path
-        self.on_save_activate(widget, data)
+        self.model.get_selected_state_machine_model().state_machine.file_system_path = path
+        self.on_save_activate(widget, data, save_as=True)
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement
@@ -210,10 +210,10 @@ class MenuBarController(ExtendedController):
         sm_keys = []
         for sm_id, sm in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
-            if sm.base_path is not None:
-                # print sm.root_state.script.path
+            if sm.file_system_path is not None:
+                # print sm.root_state.get_file_system_path()
                 # cut the last directory from the path
-                path_items = sm.root_state.script.path.split("/")
+                path_items = sm.root_state.get_file_system_path().split("/")
                 new_path = path_items[0]
                 for i in range(len(path_items) - 2):
                     new_path = "%s/%s" % (new_path, path_items[i + 1])
@@ -310,7 +310,7 @@ class MenuBarController(ExtendedController):
         # We decided on not saving the configuration when exiting
         # glib.idle_add(awesome_tool.statemachine.config.global_config.save_configuration)
         # glib.idle_add(awesome_tool.mvc.config.global_gui_config.save_configuration)
-        glib.idle_add(awesome_tool.mvc.runtime_config.global_runtime_config.save_configuration)
+        glib.idle_add(awesome_tool.mvc.runtime_config.global_runtime_config.save_configuration, self.main_window_view)
         glib.idle_add(log.debug_filter.set_logging_test_view, None)
         glib.idle_add(log.error_filter.set_logging_test_view, None)
         self.main_window_view.hide()

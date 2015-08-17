@@ -70,6 +70,10 @@ class State(Observable, yaml.YAMLObject):
         # detailed execution status of the state
         self._state_execution_status = None
 
+        # before adding a state to a parent state or a sm the get_filesystem_path cannot return the file system path
+        # there fore this variable caches the path until the state gets a parent
+        self._file_system_path = None
+
         self.thread = None
 
         if name is None:
@@ -230,7 +234,7 @@ class State(Observable, yaml.YAMLObject):
                             output data port id
 
         """
-        if not self.parent is None:
+        if isinstance(self.parent, State):
             # delete all data flows in parent related to data_port_id and self.state_id
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
@@ -311,7 +315,7 @@ class State(Observable, yaml.YAMLObject):
         :param appendix: the part of the path that was already calculated by previous function calls
         :return: the full path to the root state
         """
-        if self.parent:
+        if isinstance(self.parent, State):
             if appendix is None:
                 return self.parent.get_path(self.state_id)
             else:
@@ -321,6 +325,43 @@ class State(Observable, yaml.YAMLObject):
                 return self.state_id
             else:
                 return self.state_id + PATH_SEPARATOR + appendix
+
+    def get_sm_for_state(self):
+        """
+        Get a reference of the state_machine the state belongs to
+        :param state: the state to get the state machine reference for
+        :return:
+        """
+        if self.parent:
+            if not isinstance(self.parent, State):
+                return self.parent
+            else:
+                return self.parent.get_sm_for_state()
+
+        logger.debug("sm_id is not found as long as the state does not belong to a state machine yet")
+        return None
+
+    def set_file_system_path(self, file_system_path):
+        """
+        Caches a temporary file system path for the state
+        :param file_system_path:
+        :return:
+        """
+        self._file_system_path = file_system_path
+
+    def get_file_system_path(self):
+        """
+        Calculates the path in the filesystem where the state is stored
+        :return: the path on the filesystem where the state is stored
+        """
+        from awesome_tool.statemachine.singleton import state_machine_manager
+        if not self.get_sm_for_state() or self.get_sm_for_state().file_system_path is None:
+            if self._file_system_path:
+                return self._file_system_path
+            else:
+                return "/tmp/" + str(self.get_path())
+        else:
+            return self.get_sm_for_state().file_system_path + "/" + self.get_path()
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
@@ -342,6 +383,7 @@ class State(Observable, yaml.YAMLObject):
             return
         outcome = Outcome(outcome_id, name, self)
         self._outcomes[outcome_id] = outcome
+        print self.outcomes
         return outcome_id
 
     @Observable.observed
@@ -361,7 +403,7 @@ class State(Observable, yaml.YAMLObject):
         self.remove_outcome_hook(outcome_id)
 
         # delete possible transition connected to this outcome
-        if self.parent is not None:
+        if isinstance(self.parent, State):
             for transition_id, transition in self.parent.transitions.iteritems():
                 if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
@@ -448,7 +490,7 @@ class State(Observable, yaml.YAMLObject):
 
         # Check whether the type matches any connected data port type
         # Only relevant, if there is a parent state, otherwise the cannot be connected data flows
-        if self.parent:
+        if isinstance(self.parent, State):
             # Call the check in the parent state, where the data flows are stored
             return self.parent.check_data_port_connection(check_data_port)
 
@@ -571,9 +613,11 @@ class State(Observable, yaml.YAMLObject):
     @parent.setter
     @Observable.observed
     def parent(self, parent):
-        if not parent is None:
+        if parent is not None:
             if not isinstance(parent, State):
-                raise TypeError("parent must be of type State")
+                from awesome_tool.statemachine.state_machine import StateMachine
+                if not isinstance(parent, StateMachine):
+                    raise TypeError("parent must be of type State OR StateMachine")
 
         self._parent = parent
 
@@ -656,20 +700,6 @@ class State(Observable, yaml.YAMLObject):
                 self.add_outcome("aborted", -1)
             if -2 not in outcomes:
                 self.add_outcome("preempted", -2)
-
-    @property
-    def script(self):
-        """Property for the _script field
-
-        """
-        return self._script
-
-    @script.setter
-    @Observable.observed
-    def script(self, script):
-        if not isinstance(script, Script):
-            raise TypeError("script must be of type Script")
-        self._script = script
 
     @property
     def input_data(self):
@@ -767,6 +797,7 @@ class State(Observable, yaml.YAMLObject):
                 raise TypeError("Description must be of type str or unicode")
         # if len(description) < 1:
         #     raise ValueError("Description must have at least one character")
+
 
         self._description = description
 

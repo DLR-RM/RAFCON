@@ -109,13 +109,13 @@ class StatesEditorController(ExtendedController):
         self.register_current_state_machine()
 
     def get_state_identifier(self, state_m):
-        state_machine_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
+        state_machine_id = state_m.state.get_sm_for_state().state_machine_id
         state_path = state_m.state.get_path()
         state_identifier = "{0}|{1}".format(state_machine_id, state_path)
         return state_identifier
 
     def get_state_tab_name(self, state_m):
-        state_machine_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
+        state_machine_id = state_m.state.get_sm_for_state().state_machine_id
         state_name = state_m.state.name
         tab_name = "{0}|{1}".format(state_machine_id, state_name)
         return tab_name
@@ -295,7 +295,7 @@ class StatesEditorController(ExtendedController):
         for tab_info in self.tabs.values():
             if tab_info['page'] is page:
                 state_m = tab_info['state_m']
-                sm_id = self.model.state_machine_manager.get_sm_id_for_state(state_m.state)
+                sm_id = state_m.state.get_sm_for_state().state_machine_id
                 selected_state_m = self.__selected_state_machine_model.selection.get_selected_state()
 
                 # If the state of the selected tab is not in the selection, set it there

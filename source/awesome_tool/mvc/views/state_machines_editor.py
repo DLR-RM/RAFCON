@@ -185,8 +185,8 @@ class PlusAddNotebook (gtk.Notebook):
 
             self.add_visible = x < self.get_allocation().x + self.get_allocation().width - self.pixbuf.get_width()
 
-            if self.add_visible:
-                self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
+            # if self.add_visible:
+            #     self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
 
         return True
 

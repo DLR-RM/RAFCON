@@ -5,6 +5,7 @@ import awesome_tool.statemachine.singleton
 
 from awesome_tool.statemachine.script import Script, ScriptType
 from awesome_tool.statemachine.enums import StateType
+from awesome_tool.statemachine.states.state import State
 
 import awesome_tool.statemachine.singleton
 import awesome_tool.mvc.singleton
@@ -373,7 +374,7 @@ def store_state_elements(state, state_m):
     def is_related_data_flow(parent, state_id, df):
         return df.from_state == state_id or df.to_state == state_id
 
-    if hasattr(state, 'parent') and state.parent is not None:
+    if hasattr(state, 'parent') and state.parent is not None and isinstance(state.parent, State):
         # collect transitions of parent related and not related to me
         state_elements['transitions_external'] = []
         state_elements['transitions_external_not_related'] = []
@@ -659,7 +660,7 @@ def check_state_for_all_models(state, state_m):
             return t.from_state == state_id or t.to_state == state_id
 
         # check transitions external
-        if state.parent is not None:
+        if isinstance(state.parent, State):
             core_id_store = []
             for t_id, t in state.parent.transitions.iteritems():
                 if is_related_transition(state.parent, state.state_id, t):
@@ -690,7 +691,7 @@ def check_state_for_all_models(state, state_m):
             return df.from_state == state_id or df.to_state == state_id
 
         # check data_flows external
-        if state.parent is not None:
+        if isinstance(state.parent, State):
             core_id_store = []
             for df_id, df in state.parent.data_flows.iteritems():
                 if is_related_data_flow(state.parent, state.state_id, df):
@@ -784,15 +785,21 @@ def test_add_remove_models(with_print=False):
 
     def print_all_states_with_path_and_name(state):
         print state.get_path(), state.name, type(state)
-        if state.parent:
+        if isinstance(state.parent, State):
             print "parent is: ", state.parent.state_id, state.parent.name
+
+        from awesome_tool.statemachine.states.container_state import ContainerState
+        if isinstance(state, ContainerState):
+            script = Script(state=state)
+        else:
+            script = state.script
         state_dict = {'states': {}, 'data_flows': {}, 'transitions': {},
                       'input_data_ports': {},
                       'output_data_ports': {},
                       'scoped_variables': {},
                       'outcomes': {},
                       'path': state.get_path(),
-                      'script': state.script, 'name': state.name, 'description': state.description}
+                      'script': script, 'name': state.name, 'description': state.description}
 
         if hasattr(state, 'states'):
             for s_id, child_state in state.states.iteritems():
@@ -867,7 +874,7 @@ def test_add_remove_models(with_print=False):
         # store_state_machine(sm_model, test_history_path2)
 
         print state4.state_id
-        if state4.parent.parent is not None:
+        if isinstance(state4.parent.parent, State):
             pstate = sm_model.get_state_model_by_path(state4.parent.parent.get_path())
             print pstate.states.keys(), "\n\n"
             # print pstate.state_id, pstate.name, pstate.get_path()

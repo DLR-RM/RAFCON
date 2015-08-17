@@ -188,7 +188,7 @@ class StateMachineHelper():
                                            start_state_id=state_start_state_id,
                                            scoped_variables=source_state.scoped_variables,
                                            v_checker=source_state.v_checker,
-                                           path=source_state.script.path, filename=source_state.script.filename,
+                                           path=source_state.get_file_system_path(),
                                            check_path=False)
         else:  # TRANSFORM from EXECUTION- TO CONTAINER-STATE or FROM CONTAINER- TO EXECUTION-STATE
             if hasattr(source_state, "states"):
@@ -198,7 +198,7 @@ class StateMachineHelper():
             new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                            input_data_ports=source_state.input_data_ports,
                                            output_data_ports=source_state.output_data_ports,
-                                           outcomes=source_state.outcomes)  # , path=state.script.path, filename=state.script.filename,
+                                           outcomes=source_state.outcomes)  # , path=state.get_file_system_path(), filename=state.script.filename,
                                         # check_path=False)
 
         if source_state.description is not None and len(source_state.description) > 0:
@@ -220,7 +220,7 @@ class StateMachineHelper():
         assert issubclass(new_state_class, State)
         orig_state = orig_state_m.state  # only here to get the input parameter of the Core-function
 
-        is_root_state = orig_state_m.parent is None
+        is_root_state = not isinstance(orig_state.parent, State)
 
         current_state_is_container = isinstance(orig_state, ContainerState)
         new_state_is_container = new_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
@@ -274,7 +274,7 @@ class StateMachineHelper():
         assert isinstance(orig_state, State)
         assert issubclass(new_state_class, State)
 
-        is_root_state = orig_state.parent is None
+        is_root_state = not isinstance(orig_state.parent, State)
 
         if not is_root_state:  # PARENT IS CONTAINER STATE
             # has parent state
@@ -316,7 +316,7 @@ class StateMachineHelper():
 
             # substitute original root state with new state
             from awesome_tool.statemachine.singleton import state_machine_manager
-            sm_id = state_machine_manager.get_sm_id_for_state(orig_state)
+            sm_id = orig_state.get_sm_for_state().state_machine_id
             state_machine_manager.state_machines[sm_id].root_state = new_state
 
     @staticmethod
@@ -335,7 +335,7 @@ class StateMachineHelper():
         :return:
         """
         # find the parent of original and new state model
-        is_root_state = orig_state_m.parent is None
+        is_root_state = not isinstance(orig_state_m.state.parent, State)
 
         if not is_root_state:
             parent_m = orig_state_m.parent
@@ -465,7 +465,7 @@ class StateMachineHelper():
         """
         assert isinstance(state, State)
         from awesome_tool.statemachine.singleton import state_machine_manager
-        state_machine_id = state_machine_manager.get_sm_id_for_state(state)
+        state_machine_id = state.get_sm_for_state().state_machine_id
         state_machine_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[state_machine_id]
         state_m = state_machine_m.root_state
         state_path = state.get_path()
@@ -489,6 +489,6 @@ class StateMachineHelper():
         """
         assert isinstance(state, State)
         from awesome_tool.statemachine.singleton import state_machine_manager
-        state_machine_id = state_machine_manager.get_sm_id_for_state(state)
+        state_machine_id = state.get_sm_for_state().state_machine_id
         state_machine_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[state_machine_id]
         return state_machine_m
