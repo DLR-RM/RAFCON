@@ -27,31 +27,37 @@ class DefaultConfig(object):
         self.config_file = None
         self.default_config = default_config
         self.storage = StorageUtils()
+        self.path = None
 
-        self.__config_dict = yaml.load(self.default_config)
+        if not default_config:
+            self.__config_dict = {}
+        else:
+            self.__config_dict = yaml.load(self.default_config)
 
-    def load(self, config_file, opt_path=None):
+    def load(self, config_file, path=None):
         assert isinstance(config_file, str)
 
-        if opt_path is None:
-            opt_path = os.path.join(os.path.expanduser('~'), '.awesome_tool')
+        if path is None:
+            path = os.path.join(os.path.expanduser('~'), '.config', 'rafcon')
 
-        if not os.path.exists(opt_path):
+        if not os.path.exists(path):
             logger.warn('No configuration found, using temporary default config and create path on file system.')
-            os.makedirs(opt_path)
+            os.makedirs(path)
 
-        config_file_path = os.path.join(opt_path, config_file)
+        config_file_path = os.path.join(path, config_file)
 
+        # If no config file is found, create one in the desired directory
         if not os.path.isfile(config_file_path):
             try:
-                if not os.path.exists(opt_path):
-                    os.makedirs(opt_path)
+                if not os.path.exists(path):
+                    os.makedirs(path)
                 self.storage.write_dict_to_yaml(self.__config_dict, config_file_path, width=80, default_flow_style=False)
                 self.config_file = config_file_path
                 logger.debug("Created config file {0}".format(config_file_path))
             except Exception as e:
                 logger.error('Could not write to config {0}, using temporary default configuration. '
                              'Error: {1}'.format(config_file_path, e))
+        # Otherwise read the config file from the specified directory
         else:
             try:
                 self.__config_dict = self.storage.load_dict_from_yaml(config_file_path)
@@ -60,6 +66,8 @@ class DefaultConfig(object):
             except Exception as e:
                 logger.error('Could not read from config {0}, using temporary default configuration. '
                              'Error: {1}'.format(config_file_path, e))
+
+        self.path = path
 
     def get_config_value(self, key, default=None):
         """

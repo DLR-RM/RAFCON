@@ -162,13 +162,13 @@ def execute(self, inputs, outputs, gvm):
         # return the module
         self._compiled_module = tmp_module
 
-    def get_path(self):
-        """
-        Returns the path of the script.
-        Note: Normally you should use the get_filesystem_path of the state class.
-        :return: the path where this script resides
-        """
-        return self._path
+    # def get_path(self):
+    #     """
+    #     Returns the path of the script.
+    #     Note: Normally you should use the get_filesystem_path of the state class.
+    #     :return: the path where this script resides
+    #     """
+    #     return self._path
 
     @classmethod
     def to_yaml(cls, dumper, data):

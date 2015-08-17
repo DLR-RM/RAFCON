@@ -93,7 +93,6 @@ class StateTransitionsListController(ExtendedController):
         """
 
     def on_focus(self, widget, data=None):
-        logger.debug("TRANSITIONS_LIST get new FOCUS")
         path = self.view.tree_view.get_cursor()
         self.update()
         if path[0]:
@@ -169,87 +168,100 @@ class StateTransitionsListController(ExtendedController):
             return
 
     def on_combo_changed_from_state(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-
         # Check whether the from state was changed or the combo entry is empty
         if self.tree_store[path][1] == text or text is None:
             return
 
         # corresponding transition id
-        t_id = self.tree_store[path][0]
+        transition_id = self.tree_store[path][0]
         is_external = self.tree_store[path][5]
-        from_state_combo = self.combo['external' if is_external else 'internal'][t_id]['from_state']
+        from_state_combo = self.combo['external' if is_external else 'internal'][transition_id]['from_state']
         # get selected combo entry by comparing the state names
         from_state_entry = reduce(lambda s1, s2: s1 if s1[0] == text else s2, from_state_combo)
-        from_state_id = from_state_entry[1]
+        new_from_state_id = from_state_entry[1]
 
         if is_external:  # is external
             responsible_state_m = self.model.parent
-            free_outcomes = self.combo['free_ext_from_outcomes_dict'][from_state_id]
+            free_outcomes = self.combo['free_ext_from_outcomes_dict'][new_from_state_id]
         else:
             responsible_state_m = self.model
-            free_outcomes = self.combo['free_from_outcomes_dict'][from_state_id]
+            free_outcomes = self.combo['free_from_outcomes_dict'][new_from_state_id]
 
-        current_from_outcome = responsible_state_m.state.transitions[t_id].from_outcome
+        current_from_outcome = responsible_state_m.state.transitions[transition_id].from_outcome
         free_outcome_ids = map(lambda outcome_m: None if outcome_m is None else outcome_m.outcome_id, free_outcomes)
         if len(free_outcomes) == 0:
             logger.warning('There is no free outcome for the chosen state')
             return
-        elif current_from_outcome in free_outcome_ids:
-            fo = current_from_outcome
+        if current_from_outcome in free_outcome_ids:
+            new_from_outcome_id = current_from_outcome
         else:
-            fo = None if free_outcomes[0] is None else free_outcomes[0].outcome_id
-        if responsible_state_m.state.state_id == from_state_id:
-            from_state_id = None
-        responsible_state_m.state.modify_transition_from_state(t_id, from_state=from_state_id, from_outcome=fo)
+            new_from_outcome_id = None if free_outcomes[0] is None else free_outcomes[0].outcome_id
+        if responsible_state_m.state.state_id == new_from_state_id:
+            new_from_state_id = None
+        try:
+            responsible_state_m.state.transitions[transition_id].modify_origin(new_from_state_id, new_from_outcome_id)
+        except ValueError as e:
+            logger.error("Could not change transition from state: {0}".format(e))
 
     def on_combo_changed_from_outcome(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-
         # check if the outcome may has not changed or combo is empty
         if self.tree_store[path][2] == text or text is None:
             return
 
         # transition gets modified
         text = text.split('.')
-        t_id = self.tree_store[path][0]
-        if self.tree_store[path][5]:  # external
-            self.model.parent.state.transitions[t_id].from_outcome = int(text[-1])
+        new_from_outcome_id = int(text[-1])
+        transition_id = self.tree_store[path][0]
+
+        if self.tree_store[path][5]:  # is external transition
+            transition_parent_state = self.model.parent.state
         else:
-            self.model.state.transitions[t_id].from_outcome = int(text[-1])
+            transition_parent_state = self.model.state
+
+        try:
+            transition_parent_state.transitions[transition_id].from_outcome = new_from_outcome_id
+        except ValueError as e:
+            logger.error("Could not change the origin outcome of the transition: {0}".format(e))
 
     def on_combo_changed_to_state(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         # check if the state may has not changed or combo is empty
         if self.tree_store[path][3] == text or text is None:
             return
 
         # transition gets modified
         text = text.split('.')
-        t_id = self.tree_store[path][0]
-        if self.tree_store[path][5]:  # is external
-            self.model.parent.state.modify_transition_to_state(t_id, to_state=text[-1])
+        new_to_state_id = text[-1]
+        transition_id = self.tree_store[path][0]
+
+        if self.tree_store[path][5]:  # is external transition
+            transition_parent_state = self.model.parent.state
         else:
-            self.model.state.modify_transition_to_state(t_id, to_state=text[-1])
+            transition_parent_state = self.model.state
+
+        try:
+            transition_parent_state.transitions[transition_id].to_state = new_to_state_id
+        except ValueError as e:
+            logger.error("Could not change the target state of the transition: {0}".format(e))
 
     def on_combo_changed_to_outcome(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
-
         # check if the outcome may has not changed or combo is empty
         if self.tree_store[path][4] == text or text is None:
             return
 
         # transition gets modified
         text = text.split('.')
-        t_id = self.tree_store[path][0]
-        if self.tree_store[path][5]:  # is external
-            self.model.parent.state.transitions[t_id].to_outcome = int(text[-1])
-            # if self.model.parent.state.transitions[t_id].to_state:
-            #     self.model.parent.state.transitions[t_id].to_state = None
+        new_to_outcome_id = int(text[-1])
+        transition_id = self.tree_store[path][0]
+
+        if self.tree_store[path][5]:  # is external transition
+            transition_parent_state = self.model.parent.state
         else:
-            self.model.state.transitions[t_id].to_outcome = int(text[-1])
-            # if self.model.state.transitions[t_id].to_state:
-            #     self.model.state.transitions[t_id].to_state = None
+            transition_parent_state = self.model.state
+
+        try:
+            transition_parent_state.transitions[transition_id].to_outcome = new_to_outcome_id
+        except ValueError as e:
+            logger.error("Could not change the target outcome of the transition: {0}".format(e))
 
     @staticmethod
     def get_possible_combos_for_transition(trans, model, self_model, is_external=False):

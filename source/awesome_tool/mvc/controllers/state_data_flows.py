@@ -3,6 +3,7 @@ import gobject
 from gtk import ListStore, TreeStore
 from awesome_tool.mvc.controllers.extended_controller import ExtendedController
 from awesome_tool.statemachine.states.library_state import LibraryState
+from awesome_tool.statemachine.states.container_state import ContainerState
 from awesome_tool.utils import type_helpers
 from awesome_tool.utils import log
 logger = log.get_logger(__name__)
@@ -92,7 +93,7 @@ class StateDataFlowsListController(ExtendedController):
 
     def on_focus(self, widget, data=None):
         path = self.view.tree_view.get_cursor()
-        logger.debug("DATAFLOWS_LIST get new FOCUS %s" % str(path[0]))
+        # logger.debug("DATAFLOWS_LIST get new FOCUS %s" % str(path[0]))
         self.update_internal_data_base()
         self.update_tree_store()
         if path[0]:
@@ -181,64 +182,87 @@ class StateDataFlowsListController(ExtendedController):
             self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
 
     def on_combo_changed_from_state(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         if text is None:
             return
         text = text.split('.')
-        df_id = self.tree_store[path][0]
-        # df = self.tree_store[path][8]
-        fk = None  # df.from_key
-        if self.tree_store[path][5]:  # external
-            fk = self.from_port_external[text[-1]][0].data_port_id
-            self.model.parent.state.modify_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
+        new_from_state_id = text[-1]
+        data_flow_id = self.tree_store[path][0]
+        is_external_data_flow = self.tree_store[path][5]
+        new_from_data_port_id = None  # df.from_key
+        if is_external_data_flow:
+            new_from_data_port_id = self.from_port_external[new_from_state_id][0].data_port_id
+            data_flow_parent_state = self.model.parent.state
         else:
-            state_model = get_state_model(self.model, text[-1])
-            if state_model.state.state_id == self.model.state.state_id:
-                if self.model.state.input_data_ports:
-                    fk = self.model.state.input_data_ports.values()[0].data_port_id
-                if self.model.scoped_variables:
-                    fk = self.model.scoped_variables[0].scoped_variable.data_port_id
-            else:  # child-state
-                if state_model.state.output_data_ports:
-                    fk = state_model.state.output_data_ports.values()[0].data_port_id
-            if fk:
-                self.model.state.modify_data_flow_from_state(data_flow_id=df_id, from_state=text[-1], from_key=fk)
+            data_flow_parent_state = self.model.state
+            state_m = get_state_model(self.model, new_from_state_id)
+            # Find arbitrary origin data port in origin state
+            if state_m is self.model:  # Data flow origin is parent state
+                if len(state_m.input_data_ports) > 0:
+                    new_from_data_port_id = state_m.input_data_ports[0].data_port.data_port_id
+                elif len(state_m.scoped_variables) > 0:
+                    new_from_data_port_id = state_m.scoped_variables[0].scoped_variable.data_port_id
+            else:  # Data flow origin is child state
+                if len(state_m.output_data_ports) > 0:
+                    new_from_data_port_id = state_m.output_data_ports[0].data_port.data_port_id
+
+        if not new_from_data_port_id:
+            logger.error("Could not change from state: No data port for data flow found")
+            return
+        try:
+            data_flow_parent_state.data_flows[data_flow_id].modify_origin(new_from_state_id, new_from_data_port_id)
+        except ValueError as e:
+            logger.error("Could not change from state: {0}".format(e))
 
     def on_combo_changed_from_key(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         if text is None:
             return
         text = text.split('.')
-        df_id = self.tree_store[path][0]
-        if self.tree_store[path][5]:  # external
-            self.model.parent.state.modify_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
+        new_from_data_port_id = int(text[-1])
+        data_flow_id = self.tree_store[path][0]
+        is_external_data_flow = self.tree_store[path][5]
+        if is_external_data_flow:
+            data_flow_parent_state = self.model.parent.state
         else:
-            self.model.state.modify_data_flow_from_key(data_flow_id=df_id, from_key=int(text[-1]))
+            data_flow_parent_state = self.model.state
+
+        try:
+            data_flow_parent_state.data_flows[data_flow_id].from_key = new_from_data_port_id
+        except ValueError as e:
+            logger.error("Could not change from outcome: {0}".format(e))
 
     def on_combo_changed_to_state(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         if text is None:
             return
-        #self.combo['free_ext_from_outcomes_dict']
         text = text.split('.')
-        df_id = self.tree_store[path][0]
-        if self.tree_store[path][5]:  # external
-            tk = self.free_to_port_external[text[-1]][0].data_port_id
-            self.model.parent.state.modify_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
+        new_to_state_id = text[-1]
+        data_flow_id = self.tree_store[path][0]
+        is_external_data_flow = self.tree_store[path][5]
+        if is_external_data_flow:
+            data_flow_parent_state = self.model.parent.state
+            new_to_data_port_id = self.free_to_port_external[new_to_state_id][0].data_port_id
         else:
-            tk = self.free_to_port_internal[text[-1]][0].data_port_id
-            self.model.state.modify_data_flow_to_state(data_flow_id=df_id, to_state=text[-1], to_key=tk)
+            data_flow_parent_state = self.model.state
+            new_to_data_port_id = self.free_to_port_internal[new_to_state_id][0].data_port_id
+        try:
+            data_flow_parent_state.data_flows[data_flow_id].modify_target(new_to_state_id, new_to_data_port_id)
+        except ValueError as e:
+            logger.error("Could not change to state: {0}".format(e))
 
     def on_combo_changed_to_key(self, widget, path, text):
-        logger.debug("Widget: {widget:s} - Path: {path:s} - Text: {text:s}".format(widget=widget, path=path, text=text))
         if text is None:
             return
         text = text.split('.')
-        df_id = self.tree_store[path][0]
-        if self.tree_store[path][5]:  # external
-            self.model.parent.state.modify_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
+        new_to_data_port_id = int(text[-1])
+        data_flow_id = self.tree_store[path][0]
+        is_external_data_flow = self.tree_store[path][5]
+        if is_external_data_flow:
+            data_flow_parent_state = self.model.parent.state
         else:
-            self.model.state.modify_data_flow_to_key(data_flow_id=df_id, to_key=int(text[-1]))
+            data_flow_parent_state = self.model.state
+        try:
+            data_flow_parent_state.data_flows[data_flow_id].to_key = new_to_data_port_id
+        except ValueError as e:
+            logger.error("Could not change to outcome: {0}".format(e))
 
     def update_internal_data_base(self):
         [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
@@ -352,13 +376,12 @@ def get_key_combos(ports, keys_store, port_type, not_key=None):
     return keys_store
 
 
-def get_state_model(model, state_id):
-    state_model = None
-    if state_id == model.state.state_id:
-        state_model = model
-    elif hasattr(model, 'states') and state_id in model.states:
-        state_model = model.states[state_id]
-    return state_model
+def get_state_model(state_m, state_id):
+    if state_id == state_m.state.state_id:
+        return state_m
+    elif isinstance(state_m.state, ContainerState) and state_id in state_m.states:
+        return state_m.states[state_id]
+    return None
 
 
 def update_data_flow(model, data_flow_dict, tree_dict_combos):

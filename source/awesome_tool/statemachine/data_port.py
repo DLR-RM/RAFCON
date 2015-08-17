@@ -54,8 +54,7 @@ class DataPort(Observable, yaml.YAMLObject):
         logger.debug("DataPort with name %s initialized" % self.name)
 
     def __str__(self):
-        return "DataPort: \n name: %s \n data_type: %s \n default_value: %s " % (self.name, self.data_type,
-                                                                                 self.default_value)
+        return "DataPort '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type, self.default_value)
 
     yaml_tag = u'!DataPort'
 
@@ -118,7 +117,7 @@ class DataPort(Observable, yaml.YAMLObject):
         try:
             new_data_type = type_helpers.convert_string_to_type(data_type)
         except ValueError as e:
-            raise e
+            raise ValueError("Could not change data type to '{0}': {1}".format(data_type, e))
 
         self.__change_property_with_validity_check('_data_type', new_data_type)
 
@@ -151,6 +150,26 @@ class DataPort(Observable, yaml.YAMLObject):
 
         self.__change_property_with_validity_check('_parent', parent)
 
+    @Observable.observed
+    def change_data_type(self, data_type, default_value=None):
+        """Changes the data type and the default value
+
+        This method changes both the data type and default value. If one of the parameters does not fit,
+        an exception is thrown and no property is changed. Using this method ensures a consistent data type
+        and default value and only notifies once.
+        :param data_type: The new data type
+        :param default_value: The new default value
+        :return:
+        """
+        self.data_type = data_type
+
+        if default_value is None:
+            default_value = self.default_value
+        if type_helpers.type_inherits_of_type(type(default_value), self._data_type):
+            self._default_value = default_value
+        else:
+            self._default_value = None
+
     def __change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
 
@@ -165,34 +184,6 @@ class DataPort(Observable, yaml.YAMLObject):
         if not valid:
             setattr(self, property_name, old_value)
             raise ValueError("The data port's '{0}' could not be changed: {1}".format(property_name[1:], message))
-
-    @Observable.observed
-    def change_data_type(self, data_type, default_value=None):
-        """Changes the data type and the default value
-
-        This method changes both the data type and default value. If one of the parameters does not fit,
-        an exception is thrown and no property is changed. Using this method ensures a consistent data type
-        and default value and only notifies once.
-        :param data_type: The new data type
-        :param default_value: The new default value
-        :return:
-        """
-        if default_value is None:
-            default_value = self.default_value
-        try:
-            old_data_type = self.data_type
-            self._data_type = type_helpers.convert_string_to_type(data_type)
-
-            if not self._check_validity():
-                raise ValueError("The parent state refused to change the data type")
-
-            if type_helpers.type_inherits_of_type(type(default_value), self._data_type):
-                self._default_value = default_value
-            else:
-                self._default_value = None
-        except (TypeError, AttributeError, ValueError) as e:
-            self._data_type = old_data_type
-            logger.error("Could not change data type to '{0}': {1}".format(data_type, e))
 
     def check_default_value(self, default_value, data_type=None):
         """Checks the default value

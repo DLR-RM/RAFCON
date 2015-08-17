@@ -68,27 +68,37 @@ def get_state_tuple(state, state_m=None):
     return state_tuple
 
 
-def do_storage_test(state):
-    import os
+# def do_storage_test(state):
+#     import os
     # # logger.debug(state.get_file_system_path() + "         " + str(state.get_file_system_path().split('/')))
     # #if child_state.get_file_system_path().split('/')[1] == "tmp" and not os.path.exists(state.get_file_system_path()):
     # if not os.path.exists(state.get_file_system_path()):
-    #     # logger.debug("is tmp")
+#     #     # logger.debug("is tmp")
     #     os.makedirs(state.get_file_system_path())
     #     script_file = open(os.path.join(state.get_file_system_path(), state.script.filename), "w")
-    #     script_file.write(state.script.script)
-    #     script_file.close()
+#     #     script_file.write(state.script.script)
+#     #     script_file.close()
 
 
 def get_state_from_state_tuple(state_tuple):
 
     # print "++++ new state", state_tuple
-    state = yaml.load(state_tuple[0])
+
+    # Transitions and data flows are not added, as also states are not added
+    # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
+    # validity checks for transitions and data flows would fail
+    state_info = yaml.load(state_tuple[0])
+    if not isinstance(state_info, tuple):
+        state = state_info
+    else:
+        state = state_info[0]
+        transitions = state_info[1]
+        data_flows = state_info[2]
 
     if isinstance(state, BarrierConcurrencyState):
         # logger.debug("\n\ninsert decider_state\n\n")
         child_state = get_state_from_state_tuple(state_tuple[1][UNIQUE_DECIDER_STATE_ID])
-        do_storage_test(child_state)
+        # do_storage_test(child_state)
         for t in state.transitions.values():
             if UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
                 state.remove_transition(t.transition_id)
@@ -102,7 +112,7 @@ def get_state_from_state_tuple(state_tuple):
     #print "------------- ", state
     for child_state_id, child_state_tuple in state_tuple[1].iteritems():
         child_state = get_state_from_state_tuple(child_state_tuple)
-        do_storage_test(child_state)
+        # do_storage_test(child_state)
 
         # print "++++ new cild", child_state  # child_state_tuple, child_state
         if not child_state.state_id == UNIQUE_DECIDER_STATE_ID:
@@ -119,6 +129,11 @@ def get_state_from_state_tuple(state_tuple):
                     print_states(child_state)
         # print "got from tuple:"
         # print_states(state)
+
+    # Child states were added, now we can add transitions and data flows
+    if isinstance(state_info, tuple):
+        state.transitions = transitions
+        state.data_flows = data_flows
 
     return state
 
@@ -328,10 +343,7 @@ class Action:
         else:
             state = self.state_machine.get_state_by_path(self.parent_path)
 
-        self.update_state(state, get_state_from_state_tuple(self.after_storage))
-        insert_state_meta_data(meta_dict=self.after_storage[3],
-                               state_model=self.state_machine_model.get_state_model_by_path(state.get_path()))
-        # self.set_state_to_version(state, self.after_storage)
+        self.set_state_to_version(state, self.after_storage)
 
     def undo(self):
         """ General Undo, that takes all elements in the parent and
@@ -345,7 +357,6 @@ class Action:
             # else:
             #     logger.warning("statemachine could not get state by path -> take root_state for undo")
             state = self.state_machine.root_state
-            actual_state_model = self.state_machine_model.get_state_model_by_path(state.get_path())
         else:
             state = self.state_machine.get_state_by_path(self.parent_path)
         self.set_state_to_version(state, self.before_storage)
@@ -367,23 +378,8 @@ class Action:
 
     def update_state(self, state, stored_state):
 
-        # # print "\n#H# TRY STATE_HELPER ", type(root_state_version_fom_storage), \
-        # #     isinstance(root_state_version_fom_storage, statemachine_helper.HierarchyState), "\n"
-        # logger.debug("UPDATE STATE TYPE %s %s unsame %s" % (type(stored_state), type(state),
-        #                                                     type(stored_state) is not type(state)))
-
         assert type(stored_state) is type(state)
-        # if type(stored_state) is not type(state):
-        #     logger.debug("CHANGE STATE TYPE WHILE UNDO/REDO")
-        #     if isinstance(stored_state, HierarchyState):
-        #         new_state_class = HierarchyState
-        #     elif isinstance(stored_state, BarrierConcurrencyState):
-        #         new_state_class = BarrierConcurrencyState
-        #     elif isinstance(stored_state, PreemptiveConcurrencyState):
-        #         new_state_class = PreemptiveConcurrencyState
-        #     else:
-        #         new_state_class = ExecutionState
-        #     state = awesome_tool.mvc.statemachine_helper.StateMachineHelper.duplicate_state_with_other_state_type(state, new_state_class)
+
         is_root = not isinstance(state.parent, State)
 
         if hasattr(state, 'states'):
@@ -439,7 +435,7 @@ class Action:
                 if hasattr(state, "scoped_variables"):
                     scoped_str = str(state.scoped_variables.keys())
                 # print "\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \
-                    state.output_data_ports.keys(), scoped_str, state._used_data_port_ids, "\n\n\n"
+                #     state.output_data_ports.keys(), scoped_str, "\n\n\n"
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 # print "\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n"
                 assert dp_id in state.output_data_ports.keys()
@@ -455,17 +451,9 @@ class Action:
                 assert oc_id in state.outcomes
 
         if hasattr(state, 'states'):
-
+            # logger.debug("UPDATE STATES")
             for dp_id, sv in stored_state.scoped_variables.iteritems():
                 state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
-            #
-            # if UNIQUE_DECIDER_STATE_ID in stored_state.states:
-            #     state.add_state(stored_state.states[UNIQUE_DECIDER_STATE_ID])
-            #     sm_id = self.state_machine.state_machine_id
-            #     s_path = state.states[UNIQUE_DECIDER_STATE_ID].get_file_system_path()
-            #     awesome_tool.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
-            #     # print "unmark from removal: ", s_path
-            #     do_storage_test(state.states[UNIQUE_DECIDER_STATE_ID])
 
             for new_state in stored_state.states.values():
                 # print "++++ new child", new_state
@@ -486,7 +474,7 @@ class Action:
                             if hasattr(state_, 'states'):
                                 for child_state in state_.states.values():
                                     unmark_state(child_state, sm_id_)
-                            do_storage_test(state_)
+                            # do_storage_test(state_)
 
                         unmark_state(new_state, sm_id)
                     # check if tmp folder otherwise everthing is Ok
@@ -500,11 +488,11 @@ class Action:
                     # print "### transitions to delete ", [t.from_state, t.to_state], t
                     if not UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
                         state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
-
-            if isinstance(state, BarrierConcurrencyState):
-                for t in state.transitions.values():
-                    if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
-                        state.remove_transition(t.transition_id)
+            # logger.debug("CHECK TRANSITIONS %s" % state.transitions.keys())
+            for t in state.transitions.values():
+                logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
+                if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
+                    state.remove_transition(t.transition_id)
 
             for df_id, df in stored_state.data_flows.iteritems():
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
@@ -663,6 +651,9 @@ class HistoryTreeElement:
         self.next_id = next_id
         self.old_next_ids = old_next_ids
 
+    def __str__(self):
+        return "prev_id: %s next_id: %s and other next_ids: %s" % (self.prev_id, self.next_id, self.old_next_ids)
+
 
 class History(ModelMT):
 
@@ -676,7 +667,7 @@ class History(ModelMT):
 
         # assert isinstance(state_machine_model, StateMachineModel)
         self.state_machine_model = state_machine_model
-        self.__statemachine_id = state_machine_model.state_machine.state_machine_id
+        self.__state_machine_id = state_machine_model.state_machine.state_machine_id
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
         self.observe_model(self.state_machine_model)
@@ -710,43 +701,53 @@ class History(ModelMT):
         :param pointer_on_version_to_recover: the id of the list element which is to recover
         :return:
         """
-        logger.info("recover version %s of full state machine history" % pointer_on_version_to_recover)
+        logger.info("recover version %s of trail state machine edit history" % pointer_on_version_to_recover)
         # search for traceable path -> list of action to undo and list of action to redo
         actual_version_pointer = self.changes.trail_history[self.changes.trail_pointer].version_id
-        logger.debug("actual version_id %s and goal version_id %s" %
-                     (self.changes.all_time_history[actual_version_pointer].action.version_id, pointer_on_version_to_recover))
+        # logger.debug("actual version_id %s and goal version_id %s" %
+        #              (self.changes.all_time_history[actual_version_pointer].action.version_id, pointer_on_version_to_recover))
         undo_redo_list = []
         #backward
-        while not int(pointer_on_version_to_recover) == int(actual_version_pointer):
+        # logger.debug("actual version id %s " % self.changes.trail_history[self.changes.trail_pointer].version_id)
+        while not self.changes.trail_pointer == -1 and not int(pointer_on_version_to_recover) == int(actual_version_pointer):
             undo_redo_list.append((actual_version_pointer, 'undo'))
-            # logger.info("%s" % dir(self.changes.all_time_history[actual_version_pointer]))
+            # logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
             # logger.info(str(self.changes.all_time_history[actual_version_pointer].prev_id))
             actual_version_pointer = self.changes.all_time_history[actual_version_pointer].prev_id
 
             # logger.info("%s %s %s " % (type(pointer_on_version_to_recover), type(actual_version_pointer), pointer_on_version_to_recover == actual_version_pointer))
             if actual_version_pointer is None:
-                logger.warning("version could not be found 'backward'")
+                # logger.warning("version could not be found 'backward'")
                 undo_redo_list = []
                 break
 
         # forward
-        actual_version_pointer = self.changes.trail_history[self.changes.trail_pointer].version_id
-        if not undo_redo_list and self.changes.all_time_history[actual_version_pointer].next_id is not None:
+        # logger.debug("actual version id %s " % self.changes.trail_history[self.changes.trail_pointer].version_id)
+        if self.changes.trail_pointer == -1:
+            actual_version_pointer = self.changes.trail_history[self.changes.trail_pointer + 1].version_id
+            undo_redo_list.append((actual_version_pointer, 'redo'))
+        elif self.changes.trail_pointer is None:
+            actual_version_pointer = self.changes.trail_history[0].version_id
+        else:
+            actual_version_pointer = self.changes.trail_history[self.changes.trail_pointer].version_id
+        if not undo_redo_list or self.changes.trail_pointer == -1 \
+                and self.changes.all_time_history[actual_version_pointer].next_id is not None:
             actual_version_pointer = self.changes.all_time_history[actual_version_pointer].next_id
             undo_redo_list.append((actual_version_pointer, 'redo'))
             while not int(pointer_on_version_to_recover) == int(actual_version_pointer):
-                # logger.info("%s" % dir(self.changes.all_time_history[actual_version_pointer]))
+                # logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
                 # logger.info(str(self.changes.all_time_history[actual_version_pointer].next_id))
                 actual_version_pointer = self.changes.all_time_history[actual_version_pointer].next_id
 
                 # logger.info("%s %s %s " % (type(pointer_on_version_to_recover), type(actual_version_pointer), pointer_on_version_to_recover == actual_version_pointer))
                 if actual_version_pointer is None:
-                    logger.warning("version could not be found 'forward'")
+                    logger.warning("version could not be found 'forward' and 'backward'")
+                    undo_redo_list = []
                     break
                 undo_redo_list.append((actual_version_pointer, 'redo'))
 
 
-        logger.info("steps to perform %s" % undo_redo_list)
+        # logger.info("found steps to perform %s to reach version_id %s" % (undo_redo_list, pointer_on_version_to_recover))
         for elem in undo_redo_list:
             if elem[1] == 'undo':
                 # do undo
@@ -756,81 +757,6 @@ class History(ModelMT):
                 self._redo(elem[0])
                 #self.changes.all_time_history[elem[0]].action.redo()
 
-    @ModelMT.observe("state_machine", before=True)
-    def assign_notification_change_type_root_state_before(self, model, prop_name, info):
-        # print model, prop_name, info
-        if self.busy:  # if doing undo and redos
-            return
-        if info.method_name == "change_root_state_type":
-            if self.with_prints:
-                print "ROOT_STATE is NEW", model, prop_name, info
-            self.actual_action = StateMachineAction("change_root_state_type", model.state_machine.root_state.get_path(),  # instance path of parent
-                                                    model.root_state, prop_name, info,
-                                                    state_machine_model=self.state_machine_model)
-            self.count_before += 1
-            if self.with_prints:
-                print "LOCKED count up state_machine", self.count_before
-            self.locked = True
-
-    @ModelMT.observe("state_machine", after=True)
-    def assign_notification_change_type_root_state_after(self, model, prop_name, info):
-        # print model, prop_name, info
-        if info.result == "CRASH in FUNCTION":
-            if self.with_prints:
-                logger.warning("function crash detected sm_after")
-            return self._interrupt_actual_action()
-
-        if self.busy:  # if doing undo and redos
-            return
-
-        if info.method_name == "change_root_state_type":
-            # logger.debug("History state_machine_AFTER")
-            if self.with_prints:
-                print "ROOT_STATE is NEW", model, prop_name, info
-            if self.locked:
-                self.count_before -= 1
-                if self.with_prints:
-                    print "LOCKED count down state_machine", self.count_before
-                if self.count_before == 0:
-                    self.locked = False
-                    if self.with_prints:
-                        print "IN HISTORY", model, prop_name, info
-                    if prop_name == "states" and info.kwargs.result == "CRASH in FUNCTION":
-                        if self.with_prints:
-                            print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
-                        self.actual_action.undo()
-                    else:
-                        self.finish_new_action(model.root_state, prop_name, info)
-                        self._re_initiate_observation()
-                        if self.with_prints:
-                            print "HISTORY COUNT WAS OF SUCCESS"
-            else:
-                if self.with_prints:
-                    print "HISTORY after not count"
-
-    def meta_changed_notify_before(self, changed_parent_model, changed_model, recursive_changes):
-        pass
-
-    def meta_changed_notify_after(self, changed_parent_model, changed_model, recursive_changes):
-        """
-        :param changed_parent_model awesome_tool.mvc.models.container_state.ContainerStateModel: model that holds the changed model
-        :param changed_model gtkmvc.Model: inherent class of gtkmvc.Model like TransitionModel, StateModel and so on
-        :param recursive_changes bool: indicates if the changes are recursive and touch multiple or all recursive childs
-        :return:
-        """
-        # store meta data
-        logger.debug("state %s '%s' history got notification that Meta data has changed" %
-                     (changed_parent_model.state.state_id, changed_parent_model.state.name))
-        # -> in case of undo/redo overwrite Model.meta-dict
-
-        # self.actual_action = Action('meta_data_changed', changed_parent_model.state.get_path(),  # instance path of parent
-        #                             changed_model, 'meta_data_changed', {},
-        #                             state_machine_model=self.state_machine_model)
-        # b_tuple = self.actual_action.before_storage
-        # meta_dict = self.get_state_element_meta_from_tmp_storage(changed_model.state.get_path())
-        # mod_tuple = (b_tuple[0], b_tuple[1], b_tuple[2], meta_dict, b_tuple[4], b_tuple[5])
-        # self.actual_action.before_storage = mod_tuple
-        # self.finish_new_action(changed_model, 'meta_data_changed', {})
     def _undo(self, version_id):
         self.busy = True
         self.changes.all_time_history[version_id].action.undo()
@@ -842,6 +768,12 @@ class History(ModelMT):
             self._re_initiate_observation()
 
     def undo(self):
+        if not self.changes.trail_history or self.changes.trail_pointer < 0 \
+                or not self.changes.trail_pointer < len(self.changes.trail_history):
+            logger.debug("There is no more TrailEditionHistory element to Undo")
+            return
+        # else:
+        #     logger.debug("do Undo %s %s %s" % (bool(self.changes.trail_history), self.changes.trail_history, (self.changes.trail_pointer, len(self.changes.trail_history))))
         self.busy = True
         self.changes.undo()
         self.busy = False
@@ -862,12 +794,15 @@ class History(ModelMT):
             self._re_initiate_observation()
 
     def redo(self):
+        if not self.changes.trail_history or self.changes.trail_history and not self.changes.trail_pointer+1 < len(self.changes.trail_history):
+            logger.debug("There is no more TrailHistory element to Redo")
+            return
+        # else:
+        #     logger.debug("do Redo %s %s %s" % (bool(self.changes.trail_history), self.changes.trail_history, (self.changes.trail_pointer, len(self.changes.trail_history))))
         self.busy = True
         self.changes.redo()
         self.busy = False
-        if self.changes.trail_history is not None \
-                and self.changes.trail_pointer < len(self.changes.trail_history) \
-                and isinstance(self.changes.trail_history[self.changes.trail_pointer], StateMachineAction):
+        if isinstance(self.changes.trail_history[self.changes.trail_pointer], StateMachineAction):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
 
@@ -1006,6 +941,87 @@ class History(ModelMT):
         self.state_machine_model.history.changes.insert_action(self.actual_action)
         # logger.debug("history is now: %s" % self.state_machine_model.history.changes.single_trail_history())
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+
+    def meta_changed_notify_after(self, changed_parent_model, changed_model, recursive_changes):
+        self.manual_changed_notify_after("gui_meta_data_changed", changed_parent_model, changed_model, recursive_changes)
+
+    def manual_changed_notify_before(self, change_type, changed_parent_model, changed_model, recursive_changes):
+        pass
+
+    def manual_changed_notify_after(self, change_type, changed_parent_model, changed_model, recursive_changes):
+        """
+        :param changed_parent_model awesome_tool.mvc.models.container_state.ContainerStateModel: model that holds the changed model
+        :param changed_model gtkmvc.Model: inherent class of gtkmvc.Model like TransitionModel, StateModel and so on
+        :param recursive_changes bool: indicates if the changes are recursive and touch multiple or all recursive childs
+        :return:
+        """
+        if change_type == 'gui_meta_data_changed':
+            # store meta data
+
+            logger.debug("state %s '%s' history got notification that Meta data has changed" %
+                         (changed_parent_model.state.state_id, changed_parent_model.state.name))
+            # -> in case of undo/redo overwrite Model.meta-dict
+
+            # self.actual_action = Action('meta_data_changed', changed_parent_model.state.get_path(),  # instance path of parent
+            #                             changed_model, 'meta_data_changed', {},
+            #                             state_machine_model=self.state_machine_model)
+            # b_tuple = self.actual_action.before_storage
+            # meta_dict = self.get_state_element_meta_from_tmp_storage(changed_model.state.get_path())
+            # mod_tuple = (b_tuple[0], b_tuple[1], b_tuple[2], meta_dict, b_tuple[4], b_tuple[5])
+            # self.actual_action.before_storage = mod_tuple
+            # self.finish_new_action(changed_model, 'meta_data_changed', {})
+
+    @ModelMT.observe("state_machine", before=True)
+    def assign_notification_change_type_root_state_before(self, model, prop_name, info):
+        # print model, prop_name, info
+        if self.busy:  # if doing undo and redos
+            return
+        if info.method_name == "change_root_state_type":
+            if self.with_prints:
+                print "ROOT_STATE is NEW", model, prop_name, info
+            self.actual_action = StateMachineAction("change_root_state_type", model.state_machine.root_state.get_path(),  # instance path of parent
+                                                    model.root_state, prop_name, info,
+                                                    state_machine_model=self.state_machine_model)
+            self.count_before += 1
+            if self.with_prints:
+                print "LOCKED count up state_machine", self.count_before
+            self.locked = True
+
+    @ModelMT.observe("state_machine", after=True)
+    def assign_notification_change_type_root_state_after(self, model, prop_name, info):
+        # print model, prop_name, info
+        if info.result == "CRASH in FUNCTION":
+            if self.with_prints:
+                logger.warning("function crash detected sm_after")
+            return self._interrupt_actual_action()
+
+        if self.busy:  # if doing undo and redos
+            return
+
+        if info.method_name == "change_root_state_type":
+            # logger.debug("History state_machine_AFTER")
+            if self.with_prints:
+                print "ROOT_STATE is NEW", model, prop_name, info
+            if self.locked:
+                self.count_before -= 1
+                if self.with_prints:
+                    print "LOCKED count down state_machine", self.count_before
+                if self.count_before == 0:
+                    self.locked = False
+                    if self.with_prints:
+                        print "IN HISTORY", model, prop_name, info
+                    if prop_name == "states" and info.kwargs.result == "CRASH in FUNCTION":
+                        if self.with_prints:
+                            print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
+                        self.actual_action.undo()
+                    else:
+                        self.finish_new_action(model.root_state, prop_name, info)
+                        self._re_initiate_observation()
+                        if self.with_prints:
+                            print "HISTORY COUNT WAS OF SUCCESS"
+            else:
+                if self.with_prints:
+                    print "HISTORY after not count"
 
     @ModelMT.observe("states", before=True)
     def assign_notification_states_before(self, model, prop_name, info):
@@ -1222,7 +1238,8 @@ class History(ModelMT):
                     print 'kwargs'
                 elem['level'].append('kwargs')
                 set_dict(info, elem)
-                find_parent(info['kwargs'], elem)
+                if 'method_name' in info['kwargs'] and 'instance' in info['kwargs']:
+                    find_parent(info['kwargs'], elem)
             elif 'info' in info and info['info']:
                 if self.with_prints:
                     print 'info'
@@ -1242,8 +1259,10 @@ class History(ModelMT):
         overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
                                       'info': []})
         info_print = ''
+        info_count = 0
         for elem in overview['info']:
-            info_print += "\n" + str(elem)
+            info_print += "\ninfo %s: %s" % (info_count, str(elem))
+            info_count += 1
         if self.with_prints:
             print info_print
             print "model: ", overview['model']
@@ -1319,7 +1338,7 @@ class ChangeHistory(Observable):
         self.trail_pointer = len(self.trail_history) - 1
         if self.trail_pointer == -1:
             self.trail_pointer = None
-        self.all_time_pointer = len(self.all_time_history) - 1
+        self.all_time_pointer = len(self.all_time_history) - 1  # general should be equal to self.counter and version_id
 
     @Observable.observed
     def undo(self):
@@ -1329,7 +1348,7 @@ class ChangeHistory(Observable):
             self.trail_pointer -= 1
             self.all_time_pointer -= 1
         elif self.trail_pointer is not None:
-            logger.debug("No UNDO left over!!!")
+            logger.warning("No UNDO left over!!!")
         else:
             logger.error("History undo FAILURE")
 
@@ -1341,7 +1360,7 @@ class ChangeHistory(Observable):
             self.trail_pointer += 1
             self.all_time_pointer += 1
         elif self.trail_history is not None:
-            logger.debug("No REDO left over!!!")
+            logger.warning("No REDO left over!!!")
         else:
             logger.error("History redo FAILURE")
 
@@ -1358,7 +1377,7 @@ class ChangeHistory(Observable):
 
     @Observable.observed
     def reset(self):
-        logger.debug("\n\n\n\n\n################ RESET ChangeHistory PUT ALL TO NONE\n\n\n\n\n")
+        logger.debug("################ RESET ChangeHistory PUT ALL TO INITIATION")
         self.trail_history = []
         self.all_time_history = []
 

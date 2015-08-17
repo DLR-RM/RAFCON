@@ -94,9 +94,9 @@ class DataFlow(Observable, yaml.YAMLObject):
         :return:
         """
         if not isinstance(from_state, str):
-            raise TypeError("from_state must be of type str")
+            raise ValueError("from_state must be of type str")
         if not isinstance(from_key, int):
-            raise TypeError("from_key must be of type int")
+            raise ValueError("from_key must be of type int")
 
         old_from_state = self.from_state
         old_from_key = self.from_key
@@ -119,7 +119,7 @@ class DataFlow(Observable, yaml.YAMLObject):
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
         if not isinstance(from_state, str):
-            raise TypeError("from_state must be of type str")
+            raise ValueError("from_state must be of type str")
 
         self.__change_property_with_validity_check('_from_state', from_state)
 
@@ -133,7 +133,7 @@ class DataFlow(Observable, yaml.YAMLObject):
     @Observable.observed
     def from_key(self, from_key):
         if not isinstance(from_key, int):
-            raise TypeError("from_key must be of type int")
+            raise ValueError("from_key must be of type int")
 
         self.__change_property_with_validity_check('_from_key', from_key)
 
@@ -145,9 +145,9 @@ class DataFlow(Observable, yaml.YAMLObject):
         :return:
         """
         if not isinstance(to_state, str):
-            raise TypeError("from_state must be of type str")
+            raise ValueError("from_state must be of type str")
         if not isinstance(to_key, int):
-            raise TypeError("from_outcome must be of type int")
+            raise ValueError("from_outcome must be of type int")
 
         old_to_state = self.to_state
         old_to_key = self.to_key
@@ -170,7 +170,7 @@ class DataFlow(Observable, yaml.YAMLObject):
     # @Observable.observed  # should not be observed to stay consistent
     def to_state(self, to_state):
         if not isinstance(to_state, str):
-            raise TypeError("to_state must be of type str")
+            raise ValueError("to_state must be of type str")
 
         self.__change_property_with_validity_check('_to_state', to_state)
 
@@ -184,7 +184,7 @@ class DataFlow(Observable, yaml.YAMLObject):
     @Observable.observed
     def to_key(self, to_key):
         if not isinstance(to_key, int):
-            raise TypeError("to_key must be of type int")
+            raise ValueError("to_key must be of type int")
 
         self.__change_property_with_validity_check('_to_key', to_key)
 
@@ -200,7 +200,7 @@ class DataFlow(Observable, yaml.YAMLObject):
     def data_flow_id(self, data_flow_id):
         if data_flow_id is not None:
             if not isinstance(data_flow_id, int):
-                raise TypeError("data_flow_id must be of type int")
+                raise ValueError("data_flow_id must be of type int")
 
         self.__change_property_with_validity_check('_data_flow_id', data_flow_id)
 
@@ -230,6 +230,8 @@ class DataFlow(Observable, yaml.YAMLObject):
         valid, message = self._check_validity()
         if not valid:
             setattr(self, property_name, old_value)
+            if property_name == '_parent':
+                raise ValueError("Data flow invalid: {0}".format(message))
             raise ValueError("The data flow's '{0}' could not be changed: {1}".format(property_name[1:], message))
 
     def _check_validity(self):

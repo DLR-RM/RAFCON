@@ -17,6 +17,7 @@ import awesome_tool.statemachine.singleton as sm_singletons
 import awesome_tool.mvc.singleton as mvc_singletons
 
 from awesome_tool.mvc.config import global_gui_config
+from awesome_tool.mvc.runtime_config import global_runtime_config
 from awesome_tool.statemachine.config import global_config
 
 from awesome_tool.statemachine.storage.storage import StateMachineStorage
@@ -55,6 +56,10 @@ def state_machine_path(path):
 def config_path(path):
     if not path or path == 'None':
         return None
+    # replace ~ with /home/user
+    path = os.path.expanduser(path)
+    # e.g. replace ${RAFCON_PATH} with the root path of RAFCON
+    path = os.path.expandvars(path)
     if not os.path.isdir(path):
         raise argparse.ArgumentTypeError("{0} is not a valid path".format(path))
     if os.access(path, os.R_OK):
@@ -71,9 +76,13 @@ if __name__ == '__main__':
     logger = log.get_logger("start")
     logger.info("Awesome tool launcher")
 
+    if not os.environ.get('RAFCON_PATH', None):
+        # set env variable PYTHON_PATH to the root directory of RAFCON
+        os.environ['RAFCON_PATH'] = os.path.dirname(os.path.dirname(__file__))
+
     home_path = os.path.expanduser('~')
     if home_path:
-        home_path = os.path.join(home_path, ".awesome_tool")
+        home_path = os.path.join(home_path, ".config", "rafcon")
     else:
         home_path = 'None'
 
@@ -100,6 +109,7 @@ if __name__ == '__main__':
 
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
+    global_runtime_config.load(path=setup_config['gui_config_path'])
 
     # Initialize library
     sm_singletons.library_manager.initialize()
@@ -127,8 +137,17 @@ if __name__ == '__main__':
     sm_manager_model = mvc_singletons.state_machine_manager_model
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
+    main_window = main_window_view.get_top_widget()
+    size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
+    position = global_runtime_config.get_config_value("WINDOW_POS", None)
+    if size:
+        main_window.resize(size[0], size[1])
+    if position:
+        main_window.move(position[0], position[1])
+    # TODO: Check if window is within monitor (might be outside if the monitor configuration changed)
 
-    # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
+
+# Ensure that the next message is being printed (needed for LN manager to detect finished startup)
     level = logger.level
     logger.setLevel(logging.INFO)
     logger.info("Ready")

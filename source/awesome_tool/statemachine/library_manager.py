@@ -50,7 +50,16 @@ class LibraryManager(Observable):
         self._libraries = {}
         self._library_paths = {}
         for lib_key, lib_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
+            # Replace ~ with /home/user
             lib_path = os.path.expanduser(lib_path)
+            # Replace environment variables
+            lib_path = os.path.expandvars(lib_path)
+            # If the path is relative, assume it is relative to the config file directory
+            if lib_path.startswith('.'):
+                lib_path = os.path.join(config.global_config.path, lib_path)
+            # Clean path, e.g. replace /./ with /
+            lib_path = os.path.abspath(lib_path)
+
             if os.path.exists(lib_path):
                 lib_path = os.path.realpath(lib_path)
                 logger.debug('Adding libraries from {0}'.format(lib_path))
