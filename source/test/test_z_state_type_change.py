@@ -1,25 +1,21 @@
-import sys
 import logging
 import gtk
 import threading
 import time
-import glib
 import os
 import signal
 
+# general tool elements
 from rafcon.utils import log
-from rafcon.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController, StateDataPortEditorController,\
-    SingleWidgetWindowController, SourceEditorController
+from rafcon.mvc.models import GlobalVariableManagerModel
+from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
-from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
+from rafcon.mvc.views import LoggingView
 from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.execution_state import ExecutionState
 import rafcon.mvc.singleton
 from rafcon.statemachine.state_machine import StateMachine
 import variables_for_pytest
+from variables_for_pytest import test_multithrading_lock, call_gui_callback
 
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -104,7 +100,6 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
     # remove existing state machines
     for sm_id in rafcon.statemachine.singleton.state_machine_manager.state_machines.keys():
@@ -513,6 +508,19 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         assert state in [ExecutionState, HierarchyState, PreemptiveConcurrencyState, BarrierConcurrencyState]
 
 
+def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
+    assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
+    time_waited = 0.0
+    state_editor_ctrl = None
+    while state_editor_ctrl is None:
+        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
+        time.sleep(0.1)
+        time_waited += 0.1
+        assert time_waited < max_time
+
+    return state_editor_ctrl, time_waited
+
+
 def list_store_id_dict(store):
     id = 0
     list_store_id = {}
@@ -547,15 +555,13 @@ check_list_root_BCS = ['ports', 'outcomes', 'states', 'scoped_variables',
 
 def trigger_state_type_change_tests(*args):
     print "Wait for the gui to initialize"
-    time.sleep(1.0)
+    time.sleep(2.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     sm_m = args[2]
     state_dict = args[3]
     with_gui = args[4]
-    sleep_time = 2
-
-    time.sleep(sleep_time)
+    logger = args[5]
 
     ####### General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
@@ -565,10 +571,7 @@ def trigger_state_type_change_tests(*args):
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
-    sm_m.selection.set([state_m])
-    time.sleep(sleep_time)
-    # state_dict['Container'].change_state_type(state_m, ExecutionState)
-    # state_dict['Container'].change_state_type(state_m, PreemptiveConcurrencyState)
+    call_gui_callback(sm_m.selection.set, [state_m])
 
     # do state_type_change with gui
     # - find state machine id
@@ -585,8 +588,9 @@ def trigger_state_type_change_tests(*args):
         # - get states-editor controller
         state_identifier = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
         assert state_identifier in main_window_controller.get_controller('states_editor_ctrl').tabs
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[state_identifier]['controller']
 
+        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, 5.0)
+        logger.debug("wait for state's state editor %s" % time_waited)
         # - find right row in combo box
         store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
         list_store_id_from_state_type_dict = list_store_id_dict(store)
@@ -595,8 +599,7 @@ def trigger_state_type_change_tests(*args):
 
     # HS -> BCS
         state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
-        glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-        time.sleep(sleep_time)
+        call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
         state_dict[state_of_type_change].change_state_type(state_m, BarrierConcurrencyState)
 
@@ -609,8 +612,7 @@ def trigger_state_type_change_tests(*args):
     # BCS -> HS
     if with_gui:
         state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
-        glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-        time.sleep(sleep_time)
+        call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -618,8 +620,7 @@ def trigger_state_type_change_tests(*args):
 
     # HS -> PCS
     state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
-    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    time.sleep(sleep_time)
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -627,8 +628,7 @@ def trigger_state_type_change_tests(*args):
 
     # PCS -> ES
     state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
-    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    time.sleep(sleep_time)
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -644,18 +644,12 @@ def trigger_state_type_change_tests(*args):
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
-    sm_m.selection.set([state_m])
-    time.sleep(sleep_time)
+    call_gui_callback(sm_m.selection.set, [state_m])
 
     # do state_type_change with gui
     states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
     state_identifier = states_editor_controller.get_state_identifier(state_m)
-        # str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-    # states_editor_controller.tabs[state_identifier]
-    # states_editor_controller.tabs[state_identifier]['controller']
     state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[state_identifier]['controller']
-    print state_editor_ctrl.get_controller('properties_ctrl')
-    print state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
 
     # - find right row in combo box
     store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
@@ -663,8 +657,7 @@ def trigger_state_type_change_tests(*args):
 
     # HS -> BCS
     state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
-    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    time.sleep(sleep_time)
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -672,8 +665,7 @@ def trigger_state_type_change_tests(*args):
 
     # BCS -> HS
     state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
-    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    time.sleep(sleep_time)
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -686,8 +678,7 @@ def trigger_state_type_change_tests(*args):
 
     # HS -> PCS
     state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
-    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    time.sleep(sleep_time)
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -695,30 +686,20 @@ def trigger_state_type_change_tests(*args):
 
     # PCS -> ES
     state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
-    glib.idle_add(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    time.sleep(sleep_time)
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_ES, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
-    # simple type change of root_state
-
-    # state_m = sm_m.root_state
-    # sm_m.state_machine.change_root_state_type(state_m, ExecutionState)
-    #
-    # time.sleep(sleep_time)
-    #
-    # sm_m.history.undo()
-
-    time.sleep(sleep_time)
+    # simple type change of root_state -> still could be extended
 
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        glib.idle_add(menubar_ctrl.on_stop_activate, None)
+        call_gui_callback(menubar_ctrl.on_stop_activate, None)
         menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = '/tmp/dfc_test_state_type_change'
-        glib.idle_add(menubar_ctrl.on_save_activate, None)
-        glib.idle_add(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(menubar_ctrl.on_save_activate, None)
+        call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
 def test_state_type_change_with_gui():
@@ -731,7 +712,7 @@ def _test_state_type_change_without_gui():
 
 def state_type_change_test(with_gui=False):
 
-    variables_for_pytest.test_multithrading_lock.acquire()
+    test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(rafcon.__path__[0] + "/mvc")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
@@ -763,7 +744,7 @@ def state_type_change_test(with_gui=False):
 
     thread = threading.Thread(target=trigger_state_type_change_tests,
                               args=[variables_for_pytest.sm_manager_model, main_window_controller,
-                                    sm_m, state_dict, with_gui])
+                                    sm_m, state_dict, with_gui, logger])
     thread.start()
 
     if with_gui:
@@ -776,7 +757,7 @@ def state_type_change_test(with_gui=False):
             thread.join()
             logger.debug("Joined test triggering thread!")
         os.chdir(rafcon.__path__[0] + "/../test")
-        variables_for_pytest.test_multithrading_lock.release()
+        test_multithrading_lock.release()
     else:
         os.chdir(rafcon.__path__[0] + "/../test")
         thread.join()

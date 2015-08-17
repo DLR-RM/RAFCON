@@ -89,13 +89,13 @@ class StateOutcomesListController(ExtendedController):
         view.tree_view.connect("grab-focus", self.on_focus)
 
     def on_focus(self, widget, data=None):
-        logger.debug("OUTCOMES_LIST get new FOCUS")
+        # logger.debug("OUTCOMES_LIST get new FOCUS")
         path = self.view.tree_view.get_cursor()
         try:
             self.update_internal_data_base()
             self.update_tree_store()
-        except:
-            logger.debug("update failed")
+        except Exception:
+            logger.warning("update failed")
         if path[0]:  # if valid -> is possible as long as set_cursor does not trigger on_focus again
             self.view.tree_view.set_cursor(path[0])
 
@@ -106,7 +106,7 @@ class StateOutcomesListController(ExtendedController):
             outcome.name = text
             logger.debug("Outcome name changed to '{0}'".format(outcome.name))
         except (ValueError, TypeError) as e:
-            logger.error("The name of the outcome could not be changed: {0}".format(e))
+            logger.warning("The name of the outcome could not be changed: {0}".format(e))
         self.tree_store[path][1] = outcome.name
 
     def on_to_state_modification(self, widget, path, text):
@@ -172,7 +172,7 @@ class StateOutcomesListController(ExtendedController):
         try:
             outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
         except AttributeError as e:
-            logger.error("The outcome couldn't be added: {0}".format(e))
+            logger.warning("The outcome couldn't be added: {0}".format(e))
             return
         # Search for new entry and select it
         ctr = 0
@@ -186,7 +186,7 @@ class StateOutcomesListController(ExtendedController):
     def on_remove(self, button, info=None):
 
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        if path:  #  and not self.tree_store[path[0][0]][6].outcome_id < 0 leave this check for the state
+        if path:  # and not self.tree_store[path[0][0]][6].outcome_id < 0 leave this check for the state
             outcome_id = self.tree_store[path[0][0]][6].outcome_id
             try:
                 self.model.state.remove_outcome(outcome_id)

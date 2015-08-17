@@ -1302,14 +1302,15 @@ def test_state_property_modify_notification(with_print=False):
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast,
                                child_effects={'outcomes': 5})
 
-    # script(self, script) Script
-    # no more valid as script property only exists for execution states
-    # state_dict['Nested'].script = Script(script_type=ScriptType.CONTAINER, state=state_dict['Nested'])
-    # forecast += 1
-    # state_dict['Nested'].script = Script(script_type=ScriptType.EXECUTION, state=state_dict['Nested'])
-    # forecast += 1
-    # check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast,
-    #                            child_effects={'outcomes': 5})
+    # TODO NOTIFICATION of script assignment is wasted!!!!!!!!
+    # # script(self, script) Script
+    # if hasattr(state_dict['Nested2'], "script"):
+    #     state_dict['Nested2'].script = Script(script_type=ScriptType.CONTAINER, state=state_dict['Nested2'])
+    #     forecast += 1
+    #     state_dict['Nested2'].script = Script(script_type=ScriptType.EXECUTION, state=state_dict['Nested2'])
+    #     forecast += 1
+    # check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=2,
+    #                            child_effects={'states': 5})
 
     # description(self, description) str
     state_dict['Nested'].description = "awesome"
