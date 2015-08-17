@@ -51,6 +51,8 @@ def create_statemachine():
     with raises(ValueError):
         state4.add_transition(None, None, state3.state_id, None)
 
+    state4.add_transition(state3.state_id, 4, state4.state_id, 5)
+
     state4.start_state_id = None
     state4.add_transition(None, None, state1.state_id, None)
 
