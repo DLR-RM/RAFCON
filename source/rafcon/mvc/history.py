@@ -28,14 +28,15 @@ logger = log.get_logger(__name__)
 
 def get_state_tuple(state, state_m=None):
     """ Generates a tuple that holds the state as yaml-strings and its meta data in a dictionary.
-        The tuple consists of:
-        [0] yaml_str for state,
-        [1] dict of child_state tuples,
-        [2] script of state,
-        [3] dict of model_meta-data of self and elements
-        [4] path of state in state machine
-        [5] script_text
+    The tuple consists of:
+    [0] yaml_str for state,
+    [1] dict of child_state tuples,
+    [2] script of state,
+    [3] dict of model_meta-data of self and elements
+    [4] path of state in state machine
+    [5] script_text
     #   states-meta - [state-, transitions-, data_flows-, outcomes-, inputs-, outputs-, scopes, states-meta]
+
     :param rafcon.statemachine.states.state.State state: The state that should be stored
     :return: state_tuple tuple
     """

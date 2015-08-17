@@ -394,12 +394,16 @@ class StateMachineHelper():
 
     @staticmethod
     def change_state_type(orig_state_m, new_state_class):
-        """ The function transforms a original state represented by its model orig_state_m into a different StateType
+        """Change the type of the given state
+
+        The function transforms a original state represented by its model orig_state_m into a different StateType
         new_state_class. This is done in three steps:
-        - run_before_model_functionality_of_change_state_type -> necessary model-operation/storing before core changes
-        - run_core_functionality_of_change_state_type         -> generation of core objects, so reduction or extension
-                                                                 of original child-elements of the state
-        - run_after_model_functionality_of_change_state_type  -> necessary model-operation/inserts after core changes
+
+        # run_before_model_functionality_of_change_state_type -> necessary model-operation/storing before core changes
+        # run_core_functionality_of_change_state_type -> generation of core objects, so reduction or extension
+        of original child-elements of the state
+        # run_after_model_functionality_of_change_state_type -> necessary model-operation/inserts after core changes
+
         The core functionality is also performed by duplicate_state_with_other_state_type.
 
         :param orig_state_m: state model of state which state type (class-type) should be changed to new_state_class

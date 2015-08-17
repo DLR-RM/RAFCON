@@ -15,16 +15,14 @@ from rafcon.statemachine.id_generator import *
 
 
 class DataFlow(Observable, yaml.YAMLObject):
-
     """A class for representing a data flow connection in the state machine
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar from_state: the id of the source state of the data flow connection
-    :ivar to_state: the id of the target state of the data flow connection
-    :ivar from_key: the id of the data port / scoped variable of the source state
-    :ivar to_key: the id of the data port /scoped variable of the target state
-
+    :ivar str from_state: the id of the source state of the data flow connection
+    :ivar str to_state: the id of the target state of the data flow connection
+    :ivar int from_key: the id of the data port / scoped variable of the source state
+    :ivar int to_key: the id of the data port /scoped variable of the target state
     """
 
     yaml_tag = u'!DataFlow'

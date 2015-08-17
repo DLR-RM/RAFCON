@@ -16,7 +16,6 @@ logger = log.get_logger(__name__)
 
 
 class Outcome(Observable, yaml.YAMLObject):
-
     """A class for representing an outcome of a state
 
     It inherits from Observable to make a change of its fields observable.
@@ -24,9 +23,9 @@ class Outcome(Observable, yaml.YAMLObject):
     As the name of an outcome can be changes without modifying the transitions the primary key of an outcome is its
     id and not its name.
 
-    :ivar outcome_id: the id of the outcome, must be unique on one hierarchy level
-    :ivar name: the human readable name of the outcome
-    :ivar parent: reference to the parent state
+    :ivar int outcome_id: the id of the outcome, must be unique on one hierarchy level
+    :ivar str name: the human readable name of the outcome
+    :ivar rafcon.statemachine.states.state.State parent: reference to the parent state
     """
 
     yaml_tag = u'!Outcome'
