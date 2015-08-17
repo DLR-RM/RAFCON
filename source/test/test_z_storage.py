@@ -1,17 +1,17 @@
 __author__ = 'beld_rc'
 
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.state_machine import StateMachine
-import awesome_tool.statemachine.singleton
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.state_machine import StateMachine
+import rafcon.statemachine.singleton
 
-from awesome_tool.statemachine.script import Script, ScriptType
-from awesome_tool.statemachine.enums import StateType
+from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.enums import StateType
 
-import awesome_tool.statemachine.singleton
-import awesome_tool.mvc.singleton
+import rafcon.statemachine.singleton
+import rafcon.mvc.singleton
 
-from awesome_tool.mvc.controllers.state_machine_history import StateMachineHistoryController
+from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
 
 from gtkmvc.observer import Observer
 
@@ -77,16 +77,16 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
-    for sm_in in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.values():
-        awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    for sm_in in rafcon.statemachine.singleton.state_machine_manager.state_machines.values():
+        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-    awesome_tool.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     # return ctr_state, sm_m, state_dict
     return logger, ctr_state, sm_m, state_dict
@@ -98,7 +98,7 @@ import glib
 import threading
 import time
 
-from awesome_tool.utils import log
+from rafcon.utils import log
 
 
 def setup_logger(logging_view):
@@ -114,7 +114,7 @@ def on_save_activate(state_machine_m, logger):
             return
 
         logger.debug("Saving state machine to {0}".format(save_path))
-        awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
             state_machine_m.state_machine,
             state_machine_m.state_machine.base_path, delete_old_state_machine=False)
 
@@ -220,14 +220,14 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_gui_meta_data=Fal
 def test_storage_without_gui():
     with_gui=False
 
-    awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     # logging_view = LoggingView()
     # setup_logger(logging_view)
     # time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
-    awesome_tool.statemachine.singleton.library_manager.initialize()
+    rafcon.statemachine.singleton.library_manager.initialize()
 
     save_state_machine(sm_model=sm_m, path="/tmp/dfc_test_storage", logger=logger, with_gui=with_gui, menubar_ctrl=None)
 
@@ -237,19 +237,19 @@ def test_storage_without_gui():
 def _test_storage_with_gui():
     with_gui = True
 
-    awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(awesome_tool.__path__[0] + "/mvc/")
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    os.chdir(rafcon.__path__[0] + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
-    signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
+    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     # logging_view = LoggingView()
     # setup_logger(logging_view)
     # time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
-    awesome_tool.statemachine.singleton.library_manager.initialize()
+    rafcon.statemachine.singleton.library_manager.initialize()
 
     save_state_machine(sm_model=sm_m, path="/tmp/dfc_test_storage", logger=logger, with_gui=with_gui, menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
-    os.chdir(awesome_tool.__path__[0] + "/../test")
+    os.chdir(rafcon.__path__[0] + "/../test")

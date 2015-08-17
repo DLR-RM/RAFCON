@@ -1,10 +1,10 @@
 import pytest
 from pytest import raises
 
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.state_machine import StateMachine
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+import rafcon.statemachine.singleton
+from rafcon.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
@@ -33,12 +33,12 @@ def test_concurrency_barrier_state_execution():
     sm = create_state_machine()
     root_state = sm.root_state
     state_machine = StateMachine(root_state)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
     assert root_state.output_data["output_data_port1"] == 42

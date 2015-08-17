@@ -7,17 +7,17 @@ import glib
 import os
 from os.path import dirname, join
 
-from awesome_tool.utils import log
-from awesome_tool.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
-from awesome_tool.mvc.controllers import MainWindowController, StateDataPortEditorController,\
+from rafcon.utils import log
+from rafcon.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
+from rafcon.mvc.controllers import MainWindowController, StateDataPortEditorController,\
     SingleWidgetWindowController, SourceEditorController
-from awesome_tool.mvc.views.main_window import MainWindowView
-from awesome_tool.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-import awesome_tool.mvc.singleton
-from awesome_tool.statemachine.state_machine import StateMachine
-from awesome_tool.mvc.clipboard import global_clipboard
+from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.states.execution_state import ExecutionState
+import rafcon.mvc.singleton
+from rafcon.statemachine.state_machine import StateMachine
+from rafcon.mvc.clipboard import global_clipboard
 
 import variables_for_pytest
 from variables_for_pytest import call_gui_callback
@@ -25,7 +25,7 @@ from variables_for_pytest import call_gui_callback
 
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
-    library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: " ,dirname(__file__), dirname(dirname(__file__))
 
     library_paths["ros_libraries"] = join(dirname(dirname(os.path.realpath(__file__))), "test_scripts", "ros_libraries")
@@ -306,10 +306,10 @@ def trigger_gui_signals(*args):
 def test_gui():
     variables_for_pytest.test_multithrading_lock.acquire()
     # delete all old state machines
-    awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir("../awesome_tool/mvc/")
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    os.chdir("../rafcon/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
-    awesome_tool.statemachine.singleton.library_manager.initialize()
+    rafcon.statemachine.singleton.library_manager.initialize()
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
     #setup_logger(logging_view['main_frame'])
     logging_view = LoggingView()
@@ -317,8 +317,8 @@ def test_gui():
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    variables_for_pytest.sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    variables_for_pytest.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView(logging_view)
     main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')

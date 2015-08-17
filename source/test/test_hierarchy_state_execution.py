@@ -1,13 +1,13 @@
 import pytest
 from pytest import raises
-import awesome_tool
+import rafcon
 
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.states.state import DataPortType
-from awesome_tool.statemachine.storage.storage import StateMachineStorage
-from awesome_tool.statemachine.state_machine import StateMachine
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+import rafcon.statemachine.singleton
+from rafcon.statemachine.states.state import DataPortType
+from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
@@ -41,12 +41,12 @@ def test_hierarchy_state_execution():
     state_machine = StateMachine(hierarchy_state)
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
     hierarchy_state.join()
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
     assert hierarchy_state.output_data["output1"] == 52.0
@@ -63,12 +63,12 @@ def test_hierarchy_save_load_test():
     state_machine = StateMachine(sm_loaded.root_state)
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
     sm_loaded.root_state.join()
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
     assert state_machine.root_state.output_data["output1"] == 52.0
