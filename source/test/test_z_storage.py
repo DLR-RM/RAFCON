@@ -190,7 +190,7 @@ def check_state_storage(state, parent_path, missing_elements, check_gui_meta_dat
 
 def check_that_all_files_are_there(sm_m, base_path=None, check_gui_meta_data=False, with_print=False, old_exists=None, old_base_path=None):
     root_state = sm_m.state_machine.root_state
-    base_path = sm_m.state_machine.base_path
+    base_path = sm_m.state_machine.file_system_path
     missing_elements = []
     actual_exists = []
     check_folder(base_path, "statemachine_root_state_base_path", missing_elements, actual_exists)

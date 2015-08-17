@@ -12,6 +12,7 @@ import os
 import shutil
 import glob
 from time import gmtime, strftime
+import copy
 
 import yaml
 from gtkmvc import Observable
@@ -79,7 +80,7 @@ class StateMachineStorage(Observable):
             if path in self._paths_to_remove_before_sm_save[state_machine_id]:
                 self._paths_to_remove_before_sm_save[state_machine_id].remove(path)
 
-    def save_statemachine_as_yaml(self, statemachine, base_path, version=None, delete_old_state_machine=False):
+    def save_statemachine_as_yaml(self, statemachine, base_path, version=None, delete_old_state_machine=False, save_as=False):
         """
         Saves a root state to a yaml file.
         :param statemachine: the statemachine to be saved
@@ -90,11 +91,15 @@ class StateMachineStorage(Observable):
         if base_path is not None:
             self.base_path = base_path
 
-        # remove all paths that were marked to be removed
-        if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
-            for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
-                if StorageUtils.exists_path(path):
-                    StorageUtils.remove_path(path)
+        if save_as:
+            if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
+                self._paths_to_remove_before_sm_save[statemachine.state_machine_id] = {}
+        else:
+            # remove all paths that were marked to be removed
+            if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
+                for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
+                    if StorageUtils.exists_path(path):
+                        StorageUtils.remove_path(path)
 
         root_state = statemachine.root_state
         # clean old path first
@@ -112,6 +117,8 @@ class StateMachineStorage(Observable):
                                % (root_state.state_id, version, creation_time, last_update)
         yaml.dump(yaml.load(statemachine_content), f, indent=4)
         f.close()
+        # set the file_system_path of the state machine
+        statemachine.file_system_path = copy.copy(base_path)
         # add root state recursively
         self.save_state_recursively(root_state, "")
         if statemachine.marked_dirty:
@@ -130,28 +137,25 @@ class StateMachineStorage(Observable):
         # only save the script file if the state is not a library state
         # if not hasattr(state, "library_name"):  # ugly!
         from awesome_tool.statemachine.states.library_state import LibraryState
-        if not isinstance(state, LibraryState) or force_full_load:
+        from awesome_tool.statemachine.states.container_state import ContainerState
+        if not isinstance(state, LibraryState) and not isinstance(state, ContainerState) or force_full_load:
             state_path_full = os.path.join(self.base_path, state_path)
             source_script_file = os.path.join(state.get_file_system_path(), state.script.filename)
             destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
             if not source_script_file == destination_script_file:
                 #print "destination file: %s source file: %s" % (destination_script_file, source_script_file)
                 try:
-                    shutil.copyfile(source_script_file,
-                                destination_script_file)
-
+                    shutil.copyfile(source_script_file, destination_script_file)
                 except:
                     logger.warning("copy of file failed!!! %s -> %s" % (source_script_file, destination_script_file))
                     script_file = open(destination_script_file, 'w')
                     script_file.write(state.script.script)
                     script_file.close()
-                state.script.reload_path()
+                state.script.reload_path(self.SCRIPT_FILE)
             else:  # load text into script file
-                #print "destination file == source file: %s" % source_script_file
                 script_file = open(source_script_file, 'w')
                 script_file.write(state.script.script)
                 script_file.close()
-
 
     @staticmethod
     def save_script_file(state):
@@ -172,7 +176,6 @@ class StateMachineStorage(Observable):
         StorageUtils.create_path(state_path_full)
         self.save_script_file_for_state_and_source_path(state, state_path, force_full_load)
         StorageUtils.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
-        state.script.reload_path()
 
         #create yaml files for all children
         if hasattr(state, 'states'):
@@ -221,11 +224,15 @@ class StateMachineStorage(Observable):
         sm.version = version
         sm.creation_time = creation_time
         sm.last_update = last_update
-        sm.file_system_path = base_path
+        sm.file_system_path = self.base_path
         sm.root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(tmp_base_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
-        sm.root_state.script.reload_path()
-        self.load_script_file(sm.root_state)
+        from awesome_tool.statemachine.states.container_state import ContainerState
+
+        from awesome_tool.statemachine.states.container_state import ContainerState
+        if not isinstance(sm.root_state, ContainerState):
+            sm.root_state.script.reload_path(self.SCRIPT_FILE)
+            self.load_script_file(sm.root_state)
         for p in os.listdir(tmp_base_path):
             if os.path.isdir(os.path.join(tmp_base_path, p)):
                 elem = os.path.join(tmp_base_path, p)
@@ -250,7 +257,7 @@ class StateMachineStorage(Observable):
         """
         root_state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
         # set path after loading the state, as the yaml parser did not know the path during state creation
-        root_state.script.reload_path()
+        root_state.script.reload_path(self.SCRIPT_FILE)
         # load_and_build the module to load the correct content into root_state.script.script
         self.load_script_file(root_state)
         for p in os.listdir(state_path):
@@ -271,11 +278,13 @@ class StateMachineStorage(Observable):
         state = self.storage_utils.load_object_from_yaml_abs(os.path.join(state_path, self.META_FILE))
         # connect the missing function_handlers for setting the outcome names
         parent_state.add_state(state, storage_load=True)
-        state.script.reload_path()
+        from awesome_tool.statemachine.states.container_state import ContainerState
+        if not isinstance(state, ContainerState):
+            state.script.reload_path(self.SCRIPT_FILE)
         # the library state sets his script file to the script file of the root state of its library, thus it should
         # not be overwritten in this case
         from awesome_tool.statemachine.states.library_state import LibraryState
-        if not isinstance(state, LibraryState):
+        if not isinstance(state, LibraryState) and not isinstance(state, ContainerState):
             self.load_script_file(state)
         for p in os.listdir(state_path):
             if os.path.isdir(os.path.join(state_path, p)):
@@ -283,10 +292,12 @@ class StateMachineStorage(Observable):
                 self.load_state_recursively(state, elem)
 
     def load_script_file(self, state):
-        script_file = open(os.path.join(state.get_file_system_path(), self.SCRIPT_FILE), 'r')
-        text = script_file.read()
-        script_file.close()
-        state.script.script = text
+        from awesome_tool.statemachine.states.container_state import ContainerState
+        if not isinstance(state, ContainerState):
+            script_file = open(os.path.join(state.get_file_system_path(), state.script.filename), 'r')
+            text = script_file.read()
+            script_file.close()
+            state.script.script = text
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc

@@ -546,9 +546,11 @@ class StateTransitionsEditorController(ExtendedController):
             view['internal_t_checkbutton'].set_sensitive(False)
             view['internal_t_checkbutton'].set_active(False)
 
-        if self.model.parent is None:
-            self.trans_list_ctrl.view_dict['transitions_external'] = False
-            view['connected_to_t_checkbutton'].set_active(False)
+        from awesome_tool.statemachine.states.state import State
+        if self.model.parent:
+            if not isinstance(self.model.parent.state, State):
+                self.trans_list_ctrl.view_dict['transitions_external'] = False
+                view['connected_to_t_checkbutton'].set_active(False)
 
         if not hasattr(self.model, 'states'):
             self.trans_list_ctrl.view_dict['transitions_internal'] = False

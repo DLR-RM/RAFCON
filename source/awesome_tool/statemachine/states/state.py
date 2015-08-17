@@ -240,7 +240,7 @@ class State(Observable, yaml.YAMLObject):
                             output data port id
 
         """
-        if not self.parent is None:
+        if isinstance(self.parent, State):
             # delete all data flows in parent related to data_port_id and self.state_id
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
@@ -362,7 +362,15 @@ class State(Observable, yaml.YAMLObject):
         :return: the path on the filesystem where the state is stored
         """
         from awesome_tool.statemachine.singleton import state_machine_manager
-        return self.get_sm_for_state().file_system_path + "/" + self.get_path()
+        if not self.get_sm_for_state() or self.get_sm_for_state().file_system_path is None:
+            if hasattr(self, "script"):
+                return self.script.get_path()
+            else:
+                import os
+                from awesome_tool.statemachine.storage.storage import StateMachineStorage
+                return os.path.join("/tmp" + str(self.state_id), StateMachineStorage.GRAPHICS_FILE)
+        else:
+            return self.get_sm_for_state().file_system_path + "/" + self.get_path()
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
@@ -404,7 +412,7 @@ class State(Observable, yaml.YAMLObject):
         self.remove_outcome_hook(outcome_id)
 
         # delete possible transition connected to this outcome
-        if self.parent is not None:
+        if isinstance(self.parent, State):
             for transition_id, transition in self.parent.transitions.iteritems():
                 if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
@@ -665,20 +673,6 @@ class State(Observable, yaml.YAMLObject):
                 self.add_outcome("aborted", -1)
             if -2 not in outcomes:
                 self.add_outcome("preempted", -2)
-
-    @property
-    def script(self):
-        """Property for the _script field
-
-        """
-        return self._script
-
-    @script.setter
-    @Observable.observed
-    def script(self, script):
-        if not isinstance(script, Script):
-            raise TypeError("script must be of type Script")
-        self._script = script
 
     @property
     def input_data(self):

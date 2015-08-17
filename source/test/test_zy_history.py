@@ -1355,14 +1355,14 @@ NO_SAVE = False
 def on_save_activate(state_machine_m, logger):
     if state_machine_m is None or NO_SAVE:
         return
-    save_path = state_machine_m.state_machine.base_path
+    save_path = state_machine_m.state_machine.file_system_path
     if save_path is None:
         return
 
     logger.debug("Saving state machine to {0}".format(save_path))
     awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
         state_machine_m.state_machine,
-        state_machine_m.state_machine.base_path, delete_old_state_machine=True)
+        state_machine_m.state_machine.file_system_path, delete_old_state_machine=True)
 
     state_machine_m.root_state.store_meta_data_for_state()
     logger.debug("Successfully saved graphics meta data.")
@@ -1375,19 +1375,19 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
     def print_states(state):
         if hasattr(state, "states"):
             for state_id, child_state in state.states.iteritems():
-                print child_state.get_path(), child_state.script.path
+                print child_state.get_path(), child_state.get_file_system_path()
                 print_states(child_state)
     print_states(sm_model.state_machine.root_state)
 
     print "do SAVEING OF STATEMACHINE"
     if with_gui:
-        sm_model.state_machine.base_path = path
+        sm_model.state_machine.file_system_path = path
         time.sleep(sleep_time_short)
         print "by Menubar_ctrl"
         glib.idle_add(menubar_ctrl.on_save_activate, None)
         time.sleep(sleep_time_short)
     else:
-        sm_model.state_machine.base_path = path
+        sm_model.state_machine.file_system_path = path
         time.sleep(sleep_time_short)
         # glib.idle_add(menubar_ctrl.on_save_activate, None)
         print "by Function"
@@ -1402,7 +1402,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
     if with_gui:
         sleep_time_short = 2
-        sm_model.state_machine.base_path = path
+        sm_model.state_machine.file_system_path = path
         time.sleep(sleep_time_short)
         glib.idle_add(menubar_ctrl.on_save_activate, None)
         time.sleep(sleep_time_short)
@@ -1531,7 +1531,7 @@ def trigger_state_type_change_tests(*args):
     # BCS -> HS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
     save_state_machine(sm_model, state_machine_path + '_before2', logger, with_gui, menubar_ctrl)
-    sm_model.state_machine.base_path = state_machine_path
+    sm_model.state_machine.file_system_path = state_machine_path
     if with_gui:
         # [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
         # print "\n\n %s \n\n" % state_m.state.name

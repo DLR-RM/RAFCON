@@ -47,8 +47,6 @@ class ContainerState(State):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
 
-        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
-
         self._states = {}
         self.states = states
         self._transitions = {}
@@ -199,9 +197,10 @@ class ContainerState(State):
 
         if not storage_load:
             # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
-            own_sm_id = self.get_sm_for_state().state_machine_id
-            if own_sm_id is not None:
-                global_storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.get_file_system_path())
+            if self.get_sm_for_state():
+                own_sm_id = self.get_sm_for_state().state_machine_id
+                if own_sm_id is not None:
+                    global_storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.get_file_system_path())
 
     @Observable.observed
     def remove_state(self, state_id, recursive_deletion=True, force=True):
@@ -218,12 +217,13 @@ class ContainerState(State):
             self.set_start_state(None)
 
         # remove script folder
-        own_sm_id = state_machine_manager.get_sm_id_for_state(self)
-        if own_sm_id is None:
-            logger.warn("Something is going wrong during state removal. State does not belong to "
-                        "a state machine!")
-        else:
-            global_storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].get_file_system_path())
+        if self.get_sm_for_state():
+            own_sm_id = self.get_sm_for_state().state_machine_id
+            if own_sm_id is None:
+                logger.warn("Something is going wrong during state removal. State does not belong to "
+                            "a state machine!")
+            else:
+                global_storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].get_file_system_path())
 
         #first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
@@ -667,7 +667,7 @@ class ContainerState(State):
 
         """
         # delete all data flows in parent related to data_port_id and self.state_id
-        if not self.parent is None:
+        if isinstance(self.parent, State):
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
                 if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
@@ -1074,7 +1074,6 @@ class ContainerState(State):
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,
-            'filename': data.script.filename,
             'transitions': data.transitions,
             'data_flows': data.data_flows,
             'scoped_variables': data.scoped_variables

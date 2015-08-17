@@ -182,7 +182,7 @@ class StateMachineHelper():
                                            start_state_id=state_start_state_id,
                                            scoped_variables=source_state.scoped_variables,
                                            v_checker=source_state.v_checker,
-                                           path=source_state.get_file_system_path(), filename=source_state.script.filename,
+                                           path=source_state.get_file_system_path(),
                                            check_path=False)
         else:
             if hasattr(source_state, "states"):
@@ -209,7 +209,7 @@ class StateMachineHelper():
         assert issubclass(new_state_class, State)
         old_state = old_state_m.state  # only here to get the input parameter of the Core-function
 
-        is_root_state = old_state_m.parent is None
+        is_root_state = not isinstance(old_state_m.state.parent, State)
 
         current_state_is_container = isinstance(old_state, ContainerState)
         new_state_is_container = new_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
@@ -253,7 +253,7 @@ class StateMachineHelper():
         assert isinstance(state, State)
         assert issubclass(new_state_class, State)
 
-        is_root_state = state.parent is None
+        is_root_state = not isinstance(state.parent, State)
 
         # CONTAINER STATE
         if not is_root_state:
@@ -296,13 +296,13 @@ class StateMachineHelper():
 
             # substitute old root state with new state
             from awesome_tool.statemachine.singleton import state_machine_manager
-            sm_id = state_machine_manager.get_sm_id_for_state(state)
+            sm_id = state.get_sm_for_state().state_machine_id
             state_machine_manager.state_machines[sm_id].root_state = new_state
 
     @staticmethod
     def load_data_from_old_state_into_new_state(new_state_m, state_machine_m, old_model_properties, old_model_properties_meta_data):
 
-        is_root_state = new_state_m.parent is None
+        is_root_state = not isinstance(new_state_m.state.parent, State)
 
         if not is_root_state:
             parent_m = new_state_m.parent
@@ -417,7 +417,7 @@ class StateMachineHelper():
         """
         assert isinstance(state, State)
         from awesome_tool.statemachine.singleton import state_machine_manager
-        state_machine_id = state_machine_manager.get_sm_id_for_state(state)
+        state_machine_id = state.get_sm_for_state().state_machine_id
         state_machine_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[state_machine_id]
         state_m = state_machine_m.root_state
         state_path = state.get_path()
@@ -441,6 +441,6 @@ class StateMachineHelper():
         """
         assert isinstance(state, State)
         from awesome_tool.statemachine.singleton import state_machine_manager
-        state_machine_id = state_machine_manager.get_sm_id_for_state(state)
+        state_machine_id = state.get_sm_for_state().state_machine_id
         state_machine_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[state_machine_id]
         return state_machine_m

@@ -82,39 +82,29 @@ def execute(self, inputs, outputs, gvm):
         else:
             self.script = Script.DEFAULT_SCRIPT_CONTAINER
         if path is None:
-            self.path = DEFAULT_SCRIPT_PATH + state.get_path()
-            if not os.path.exists(self.path):
-                os.makedirs(self.path)
-            self._filename = "Script_%s.file" % str(self._script_id)
-            script_file = open(os.path.join(self.path, self._filename), "w")
+            self._path = DEFAULT_SCRIPT_PATH + state.get_path()
+            if not os.path.exists(self._path):
+                os.makedirs(self._path)
+            if not filename:
+                self._filename = "Script_%s.file" % str(self._script_id)
+            script_file = open(os.path.join(self._path, self._filename), "w")
             script_file.write(self.script)
             script_file.close()
 
         if check_path:
-            if not os.path.exists(self.path):
-                raise RuntimeError("Path %s does not exist" % self.path)
-            else:
-                if not os.path.exists(os.path.join(self.path, self._filename)):
-                    raise RuntimeError("Path %s does not exist" % os.path.join(self.path, self._filename))
+            if not os.path.exists(self._path):
+                raise RuntimeError("Path %s does not exist" % self._path)
+            if not os.path.exists(os.path.join(self._path, self._filename)):
+                raise RuntimeError("Path %s does not exist" % os.path.join(self._path, self._filename))
 
             # load and build the module per default else the default scripts will be loaded in self.script
             self.load_script()
             self.build_module()
 
-    def reload_path(self):
+    def reload_path(self, filename=None):
         self._path = self._state.get_file_system_path()
-        # if not os.path.exists(self.path):
-        #     os.makedirs(self.path)
-        self._filename = "script.py"
-
-    # def reset_script(self, state_path):
-    #     self.path = DEFAULT_SCRIPT_PATH + state_path
-    #     if not os.path.exists(self.path):
-    #         os.makedirs(self.path)
-    #     self.filename = "Script_%s.file" % str(self._script_id)
-    #     script_file = open(os.path.join(self.path, self.filename), "w")
-    #     script_file.write(self.script)
-    #     script_file.close()
+        if filename:
+            self._filename = filename
 
     def execute(self, state, inputs={}, outputs={}, backward_execution=False):
         """
@@ -139,7 +129,7 @@ def execute(self, inputs, outputs, gvm):
     def load_script(self):
         """Loads and builds the module given by the path and the filename
         """
-        script_path = os.path.join(self.path, self._filename)
+        script_path = os.path.join(self._path, self._filename)
 
         try:
             script_file = open(script_path, 'r')
@@ -172,6 +162,14 @@ def execute(self, inputs, outputs, gvm):
         # return the module
         self._compiled_module = tmp_module
 
+    def get_path(self):
+        """
+        Returns the path of the script.
+        Note: Normally you should use the get_filesystem_path of the state class.
+        :return: the path where this script resides
+        """
+        return self._path
+
     @classmethod
     def to_yaml(cls, dumper, data):
         #TODO:implement
@@ -194,7 +192,6 @@ def execute(self, inputs, outputs, gvm):
 
         """
         return self._filename
-
 
     @property
     def compiled_module(self):

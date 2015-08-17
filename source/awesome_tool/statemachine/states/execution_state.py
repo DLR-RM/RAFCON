@@ -103,7 +103,6 @@ class ExecutionState(State):
             'name': data.name,
             'state_id': data.state_id,
             'description': data.description,
-            'filename' : data.script.filename,
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes
@@ -124,16 +123,33 @@ class ExecutionState(State):
         input_data_ports = dict_representation['input_data_ports']
         output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']
-        filename = dict_representation['filename']
-        state = ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, filename=filename, check_path=False)
+        state = ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, check_path=False)
         try:
             state.description = dict_representation['description']
         except (ValueError, TypeError, KeyError):
             pass
         return state
 
+#########################################################################
+# Properties for all class fields that must be observed by gtkmvc
+#########################################################################
+
     @State.name.setter
     @Observable.observed
     def name(self, name):
         State.name.fset(self, name)
         self.logger = log.get_logger(self.name)
+
+    @property
+    def script(self):
+        """Property for the _script field
+
+        """
+        return self._script
+
+    @script.setter
+    @Observable.observed
+    def script(self, script):
+        if not isinstance(script, Script):
+            raise TypeError("script must be of type Script")
+        self._script = script

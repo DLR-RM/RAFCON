@@ -290,7 +290,6 @@ class BarrierConcurrencyState(ConcurrencyState):
                                         data_flows=dict_representation['data_flows'],
                                         scoped_variables=dict_representation['scoped_variables'],
                                         v_checker=None,
-                                        filename=dict_representation['filename'],
                                         check_path=False,
                                         load_from_storage=True)
         try:
@@ -381,9 +380,7 @@ class DeciderState(ExecutionState):
         input_data_ports = dict_representation['input_data_ports']
         output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']
-        filename = dict_representation['filename']
-        state = DeciderState(name, state_id, input_data_ports, output_data_ports, outcomes, filename=filename,
-                             check_path=False)
+        state = DeciderState(name, state_id, input_data_ports, output_data_ports, outcomes, check_path=False)
         try:
             state.description = dict_representation['description']
         except (ValueError, TypeError, KeyError):

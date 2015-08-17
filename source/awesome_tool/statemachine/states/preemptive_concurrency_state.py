@@ -165,8 +165,6 @@ class PreemptiveConcurrencyState(ConcurrencyState):
                                            data_flows=dict_representation['data_flows'],
                                            scoped_variables=dict_representation['scoped_variables'],
                                            v_checker=None,
-                                           path=dict_representation['path'],
-                                           filename=dict_representation['filename'],
                                            check_path=False)
         try:
             state.description = dict_representation['description']

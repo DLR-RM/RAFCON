@@ -13,7 +13,7 @@ def custom_entry_point():
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(
         "../test_scripts/unit_test_state_machines/test_custom_entry_point", start_state_id)
     awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
-    assert sm.root_state.output_data["error_check"] == "successfull"
+    assert not awesome_tool.statemachine.singleton.global_variable_manager.variable_exist("start_id21")
 
     variables_for_pytest.test_multithrading_lock.release()
 

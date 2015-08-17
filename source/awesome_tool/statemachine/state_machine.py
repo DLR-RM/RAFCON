@@ -117,6 +117,9 @@ class StateMachine(Observable):
         from awesome_tool.statemachine.states.library_state import LibraryState
         path_item_list = path.split('/')
 
+        print path_item_list
+        print self.root_state.state_id
+        print path
         assert path_item_list.pop(0) == self.root_state.state_id
         state = self.root_state
         for state_id in path_item_list:

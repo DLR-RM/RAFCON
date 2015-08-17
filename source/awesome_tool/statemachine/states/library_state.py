@@ -88,7 +88,6 @@ class LibraryState(State):
         self.outcomes = self.state_copy.outcomes
 
         logger.debug("Initialized library state with name %s" % name)
-        self.script.script = self.state_copy.script.script
         self.initialized = True
 
     def __str__(self):
@@ -202,7 +201,6 @@ class LibraryState(State):
             'input_data_ports': data.input_data_ports,
             'output_data_ports': data.output_data_ports,
             'outcomes': data.outcomes,
-            'filename': data.script.filename
         }
         node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
         return node
@@ -218,14 +216,26 @@ class LibraryState(State):
         input_data_ports = dict_representation['input_data_ports']
         output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']
-        path = dict_representation['path']
-        filename = dict_representation['filename']
         return LibraryState(library_path, library_name, version, name, state_id, input_data_ports,
-                            output_data_ports, outcomes, path, filename, check_path=False)
+                            output_data_ports, outcomes, check_path=False)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
+
+    @property
+    def script(self):
+        """Property for the _script field
+
+        """
+        return self._script
+
+    @script.setter
+    @Observable.observed
+    def script(self, script):
+        if not isinstance(script, Script):
+            raise TypeError("script must be of type Script")
+        self._script = script
 
     @property
     def library_path(self):
@@ -241,7 +251,6 @@ class LibraryState(State):
             raise TypeError("library_path must be of type str")
 
         self._library_path = library_path
-
 
     @property
     def library_name(self):
