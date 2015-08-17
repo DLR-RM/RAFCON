@@ -788,7 +788,7 @@ def test_add_remove_models(with_print=False):
         if isinstance(state.parent, State):
             print "parent is: ", state.parent.state_id, state.parent.name
 
-        from awesome_tool.statemachine.states.container_state import ContainerState
+        from rafcon.statemachine.states.container_state import ContainerState
         if isinstance(state, ContainerState):
             script = Script(state=state)
         else:

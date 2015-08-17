@@ -107,8 +107,8 @@ def create_models(*args, **kargs):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
     # remove existing state machines
-        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    for sm_id in rafcon.statemachine.singleton.state_machine_manager.state_machines.keys():
+        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_id)
     # add new state machine
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
