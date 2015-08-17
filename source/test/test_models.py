@@ -1,16 +1,16 @@
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.state_machine import StateMachine
-import awesome_tool.statemachine.singleton
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.state_machine import StateMachine
+import rafcon.statemachine.singleton
 
-from awesome_tool.statemachine.script import Script, ScriptType
-from awesome_tool.statemachine.enums import StateType
-from awesome_tool.statemachine.states.state import State
+from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.states.state import State
 
-import awesome_tool.statemachine.singleton
-import awesome_tool.mvc.singleton
+import rafcon.statemachine.singleton
+import rafcon.mvc.singleton
 
-from awesome_tool.mvc.controllers.state_machine_history import StateMachineHistoryController
+from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
 
 from gtkmvc.observer import Observer
 
@@ -230,16 +230,16 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
-    for sm_in in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.values():
-        awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    for sm_in in rafcon.statemachine.singleton.state_machine_manager.state_machines.values():
+        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-    awesome_tool.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
     sm_m.history.fake = True
 
     return ctr_state, sm_m, state_dict
@@ -752,12 +752,12 @@ def test_add_remove_models(with_print=False):
     # create testbed
     [state, sm_model, state_dict] = create_models()
 
-    import awesome_tool
+    import rafcon
     test_history_path1 = '/home_local/test_history_before'
     test_history_path2 = '/home_local/test_history_after'
 
     def store_state_machine(sm_model, path):
-        awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
             sm_model.state_machine,
             path,
             delete_old_state_machine=True)

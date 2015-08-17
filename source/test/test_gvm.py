@@ -1,4 +1,4 @@
-from awesome_tool.statemachine.global_variable_manager import GlobalVariableManager
+from rafcon.statemachine.global_variable_manager import GlobalVariableManager
 from pytest import raises
 
 

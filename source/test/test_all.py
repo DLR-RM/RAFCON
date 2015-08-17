@@ -1,5 +1,5 @@
 import pytest
-import awesome_tool.statemachine.config
+import rafcon.statemachine.config
 
 def test_basic_math():
     assert 2 + 2 == 4

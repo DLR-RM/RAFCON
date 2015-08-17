@@ -7,28 +7,28 @@ import glib
 import os
 import signal
 
-from awesome_tool.utils import log
-from awesome_tool.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
-from awesome_tool.mvc.controllers import MainWindowController, StateDataPortEditorController,\
+from rafcon.utils import log
+from rafcon.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
+from rafcon.mvc.controllers import MainWindowController, StateDataPortEditorController,\
     SingleWidgetWindowController, SourceEditorController
-from awesome_tool.mvc.views.main_window import MainWindowView
-from awesome_tool.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
-from awesome_tool.statemachine.states.state import State
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-import awesome_tool.mvc.singleton
-from awesome_tool.statemachine.state_machine import StateMachine
+from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
+from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.states.execution_state import ExecutionState
+import rafcon.mvc.singleton
+from rafcon.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
-from awesome_tool.mvc.config import global_gui_config
-from awesome_tool.statemachine.config import global_config
+from rafcon.mvc.config import global_gui_config
+from rafcon.statemachine.config import global_config
 
 
 def create_models(*args, **kargs):
@@ -104,19 +104,20 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
     # remove existing state machines
-    for sm_in in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.values():
-        awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
     # add new state machine
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
-    awesome_tool.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
     # get state machine model
-    sm_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     global_var_manager_model = GlobalVariableManagerModel()
-    global_var_manager_model = awesome_tool.mvc.singleton.global_variable_manager_model
+    global_var_manager_model = rafcon.mvc.singleton.global_variable_manager_model
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
@@ -731,21 +732,21 @@ def _test_state_type_change_without_gui():
 def state_type_change_test(with_gui=False):
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(awesome_tool.__path__[0] + "/mvc")
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    os.chdir(rafcon.__path__[0] + "/mvc")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
-    signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
-    global_config.load()  # load the default config from ~/.awesome_tool/config.yaml
-    global_gui_config.load()  # load the default config from ~/.awesome_tool/config.yaml
+    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    global_config.load()  # load the default config
+    global_gui_config.load()  # load the default config
     logging_view = LoggingView()
     setup_logger(logging_view)
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
-    awesome_tool.statemachine.singleton.library_manager.initialize()
+    rafcon.statemachine.singleton.library_manager.initialize()
 
     if variables_for_pytest.sm_manager_model is None:
-            variables_for_pytest.sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
+            variables_for_pytest.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     main_window_controller = None
     if with_gui:
@@ -768,16 +769,16 @@ def state_type_change_test(with_gui=False):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
+        sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
         if sm:
             sm.root_state.join()
             logger.debug("Joined currently executing state machine!")
             thread.join()
             logger.debug("Joined test triggering thread!")
-        os.chdir(awesome_tool.__path__[0] + "/../test")
+        os.chdir(rafcon.__path__[0] + "/../test")
         variables_for_pytest.test_multithrading_lock.release()
     else:
-        os.chdir(awesome_tool.__path__[0] + "/../test")
+        os.chdir(rafcon.__path__[0] + "/../test")
         thread.join()
 
 

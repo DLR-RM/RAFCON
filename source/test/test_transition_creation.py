@@ -1,11 +1,11 @@
 import pytest
 import time
 from pytest import raises
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.storage.storage import StateMachineStorage
-import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.state_machine import StateMachine
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.storage.storage import StateMachineStorage
+import rafcon.statemachine.singleton
+from rafcon.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
@@ -33,6 +33,7 @@ def create_statemachine():
     state4.add_transition(state1.state_id, 4, state3.state_id, None)
     state4.add_transition(state2.state_id, 3, state4.state_id, 5)
     state4.add_transition(state3.state_id, 3, state4.state_id, 5)
+    state4.add_transition(state3.state_id, 4, state4.state_id, 5)
 
     t = state4.add_transition(state2.state_id, 4, state1.state_id, None)
 
@@ -70,13 +71,13 @@ def test_transition_creation():
 
     state_machine = StateMachine(root_state)
     assert variables_for_pytest.test_multithrading_lock.acquire(False)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
     time.sleep(0.2)
     root_state.join()
     time.sleep(0.2)
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     variables_for_pytest.test_multithrading_lock.release()
 
 

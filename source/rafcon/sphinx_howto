@@ -1,0 +1,12 @@
+To create the *.rst files you have to run (in the directory where the sphinx_howto resides):
+
+sphinx-apidoc . --full -o documentation/
+
+Afterwards you have to run:
+
+sphinx-build . documentation
+
+or use the run configuration in pycharm. To use this you have to set your AWESOME_TOOL_PROJECT_PATH environment
+variable to your specific RAFCON directory. Then start pycharm from a shell where the AWESOME_TOOL_PROJECT_PATH
+environment variable is set.
+

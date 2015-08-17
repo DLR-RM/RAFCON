@@ -1,18 +1,18 @@
 import pytest
 from pytest import raises
-# from awesome_tool.mvc.controllers import MainWindowController
+# from rafcon.mvc.controllers import MainWindowController
 
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.state_machine import StateMachine
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.state_machine import StateMachine
 
-from awesome_tool.statemachine.script import Script, ScriptType
-from awesome_tool.statemachine.enums import StateType
+from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.enums import StateType
 
 from gtkmvc.observer import Observer
 
-from awesome_tool.statemachine.singleton import state_machine_manager
-from awesome_tool.mvc.singleton import state_machine_manager_model
+from rafcon.statemachine.singleton import state_machine_manager
+from rafcon.mvc.singleton import state_machine_manager_model
 
 import logging as logger
 
