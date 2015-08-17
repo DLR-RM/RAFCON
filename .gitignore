@@ -11,5 +11,7 @@ workspace.xml
 
 # Sphinx
 .doctrees
-_sources
-**/raw/*.html
+_sources/
+_static/
+*.html
+*.js
