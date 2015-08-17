@@ -8,3 +8,8 @@ workspace.xml
 
 # LN Manager
 *.lnc_process_window_positions
+
+# Sphinx
+.doctrees
+_sources
+**/raw/*.html
