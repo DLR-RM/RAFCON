@@ -143,8 +143,10 @@ if __name__ == '__main__':
     if size:
         main_window.resize(size[0], size[1])
     if position:
-        main_window.move(position[0], position[1])
-    # TODO: Check if window is within monitor (might be outside if the monitor configuration changed)
+        screen_width = gtk.gdk.screen_width()
+        screen_height = gtk.gdk.screen_height()
+        if position[0] < screen_width and position[1] < screen_height:
+            main_window.move(position[0], position[1])
 
 
 # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
