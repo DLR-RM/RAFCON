@@ -9,6 +9,7 @@
 """
 
 from enum import Enum
+import os
 
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY DECIDER_STATE')
@@ -18,4 +19,4 @@ StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED ST
 
 # Constants
 UNIQUE_DECIDER_STATE_ID = "unique_decider_state_id"
-DEFAULT_SCRIPT_PATH = "/tmp/DFC/"
+DEFAULT_SCRIPT_PATH = "/tmp/" + os.environ.get('USER') + "/DFC/"
