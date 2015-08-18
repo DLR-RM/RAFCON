@@ -7,6 +7,7 @@ import gtk
 import signal
 import argparse
 
+import rafcon
 from rafcon.mvc.controllers import MainWindowController
 
 from rafcon.utils import log
@@ -110,6 +111,8 @@ if __name__ == '__main__':
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
+
+    os.chdir(os.path.join(os.path.dirname(rafcon.__file__), 'mvc'))
 
     # Initialize library
     sm_singletons.library_manager.initialize()
