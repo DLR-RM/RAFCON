@@ -64,9 +64,6 @@ class StateOverviewController(ExtendedController, Model):
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
 
-        if not self.model.state.is_root_state:
-            self.view['is_start_state_checkbutton'].hide()
-
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
         combo.set_focus_on_click(False)
@@ -97,10 +94,10 @@ class StateOverviewController(ExtendedController, Model):
         view['type_combobox'].connect('changed', self.change_type)
 
         # Prepare "is start state check button"
-        # has_no_start_state_state_types = [BarrierConcurrencyState, PreemptiveConcurrencyState]
-        if isinstance(self.model.state, DeciderState):  # \
-            # has to re-initiated if parent becomes HierarchchyState
-            #     or self.model.parent is not None and type(self.model.parent.state) in has_no_start_state_state_types:
+        has_no_start_state_state_types = [BarrierConcurrencyState, PreemptiveConcurrencyState]
+        if isinstance(self.model.state, DeciderState) or self.model.state.is_root_state or \
+                type(self.model.parent.state) in has_no_start_state_state_types:  # \
+            # for now the checkbutton is NOT HIDE as long as the checkbutton does not stay hidden all time
             view['is_start_state_checkbutton'].destroy()  # DeciderState is removed if parent change type
         else:
             view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
@@ -132,7 +129,7 @@ class StateOverviewController(ExtendedController, Model):
                     else:
                         self.model.parent.state.start_state_id = None
                         logger.debug("Start state unset, no start state defined")
-                except AttributeError as e:
+                except ValueError as e:
                     logger.warn("Could no change start state: {0}".format(e))
                     # avoid to toggle button
                     self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
