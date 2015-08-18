@@ -1,14 +1,11 @@
 !Vividict
 gui: !Vividict
-    editor: !Vividict
-        rel_pos: !Vividict {}
-        size: !!python/tuple [215.3174867021276, 128.82937167553192]
     editor_gaphas: !Vividict
         rel_pos: !!python/tuple [10.0, 10.0]
         size: !!python/tuple [216.66666666666666, 130.33333333333331]
     editor_opengl: !Vividict
-        rel_pos: !!python/tuple [10.0, -10.0]
-        size: !!python/tuple [216.66666666666666, 130.33333333333331]
+        rel_pos: !Vividict {}
+        size: !!python/tuple [215.3174867021276, 128.82937167553192]
 income: !Vividict
     gui: !Vividict
         editor_gaphas: !Vividict
@@ -33,21 +30,24 @@ outcome0: !Vividict
 transition1: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id001 !Vividict {}
         editor_gaphas: !Vividict
             waypoints: []
-        editor_opengl: !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id001
 transition2: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id002 !Vividict {}
         editor_gaphas: !Vividict
             waypoints: !Vividict {}
-        editor_opengl: !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id002
 transition3: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id003 !Vividict {}
         editor_gaphas: !Vividict
             waypoints: !Vividict {}
-        editor_opengl: !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id003

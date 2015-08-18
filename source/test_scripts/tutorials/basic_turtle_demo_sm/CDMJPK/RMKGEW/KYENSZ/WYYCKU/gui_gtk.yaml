@@ -1,14 +1,11 @@
 !Vividict
 gui: !Vividict
-    editor: !Vividict
-        rel_pos: !!python/tuple [4.455818815572357, -25.97876123889681]
-        size: !!python/tuple [6.924413686068874, 5.613563443761585]
     editor_gaphas: !Vividict
         rel_pos: !!python/tuple [45.28696369282909, 22.60723837866591]
         size: !!python/tuple [6.128505587679338, 6.225631570744454]
     editor_opengl: !Vividict
-        rel_pos: !!python/tuple [45.28696369282909, -22.60723837866591]
-        size: !!python/tuple [6.128505587679338, 6.225631570744454]
+        rel_pos: !!python/tuple [4.455818815572357, -25.97876123889681]
+        size: !!python/tuple [6.924413686068874, 5.613563443761585]
 income: !Vividict
     gui: !Vividict
         editor_gaphas: !Vividict

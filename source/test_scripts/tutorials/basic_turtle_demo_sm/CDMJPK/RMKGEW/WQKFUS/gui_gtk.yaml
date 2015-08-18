@@ -1,8 +1,5 @@
 !Vividict
 gui: !Vividict
-    editor: !Vividict
-        rel_pos: !!python/tuple [9.525055182978704, -26.824540595744644]
-        size: !!python/tuple [16.32189657872337, 15.937739710638255]
     editor_gaphas: !Vividict
         rel_pos: !!python/tuple [9.525055182978704, 26.824540595744644]
         size: !!python/tuple [16.32189657872337, 15.937739710638255]
