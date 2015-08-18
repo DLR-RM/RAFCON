@@ -1,20 +1,21 @@
 import pytest
 from pytest import raises
+from os.path import dirname, join, realpath
 
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.states.library_state import LibraryState
-import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.states.state import DataPortType
-from awesome_tool.statemachine.storage.storage import StateMachineStorage
-from awesome_tool.statemachine.state_machine import StateMachine
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.states.library_state import LibraryState
+import rafcon.statemachine.singleton
+from rafcon.statemachine.states.state import DataPortType
+from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.state_machine import StateMachine
 import variables_for_pytest
-import awesome_tool.statemachine.config
+import rafcon.statemachine.config
 
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
-    library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = "../test_scripts/test_libraries"
+    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths["test_libraries"] = join(dirname(dirname(realpath(__file__))), "test_scripts", "test_libraries")
 
 
 def test_save_libraries():
@@ -64,7 +65,7 @@ def test_save_libraries():
 
 
 def create_hierarchy_state_library_state_machine():
-    awesome_tool.statemachine.singleton.library_manager.initialize()
+    rafcon.statemachine.singleton.library_manager.initialize()
     library_container_state = HierarchyState("LibContainerState", path="../test_scripts",
                                              filename="hierarchy_state.py")
     lib_state = LibraryState("test_libraries", "hierarchy_library", "0.1", "library_state")
@@ -88,7 +89,7 @@ def create_hierarchy_state_library_state_machine():
 
 
 def create_execution_state_library_state_machine():
-    awesome_tool.statemachine.singleton.library_manager.initialize()
+    rafcon.statemachine.singleton.library_manager.initialize()
     library_container_state = HierarchyState("LibContainerState", path="../test_scripts",
                                              filename="hierarchy_state.py")
     lib_state = LibraryState("test_libraries", "execution_library", "0.1", "library_state")
@@ -114,7 +115,7 @@ def create_execution_state_library_state_machine():
 def test_save_nested_library_state():
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
-    awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+    rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
         library_with_nested_library_sm, "../test_scripts/test_libraries/library_with_nested_library", "0.1")
 
 
@@ -122,15 +123,15 @@ def test_hierarchy_state_library():
     variables_for_pytest.test_multithrading_lock.acquire()
     library_container_state_sm = create_hierarchy_state_library_state_machine()
 
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
     library_container_state_sm.root_state.join()
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
 
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
 
@@ -138,40 +139,38 @@ def test_execution_state_library():
     variables_for_pytest.test_multithrading_lock.acquire()
     library_container_state_sm = create_execution_state_library_state_machine()
 
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
     library_container_state_sm.root_state.join()
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
 
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
 
 def test_nested_library_state_machine():
     variables_for_pytest.test_multithrading_lock.acquire()
-    awesome_tool.statemachine.singleton.library_manager.initialize()
+    rafcon.statemachine.singleton.library_manager.initialize()
     nested_library_state = LibraryState("test_libraries", "library_with_nested_library", "0.1", "library_state_name")
     state_machine = StateMachine(nested_library_state)
 
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
     nested_library_state.join()
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
 
     # print output_data["data_output_port1"]
     assert nested_library_state.output_data["data_output_port1"] == 42.0
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
 
 def teardown_module(module=None):
-    library_paths = awesome_tool.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = "../../test_scripts/test_libraries"
-    awesome_tool.statemachine.config.global_config.save_configuration()
+    pass
 
 
 if __name__ == '__main__':

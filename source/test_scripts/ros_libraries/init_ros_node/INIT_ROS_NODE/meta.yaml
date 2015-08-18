@@ -1,6 +1,5 @@
 !ExecutionState
 description: null
-filename: script.py
 input_data_ports:
     1: !DataPort {data_port_id: 1, data_type: str, default_value: new_ros_node, name: node_name}
 name: init_ros_node

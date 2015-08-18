@@ -4,7 +4,6 @@ def execute(self, inputs, outputs, gvm):
     print "concurrence_barrier1: Hello world"
     print inputs
     print outputs
-    self.print_state_information()
     for i in range(2):
         time.sleep(inputs["input_data_port1"])
         print "concurrence_barrier1 state active"

@@ -1,0 +1,70 @@
+.devs text {
+    font-weight: 800;
+}
+
+.devs .body {
+    fill: #ffffff;
+    stroke: #00d2c6;
+    stroke-width: 3px;
+}
+
+.devs .label {
+    fill: #00d2c6;
+    font-size: 16px;
+}
+
+.devs .port-body {
+    stroke: #ffffff;
+    stroke-width: 3px;
+}
+
+.devs .inPorts circle{
+	fill: #ff0000;
+}
+
+.devs .outPorts circle{
+	fill: #00ff00;
+}
+
+.devs.Model .body {
+    stroke: #ffb176;
+}
+
+.devs.Model .label {
+    fill: #ffb176;
+}
+
+/* links */
+
+.link .connection {
+    stroke: #212135;
+    stroke-width: 4px;
+}
+
+.link .marker-arrowhead, .link .marker-vertex {
+    fill: #696b87;
+}
+
+.link-tools .tool-remove circle {
+    fill: #ff7e5d;
+}
+
+/* highlighting */
+
+.devs.active-state .body {
+    stroke: #00ff00;
+}
+
+.devs.active-state .label {
+    fill: #00ff00;
+    text-decoration: underline;
+}
+
+.devs.active-parent-state .body {
+	stroke: #009900;
+}
+
+.devs.active-parent-state .label {
+	fill: #009900;
+	text-decoration: underline;
+}

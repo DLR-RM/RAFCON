@@ -1,0 +1,9 @@
+AbstractTextEditor.Color.Background=255,255,255
+AbstractTextEditor.Color.Background.SystemDefault=false
+AbstractTextEditor.Color.Foreground=0,0,0
+AbstractTextEditor.Color.Foreground.SystemDefault=false
+AbstractTextEditor.Color.SelectionBackground=180,213,255
+AbstractTextEditor.Color.SelectionForeground=0,0,0
+AbstractTextEditor.Color.SelectionForeground.SystemDefault=false
+currentLineColor=232,242,254
+eclipse.preferences.version=1

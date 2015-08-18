@@ -1,15 +1,16 @@
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.state_machine import StateMachine
-import awesome_tool.statemachine.singleton
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.state_machine import StateMachine
+import rafcon.statemachine.singleton
 
-from awesome_tool.statemachine.script import Script, ScriptType
-from awesome_tool.statemachine.enums import StateType
+from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.states.state import State
 
-import awesome_tool.statemachine.singleton
-import awesome_tool.mvc.singleton
+import rafcon.statemachine.singleton
+import rafcon.mvc.singleton
 
-from awesome_tool.mvc.controllers.state_machine_history import StateMachineHistoryController
+from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
 
 from gtkmvc.observer import Observer
 
@@ -229,16 +230,16 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
-    for sm_in in awesome_tool.statemachine.singleton.state_machine_manager.state_machines.values():
-        awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    for sm_in in rafcon.statemachine.singleton.state_machine_manager.state_machines.values():
+        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-    awesome_tool.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = awesome_tool.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
     sm_m.history.fake = True
 
     return ctr_state, sm_m, state_dict
@@ -373,7 +374,7 @@ def store_state_elements(state, state_m):
     def is_related_data_flow(parent, state_id, df):
         return df.from_state == state_id or df.to_state == state_id
 
-    if hasattr(state, 'parent') and state.parent is not None:
+    if hasattr(state, 'parent') and state.parent is not None and isinstance(state.parent, State):
         # collect transitions of parent related and not related to me
         state_elements['transitions_external'] = []
         state_elements['transitions_external_not_related'] = []
@@ -659,7 +660,7 @@ def check_state_for_all_models(state, state_m):
             return t.from_state == state_id or t.to_state == state_id
 
         # check transitions external
-        if state.parent is not None:
+        if isinstance(state.parent, State):
             core_id_store = []
             for t_id, t in state.parent.transitions.iteritems():
                 if is_related_transition(state.parent, state.state_id, t):
@@ -690,7 +691,7 @@ def check_state_for_all_models(state, state_m):
             return df.from_state == state_id or df.to_state == state_id
 
         # check data_flows external
-        if state.parent is not None:
+        if isinstance(state.parent, State):
             core_id_store = []
             for df_id, df in state.parent.data_flows.iteritems():
                 if is_related_data_flow(state.parent, state.state_id, df):
@@ -751,12 +752,12 @@ def test_add_remove_models(with_print=False):
     # create testbed
     [state, sm_model, state_dict] = create_models()
 
-    import awesome_tool
+    import rafcon
     test_history_path1 = '/home_local/test_history_before'
     test_history_path2 = '/home_local/test_history_after'
 
     def store_state_machine(sm_model, path):
-        awesome_tool.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
             sm_model.state_machine,
             path,
             delete_old_state_machine=True)
@@ -784,15 +785,21 @@ def test_add_remove_models(with_print=False):
 
     def print_all_states_with_path_and_name(state):
         print state.get_path(), state.name, type(state)
-        if state.parent:
+        if isinstance(state.parent, State):
             print "parent is: ", state.parent.state_id, state.parent.name
+
+        from rafcon.statemachine.states.container_state import ContainerState
+        if isinstance(state, ContainerState):
+            script = Script(state=state)
+        else:
+            script = state.script
         state_dict = {'states': {}, 'data_flows': {}, 'transitions': {},
                       'input_data_ports': {},
                       'output_data_ports': {},
                       'scoped_variables': {},
                       'outcomes': {},
                       'path': state.get_path(),
-                      'script': state.script, 'name': state.name, 'description': state.description}
+                      'script': script, 'name': state.name, 'description': state.description}
 
         if hasattr(state, 'states'):
             for s_id, child_state in state.states.iteritems():
@@ -867,7 +874,7 @@ def test_add_remove_models(with_print=False):
         # store_state_machine(sm_model, test_history_path2)
 
         print state4.state_id
-        if state4.parent.parent is not None:
+        if isinstance(state4.parent.parent, State):
             pstate = sm_model.get_state_model_by_path(state4.parent.parent.get_path())
             print pstate.states.keys(), "\n\n"
             # print pstate.state_id, pstate.name, pstate.get_path()
@@ -1288,9 +1295,10 @@ def test_transition_property_changes_history(with_print=False):
     sm_model.history.redo()
 
     # to_outcome(self, to_outcome)
-    state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
-    sm_model.history.undo()
-    sm_model.history.redo()
+    # Invalid change of outcome! to_outcome must be None as transition goes to child state
+    # state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
+    # sm_model.history.undo()
+    # sm_model.history.redo()
 
     # transition_id(self, transition_id)
     # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
@@ -1310,23 +1318,27 @@ def test_transition_property_changes_history(with_print=False):
 
     ##### modify from parent state #######
     # modify_transition_from_state(self, transition_id, from_state, from_outcome)
-    state_dict['Nested'].modify_transition_from_state(new_df_id, from_state=state2.state_id,
-                                                      from_outcome=oc_full_state2)
+    # state_dict['Nested'].modify_transition_from_state(new_df_id, from_state=state2.state_id,
+    #                                                   from_outcome=oc_full_state2)
+    state_dict['Nested'].transitions[new_df_id].modify_origin(state2.state_id, oc_full_state2)
     sm_model.history.undo()
     sm_model.history.redo()
 
     # modify_transition_from_outcome(self, transition_id, from_outcome)
-    state_dict['Nested'].modify_transition_from_outcome(new_df_id, from_outcome=oc_done_state2)
+    # state_dict['Nested'].modify_transition_from_outcome(new_df_id, from_outcome=oc_done_state2)
+    state_dict['Nested'].transitions[new_df_id].from_outcome = oc_done_state2
     sm_model.history.undo()
     sm_model.history.redo()
 
     # modify_transition_to_outcome(self, transition_id, to_outcome)
-    state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
-    sm_model.history.undo()
-    sm_model.history.redo()
+    # Invalid target: to_outcome must be None as transition goes to child state
+    # state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
+    # sm_model.history.undo()
+    # sm_model.history.redo()
 
     # modify_transition_to_state(self, transition_id, to_state, to_outcome)
-    state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
+    # state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
+    state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
     sm_model.history.undo()
     sm_model.history.redo()
 
@@ -1565,28 +1577,32 @@ def test_data_flow_property_changes_history(with_print=False):
 
     ##### modify from parent state #######
     # modify_data_flow_from_state(self, data_flow_id, from_state, from_key)
-    state_dict['Nested'].modify_data_flow_from_state(new_df_id, from_state=state1.state_id, from_key=output_state1)
+    # state_dict['Nested'].modify_data_flow_from_state(new_df_id, from_state=state1.state_id, from_key=output_state1)
+    state_dict['Nested'].data_flows[new_df_id].modify_origin(state1.state_id, output_state1)
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_from_key(self, data_flow_id, from_key)
-    state_dict['Nested'].modify_data_flow_from_key(new_df_id, from_key=output_count_state1)
+    # state_dict['Nested'].modify_data_flow_from_key(new_df_id, from_key=output_count_state1)
+    state_dict['Nested'].data_flows[new_df_id].from_key = output_count_state1
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_to_state(self, data_flow_id, to_state, to_key)
-    state_dict['Nested'].modify_data_flow_to_state(new_df_id, to_state=state2.state_id, to_key=input_par_state2)
+    # state_dict['Nested'].modify_data_flow_to_state(new_df_id, to_state=state2.state_id, to_key=input_par_state2)
+    state_dict['Nested'].data_flows[new_df_id].modify_target(state2.state_id, input_par_state2)
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_to_key(self, data_flow_id, to_key)
-    state_dict['Nested'].modify_data_flow_to_key(new_df_id, to_key=input_number_state2)
+    # state_dict['Nested'].modify_data_flow_to_key(new_df_id, to_key=input_number_state2)
+    state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
     sm_model.history.undo()
     sm_model.history.redo()
 

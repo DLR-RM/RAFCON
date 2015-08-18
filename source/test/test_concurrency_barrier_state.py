@@ -1,14 +1,14 @@
 import pytest
 from pytest import raises
 
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
-import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.storage.storage import StateMachineStorage
-from awesome_tool.statemachine.state_machine import StateMachine
-from awesome_tool.statemachine.script import Script, ScriptType
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
+import rafcon.statemachine.singleton
+from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.script import Script, ScriptType
 import variables_for_pytest
-from awesome_tool.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 
 def create_concurrency_barrier_state():
@@ -49,39 +49,14 @@ def create_concurrency_barrier_state():
     return barrier_state
 
 
-def concurrency_barrier_state_execution():
-
-    concurrency_barrier_state = create_concurrency_barrier_state()
-
-    # input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
-    # output_data = {"output_data_port1": None}
-    # concurrency_barrier_state.input_data = input_data
-    # concurrency_barrier_state.output_data = output_data
-
-    state_machine = StateMachine(concurrency_barrier_state)
-    variables_for_pytest.test_multithrading_lock.acquire()
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine = state_machine.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
-    concurrency_barrier_state.join()
-    # awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
-
-    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
-    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
-    assert concurrency_barrier_state.final_outcome.outcome_id == 4
-
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    variables_for_pytest.test_multithrading_lock.release()
-
-
 def test_concurrency_barrier_save_load():
     concurrency_barrier_state = create_concurrency_barrier_state()
 
     state_machine = StateMachine(concurrency_barrier_state)
     test_storage = StateMachineStorage("../test_scripts/decider_test_statemachine")
-    test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
+    # test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
     test_storage.save_statemachine_as_yaml(state_machine, "/tmp/decider_test_statemachine")
-    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml()
+    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml("/tmp/decider_test_statemachine")
 
     root_state = sm_loaded.root_state
     input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}
@@ -91,19 +66,18 @@ def test_concurrency_barrier_save_load():
 
     state_machine = StateMachine(root_state)
     variables_for_pytest.test_multithrading_lock.acquire()
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
 
-    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
-    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
+    assert rafcon.statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
+    assert rafcon.statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
     assert root_state.final_outcome.outcome_id == 4
 
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
 
 if __name__ == '__main__':
-    # concurrency_barrier_state_execution()
     test_concurrency_barrier_save_load()

@@ -1,8 +1,8 @@
 import pytest
 from pytest import raises
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.container_state import ContainerState
-from awesome_tool.statemachine.states.state import DataPort
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.container_state import ContainerState
+from rafcon.statemachine.states.state import DataPort
 
 def test_create_state():
     state1 = ExecutionState("MyFirstState")
@@ -95,28 +95,30 @@ def test_create_container_state():
     container.add_data_flow(state1.state_id, output_state1, state2.state_id, input_state2)
     assert len(container.data_flows) == 1
 
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow to connected input port
         container.add_data_flow(state1.state_id, input_state1, state2.state_id, input_state2)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow to non-existing port
         wrong_data_port_id = 218347
         container.add_data_flow(state1.state_id, output_state1, state2.state_id, wrong_data_port_id)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow from non-existing port
         wrong_data_port_id = 239847
         container.add_data_flow(state1.state_id, wrong_data_port_id, state2.state_id, input_state2)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow from non-existing state
         container.add_data_flow(-1, output_state1, state2.state_id, input_state2)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Data flow to non-existing state
         container.add_data_flow(state1.state_id, output_state1, -1, input_state2)
 
     container.add_data_flow(container.state_id, input_container_state, state1.state_id, input_state1)
-    container.add_data_flow(state2.state_id, output_state2, state2.state_id, input2_state2)
 
-    assert len(container.data_flows) == 3
+    with raises(ValueError):  # cannot connect data flow to same child state
+        container.add_data_flow(state2.state_id, output_state2, state2.state_id, input2_state2)
+
+    assert len(container.data_flows) == 2
 
     assert len(container.transitions) == 0
 
@@ -127,31 +129,31 @@ def test_create_container_state():
     t3 = container.add_transition(state2.state_id, -1, container.state_id, -1)
     assert len(container.transitions) == 3
 
-    with raises(AttributeError):
+    with raises(ValueError):
         # Transition from connected outcome
         container.add_transition(state1.state_id, -1, state2.state_id, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Non-existing from state id
         container.add_transition(-1, -1, state2.state_id, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Non-existing from outcome
         container.add_transition(state1.state_id, -3, state2.state_id, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Non-existing to state id
         container.add_transition(state1.state_id, -1, -1, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Non-existing to outcome
         container.add_transition(state1.state_id, -1, container.state_id, -3)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Transition pointing to the state itself
         container.add_transition(state1.state_id, -2, state1.state_id, None)
-    with raises(AttributeError):
+    with raises(ValueError):
         # to_state_id and to_outcome not None
         container.add_transition(state1.state_id, -2, state1.state_id, -1)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Transition from connected outcome
         container.add_transition(state2.state_id, -1, state2.state_id, -2)
-    with raises(AttributeError):
+    with raises(ValueError):
         # Transition going from one outcome to another outcome of the same state
         container.add_transition(state2.state_id, -1, state2.state_id, -2)
 
@@ -170,7 +172,7 @@ def test_create_container_state():
     container.remove_state(state1.state_id)
     assert len(container.states) == 1
     assert len(container.transitions) == 1
-    assert len(container.data_flows) == 1
+    assert len(container.data_flows) == 0
 
 
 def test_port_and_outcome_removal():

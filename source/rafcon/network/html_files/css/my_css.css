@@ -1,0 +1,36 @@
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	width: 100%;
+	border: 0;
+	overflow: hidden;
+	display: block;
+}
+
+footer {
+	position: absolute;
+	bottom: 0;
+}
+
+.height-limiter {
+	width: 95%;
+	height: 150px;
+	overflow: auto;
+}
+
+.placeholder {
+	color: white;
+	background: red;
+}
+
+canvas {
+	position: absolute; 
+	left: 0px; 
+	top: 60px;
+}
+
+.my_test .port-body {
+	stroke-width: 3px;
+}

@@ -1,10 +1,10 @@
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-import awesome_tool.statemachine.singleton
-from awesome_tool.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+import rafcon.statemachine.singleton
+from rafcon.statemachine.storage.storage import StateMachineStorage
 
-from awesome_tool.statemachine.state_machine_manager import StateMachineManager
-from awesome_tool.statemachine.state_machine import StateMachine
+from rafcon.statemachine.state_machine_manager import StateMachineManager
+from rafcon.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 import pytest
@@ -34,7 +34,7 @@ def test_start_stop_pause_step():
     # import gtk
 
     sm = return_loop_state_machine()
-    awesome_tool.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
+    rafcon.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
 
     s = StateMachineStorage("../test_scripts/stored_statemachine")
     s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
@@ -49,21 +49,21 @@ def test_start_stop_pause_step():
     my_state_machine_manager = StateMachineManager()
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(sm_loaded)
-    awesome_tool.statemachine.singleton.state_machine_manager.active_state_machine_id = sm_loaded.state_machine_id
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.step_mode()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm_loaded)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = sm_loaded.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.step_mode()
 
     for i in range(5):
-        time.sleep(0.01)
-        awesome_tool.statemachine.singleton.state_machine_execution_engine.step()
+        time.sleep(0.2)
+        rafcon.statemachine.singleton.state_machine_execution_engine.step()
 
     # give the state machine time to execute
-    time.sleep(0.01)
-    awesome_tool.statemachine.singleton.state_machine_execution_engine.stop()
+    time.sleep(0.2)
+    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     sm_loaded.root_state.join()
 
-    assert awesome_tool.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
-    awesome_tool.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded.state_machine_id)
+    assert rafcon.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
     # gtk.main()
 

@@ -7,17 +7,17 @@ import glib
 import os
 import signal
 
-from awesome_tool.utils import log
-from awesome_tool.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
-from awesome_tool.mvc.controllers import MainWindowController, StateDataPortEditorController,\
+from rafcon.utils import log
+from rafcon.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
+from rafcon.mvc.controllers import MainWindowController, StateDataPortEditorController,\
     SingleWidgetWindowController, SourceEditorController
-from awesome_tool.mvc.views.main_window import MainWindowView
-from awesome_tool.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
-from awesome_tool.mvc.models.state_machine_manager import StateMachineManagerModel
-from awesome_tool.statemachine.states.hierarchy_state import HierarchyState
-from awesome_tool.statemachine.states.execution_state import ExecutionState
-import awesome_tool.mvc.singleton
-from awesome_tool.statemachine.state_machine import StateMachine
+from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
+from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.states.execution_state import ExecutionState
+import rafcon.mvc.singleton
+from rafcon.statemachine.state_machine import StateMachine
 import variables_for_pytest
 
 
@@ -65,7 +65,7 @@ def trigger_gui_signals(*args):
         glib.idle_add(menubar_ctrl.on_backward_step_activate, None, None)
         time.sleep(sleep_time)
 
-    sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
+    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
     time.sleep(sleep_time)
 
     for key, sd in sm.root_state.scoped_data.iteritems():
@@ -76,6 +76,8 @@ def trigger_gui_signals(*args):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
+    glib.idle_add(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+
     glib.idle_add(menubar_ctrl.on_stop_activate, None)
     glib.idle_add(menubar_ctrl.on_quit_activate, None)
 
@@ -83,24 +85,24 @@ def trigger_gui_signals(*args):
 def test_backward_stepping():
 
     variables_for_pytest.test_multithrading_lock.acquire()
-    awesome_tool.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir("../awesome_tool/mvc/")
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    os.chdir("../rafcon/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
-    signal.signal(signal.SIGINT, awesome_tool.statemachine.singleton.signal_handler)
+    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     logging_view = LoggingView()
     setup_logger(logging_view)
 
     logger, gvm_model = create_models()
 
-    awesome_tool.statemachine.singleton.library_manager.initialize()
+    rafcon.statemachine.singleton.library_manager.initialize()
 
-    [state_machine, version, creation_time] = awesome_tool.statemachine.singleton.\
+    [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
 
     main_window_view = MainWindowView(logging_view)
-    awesome_tool.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     if variables_for_pytest.sm_manager_model is None:
-        variables_for_pytest.sm_manager_model = awesome_tool.mvc.singleton.state_machine_manager_model
+        variables_for_pytest.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
@@ -113,7 +115,7 @@ def test_backward_stepping():
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
-    sm = awesome_tool.statemachine.singleton.state_machine_manager.get_active_state_machine()
+    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
     if sm:
         sm.root_state.join()
         logger.debug("Joined currently executing state machine!")
