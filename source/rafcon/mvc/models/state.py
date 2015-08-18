@@ -283,6 +283,12 @@ class StateModel(ModelMT):
         if os.path.exists(meta_path):
             tmp_meta = rafcon.statemachine.singleton.global_storage.storage_utils.load_dict_from_yaml(meta_path)
 
+            # For backwards compatibility
+            # move all meta data from editor to editor_opengl
+            if "editor" in tmp_meta['gui']:
+                tmp_meta['gui']['editor_opengl'] = copy.deepcopy(tmp_meta['gui']['editor'])
+                del tmp_meta['gui']['editor']
+
             for input_data_port_model in self.input_data_ports:
                 i_id = input_data_port_model.data_port.data_port_id
                 input_data_port_model.meta = tmp_meta["input_data_port" + str(i_id)]
