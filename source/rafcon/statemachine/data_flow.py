@@ -215,6 +215,12 @@ class DataFlow(Observable, yaml.YAMLObject):
 
         self.__change_property_with_validity_check('_parent', parent)
 
+    def __get_parent_name(self):
+        if self.parent:
+            return self.parent.name
+        else:
+            return ""
+
     def __change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
 
@@ -229,7 +235,9 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not valid:
             setattr(self, property_name, old_value)
             if property_name == '_parent':
-                raise ValueError("Data flow invalid: {0}".format(message))
+                raise ValueError("Data flow of state '{0}' [{1}] invalid: {2}".format(value.name,
+                                                                                      value.state_id,
+                                                                                      message))
             raise ValueError("The data flow's '{0}' could not be changed: {1}".format(property_name[1:], message))
 
     def _check_validity(self):
