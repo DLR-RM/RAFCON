@@ -186,17 +186,20 @@ class StateNotificationLogObserver(NotificationLogObserver):
             d['prop_name'].append(info['prop_name'])
             d['instance'].append(info['instance'])
             d['method_name'].append(info['method_name'])
-            print "set"
+            if self.with_print:
+                print "set"
 
         def find_parent(info, elem):
             elem['info'].append(info)
             if 'kwargs' in info and info['kwargs']:
-                print 'kwargs'
+                if self.with_print:
+                    print 'kwargs'
                 elem['level'].append('kwargs')
                 set_dict(info, elem)
                 find_parent(info['kwargs'], elem)
             elif 'info' in info and info['info']:
-                print 'info'
+                if self.with_print:
+                    print 'info'
                 elem['level'].append('info')
                 set_dict(info, elem)
                 find_parent(info['info'], elem)
@@ -205,7 +208,8 @@ class StateNotificationLogObserver(NotificationLogObserver):
             elif 'kwargs' in info:
                 set_dict(info, elem)
             else:
-                print 'assert info: %s elem: %s' % (info, elem)
+                if self.with_print:
+                    print 'assert info: %s elem: %s' % (info, elem)
                 # assert False
             return elem
 
@@ -223,15 +227,18 @@ class StateNotificationLogObserver(NotificationLogObserver):
             print overview['level']
             print overview['prop_name'][-1]
         if overview['prop_name'][-1] == 'state':
-            print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
+            if self.with_print:
+                print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
             assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
         else:
             if overview['model'][-1].state.is_root_state:
                 overview['model'][-1].state.get_path()
-                print "Path_root: ", overview['model'][-1].state.get_path()
+                if self.with_print:
+                    print "Path_root: ", overview['model'][-1].state.get_path()
             else:
                 overview['model'][-1].parent.state.get_path()
-                print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
+                if self.with_print:
+                    print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
                     overview['model'][-1].parent.state.get_path()
                 assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
         return overview
@@ -312,6 +319,8 @@ def create_models(*args, **kargs):
 
     sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
     sm_m.history.fake = False
+    print "with_prints is: ", sm_m.history.with_prints
+    sm_m.history.with_prints = False
     # return ctr_state, sm_m, state_dict
     return logger, ctr_state, sm_m, state_dict
 
@@ -1899,17 +1908,18 @@ def trigger_state_type_change_tests(*args):
 
 if __name__ == '__main__':
     # pytest.main()
-    test_add_remove_history(True)
-    test_state_property_changes_history(True)
+    with_prints = False
+    test_add_remove_history(with_prints)
+    test_state_property_changes_history(with_prints)
 
-    test_outcome_property_changes_history(True)
-    test_transition_property_changes_history(True)
+    test_outcome_property_changes_history(with_prints)
+    test_transition_property_changes_history(with_prints)
 
-    test_input_port_modify_notification(True)
-    test_output_port_modify_notification(True)
-    test_scoped_variable_modify_notification(True)
+    test_input_port_modify_notification(with_prints)
+    test_output_port_modify_notification(with_prints)
+    test_scoped_variable_modify_notification(with_prints)
 
-    test_data_flow_property_changes_history(True)
+    test_data_flow_property_changes_history(with_prints)
 
     test_type_changes_without_gui()
 

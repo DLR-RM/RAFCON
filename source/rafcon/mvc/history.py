@@ -930,7 +930,8 @@ class History(ModelMT):
         else:  # FAILURE  # is root_state
             # self.actual_action = Action(info.method_name, '/',
             #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-            logger.error("tried to start observation of new action that is not classifiable \n%s \n%s \n%s \n%s",
+            logger.warn("History may need update, tried to start observation of new action that is not classifiable "
+                        "\n%s \n%s \n%s \n%s",
                          overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
             return False
 
