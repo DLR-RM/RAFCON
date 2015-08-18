@@ -59,7 +59,13 @@ class StateEditorController(ExtendedController):
         if not isinstance(model, ContainerStateModel):
             self.add_controller('source_ctrl', SourceEditorController(model, view['source_view']))
             view['source_view'].show()
+            # view.get_top_widget()
+            # view['scoped_variables_scroller'].hide()
+            # view['scopes_view'].show()
+            scoped_var_page = view['ports_notebook'].page_num(view['scoped_variable_vbox'])
+            view['ports_notebook'].remove_page(scoped_var_page)
         else:
+            view['scopes_view'].show()
             source_page = view['main_notebook_1'].page_num(view['source_viewport'])
             view['main_notebook_1'].remove_page(source_page)
 
