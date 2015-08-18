@@ -381,9 +381,9 @@ class Action:
 
         assert type(stored_state) is type(state)
 
-        is_root = not isinstance(state.parent, State)
+        is_root = state.is_root_state
 
-        if hasattr(state, 'states'):
+        if isinstance(state, ContainerState):
 
             for data_flow_id in state.data_flows.keys():
                 state.remove_data_flow(data_flow_id)
@@ -1136,10 +1136,7 @@ class History(ModelMT):
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
-            if not isinstance(parent_model.state.parent, State):
-                root_cause_is_state = True
-            else:
-                root_cause_is_state = False
+            root_cause_is_state = parent_model.state.is_root_state
 
             # print "IN HISTORY", info
             #print "states changed ", info.prop_name, info.method_name
@@ -1195,10 +1192,7 @@ class History(ModelMT):
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
-            if not isinstance(parent_model.state.parent, State):
-                root_cause_is_state = True
-            else:
-                root_cause_is_state = False
+            root_cause_is_state = parent_model.state.is_root_state
 
             if self.locked:
                 self.count_before -= 1

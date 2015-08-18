@@ -89,6 +89,9 @@ class StateMachine(Observable):
         # if not isinstance(root_state, State):
         #     raise AttributeError("root_state has to be of type State")
         if root_state is not None:
+            from rafcon.statemachine.states.state import State
+            if not isinstance(root_state, State):
+                raise AttributeError("root_state has to be of type State")
             root_state.parent = self
         self._root_state = root_state
 

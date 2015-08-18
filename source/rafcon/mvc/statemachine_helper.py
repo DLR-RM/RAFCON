@@ -220,7 +220,7 @@ class StateMachineHelper():
         assert issubclass(new_state_class, State)
         orig_state = orig_state_m.state  # only here to get the input parameter of the Core-function
 
-        is_root_state = not isinstance(orig_state.parent, State)
+        is_root_state = orig_state.is_root_state
 
         current_state_is_container = isinstance(orig_state, ContainerState)
         new_state_is_container = new_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
@@ -274,7 +274,7 @@ class StateMachineHelper():
         assert isinstance(orig_state, State)
         assert issubclass(new_state_class, State)
 
-        is_root_state = not isinstance(orig_state.parent, State)
+        is_root_state = orig_state.is_root_state
 
         if not is_root_state:  # PARENT IS CONTAINER STATE
             # has parent state
@@ -335,7 +335,7 @@ class StateMachineHelper():
         :return:
         """
         # find the parent of original and new state model
-        is_root_state = not isinstance(orig_state_m.state.parent, State)
+        is_root_state = orig_state_m.state.is_root_state
 
         if not is_root_state:
             parent_m = orig_state_m.parent

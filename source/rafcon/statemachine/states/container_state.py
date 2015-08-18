@@ -541,11 +541,11 @@ class ContainerState(State):
 
         """
         # delete all data flows in parent related to data_port_id and self.state_id
-        if isinstance(self.parent, State):
+        if not self.is_root_state:
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
                 if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
-                                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                     data_flow_ids_to_remove.append(data_flow_id)
 
             for data_flow_id in data_flow_ids_to_remove:
@@ -556,7 +556,7 @@ class ContainerState(State):
         data_flow_ids_to_remove = []
         for data_flow_id, data_flow in self.data_flows.iteritems():
             if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
-                                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                 data_flow_ids_to_remove.append(data_flow_id)
 
         for data_flow_id in data_flow_ids_to_remove:

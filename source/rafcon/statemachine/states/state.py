@@ -234,7 +234,7 @@ class State(Observable, yaml.YAMLObject):
                             output data port id
 
         """
-        if isinstance(self.parent, State):
+        if not self.is_root_state:
             # delete all data flows in parent related to data_port_id and self.state_id
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
@@ -315,7 +315,7 @@ class State(Observable, yaml.YAMLObject):
         :param appendix: the part of the path that was already calculated by previous function calls
         :return: the full path to the root state
         """
-        if isinstance(self.parent, State):
+        if not self.is_root_state:
             if appendix is None:
                 return self.parent.get_path(self.state_id)
             else:
@@ -333,7 +333,7 @@ class State(Observable, yaml.YAMLObject):
         :return:
         """
         if self.parent:
-            if not isinstance(self.parent, State):
+            if self.is_root_state:
                 return self.parent
             else:
                 return self.parent.get_sm_for_state()
@@ -401,7 +401,7 @@ class State(Observable, yaml.YAMLObject):
         self.remove_outcome_hook(outcome_id)
 
         # delete possible transition connected to this outcome
-        if isinstance(self.parent, State):
+        if not self.is_root_state:
             for transition_id, transition in self.parent.transitions.iteritems():
                 if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
@@ -487,8 +487,9 @@ class State(Observable, yaml.YAMLObject):
             return False, message
 
         # Check whether the type matches any connected data port type
-        # Only relevant, if there is a parent state, otherwise the cannot be connected data flows
-        if isinstance(self.parent, State):
+        # Only relevant, if there is a parent state, otherwise the port cannot be connected to data flows
+        # TODO: check of internal connections
+        if not self.is_root_state:
             # Call the check in the parent state, where the data flows are stored
             return self.parent.check_data_port_connection(check_data_port)
 

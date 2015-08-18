@@ -88,7 +88,7 @@ class StateMachineTreeController(ExtendedController):
             return
 
         if changed_state_model:
-            if not isinstance(changed_state_model.state.parent, State):
+            if changed_state_model.state.is_root_state:
                 parent_iter = self.path_store[changed_state_model.state.get_path()]
             else:
                 parent_iter = self.path_store[changed_state_model.parent.state.get_path()]

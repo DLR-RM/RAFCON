@@ -65,8 +65,7 @@ class StateOverviewController(ExtendedController, Model):
         view['label_id_value'].set_text(self.model.state.state_id)
 
         if not self.model.state.is_root_state:
-            if not isinstance(self.model.parent.state, State):
-                self.view['is_start_state_checkbutton'].hide()
+            self.view['is_start_state_checkbutton'].hide()
 
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
@@ -171,7 +170,7 @@ class StateOverviewController(ExtendedController, Model):
             logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
                                                                              type(self.model.state),
                                                                              target_class))
-            if not isinstance(self.model.state.parent, State):
+            if self.model.state.is_root_state:
                 from rafcon.mvc.singleton import state_machine_manager_model
                 sm_id = self.model.state.get_sm_for_state().state_machine_id
                 state_machine = state_machine_manager_model.state_machine_manager.state_machines[sm_id]
