@@ -589,19 +589,17 @@ class GraphicalEditorController(ExtendedController):
         state_temp = state_m.temp['gui']['editor']
 
         # Use default values if no size information is stored
-        if isinstance(state_m.meta['gui']['editor']['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):
-            state_meta_gaphas['size'] = state_m.meta['gui']['editor']['size']
-            state_meta_opengl['size'] = state_m.meta['gui']['editor']['size']
+        if isinstance(state_meta_opengl['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):
+            state_meta_gaphas['size'] = state_meta_opengl['size']
             self.model.state_machine.marked_dirty = True
         if not isinstance(state_meta_gaphas['size'], tuple):
             state_meta_gaphas['size'] = size
 
         size = state_meta_gaphas['size']
 
-        if isinstance(state_m.meta['gui']['editor']['rel_pos'], tuple) and not isinstance(state_meta_gaphas['rel_pos'], tuple):
-            rel_pos = state_m.meta['gui']['editor']['rel_pos']
+        if isinstance(state_meta_opengl['rel_pos'], tuple) and not isinstance(state_meta_gaphas['rel_pos'], tuple):
+            rel_pos = state_meta_opengl['rel_pos']
             state_meta_gaphas['rel_pos'] = (rel_pos[0], -rel_pos[1])
-            state_meta_opengl['rel_pos'] = rel_pos
             self.model.state_machine.marked_dirty = True
 
         if isinstance(state_meta_gaphas['rel_pos'], tuple):
@@ -681,15 +679,14 @@ class GraphicalEditorController(ExtendedController):
 
         try:
             if use_waypoints:
-                if (isinstance(transition_m.meta['gui']['editor']['waypoints'], list) and
+                if (isinstance(transition_meta_opengl['waypoints'], list) and
                         isinstance(transition_meta_gaphas['waypoints'], dict)):
-                    old_waypoint_list = transition_m.meta['gui']['editor']['waypoints']
+                    old_waypoint_list = transition_meta_opengl['waypoints']
                     new_waypoint_list = []
                     for wp in old_waypoint_list:
                         wp = (wp[0], -wp[1])
                         new_waypoint_list.append(wp)
                     transition_meta_gaphas['waypoints'] = new_waypoint_list
-                    transition_meta_opengl['waypoints'] = old_waypoint_list
                     self.model.state_machine.marked_dirty = True
 
                 waypoint_list = transition_meta_gaphas['waypoints']
