@@ -213,6 +213,8 @@ class GraphicalEditorController(ExtendedController):
 
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
+            print "method_name, model, result, arguments, instance"
+            print method_name, model, result, arguments, instance
             if method_name == 'add_state':
                 new_state = arguments[1]
                 new_state_m = model.states[new_state.state_id]
@@ -266,6 +268,10 @@ class GraphicalEditorController(ExtendedController):
                     if outcome_v.outcome_id == arguments[1]:
                         state_v.remove_outcome(outcome_v)
                         self.canvas.request_update(state_v)
+            elif method_name == 'outcome_change':
+                state_m = model
+                state_v = self.get_view_for_model(state_m)
+                self.canvas.request_update(state_v)
             # ----------------------------------
             #           DATA PORTS
             # ----------------------------------
