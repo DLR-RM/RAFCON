@@ -558,7 +558,19 @@ class GraphicalEditorController(ExtendedController):
         new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
         new_state_size = (new_state_side_size, new_state_side_size)
 
-        self.setup_state(state_m, parent_state_v, size=new_state_size, hierarchy_level=new_state_hierarchy_level)
+        child_width = new_state_side_size
+        child_height = new_state_side_size
+        child_size = (child_width, child_height)
+        child_spacing = max(child_size) * 1.2
+
+        max_cols = parent_state_v.width // child_spacing
+        (row, col) = divmod(len(parent_state_m.states) - 1, max_cols)
+        child_rel_pos_x = col * child_spacing + child_spacing - child_width
+        child_rel_pos_y = child_spacing * (1.5 * row + 1)
+        child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
+
+        self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
+                         hierarchy_level=new_state_hierarchy_level)
         return
 
     def _remove_state_view(self, view):
@@ -648,7 +660,7 @@ class GraphicalEditorController(ExtendedController):
                 child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
                 num_child_state += 1
 
-                self.setup_state(child_state, state_v, (0, 0), child_size, hierarchy_level + 1)
+                self.setup_state(child_state, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
             self.draw_transitions(state_m, hierarchy_level)
 
