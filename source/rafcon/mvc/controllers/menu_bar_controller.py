@@ -98,10 +98,22 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - File
     ######################################################
     def on_new_activate(self, widget=None, data=None):
+        import glib
         logger.debug("Creating new state-machine...")
         root_state = HierarchyState("new root state")
-        sm = StateMachine(root_state)
-        rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+        state_machine = StateMachine(root_state)
+        rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+        rafcon.statemachine.singleton.state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+        state_machine_m = self.model.get_selected_state_machine_model()
+        # If idle_add isn't used, gaphas crashes, as the view is not ready
+        glib.idle_add(state_machine_m.selection.set, state_machine_m.root_state)
+
+        def grab_focus():
+            editor_controller = self.state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
+            editor_controller.view.editor.grab_focus()
+        # The editor parameter of view is created belated, thus we have to use idle_add again
+        glib.idle_add(grab_focus)
+
 
     def on_open_activate(self, widget=None, data=None, path=None):
         if path is None:
