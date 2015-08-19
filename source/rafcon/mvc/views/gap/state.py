@@ -766,24 +766,6 @@ class NameView(Element):
     def parent(self):
         return self.canvas.get_parent(self)
 
-    def get_name_string(self, name):
-        if len(name) > constants.MAX_TITLE_LENGTH_PER_LINE:
-            multi_line_name = ""
-            split = name.split(" ")
-            line = ""
-
-            for sub_string in split:
-                if len(line) + len(sub_string) < constants.MAX_TITLE_LENGTH_PER_LINE:
-                    line = line + sub_string + " "
-                else:
-                    multi_line_name = multi_line_name + line + "\n"
-                    line = sub_string + " "
-            multi_line_name += line
-
-            return multi_line_name
-        else:
-            return name
-
     def draw(self, context):
         if self.moving:
             return
@@ -809,7 +791,7 @@ class NameView(Element):
         layout = pcc.create_layout()
         layout.set_wrap(WRAP_WORD)
         layout.set_width(int(self.width) * SCALE)
-        layout.set_text(self.get_name_string(self.name))
+        layout.set_text(self.name)
 
         font_name = constants.FONT_NAMES[0]
         font_size = self.height * 0.8
