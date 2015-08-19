@@ -203,7 +203,7 @@ class DataPort(Observable, yaml.YAMLObject):
             if isinstance(default_value, (str, basestring)):
                 if len(default_value) > 1 and default_value[0] == '$':
                     return default_value
-                if len(default_value) == 0 or default_value == "None":
+                if default_value == "None":
                     return None
 
                 default_value = type_helpers.convert_string_value_to_type_value(default_value, data_type)
