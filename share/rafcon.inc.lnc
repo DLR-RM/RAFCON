@@ -1,12 +1,6 @@
 
 # This include file can be customized by defining the following defines 
 # before including this file:
-#   RAFCON_SRC_PATH
-#     (optional) path to the source folder of RAFCON
-#     defaults to /volume/software/common/packages/rafcon/latest/lib/python2.7/
-#   RAFCON_LIB_PATH
-#     (optional) path to the library folder of RAFCON
-#     defaults to /volume/software/common/packages/rafcon/latest/share/libraries
 #   RAFCON_PYTHONPATH_ADD
 #     (optional) path to be added to the PYTHONPATH
 #   RAFCON_NEW_STATE_MACHINE:
@@ -25,31 +19,18 @@
 #     defaults to ~/.config/rafcon
 
 defines
-RAFCON_SRC_PATH: %(ifndef "RAFCON_SRC_PATH", "/volume/software/common/packages/rafcon/latest/lib/python2.7/")
-RAFCON_LIB_PATH: %(ifndef "RAFCON_LIB_PATH", "/volume/software/common/packages/rafcon/latest/share/libraries")
 RAFCON_PYTHONPATH_ADD: %(ifndef "RAFCON_PYTHONPATH_ADD", "")
 RAFCON_NEW_STATE_MACHINE: %(ifeq "%(RAFCON_NEW_STATE_MACHINE)", "True", "-n", "")
 
-# $(ARCH) is sled11-x86-gcc4.x for 32bit, sled11-x86_64-gcc4.x for 64bit
-# 32 for 32bit, 64 for 64bit
-# BIT_CNT: %(subst "sled11-x86_64-gcc4.x", "64", "%(subst "sled11-x86-gcc4.x", "32", "%(env "ARCH")")")
-# empty for 32bit, 64 for 64bit
-LIB: %(subst "sled11-x86_64-gcc4.x", "lib64", "%(subst "sled11-x86-gcc4.x", "lib", "%(env "ARCH")")")
-
-RAFCON_LD_LIBRARY_PATH: /volume/software/moro/packages/gtk_etc/latest/$(ARCH)/lib64:/volume/software/moro/packages/gtk_etc/latest/$(ARCH)/lib:/volume/software/moro/packages/gtk_etc_python/latest/$(ARCH)/lib
-RAFCON_PYTHONPATH: /volume/software/common/packages/rafcon/latest/lib/python2.7:/volume/software/moro/packages/gtk_etc_python/latest/$(ARCH):/volume/software/moro/packages/gtk_etc_python/latest/$(ARCH)/lib/python2.7/site-packages:/volume/software/moro/packages/gtk_etc_python/latest/$(ARCH)/lib/python2.7/site-packages/gtk-2.0
+pipe_include rmpm_do env --env-format ln rafcon
 
 process RAFCON
+use_template: rafcon_environment
 node: localhost 
 change_directory: %(RAFCON_SRC_PATH)/rafcon/mvc/
-environment: [
-    PYTHONPATH=%(LN_PYTHONPATH):%(RAFCON_PYTHONPATH_ADD):%(RAFCON_PYTHONPATH), 
-    LD_LIBRARY_PATH=%(RAFCON_LD_LIBRARY_PATH),
-    RAFCON_PATH=%(RAFCON_SRC_PATH)/rafcon,
-    RAFCON_LIB_PATH=%(RAFCON_LIB_PATH)
-]
-pass_environment: HOME, DISPLAY, ARCH, USER
-command: /opt/python/python2.7/bin/python %(RAFCON_SRC_PATH)/rafcon/mvc/start.py %(RAFCON_NEW_STATE_MACHINE) -o %(RAFCON_OPEN_STATE_MACHINES) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
+
+pass_environment: HOME, USER, ARCH, DISPLAY
+command: /opt/python/python2.7/bin/python %(RAFCON_ROOT_PATH)/lib/python2.7/rafcon/mvc/start.py %(RAFCON_NEW_STATE_MACHINE) -o %(RAFCON_OPEN_STATE_MACHINES) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
 # warning_regex: WARNING
 flags: no_error_on_stop
 ready_regex: Ready

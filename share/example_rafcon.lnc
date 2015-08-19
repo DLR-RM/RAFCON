@@ -10,3 +10,4 @@ RAFCON_NEW_STATE_MACHINE: True
 
 include /volume/software/common/packages/rafcon/latest/share/rafcon.inc.lnc
 
+#include /home_local/stei_fn/taskcontrol/share/rafcon.inc.lnc
