@@ -1,27 +1,19 @@
-import gtk
 from gtkmvc import ModelMT, Observable
-import gobject
 import yaml
 
 from rafcon.utils import log
 
-
-from rafcon.statemachine.states.state import State, DataPort
 from rafcon.statemachine.scope import ScopedVariable
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.data_flow import DataFlow
 from rafcon.statemachine.transition import Transition
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.mvc.models.container_state import ContainerState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.script import Script
+from rafcon.statemachine.states.state import State, DataPort
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+
+from rafcon.mvc.models.container_state import ContainerState
 import rafcon.mvc.statemachine_helper
-from rafcon.mvc.models import ContainerStateModel
-from rafcon.mvc.models.state import StateModel
-from rafcon.statemachine.script import  Script
 
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 logger = log.get_logger(__name__)
@@ -372,7 +364,6 @@ class Action:
         assert storage_version_of_state
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
         self.update_state(state, storage_version_of_state)
-
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)

@@ -22,6 +22,8 @@ class StateDataFlowsListController(ExtendedController):
     :param rafcon.mvc.views.DataFlowListView view: The GTK view showing the data flows as a table
     """
 
+    # TODO - widget should update if parent of state has changed (e.g. because of state-type-change of parent)
+
     def __init__(self, model, view):
         """Constructor
         """

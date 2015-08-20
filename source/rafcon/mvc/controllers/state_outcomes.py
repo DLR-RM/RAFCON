@@ -18,7 +18,7 @@ class StateOutcomesListController(ExtendedController):
 
     """
 
-    parent_observer = None
+    # TODO - widget should update if parent of state has changed (e.g. because of state-type-change of parent)
 
     def __init__(self, model, view):
         ExtendedController.__init__(self, model, view)
