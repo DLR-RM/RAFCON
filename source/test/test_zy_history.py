@@ -1881,19 +1881,19 @@ def trigger_state_type_change_tests(*args):
 
 if __name__ == '__main__':
     # pytest.main()
-    # with_prints = False
-    # test_add_remove_history(with_prints)
-    # test_state_property_changes_history(with_prints)
-    #
-    # test_outcome_property_changes_history(with_prints)
-    # test_transition_property_changes_history(with_prints)
-    #
-    # test_input_port_modify_notification(with_prints)
-    # test_output_port_modify_notification(with_prints)
-    # test_scoped_variable_modify_notification(with_prints)
-    #
-    # test_data_flow_property_changes_history(with_prints)
-    #
-    # test_type_changes_without_gui()
+    with_prints = False
+    test_add_remove_history(with_prints)
+    test_state_property_changes_history(with_prints)
+
+    test_outcome_property_changes_history(with_prints)
+    test_transition_property_changes_history(with_prints)
+
+    test_input_port_modify_notification(with_prints)
+    test_output_port_modify_notification(with_prints)
+    test_scoped_variable_modify_notification(with_prints)
+
+    test_data_flow_property_changes_history(with_prints)
+
+    test_type_changes_without_gui()
 
     test_state_machine_changes_with_gui()
