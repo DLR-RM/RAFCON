@@ -24,3 +24,50 @@ ROTATE_NAMES_ON_CONNECTIONS: False
 HISTORY_ENABLED: True 
 
 KEEP_ONLY_STICKY_STATES_OPEN: True
+
+SHORTCUTS:
+    abort: Escape
+    add: <Control>A
+    backward_step: F9
+    close: <Control>W
+    copy: <Control>C
+    cut: <Control>X
+    data_flow_mode: <Control><Shift>D
+    delete: Delete
+    down:
+    - <Control>Down
+    - <Control><Shift>Down
+    entry: <Control>E
+    fit: <Control>space
+    group: <Control>G
+    info: <Control>I
+    left:
+    - <Control>Left
+    - <Control><Shift>Left
+    new: <Control>N
+    open: <Control>O
+    paste: <Control>V
+    pause: F7
+    quit: <Control>Q
+    redo:
+    - <Control>Y
+    - <Control><Shift>Z
+    reload: <Shift>F5
+    rename: F2
+    right:
+    - <Control>Right
+    - <Control><Shift>Right
+    save: <Control>S
+    save_as: <Control><Shift>S
+    show_aborted_preempted: <Control>P
+    show_data_flows: <Control>D
+    show_data_values: <Control>L
+    start: F5
+    step: F4
+    step_mode: F6
+    stop: F8
+    undo: <Control>Z
+    ungroup: <Control>U
+    up:
+    - <Control>Up
+    - <Control><Shift>Up

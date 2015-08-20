@@ -141,6 +141,12 @@ class HoverItemTool(HoverTool):
     def on_motion_notify(self, event):
         super(HoverItemTool, self).on_motion_notify(event)
 
+        # NameView should only be hovered, if its state is selected
+        if isinstance(self.view.hovered_item, NameView):
+            state_v = self.view.canvas.get_parent(self.view.hovered_item)
+            if state_v not in self.view.selected_items:
+                self.view.hovered_item = state_v
+
         if self._prev_hovered_item and self.view.hovered_item is not self._prev_hovered_item:
             self._prev_hovered_item.hovered = False
         if isinstance(self.view.hovered_item, StateView):

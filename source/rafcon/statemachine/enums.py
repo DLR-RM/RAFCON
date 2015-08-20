@@ -19,4 +19,4 @@ StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED ST
 
 # Constants
 UNIQUE_DECIDER_STATE_ID = "unique_decider_state_id"
-DEFAULT_SCRIPT_PATH = "/tmp/" + os.environ.get('USER') + "/DFC/"
+DEFAULT_SCRIPT_PATH = os.path.join("/tmp", os.environ.get('USER', 'anonymous'), "DFC")

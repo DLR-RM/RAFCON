@@ -1,56 +1,36 @@
 
 # This include file can be customized by defining the following defines 
 # before including this file:
-#   DFC_SRC_PATH
-#     (optional) path to the source folder of Awesome tool
-#     defaults to /volume/USERSTORE/brun_sb/public/DFC/source
-#   DFC_PYTHONPATH_ADD
+#   RAFCON_PYTHONPATH_ADD
 #     (optional) path to be added to the PYTHONPATH
-#   DFC_NEW_STATE_MACHINE:
+#   RAFCON_NEW_STATE_MACHINE:
 #     (optional) set this to "True" if you want to have a new
-#     state-machine created when opening Awesome tool
+#     state-machine created when opening RAFCON
 #     defaults to False
-#   DFC_OPEN_STATE_MACHINES:
+#   RAFCON_OPEN_STATE_MACHINES:
 #     (optional) specify paths to state-machines that shall be
-#     opened with Awesome tool; separate multiple paths by space
+#     opened with RAFCON; separate multiple paths by space
 #     defaults to None
-#   DFC_CONFIG_PATH:
+#   RAFCON_CONFIG_PATH:
 #     (optional) specify path to config file config.yaml
-#     defaults to ~/.awesome_tool
-#   DFC_GUI_CONFIG_PATH:
+#     defaults to ~/.config/rafcon
+#   RAFCON_GUI_CONFIG_PATH:
 #     (optional) specify path to GUI config file gui_config.yaml
-#     defaults to ~/.awesome_tool
+#     defaults to ~/.config/rafcon
 
 defines
-DFC_SRC_PATH: %(ifndef "DFC_SRC_PATH", "/volume/USERSTORE/brun_sb/public/DFC/source")
-DFC_PYTHONPATH_ADD: %(ifndef "DFC_PYTHONPATH_ADD", "")
-DFC_NEW_STATE_MACHINE: %(ifeq "%(DFC_NEW_STATE_MACHINE)", "True", "-n", "")
+RAFCON_PYTHONPATH_ADD: %(ifndef "RAFCON_PYTHONPATH_ADD", "")
+RAFCON_NEW_STATE_MACHINE: %(ifeq "%(RAFCON_NEW_STATE_MACHINE)", "True", "-n", "")
 
-# $(ARCH) is i686 for 32bit, x86_64 for 64bit
-# x86 for 32bit, x86_64 for 64bit
-X_CODE: %(subst "i686", "x86", "$(ARCH)")
-# 32 for 32bit, 64 for 64bit
-BIT_CNT: %(subst "x86_64", "64", "%(subst "i686", "32", "$(ARCH)")")
-# empty for 32bit, 64 for 64bit
-BIT_64: %(subst "32", "", "%(BIT_CNT)")
+pipe_include rmpm_do env --env-format ln rafcon
 
-DFC_USERSTORE: /volume/USERSTORE/brun_sb/libraries/
-DFC_LD_PATH_64: %(subst "64", "%(DFC_USERSTORE)sys_libraries/64_bit/lib64:", "%(BIT_64)")
-
-DFC_PATH: %(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit/bin:/home/f_soft/bin/sled11-%(X_CODE)-gcc4.x:/usr/local/bin:/usr/bin:/bin:/usr/bin/X11:/usr/X11R6/bin
-DFC_LD_LIBRARY_PATH: %(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit/lib:%(DFC_USERSTORE)sys_libraries/%(BIT_CNT)_bit/lib:%(DFC_LD_PATH_64)/usr/lib/gcc/i586-suse-linux/4.7
-DFC_PYTHONPATH: %(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit:%(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit/lib/python2.7/site-packages:%(DFC_USERSTORE)python_libraries/%(BIT_CNT)_bit/lib/python2.7/site-packages/gtk-2.0
-
-process Awesome tool
+process RAFCON
+use_template: rafcon_environment
 node: localhost 
-change_directory: %(DFC_SRC_PATH)/awesome_tool/mvc/
-environment: [
-    PYTHONPATH=%(LN_PYTHONPATH):%(DFC_SRC_PATH):%(DFC_SRC_PATH)/test_scripts:%(DFC_PYTHONPATH_ADD):%(DFC_PYTHONPATH), 
-    PATH=%(DFC_PATH), 
-    LD_LIBRARY_PATH=%(DFC_LD_LIBRARY_PATH)
-]
-pass_environment: HOME, DISPLAY
-command: /opt/python/python2.7/bin/python %(DFC_SRC_PATH)/awesome_tool/mvc/start.py %(DFC_NEW_STATE_MACHINE) -o %(DFC_OPEN_STATE_MACHINES) -c %(DFC_CONFIG_PATH) -g %(DFC_GUI_CONFIG_PATH)
+change_directory: %(RAFCON_SRC_PATH)/rafcon/mvc/
+
+pass_environment: HOME, USER, ARCH, DISPLAY
+command: /opt/python/python2.7/bin/python %(RAFCON_ROOT_PATH)/lib/python2.7/rafcon/mvc/start.py %(RAFCON_NEW_STATE_MACHINE) -o %(RAFCON_OPEN_STATE_MACHINES) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
 # warning_regex: WARNING
 flags: no_error_on_stop
 ready_regex: Ready

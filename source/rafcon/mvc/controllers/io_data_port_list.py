@@ -180,8 +180,12 @@ class DataPortListController(ExtendedController):
             # if the type is not a builtin type, also show the module
             if data_type_module != '__builtin__':
                 data_type_name = data_type_module + '.' + data_type_name
+            if idp_model.data_port.default_value is None:
+                default_value = "<None>"
+            else:
+                default_value = idp_model.data_port.default_value
             tmp.append([idp_model.data_port.name, data_type_name,
-                        idp_model.data_port.default_value,
+                        default_value,
                         idp_model.data_port.data_port_id])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)

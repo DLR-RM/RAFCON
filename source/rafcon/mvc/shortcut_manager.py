@@ -3,6 +3,9 @@ import gtk
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+from rafcon.mvc.config import global_gui_config
+
 from functools import partial
 
 
@@ -12,7 +15,6 @@ class ShortcutManager():
     Holds a mapping between shortcuts and action. Actions can be subscribed to. When a listed shortcut is triggered,
     all subscribers are notified.
     """
-    __action_to_shortcuts = dict()
 
     def __init__(self, window):
         # Setup window to listen for accelerators
@@ -20,48 +22,9 @@ class ShortcutManager():
         self.accel_group = gtk.AccelGroup()
         self.main_window.add_accel_group(self.accel_group)
 
-        self.__init_shortcuts()
+        self.__action_to_callbacks = {}
+        self.__action_to_shortcuts = global_gui_config.get_config_value('SHORTCUTS', {})
         self.__register_shortcuts()
-        self.__action_to_callbacks = dict()
-
-    def __init_shortcuts(self):
-        self.__action_to_shortcuts = {
-            'save': '<Control>S',
-            'save_as': '<Control><Shift>S',
-            'open': '<Control>O',
-            'new': '<Control>N',
-            'quit': '<Control>Q',
-            'close': '<Control>W',
-            'abort': 'Escape',
-            'copy': '<Control>C',
-            'paste': '<Control>V',
-            'cut': '<Control>X',
-            'add': '<Control>A',
-            'delete': 'Delete',
-            'group': '<Control>G',
-            'ungroup': '<Control>U',
-            'entry': '<Control>E',
-            'fit': '<Control>space',
-            'info': '<Control>I',
-            'rename': 'F2',
-            'start': 'F5',
-            'step_mode': 'F6',
-            'pause': 'F7',
-            'stop': 'F8',
-            'step': 'F4',
-            'backward_step': 'F9',
-            'reload': '<Shift>F5',
-            'undo': '<Control>Z',
-            'redo': ['<Control>Y', '<Control><Shift>Z'],
-            'left': ['<Control>Left', '<Control><Shift>Left'],
-            'right': ['<Control>Right', '<Control><Shift>Right'],
-            'up': ['<Control>Up', '<Control><Shift>Up'],
-            'down': ['<Control>Down', '<Control><Shift>Down'],
-            'show_data_flows': '<Control>D',
-            'show_data_values': '<Control>L',
-            'data_flow_mode': '<Control><Shift>D',
-            'show_aborted_preempted': '<Control>P'
-        }
 
     def __register_shortcuts(self):
         for action in self.__action_to_shortcuts:
