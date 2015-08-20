@@ -28,7 +28,7 @@ def setup_module(module=None):
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: " ,dirname(__file__), dirname(dirname(__file__))
 
-    library_paths["ros_libraries"] = join(dirname(dirname(os.path.realpath(__file__))), "test_scripts", "ros_libraries")
+    library_paths["ros"] = join(dirname(dirname(os.path.realpath(__file__))), "test_scripts", "ros_libraries")
     library_paths["turtle_libraries"] = join(dirname(dirname(os.path.realpath(__file__))), "test_scripts", "turtle_libraries")
 
 def setup_logger(logging_view):
