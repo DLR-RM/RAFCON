@@ -143,14 +143,17 @@ class StateMachineStorage(Observable):
             source_script_file = os.path.join(state.get_file_system_path(), state.script.filename)
             destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
             if not source_script_file == destination_script_file:
-                #print "destination file: %s source file: %s" % (destination_script_file, source_script_file)
                 try:
-                    shutil.copyfile(source_script_file, destination_script_file)
-                except:
+                    if not os.path.exists(source_script_file):
+                            script_file = open(destination_script_file, 'w')
+                            script_file.write(state.script.script)
+                            script_file.close()
+                    else:
+                        shutil.copyfile(source_script_file, destination_script_file)
+                except Exception, e:
                     logger.warning("copy of file failed!!! %s -> %s" % (source_script_file, destination_script_file))
-                    script_file = open(destination_script_file, 'w')
-                    script_file.write(state.script.script)
-                    script_file.close()
+                    raise
+
                 state.script.reload_path(self.SCRIPT_FILE)
             else:  # load text into script file
                 script_file = open(source_script_file, 'w')
