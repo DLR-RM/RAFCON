@@ -155,7 +155,7 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
     sleep_time_max = 5.0
     states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
     if isinstance(parent_state_m, ContainerStateModel):
-        logger.debug("old tabs are:")
+        # logger.debug("old tabs are:")
         # for tab in states_editor_controller.tabs.itervalues():
         #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
         # for tab in states_editor_controller.closed_tabs.itervalues():
@@ -170,7 +170,7 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
                                                                       state_identifier,
                                                                       sleep_time_max)
             # logger.debug("wait for state's state editor %s" % time_waited)
-            # 
+            #
             # logger.debug("models are: \n ctrl  %s path: %s\n model %s path: %s" %
             #              (state_editor_ctrl.model, state_editor_ctrl.model.state.get_path(),
             #               state_m, state_m.state.get_path()))

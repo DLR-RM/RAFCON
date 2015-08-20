@@ -385,12 +385,11 @@ class Action:
                     state.remove_transition(t_id)
 
             for old_state_id in state.states.keys():
-                if not old_state_id == UNIQUE_DECIDER_STATE_ID:
-                    try:
-                        state.remove_state(old_state_id, force=True)
-                    except Exception as e:
-                        print old_state_id, UNIQUE_DECIDER_STATE_ID, state
-                        raise e
+                try:
+                    state.remove_state(old_state_id, force=True)
+                except Exception as e:
+                    print old_state_id, UNIQUE_DECIDER_STATE_ID, state
+                    raise e
 
         if is_root:
             for outcome_id in state.outcomes.keys():
@@ -446,6 +445,9 @@ class Action:
             # logger.debug("UPDATE STATES")
             for dp_id, sv in stored_state.scoped_variables.iteritems():
                 state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
+
+            if UNIQUE_DECIDER_STATE_ID in stored_state.states:
+                state.add_state(stored_state.states[UNIQUE_DECIDER_STATE_ID], storage_load=True)
 
             for new_state in stored_state.states.values():
                 # print "++++ new child", new_state
