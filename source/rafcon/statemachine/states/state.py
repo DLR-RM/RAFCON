@@ -565,7 +565,7 @@ class State(Observable, yaml.YAMLObject):
             new_state_id = state_id_generator()
         else:
             new_state_id = state_id
-        if self.parent is not None:
+        if not self.is_root_state:
             while self.parent.state_id_exists(new_state_id):
                 new_state_id = state_id_generator()
 
