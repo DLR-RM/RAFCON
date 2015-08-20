@@ -27,7 +27,8 @@ KEEP_ONLY_STICKY_STATES_OPEN: True
 
 SHORTCUTS:
     abort: Escape
-    add: <Control>A
+    add: <Control>A             # In graphical editor: add execution state
+    add2: <Control><Shift>A     # In graphical editor: add hierarchy state
     backward_step: F9
     close: <Control>W
     copy: <Control>C

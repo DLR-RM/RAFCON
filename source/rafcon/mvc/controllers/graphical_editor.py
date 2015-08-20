@@ -119,7 +119,8 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
-        shortcut_manager.add_callback_for_action("add", self._add_execution_state)
+        shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
+        shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
         shortcut_manager.add_callback_for_action("info", self._toggle_data_flow_visibility)
         shortcut_manager.add_callback_for_action("abort", self._abort)
 
@@ -1839,16 +1840,22 @@ class GraphicalEditorController(ExtendedController):
                 StateMachineHelper.delete_models(self.model.selection.get_all())
                 self.model.selection.clear()
 
-    def _add_execution_state(self, *args):
-        if self.view.editor.has_focus():  # or singleton.global_focus is self:
-            selection = self.model.selection.get_all()
-            if len(selection) > 0:
-                model = selection[0]
+    def _add_new_state(self, *args, **kwargs):
+        if not self.view.editor.has_focus():  # or singleton.global_focus is self:
+            return
 
-                if isinstance(model, StateModel):
-                    StateMachineHelper.add_state(model, StateType.EXECUTION)
-                if isinstance(model, TransitionModel) or isinstance(model, DataFlowModel):
-                    StateMachineHelper.add_state(model.parent, StateType.EXECUTION)
+        if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
+            state_type = StateType.EXECUTION
+        else:
+            state_type = kwargs['state_type']
+
+        selection = self.model.selection.get_all()
+        model = selection[0]
+
+        if isinstance(model, StateModel):
+            StateMachineHelper.add_state(model, state_type)
+        if isinstance(model, (TransitionModel, DataFlowModel)):
+            StateMachineHelper.add_state(model.parent, state_type)
 
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.has_focus():
