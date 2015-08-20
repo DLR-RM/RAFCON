@@ -2,6 +2,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.views.network_connections import NetworkConnectionsView
 from rafcon.utils import log
+from rafcon.network.config_network import global_net_config
 
 from rafcon.network.singleton import network_connections
 
@@ -41,6 +42,8 @@ class NetworkController(ExtendedController):
         self.view["udp_connection_registered_label"].set_text("NO")
 
     def on_udp_register_button_clicked(self, widget, event=None):
+        if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
+            self.view["udp_connection_registered_label"].set_text("YES")
         self.network_connections.register_udp()
 
     def on_tcp_connect_button_clicked(self, widget, event=None):

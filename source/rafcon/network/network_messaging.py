@@ -3,7 +3,7 @@ import hashlib
 
 import gobject
 
-from awesome_tool.network.protobuf.udp_message_pb2 import UDPMessage
+from rafcon.network.protobuf.udp_message_pb2 import UDPMessage
 
 from rafcon.utils import constants
 from rafcon.utils import log

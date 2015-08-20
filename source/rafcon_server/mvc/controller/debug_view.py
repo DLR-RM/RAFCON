@@ -23,7 +23,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-TEMP_FOLDER = "/tmp/rafcon_server"
+TEMP_FOLDER = os.getenv("HOME") + "/.rafcon_server/tmp"
 
 command_mapping = {
     'Start': 'run',
@@ -143,7 +143,8 @@ class DebugViewController(ExtendedController):
         self.process_yaml_files(files.files)
         tmp_sm_path = str(TEMP_FOLDER + "/" + files.files[0].file_path.rsplit('/')[1])
         [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(tmp_sm_path)
-        state_machine_manager.add_state_machine(state_machine)
+        if not state_machine.state_machine_id in state_machine_manager.state_machines.keys():
+            state_machine_manager.add_state_machine(state_machine)
         state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
         root_state_id = state_machine.root_state.state_id
@@ -176,7 +177,7 @@ class DebugViewController(ExtendedController):
             logger.error('Error while trying to open state-machine: {0}'.format(e))
 
     def send_statemachine_to_browser(self, sm_name, state_id, state, hierarchy_level):
-        meta_path = os.path.join(state.script.path, StateMachineStorage.GRAPHICS_FILE)
+        meta_path = os.path.join(state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
         tmp_meta = None
         if os.path.exists(meta_path):
             tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
@@ -184,13 +185,13 @@ class DebugViewController(ExtendedController):
         if not tmp_meta:
             raise AttributeError("Meta data could not be loaded from %s" % meta_path)
 
-        rel_pos = tmp_meta["gui"]["editor"]["rel_pos"]
+        rel_pos = tmp_meta["gui"]["editor_opengl"]["rel_pos"]
         if isinstance(rel_pos, dict):
             rel_pos = (5, 5)
-        size = tmp_meta["gui"]["editor"]["size"]
+        size = tmp_meta["gui"]["editor_opengl"]["size"]
 
         parent_id = "none"
-        if state.parent:
+        if state.parent and isinstance(state.parent, ContainerState):
             parent_id = state.parent.state_id
 
         self.model.connection_manager.server_html.send_state_data(sm_name,
@@ -211,7 +212,7 @@ class DebugViewController(ExtendedController):
         if isinstance(state, ContainerState):
             transitions = state.transitions
 
-            meta_path = os.path.join(state.script.path, StateMachineStorage.GRAPHICS_FILE)
+            meta_path = os.path.join(state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
             tmp_meta = None
             if os.path.exists(meta_path):
                 tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
@@ -220,7 +221,7 @@ class DebugViewController(ExtendedController):
                 raise AttributeError("Meta data could not be loaded from %s" % meta_path)
 
             for transition_id, transition in transitions.iteritems():
-                transition_waypoints = tmp_meta["transition%d" % transition_id]["gui"]["editor"]["waypoints"]
+                transition_waypoints = tmp_meta["transition%d" % transition_id]["gui"]["editor_opengl"]["waypoints"]
                 if len(transition_waypoints) == 0:
                     transition_waypoints = None
                 if transition.from_state:

@@ -19,6 +19,7 @@ from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveCo
 import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 from rafcon.mvc.config import global_gui_config
+from rafcon.network.config_network import global_net_config
 from rafcon.statemachine.config import global_config
 from rafcon.statemachine.states.library_state import LibraryState
 
