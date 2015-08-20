@@ -836,7 +836,6 @@ def test_add_remove_models(with_print=False):
         return everything_right
 
     def do_check_for_state(state_dict, state_name):
-        import test_z_state_type_change
         #############
         # add outcome
         outcome_super = state_dict[state_name].add_outcome('super')

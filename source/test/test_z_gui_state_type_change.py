@@ -553,7 +553,28 @@ check_list_root_BCS = ['ports', 'outcomes', 'states', 'scoped_variables',
                        'data_flows_internal']
 
 
+def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger):
+    states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
+    # - do state selection to generate state editor widget
+    call_gui_callback(sm_m.selection.set, [state_m])
+    # - get states-editor controller
+    state_identifier = states_editor_controller.get_state_identifier(state_m)
+    [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, sleep_time_max)
+    logger.debug("wait for state's state editor %s" % time_waited)
+    assert state_editor_ctrl.model == state_m
+    # - find right row in combo box
+    store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
+    list_store_id_from_state_type_dict = list_store_id_dict(store)
+
+    return state_editor_ctrl, list_store_id_from_state_type_dict
+
+
 def trigger_state_type_change_tests(*args):
+    """
+    Does only works with gui at the moment.
+    :param args:
+    :return:
+    """
     print "Wait for the gui to initialize"
     time.sleep(2.0)
     sm_manager_model = args[0]
@@ -562,132 +583,120 @@ def trigger_state_type_change_tests(*args):
     state_dict = args[3]
     with_gui = args[4]
     logger = args[5]
+    sleep_time_max = 5.0
 
-    ####### General Type Change inside of a state machine (NO ROOT STATE) ############
+    # General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
 
-    # HS -> ES
-    # state_m = sm_m.get_state_model_by_path(state_dict['Nested'].get_path())
+    # first storage
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
     call_gui_callback(sm_m.selection.set, [state_m])
 
-    # do state_type_change with gui
-    # - find state machine id
-
-    my_sm_id = None
-    for sm_id, state_machine in sm_manager_model.state_machine_manager.state_machines.iteritems():
-        if state_machine is sm_m.state_machine:
-            my_sm_id = sm_id
-    assert my_sm_id is not None
-
-    list_store_id_from_state_type_dict = {}
-    state_editor_ctrl = None
-    if with_gui:
-        # - get states-editor controller
-        state_identifier = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        assert state_identifier in main_window_controller.get_controller('states_editor_ctrl').tabs
-
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, 5.0)
-        logger.debug("wait for state's state editor %s" % time_waited)
-        # - find right row in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
-
-        print "+++++++++++++++++++++++++++++++++++++" + sm_m.state_machine.root_state.state_id
-
     # HS -> BCS
-        state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
-        call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    else:
-        state_dict[state_of_type_change].change_state_type(state_m, BarrierConcurrencyState)
-
-    print "+++++++++++++++++++++++++++++++++++++" + sm_m.state_machine.root_state.state_id
+    # - get state-editor controller and find right row in combo box
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+        get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger)
+    # - do state type change
+    state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_BCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
-    if with_gui:
-        state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
-        call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-
+    # - get state-editor controller and find right row in combo box
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
+    # - do state type change
+    state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    # - do checks
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # HS -> PCS
+    # - get state-editor controller and find right row in combo box
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
+    # - do state type change
     state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
     call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-
+    # - do checks
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
+    # - get state-editor controller and find right row in combo box
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
+    # - do state type change
     state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
     call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-
+    # - do checks
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_ES, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
 
-    ####### General Type Change as ROOT STATE ############
+    # General Type Change as ROOT STATE ############
     state_of_type_change = 'Container'
 
-    # HS -> ES
-    # state_m = sm_m.get_state_model_by_path(state_dict['Nested'].get_path())
+    # get first storage
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
     call_gui_callback(sm_m.selection.set, [state_m])
 
-    # do state_type_change with gui
-    states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
-    state_identifier = states_editor_controller.get_state_identifier(state_m)
-    state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[state_identifier]['controller']
-
-    # - find right row in combo box
-    store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-    list_store_id_from_state_type_dict = list_store_id_dict(store)
-
     # HS -> BCS
+    # - get state-editor controller and find right row in combo box
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+        get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger)
+    # - do state type change
     state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
     call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-
+    # - do checks
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_BCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
+    # - get state-editor controller and find right row in combo box
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
+    # - do state type change
     state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
     call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-
+    # - do checks
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
-    ###################################
-    # Test Preemptive Concurrency State
-    # RULES
-    # - no start states
-
     # HS -> PCS
+    # - get state-editor controller and find right row in combo box
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
+    # - do state type change
     state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
     call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-
+    # - do checks
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
+    # - get state-editor controller and find right row in combo box
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
+    # - do state type change
     state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
     call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-
+    # - do checks
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_ES, new_state, new_state_m, stored_state_elements, stored_state_m_elements)

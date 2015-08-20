@@ -32,9 +32,11 @@ from rafcon.statemachine.config import global_config
 # test environment elements
 import variables_for_pytest
 from variables_for_pytest import test_multithrading_lock, call_gui_callback
-from test_z_state_type_change import store_state_elements, list_store_id_dict, check_state_elements, \
+from test_z_gui_state_type_change import store_state_elements, list_store_id_dict, check_state_elements, \
     check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
-    check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS
+    check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
+    get_state_editor_ctrl_and_store_id_dict
+from test_z_gui_states_editor_widget import check_state_editor_models
 
 NO_SAVE = False
 
@@ -1435,22 +1437,16 @@ def trigger_state_type_change_tests(*args):
         save_state_machine(sm_model, state_machine_path, logger, with_gui, menubar_ctrl)
 
         # do state_type_change with gui
-        # - do state selection to generate state editor widget
-        call_gui_callback(sm_m.selection.set, [state_m])
-
-        # - get states-editor controller
-        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, tab_key, sleep_time_max)
-        logger.debug("wait for state's state editor %s" % time_waited)
-
-        # - find right rows in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger)
     else:
         menubar_ctrl = None
         state_machine_path = '/tmp/dfc_test_state_type_change_history_without_gui'
         save_state_machine(sm_model, state_machine_path, logger, with_gui, menubar_ctrl)
         pass
+    if with_gui:
+        check_state_editor_models(sm_m, state_m, main_window_controller, logger)
 
     # HS -> BCS
     save_state_machine(sm_model, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
@@ -1484,6 +1480,8 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     if with_gui:
         call_gui_callback(sm_model.history.redo)
@@ -1498,7 +1496,8 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_BCS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
-    state_m = new_state_m
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # BCS -> HS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1506,25 +1505,15 @@ def trigger_state_type_change_tests(*args):
     sm_model.state_machine.file_system_path = state_machine_path
     if with_gui:
         # do state_type_change with gui
-        # - do state selection to generate state editor widget
-        call_gui_callback(sm_m.selection.set, [new_state_m])
-
-        # - get states-editor controller
-        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, tab_key, sleep_time_max)
-        logger.debug("wait for state's state editor %s" % time_waited)
-        # state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
-
-        # - find right rows in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
 
     # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        state_dict[parent_of_type_change].change_state_type(state_m, HierarchyState)
+        state_dict[parent_of_type_change].change_state_type(new_state_m, HierarchyState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
@@ -1548,6 +1537,8 @@ def trigger_state_type_change_tests(*args):
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     save_state_machine(sm_model, state_machine_path + '_undo2', logger, with_gui, menubar_ctrl)
 
@@ -1564,30 +1555,23 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
-    state_m = new_state_m
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # HS -> PCS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
     save_state_machine(sm_model, state_machine_path + '_before3', logger, with_gui, menubar_ctrl)
     if with_gui:
         # do state_type_change with gui
-        # - do state selection to generate state editor widget
-        call_gui_callback(sm_m.selection.set, [new_state_m])
-
-        # - get states-editor controller
-        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, tab_key, sleep_time_max)
-        logger.debug("wait for state's state editor %s" % time_waited)
-
-        # - find right rows in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
 
     # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        state_dict[parent_of_type_change].change_state_type(state_m, PreemptiveConcurrencyState)
+        state_dict[parent_of_type_change].change_state_type(new_state_m, PreemptiveConcurrencyState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
@@ -1606,6 +1590,8 @@ def trigger_state_type_change_tests(*args):
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     save_state_machine(sm_model, state_machine_path + '_undo3', logger, with_gui, menubar_ctrl)
 
@@ -1626,30 +1612,23 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_model.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_model.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_PCS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
-    state_m = new_state_m
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # PCS -> ES
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
     save_state_machine(sm_model, state_machine_path + '_before4', logger, with_gui, menubar_ctrl)
     if with_gui:
         # do state_type_change with gui
-        # - do state selection to generate state editor widget
-        call_gui_callback(sm_m.selection.set, [new_state_m])
-
-        # - get states-editor controller
-        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, tab_key, sleep_time_max)
-        logger.debug("wait for state's state editor %s" % time_waited)
-
-        # - find right rows in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
 
     # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        state_dict[parent_of_type_change].change_state_type(state_m, ExecutionState)
+        state_dict[parent_of_type_change].change_state_type(new_state_m, ExecutionState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
@@ -1668,6 +1647,8 @@ def trigger_state_type_change_tests(*args):
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     save_state_machine(sm_model, state_machine_path + '_undo4', logger, with_gui, menubar_ctrl)
 
@@ -1688,7 +1669,8 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_model.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_model.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_ES, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
-    state_m = new_state
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # # TODO do the check for the root-state too!!!
     # save_and_quit(sm_model, '/tmp/dfc_test_state_type_change_history', menubar_ctrl, with_gui)
@@ -1698,8 +1680,8 @@ def trigger_state_type_change_tests(*args):
     state_of_type_change = 'Container'
     state_m = sm_model.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
-    new_state = state_m.state
-    new_state_m = state_m
+    if with_gui:
+        check_state_editor_models(sm_m, state_m, main_window_controller, logger)
 
     # HS -> BCS
     if with_gui:
@@ -1709,14 +1691,9 @@ def trigger_state_type_change_tests(*args):
         call_gui_callback(sm_m.selection.clear)
         call_gui_callback(sm_m.selection.set, [state_m])
 
-        # - get states-editor controller
-        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, tab_key, sleep_time_max)
-        logger.debug("wait for state's state editor %s" % time_waited)
-
-        # - find right row in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger)
 
     # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
@@ -1739,6 +1716,8 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     if with_gui:
         call_gui_callback(sm_model.history.redo)
@@ -1750,7 +1729,8 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_BCS, new_state, new_state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
-    state_m = new_state_m
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # BCS -> HS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1761,20 +1741,15 @@ def trigger_state_type_change_tests(*args):
         call_gui_callback(sm_m.selection.clear)
         call_gui_callback(sm_m.selection.set, [new_state_m])
 
-        # - get states-editor controller
-        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, tab_key, sleep_time_max)
-        logger.debug("wait for state's state editor %s" % time_waited)
-
-        # - find right rows in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
 
     # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        sm_m.state_machine.change_root_state_type(state_m, HierarchyState)
+        sm_m.state_machine.change_root_state_type(new_state_m, HierarchyState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
@@ -1788,6 +1763,8 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_BCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     if with_gui:
         call_gui_callback(sm_model.history.redo)
@@ -1799,7 +1776,8 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_HS, new_state, new_state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
-    state_m = new_state_m
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # HS -> PCS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1810,21 +1788,15 @@ def trigger_state_type_change_tests(*args):
         call_gui_callback(sm_m.selection.clear)
         call_gui_callback(sm_m.selection.set, [new_state_m])
 
-        # - get states-editor controller
-        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, tab_key, sleep_time_max)
-        logger.debug("wait for state's state editor %s" % time_waited)
-        # state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
-
-        # - find right rows in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
 
     # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        sm_m.state_machine.change_root_state_type(state_m, PreemptiveConcurrencyState)
+        sm_m.state_machine.change_root_state_type(new_state_m, PreemptiveConcurrencyState)
         state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
     # assert len(sm_model.history.changes.single_trail_history()) == 3
@@ -1837,6 +1809,8 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     if with_gui:
         call_gui_callback(sm_model.history.redo)
@@ -1848,7 +1822,8 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_HS, new_state, new_state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
-    state_m = new_state_m
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # PCS -> ES
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1859,21 +1834,15 @@ def trigger_state_type_change_tests(*args):
         call_gui_callback(sm_m.selection.clear)
         call_gui_callback(sm_m.selection.set, [new_state_m])
 
-        # - get states-editor controller
-        tab_key = str(my_sm_id) + '|' + state_dict[state_of_type_change].get_path()
-        [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, tab_key, sleep_time_max)
-        logger.debug("wait for state's state editor %s" % time_waited)
-        # state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
-
-        # - find right rows in combo box
-        store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
-        list_store_id_from_state_type_dict = list_store_id_dict(store)
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
 
     # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        sm_m.state_machine.change_root_state_type(state_m, ExecutionState)
+        sm_m.state_machine.change_root_state_type(new_state_m, ExecutionState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
@@ -1891,6 +1860,8 @@ def trigger_state_type_change_tests(*args):
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     if with_gui:
         call_gui_callback(sm_model.history.redo)
@@ -1902,25 +1873,27 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_ES, new_state, new_state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
+    if with_gui:
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     save_and_quit(sm_model, '/tmp/dfc_test_state_type_change_history', menubar_ctrl, with_gui)
 
 
 if __name__ == '__main__':
     # pytest.main()
-    with_prints = False
-    test_add_remove_history(with_prints)
-    test_state_property_changes_history(with_prints)
-
-    test_outcome_property_changes_history(with_prints)
-    test_transition_property_changes_history(with_prints)
-
-    test_input_port_modify_notification(with_prints)
-    test_output_port_modify_notification(with_prints)
-    test_scoped_variable_modify_notification(with_prints)
-
-    test_data_flow_property_changes_history(with_prints)
-
-    test_type_changes_without_gui()
+    # with_prints = False
+    # test_add_remove_history(with_prints)
+    # test_state_property_changes_history(with_prints)
+    #
+    # test_outcome_property_changes_history(with_prints)
+    # test_transition_property_changes_history(with_prints)
+    #
+    # test_input_port_modify_notification(with_prints)
+    # test_output_port_modify_notification(with_prints)
+    # test_scoped_variable_modify_notification(with_prints)
+    #
+    # test_data_flow_property_changes_history(with_prints)
+    #
+    # test_type_changes_without_gui()
 
     test_state_machine_changes_with_gui()
