@@ -5,7 +5,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.views.state_editor import StateEditorView
 from rafcon.mvc.controllers.state_editor import StateEditorController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.models.state import StateModel
+from rafcon.mvc.models.container_state import StateModel, ContainerStateModel
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.config import global_gui_config
 from rafcon.utils import constants
@@ -136,9 +136,39 @@ class StatesEditorController(ExtendedController):
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, property, info):
+        # logger.warn("\n\nroot_state changed %s\n\n" % info)
         old_root_state_m = info['old']
-        state_identifier = self.get_state_identifier(old_root_state_m)
-        self.close_page(state_identifier, delete=True)
+
+        # TODO commented lines can be deleted with next clean up and function satisfies
+        # logger.debug("tabs are:")
+        # for tab in self.tabs.itervalues():
+        #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
+        # logger.debug("closed_tabs are:")
+        # for tab in self.closed_tabs.itervalues():
+        #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
+
+        # close all tabs related child models and root-state-model
+        # TODO check if some models are the same in the new model - but only if widgets update if parent has changed
+        def close_all_tabs_of_related_state_models_recursively(parent_state_m):
+            # logger.debug("run child removes \n%s \n%s" % (parent_state_m, parent_state_m.state))
+            if isinstance(parent_state_m, ContainerStateModel):
+                # logger.debug("run child removes %s \n%s \n%s" % (parent_state_m, parent_state_m.states, parent_state_m.state))
+                # logger.debug("instance %s %s %s" % (parent_state_m, ContainerStateModel, isinstance(parent_state_m, ContainerStateModel)))
+                for child_state_m in parent_state_m.states.values():
+                    # logger.debug("try to remove: %s %s" % (child_state_m, child_state_m.state.get_path()))
+                    close_all_tabs_of_related_state_models_recursively(child_state_m)
+            state_identifier = self.get_state_identifier(parent_state_m)
+            self.close_page(state_identifier, delete=True)
+
+        close_all_tabs_of_related_state_models_recursively(old_root_state_m)
+
+        # TODO commented lines can be deleted with next clean up and function satisfies
+        # logger.debug("final tabs are:")
+        # for tab in self.tabs.itervalues():
+        #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
+        # logger.debug("closed_tabs are:")
+        # for tab in self.closed_tabs.itervalues():
+        #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
@@ -378,27 +408,58 @@ class StatesEditorController(ExtendedController):
         'after' is used here in order to receive deletion events of children first. In addition, only successful
         deletion events are handled. This has the drawback that the model of removed states are no longer existing in
         the parent state model. Therefore, we use the helper method close_state_of_parent, which looks at all open
-        tabs and the ids of their states.
+        tabs as well as closed tabs and the ids of their states.
         """
         def close_state_of_parent(parent_state_m, state_id):
+
             for tab_info in self.tabs.itervalues():
                 state_m = tab_info['state_m']
                 # The state id is only unique within the parent
+                # logger.debug("tabs: %s %s %s %s" % (state_m.state.state_id, state_id, state_m.parent, parent_state_m))
                 if state_m.state.state_id == state_id and state_m.parent is parent_state_m:
                     state_identifier = self.get_state_identifier(state_m)
                     self.close_page(state_identifier, delete=True)
                     return True
+
+            for tab_info in self.closed_tabs.itervalues():
+                state_m = tab_info['controller'].model
+                # The state id is only unique within the parent
+                # logger.debug("closed_tabs: %s %s %s %s" % (state_m.state.state_id, state_id, state_m.parent, parent_state_m))
+                if state_m.state.state_id == state_id and state_m.parent is parent_state_m:
+                        # state_identifier in self.closed_tabs or state_identifier in self.tabs:
+                    state_identifier = self.get_state_identifier(state_m)
+                    self.close_page(state_identifier, delete=True)
+                    return True
             return False
-        # A child state is affected
+
+        # A child state of a root-state child is affected
         if hasattr(info, "kwargs") and info.method_name == 'state_change':
             if info.kwargs.method_name == 'remove_state':
+                # logger.warn("child child remove is triggered %s" % info)
                 state_id = info.kwargs.args[1]
                 parent_state_m = info.kwargs.model
+                # logger.debug("remove %s %s %s" % (parent_state_m, parent_state_m.state.state_id, state_id))
                 close_state_of_parent(parent_state_m, state_id)
-        # The parent state is affected
+                # logger.debug("tabs are:")
+                # for tab in self.tabs.itervalues():
+                #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
+                # logger.debug("closed_tabs are:")
+                # for tab in self.closed_tabs.itervalues():
+                #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
+        # A root-state child is affected
+        # -> does the same as the states-model-list observation below IS A BACKUP AT THE MOMENT
+        #   -> do we prefer observation of core changes or model changes?
+        elif info.method_name == 'remove_state':
+            # logger.warn("remove is triggered %s" % info)
+            state_id = info.args[1]
+            parent_state_m = info.model  # should be root_state
+            # logger.debug("remove %s %s %s" % (parent_state_m, parent_state_m.state.state_id, state_id))
+            close_state_of_parent(parent_state_m, state_id)
+        # for the case that a StateModel gets removed from states-list of root-state-model
         elif info.method_name in ['__delitem__']:
+            # logger.warn("delitem is triggered %s" % info)
             state_id = info.args[0]
-            parent_state_m = info.model
+            parent_state_m = info.model  # is root-state-model
             close_state_of_parent(parent_state_m, state_id)
 
     @ExtendedController.observe("state", after=True)
