@@ -131,6 +131,7 @@ class StateMachineHelper():
         if container_state_m is None:
             logger.error("Cannot add a state without a parent.")
             return False
+
         if not isinstance(container_state_m, StateModel) or \
                 (isinstance(container_state_m, StateModel) and not isinstance(container_state_m, ContainerStateModel)):
             logger.error("Parent state must be a container, for example a Hierarchy State." + str(container_state_m))
@@ -191,10 +192,6 @@ class StateMachineHelper():
                                            path=source_state.get_file_system_path(),
                                            check_path=False)
         else:  # TRANSFORM from EXECUTION- TO CONTAINER-STATE or FROM CONTAINER- TO EXECUTION-STATE
-            if hasattr(source_state, "states"):
-                # remove original child states
-                for child_state_id in source_state.states.keys():
-                    source_state.remove_state(child_state_id, force=True)
             new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                            input_data_ports=source_state.input_data_ports,
                                            output_data_ports=source_state.output_data_ports,
@@ -297,7 +294,10 @@ class StateMachineHelper():
 
             # substitute old state with new state
             # new_state.parent = parent_state  # TODO remove - unnecessary as long done in add_state
-            parent_state.remove_state(orig_state.state_id, recursive_deletion=False, force=True)
+            if isinstance(orig_state, ContainerState) and isinstance(new_state, ExecutionState):
+                parent_state.remove_state(orig_state.state_id, recursive_deletion=True, force=True)
+            else:
+                parent_state.remove_state(orig_state.state_id, recursive_deletion=False, force=True)
             parent_state.add_state(new_state)
 
             # reconstruct related external transitions and data flows
@@ -330,7 +330,7 @@ class StateMachineHelper():
 
         :param orig_state_m: state model of state which state type (class-type) should be changed to new_state_class
         :param state_machine_m: state machine model in which state machine the type change happens
-        :param orig_model_property_refs: references on properties (child modles) of the original model
+        :param orig_model_property_refs: references on properties (child models) of the original model
         :param orig_model_linkage_meta_data: meta data of external linkage elements in the parent state
         :return:
         """
@@ -382,8 +382,8 @@ class StateMachineHelper():
         # If there is a parent,
         # -> Insert Meta-Data of original external related transition and data flow models into the new models
         if not is_root_state:
-            if not (isinstance(new_state_m.state, PreemptiveConcurrencyState) or
-                    isinstance(new_state_m.state, BarrierConcurrencyState)):
+            if not (isinstance(new_state_m.parent.state, PreemptiveConcurrencyState) or
+                    isinstance(new_state_m.parent.state, BarrierConcurrencyState)):
                 for t_id, t_meta in orig_model_linkage_meta_data['transitions'].iteritems():
                     parent_m.get_transition_model(t_id).meta = t_meta
 

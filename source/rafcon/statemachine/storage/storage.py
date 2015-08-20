@@ -25,7 +25,7 @@ from rafcon.utils.storage_utils import StorageUtils
 
 from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
 if StorageUtils.exists_path(DEFAULT_SCRIPT_PATH):
-    files = glob.glob(DEFAULT_SCRIPT_PATH + "*")
+    files = glob.glob(os.path.join(DEFAULT_SCRIPT_PATH, "*"))
     for f in files:
         shutil.rmtree(f)
 

@@ -9,6 +9,7 @@ import os
 import gtk
 import signal
 import argparse
+from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 
 import rafcon
 from rafcon.mvc.controllers import MainWindowController
@@ -49,8 +50,8 @@ def setup_logger(logging_view):
 
 
 def state_machine_path(path):
-    sm_root_file = os.path.join(path, StateMachineStorage.STATEMACHINE_FILE)
-    if os.path.exists(sm_root_file):
+    sm_root_file = join(path, StateMachineStorage.STATEMACHINE_FILE)
+    if exists(sm_root_file):
         return path
     else:
         raise argparse.ArgumentTypeError("Failed to open {0}: {1} not found in path".format(path,
@@ -61,10 +62,10 @@ def config_path(path):
     if not path or path == 'None':
         return None
     # replace ~ with /home/user
-    path = os.path.expanduser(path)
+    path = expanduser(path)
     # e.g. replace ${RAFCON_PATH} with the root path of RAFCON
-    path = os.path.expandvars(path)
-    if not os.path.isdir(path):
+    path = expandvars(path)
+    if not isdir(path):
         raise argparse.ArgumentTypeError("{0} is not a valid path".format(path))
     if os.access(path, os.R_OK):
         return path
@@ -80,13 +81,18 @@ if __name__ == '__main__':
     logger = log.get_logger("start")
     logger.info("RAFCON launcher")
 
+    rafcon_root_path = dirname(realpath(rafcon.__file__))
     if not os.environ.get('RAFCON_PATH', None):
-        # set env variable PYTHON_PATH to the root directory of RAFCON
-        os.environ['RAFCON_PATH'] = os.path.dirname(os.path.dirname(__file__))
+        # set env variable RAFCON_PATH to the root directory of RAFCON
+        os.environ['RAFCON_PATH'] = rafcon_root_path
 
-    home_path = os.path.expanduser('~')
+    if not os.environ.get('RAFCON_LIB_PATH', None):
+        # set env variable RAFCON_LIB_PATH to the library directory of RAFCON (when not using RMPM)
+        os.environ['RAFCON_LIB_PATH'] = join(dirname(rafcon_root_path), 'libraries')
+
+    home_path = expanduser('~')
     if home_path:
-        home_path = os.path.join(home_path, ".config", "rafcon")
+        home_path = join(home_path, ".config", "rafcon")
     else:
         home_path = 'None'
 
@@ -120,7 +126,9 @@ if __name__ == '__main__':
     global_net_config.load(setup_config['net_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
 
-    os.chdir(os.path.join(os.path.dirname(rafcon.__file__), 'mvc'))
+    # Make mvc directory the working directory
+    # Needed for views, which assume to be in the mvc path and import glade files relatively
+    os.chdir(join(rafcon_root_path, 'mvc'))
 
     # Initialize library
     sm_singletons.library_manager.initialize()

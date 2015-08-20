@@ -266,6 +266,10 @@ class GraphicalEditorController(ExtendedController):
                     if outcome_v.outcome_id == arguments[1]:
                         state_v.remove_outcome(outcome_v)
                         self.canvas.request_update(state_v)
+            elif method_name == 'outcome_change':
+                state_m = model
+                state_v = self.get_view_for_model(state_m)
+                self.canvas.request_update(state_v)
             # ----------------------------------
             #           DATA PORTS
             # ----------------------------------
@@ -558,7 +562,19 @@ class GraphicalEditorController(ExtendedController):
         new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
         new_state_size = (new_state_side_size, new_state_side_size)
 
-        self.setup_state(state_m, parent_state_v, size=new_state_size, hierarchy_level=new_state_hierarchy_level)
+        child_width = new_state_side_size
+        child_height = new_state_side_size
+        child_size = (child_width, child_height)
+        child_spacing = max(child_size) * 1.2
+
+        max_cols = parent_state_v.width // child_spacing
+        (row, col) = divmod(len(parent_state_m.states) - 1, max_cols)
+        child_rel_pos_x = col * child_spacing + child_spacing - child_width
+        child_rel_pos_y = child_spacing * (1.5 * row + 1)
+        child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
+
+        self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
+                         hierarchy_level=new_state_hierarchy_level)
         return
 
     def _remove_state_view(self, view):
@@ -589,19 +605,17 @@ class GraphicalEditorController(ExtendedController):
         state_temp = state_m.temp['gui']['editor']
 
         # Use default values if no size information is stored
-        if isinstance(state_m.meta['gui']['editor']['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):
-            state_meta_gaphas['size'] = state_m.meta['gui']['editor']['size']
-            state_meta_opengl['size'] = state_m.meta['gui']['editor']['size']
+        if isinstance(state_meta_opengl['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):
+            state_meta_gaphas['size'] = state_meta_opengl['size']
             self.model.state_machine.marked_dirty = True
         if not isinstance(state_meta_gaphas['size'], tuple):
             state_meta_gaphas['size'] = size
 
         size = state_meta_gaphas['size']
 
-        if isinstance(state_m.meta['gui']['editor']['rel_pos'], tuple) and not isinstance(state_meta_gaphas['rel_pos'], tuple):
-            rel_pos = state_m.meta['gui']['editor']['rel_pos']
+        if isinstance(state_meta_opengl['rel_pos'], tuple) and not isinstance(state_meta_gaphas['rel_pos'], tuple):
+            rel_pos = state_meta_opengl['rel_pos']
             state_meta_gaphas['rel_pos'] = (rel_pos[0], -rel_pos[1])
-            state_meta_opengl['rel_pos'] = rel_pos
             self.model.state_machine.marked_dirty = True
 
         if isinstance(state_meta_gaphas['rel_pos'], tuple):
@@ -650,7 +664,7 @@ class GraphicalEditorController(ExtendedController):
                 child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
                 num_child_state += 1
 
-                self.setup_state(child_state, state_v, (0, 0), child_size, hierarchy_level + 1)
+                self.setup_state(child_state, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
             self.draw_transitions(state_m, hierarchy_level)
 
@@ -681,15 +695,14 @@ class GraphicalEditorController(ExtendedController):
 
         try:
             if use_waypoints:
-                if (isinstance(transition_m.meta['gui']['editor']['waypoints'], list) and
+                if (isinstance(transition_meta_opengl['waypoints'], list) and
                         isinstance(transition_meta_gaphas['waypoints'], dict)):
-                    old_waypoint_list = transition_m.meta['gui']['editor']['waypoints']
+                    old_waypoint_list = transition_meta_opengl['waypoints']
                     new_waypoint_list = []
                     for wp in old_waypoint_list:
                         wp = (wp[0], -wp[1])
                         new_waypoint_list.append(wp)
                     transition_meta_gaphas['waypoints'] = new_waypoint_list
-                    transition_meta_opengl['waypoints'] = old_waypoint_list
                     self.model.state_machine.marked_dirty = True
 
                 waypoint_list = transition_meta_gaphas['waypoints']

@@ -1,7 +1,7 @@
 from weakref import ref
 
 import cairo
-from pango import SCALE, FontDescription
+from pango import SCALE, FontDescription, WRAP_WORD
 
 from gtk.gdk import CairoContext, Color
 from math import pow
@@ -45,8 +45,6 @@ class StateView(Element):
 
         self.min_width = 0.0001
         self.min_height = 0.0001
-        self.width = size[0]
-        self.height = size[1]
 
         self._income = None
         self._outcomes = []
@@ -75,7 +73,7 @@ class StateView(Element):
 
         if isinstance(state_m.meta['name']['gui']['editor_gaphas']['rel_pos'], tuple):
             name_pos = state_m.meta['name']['gui']['editor_gaphas']['rel_pos']
-            self._name_view.matrix.translate(*name_pos)
+            self.name_view.matrix.translate(*name_pos)
 
     def setup_canvas(self):
         self._income = self.add_income()
@@ -752,8 +750,6 @@ class NameView(Element):
 
         self.min_width = 0.0001
         self.min_height = 0.0001
-        self.width = size[0]
-        self.height = size[1]
 
         self.moving = False
 
@@ -769,24 +765,6 @@ class NameView(Element):
     @property
     def parent(self):
         return self.canvas.get_parent(self)
-
-    def get_name_string(self, name):
-        if len(name) > constants.MAX_TITLE_LENGTH_PER_LINE:
-            multi_line_name = ""
-            split = name.split(" ")
-            line = ""
-
-            for sub_string in split:
-                if len(line) + len(sub_string) < constants.MAX_TITLE_LENGTH_PER_LINE:
-                    line = line + sub_string + " "
-                else:
-                    multi_line_name = multi_line_name + line + "\n"
-                    line = sub_string + " "
-            multi_line_name += line
-
-            return multi_line_name
-        else:
-            return name
 
     def draw(self, context):
         if self.moving:
@@ -811,22 +789,22 @@ class NameView(Element):
         pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
         layout = pcc.create_layout()
-        layout.set_text(self.get_name_string(self.name))
+        layout.set_wrap(WRAP_WORD)
+        layout.set_width(int(self.width) * SCALE)
+        layout.set_text(self.name)
 
         font_name = constants.FONT_NAMES[0]
-        font_size = 20
+        font_size = self.height * 0.8
 
         def set_font_description():
             font = FontDescription(font_name + " " + str(font_size))
             layout.set_font_description(font)
 
         set_font_description()
-        while layout.get_size()[0] / float(SCALE) > self.width or layout.get_size()[1] / float(SCALE) > self.height:
+        pango_size = (self.width * SCALE, self.height * SCALE)
+        while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
             font_size *= 0.9
             set_font_description()
-
-        self.width = layout.get_size()[0] / float(SCALE)
-        self.height = layout.get_size()[1] / float(SCALE)
 
         c.move_to(*self.handles()[NW].pos)
         cc.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))

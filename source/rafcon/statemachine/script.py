@@ -82,7 +82,7 @@ def execute(self, inputs, outputs, gvm):
         else:
             self.script = Script.DEFAULT_SCRIPT_CONTAINER
         if path is None:
-            self._path = DEFAULT_SCRIPT_PATH + state.get_path()
+            self._path = os.path.join(DEFAULT_SCRIPT_PATH, state.get_path())
             if not os.path.exists(self._path):
                 os.makedirs(self._path)
             if not filename:
