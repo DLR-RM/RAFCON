@@ -162,6 +162,14 @@ class StatesEditorController(ExtendedController):
 
         close_all_tabs_of_related_state_models_recursively(old_root_state_m)
 
+        self.relieve_model(info['old'])  # supposed to be the same self.__buffered_root_state
+        self.observe_model(info['new'])  # supposed to be the same self.__selected_state_machine_model.root_state)
+        # assert to prevent inconsistencies
+        assert self.__buffered_root_state == info['old']
+        assert self.__selected_state_machine_model.root_state == info['new']
+        self.__buffered_root_state = info['old']
+        self.__selected_state_machine_model.root_state = info['new']
+
         # TODO commented lines can be deleted with next clean up and function satisfies
         # logger.debug("final tabs are:")
         # for tab in self.tabs.itervalues():
@@ -199,6 +207,7 @@ class StatesEditorController(ExtendedController):
     def register_current_state_machine(self):
         """Change the state machine that is observed for new selected states to the selected state machine.
         """
+        # TODO there is still the problem that a states-editor can hold tabs with states from different StateMachines which are may not selected when edited
         # relieve old models
         if self.__my_selected_state_machine_id is not None:  # no old models available
             self.relieve_model(self.__buffered_root_state)
@@ -412,6 +421,12 @@ class StatesEditorController(ExtendedController):
         """
         def close_state_of_parent(parent_state_m, state_id):
 
+            # logger.debug("tabs before are:")
+            # for tab in self.tabs.itervalues():
+            #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
+            # logger.debug("closed_tabs are:")
+            # for tab in self.closed_tabs.itervalues():
+            #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
             for tab_info in self.tabs.itervalues():
                 state_m = tab_info['state_m']
                 # The state id is only unique within the parent
@@ -430,6 +445,12 @@ class StatesEditorController(ExtendedController):
                     state_identifier = self.get_state_identifier(state_m)
                     self.close_page(state_identifier, delete=True)
                     return True
+            # logger.debug("tabs after are:")
+            # for tab in self.tabs.itervalues():
+            #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
+            # logger.debug("closed_tabs are:")
+            # for tab in self.closed_tabs.itervalues():
+            #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
             return False
 
         # A child state of a root-state child is affected
@@ -440,12 +461,6 @@ class StatesEditorController(ExtendedController):
                 parent_state_m = info.kwargs.model
                 # logger.debug("remove %s %s %s" % (parent_state_m, parent_state_m.state.state_id, state_id))
                 close_state_of_parent(parent_state_m, state_id)
-                # logger.debug("tabs are:")
-                # for tab in self.tabs.itervalues():
-                #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
-                # logger.debug("closed_tabs are:")
-                # for tab in self.closed_tabs.itervalues():
-                #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
         # A root-state child is affected
         # -> does the same as the states-model-list observation below IS A BACKUP AT THE MOMENT
         #   -> do we prefer observation of core changes or model changes?
