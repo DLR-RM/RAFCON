@@ -23,7 +23,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-TEMP_FOLDER = os.getenv("HOME") + "/.rafcon_server/tmp"
+TEMP_FOLDER = "/tmp/rafcon_server"
 
 command_mapping = {
     'Start': 'run',

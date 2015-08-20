@@ -182,17 +182,20 @@ class NetworkConnections(Observer, gobject.GObject):
     def execution_mode_changed(self, model, prop_name, info):
         execution_mode = str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         execution_mode = execution_mode.replace("EXECUTION_MODE.", "")
-        udp_connection = self._udp_net_controller.get_connections()[self.udp_port]
-        if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
-            udp_connection.send_non_acknowledged_message(execution_mode,
+        if self.udp_port in self._udp_net_controller.get_connections():
+            udp_connection = self._udp_net_controller.get_connections()[self.udp_port]
+            if global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
+                udp_connection.send_non_acknowledged_message(execution_mode,
+                                                             (global_net_config.get_server_ip(),
+                                                              global_net_config.get_server_udp_port()),
+                                                             "EXE")
+            else:
+                udp_connection.send_acknowledged_message(execution_mode,
                                                          (global_net_config.get_server_ip(),
                                                           global_net_config.get_server_udp_port()),
                                                          "EXE")
         else:
-            udp_connection.send_acknowledged_message(execution_mode,
-                                                     (global_net_config.get_server_ip(),
-                                                      global_net_config.get_server_udp_port()),
-                                                     "EXE")
+            logger.warning("No udp-connection for port %d found" % self.udp_port)
 
     @staticmethod
     def state_has_content(state):
