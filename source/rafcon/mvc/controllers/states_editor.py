@@ -167,8 +167,7 @@ class StatesEditorController(ExtendedController):
         # assert to prevent inconsistencies
         assert self.__buffered_root_state == info['old']
         assert self.__selected_state_machine_model.root_state == info['new']
-        self.__buffered_root_state = info['old']
-        self.__selected_state_machine_model.root_state = info['new']
+        self.__buffered_root_state = info['new']
 
         # TODO commented lines can be deleted with next clean up and function satisfies
         # logger.debug("final tabs are:")

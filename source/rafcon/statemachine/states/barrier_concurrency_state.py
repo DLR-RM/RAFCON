@@ -247,7 +247,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         """
         ContainerState.add_state(self, state)
         if not storage_load and state.state_id is not UNIQUE_DECIDER_STATE_ID:
-            # the transitions must only be created for the inital add_state call and not during each load procedure
+            # the transitions must only be created for the initial add_state call and not during each load procedure
             for o_id, o in state.outcomes.iteritems():
                 if not o_id == -1 and not o_id == -2:
                     self.add_transition(state.state_id, o_id, self.states[UNIQUE_DECIDER_STATE_ID].state_id, None)
