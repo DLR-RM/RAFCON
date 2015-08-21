@@ -15,9 +15,9 @@ from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
 from rafcon.mvc.shortcut_manager import ShortcutManager
 import rafcon.statemachine.config
-from rafcon.mvc.controllers.menu_bar_controller import MenuBarController
-from rafcon.mvc.controllers.tool_bar_controller import ToolBarController
-from rafcon.mvc.controllers.top_tool_bar_controller import TopToolBarController
+from rafcon.mvc.controllers.menu_bar import MenuBarController
+from rafcon.mvc.controllers.tool_bar import ToolBarController
+from rafcon.mvc.controllers.top_tool_bar import TopToolBarController
 from rafcon.utils import constants
 from rafcon.mvc.controllers.execution_history import ExecutionHistoryTreeController
 import threading
