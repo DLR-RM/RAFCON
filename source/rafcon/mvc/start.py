@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
-    global_net_config.load(setup_config['net_config_path'])
+    global_net_config.load(path=setup_config['net_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
 
     # Make mvc directory the working directory
