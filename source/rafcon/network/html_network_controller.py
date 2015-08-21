@@ -5,7 +5,7 @@ import gobject
 from twisted.web import server, resource, static
 from twisted.internet import reactor
 
-from rafcon.network.config_network import global_net_config
+from rafcon.network.network_config import global_net_config
 from rafcon.utils import constants
 
 from rafcon.utils import log

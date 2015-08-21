@@ -7,7 +7,7 @@ from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.state import State
 import rafcon.statemachine.singleton
 
-from rafcon.network.config_network import global_net_config
+from rafcon.network.network_config import global_net_config
 
 from rafcon.network.enums import ConnectionMode
 

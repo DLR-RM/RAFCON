@@ -5,7 +5,7 @@ from threading import Thread, Event
 
 import gobject
 
-from rafcon.network.config_network import global_net_config
+from rafcon.network.network_config import global_net_config
 
 from rafcon.statemachine.singleton import state_machine_manager
 

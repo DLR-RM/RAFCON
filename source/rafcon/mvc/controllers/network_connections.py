@@ -2,7 +2,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.views.network_connections import NetworkConnectionsView
 from rafcon.utils import log
-from rafcon.network.config_network import global_net_config
+from rafcon.network.network_config import global_net_config
 
 from rafcon.network.singleton import network_connections
 

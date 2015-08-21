@@ -20,7 +20,7 @@ from rafcon.mvc.views.main_window import MainWindowView
 import rafcon.statemachine.singleton as sm_singletons
 import rafcon.mvc.singleton as mvc_singletons
 
-from rafcon.network.config_network import global_net_config
+from rafcon.network.network_config import global_net_config
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.statemachine.config import global_config
