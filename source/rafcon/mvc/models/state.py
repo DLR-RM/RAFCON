@@ -276,6 +276,17 @@ class StateModel(ModelMT):
                     del model_list[model_item]
                 return
 
+    def overwrite_editor_meta(self, meta):
+        """
+        This function is for backward compatibility for state machines that still uses the "editor" key in their meta
+        :param meta:
+        :return:
+        """
+        if "editor" in meta['gui']:
+            if "editor_opengl" not in meta['gui']:
+                meta['gui']['editor_opengl'] = copy.deepcopy(meta['gui']['editor'])
+            del meta['gui']['editor']
+
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
         #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
@@ -285,16 +296,16 @@ class StateModel(ModelMT):
 
             # For backwards compatibility
             # move all meta data from editor to editor_opengl
-            if "editor" in tmp_meta['gui']:
-                tmp_meta['gui']['editor_opengl'] = copy.deepcopy(tmp_meta['gui']['editor'])
-                del tmp_meta['gui']['editor']
+            self.overwrite_editor_meta(tmp_meta)
 
             for input_data_port_model in self.input_data_ports:
                 i_id = input_data_port_model.data_port.data_port_id
+                self.overwrite_editor_meta(tmp_meta["input_data_port" + str(i_id)])
                 input_data_port_model.meta = tmp_meta["input_data_port" + str(i_id)]
                 del tmp_meta["input_data_port" + str(i_id)]
             for output_data_port_model in self.output_data_ports:
                 o_id = output_data_port_model.data_port.data_port_id
+                self.overwrite_editor_meta(tmp_meta["output_data_port" + str(o_id)])
                 output_data_port_model.meta = tmp_meta["output_data_port" + str(o_id)]
                 del tmp_meta["output_data_port" + str(o_id)]
 
@@ -302,14 +313,17 @@ class StateModel(ModelMT):
             if hasattr(self.state, 'states'):
                 for transition_model in self.transitions:
                     t_id = transition_model.transition.transition_id
+                    self.overwrite_editor_meta(tmp_meta["transition" + str(t_id)])
                     transition_model.meta = tmp_meta["transition" + str(t_id)]
                     del tmp_meta["transition" + str(t_id)]
                 for data_flow_model in self.data_flows:
                     d_id = data_flow_model.data_flow.data_flow_id
+                    self.overwrite_editor_meta(tmp_meta["data_flow" + str(d_id)])
                     data_flow_model.meta = tmp_meta["data_flow" + str(d_id)]
                     del tmp_meta["data_flow" + str(d_id)]
                 for scoped_variable_model in self.scoped_variables:
                     s_id = scoped_variable_model.scoped_variable.data_port_id
+                    self.overwrite_editor_meta(tmp_meta["scoped_variable" + str(s_id)])
                     scoped_variable_model.meta = tmp_meta["scoped_variable" + str(s_id)]
                     del tmp_meta["scoped_variable" + str(s_id)]
             # assign the meta data to the state
