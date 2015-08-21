@@ -1,13 +1,3 @@
-"""
-.. module:: state
-   :platform: Unix, Windows
-   :synopsis: A module to represent a state in the statemachine
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 import threading
 import sys
 import Queue

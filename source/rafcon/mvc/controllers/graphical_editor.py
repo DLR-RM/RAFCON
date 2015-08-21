@@ -24,7 +24,6 @@ from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
-from rafcon.statemachine.states.state import State
 
 
 def check_pos(pos):
