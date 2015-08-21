@@ -398,6 +398,7 @@ class State(Observable, yaml.YAMLObject):
             raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to "
                                  "return aborted or preempted")
 
+        # Remove internal transitions to this outcome
         self.remove_outcome_hook(outcome_id)
 
         # delete possible transition connected to this outcome

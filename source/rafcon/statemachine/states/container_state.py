@@ -486,13 +486,10 @@ class ContainerState(State):
     def remove_outcome_hook(self, outcome_id):
         """Removes internal transition going to the outcome
         """
-        transition_ids_to_remove = []
-        for transition_id, transition in self.transitions.iteritems():
-            if transition.to_outcome == outcome_id and transition.to_state is None:
-                transition_ids_to_remove.append(transition_id)
-
-        for transition_id in transition_ids_to_remove:
-            self.remove_transition(transition_id)
+        for transition_id in self.transitions.keys():
+            transition = self.transitions[transition_id]
+            if transition.to_outcome == outcome_id and transition.to_state is self.state_id:
+                self.remove_transition(transition_id)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data-flow functions -------------------------------------
