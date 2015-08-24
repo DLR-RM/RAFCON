@@ -4,7 +4,6 @@ data_flows:
     8: !DataFlow {data_flow_id: 8, from_key: 2, from_state: LUDNFV, to_key: 5, to_state: unique_decider_state_id}
     9: !DataFlow {data_flow_id: 9, from_key: 3, from_state: LUDNFV, to_key: 6, to_state: unique_decider_state_id}
 description: null
-filename: script.py
 input_data_ports: {}
 name: Barrier Concurrency
 outcomes:
@@ -13,7 +12,6 @@ outcomes:
     0: !Outcome {name: success, outcome_id: 0}
     1: !Outcome {name: failure, outcome_id: 1}
 output_data_ports: {}
-path: ../../test_scripts/barrier_concurrency_test_sm/VFNVDL/AMWCJX
 scoped_variables: {}
 state_id: AMWCJX
 transitions:
@@ -22,6 +20,6 @@ transitions:
     3: !Transition {from_outcome: 0, from_state: HOSHJH, to_outcome: null, to_state: unique_decider_state_id,
         transition_id: 3}
     4: !Transition {from_outcome: 0, from_state: unique_decider_state_id, to_outcome: 0,
-        to_state: null, transition_id: 4}
+        to_state: AMWCJX, transition_id: 4}
     5: !Transition {from_outcome: 1, from_state: unique_decider_state_id, to_outcome: 1,
-        to_state: null, transition_id: 5}
+        to_state: AMWCJX, transition_id: 5}
