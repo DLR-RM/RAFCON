@@ -42,9 +42,9 @@ class DataPortListController(ExtendedController):
         view['name_col'].add_attribute(view['name_text'], 'text', 0)
         if not isinstance(self.model.state, LibraryState):
             view['name_text'].set_property("editable", True)
+            view['data_type_text'].set_property("editable", True)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', 1)
-        # if not isinstance(self.model.state, LibraryState):
-        view['data_type_text'].set_property("editable", True)
+
         if view['default_value_col'] and view['default_value_text']:
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', 2)
             view['default_value_text'].set_property("editable", True)

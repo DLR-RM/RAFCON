@@ -12,7 +12,7 @@ from gtkmvc import Observable
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.script import Script, ScriptType
 from rafcon.statemachine.states.state import State
-import rafcon.statemachine.singleton
+from rafcon.statemachine.singleton import library_manager
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -52,7 +52,7 @@ class LibraryState(State):
 
         self._state_copy = None
         lib_os_path, new_library_path, new_library_name = \
-            rafcon.statemachine.singleton.library_manager.get_os_path_to_library(library_path, library_name)
+            library_manager.get_os_path_to_library(library_path, library_name)
 
         if library_path != new_library_path or library_name != new_library_name:
             self.library_name = new_library_name
@@ -61,7 +61,7 @@ class LibraryState(State):
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
 
-        state_machine, lib_version, creation_time = rafcon.statemachine.singleton.library_manager.storage.load_statemachine_from_yaml(lib_os_path)
+        state_machine, lib_version, creation_time = library_manager.storage.load_statemachine_from_yaml(lib_os_path)
         self.state_copy = state_machine.root_state
         self.state_copy.parent = self
         if not str(lib_version) == version and not str(lib_version) == "None":
@@ -75,7 +75,8 @@ class LibraryState(State):
             for i_key, i_data_port in input_data_ports.iteritems():
                 if i_key in self.input_data_ports:
                     self.input_data_ports[i_key].default_value = i_data_port.default_value
-                    self.input_data_ports[i_key].data_type = i_data_port.data_type
+                    # Use data type of library, user should not be able to overwrite the data type of a port
+                    # self.input_data_ports[i_key].data_type = i_data_port.data_type
         self.output_data_ports = self.state_copy.output_data_ports
 
         # copy output_port default values
