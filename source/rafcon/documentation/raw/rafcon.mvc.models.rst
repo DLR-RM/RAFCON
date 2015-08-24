@@ -1,54 +1,74 @@
 MVC Models (rafcon.mvc.models)
 ====================================
 
-Submodules
-----------
+This package contains all models of the MVC architecture.
 
-None yet.
-
+The models hold the data for, which are shown in the views. These models typically hold an element of the core, which
+is observable. For example, the StateModel holds a reference to a State class object from the core. If the core
+element changes, the model recognizes these changes and forwards the notification to the controllers, if they observe
+the changed model property.
 
 StateModel (in state)
 ---------------------
 
 .. automodule:: rafcon.mvc.models.state
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :platform: Unix, Windows
-    :synopsis: This model class manages a State
-.. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
 
 
-state_machine
--------------
-
-.. automodule:: rafcon.mvc.models.state_machine
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :platform: Unix, Windows
-.. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
-
-
-ContainerStateModel (in state)
-------------------------------
+ContainerStateModel (in container_state)
+----------------------------------------
 
 .. automodule:: rafcon.mvc.models.container_state
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :platform: Unix, Windows
-    :synopsis: This model class manages a ContainerState
-.. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
 
 
-TransitionModel (in state)
---------------------------
+TransitionModel (in transition)
+-------------------------------
 
 .. automodule:: rafcon.mvc.models.transition
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :platform: Unix, Windows
-    :synopsis: This model class manages a Transition
-.. moduleauthor:: Franz Steinmetz <franz.steinmetz@dlr.de>
+
+
+DataFlowModel (in data_flow)
+----------------------------
+
+.. automodule:: rafcon.mvc.models.data_flow
+
+
+DataPortModel (in data_port)
+----------------------------
+
+.. automodule:: rafcon.mvc.models.data_port
+
+
+ScopedVariableModel (in scoped_variable)
+----------------------------------------
+
+.. automodule:: rafcon.mvc.models.scoped_variable
+
+
+OutcomeModel (in outcome)
+-------------------------
+
+.. automodule:: rafcon.mvc.models.outcome
+
+
+StateMachineModel (in state_machine)
+------------------------------------
+
+.. automodule:: rafcon.mvc.models.state_machine
+
+
+StateMachineManagerModel (in state_machine_manager)
+---------------------------------------------------
+
+.. automodule:: rafcon.mvc.models.state_machine_manager
+
+
+GlobalVariableManagerModel (in global_variable_manager)
+-------------------------------------------------------
+
+.. automodule:: rafcon.mvc.models.global_variable_manager
+
+
+LibraryManagerModel (in library_manager)
+-------------------------------------------------------
+
+.. automodule:: rafcon.mvc.models.library_manager
