@@ -3,6 +3,9 @@ from gtkmvc import ModelMT
 from rafcon.statemachine.data_port import DataPort
 from rafcon.utils.vividict import Vividict
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 class DataPortModel(ModelMT):
     """This model class manages a DataPort

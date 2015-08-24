@@ -3,8 +3,8 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers.state_transitions import StateTransitionsListController, StateTransitionsEditorController
-from rafcon.mvc.controllers.state_data_flows import StateDataFlowsListController, StateDataFlowsEditorController
+from rafcon.mvc.controllers.state_transitions import StateTransitionsEditorController
+from rafcon.mvc.controllers.state_data_flows import StateDataFlowsEditorController
 
 
 class StateConnectionsEditorController(ExtendedController):

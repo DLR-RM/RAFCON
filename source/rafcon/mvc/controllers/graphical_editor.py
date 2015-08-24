@@ -24,7 +24,6 @@ from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
-from rafcon.statemachine.states.state import State
 
 
 def check_pos(pos):
@@ -1850,6 +1849,9 @@ class GraphicalEditorController(ExtendedController):
             state_type = kwargs['state_type']
 
         selection = self.model.selection.get_all()
+        if not selection:
+            logger.warn("Please select the desired parent state, before adding a new state")
+            return
         model = selection[0]
 
         if isinstance(model, StateModel):

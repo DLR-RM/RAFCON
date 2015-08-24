@@ -1,18 +1,13 @@
-from gtkmvc import ModelMT, Observable
-from enum import Enum
+from gtkmvc import ModelMT
 
 from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
-import rafcon.mvc.selection
-
-from rafcon.utils.vividict import Vividict
-
-from rafcon.mvc.history import History
+from rafcon.mvc.models import ContainerStateModel, StateModel
+from rafcon.mvc.selection import Selection
 
 from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.config import global_gui_config
+from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -51,8 +46,9 @@ class StateMachineModel(ModelMT):
 
         self.sm_manager_model = sm_manager_model
 
-        self.selection = rafcon.mvc.selection.Selection()
+        self.selection = Selection()
 
+        from rafcon.mvc.history import History
         HISTORY_ENABLED = global_gui_config.get_config_value('HISTORY_ENABLED')
         logger.info("is history enabled: %s" % HISTORY_ENABLED)
         self.history = History(self)

@@ -1,7 +1,10 @@
-
 from gtkmvc import ModelMT
+
 from rafcon.statemachine.data_flow import DataFlow
 from rafcon.utils.vividict import Vividict
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class DataFlowModel(ModelMT):

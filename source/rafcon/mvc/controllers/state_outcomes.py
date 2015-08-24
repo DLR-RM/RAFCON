@@ -9,13 +9,13 @@ logger = log.get_logger(__name__)
 
 class StateOutcomesListController(ExtendedController):
 
-    """ The controller handles the outcomes of one respective state, to add and remove outcomes as well as
-     to add, remove and to modify the related transition.
-    The related transition can be set to a child-state or to a outcome of the parent.
-    Hereby the transition also can switch from pointing to an outcome or to a state.
-    It react to changes in the state's respective outcomes-list or transitions-list
-    and use the focus change to update after a modification.
+    """The controller handles the outcomes of one respective state
 
+    The controller allows to add and remove outcomes as well as to add, remove and to modify the related transition.
+
+    The related transition can be set to a child-state or to a outcome of the parent. Hereby the transition also can
+    switch from pointing to an outcome or to a state. It react to changes in the state's respective outcomes-list or
+    transitions-list and use the focus change to update after a modification.
     """
 
     # TODO - widget should update if parent of state has changed (e.g. because of state-type-change of parent)
@@ -46,6 +46,7 @@ class StateOutcomesListController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered
+
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
 
@@ -303,6 +304,7 @@ class StateOutcomesEditorController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered
+
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
 

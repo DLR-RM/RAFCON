@@ -1,9 +1,11 @@
 from gtkmvc import ModelMT
 from gtkmvc import Observable
-from rafcon.mvc.models.state_machine import StateMachineModel
-from rafcon.statemachine.state_machine_manager import StateMachineManager
-from rafcon.utils.vividict import Vividict
 
+from rafcon.statemachine.state_machine_manager import StateMachineManager
+
+from rafcon.mvc.models.state_machine import StateMachineModel
+
+from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

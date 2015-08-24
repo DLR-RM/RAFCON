@@ -1,24 +1,14 @@
-import gobject
-from gtk import ListStore
 from gtkmvc import ModelMT
-import gtk
 
-from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.state import State
-from rafcon.statemachine.data_flow import DataFlow
-from rafcon.statemachine.transition import Transition
-from rafcon.statemachine.data_port import DataPort
-from rafcon.statemachine.scope import ScopedVariable
+from rafcon.statemachine.states.container_state import ContainerState
+
 from rafcon.mvc.models.state import StateModel
-import rafcon.mvc.models
 from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
-from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
+
 from rafcon.utils import log
-
-from rafcon.statemachine.states.container_state import ContainerState
-
 logger = log.get_logger(__name__)
 
 

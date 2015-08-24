@@ -1,5 +1,5 @@
-
 from gtkmvc import ModelMT
+
 from rafcon.statemachine.transition import Transition
 from rafcon.utils.vividict import Vividict
 

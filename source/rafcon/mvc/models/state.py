@@ -1,20 +1,19 @@
 from gtkmvc import ModelMT
 
-from gtk import ListStore
 import os
 import copy
 
 from rafcon.statemachine.states.state import State
-from rafcon.utils.vividict import Vividict
-from rafcon.mvc.models.data_port import DataPortModel
-from rafcon.mvc.models.outcome import OutcomeModel
-import rafcon.statemachine.singleton
-from rafcon.statemachine.storage.storage import StateMachineStorage
-from rafcon.utils import log
-
 from rafcon.statemachine.outcome import Outcome
 from rafcon.statemachine.data_port import DataPort
+from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.singleton import global_storage, state_machine_manager
 
+from rafcon.mvc.models.data_port import DataPortModel
+from rafcon.mvc.models.outcome import OutcomeModel
+
+from rafcon.utils.vividict import Vividict
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -111,7 +110,7 @@ class StateModel(ModelMT):
             if self.state.get_sm_for_state():
                 own_sm_id = self.state.get_sm_for_state().state_machine_id
                 if own_sm_id is not None:
-                    rafcon.statemachine.singleton.state_machine_manager.state_machines[own_sm_id].marked_dirty = True
+                    state_machine_manager.state_machines[own_sm_id].marked_dirty = True
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument
@@ -292,7 +291,7 @@ class StateModel(ModelMT):
         #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
-            tmp_meta = rafcon.statemachine.singleton.global_storage.storage_utils.load_dict_from_yaml(meta_path)
+            tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
 
             # For backwards compatibility
             # move all meta data from editor to editor_opengl
@@ -385,7 +384,7 @@ class StateModel(ModelMT):
                 self.meta["scoped_variable" + str(scoped_variable_model.scoped_variable.data_port_id)] =\
                     scoped_variable_model.meta
 
-        rafcon.statemachine.singleton.global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)
+        global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)
 
     @staticmethod
     def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
