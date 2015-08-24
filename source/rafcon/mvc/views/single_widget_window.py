@@ -1,8 +1,5 @@
 import gtk
 from gtkmvc import View
-from gtkmvc import Controller
-from rafcon.statemachine.states.execution_state import ExecutionState
-import rafcon.statemachine.singleton
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

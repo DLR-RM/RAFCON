@@ -1,6 +1,6 @@
 import gtk
-from gtkmvc import View
 import gobject
+from gtkmvc import View
 from rafcon.utils import constants
 
 

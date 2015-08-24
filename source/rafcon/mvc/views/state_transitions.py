@@ -1,13 +1,3 @@
-"""
-.. module:: transition_list
-   :platform: Unix, Windows
-   :synopsis: A module to view the logical connections (transitions) of a respective state (internal, external)
-
-.. moduleauthor:: Rico Belder
-
-"""
-
-import gtk  # , gobject
 from gtkmvc import View
 from rafcon.utils import constants
 

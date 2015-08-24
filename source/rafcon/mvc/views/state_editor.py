@@ -1,13 +1,3 @@
-"""
-.. module:: state_editor (View)
-   :platform: Unix, Windows
-   :synopsis: A module to view the all aspects of a respective state
-
-.. moduleauthor:: Rico Belder
-
-"""
-import pango
-
 import gtk
 from gtkmvc import View
 from rafcon.mvc.views import SourceEditorView, StateOutcomesEditorView

@@ -1,4 +1,3 @@
-import gtk
 from gtkmvc import View
 from rafcon.utils import constants
 
