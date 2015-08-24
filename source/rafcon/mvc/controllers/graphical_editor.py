@@ -498,7 +498,7 @@ class GraphicalEditorController(ExtendedController):
         # Move the selected waypoint (if there is one)
         if self.selected_waypoint is not None:
             # Move selected waypoint within its container state
-            parent_state_m = event.state
+            parent_state_m = self.selected_waypoint[0].parent
             if parent_state_m not in self.changed_models:
                 self.changed_models.append(parent_state_m)
             self._move_waypoint(mouse_current_coord, event.state)
