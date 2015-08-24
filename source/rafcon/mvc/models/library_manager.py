@@ -1,4 +1,3 @@
-
 from gtkmvc import ModelMT
 from rafcon.utils.vividict import Vividict
 from rafcon.statemachine.library_manager import LibraryManager

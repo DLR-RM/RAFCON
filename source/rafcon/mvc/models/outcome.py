@@ -1,8 +1,8 @@
-
 from gtkmvc import ModelMT
-from rafcon.statemachine.outcome import Outcome
-from rafcon.utils.vividict import Vividict
 
+from rafcon.statemachine.outcome import Outcome
+
+from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

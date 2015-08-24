@@ -1,4 +1,5 @@
 from gtkmvc import ModelMT
+
 from rafcon.statemachine.scope import ScopedVariable
 from rafcon.utils.vividict import Vividict
 

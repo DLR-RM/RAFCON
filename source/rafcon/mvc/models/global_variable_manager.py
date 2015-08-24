@@ -1,11 +1,15 @@
 from gtkmvc import ModelMT
+
+from rafcon.statemachine.singleton import global_variable_manager
+
 from rafcon.utils.vividict import Vividict
-import rafcon.statemachine.singleton
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class GlobalVariableManagerModel(ModelMT):
 
-    global_variable_manager = rafcon.statemachine.singleton.global_variable_manager
+    global_variable_manager = global_variable_manager
 
     __observables__ = ("global_variable_manager",)
 
