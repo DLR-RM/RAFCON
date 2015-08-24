@@ -452,17 +452,34 @@ class GraphicalEditorController(ExtendedController):
                             offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
                             model_temp['original_rel_pos'] = copy(model_meta['rel_pos'])
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
-                            self.changed_models.append(model.parent)
+                            self.changed_models.append(model)
                             offset = subtract_pos(self.mouse_move_start_coords, model_temp['inner_pos'])
                             model_temp['original_inner_rel_pos'] = copy(model_meta['inner_rel_pos'])
+                        elif isinstance(model, (DataFlowModel, TransitionModel)):
+                            self.changed_models.append(model)
+                            waypoints = model_meta['waypoints']
+                            if waypoints:
+                                offset = {}
+                                for waypoint_id, waypoint_pos in enumerate(waypoints):
+                                    waypoint_abs_pos = self._get_absolute_position(model.parent, waypoint_pos)
+                                    offset[waypoint_id] = subtract_pos(self.mouse_move_start_coords, waypoint_abs_pos)
+                                    model_temp['original_waypoint_{0}_rel_pos'.format(waypoint_id)] = waypoint_pos
                         self.drag_origin_offset.append(offset)
                 for i, model in enumerate(self.model.selection):
                     if self.drag_origin_offset[i] is not None:
-                        new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
                         if isinstance(model, StateModel):
+                            new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
                             self._move_state(model, new_pos, redraw=False, publish_changes=False)
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
+                            new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
                             self._move_data_port(model, new_pos, redraw=False, publish_changes=False)
+                        elif isinstance(model, (DataFlowModel, TransitionModel)):
+                            waypoints = model.meta['gui']['editor_opengl']['waypoints']
+                            if waypoints:
+                                for waypoint_id, waypoint_pos in enumerate(waypoints):
+                                    new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i][waypoint_id])
+                                    self._move_waypoint(model, waypoint_id, new_pos, redraw=False)
+
                 self._redraw()
 
             # Move the current state, if the user didn't click on an outcome (wants to create a transition) or a
@@ -498,10 +515,12 @@ class GraphicalEditorController(ExtendedController):
         # Move the selected waypoint (if there is one)
         if self.selected_waypoint is not None:
             # Move selected waypoint within its container state
-            parent_state_m = self.selected_waypoint[0].parent
-            if parent_state_m not in self.changed_models:
-                self.changed_models.append(parent_state_m)
-            self._move_waypoint(mouse_current_coord, event.state)
+            connection_m = self.selected_waypoint[0]
+            waypoint_id = self.selected_waypoint[1]
+            if connection_m not in self.changed_models:
+                self.changed_models.append(connection_m)
+            snap = event.state & SHIFT_MASK != 0
+            self._move_waypoint(connection_m, waypoint_id, mouse_current_coord, snap)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
         if self.selected_outcome is not None or self.selected_port_connector:
@@ -682,7 +701,7 @@ class GraphicalEditorController(ExtendedController):
             def is_within_frame(model):
                 left, right, bottom, top = self.get_boundaries(model)
                 if left is not None:
-                    if frame_left < left < right < frame_right and frame_bottom < bottom < top < frame_top:
+                    if frame_left < left <= right < frame_right and frame_bottom < bottom <= top < frame_top:
                         return True
                 return False
 
@@ -730,7 +749,6 @@ class GraphicalEditorController(ExtendedController):
         corner2 = self.mouse_move_last_coords
         self.model.temp['gui']['editor']['selection_frame'] = [corner1, corner2]
         self._redraw()
-
 
     def _add_waypoint(self, connection_m, coords):
         """Adds a waypoint to the given connection
@@ -856,7 +874,7 @@ class GraphicalEditorController(ExtendedController):
         state is kept within its parent, thus restricting the movement.
 
         :param rafcon.mvc.models.state.StateModel state_m: The model of the state to be moved
-        :param tuple new_pos: The desired new position (x, y)
+        :param tuple new_pos: The desired new absolute position (x, y)
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
         """
@@ -974,22 +992,24 @@ class GraphicalEditorController(ExtendedController):
             return True # Prevent shortcut from being passed to GTK
         return False # Allow passing of shortcut
 
-    def _move_waypoint(self, new_pos, modifier_keys):
+    def _move_waypoint(self, connection_m, waypoint_id, new_pos, snap=False, redraw=True, publish_changes=False):
         """Moves the currently selected waypoint to the given position
 
-        :param new_pos: The new position of the waypoint
-        :param modifier_keys: The modifier keys clicked while moving the waypoint
+        :param connection_m: The model of the connection (transition or data flow)
+        :param int waypoint_id: The id of the waypoint within the connection
+        :param tuple new_pos: The new absolute position of the waypoint
+        :param bool snap: Whether to snap the viapoints at certain angles
+        :param bool redraw: Whether to redraw after updating the position
+        :param bool publish_changes: Whether to publish the changes of the meta data
         """
-        connection_m = self.selected_waypoint[0]
-        connection_temp = connection_m.temp['gui']['editor']
         waypoints = connection_m.meta['gui']['editor_opengl']['waypoints']
-        waypoint_id = self.selected_waypoint[1]
+        connection_temp = connection_m.temp['gui']['editor']
         parent_state_m = connection_m.parent
         new_pos = self._limit_position_to_state(parent_state_m, new_pos)
         new_rel_pos = self._get_position_relative_to_state(parent_state_m, new_pos)
 
         # With the shift key pressed, try to snap the waypoint such that the connection has a multiple of 45 deg
-        if modifier_keys & SHIFT_MASK != 0:
+        if snap:
             snap_angle = deg2rad(global_gui_config.get_config_value('WAYPOINT_SNAP_ANGLE', 45.))
             snap_diff = deg2rad(global_gui_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_ANGLE', 10.))
             max_snap_dist = global_gui_config.get_config_value('WAYPOINT_SNAP_MAX_DIFF_PIXEL', 50.)
@@ -1038,7 +1058,11 @@ class GraphicalEditorController(ExtendedController):
             new_rel_pos = calculate_snap_point(prev_point, new_rel_pos, next_point)
 
         waypoints[waypoint_id] = new_rel_pos
-        self._redraw()
+
+        if publish_changes:
+            self._publish_changes(connection_m, affects_children=False)
+        if redraw:
+            self._redraw()
 
     def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False, publish_changes=False):
         """Resize the state by the given delta width and height
@@ -1886,6 +1910,12 @@ class GraphicalEditorController(ExtendedController):
                             model_meta['rel_pos'] = model_temp['original_rel_pos']
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
                             model_meta['inner_rel_pos'] = model_temp['original_inner_rel_pos']
+                        elif isinstance(model, (DataFlowModel, TransitionModel)):
+                            waypoints = model_meta['waypoints']
+                            if waypoints:
+                                for waypoint_id, waypoint_pos in enumerate(waypoints):
+                                    waypoints[waypoint_id] = model_temp['original_waypoint_{0}_rel_pos'.format(
+                                        waypoint_id)]
                 elif isinstance(self.single_selection, StateModel):
                     self.single_selection.meta['gui']['editor_opengl']['rel_pos'] = \
                         self.single_selection.temp['gui']['editor']['original_rel_pos']
