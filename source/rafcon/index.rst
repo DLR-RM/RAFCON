@@ -3,13 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the documentation of RAFCON -- RMC awesome flow control
+RAFCON -- RMC awesome flow control
 ==================================================================
 
-Contents:
+RAFCON (RMC awesome [or advanced] Flow Control, new name, aka Awesome tool) is an effort of DLR RMC to create a new
+flow control tool, based on existing ones. The target of this software is to combine the advantages and features of
+flow control tools like Bubbles or SMACH without inheriting their drawbacks.
 
 .. toctree::
-   :maxdepth: 6
+   :maxdepth: 3
+   :numbered:
+   :caption: Table of Contents
 
    documentation/raw/rafcon.rst
 
