@@ -1,6 +1,6 @@
 !Vividict
 gui: !Vividict
-    editor: !Vividict
+    editor_opengl: !Vividict
         outcome_pos:
             -2: !!python/tuple [1343.6380889844938, -1114.9098192472843]
             -1: !!python/tuple [1348.0391164104935, -1114.9098192472843]
@@ -9,11 +9,11 @@ gui: !Vividict
         size: !!python/tuple [2.7074678749504524, 2.428489003528193]
 input_data_port2: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             outer_connector_pos: !!python/tuple [1332.0338566295188, -1139.1154700902832]
             outer_connector_radius: 0.4584403568749798
 output_data_port3: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             outer_connector_pos: !!python/tuple [1341.2011292386273, -1143.149745230783]
             outer_connector_radius: 0.4584403568749798

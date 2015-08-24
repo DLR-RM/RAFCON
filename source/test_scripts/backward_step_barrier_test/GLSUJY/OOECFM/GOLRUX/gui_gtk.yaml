@@ -1,40 +1,42 @@
 !Vividict
 data_flow10: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             waypoints: []
     waypoints: !Vividict {}
 data_flow13: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id001 !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id001
 data_flow4: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             waypoints: []
     waypoints: !Vividict {}
 data_flow6: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             waypoints: []
     waypoints: !Vividict {}
 data_flow7: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             waypoints: []
     waypoints: !Vividict {}
 data_flow8: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             waypoints: []
     waypoints: !Vividict {}
 data_flow9: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             waypoints: []
     waypoints: !Vividict {}
 gui: !Vividict
-    editor: !Vividict
+    editor_opengl: !Vividict
         outcome_pos:
             -2: !!python/tuple [1485.8608279322418, -888.9485379504584]
             -1: !!python/tuple [1507.6759246298689, -888.9485379504584]
@@ -43,7 +45,7 @@ gui: !Vividict
         size: !!python/tuple [22.561296582351275, 9.87167309997713]
 input_data_port1: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             inner_connector_pos: !!python/tuple [1275.4977722206388, -985.8301697998694]
             inner_connector_radius: 0.7271698899209021
             inner_rel_pos: !!python/tuple [5.368017477248941, -8.100168895906933]
@@ -51,7 +53,7 @@ input_data_port1: !Vividict
             outer_connector_radius: 2.272405906002819
 input_data_port2: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             inner_connector_pos: !!python/tuple [1271.5552300288834, -965.4886136564065]
             inner_connector_radius: 0.7271698899209021
             inner_rel_pos: !!python/tuple [1.120419325474515, -7.471546671689225]
@@ -59,7 +61,7 @@ input_data_port2: !Vividict
             outer_connector_radius: 2.272405906002819
 output_data_port12: !Vividict
     gui: !Vividict
-        editor: !Vividict
+        editor_opengl: !Vividict
             inner_connector_pos: !!python/tuple [1480.5432226021294, -952.2111089459114]
             inner_connector_radius: 0.7271698899209021
             inner_rel_pos: !!python/tuple [21.851977338295853, -6.149399337628779]
@@ -68,20 +70,30 @@ output_data_port12: !Vividict
 transition1: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id002 !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id002
 transition2: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id003 !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id003
 transition3: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id004 !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id004
 transition4: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id005 !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id005
 transition6: !Vividict
     gui: !Vividict
         editor: !Vividict
-            waypoints: !Vividict {}
+            waypoints: &id006 !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id006
