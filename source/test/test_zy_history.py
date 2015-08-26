@@ -25,21 +25,20 @@ from rafcon.mvc.views import LoggingView
 
 # singleton elements
 import rafcon.statemachine.singleton
-# import rafcon.mvc.singleton
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
 # test environment elements
 import variables_for_pytest
-from variables_for_pytest import test_multithrading_lock, call_gui_callback
-from test_z_gui_state_type_change import store_state_elements, list_store_id_dict, check_state_elements, \
+from variables_for_pytest import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
     check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
     check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
     get_state_editor_ctrl_and_store_id_dict
 from test_z_gui_states_editor_widget import check_state_editor_models
 
 NO_SAVE = False
-
+TEST_PATH = TMP_TEST_PATH + "/test_history"
 
 def on_save_activate(state_machine_m, logger):
     if state_machine_m is None or NO_SAVE:
@@ -379,9 +378,7 @@ def test_add_remove_history(with_print=False):
     [logger, state, sm_model, state_dict] = create_models()
 
     import rafcon
-    test_history_path1 = '/home_local/test_history_before'
-    test_history_path2 = '/home_local/test_history_after'
-    state_machine_path = '/tmp/dfc_history_test_add_remove'
+    state_machine_path = TEST_PATH + '_test_add_remove'
     save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
 
     def store_state_machine(sm_model, path):
@@ -667,11 +664,11 @@ def test_add_remove_history(with_print=False):
     # do_check_for_state(state_dict, state_name='state2')
     do_check_for_state(state_dict, state_name='Nested')
     sm_model.history.changes.reset()
-    save_state_machine(sm_model, "/tmp/DFC_test/history_add_remove_child_hierarchical_state", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_add_remove_child_hierarchical_state", logger, with_gui=False)
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # state_check_dict2 = print_all_states_with_path_and_name(state_dict['Container'])
     do_check_for_state(state_dict, state_name='Container')
-    save_state_machine(sm_model, "/tmp/DFC_test/history_add_remove_root_state", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_add_remove_root_state", logger, with_gui=False)
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
@@ -848,7 +845,7 @@ def test_state_property_changes_history(with_print=False):
     sm_model.history.undo()
     sm_model.history.redo()
 
-    save_state_machine(sm_model, "/tmp/DFC_test/history_state_properties", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_state_properties", logger, with_gui=False)
 
 
 def test_outcome_property_changes_history(with_print=False):
@@ -897,7 +894,7 @@ def test_outcome_property_changes_history(with_print=False):
 
     # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
     do_check_for_state(state_dict, state_name='Container')
-    save_state_machine(sm_model, "/tmp/DFC_test/history_outcome_properties", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_outcome_properties", logger, with_gui=False)
 
 
 def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
@@ -1020,7 +1017,7 @@ def test_transition_property_changes_history(with_print=False):
     state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
     sm_model.history.undo()
     sm_model.history.redo()
-    save_state_machine(sm_model, "/tmp/DFC_test/history_transition_properties", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_transition_properties", logger, with_gui=False)
 
 
 def test_input_port_modify_notification(with_print=False):
@@ -1065,7 +1062,7 @@ def test_input_port_modify_notification(with_print=False):
                                                                                     default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
-    save_state_machine(sm_model, "/tmp/DFC_test/history_input_port_properties", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_input_port_properties", logger, with_gui=False)
 
 
 def test_output_port_modify_notification(with_print=False):
@@ -1109,7 +1106,7 @@ def test_output_port_modify_notification(with_print=False):
                                                                                       default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
-    save_state_machine(sm_model, "/tmp/DFC_test/history_output_port_properties", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_output_port_properties", logger, with_gui=False)
 
 
 def test_scoped_variable_modify_notification(with_print=False):
@@ -1159,7 +1156,7 @@ def test_scoped_variable_modify_notification(with_print=False):
                                                                                    default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
-    save_state_machine(sm_model, "/tmp/DFC_test/history_scoped_variable_properties", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_scoped_variable_properties", logger, with_gui=False)
 
 
 def test_data_flow_property_changes_history(with_print=False):
@@ -1288,7 +1285,7 @@ def test_data_flow_property_changes_history(with_print=False):
     sm_model.history.undo()
     sm_model.history.redo()
 
-    save_state_machine(sm_model, "/tmp/DFC_test/history_data_flow_properties", logger, with_gui=False)
+    save_state_machine(sm_model, TEST_PATH + "_data_flow_properties", logger, with_gui=False)
 
 
 def setup_logger(logging_view):
@@ -1391,7 +1388,7 @@ def trigger_state_type_change_tests(*args):
     main_window_controller = args[1]
     sm_m = args[2]
     state_dict = args[3]
-    with_gui = args[4]
+    with_gui = bool(args[4])
     logger = args[5]
 
     sleep_time_short = 3
@@ -1399,7 +1396,7 @@ def trigger_state_type_change_tests(*args):
 
     time.sleep(sleep_time_short)
 
-    ####### General Type Change inside of a state machine (NO ROOT STATE) ############
+    # General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
     parent_of_type_change = 'Container'
 
@@ -1431,7 +1428,7 @@ def trigger_state_type_change_tests(*args):
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
 
     if with_gui:
-        state_machine_path = '/tmp/dfc_test_state_type_change_history_with_gui'
+        state_machine_path = TEST_PATH + '_state_type_change_with_gui'
         # TODO the next lines should not to be necessary to save the statemachine at the end
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         save_state_machine(sm_model, state_machine_path, logger, with_gui, menubar_ctrl)
@@ -1442,8 +1439,8 @@ def trigger_state_type_change_tests(*args):
             get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger)
     else:
         menubar_ctrl = None
-        state_machine_path = '/tmp/dfc_test_state_type_change_history_without_gui'
-        save_state_machine(sm_model, state_machine_path, logger, with_gui, menubar_ctrl)
+        state_machine_path = TEST_PATH + '_state_type_change_without_gui'
+        save_state_machine(sm_model, state_machine_path, logger, bool(with_gui), menubar_ctrl)
         pass
     if with_gui:
         check_state_editor_models(sm_m, state_m, main_window_controller, logger)
@@ -1673,8 +1670,6 @@ def trigger_state_type_change_tests(*args):
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # # TODO do the check for the root-state too!!!
-    # save_and_quit(sm_model, '/tmp/dfc_test_state_type_change_history', menubar_ctrl, with_gui)
-    # # return
 
     ####### General Type Change as ROOT STATE ############
     state_of_type_change = 'Container'
@@ -1876,7 +1871,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    save_and_quit(sm_model, '/tmp/dfc_test_state_type_change_history', menubar_ctrl, with_gui)
+    save_and_quit(sm_model, TEST_PATH + '_state_type_change', menubar_ctrl, with_gui)
 
 
 if __name__ == '__main__':

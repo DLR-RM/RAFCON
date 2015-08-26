@@ -1,12 +1,14 @@
-import pytest
-from pytest import raises
-
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
-import rafcon.statemachine.singleton
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.script import Script, ScriptType
+
+# singleton elements
+import rafcon.statemachine.singleton
+
+# test environment elements
 import variables_for_pytest
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
@@ -55,8 +57,9 @@ def test_concurrency_barrier_save_load():
     state_machine = StateMachine(concurrency_barrier_state)
     test_storage = StateMachineStorage("../test_scripts/decider_test_statemachine")
     # test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
-    test_storage.save_statemachine_as_yaml(state_machine, "/tmp/decider_test_statemachine")
-    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml("/tmp/decider_test_statemachine")
+    test_storage.save_statemachine_as_yaml(state_machine, variables_for_pytest.TMP_TEST_PATH + "/decider_test_statemachine")
+    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml(variables_for_pytest.TMP_TEST_PATH +
+                                                                                 "/decider_test_statemachine")
 
     root_state = sm_loaded.root_state
     input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}

@@ -1,8 +1,13 @@
-import variables_for_pytest
-import rafcon.statemachine.singleton
+# core elements
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
-import rafcon.statemachine.states.execution_state
+from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
+
+# singleton elements
+import rafcon.statemachine.singleton
+
+# test environment elements
+import variables_for_pytest
 
 
 def test_error_propagation():

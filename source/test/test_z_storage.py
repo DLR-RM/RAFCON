@@ -1,25 +1,31 @@
-__author__ = 'beld_rc'
+import os
+import gtk
+import signal
+import time
+import logging
 
+# general tool elements
+from rafcon.utils import log
+
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
-import rafcon.statemachine.singleton
 
-from rafcon.statemachine.script import Script, ScriptType
-from rafcon.statemachine.enums import StateType
-
+# singleton elements
 import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
-from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
-
-from gtkmvc.observer import Observer
-
-import logging as logger
+# test environment elements
+from variables_for_pytest import call_gui_callback, TMP_TEST_PATH
 
 
 def create_models(*args, **kargs):
 
+    logger = log.get_logger(__name__)
+    logger.setLevel(logging.DEBUG)
+    for handler in logging.getLogger('gtkmvc').handlers:
+        logging.getLogger('gtkmvc').removeHandler(handler)
     state1 = ExecutionState('State1', state_id='STATE1')
     output_state1 = state1.add_output_data_port("output", "int")
     input_state1 = state1.add_input_data_port("input", "str", "zero")
@@ -91,15 +97,6 @@ def create_models(*args, **kargs):
     # return ctr_state, sm_m, state_dict
     return logger, ctr_state, sm_m, state_dict
 
-import os
-import gtk
-import signal
-import glib
-import threading
-import time
-
-from rafcon.utils import log
-
 
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
@@ -127,7 +124,7 @@ def save_state_machine(sm_model, path, logger, with_gui, menubar_ctrl):
     if with_gui:
         sm_model.state_machine.base_path = path
         time.sleep(sleep_time_short)
-        glib.idle_add(menubar_ctrl.on_save_activate, None)
+        call_gui_callback(menubar_ctrl.on_save_activate, None)
         time.sleep(sleep_time_short)
     else:
         sm_model.state_machine.base_path = path
@@ -228,8 +225,8 @@ def test_storage_without_gui():
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
     rafcon.statemachine.singleton.library_manager.initialize()
-
-    save_state_machine(sm_model=sm_m, path="/tmp/dfc_test_storage", logger=logger, with_gui=with_gui, menubar_ctrl=None)
+    save_state_machine(sm_model=sm_m, path=TMP_TEST_PATH + "/test_storage_without_gui", logger=logger, with_gui=with_gui,
+                       menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
 
@@ -249,7 +246,8 @@ def _test_storage_with_gui():
     print "init libs"
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    save_state_machine(sm_model=sm_m, path="/tmp/dfc_test_storage", logger=logger, with_gui=with_gui, menubar_ctrl=None)
+    save_state_machine(sm_model=sm_m, path=TMP_TEST_PATH + "/test_storage_with_gui", logger=logger, with_gui=with_gui,
+                       menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
     os.chdir(rafcon.__path__[0] + "/../test")

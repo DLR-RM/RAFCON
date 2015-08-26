@@ -1,14 +1,16 @@
+import time
+
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
-import rafcon.statemachine.singleton
 from rafcon.statemachine.storage.storage import StateMachineStorage
-
-from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.state_machine import StateMachine
-import variables_for_pytest
 
-import pytest
-import time
+# singleton elements
+import rafcon.statemachine.singleton
+
+# test environment elements
+import variables_for_pytest
 
 
 def return_loop_state_machine():
@@ -29,9 +31,6 @@ def return_loop_state_machine():
 
 
 def test_start_stop_pause_step():
-    # from mvc.models import ContainerStateModel
-    # from mvc.views.single_widget_window import TestButtonsView
-    # import gtk
 
     sm = return_loop_state_machine()
     rafcon.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
@@ -39,14 +38,6 @@ def test_start_stop_pause_step():
     s = StateMachineStorage("../test_scripts/stored_statemachine")
     s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
     sm_loaded, version, creation_time = s.load_statemachine_from_yaml()
-
-    # ctr_model = ContainerStateModel(root_state)
-    # test_buttons_view = TestButtonsView(ctr_model)
-
-    #root_state.daemon = True
-
-    # care for old statemachines that were started in previous tests
-    my_state_machine_manager = StateMachineManager()
 
     variables_for_pytest.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm_loaded)
@@ -65,7 +56,6 @@ def test_start_stop_pause_step():
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded.state_machine_id)
     variables_for_pytest.test_multithrading_lock.release()
-    # gtk.main()
 
 if __name__ == '__main__':
     #pytest.main()

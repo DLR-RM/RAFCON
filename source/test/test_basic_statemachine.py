@@ -1,4 +1,3 @@
-import pytest
 from pytest import raises
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
