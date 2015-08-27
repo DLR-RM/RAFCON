@@ -195,7 +195,7 @@ class StateMachineTreeController(ExtendedController):
                 self.view.expand_to_path(selected_path)
                 self.view.get_selection().select_iter(selected_iter)
                 # work around to force selection to state-editor
-                self._selected_sm_model.selection.set([self._selected_sm_model.selection.get_selected_state()])
+                # self._selected_sm_model.selection.set([self._selected_sm_model.selection.get_selected_state()])
 
         # if hasattr(info.kwargs, 'model'):
         #     self.update(info.kwargs.model)

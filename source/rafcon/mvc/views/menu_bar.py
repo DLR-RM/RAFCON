@@ -1,6 +1,5 @@
-from gtkmvc import View
 import gtk
-import pango
+from gtkmvc import View
 from rafcon.utils import constants
 
 

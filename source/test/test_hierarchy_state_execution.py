@@ -1,13 +1,14 @@
-import pytest
-from pytest import raises
-import rafcon
-
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
-import rafcon.statemachine.singleton
 from rafcon.statemachine.states.state import DataPortType
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
+
+# singleton elements
+import rafcon.statemachine.singleton
+
+# test environment elements
 import variables_for_pytest
 
 

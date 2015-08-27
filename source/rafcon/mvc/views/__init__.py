@@ -1,5 +1,3 @@
-from state_properties import StatePropertiesView  # old
-from container_state import ContainerStateView  # old
 from single_widget_window import SingleWidgetWindowView
 
 from graphical_editor import GraphicalEditorView

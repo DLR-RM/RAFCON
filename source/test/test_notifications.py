@@ -1,20 +1,13 @@
-import pytest
-from pytest import raises
-# from rafcon.mvc.controllers import MainWindowController
+from gtkmvc.observer import Observer
 
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 
-from rafcon.statemachine.script import Script, ScriptType
-from rafcon.statemachine.enums import StateType
-
-from gtkmvc.observer import Observer
-
+# singleton elements
 from rafcon.statemachine.singleton import state_machine_manager
 from rafcon.mvc.singleton import state_machine_manager_model
-
-import logging as logger
 
 
 class NotificationLogObserver(Observer):

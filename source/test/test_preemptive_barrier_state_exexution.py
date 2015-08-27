@@ -1,11 +1,13 @@
-import pytest
-from pytest import raises
-
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-import rafcon.statemachine.singleton
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
+
+# singleton elements
+import rafcon.statemachine.singleton
+
+# test environment elements
 import variables_for_pytest
 
 

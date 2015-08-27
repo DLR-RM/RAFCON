@@ -1,20 +1,16 @@
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.state_machine import StateMachine
-import rafcon.statemachine.singleton
+from gtkmvc.observer import Observer
 
+# core elements
 from rafcon.statemachine.script import Script, ScriptType
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.state_machine import StateMachine
 
+# singleton elements
 import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
-
-from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
-
-from gtkmvc.observer import Observer
-
-import logging as logger
 
 
 class NotificationLogObserver(Observer):
@@ -844,7 +840,6 @@ def test_add_remove_models(with_print=False):
         [stored_s_elements, stored_s_m_elements] = store_state_elements(state, state_m)
         check_state_for_all_models(state, state_m)
 
-
         ################
         # remove outcome
         state_dict[state_name].remove_outcome(outcome_super)  # new outcome should be the third one
@@ -886,7 +881,6 @@ def test_add_remove_models(with_print=False):
 
         outcome_state4 = state4.add_outcome('UsedHere')
         outcome_state5 = state5.add_outcome('UsedHere')
-
 
         ################
         # add transition from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id
@@ -1085,7 +1079,7 @@ def test_state_property_changes_history(with_print=False):
     assert len(sm_model.history.changes.single_trail_history()) == 9
 
     #######################################
-    ######## Properties of State ##########
+    # Properties of State #################
 
     # name(self, name)
     state_dict['Nested'].name = 'nested'
@@ -1146,7 +1140,7 @@ def test_state_property_changes_history(with_print=False):
     # TODO introduce state.execution_status and so on
 
     ############################################
-    ###### Properties of ContainerState ########
+    # Properties of ContainerState #############
 
     # TODO check where all this shit comes from may a observed capsuled set_start_state function in ContainerState will help
     # set_start_state(self, state) State or state_id

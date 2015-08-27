@@ -1,10 +1,7 @@
-
 import gtk
 from gtkmvc import View
-from rafcon.mvc.views import StatePropertiesView, ContainerStateView, GraphicalEditorView, StateDataportEditorView,\
-     GlobalVariableEditorView, SourceEditorView, SingleWidgetWindowView, StateEditorView, \
-     LoggingView, StateMachineTreeView, LibraryTreeView, MenuBarView, ToolBarView, StateMachineHistoryView, TopToolBarView, \
-     ExecutionHistoryView
+from rafcon.mvc.views import GlobalVariableEditorView, StateMachineTreeView, LibraryTreeView, MenuBarView, \
+    ToolBarView, StateMachineHistoryView, TopToolBarView, ExecutionHistoryView
 from rafcon.mvc.views.states_editor import StatesEditorView
 from rafcon.mvc.views.state_machines_editor import StateMachinesEditorView
 from rafcon.mvc.views.network_connections import NetworkConnectionsView

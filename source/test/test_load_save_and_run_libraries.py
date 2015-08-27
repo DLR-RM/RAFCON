@@ -1,16 +1,19 @@
-import pytest
-from pytest import raises
 from os.path import dirname, join, realpath
 
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.library_state import LibraryState
-import rafcon.statemachine.singleton
 from rafcon.statemachine.states.state import DataPortType
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
+
+# singleton elements
+import rafcon.statemachine.singleton
+
+# test environment elements
 import variables_for_pytest
-import rafcon.statemachine.config
+
 
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value

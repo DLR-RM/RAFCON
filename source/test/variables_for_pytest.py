@@ -1,6 +1,9 @@
+import getpass
 from threading import Lock, Condition
 
 test_multithrading_lock = Lock()
+
+TMP_TEST_PATH = "/tmp/{0}/rafcon_unit_tests".format(getpass.getuser())
 
 
 def call_gui_callback(callback, *args):

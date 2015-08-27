@@ -159,6 +159,7 @@ if __name__ == '__main__':
     main_window = main_window_view.get_top_widget()
     size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
     position = global_runtime_config.get_config_value("WINDOW_POS", None)
+    position = (max(0, position[0]), max(0, position[1]))
     if size:
         main_window.resize(size[0], size[1])
     if position:

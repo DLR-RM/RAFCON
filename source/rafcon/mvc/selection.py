@@ -1,6 +1,7 @@
 from gtkmvc import Observable
 from rafcon.mvc.models import StateModel, TransitionModel, DataFlowModel
 
+
 def reduce_to_parent_states(models):
     models_to_remove = []
     for model in models:
@@ -13,6 +14,7 @@ def reduce_to_parent_states(models):
     for model in models_to_remove:
         models.remove(model)
     return models
+
 
 class Selection(Observable):
     """

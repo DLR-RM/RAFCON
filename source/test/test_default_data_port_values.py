@@ -1,10 +1,13 @@
-import pytest
-
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.storage.storage import StateMachineStorage
-import rafcon.statemachine.singleton
 from rafcon.statemachine.state_machine import StateMachine
+
+# singleton elements
+import rafcon.statemachine.singleton
+
+# test environment elements
 import variables_for_pytest
 
 
@@ -59,5 +62,4 @@ def test_default_values_of_data_ports():
 
 
 if __name__ == '__main__':
-    #pytest.main()
     test_default_values_of_data_ports()

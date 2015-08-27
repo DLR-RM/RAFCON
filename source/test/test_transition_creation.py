@@ -1,11 +1,16 @@
-import pytest
 import time
-from pytest import raises
+
+# core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.storage.storage import StateMachineStorage
-import rafcon.statemachine.singleton
 from rafcon.statemachine.state_machine import StateMachine
+
+# singleton elements
+import rafcon.statemachine.singleton
+
+# test environment elements
+from pytest import raises
 import variables_for_pytest
 
 

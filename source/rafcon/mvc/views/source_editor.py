@@ -1,12 +1,11 @@
 import gtk
-try:
-    import gtksourceview2
-except:
-    print "NO python-module gtksourceview2 found!"
 from gtkmvc import View
-
 from rafcon.mvc.config import global_gui_config
 from rafcon.utils import constants
+try:
+    import gtksourceview2
+except ImportError:
+    print "Python module 'gtksourceview2' not found!"
 
 
 class SourceEditorView(View):

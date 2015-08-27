@@ -3,22 +3,24 @@ import logging
 import gtk
 import threading
 import time
-import glib
 import os
 import signal
 
+# general tool elements
 from rafcon.utils import log
-from rafcon.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController, StateDataPortEditorController,\
-    SingleWidgetWindowController, SourceEditorController
+
+# mvc elements
+from rafcon.mvc.models import GlobalVariableManagerModel
+from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
-from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.mvc.views import LoggingView
+
+# singleton elements
 import rafcon.mvc.singleton
-from rafcon.statemachine.state_machine import StateMachine
+
+# test environment elements
 import variables_for_pytest
+from variables_for_pytest import call_gui_callback
 
 
 def create_models():
@@ -53,16 +55,16 @@ def trigger_gui_signals(*args):
     main_window_controller = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
-    glib.idle_add(menubar_ctrl.on_step_mode_activate, None, None)
+    call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
     number_of_steps = 9
-    sleep_time = 0.5
+    sleep_time = 0.01
     time.sleep(sleep_time)
     for i in range(number_of_steps):
-        glib.idle_add(menubar_ctrl.on_step_activate, None, None)
+        call_gui_callback(menubar_ctrl.on_step_activate, None, None)
         time.sleep(sleep_time)
 
     for i in range(number_of_steps):
-        glib.idle_add(menubar_ctrl.on_backward_step_activate, None, None)
+        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         time.sleep(sleep_time)
 
     sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
@@ -76,10 +78,10 @@ def trigger_gui_signals(*args):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
-    glib.idle_add(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
 
-    glib.idle_add(menubar_ctrl.on_stop_activate, None)
-    glib.idle_add(menubar_ctrl.on_quit_activate, None)
+    call_gui_callback(menubar_ctrl.on_stop_activate, None)
+    call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
 def test_backward_stepping():

@@ -7,24 +7,30 @@ import signal
 
 # general tool elements
 from rafcon.utils import log
-from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
-from rafcon.statemachine.states.state import State
-import rafcon.mvc.singleton
-from rafcon.statemachine.state_machine import StateMachine
-import variables_for_pytest
-from variables_for_pytest import test_multithrading_lock, call_gui_callback
 
+# core elements
+from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.statemachine.state_machine import StateMachine
 
+# mvc elements
+from rafcon.mvc.models import GlobalVariableManagerModel
+from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.mvc.views import LoggingView
+
+# singleton elements
+import rafcon.mvc.singleton
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
+
+# test environment elements
+import variables_for_pytest
+from variables_for_pytest import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 
 
 def create_models(*args, **kargs):
@@ -260,7 +266,7 @@ def store_state_elements(state, state_m):
     def is_related_data_flow(parent, state_id, df):
         return df.from_state == state_id or df.to_state == state_id
 
-    # LOOKOUT: root states have their statemachine as parent
+    # LOOKOUT: root states have their state machine as parent
     if hasattr(state, 'parent') and state.parent is not None and isinstance(state.parent, State):
         # collect transitions of parent related and not related to me
         state_elements['transitions_external'] = []
@@ -706,7 +712,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = '/tmp/dfc_test_state_type_change'
+        menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = TMP_TEST_PATH + '/test_state_type_change'
         call_gui_callback(menubar_ctrl.on_save_activate, None)
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
