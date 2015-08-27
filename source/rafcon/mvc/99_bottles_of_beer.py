@@ -156,7 +156,7 @@ def run_turtle_demo():
     setup_logger(logging_view)
     logger = log.get_logger("turtle demo")
 
-    home_path = os.path.join(os.path.expanduser('~'), '.rafcon')
+    home_path = os.path.join(os.path.expanduser('~'), '.config/rafcon')
     global_config.load(path=home_path)
     global_gui_config.load(path=home_path)
     global_net_config.load()
