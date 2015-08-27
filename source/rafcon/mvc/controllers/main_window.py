@@ -35,7 +35,8 @@ class MainWindowController(ExtendedController):
         "State Tree":           constants.ICON_TREE,
         "Global Variables":     constants.ICON_GLOB,
         "History":              constants.ICON_HIST,
-        "Execution History":    constants.ICON_EHIST
+        "Execution History":    constants.ICON_EHIST,
+        "Network":              constants.ICON_NET
     }
 
     def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
@@ -194,6 +195,19 @@ class MainWindowController(ExtendedController):
         # history_tab_label = gtk.Label('History')
         # history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
         # view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
+
+        ######################################################
+        # network controller tab
+        ######################################################
+        network_tab = view['network_placeholder']
+        page_num = view['tree_notebook_2'].page_num(network_tab)
+        view['tree_notebook_2'].remove_page(page_num)
+
+        network_label = gtk.Label('Network')
+        network_notebook_widget = self.create_notebook_widget("NETWORK", view.network_connections_view.get_top_widget(),
+                                                              use_scroller=False,
+                                                              border=constants.BORDER_WIDTH_TEXTVIEW)
+        view['tree_notebook_2'].insert_page(network_notebook_widget, network_label, page_num)
 
         ######################################################
         # state machine execution history

@@ -104,6 +104,7 @@ ICON_TREE = "f0e8"
 ICON_GLOB = "f0ac"
 ICON_HIST = "f254"
 ICON_EHIST = "f1b3"
+ICON_NET = "f0ec"
 
 ICON_STICKY = "f08d"
 

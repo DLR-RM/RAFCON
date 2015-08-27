@@ -107,7 +107,7 @@ class MainWindowView(View):
 
         self.network_connections_view = NetworkConnectionsView()
         self.network_connections_view.show()
-        self["network_controller_viewport"].add(self.network_connections_view.get_top_widget())
+        # self["network_controller_viewport"].add(self.network_connections_view.get_top_widget())
 
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts
