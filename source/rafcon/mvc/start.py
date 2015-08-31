@@ -175,7 +175,8 @@ if __name__ == '__main__':
     logger.info("Ready")
     logger.setLevel(level)
     reactor.run()
-    gtk.main()
+    # reactor.run() replaces the gtk.main() call after gtk2reactor.install()
+    # gtk.main()
     logger.debug("Gtk main loop exited!")
 
     # If there is a running state-machine, wait for it to be finished before exiting
