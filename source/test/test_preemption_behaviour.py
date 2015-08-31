@@ -13,6 +13,7 @@ import variables_for_pytest
 
 def test_preemption_behaviour():
 
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     variables_for_pytest.test_multithrading_lock.acquire()
 
     sm = StatemachineExecutionEngine.execute_state_machine_from_path("../test_scripts/preemption_bahaviour_test_sm")

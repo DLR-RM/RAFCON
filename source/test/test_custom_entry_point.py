@@ -12,6 +12,7 @@ import variables_for_pytest
 
 def custom_entry_point():
 
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     variables_for_pytest.test_multithrading_lock.acquire()
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"

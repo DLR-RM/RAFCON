@@ -7,7 +7,7 @@
 
 
 """
-import signal
+import Queue
 
 from gtkmvc import Observable
 from gtkmvc import ModelMT
@@ -198,7 +198,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._start_tree()
 
     @staticmethod
-    def execute_state_machine_from_path(path, start_state_path=None):
+    def execute_state_machine_from_path(path, start_state_path=None, wait_for_execution_finished=True):
         """
         A helper function to start an arbitrary state machine at a given path.
         :param path: The path where the state machine resides
@@ -207,19 +207,19 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """
 
         import rafcon.statemachine.singleton
-        rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-        signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-
         rafcon.statemachine.singleton.library_manager.initialize()
         [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
             global_storage.load_statemachine_from_yaml(path)
         rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
         rafcon.statemachine.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
         sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-        if sm:
-            sm.root_state.join()
-        rafcon.statemachine.singleton.state_machine_execution_engine.stop()
 
+        concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
+        sm.root_state.concurrency_queue = concurrency_queue
+
+        if wait_for_execution_finished:
+            sm.root_state.join()
+            rafcon.statemachine.singleton.state_machine_execution_engine.stop()
         return sm
 
 #########################################################################
