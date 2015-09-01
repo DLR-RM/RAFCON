@@ -163,10 +163,10 @@ if __name__ == '__main__':
     main_window = main_window_view.get_top_widget()
     size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
     position = global_runtime_config.get_config_value("WINDOW_POS", None)
-    position = (max(0, position[0]), max(0, position[1]))
     if size:
         main_window.resize(size[0], size[1])
     if position:
+        position = (max(0, position[0]), max(0, position[1]))
         screen_width = gtk.gdk.screen_width()
         screen_height = gtk.gdk.screen_height()
         if position[0] < screen_width and position[1] < screen_height:
