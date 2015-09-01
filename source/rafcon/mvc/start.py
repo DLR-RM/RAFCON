@@ -12,22 +12,24 @@ import argparse
 from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 
 import rafcon
-from rafcon.mvc.controllers import MainWindowController
 
 from rafcon.utils import log
-from rafcon.mvc.views.logging import LoggingView
-from rafcon.mvc.views.main_window import MainWindowView
-import rafcon.statemachine.singleton as sm_singletons
-import rafcon.mvc.singleton as mvc_singletons
 
-from rafcon.network.network_config import global_net_config
-from rafcon.mvc.config import global_gui_config
-from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.statemachine.config import global_config
-
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
+import rafcon.statemachine.singleton as sm_singletons
+
+from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.views.logging import LoggingView
+from rafcon.mvc.views.main_window import MainWindowView
+import rafcon.mvc.singleton as mvc_singletons
+from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
+
+from rafcon.network.network_config import global_net_config
+from rafcon.network.singleton import network_connections
 
 
 def setup_logger(logging_view):
@@ -111,7 +113,7 @@ if __name__ == '__main__':
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
-    parser.add_argument('-i', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
+    parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
@@ -125,6 +127,8 @@ if __name__ == '__main__':
     global_gui_config.load(path=setup_config['gui_config_path'])
     global_net_config.load(path=setup_config['net_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
+
+    network_connections.initialize()
 
     # Make mvc directory the working directory
     # Needed for views, which assume to be in the mvc path and import glade files relatively

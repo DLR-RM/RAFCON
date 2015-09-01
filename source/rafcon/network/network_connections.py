@@ -28,12 +28,18 @@ class NetworkConnections(Observer, gobject.GObject):
         Observer.__init__(self)
 
         self.tcp_connected = False
-
         self._udp_net_controller = udp_net_controller
         self._tcp_net_controller = tcp_net_controller
 
-        self.udp_port = global_net_config.get_config_value("CLIENT_UDP_PORT", 7777)
+        # these variables will be initialized in the initialize method
+        self.udp_port = None
+        self.net_storage_reader = None
+        self.state_machine_execution_engine = None
+        self.state_machine_manager = None
+        self.previous_execution_message = None
 
+    def initialize(self):
+        self.udp_port = global_net_config.get_config_value("CLIENT_UDP_PORT")
         self.net_storage_reader = None
 
         # execution engine

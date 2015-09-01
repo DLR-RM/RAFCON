@@ -1,5 +1,7 @@
 import yaml
 import os
+import argparse
+from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 
 from rafcon.utils.storage_utils import StorageUtils
 from rafcon.utils import log
@@ -15,6 +17,21 @@ def read_file(path, filename):
         file_content = file_pointer.read()
 
     return file_content
+
+
+def config_path(path):
+    if not path or path == 'None':
+        return None
+    # replace ~ with /home/user
+    path = expanduser(path)
+    # e.g. replace ${RAFCON_PATH} with the root path of RAFCON
+    path = expandvars(path)
+    if not isdir(path):
+        raise argparse.ArgumentTypeError("{0} is not a valid path".format(path))
+    if os.access(path, os.R_OK):
+        return path
+    else:
+        raise argparse.ArgumentTypeError("{0} is not a readable dir".format(path))
 
 
 class DefaultConfig(object):

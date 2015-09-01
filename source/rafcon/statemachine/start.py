@@ -23,6 +23,7 @@ import threading
 import rafcon
 # TODO: needed for observer pattern in network/network_connections.py
 import rafcon.mvc.singleton as mvc_singletons
+from rafcon.utils.config import config_path
 
 
 from rafcon.statemachine.config import global_config
@@ -36,21 +37,6 @@ from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.network.network_config import global_net_config
 from rafcon.network.singleton import network_connections
-
-
-def config_path(path):
-    if not path or path == 'None':
-        return None
-    # replace ~ with /home/user
-    path = expanduser(path)
-    # e.g. replace ${RAFCON_PATH} with the root path of RAFCON
-    path = expandvars(path)
-    if not isdir(path):
-        raise argparse.ArgumentTypeError("{0} is not a valid path".format(path))
-    if os.access(path, os.R_OK):
-        return path
-    else:
-        raise argparse.ArgumentTypeError("{0} is not a readable dir".format(path))
 
 
 def state_machine_path(path):
@@ -117,7 +103,7 @@ if __name__ == '__main__':
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
-    parser.add_argument('-i', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
+    parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
@@ -133,6 +119,9 @@ if __name__ == '__main__':
 
     global_config.load(path=setup_config['config_path'])
     global_net_config.load(path=setup_config['net_config_path'])
+
+    # the network connections cannot be initialized before the network configuration was loaded
+    network_connections.initialize()
 
     # Initialize libraries
     sm_singletons.library_manager.initialize()

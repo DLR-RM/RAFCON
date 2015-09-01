@@ -1,7 +1,7 @@
 from rafcon_server.mvc.models.connection_manager import ConnectionManagerModel
 
 from rafcon.network.protobuf import yaml_transmission_pb2
-from rafcon.network.config_network import global_net_config
+from rafcon.network.network_config import global_net_config
 
 from rafcon.utils.storage_utils import StorageUtils
 from rafcon.utils import constants

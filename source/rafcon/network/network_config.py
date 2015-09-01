@@ -15,7 +15,6 @@ class NetworkConfig(DefaultConfig):
 
     def __init__(self):
         super(NetworkConfig, self).__init__(DEFAULT_CONFIG)
-        # self.load(CONFIG_FILE)
         if self.get_config_value("TYPE") != "NETWORK_CONFIG":
             raise ConfigError("Type should be NETWORK_CONFIG for Network configuration. "
                               "Please add \"TYPE: NETWORK_CONFIG\" to your net_config.yaml file.")
