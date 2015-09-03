@@ -19,6 +19,7 @@ from rafcon.statemachine.enums import MethodName
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
+
 class HierarchyState(ContainerState):
 
     """A class tto represent a hierarchy state for the state machine
@@ -37,7 +38,7 @@ class HierarchyState(ContainerState):
                                 check_path=check_path)
 
     def run(self):
-        """ This defines the sequence of actions that are taken when the hierarchy child_state is executed
+        """ This defines the sequence of actions that are taken when the hierarchy is executed
 
         The input_data and output_data comes with a mapping from names to values,
         to transfer the data to the correct ports, the input_data.port_id has to be retrieved again

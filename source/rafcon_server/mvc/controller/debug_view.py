@@ -37,7 +37,7 @@ command_mapping = {
 
 class DebugViewController(ExtendedController):
 
-    def __init__(self, model, view):
+    def __init__(self, model, view, multiprocessing_queue=None):
         assert isinstance(model, ConnectionManagerModel)
         ExtendedController.__init__(self, model, view)
 
@@ -53,6 +53,7 @@ class DebugViewController(ExtendedController):
         self.storage = StorageUtils("~/")
         if not self.storage.exists_path(TEMP_FOLDER):
             self.storage.create_path(TEMP_FOLDER)
+        self.multiprocessing_queue = multiprocessing_queue
 
     @property
     def active_state_machine(self):
@@ -263,7 +264,12 @@ class DebugViewController(ExtendedController):
 
         if not message.startswith('-'):
             self.last_active_state_message = message
+
         self.print_msg("%s: %s" % (msg.sm_name, message))
+
+        # this is for unit testing purpose
+        if self.multiprocessing_queue:
+            self.multiprocessing_queue.put("%s: %s" % (msg.sm_name, message))
 
     def process_yaml_files(self, files):
         for f in files:

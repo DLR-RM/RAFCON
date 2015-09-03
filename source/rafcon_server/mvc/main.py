@@ -15,6 +15,7 @@ from rafcon_server.mvc.controller.debug_view import DebugViewController
 from rafcon_server.mvc.controller.connection_manager import ConnectionManager
 from rafcon_server.mvc.models.connection_manager import ConnectionManagerModel
 
+from rafcon.statemachine.config import global_config
 from rafcon.statemachine.singleton import library_manager
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.singleton import global_storage, state_machine_manager
@@ -46,6 +47,10 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--open', action='store', type=state_machine_path, dest='sm_path', metavar='path',
                         help="specify a directory of a state-machine that shall be opened and started. The path must contain a "
                              "statemachine.yaml file")
+    parser.add_argument('-c', '--config', action='store', type=config_path, metavar='path', dest='config_path',
+                        default=home_path, nargs='?', const=home_path,
+                        help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
+                             "a config file and use the default configuration. Default: {0}".format(home_path))
     parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
@@ -57,6 +62,7 @@ if __name__ == '__main__':
     if not setup_config['sm_path']:
         logger.warn("No statemachine specified")
 
+    global_config.load(path=setup_config['config_path'])
     global_net_config.load(path=setup_config['net_config_path'])
 
     # initialize the logging view
@@ -78,4 +84,4 @@ if __name__ == '__main__':
     debug_view_ctrl = DebugViewController(connection_manager_model, debug_view)
 
     reactor.run()
-    gtk.main()
+    #gtk.main()
