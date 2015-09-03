@@ -32,6 +32,8 @@ from rafcon.statemachine.storage.storage import StateMachineStorage
 # needed for yaml parsing
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
