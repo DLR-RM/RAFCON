@@ -136,10 +136,11 @@ class StateMachineTreeController(ExtendedController):
             try:
                 for state_path, state_row_expanded in self.__expansion_state[self.__my_selected_sm_id].iteritems():
                     state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
-                    state_row_path = self.tree_store.get_path(state_row_iter)
-                    if state_row_expanded:
-                        self.view.expand_to_path(state_row_path)
-                        # print state_path
+                    if state_row_iter:  # may elements are missing afterwards
+                        state_row_path = self.tree_store.get_path(state_row_iter)
+                        if state_row_expanded:
+                            self.view.expand_to_path(state_row_path)
+                            # print state_path
             except (TypeError, KeyError):
                 logger.debug("expansion state of state machine {0} could not be re-done".format(self.__my_selected_sm_id))
 

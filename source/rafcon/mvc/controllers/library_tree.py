@@ -98,10 +98,11 @@ class LibraryTreeController(ExtendedController):
             try:
                 for library_path, library_row_expanded in self.__expansion_state.iteritems():
                     library_row_iter = self.library_row_iter_dict_by_library_path[library_path]
-                    library_row_path = self.library_tree_store.get_path(library_row_iter)
-                    if library_row_expanded:
-                        self.view.expand_to_path(library_row_path)
-                        # print library_path
+                    if library_row_iter:  # may elements are missing afterwards
+                        library_row_path = self.library_tree_store.get_path(library_row_iter)
+                        if library_row_expanded:
+                            self.view.expand_to_path(library_row_path)
+                            # print library_path
             except (TypeError, KeyError):
                 logger.warn("expansion state of library tree could not be re-done")
 
