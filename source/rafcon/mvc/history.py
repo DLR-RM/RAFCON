@@ -484,7 +484,7 @@ class Action:
                         state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
             # logger.debug("CHECK TRANSITIONS %s" % state.transitions.keys())
             for t in state.transitions.values():
-                logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
+                # logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
                 if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
                     state.remove_transition(t.transition_id)
 
