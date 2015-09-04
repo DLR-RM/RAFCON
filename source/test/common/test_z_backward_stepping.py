@@ -88,7 +88,7 @@ def test_backward_stepping():
 
     variables_for_pytest.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir("../rafcon/mvc/")
+    os.chdir(rafcon.__path__[0] + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     logging_view = LoggingView()
@@ -99,7 +99,7 @@ def test_backward_stepping():
     rafcon.statemachine.singleton.library_manager.initialize()
 
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
+        global_storage.load_statemachine_from_yaml(rafcon.__path__[0] + "/../test_scripts/backward_step_barrier_test")
 
     main_window_view = MainWindowView(logging_view)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -123,7 +123,7 @@ def test_backward_stepping():
         logger.debug("Joined currently executing state machine!")
         thread.join()
         logger.debug("Joined test triggering thread!")
-    os.chdir("../../test")
+    os.chdir(rafcon.__path__[0] + "/../test/common")
     variables_for_pytest.test_multithrading_lock.release()
 
 

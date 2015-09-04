@@ -12,15 +12,15 @@ import variables_for_pytest
 
 
 def create_preemption_statemachine():
-    state1 = ExecutionState("FirstState", path="../test_scripts", filename="concurrence_preemption1.py")
+    state1 = ExecutionState("FirstState", path=rafcon.__path__[0] + "/../test_scripts", filename="concurrence_preemption1.py")
     state1.add_outcome("FirstOutcome", 3)
     input_state1 = state1.add_input_data_port("input_data_port1", "float")
 
-    state2 = ExecutionState("SecondState", path="../test_scripts", filename="concurrence_preemption2.py")
+    state2 = ExecutionState("SecondState", path=rafcon.__path__[0] + "/../test_scripts", filename="concurrence_preemption2.py")
     state2.add_outcome("FirstOutcome", 3)
     input_state2 = state2.add_input_data_port("input_data_port1", "float")
 
-    state3 = PreemptiveConcurrencyState("FirstConcurrencyState", path="../test_scripts",
+    state3 = PreemptiveConcurrencyState("FirstConcurrencyState", path=rafcon.__path__[0] + "/../test_scripts",
                                         filename="concurrency_container.py")
     state3.add_state(state1)
     state3.add_state(state2)
@@ -53,11 +53,11 @@ def test_concurrency_preemption_state_execution():
 
 def test_concurrency_preemption_save_load():
     variables_for_pytest.test_multithrading_lock.acquire()
-    s = StateMachineStorage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
     preemption_state_sm = create_preemption_statemachine()
 
-    s.save_statemachine_as_yaml(preemption_state_sm, "../test_scripts/stored_statemachine")
+    s.save_statemachine_as_yaml(preemption_state_sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
     [root_state, version, creation_time] = s.load_statemachine_from_yaml()
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)

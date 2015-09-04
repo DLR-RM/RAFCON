@@ -18,21 +18,21 @@ import variables_for_pytest
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = join(dirname(dirname(realpath(__file__))), "test_scripts", "test_libraries")
+    library_paths["test_libraries"] = join(rafcon.__path__[0] + "/..", "test_scripts", "test_libraries")
 
 
 def test_save_libraries():
-    s = StateMachineStorage("../test_scripts/test_libraries")
+    s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/test_libraries")
 
-    state1 = ExecutionState("library_execution_state1", path="../test_scripts", filename="library_execution_state1.py")
+    state1 = ExecutionState("library_execution_state1", path=rafcon.__path__[0] + "/../test_scripts", filename="library_execution_state1.py")
     input_state1 = state1.add_input_data_port("data_input_port1", "float")
     output_state1 = state1.add_output_data_port("data_output_port1", "float")
 
-    state2 = ExecutionState("library_execution_state2", path="../test_scripts", filename="library_execution_state2.py")
+    state2 = ExecutionState("library_execution_state2", path=rafcon.__path__[0] + "/../test_scripts", filename="library_execution_state2.py")
     input_state2 = state2.add_input_data_port("data_input_port1", "float")
     output_state2 = state2.add_output_data_port("data_output_port1", "float")
 
-    state3 = HierarchyState("library_hierarchy_state1", path="../test_scripts", filename="library_hierarchy_state.py")
+    state3 = HierarchyState("library_hierarchy_state1", path=rafcon.__path__[0] + "/../test_scripts", filename="library_hierarchy_state.py")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
@@ -55,21 +55,21 @@ def test_save_libraries():
                          output_state3)
 
     # save hierarchy state as state machine
-    s.save_statemachine_as_yaml(StateMachine(state3), "../test_scripts/test_libraries/hierarchy_library", "0.1")
+    s.save_statemachine_as_yaml(StateMachine(state3), rafcon.__path__[0] + "/../test_scripts/test_libraries/hierarchy_library", "0.1")
 
     # save execution state as state machine
-    s.save_statemachine_as_yaml(StateMachine(state1), "../test_scripts/test_libraries/execution_library", "0.1")
+    s.save_statemachine_as_yaml(StateMachine(state1), rafcon.__path__[0] + "/../test_scripts/test_libraries/execution_library", "0.1")
 
     # save hierarchy state as nested state machines
     state3.name = "library_nested1"
-    s.save_statemachine_as_yaml(StateMachine(state3), "../test_scripts/test_libraries/library_container/library_nested1", "0.1")
+    s.save_statemachine_as_yaml(StateMachine(state3), rafcon.__path__[0] + "/../test_scripts/test_libraries/library_container/library_nested1", "0.1")
     state3.name = "library_nested2"
-    s.save_statemachine_as_yaml(StateMachine(state3), "../test_scripts/test_libraries/library_container/library_nested2", "0.1")
+    s.save_statemachine_as_yaml(StateMachine(state3), rafcon.__path__[0] + "/../test_scripts/test_libraries/library_container/library_nested2", "0.1")
 
 
 def create_hierarchy_state_library_state_machine():
     rafcon.statemachine.singleton.library_manager.initialize()
-    library_container_state = HierarchyState("LibContainerState", path="../test_scripts",
+    library_container_state = HierarchyState("LibContainerState", path=rafcon.__path__[0] + "/../test_scripts",
                                              filename="hierarchy_state.py")
     lib_state = LibraryState("test_libraries", "hierarchy_library", "0.1", "library_state")
     library_container_state.add_state(lib_state)
@@ -93,7 +93,7 @@ def create_hierarchy_state_library_state_machine():
 
 def create_execution_state_library_state_machine():
     rafcon.statemachine.singleton.library_manager.initialize()
-    library_container_state = HierarchyState("LibContainerState", path="../test_scripts",
+    library_container_state = HierarchyState("LibContainerState", path=rafcon.__path__[0] + "/../test_scripts",
                                              filename="hierarchy_state.py")
     lib_state = LibraryState("test_libraries", "execution_library", "0.1", "library_state")
     library_container_state.add_state(lib_state)
@@ -119,7 +119,7 @@ def test_save_nested_library_state():
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
     rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
-        library_with_nested_library_sm, "../test_scripts/test_libraries/library_with_nested_library", "0.1")
+        library_with_nested_library_sm, rafcon.__path__[0] + "/../test_scripts/test_libraries/library_with_nested_library", "0.1")
 
 
 def test_hierarchy_state_library():

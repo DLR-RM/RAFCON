@@ -32,10 +32,10 @@ from variables_for_pytest import call_gui_callback
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    print "File: " ,dirname(__file__), dirname(dirname(__file__))
+    print "File: ", dirname(__file__), dirname(dirname(__file__))
 
-    library_paths["ros"] = join(dirname(dirname(os.path.realpath(__file__))), "test_scripts", "ros_libraries")
-    library_paths["turtle_libraries"] = join(dirname(dirname(os.path.realpath(__file__))), "test_scripts", "turtle_libraries")
+    library_paths["ros"] = join(rafcon.__path__[0] + "/..", "test_scripts", "ros_libraries")
+    library_paths["turtle_libraries"] = join(rafcon.__path__[0] + "/..", "test_scripts", "turtle_libraries")
 
 
 def setup_logger(logging_view):
@@ -156,7 +156,7 @@ def trigger_gui_signals(*args):
     # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
 
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, "../../test_scripts/tutorials/basic_turtle_demo_sm")
+    call_gui_callback(menubar_ctrl.on_open_activate, None, None, rafcon.__path__[0] + "/../test_scripts/tutorials/basic_turtle_demo_sm")
     # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
     assert len(sm_manager_model.state_machines) == current_sm_length+2
 
@@ -291,7 +291,7 @@ def test_gui():
     variables_for_pytest.test_multithrading_lock.acquire()
     # delete all old state machines
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir("../rafcon/mvc/")
+    os.chdir(rafcon.__path__[0] + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
@@ -313,7 +313,7 @@ def test_gui():
 
     gtk.main()
     logger.debug("after gtk main")
-    os.chdir("../../test")
+    os.chdir(rafcon.__path__[0] + "/../test/common")
     variables_for_pytest.test_multithrading_lock.release()
 
 

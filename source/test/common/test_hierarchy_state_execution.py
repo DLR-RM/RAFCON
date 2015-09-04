@@ -13,12 +13,12 @@ import variables_for_pytest
 
 
 def create_hierarchy_state():
-    state1 = ExecutionState("MyFirstState", path="../test_scripts", filename="first_execution_state.py")
+    state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts", filename="first_execution_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
     state1.add_input_data_port("data_input_port1", "float")
     state1.add_output_data_port("data_output_port1", "float")
 
-    state2 = HierarchyState("MyFirstHierarchyState", path="../test_scripts", filename="hierarchy_state.py")
+    state2 = HierarchyState("MyFirstHierarchyState", path=rafcon.__path__[0] + "/../test_scripts", filename="hierarchy_state.py")
     state2.add_state(state1)
     state2.set_start_state(state1.state_id)
     state2.add_outcome("Container_Outcome", 6)
@@ -35,6 +35,7 @@ def create_hierarchy_state():
                          state2.state_id,
                          state2.get_io_data_port_id_from_name_and_type("output1", DataPortType.OUTPUT))
     return state2
+
 
 def test_hierarchy_state_execution():
     hierarchy_state = create_hierarchy_state()
@@ -53,12 +54,12 @@ def test_hierarchy_state_execution():
     assert hierarchy_state.output_data["output1"] == 52.0
 
 def test_hierarchy_save_load_test():
-    s = StateMachineStorage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
     hierarchy_state = create_hierarchy_state()
     sm = StateMachine(hierarchy_state)
 
-    s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
+    s.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
     [sm_loaded, version, creation_time] = s.load_statemachine_from_yaml()
 
     state_machine = StateMachine(sm_loaded.root_state)

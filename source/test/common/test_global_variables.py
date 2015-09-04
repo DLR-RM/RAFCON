@@ -11,12 +11,14 @@ import variables_for_pytest
 
 
 def create_state_machine():
-    state1 = ExecutionState("MyFirstState", path="../test_scripts", filename="global_variable_state.py")
+    state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts",
+                            filename="global_variable_state.py")
     state1.add_outcome("first_outcome", 3)
     input_state1 = state1.add_input_data_port("input_data_port1", "float")
     output_state1 = state1.add_output_data_port("output_data_port1", "float")
 
-    state3 = HierarchyState("MyFirstHierarchyState", path="../test_scripts", filename="hierarchy_state.py")
+    state3 = HierarchyState("MyFirstHierarchyState", path=rafcon.__path__[0] + "/../test_scripts",
+                            filename="hierarchy_state.py")
     state3.add_state(state1)
     state3.set_start_state(state1.state_id)
     state3.add_outcome("Container_Outcome", 6)

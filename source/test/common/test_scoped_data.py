@@ -13,17 +13,17 @@ import variables_for_pytest
 
 
 def create_statemachine():
-    state1 = ExecutionState("first_state", path="../test_scripts", filename="scoped_data_test_state1.py")
+    state1 = ExecutionState("first_state", path=rafcon.__path__[0] + "/../test_scripts", filename="scoped_data_test_state1.py")
     state1.add_outcome("first_outcome", 3)
     state1.add_input_data_port("data_input_port1", "float")
     state1.add_output_data_port("data_output_port1", "float")
 
-    state2 = ExecutionState("second_state", path="../test_scripts", filename="scoped_data_test_state2.py")
+    state2 = ExecutionState("second_state", path=rafcon.__path__[0] + "/../test_scripts", filename="scoped_data_test_state2.py")
     state2.add_outcome("first_outcome", 3)
     state2.add_input_data_port("data_input_port1", "float")
     state2.add_output_data_port("data_output_port1", "float")
 
-    state3 = HierarchyState("hierarchy_state", path="../test_scripts", filename="hierarchy_state.py")
+    state3 = HierarchyState("hierarchy_state", path=rafcon.__path__[0] + "/../test_scripts", filename="hierarchy_state.py")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
@@ -50,11 +50,11 @@ def create_statemachine():
 # remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
 # states)
 def test_scoped_data():
-    s = StateMachineStorage("../test_scripts/stored_statemachine")
+    s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
     sm = create_statemachine()
 
-    s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
+    s.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
     [sm_loaded, version, creation_time] = s.load_statemachine_from_yaml()
 
     state_machine = StateMachine(sm_loaded.root_state)

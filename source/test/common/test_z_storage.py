@@ -250,4 +250,4 @@ def _test_storage_with_gui():
                        menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
-    os.chdir(rafcon.__path__[0] + "/../test")
+    os.chdir(rafcon.__path__[0] + "/../test/common")

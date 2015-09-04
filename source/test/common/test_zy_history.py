@@ -1374,10 +1374,10 @@ def test_state_machine_changes_with_gui(with_gui=True):
             # logger.debug("Joined currently executing state machine!")
             thread.join()
             logger.debug("Joined test triggering thread!")
-        os.chdir(rafcon.__path__[0] + "/../test")
+        os.chdir(rafcon.__path__[0] + "/../test/common")
         test_multithrading_lock.release()
     else:
-        os.chdir(rafcon.__path__[0] + "/../test")
+        os.chdir(rafcon.__path__[0] + "/../test/common")
         thread.join()
 
 

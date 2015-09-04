@@ -15,15 +15,15 @@ import variables_for_pytest
 
 
 def create_statemachine():
-    state1 = ExecutionState("DummyState1", path="../test_scripts", filename="transition_test_state.py")
+    state1 = ExecutionState("DummyState1", path=rafcon.__path__[0] + "/../test_scripts", filename="transition_test_state.py")
     state1.add_outcome('dummy_outcome_1', 3)
     state1.add_outcome('dummy_outcome_2', 4)
 
-    state2 = ExecutionState("DummyState2", path="../test_scripts", filename="transition_test_state.py")
+    state2 = ExecutionState("DummyState2", path=rafcon.__path__[0] + "/../test_scripts", filename="transition_test_state.py")
     state2.add_outcome('dummy_outcome_1', 3)
     state2.add_outcome('dummy_outcome_2', 4)
 
-    state3 = ExecutionState("DummyState3", path="../test_scripts", filename="transition_test_state.py")
+    state3 = ExecutionState("DummyState3", path=rafcon.__path__[0] + "/../test_scripts", filename="transition_test_state.py")
     state3.add_outcome('dummy_outcome_1', 3)
     state3.add_outcome('dummy_outcome_2', 4)
 
@@ -65,11 +65,11 @@ def create_statemachine():
 
 def test_transition_creation():
 
-    test_storage = StateMachineStorage("../test_scripts/stored_statemachine")
+    test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
     sm = create_statemachine()
 
-    test_storage.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
+    test_storage.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
     [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_yaml()
 
     root_state = sm_loaded.root_state

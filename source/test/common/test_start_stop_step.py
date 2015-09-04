@@ -14,13 +14,13 @@ import variables_for_pytest
 
 
 def return_loop_state_machine():
-    state1 = ExecutionState("MyFirstState", path="../test_scripts", filename="loop_state1.py")
+    state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts", filename="loop_state1.py")
     state1.add_outcome("MyFirstOutcome", 3)
 
-    state2 = ExecutionState("MySecondState", path="../test_scripts", filename="loop_state2.py")
+    state2 = ExecutionState("MySecondState", path=rafcon.__path__[0] + "/../test_scripts", filename="loop_state2.py")
     state2.add_outcome("FirstOutcome", 3)
 
-    state3 = HierarchyState("MyFirstHierarchyState", path="../test_scripts", filename="hierarchy_state.py")
+    state3 = HierarchyState("MyFirstHierarchyState", path=rafcon.__path__[0] + "/../test_scripts", filename="hierarchy_state.py")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
@@ -35,8 +35,8 @@ def test_start_stop_pause_step():
     sm = return_loop_state_machine()
     rafcon.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
 
-    s = StateMachineStorage("../test_scripts/stored_statemachine")
-    s.save_statemachine_as_yaml(sm, "../test_scripts/stored_statemachine")
+    s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    s.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
     sm_loaded, version, creation_time = s.load_statemachine_from_yaml()
 
     variables_for_pytest.test_multithrading_lock.acquire()
