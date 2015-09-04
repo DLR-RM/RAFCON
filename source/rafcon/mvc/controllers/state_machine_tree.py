@@ -85,7 +85,17 @@ class StateMachineTreeController(ExtendedController):
             self.update(model)
             # self.update_tree_store_row(overview['model'][-1])
         else:
-            self.update()
+            if overview['prop_name'][-1] == 'state' and \
+                    overview['method_name'][-1] in ["add_input_data_port", "remove_input_data_port",
+                                                    "add_output_data_port", "remove_output_data_port",
+                                                    "add_scoped_variable", "remove_scoped_variable",
+                                                    "add_outcome", "remove_outcome",
+                                                    "add_data_flow", "remove_data_flow",
+                                                    "add_transition", "remove_transition"]:
+                return
+            self.store_expansion_state()
+            self.update()  # TODO finally the state-machine tree has to be stable without this
+            self.redo_expansion_state()
 
     @ExtendedController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):
@@ -115,7 +125,7 @@ class StateMachineTreeController(ExtendedController):
                 state_row_path = self.tree_store.get_path(state_row_iter)
                 act_expansion_state[state_path] = self.view.row_expanded(state_row_path)
                 # if act_expansion_state[state_path]:
-                    # print state_path
+                #     print state_path
             self.__expansion_state[self.__my_selected_sm_id] = act_expansion_state
         except TypeError:
             logger.debug("expansion state of state machine {0} could not be stored".format(self.__my_selected_sm_id))
@@ -123,12 +133,15 @@ class StateMachineTreeController(ExtendedController):
     def redo_expansion_state(self):
         if self.__my_selected_sm_id in self.__expansion_state:
             # print "\n\n redo of state machine {0} \n\n".format(self.__my_selected_sm_id)
-            for state_path, state_row_expanded in self.__expansion_state[self.__my_selected_sm_id].iteritems():
-                state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
-                state_row_path = self.tree_store.get_path(state_row_iter)
-                if state_row_expanded:
-                    self.view.expand_to_path(state_row_path)
-                    # print state_path
+            try:
+                for state_path, state_row_expanded in self.__expansion_state[self.__my_selected_sm_id].iteritems():
+                    state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
+                    state_row_path = self.tree_store.get_path(state_row_iter)
+                    if state_row_expanded:
+                        self.view.expand_to_path(state_row_path)
+                        # print state_path
+            except (TypeError, KeyError):
+                logger.debug("expansion state of state machine {0} could not be re-done".format(self.__my_selected_sm_id))
 
     def update(self, changed_state_model=None, with_expand=False):
         """
@@ -241,10 +254,10 @@ class StateMachineTreeController(ExtendedController):
                 # logger.debug("reselect state machine tree-selection")
                 # if single selection-mode is set no un-select is needed
                 #self.view.get_selection().unselect_path(actual_path)
-                self.no_cursor_selection = True
+                # self.no_cursor_selection = True
                 self.view.expand_to_path(selected_path)
                 self.view.get_selection().select_iter(selected_iter)
-                self.no_cursor_selection = False
+                # self.no_cursor_selection = False
 
                 # # work around to force selection to state-editor
                 # self._selected_sm_model.selection.set([self._selected_sm_model.selection.get_selected_state()])
