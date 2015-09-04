@@ -21,6 +21,9 @@ class LibraryTreeController(ExtendedController):
 
         self.state_machine_manager_model = state_machine_manager_model
 
+        self.library_row_iter_dict_by_library_path = {}
+        self.__expansion_state = None
+
         self.update()
 
     def register_adapters(self):
@@ -76,11 +79,40 @@ class LibraryTreeController(ExtendedController):
     def model_changed(self, model, prop_name, info):
         self.update()
 
+    def store_expansion_state(self):
+        # print "\n\n store of state machine {0} \n\n".format(self.__my_selected_sm_id)
+        try:
+            act_expansion_library = {}
+            for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.iteritems():
+                library_row_path = self.library_tree_store.get_path(library_row_iter)
+                act_expansion_library[library_path] = self.view.row_expanded(library_row_path)
+                # if act_expansion_library[library_path]:
+                #     print library_path
+            self.__expansion_state = act_expansion_library
+        except TypeError:
+            logger.warn("expansion state of library could not be stored")
+
+    def redo_expansion_state(self):
+        if self.__expansion_state:
+            # print "\n\n redo of state machine {0} \n\n".format(self.__my_selected_sm_id)
+            try:
+                for library_path, library_row_expanded in self.__expansion_state.iteritems():
+                    library_row_iter = self.library_row_iter_dict_by_library_path[library_path]
+                    library_row_path = self.library_tree_store.get_path(library_row_iter)
+                    if library_row_expanded:
+                        self.view.expand_to_path(library_row_path)
+                        # print library_path
+            except (TypeError, KeyError):
+                logger.warn("expansion state of library tree could not be re-done")
+
     def update(self):
-        #logger.debug("Update of library_tree controller called")
+        logger.info("Update of library_tree controller called")
+        self.store_expansion_state()
         self.library_tree_store.clear()
+        self.library_row_iter_dict_by_library_path.clear()
         for library_key, library_item in rafcon.statemachine.singleton.library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")
+        self.redo_expansion_state()
 
     def insert_rec(self, parent, library_key, library_item, library_path):
         #logger.debug("Add new library to tree store: %s" % library_key)
@@ -89,6 +121,7 @@ class LibraryTreeController(ExtendedController):
             library_path = library_key
         else:
             library_path = library_path + "/" + library_key
+        self.library_row_iter_dict_by_library_path[library_path] = tree_item
         if isinstance(library_item, dict):
             #logger.debug("Found library container: %s" % library_key)
             for child_key, child_item in library_item.iteritems():
