@@ -952,7 +952,9 @@ class History(ModelMT):
         """
         if change_type == 'gui_meta_data_changed':
             # store meta data
-            pass
+
+            logger.debug("state %s '%s' history got notification that Meta data has changed" %
+                         (changed_model.state.state_id, changed_model.state.name))
             # -> in case of undo/redo overwrite Model.meta-dict
 
             # self.actual_action = Action('meta_data_changed', changed_parent_model.state.get_path(),  # instance path of parent
@@ -1025,7 +1027,7 @@ class History(ModelMT):
         else:
             # logger.debug("History states_BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = self.parent_state_of_notification_source(model, prop_name, info, before_after='before')
+            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before', with_prints=self.with_prints)
 
             # skipped state changes
             if overview['method_name'][0] == 'state_change' and \
@@ -1076,7 +1078,7 @@ class History(ModelMT):
         else:
             # logger.debug("History states_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = self.parent_state_of_notification_source(model, prop_name, info, before_after='after')
+            overview = parent_state_of_notification_source(model, prop_name, info, before_after='after', with_prints=self.with_prints)
             if overview['method_name'][0] == 'state_change' and \
                     overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status']:
                 if self.with_prints:
@@ -1124,7 +1126,7 @@ class History(ModelMT):
         else:
             # logger.debug("History BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = self.parent_state_of_notification_source(model, prop_name, info, before_after='before')
+            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before', with_prints=self.with_prints)
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
@@ -1180,7 +1182,7 @@ class History(ModelMT):
         else:
             # logger.debug("History state_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = self.parent_state_of_notification_source(model, prop_name, info, before_after='before')
+            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before', with_prints=self.with_prints)
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
@@ -1206,75 +1208,76 @@ class History(ModelMT):
                 if self.with_prints:
                     print "HISTORY after not count"
 
-    def parent_state_of_notification_source(self, model, prop_name, info, before_after):
-        if self.with_prints:
-            print "----- xxxxxxx %s \n%s\n%s\n%s\n" % (before_after, model, prop_name, info)
 
-        def set_dict(info, d):
-            d['model'].append(info['model'])
-            d['prop_name'].append(info['prop_name'])
-            d['instance'].append(info['instance'])
-            d['method_name'].append(info['method_name'])
-            if self.with_prints:
-                print "set"
+def parent_state_of_notification_source(model, prop_name, info, before_after, with_prints):
+    if with_prints:
+        print "----- xxxxxxx %s \n%s\n%s\n%s\n" % (before_after, model, prop_name, info)
 
-        def find_parent(info, elem):
-            elem['info'].append(info)
-            if 'kwargs' in info and info['kwargs']:
-                if self.with_prints:
-                    print 'kwargs'
-                elem['level'].append('kwargs')
-                set_dict(info, elem)
-                if 'method_name' in info['kwargs'] and 'instance' in info['kwargs']:
-                    find_parent(info['kwargs'], elem)
-            elif 'info' in info and info['info']:
-                if self.with_prints:
-                    print 'info'
-                elem['level'].append('info')
-                set_dict(info, elem)
-                find_parent(info['info'], elem)
-            elif 'info' in info:
-                set_dict(info, elem)
-            elif 'kwargs' in info:
-                set_dict(info, elem)
-            else:
-                if self.with_prints:
-                    print 'assert'
-                assert True
-            return elem
+    def set_dict(info, d):
+        d['model'].append(info['model'])
+        d['prop_name'].append(info['prop_name'])
+        d['instance'].append(info['instance'])
+        d['method_name'].append(info['method_name'])
+        if with_prints:
+            print "set"
 
-        overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
-                                      'info': []})
-        info_print = ''
-        info_count = 0
-        for elem in overview['info']:
-            info_print += "\ninfo %s: %s" % (info_count, str(elem))
-            info_count += 1
-        if self.with_prints:
-            print info_print
-            print "model: ", overview['model']
-            print "prop_: ", overview['prop_name']
-            print "insta: ", overview['instance']
-            print "metho: ", overview['method_name']
-            print "level: ", overview['level']
-            print "prop-: ", overview['prop_name'][-1]
-
-        if overview['prop_name'][-1] == 'state':
-            # print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
-            assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
+    def find_parent(info, elem):
+        elem['info'].append(info)
+        if 'kwargs' in info and info['kwargs']:
+            if with_prints:
+                print 'kwargs'
+            elem['level'].append('kwargs')
+            set_dict(info, elem)
+            if 'method_name' in info['kwargs'] and 'instance' in info['kwargs']:
+                find_parent(info['kwargs'], elem)
+        elif 'info' in info and info['info']:
+            if with_prints:
+                print 'info'
+            elem['level'].append('info')
+            set_dict(info, elem)
+            find_parent(info['info'], elem)
+        elif 'info' in info:
+            set_dict(info, elem)
+        elif 'kwargs' in info:
+            set_dict(info, elem)
         else:
-            if overview['model'][-1].parent:
-                if not isinstance(overview['model'][-1].parent.state, State):  # is root_state
-                    overview['model'][-1].state.get_path()
-                    if self.with_prints:
-                        print "Path_root: ", overview['model'][-1].state.get_path()
-                else:
-                    overview['model'][-1].parent.state.get_path()
-                    if self.with_prints:
-                        print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                            overview['model'][-1].parent.state.get_path()
-                    assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
-        return overview
+            if with_prints:
+                print 'assert'
+            assert True
+        return elem
+
+    overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
+                                  'info': []})
+    info_print = ''
+    info_count = 0
+    for elem in overview['info']:
+        info_print += "\ninfo %s: %s" % (info_count, str(elem))
+        info_count += 1
+    if with_prints:
+        print info_print
+        print "model: ", overview['model']
+        print "prop_: ", overview['prop_name']
+        print "insta: ", overview['instance']
+        print "metho: ", overview['method_name']
+        print "level: ", overview['level']
+        print "prop-: ", overview['prop_name'][-1]
+
+    if overview['prop_name'][-1] == 'state':
+        # print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
+        assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
+    else:
+        if overview['model'][-1].parent:
+            if not isinstance(overview['model'][-1].parent.state, State):  # is root_state
+                overview['model'][-1].state.get_path()
+                if with_prints:
+                    print "Path_root: ", overview['model'][-1].state.get_path()
+            else:
+                overview['model'][-1].parent.state.get_path()
+                if with_prints:
+                    print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
+                        overview['model'][-1].parent.state.get_path()
+                assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
+    return overview
 
 
 class ChangeHistory(Observable):
