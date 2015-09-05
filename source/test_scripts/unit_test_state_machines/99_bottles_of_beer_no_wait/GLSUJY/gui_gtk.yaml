@@ -1,0 +1,105 @@
+!Vividict
+data_flow27: !Vividict
+    gui: !Vividict
+        editor_opengl: !Vividict
+            waypoints:
+            - !!python/tuple [64.52454760567403, -61.4113475177305]
+            - !!python/tuple [64.52454760567403, -58.25531914893617]
+data_flow28: !Vividict
+    gui: !Vividict
+        editor_opengl: !Vividict
+            waypoints:
+            - !!python/tuple [64.34570976462834, -61.4113475177305]
+            - !!python/tuple [64.34570976462834, -82.52482269503545]
+data_flow33: !Vividict
+    gui: !Vividict
+        editor_opengl: !Vividict
+            waypoints:
+            - !!python/tuple [42.74514847386999, -82.52482269503545]
+            - !!python/tuple [42.74514847386999, -57.74468085106383]
+data_flow38: !Vividict
+    gui: !Vividict
+        editor_opengl: !Vividict
+            waypoints:
+            - !!python/tuple [9.97059259918693, -82.52482269503545]
+            - !!python/tuple [9.97059259918693, -58.51063829787235]
+gui: !Vividict
+    editor_gaphas: !Vividict
+        rel_pos: !Vividict {}
+        size: !!python/tuple [116.27659574468086, 101.59574468085107]
+    editor_opengl: !Vividict
+        size: !!python/tuple [116.27659574468086, 101.59574468085107]
+income: !Vividict
+    gui: !Vividict
+        editor_gaphas: !Vividict
+            rel_pos: !!python/tuple [1.5, 25.659593723333348]
+name: !Vividict
+    gui: !Vividict
+        editor_gaphas: !Vividict
+            rel_pos: !Vividict {}
+            size: !Vividict {}
+outcome-1: !Vividict
+    gui: !Vividict
+        editor_gaphas: !Vividict
+            rel_pos: !Vividict {}
+outcome-2: !Vividict
+    gui: !Vividict
+        editor_gaphas: !Vividict
+            rel_pos: !Vividict {}
+outcome0: !Vividict
+    gui: !Vividict
+        editor_gaphas: !Vividict
+            rel_pos: !!python/tuple [114.77659574468086, 39.43454444333334]
+scoped29: !Vividict
+    gui: !Vividict
+        editor_gaphas: !Vividict
+            rel_pos: !Vividict {}
+scoped_variable29: !Vividict
+    gui: !Vividict
+        editor_opengl: !Vividict
+            inner_rel_pos: !!python/tuple [20.17021276595744, -74.27127659574468]
+transition1: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: &id001 !Vividict {}
+        editor_gaphas: !Vividict
+            waypoints:
+            - !!python/tuple [19.155682230000004, 25.516104653333343]
+        editor_opengl: !Vividict
+            waypoints: *id001
+transition10: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: &id002 !Vividict {}
+        editor_gaphas: !Vividict
+            waypoints: !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id002
+transition7: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: &id003 !Vividict {}
+        editor_gaphas: !Vividict
+            waypoints: !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id003
+transition8: !Vividict
+    gui: !Vividict
+        editor: !Vividict
+            waypoints: &id004 !Vividict {}
+        editor_gaphas: !Vividict
+            waypoints: !Vividict {}
+        editor_opengl: !Vividict
+            waypoints: *id004
+transition9: !Vividict
+    gui: !Vividict
+        editor_gaphas: !Vividict
+            waypoints:
+            - !!python/tuple [80.28202604999996, 24.36819209333335]
+            - !!python/tuple [19.155682229999996, 24.51168116333335]
+        editor_opengl: !Vividict
+            waypoints:
+            - !!python/tuple [96.04090167723922, -49.5886524822695]
+            - !!python/tuple [96.04090167723922, -24.45143807178587]
+            - !!python/tuple [3.5596824374310785, -24.45143807178588]
+            - !!python/tuple [3.55968243743108, -46.51063829787234]

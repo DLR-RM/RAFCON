@@ -12,7 +12,7 @@ from rafcon.statemachine.enums import StateExecutionState
 
 
 setup_config = dict()
-setup_config['sm_path'] = "../../test_scripts/test_libraries/99_bottles_of_beer_no_wait"
+setup_config['sm_path'] = "../../test_scripts/unit_test_state_machines/99_bottles_of_beer_no_wait"
 setup_config['config_path'] = "./"
 setup_config['net_config_path'] = "./"
 

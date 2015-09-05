@@ -1,0 +1,13 @@
+!ExecutionState
+description: null
+input_data_ports:
+    35: !DataPort {data_port_id: 35, data_type: !!python/name:__builtin__.int '',
+        default_value: 99, name: bottles}
+name: Count bottles
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: ==0, outcome_id: 0}
+    1: !Outcome {name: '>0', outcome_id: 1}
+output_data_ports: {}
+state_id: SFZGMH
