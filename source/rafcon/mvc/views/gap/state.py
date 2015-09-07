@@ -62,6 +62,8 @@ class StateView(Element):
         self._transparent = False
         self._show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
 
+        self.__symbol_size_cache = {}
+
         if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['size'], tuple):
             name_width = self.width * 0.8
             name_height = self.height * 0.4
@@ -315,7 +317,6 @@ class StateView(Element):
         layout = pcc.create_layout()
 
         font_name = constants.FONT_NAMES[1]
-        font_size = 30
 
         def set_font_description():
             layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
@@ -323,11 +324,22 @@ class StateView(Element):
                                font_size,
                                symbol))
 
-        set_font_description()
-
-        while layout.get_size()[0] / float(SCALE) > max_size[0] or layout.get_size()[1] / float(SCALE) > max_size[1]:
-            font_size *= 0.9
+        if symbol in self.__symbol_size_cache and \
+                self.__symbol_size_cache[symbol]['width'] == self.width and \
+                self.__symbol_size_cache[symbol]['height'] == self.height:
+            font_size = self.__symbol_size_cache[symbol]['size']
             set_font_description()
+
+        else:
+            font_size = 30
+            set_font_description()
+
+            pango_size = (self.width * SCALE, self.height * SCALE)
+            while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
+                font_size *= 0.9
+                set_font_description()
+
+            self.__symbol_size_cache[symbol] = {'width': self.width, 'height': self.height, 'size': font_size}
 
         c.move_to(self.width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
                   self.height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
@@ -753,6 +765,8 @@ class NameView(Element):
 
         self.moving = False
 
+        self.__font_size_cache = {'text': None, 'width': None, 'height': None, 'size': None}
+
     @property
     def name(self):
         return self._name
@@ -793,18 +807,27 @@ class NameView(Element):
         layout.set_width(int(self.width) * SCALE)
         layout.set_text(self.name)
 
-        font_name = constants.FONT_NAMES[0]
-        font_size = self.height * 0.8
-
         def set_font_description():
             font = FontDescription(font_name + " " + str(font_size))
             layout.set_font_description(font)
 
-        set_font_description()
-        pango_size = (self.width * SCALE, self.height * SCALE)
-        while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
-            font_size *= 0.9
+        font_name = constants.FONT_NAMES[0]
+
+        if self.__font_size_cache['width'] == self.width and self.__font_size_cache['height'] == self.height and \
+                self.__font_size_cache['text'] == self.name:
+            font_size = self.__font_size_cache['size']
             set_font_description()
+
+        else:
+            font_size = self.height * 0.8
+
+            set_font_description()
+            pango_size = (self.width * SCALE, self.height * SCALE)
+            while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
+                font_size *= 0.9
+                set_font_description()
+
+            self.__font_size_cache = {'text': self.name, 'width': self.width, 'height': self.height, 'size': font_size}
 
         c.move_to(*self.handles()[NW].pos)
         cc.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
