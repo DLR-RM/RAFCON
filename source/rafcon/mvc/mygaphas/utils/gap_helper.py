@@ -1,14 +1,15 @@
-from rafcon.mvc.views.gap.state import StateView, NameView
-from rafcon.mvc.views.gap.ports import InputPortView, OutputPortView, IncomeView, OutcomeView,\
-    ScopedVariablePortView
-from rafcon.mvc.views.gap.connection import TransitionView
 
 from rafcon.statemachine.states.container_state import ContainerState
 
-from gaphas.item import NW
-
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+from gaphas.item import NW
+
+from rafcon.mvc.mygaphas.items.ports import InputPortView, OutputPortView, IncomeView, OutcomeView,\
+    ScopedVariablePortView
+from rafcon.mvc.mygaphas.items.connection import TransitionView
+
 
 
 def calc_rel_pos_to_parent(canvas, item, handle):
@@ -53,6 +54,7 @@ def get_state_id_for_port(port):
     :return: State ID of state containing port
     """
     parent = port.parent
+    from rafcon.mvc.mygaphas.items.state import StateView
     if isinstance(parent, StateView):
         return parent.model.state.state_id
 
@@ -64,6 +66,7 @@ def get_port_for_handle(handle, state):
     :param state: State containing handle and port
     :returns: PortView for handle
     """
+    from rafcon.mvc.mygaphas.items.state import StateView
     if isinstance(state, StateView):
         if state.income.handle == handle:
             return state.income
@@ -349,6 +352,7 @@ def update_meta_data_for_item(graphical_editor_view, grabbed_handle, item, child
     meta_gaphas = None
     meta_opengl = None
 
+    from rafcon.mvc.mygaphas.items.state import StateView, NameView
     if isinstance(item, StateView):
         # If handle for state resize was pulled
         if grabbed_handle in item.corner_handles or child_resize:

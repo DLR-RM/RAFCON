@@ -1,26 +1,25 @@
-from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
-from gaphas.aspect import Connector, HandleFinder, ItemConnectionSink
-from gaphas.item import NW
-
-from rafcon.mvc.views.gap.connection import ConnectionView, ConnectionPlaceholderView, TransitionView,\
-    DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
-from rafcon.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
-    ScopedVariablePortView
-from rafcon.mvc.views.gap.state import StateView, NameView
-
-from rafcon.mvc.controllers.gap.aspect import HandleInMotion
-from rafcon.mvc.controllers.gap import gap_helper
-from rafcon.mvc.singleton import state_machine_manager_model
-
 import gtk
 from gtk.gdk import CONTROL_MASK
 from enum import Enum
 from math import pow
 
+from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc.statemachine_helper import StateMachineHelper
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
+from gaphas.item import NW
+from gaphas.aspect import HandleFinder, ItemConnectionSink
+
+from rafcon.mvc.mygaphas.aspect import HandleInMotion, Connector
+from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView,\
+    DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
+from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
+    ScopedVariablePortView
+from rafcon.mvc.mygaphas.items.state import StateView, NameView
+from rafcon.mvc.mygaphas.utils import gap_helper
 
 
 PortMoved = Enum('PORT', 'FROM TO')

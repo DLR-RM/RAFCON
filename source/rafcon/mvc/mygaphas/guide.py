@@ -3,10 +3,12 @@ Module implements guides when moving items and handles around.
 """
 
 from simplegeneric import generic
-from gaphas.aspect import InMotion, HandleInMotion, PaintFocused
-from gaphas.aspect import ItemInMotion, ItemHandleInMotion, ItemPaintFocused
-from gaphas.connector import Handle
-from gaphas.item import Item, Element, Line, SE
+
+from gaphas.aspect import InMotion, PaintFocused, ItemInMotion, ItemPaintFocused
+from gaphas.item import Item, Element, Line
+
+from rafcon.mvc.mygaphas.aspect import HandleInMotion, ItemHandleInMotion
+from rafcon.mvc.mygaphas.items.state import StateView
 
 
 class ItemGuide(object):
@@ -203,7 +205,6 @@ class GuidedItemInMotion(GuideMixin, ItemInMotion):
     """
 
     def get_excluded_items(self):
-        from rafcon.mvc.views.gap.state import StateView
 
         root_items = self.view.canvas.get_root_items()
         exclude_items = set(self.view.canvas.get_all_children(root_items[0]))

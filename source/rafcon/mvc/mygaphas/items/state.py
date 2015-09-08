@@ -1,32 +1,30 @@
 from weakref import ref
-
-import cairo
 from pango import SCALE, FontDescription, WRAP_WORD
-
-from gtk.gdk import CairoContext, Color
 from math import pow
-
 from copy import copy
 
-from gaphas.item import Element, NW, NE, SW, SE
-from gaphas.connector import Position
+from rafcon.utils import constants, log
 
-from rafcon.mvc.views.gap.constraint import KeepRectangleWithinConstraint, PortRectConstraint
-from rafcon.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
-    ScopedVariablePortView
-from rafcon.mvc.views.gap.connection import TransitionView
+from rafcon.statemachine.states.library_state import LibraryState
+
 from rafcon.mvc.config import global_gui_config
-
-from rafcon.mvc.controllers.gap.enums import SnappedSide
-from rafcon.mvc.controllers.gap.gap_draw_helper import get_col_rgba
-
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.container_state import ContainerStateModel
 
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.mvc.controllers.gap import gap_draw_helper
+import cairo
+from gtk.gdk import CairoContext, Color
+from gaphas.item import Element, NW, NE, SW, SE
+from gaphas.connector import Position
 
-from rafcon.utils import constants, log
+from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint
+from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
+    ScopedVariablePortView
+from rafcon.mvc.mygaphas.items.connection import TransitionView
+from rafcon.mvc.mygaphas.utils.enums import SnappedSide
+from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
+from rafcon.mvc.mygaphas.utils import gap_draw_helper
+
+
 logger = log.get_logger(__name__)
 
 
@@ -678,7 +676,7 @@ class StateView(Element):
                 return pos + constants.INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER * port_size
 
     def resize_all_children(self, old_size, paste=False):
-        from rafcon.mvc.controllers.gap import gap_helper
+        from rafcon.mvc.mygaphas.utils import gap_helper
         new_size = (self.width, self.height)
         canvas = self.canvas
 

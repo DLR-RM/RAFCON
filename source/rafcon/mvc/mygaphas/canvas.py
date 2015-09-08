@@ -1,9 +1,9 @@
-from gaphas.canvas import Canvas
 from gaphas.solver import Projection
 from gaphas.decorators import nonrecursive, async, PRIORITY_HIGH_IDLE
+from gaphas.canvas import Canvas
 
-from rafcon.mvc.views.gap.state import StateView, NameView
-from rafcon.mvc.views.gap.constraint import KeepRectangleWithinConstraint
+from rafcon.mvc.mygaphas.items.state import StateView, NameView
+from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint
 
 
 class MyCanvas(Canvas):

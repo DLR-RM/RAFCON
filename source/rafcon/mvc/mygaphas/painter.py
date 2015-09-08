@@ -1,9 +1,10 @@
+from cairo import ANTIALIAS_NONE, Matrix
+
+from gaphas.aspect import PaintFocused, ItemPaintFocused
 from gaphas.painter import HandlePainter
 
-from rafcon.mvc.views.gap.connection import ConnectionView, ScopedVariableDataFlowView
-from rafcon.mvc.views.gap.state import StateView
-
-from cairo import ANTIALIAS_NONE
+from rafcon.mvc.mygaphas.items.connection import ConnectionView, ScopedVariableDataFlowView, DataFlowView
+from rafcon.mvc.mygaphas.items.state import StateView
 
 
 class CustomColorHandlePainter(HandlePainter):
@@ -63,3 +64,41 @@ class CustomColorHandlePainter(HandlePainter):
             cairo.set_source_rgba(r/4., g/4., b/4., opacity*1.3)
             cairo.stroke()
         cairo.restore()
+
+
+@PaintFocused.when_type(ConnectionView)
+class LineSegmentPainter(ItemPaintFocused):
+    """
+    This painter draws pseudo-handles on gaphas.item.Line objects. Each
+    line can be split by dragging those points, which will result in
+    a new handle.
+
+    ConnectHandleTool take care of performing the user
+    interaction required for this feature.
+    """
+
+    def paint(self, context):
+        view = self.view
+        item = view.hovered_item
+        if isinstance(item, DataFlowView):
+            return
+        if item and item is view.focused_item:
+            cr = context.cairo
+            h = item.handles()
+            for h1, h2 in zip(h[:-1], h[1:]):
+                p1, p2 = h1.pos, h2.pos
+                cx = (p1.x + p2.x) / 2
+                cy = (p1.y + p2.y) / 2
+                cr.save()
+                cr.identity_matrix()
+                m = Matrix(*view.get_matrix_i2v(item))
+
+                cr.set_antialias(ANTIALIAS_NONE)
+                cr.translate(*m.transform_point(cx, cy))
+                cr.rectangle(-3, -3, 6, 6)
+                cr.set_source_rgba(0, 0, 0.5, .4)
+                cr.fill_preserve()
+                cr.set_source_rgba(.25, .25, .25, .6)
+                cr.set_line_width(1)
+                cr.stroke()
+                cr.restore()

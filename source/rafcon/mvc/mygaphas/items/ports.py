@@ -1,28 +1,24 @@
 from weakref import ref
+from math import pi
+from pango import SCALE, FontDescription
 
 from gaphas.connector import PointPort, Handle
+from gtkmvc.model import Model
+import cairo
+from gtk.gdk import Color, CairoContext
+
+from rafcon.utils import constants
+
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models.outcome import OutcomeModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
-from rafcon.utils import constants
-
-from rafcon.mvc.controllers.gap import gap_draw_helper
-
-from gtkmvc.model import Model
-
-from math import pi
-
-import cairo
-from pango import SCALE, FontDescription
-from gtk.gdk import Color, CairoContext
-
-from rafcon.mvc.controllers.gap.enums import SnappedSide, Direction
-
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.mvc.mygaphas.utils import gap_draw_helper
+from rafcon.mvc.mygaphas.utils.enums import SnappedSide, Direction
 
 
 class PortView(Model, object):
@@ -113,7 +109,7 @@ class PortView(Model, object):
         return len(self._incoming_handles) > 0
 
     def add_connected_handle(self, handle, connection_view, moving=False):
-        from rafcon.mvc.views.gap.connection import ConnectionView
+        from rafcon.mvc.mygaphas.items.connection import ConnectionView
         assert isinstance(handle, Handle)
         assert isinstance(connection_view, ConnectionView)
         if not moving and handle is connection_view.from_handle() and handle not in self._outgoing_handles:
@@ -163,7 +159,6 @@ class PortView(Model, object):
         return True
 
     def is_connected_to_scoped_variable(self):
-        from rafcon.mvc.views.gap.connection import ScopedVariableDataFlowView
         for conn in self._connected_connections:
             if isinstance(conn, ScopedVariableDataFlowView):
                 return True

@@ -2,9 +2,9 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 from gaphas.constraint import Constraint
-from rafcon.mvc.views.gap.ports import PortView
 
-from rafcon.mvc.controllers.gap.enums import SnappedSide
+from rafcon.mvc.mygaphas.items.ports import PortView
+from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 
 from copy import deepcopy
 

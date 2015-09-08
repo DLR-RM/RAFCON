@@ -1,8 +1,6 @@
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
-from rafcon.mvc.controllers.gap import segment  # do not remove - needed for GUI to work
-
 from rafcon.statemachine.enums import StateType
 from gaphas.item import NW
 
@@ -15,16 +13,14 @@ from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, 
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
-from rafcon.mvc.views.gap.state import StateView
-from rafcon.mvc.views.gap.connection import DataFlowView, TransitionView, FromScopedVariableDataFlowView,\
+from rafcon.mvc.mygaphas.items.state import StateView
+from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView, FromScopedVariableDataFlowView,\
     ToScopedVariableDataFlowView
 
 from rafcon.mvc.config import global_gui_config
 
-from rafcon.mvc.views.gap.canvas import MyCanvas
+from rafcon.mvc.mygaphas.canvas import MyCanvas
 
-from gaphas import Canvas
-import rafcon.mvc.controllers.gap.guide
 from functools import partial
 
 class GraphicalEditorController(ExtendedController):

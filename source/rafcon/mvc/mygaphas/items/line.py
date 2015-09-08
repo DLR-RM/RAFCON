@@ -1,18 +1,17 @@
+from pango import FontDescription
+from math import atan2, pi
+
 from gaphas.item import Line, NW, SE
-from gaphas.segment import Segment
-
-from rafcon.mvc.views.gap.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
-from rafcon.mvc.views.gap.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, PortView
-
-from rafcon.mvc.controllers.gap.enums import SnappedSide
+from gtk.gdk import CairoContext
+from cairo import ANTIALIAS_SUBPIXEL
 
 from rafcon.utils import constants
+
 from rafcon.mvc.config import global_gui_config
 
-from gtk.gdk import Color, CairoContext
-from pango import FontDescription
-from cairo import ANTIALIAS_SUBPIXEL
-from math import atan2, pi
+from rafcon.mvc.mygaphas.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
+from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, PortView
+from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 
 
 class PerpLine(Line):
@@ -21,6 +20,7 @@ class PerpLine(Line):
         super(PerpLine, self).__init__()
         self._from_handle = self.handles()[0]
         self._to_handle = self.handles()[1]
+        from rafcon.mvc.mygaphas.segment import Segment
         self._segment = Segment(self, view=self.canvas)
 
         self.hierarchy_level = hierarchy_level
