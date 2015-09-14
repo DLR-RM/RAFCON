@@ -81,8 +81,9 @@ class StateOverviewController(ExtendedController, Model):
             self.view['library_path'].set_text(self.model.state.library_path + "/" + self.model.state.library_name)
             combo.set_sensitive(False)
         else:
-            self.view['label_library_name'].hide()
-            self.view['library_name'].hide()
+            self.view['label_library_path'].destroy()
+            self.view['library_path'].destroy()
+
             for key, value in self.state_types_dict.iteritems():
                 if value['class'] == type(self.model.state):
                     l_store.prepend([key])
