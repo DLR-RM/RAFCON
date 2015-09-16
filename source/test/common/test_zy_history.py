@@ -593,9 +593,9 @@ def test_add_remove_history(with_print=False):
 
         # prepare again state4
         output_state4 = state4.add_output_data_port("output", "int")
-        input_state4 = state4.add_input_data_port("input", "str", "zero")
+        input_state4 = state4.add_input_data_port("input_new", "str", "zero")
         assert len(sm_history.changes.single_trail_history()) == 16
-        output_state4 = state4.add_output_data_port("output", "int")
+        output_state4 = state4.add_output_data_port("output_new", "int")
         assert len(sm_history.changes.single_trail_history()) == 17
 
         state5 = ExecutionState('State5')
