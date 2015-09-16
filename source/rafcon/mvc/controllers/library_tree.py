@@ -32,9 +32,9 @@ class LibraryTreeController(ExtendedController):
     def register_view(self, view):
         self.view.connect('cursor-changed', self.on_cursor_changed)
 
-        self.view.connect('button_press_event', self.right_click)
+        self.view.connect('button_press_event', self.mouse_click)
 
-    def right_click(self, widget, event=None):
+    def mouse_click(self, widget, event=None):
         # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}".format(event.button, gtk.gdk.BUTTON_PRESS, event.type == gtk.gdk._2BUTTON_PRESS, event.type == gtk.gdk.BUTTON_PRESS, event.button == 1))
         if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
