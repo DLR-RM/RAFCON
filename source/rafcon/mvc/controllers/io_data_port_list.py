@@ -170,7 +170,7 @@ class DataPortListController(ExtendedController):
         try:
             data_port_id = self.get_data_port_id_from_selection()
             self.state_data_port_dict[data_port_id].name = text
-        except (ValueError, TypeError) as e:
+        except TypeError as e:
             logger.error("Error while trying to change the port name: {0}".format(e))
 
     def on_data_type_changed(self, widget, column_id, text):
