@@ -97,10 +97,10 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="label_library_name">
+      <object class="GtkLabel" id="label_library_path">
         <property name="visible">True</property>
         <property name="xalign">0</property>
-        <property name="label" translatable="yes">Library Name</property>
+        <property name="label" translatable="yes">Library Path/Name</property>
       </object>
       <packing>
         <property name="top_attach">1</property>
@@ -108,7 +108,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkEntry" id="library_name">
+      <object class="GtkEntry" id="library_path">
         <property name="visible">True</property>
         <property name="sensitive">False</property>
         <property name="can_focus">True</property>

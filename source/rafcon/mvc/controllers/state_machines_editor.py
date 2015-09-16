@@ -7,6 +7,12 @@ from rafcon.mvc.controllers.graphical_editor import GraphicalEditorController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.state_machine import StateMachineModel, StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
+
+import rafcon.statemachine.singleton
+from rafcon.utils import constants, helper
+from rafcon.mvc.config import global_gui_config
+from rafcon.network.network_config import global_net_config
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -15,13 +21,10 @@ try:
     from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
     from rafcon.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
         GraphicalEditorGaphasController
-except Exception as e:
-    logger.error("%s, %s" % (e.message, traceback.format_exc()))
+except ImportError as e:
+    logger.warn("The Gaphas graphical editor is not supported due to missing libraries -> {0}".format(e.message))
+    # logger.error("%s, %s" % (e.message, traceback.format_exc()))
     GAPHAS_AVAILABLE = False
-
-import rafcon.statemachine.singleton
-from rafcon.utils import constants, helper
-from rafcon.mvc.config import global_gui_config
 
 
 def create_tab_close_button(callback, *additional_parameters):
@@ -84,7 +87,8 @@ class StateMachinesEditorController(ExtendedController):
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
-        self.add_controller('network_connections_ctrl', network_connections_ctrl)
+        if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
+            self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
         self.tabs = {}
 

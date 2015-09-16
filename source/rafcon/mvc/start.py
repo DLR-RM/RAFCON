@@ -24,12 +24,14 @@ import rafcon.statemachine.singleton as sm_singletons
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.main_window import MainWindowView
+
 import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-
 from rafcon.network.network_config import global_net_config
-from rafcon.network.singleton import network_connections
+
+if global_net_config.get_config_value("NETWORK_CONNECTIONS"):
+    from rafcon.network.singleton import network_connections
 
 
 def setup_logger(logging_view):
@@ -128,7 +130,8 @@ if __name__ == '__main__':
     global_net_config.load(path=setup_config['net_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
 
-    network_connections.initialize()
+    if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
+        network_connections.initialize()
 
     # Make mvc directory the working directory
     # Needed for views, which assume to be in the mvc path and import glade files relatively

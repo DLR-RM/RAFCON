@@ -75,6 +75,8 @@ class StateMachineHistoryController(ExtendedController):
             self.observe_model(self._selected_sm_model.history)
             self.update(None, None, None)
         else:
+            if self.__my_selected_sm_id is not None:
+                self.list_store.clear()
             self.__my_selected_sm_id = None
             self._selected_sm_model = None
 

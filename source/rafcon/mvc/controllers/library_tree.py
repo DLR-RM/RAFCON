@@ -35,6 +35,14 @@ class LibraryTreeController(ExtendedController):
         self.view.connect('button_press_event', self.right_click)
 
     def right_click(self, widget, event=None):
+        # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}".format(event.button, gtk.gdk.BUTTON_PRESS, event.type == gtk.gdk._2BUTTON_PRESS, event.type == gtk.gdk.BUTTON_PRESS, event.button == 1))
+        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+            (model, row) = self.view.get_selection().get_selected()
+            if isinstance(model[row][1], dict):  # double click on folder, not library
+                return False
+            logger.info("left double click event detected -> open library: {0}/{1}".format(model[row][2], model[row][0]))
+            self.open_button_clicked(None)
+            return True
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             menu = gtk.Menu()
             add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
