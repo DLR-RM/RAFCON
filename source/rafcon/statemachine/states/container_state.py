@@ -589,6 +589,13 @@ class ContainerState(State):
             scoped_variable_id = generate_data_flow_id()
         self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value,
                                                                     scoped_variable_id, self)
+
+        # Check for name uniqueness
+        valid, message = self._check_data_port_name(self._scoped_variables[scoped_variable_id])
+        if not valid:
+            del self._scoped_variables[scoped_variable_id]
+            raise ValueError(message)
+
         return scoped_variable_id
 
     @Observable.observed
@@ -907,14 +914,6 @@ class ContainerState(State):
                     return False, "Connection of two non-compatible data types"
         return True, "valid"
 
-    def _check_data_port_validity(self, check_data_port):
-        valid, message = super(ContainerState, self)._check_data_port_validity(check_data_port)
-        if not valid:
-            return False, message
-        if check_data_port.data_port_id not in self.scoped_variables:
-            return True, message
-        return self._check_scoped_variable_name(check_data_port)
-
     def _check_data_port_id(self, data_port):
         """Checks the validity of a data port id
 
@@ -935,19 +934,27 @@ class ContainerState(State):
                 return False, "data port id already existing in state"
         return True, message
 
-    def _check_scoped_variable_name(self, check_scoped_variable):
-        """Checks the validity of a scoped variable name
+    def _check_data_port_name(self, data_port):
+        """Checks the validity of a data port name
 
-        Checks whether the name of the given scoped variable is already used by anther scoped variable within the state.
+        Checks whether the name of the given data port is already used by anther data port within the state. Names
+        must be unique with input data ports, output data ports and scoped variables.
 
-        :param rafcon.statemachine.scope.ScopedVariable check_scoped_variable: The scoped variable to be checked
+        :param rafcon.statemachine.data_port.DataPort data_port: The data port to be checked
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
-            more information especially if the scoped variable is not valid
+            more information especially if the data port is not valid
         """
-        for scoped_variable in self.scoped_variables.values():
-            if check_scoped_variable.name == scoped_variable.name and check_scoped_variable is not scoped_variable:
-                return False, "Name of scoped variable already used by another scoped variable within the state"
-        return True, "valid"
+        # First check inputs and outputs
+        valid, message = super(ContainerState, self)._check_data_port_name(data_port)
+        if not valid:
+            return False, message
+
+        if data_port.data_port_id in self.scoped_variables:
+            for scoped_variable in self.scoped_variables.itervalues():
+                if data_port.name == scoped_variable.name and data_port is not scoped_variable:
+                    return False, "scoped variable name already existing in state's scoped variables"
+
+        return True, message
 
     def _check_data_flow_validity(self, check_data_flow):
         """Checks the validity of a data flow

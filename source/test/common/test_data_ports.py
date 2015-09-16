@@ -1,3 +1,6 @@
+# test for expected exceptions
+from pytest import raises
+
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -63,5 +66,71 @@ def test_default_values_of_data_ports():
     assert root_state.output_data["output_data_port1"] == "default_value"
 
 
+def test_unique_port_names():
+
+    state = ExecutionState('execution state')
+
+    state.add_input_data_port("in", "int", 0)
+    state.add_output_data_port("out", "int", 0)
+
+    # Data port name must be unique within data port set (input or output)
+    with raises(ValueError):
+        state.add_input_data_port("in", "int", 0)
+    with raises(ValueError):
+        state.add_input_data_port("in", "double", 0)
+    with raises(ValueError):
+        state.add_output_data_port("out", "int", 0)
+    with raises(ValueError):
+        state.add_output_data_port("out", "double", 0)
+
+    # Names are allowed for other data port set
+    state.add_output_data_port("in", "int", 0)
+    state.add_input_data_port("out", "int", 0)
+
+    assert len(state.input_data_ports) == 2
+    assert len(state.output_data_ports) == 2
+
+    state = HierarchyState('hierarchy state')
+
+    in_id = state.add_input_data_port("in", "int", 0)
+    out_id = state.add_output_data_port("out", "int", 0)
+    scope_id = state.add_scoped_variable("scope", "int", 0)
+
+    # Data port name must be unique within data port set (input, output or scope)
+    with raises(ValueError):
+        state.add_input_data_port("in", "int", 0)
+    with raises(ValueError):
+        state.add_input_data_port("in", "double", 0)
+    with raises(ValueError):
+        state.add_output_data_port("out", "int", 0)
+    with raises(ValueError):
+        state.add_output_data_port("out", "double", 0)
+    with raises(ValueError):
+        state.add_scoped_variable("scope", "int", 0)
+    with raises(ValueError):
+        state.add_scoped_variable("scope", "double", 0)
+
+    # Names are allowed for other data port set
+    state.add_output_data_port("in", "int", 0)
+    state.add_scoped_variable("in", "int", 0)
+    state.add_input_data_port("out", "int", 0)
+    state.add_scoped_variable("out", "int", 0)
+    state.add_input_data_port("scope", "int", 0)
+    state.add_output_data_port("scope", "int", 0)
+
+    # Also renaming should raise exceptions
+    with raises(ValueError):
+        state.input_data_ports[in_id].name = "out"
+    with raises(ValueError):
+        state.output_data_ports[out_id].name = "in"
+    with raises(ValueError):
+        state.scoped_variables[scope_id].name = "out"
+
+    assert len(state.input_data_ports) == 3
+    assert len(state.output_data_ports) == 3
+    assert len(state.scoped_variables) == 3
+
+
 if __name__ == '__main__':
     test_default_values_of_data_ports()
+    test_unique_port_names()

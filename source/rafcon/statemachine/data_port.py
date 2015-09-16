@@ -102,7 +102,10 @@ class DataPort(Observable, yaml.YAMLObject):
         if not isinstance(name, str):
             raise TypeError("Name must be of type str")
 
-        self._name = name
+        if len(name) < 1:
+            raise ValueError("Name cannot be empty")
+
+        self.__change_property_with_validity_check('_name', name)
 
     @property
     def data_type(self):
