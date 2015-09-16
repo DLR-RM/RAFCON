@@ -73,6 +73,7 @@ def test_unique_port_names():
     state.add_input_data_port("in", "int", 0)
     state.add_output_data_port("out", "int", 0)
 
+    # Data port name must be unique within data port set (input or output)
     with raises(ValueError):
         state.add_input_data_port("in", "int", 0)
     with raises(ValueError):
@@ -82,12 +83,17 @@ def test_unique_port_names():
     with raises(ValueError):
         state.add_output_data_port("out", "double", 0)
 
+    # Names are allowed for other data port set
+    state.add_output_data_port("in", "int", 0)
+    state.add_input_data_port("out", "int", 0)
+
     state = HierarchyState('hierarchy state')
 
     state.add_input_data_port("in", "int", 0)
     state.add_output_data_port("out", "int", 0)
     state.add_scoped_variable("scope", "int", 0)
 
+    # Data port name must be unique within data port set (input, output or scope)
     with raises(ValueError):
         state.add_input_data_port("in", "int", 0)
     with raises(ValueError):
@@ -100,6 +106,14 @@ def test_unique_port_names():
         state.add_scoped_variable("scope", "int", 0)
     with raises(ValueError):
         state.add_scoped_variable("scope", "double", 0)
+
+    # Names are allowed for other data port set
+    state.add_output_data_port("in", "int", 0)
+    state.add_scoped_variable("in", "int", 0)
+    state.add_input_data_port("out", "int", 0)
+    state.add_scoped_variable("out", "int", 0)
+    state.add_input_data_port("scope", "int", 0)
+    state.add_output_data_port("scope", "int", 0)
 
 
 if __name__ == '__main__':
