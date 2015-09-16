@@ -197,11 +197,19 @@ class State(Observable, yaml.YAMLObject):
         :param name: the name of the new input data port
         :param data_type: the type of the new input data port
         :param default_value: the default value of the data port
-
+        :param data_port_id: the data_port_id of the new data port
+        :return: data_port_id of new input data port
         """
         if data_port_id is None:
             data_port_id = generate_data_flow_id()
         self._input_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id, self)
+
+        # Check for name uniqueness
+        valid, message = self._check_data_port_name(self._input_data_ports[data_port_id])
+        if not valid:
+            del self._input_data_ports[data_port_id]
+            raise ValueError(message)
+
         return data_port_id
 
     @Observable.observed
@@ -243,12 +251,19 @@ class State(Observable, yaml.YAMLObject):
         :param name: the name of the new output data port
         :param data_type: the type of the new output data port
         :param default_value: the default value of the data port
-
+        :param data_port_id: the data_port_id of the new data port
+        :return: data_port_id of new output data port
         """
-
         if data_port_id is None:
             data_port_id = generate_data_flow_id()
         self._output_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id, self)
+
+        # Check for name uniqueness
+        valid, message = self._check_data_port_name(self._output_data_ports[data_port_id])
+        if not valid:
+            del self._output_data_ports[data_port_id]
+            raise ValueError(message)
+
         return data_port_id
 
     @Observable.observed
@@ -477,6 +492,10 @@ class State(Observable, yaml.YAMLObject):
         if not valid:
             return False, message
 
+        valid, message = self._check_data_port_name(check_data_port)
+        if not valid:
+            return False, message
+
         # Check whether the type matches any connected data port type
         # Only relevant, if there is a parent state, otherwise the port cannot be connected to data flows
         # TODO: check of internal connections
@@ -502,6 +521,28 @@ class State(Observable, yaml.YAMLObject):
         for output_data_port_id, output_data_port in self.output_data_ports.iteritems():
             if data_port.data_port_id == output_data_port_id and data_port is not output_data_port:
                 return False, "data port id already existing in state"
+        return True, "valid"
+
+    def _check_data_port_name(self, data_port):
+        """Checks the validity of a data port name
+
+        Checks whether the name of the given data port is already used by anther data port within the state. Names
+        must be unique with input data ports and output data ports.
+
+        :param rafcon.statemachine.data_port.DataPort data_port: The data port to be checked
+        :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
+            more information especially if the data port is not valid
+        """
+        if data_port.data_port_id in self.input_data_ports:
+            for input_data_port in self.input_data_ports.itervalues():
+                if data_port.name == input_data_port.name and data_port is not input_data_port:
+                    return False, "data port name already existing in state's input data ports"
+
+        elif data_port.data_port_id in self.output_data_ports:
+            for output_data_port in self.output_data_ports.itervalues():
+                if data_port.name == output_data_port.name and data_port is not output_data_port:
+                    return False, "data port name already existing in state's output data ports"
+
         return True, "valid"
 
     def check_input_data_type(self, input_data):
