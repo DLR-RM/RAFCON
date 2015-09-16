@@ -87,7 +87,7 @@ class LibraryManager(Observable):
         :return:
         """
         for lib in os.listdir(lib_path):
-            if os.path.isdir(os.path.join(lib_path, lib)) and '.' not in lib:
+            if os.path.isdir(os.path.join(lib_path, lib)) and not '.' == lib[0]:
                 if os.path.exists(os.path.join(os.path.join(lib_path, lib), StateMachineStorage.STATEMACHINE_FILE)):
                     self.add_library(lib, lib_path, target_dict)
                 else:
@@ -98,8 +98,8 @@ class LibraryManager(Observable):
                     else:
                         target_dict[lib] = dict(sorted(target_dict[lib].items()))
             else:
-                if os.path.isdir(os.path.join(lib_path, lib)) and '.' in lib:
-                    logger.warn('lib_root_path/lib_path *.*-folder are ignored if within lib_path, e.g. -> {0} -> full path is {1}'.format(lib, os.path.join(lib_path, lib)))
+                if os.path.isdir(os.path.join(lib_path, lib)) and '.' == lib[0]:
+                    logger.warn('lib_root_path/lib_path .*-folder are ignored if within lib_path, e.g. -> {0} -> full path is {1}'.format(lib, os.path.join(lib_path, lib)))
 
     def add_library(self, lib, lib_path, target_dict):
         """
