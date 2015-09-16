@@ -2,8 +2,15 @@ from gtk import TreeView
 from gtk.keysyms import Tab as KEY_TAB, ISO_Left_Tab
 
 
-class MoveAndEditTabUtilController:
-    """ Works for text cell renderer """
+class MoveAndEditWithTabKeyListFeatureController:
+    """ The Controller introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a gtk.TreeView.
+     It is designed to work with a gtk.TreeView which model is a gtk.ListStore and only uses text cell renderer.
+     Additional, the TreeView is assumed to be used as a list not as a tree.
+     With the "tab"-key the cell on the right site of the actual focused cell is started to be edit. Changes in the
+     gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
+     with the first cell of the next row. With the "shift-tab"-key the inverse functionality of the "tab"-key is provided.
+     The Controller over steps not editable cells.
+    """
 
     def __init__(self, tree_view):
 
@@ -15,7 +22,7 @@ class MoveAndEditTabUtilController:
 
     def register_view(self):
 
-        self.view.connect('key-press-event', self.tree_view_keypress_cb)
+        self.view.connect('key-press-event', self.tree_view_keypress_callback)
 
         for column in self.widget_columns:
             column.get_cell_renderers()[0].connect('editing-started', self.store_entry_widget)
@@ -30,12 +37,12 @@ class MoveAndEditTabUtilController:
         # logger.info("entry widget canceled")
         self.last_entry_widget = None
 
-    def tree_view_keypress_cb(self, widget, event):
+    def tree_view_keypress_callback(self, widget, event):
         # logger.info("key_value: " + str(event.keyval))
 
         if event.keyval == KEY_TAB or event.keyval == ISO_Left_Tab:
             [path, focus_column] = self.view.get_cursor()
-            # print path, focus_column, self.view['name_col'] == focus_column, self.view['data_type_col'] == focus_column, self.view['default_value_col'] == focus_column
+            # finish active edit process
             if self.last_entry_widget is not None and path:
                 text = self.last_entry_widget.get_buffer().get_text()
                 if focus_column in self.widget_columns:
@@ -68,7 +75,13 @@ class MoveAndEditTabUtilController:
             if focus_column_id is not None:
                 # search all columns for next editable cell renderer
                 for index in range(len(self.widget_columns)):
-                    next_focus_column_id = (focus_column_id + direction*index + direction) % len(self.widget_columns)
+                    test_id = focus_column_id + direction*index + direction
+                    next_focus_column_id = test_id % len(self.widget_columns)
+                    if test_id > len(self.widget_columns) or test_id < 0:
+                        next_row = path[0] + direction
+                        if next_row < 0 or next_row > len(self.widget_columns):
+                            return False
+
                     if self.widget_columns[next_focus_column_id].get_cell_renderers()[0].get_property('editable'):
                         break
             else:

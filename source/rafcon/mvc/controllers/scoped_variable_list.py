@@ -8,7 +8,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils import MoveAndEditTabUtilController
+from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.models.state import StateModel
 
 
@@ -18,7 +18,7 @@ class ScopedVariableListController(ExtendedController):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
-        self.tab_edit_controller = MoveAndEditTabUtilController(view.get_top_widget())
+        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
         self.new_sv_counter = 0
         self.last_entry_widget = None

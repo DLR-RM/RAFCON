@@ -6,7 +6,7 @@ logger = log.get_logger(__name__)
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils import MoveAndEditTabUtilController
+from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.models.state import StateModel
 
 
@@ -16,7 +16,7 @@ class DataPortListController(ExtendedController):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
-        self.tab_edit_controller = MoveAndEditTabUtilController(view.get_top_widget())
+        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
         self.type = io_type
         self.state_data_port_dict = None
         self.data_port_list_store = None
