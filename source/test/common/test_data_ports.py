@@ -87,6 +87,9 @@ def test_unique_port_names():
     state.add_output_data_port("in", "int", 0)
     state.add_input_data_port("out", "int", 0)
 
+    assert len(state.input_data_ports) == 2
+    assert len(state.output_data_ports) == 2
+
     state = HierarchyState('hierarchy state')
 
     state.add_input_data_port("in", "int", 0)
@@ -114,6 +117,10 @@ def test_unique_port_names():
     state.add_scoped_variable("out", "int", 0)
     state.add_input_data_port("scope", "int", 0)
     state.add_output_data_port("scope", "int", 0)
+
+    assert len(state.input_data_ports) == 3
+    assert len(state.output_data_ports) == 3
+    assert len(state.scoped_variables) == 3
 
 
 if __name__ == '__main__':
