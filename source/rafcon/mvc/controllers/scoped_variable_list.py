@@ -1,11 +1,14 @@
 import gtk
 from gtk import ListStore
 import gobject
+from gtk.keysyms import Tab as KEY_TAB, ISO_Left_Tab
+import traceback
 
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils import MoveAndEditTabUtilController
 from rafcon.mvc.models.state import StateModel
 
 
@@ -15,8 +18,12 @@ class ScopedVariableListController(ExtendedController):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
+        self.tab_edit_controller = MoveAndEditTabUtilController(view.get_top_widget())
 
         self.new_sv_counter = 0
+        self.last_entry_widget = None
+        self.next_focus_column = {}
+        self.prev_focus_column = {}
         self.scoped_variables_list_store = ListStore(str, str, str, int)
 
     def register_view(self, view):
@@ -39,6 +46,8 @@ class ScopedVariableListController(ExtendedController):
 
         view['name_text'].connect("edited", self.on_name_changed)
         view['data_type_text'].connect("edited", self.on_data_type_changed)
+
+        self.tab_edit_controller.register_view()
 
         if hasattr(self.model, 'scoped_variables'):
             self.reload_scoped_variables_list_store()
@@ -64,8 +73,16 @@ class ScopedVariableListController(ExtendedController):
             self.on_delete_scoped_variable_button_clicked(None)
 
     @ExtendedController.observe("scoped_variables", after=True)
-    def input_data_ports_changed(self, model, prop_name, info):
+    def scoped_variables_changed(self, model, prop_name, info):
+        # store port selection
+        model, path_list = self.view.get_top_widget().get_selection().get_selected_rows()
+        selected_data_port_id = None
+        if len(self.scoped_variables_list_store) > 0 and path_list:
+            selected_data_port_id = self.scoped_variables_list_store[path_list[0][0]][3]
         self.reload_scoped_variables_list_store()
+        # recover port selection
+        if selected_data_port_id is not None:
+            self.select_entry(selected_data_port_id)
 
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
         new_sv_name = "scoped_%s" % str(self.new_sv_counter)
@@ -84,15 +101,34 @@ class ScopedVariableListController(ExtendedController):
 
     def on_name_changed(self, widget, path, text):
         scoped_variable_id = self.scoped_variables_list_store[int(path)][3]
-        self.model.state.scoped_variables[scoped_variable_id].name = text
+        try:
+            self.model.state.scoped_variables[scoped_variable_id].name = text
+        except TypeError as e:
+            logger.error("Error while changing port name: {0}".format(e))
 
     def on_data_type_changed(self, widget, path, text):
         data_port_id = self.scoped_variables_list_store[int(path)][3]
-        self.model.state.scoped_variables[data_port_id].change_data_type(text, None)
+        try:
+            self.model.state.scoped_variables[data_port_id].change_data_type(text, None)
+        except ValueError as e:
+            logger.error("Error while changing data type: {0}".format(e))
 
     def on_default_value_changed(self, widget, path, text):
         data_port_id = self.scoped_variables_list_store[int(path)][3]
-        self.model.state.scoped_variables[data_port_id].default_value = text
+        try:
+            self.model.state.scoped_variables[data_port_id].default_value = text
+        except (TypeError, AttributeError) as e:
+            logger.error("Error while changing default value: {0}".format(e))
+
+    def select_entry(self, data_port_id):
+        """Selects the port entry belonging to the given data_port_id"""
+        ctr = 0
+        for data_port_entry in self.scoped_variables_list_store:
+            # Compare transition ids
+            if data_port_entry[3] == data_port_id:
+                self.view[self.view.top].set_cursor(ctr)
+                break
+            ctr += 1
 
     def reload_scoped_variables_list_store(self):
         """Reloads the scoped variable list store from the data port models
