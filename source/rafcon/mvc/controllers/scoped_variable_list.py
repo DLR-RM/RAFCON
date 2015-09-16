@@ -75,8 +75,10 @@ class ScopedVariableListController(ExtendedController):
     @ExtendedController.observe("scoped_variables", after=True)
     def scoped_variables_changed(self, model, prop_name, info):
         # store port selection
-        model, path_list = self.view.get_top_widget().get_selection().get_selected_rows()
+        path_list = None
         selected_data_port_id = None
+        if self.view is not None:
+            model, path_list = self.view.get_top_widget().get_selection().get_selected_rows()
         if len(self.scoped_variables_list_store) > 0 and path_list:
             selected_data_port_id = self.scoped_variables_list_store[path_list[0][0]][3]
         self.reload_scoped_variables_list_store()
