@@ -92,9 +92,9 @@ def test_unique_port_names():
 
     state = HierarchyState('hierarchy state')
 
-    state.add_input_data_port("in", "int", 0)
-    state.add_output_data_port("out", "int", 0)
-    state.add_scoped_variable("scope", "int", 0)
+    in_id = state.add_input_data_port("in", "int", 0)
+    out_id = state.add_output_data_port("out", "int", 0)
+    scope_id = state.add_scoped_variable("scope", "int", 0)
 
     # Data port name must be unique within data port set (input, output or scope)
     with raises(ValueError):
@@ -117,6 +117,14 @@ def test_unique_port_names():
     state.add_scoped_variable("out", "int", 0)
     state.add_input_data_port("scope", "int", 0)
     state.add_output_data_port("scope", "int", 0)
+
+    # Also renaming should raise exceptions
+    with raises(ValueError):
+        state.input_data_ports[in_id].name = "out"
+    with raises(ValueError):
+        state.output_data_ports[out_id].name = "in"
+    with raises(ValueError):
+        state.scoped_variables[scope_id].name = "out"
 
     assert len(state.input_data_ports) == 3
     assert len(state.output_data_ports) == 3
