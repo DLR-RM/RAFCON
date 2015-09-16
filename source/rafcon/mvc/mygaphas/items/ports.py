@@ -20,7 +20,6 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide, Direction
 
-
 class PortView(Model, object):
 
     side = None
@@ -159,6 +158,7 @@ class PortView(Model, object):
         return True
 
     def is_connected_to_scoped_variable(self):
+        from rafcon.mvc.mygaphas.items.connection import ScopedVariableDataFlowView
         for conn in self._connected_connections:
             if isinstance(conn, ScopedVariableDataFlowView):
                 return True
