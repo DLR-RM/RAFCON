@@ -1,3 +1,6 @@
+# test for expected exceptions
+from pytest import raises
+
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -63,5 +66,42 @@ def test_default_values_of_data_ports():
     assert root_state.output_data["output_data_port1"] == "default_value"
 
 
+def test_unique_port_names():
+
+    state = ExecutionState('execution state')
+
+    state.add_input_data_port("in", "int", 0)
+    state.add_output_data_port("out", "int", 0)
+
+    with raises(ValueError):
+        state.add_input_data_port("in", "int", 0)
+    with raises(ValueError):
+        state.add_input_data_port("in", "double", 0)
+    with raises(ValueError):
+        state.add_output_data_port("out", "int", 0)
+    with raises(ValueError):
+        state.add_output_data_port("out", "double", 0)
+
+    state = HierarchyState('hierarchy state')
+
+    state.add_input_data_port("in", "int", 0)
+    state.add_output_data_port("out", "int", 0)
+    state.add_scoped_variable("scope", "int", 0)
+
+    with raises(ValueError):
+        state.add_input_data_port("in", "int", 0)
+    with raises(ValueError):
+        state.add_input_data_port("in", "double", 0)
+    with raises(ValueError):
+        state.add_output_data_port("out", "int", 0)
+    with raises(ValueError):
+        state.add_output_data_port("out", "double", 0)
+    with raises(ValueError):
+        state.add_scoped_variable("scope", "int", 0)
+    with raises(ValueError):
+        state.add_scoped_variable("scope", "double", 0)
+
+
 if __name__ == '__main__':
     test_default_values_of_data_ports()
+    test_unique_port_names()
