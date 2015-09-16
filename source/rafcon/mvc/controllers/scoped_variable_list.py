@@ -84,7 +84,10 @@ class ScopedVariableListController(ExtendedController):
 
     def on_name_changed(self, widget, path, text):
         scoped_variable_id = self.scoped_variables_list_store[int(path)][3]
-        self.model.state.scoped_variables[scoped_variable_id].name = text
+        try:
+            self.model.state.scoped_variables[scoped_variable_id].name = text
+        except (ValueError, TypeError) as e:
+            logger.error("Error while trying to change the scoped variable name: {0}".format(e))
 
     def on_data_type_changed(self, widget, path, text):
         data_port_id = self.scoped_variables_list_store[int(path)][3]
