@@ -54,6 +54,7 @@ class MainWindowController(ExtendedController):
     def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
+        rafcon.mvc.singleton.main_window_controller = self
         self.editor_type = editor_type
         self.shortcut_manager = None
 

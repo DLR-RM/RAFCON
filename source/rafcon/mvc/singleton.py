@@ -87,3 +87,5 @@ interface.show_notice_func = show_notice
 state_machine_manager_model = StateMachineManagerModel(state_machine_manager)
 
 global_variable_manager_model = GlobalVariableManagerModel(global_variable_manager)
+
+main_window_controller = None

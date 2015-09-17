@@ -369,10 +369,10 @@ class MenuBarController(ExtendedController):
         pass
 
     def on_undo_activate(self, widget, data=None):
-        pass
+        self.shortcut_manager.trigger_action("undo", None, None)
 
     def on_redo_activate(self, widget, data=None):
-        pass
+        self.shortcut_manager.trigger_action("redo", None, None)
 
     def on_grid_toggled(self, widget, data=None):
         pass
