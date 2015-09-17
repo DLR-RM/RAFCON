@@ -25,13 +25,17 @@ class ImageCache(object):
         :param width: The width of the image
         :param height: The height of the image
         :param parameters: The parameters used for the image
-        :return: bool, ImageSurface -- The flag is when the image is retrieved from the cache, otherwise false
+        :return: bool, ImageSurface -- The flag is True when the image is retrieved from the cache, otherwise False
         """
         if self.__compare_parameters(width, height, parameters):
-            return True, self.__image
+            return self.__image
         else:
-            self.__image = ImageSurface(self.__format, width, height)
-            return False, self.__image
+            self.__image = ImageSurface(self.__format, int(width), int(height))
+            return None  # False, self.__image
+
+    def set_cached_image(self, image, parameters={}):
+        self.__image = image
+        self.__last_parameters = parameters
 
     def __compare_parameters(self, width, height, parameters):
         """Compare parameters for equality
@@ -43,10 +47,11 @@ class ImageCache(object):
         :param parameters: The parameters used for the image
         :return: True if all parameters are equal, False else
         """
-        if not isinstance(self.__image, ImageSurface):
+        # if not isinstance(self.__image, ImageSurface):
+        if not self.__image:
             return False
 
-        if self.__image.get_width() != width or self.__image.get_height() != height:
+        if self.__image.get_width() != int(width) or self.__image.get_height() != int(height):
             return False
 
         for key in parameters:

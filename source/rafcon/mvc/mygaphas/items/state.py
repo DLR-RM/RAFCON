@@ -23,6 +23,7 @@ from rafcon.mvc.mygaphas.items.connection import TransitionView
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
+from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
 
 logger = log.get_logger(__name__)
@@ -61,6 +62,7 @@ class StateView(Element):
         self._show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
 
         self.__symbol_size_cache = {}
+        self._image_cache = ImageCache()
 
         if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['size'], tuple):
             name_width = self.width * 0.8
@@ -240,34 +242,69 @@ class StateView(Element):
             return
         c = context.cairo
 
-        c.set_line_width(0.1 / self.hierarchy_level)
+        from cairo import ImageSurface
+        from cairo import FORMAT_ARGB32
         nw = self._handles[NW].pos
-        c.rectangle(nw.x, nw.y, self.width, self.height)
 
-        if self.model.state.active:
-            c.set_source_color(Color(constants.STATE_ACTIVE_COLOR))
-        elif self.selected:
-            c.set_source_color(Color(constants.STATE_SELECTED_COLOR))
+        parameters = {
+            'hierarchy': self.hierarchy_level,
+            'active':  self.model.state.active,
+            'selected': self.selected,
+            'moving': self.moving,
+            'port_side_size': self.port_side_size
+        }
+
+        image = self._image_cache.get_cached_image(int(self.width), int(self.height), parameters)
+
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if image:
+            # print "from cache"
+            c.save()
+            c.set_source_surface(image, int(nw.x.value), int(nw.y.value))
+            c.paint()
+            c.restore()
+
         else:
-            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
-        c.fill_preserve()
-        if self.model.state.active:
-            c.set_source_color(Color(constants.STATE_ACTIVE_BORDER_COLOR))
-            c.set_line_width(.25 / self.hierarchy_level)
-        elif self.selected:
-            c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
-            c.set_line_width(.25 / self.hierarchy_level)
-        else:
+            # print "draw"
+
+            image = ImageSurface(FORMAT_ARGB32, int(self.width), int(self.height))
+            cairo_context = cairo.Context(image)
+            c = CairoContext(cairo_context)
+
+            # Parameters have changed or nothing in cache => redraw
+            c.set_line_width(0.1 / self.hierarchy_level)
+            c.rectangle(nw.x, nw.y, self.width, self.height)
+
+            if self.model.state.active:
+                c.set_source_color(Color(constants.STATE_ACTIVE_COLOR))
+            elif self.selected:
+                c.set_source_color(Color(constants.STATE_SELECTED_COLOR))
+            else:
+                c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
+            c.fill_preserve()
+            if self.model.state.active:
+                c.set_source_color(Color(constants.STATE_ACTIVE_BORDER_COLOR))
+                c.set_line_width(.25 / self.hierarchy_level)
+            elif self.selected:
+                c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
+                c.set_line_width(.25 / self.hierarchy_level)
+            else:
+                c.set_source_color(Color(constants.BLACK_COLOR))
+            c.stroke()
+            c.set_line_width(0.1 / self.hierarchy_level)
+
+            inner_nw, inner_se = self.get_state_drawing_area(self)
+            c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
+            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR)))
+            c.fill_preserve()
             c.set_source_color(Color(constants.BLACK_COLOR))
-        c.stroke()
-        c.set_line_width(0.1 / self.hierarchy_level)
+            c.stroke()
 
-        inner_nw, inner_se = self.get_state_drawing_area(self)
-        c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-        c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR)))
-        c.fill_preserve()
-        c.set_source_color(Color(constants.BLACK_COLOR))
-        c.stroke()
+            context.cairo.save()
+            context.cairo.set_source_surface(image, int(nw.x.value), int(nw.y.value))
+            context.cairo.paint()
+            context.cairo.restore()
+            self._image_cache.set_cached_image(image, parameters)
 
         self._income.port_side_size = self.port_side_size
         self._income.draw(context, self)
@@ -299,6 +336,7 @@ class StateView(Element):
             max_width = self.width - 2 * self.port_side_size
             max_height = self.height - 2 * self.port_side_size
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
+
 
     def _draw_symbol(self, context, symbol, is_library_state, max_size):
         c = context.cairo
