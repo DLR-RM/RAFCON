@@ -18,10 +18,12 @@ from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.container_state import ContainerState
 from rafcon.mvc.models.container_state import ContainerState
 
+from rafcon.mvc import singleton as mvc_singleton
+
 logger = log.get_logger(__name__)
 
 # TODO Comment
-
+import gtk
 
 class StateMachineHistoryController(ExtendedController):
 
@@ -95,6 +97,7 @@ class StateMachineHistoryController(ExtendedController):
 
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
+        logger.info("register actions")
         shortcut_manager.add_callback_for_action("undo", self.undo)
         shortcut_manager.add_callback_for_action("redo", self.redo)
 
@@ -126,12 +129,22 @@ class StateMachineHistoryController(ExtendedController):
         self.no_cursor_observation = False
 
     def undo(self, key_value, modifier_mask):
-        # logger.debug("Run history UNDO")
+        for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
+            if tab['controller'].get_controller('source_ctrl').view.textview.has_focus():
+                # print tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_undo(), key
+                if tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_undo():
+                    return False
         self._selected_sm_model.history.undo()
+        return True
 
     def redo(self, key_value, modifier_mask):
-        # logger.debug("Run history REDO")
+        for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
+            if tab['controller'].get_controller('source_ctrl').view.textview.has_focus():
+                # print tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_redo(), key
+                if tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_redo():
+                    return False
         self._selected_sm_model.history.redo()
+        return True
 
     @ExtendedController.observe("changes", after=True)
     def update(self, model, prop_name, info):
