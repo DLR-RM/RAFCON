@@ -231,6 +231,7 @@ class StatesEditorController(ExtendedController):
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
         shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
+        super(StatesEditorController, self).register_actions(shortcut_manager)
 
     def add_state_editor(self, state_m, editor_type=None):
         state_identifier = self.get_state_identifier(state_m)
@@ -241,6 +242,7 @@ class StatesEditorController(ExtendedController):
         else:
             state_editor_view = StateEditorView()
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
+            self.add_controller(state_identifier, state_editor_ctrl)
 
         tab_label_text = self.get_state_tab_name(state_m)
         tab_label_text_trimmed = limit_tab_label_text(tab_label_text)
@@ -274,6 +276,7 @@ class StatesEditorController(ExtendedController):
         """
         # delete old controller references
         if delete and state_identifier in self.closed_tabs:
+            self.remove_controller(self.closed_tabs[state_identifier]['controller'])
             del self.closed_tabs[state_identifier]
 
         # check for open page of state
@@ -284,6 +287,8 @@ class StatesEditorController(ExtendedController):
             if not delete:
                 controller = self.tabs[state_identifier]['controller']
                 self.closed_tabs[state_identifier] = {'controller': controller}
+            else:
+                self.remove_controller(self.tabs[state_identifier]['controller'])
             del self.tabs[state_identifier]
 
     def find_page_of_state_m(self, state_m):

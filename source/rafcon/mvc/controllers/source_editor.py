@@ -58,12 +58,20 @@ class SourceEditorController(ExtendedController):
         pass
 
     def _undo(self, *args):
-        logger.debug('run Undo on script editor')
-        pass
+        buffer = self.view.textview.get_buffer()
+        if self.view.textview.has_focus() and buffer.can_undo():
+            logger.debug('run Undo on script editor')
+            return buffer.undo()
+        else:
+            return False
 
     def _redo(self, *args):
-        logger.debug('run Redo on script editor')
-        pass
+        buffer = self.view.textview.get_buffer()
+        if self.view.textview.has_focus() and buffer.can_redo():
+            logger.debug('run Redo on script editor')
+            return buffer.redo()
+        else:
+            return False
 
     #===============================================================
     def code_changed(self, source):
