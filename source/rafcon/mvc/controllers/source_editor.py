@@ -1,12 +1,12 @@
 import gtk
 import os
-from rafcon.mvc.controllers.extended_controller import ExtendedController
 from pylint import epylint as lint
+
+from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-import rafcon.statemachine.singleton
-from rafcon.statemachine.states.library_state import LibraryState
 
 #TODO: comment
 
@@ -94,7 +94,7 @@ class SourceEditorController(ExtendedController):
 
         ###############
         # do syntax-check on script
-        text_file = open("/tmp/file_to_get_pylinted.py", "w")
+        text_file = open(self.tmp_file, "w")
         text_file.write(current_text)
         text_file.close()
 
@@ -102,6 +102,7 @@ class SourceEditorController(ExtendedController):
             self.tmp_file + " --errors-only --disable=print-statement ",
             True, script="epylint")
         # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
+        os.remove(self.tmp_file)
 
         # (pylint_stdout, pylint_stderr) = lint.py_run("/tmp/file_to_get_pylinted.py", True)
         pylint_stdout_data = pylint_stdout.readlines()
