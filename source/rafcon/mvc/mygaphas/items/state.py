@@ -267,10 +267,9 @@ class StateView(Element):
         # Parameters have changed or nothing in cache => redraw
         else:
             # print "draw"
-            zoom = self.canvas.get_first_view().get_zoom_factor()
             cairo_context = cairo.Context(image)
             c = CairoContext(cairo_context)
-            c.scale(zoom, zoom)
+            c.scale(current_zoom, current_zoom)
 
             c.set_line_width(0.1 / self.hierarchy_level)
             c.rectangle(nw.x, nw.y, self.width, self.height)
@@ -302,7 +301,7 @@ class StateView(Element):
 
             # Copy image surface to current cairo context
             context.cairo.save()
-            context.cairo.scale(1./zoom, 1./zoom)
+            context.cairo.scale(1. / current_zoom, 1. / current_zoom)
             context.cairo.set_source_surface(image, int(nw.x.value), int(nw.y.value))
             context.cairo.paint()
             context.cairo.restore()

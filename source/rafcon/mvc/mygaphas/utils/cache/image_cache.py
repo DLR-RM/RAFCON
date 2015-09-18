@@ -64,9 +64,8 @@ class ImageCache(object):
             return False
 
         # TODO: Maybe implement zoom factor comparison
-        print "equal size"
         for key in parameters:
             if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
                 return False
-        print "equal"
+
         return True
