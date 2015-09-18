@@ -242,8 +242,6 @@ class StateView(Element):
             return
         c = context.cairo
 
-        from cairo import ImageSurface
-        from cairo import FORMAT_ARGB32
         nw = self._handles[NW].pos
 
         parameters = {
@@ -254,13 +252,14 @@ class StateView(Element):
             'port_side_size': self.port_side_size
         }
 
-        image, scale_factor = self._image_cache.get_cached_image(self.width, self.height, parameters)
+        current_zoom = self.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height, current_zoom, parameters)
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
-        if image:
+        if from_cache:
             # print "from cache"
             c.save()
-            c.scale(1./scale_factor, 1./scale_factor)
+            c.scale(1./zoom, 1./zoom)
             c.set_source_surface(image, int(nw.x.value), int(nw.y.value))
             c.paint()
             c.restore()
@@ -268,11 +267,10 @@ class StateView(Element):
         # Parameters have changed or nothing in cache => redraw
         else:
             # print "draw"
-            scale_factor = self.canvas.get_first_view().get_zoom_factor()
-            image = ImageSurface(FORMAT_ARGB32, int(self.width*scale_factor), int(self.height*scale_factor))
+            zoom = self.canvas.get_first_view().get_zoom_factor()
             cairo_context = cairo.Context(image)
             c = CairoContext(cairo_context)
-            c.scale(scale_factor, scale_factor)
+            c.scale(zoom, zoom)
 
             c.set_line_width(0.1 / self.hierarchy_level)
             c.rectangle(nw.x, nw.y, self.width, self.height)
@@ -304,13 +302,10 @@ class StateView(Element):
 
             # Copy image surface to current cairo context
             context.cairo.save()
-            context.cairo.scale(1./scale_factor, 1./scale_factor)
+            context.cairo.scale(1./zoom, 1./zoom)
             context.cairo.set_source_surface(image, int(nw.x.value), int(nw.y.value))
             context.cairo.paint()
             context.cairo.restore()
-
-            # Store the image surface for caching
-            self._image_cache.set_cached_image(image, self.width, self.height, scale_factor, parameters)
 
         self._income.port_side_size = self.port_side_size
         self._income.draw(context, self)

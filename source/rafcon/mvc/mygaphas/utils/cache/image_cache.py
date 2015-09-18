@@ -19,7 +19,7 @@ class ImageCache(object):
         self.__format = FORMAT_ARGB32
         self.__last_parameters = {}
 
-    def get_cached_image(self, width, height, parameters={}):
+    def get_cached_image(self, width, height, zoom, parameters={}):
         """Get ImageSurface object, if possible, cached
 
         The method checks whether the image was already rendered. This is done by comparing the passed size and
@@ -27,27 +27,32 @@ class ImageCache(object):
         a new ImageSurface with the specified dimensions is created and returned.
         :param width: The width of the image
         :param height: The height of the image
+        :param zoom: The current scale/zoom factor
         :param parameters: The parameters used for the image
         :return: bool, ImageSurface -- The flag is True when the image is retrieved from the cache, otherwise False
         """
-        if self.__compare_parameters(width, height, parameters):
-            return self.__image, self.__zoom
-        return None, None
+        if self.__compare_parameters(width, height, zoom, parameters):
+            return True, self.__image, self.__zoom
 
-    def set_cached_image(self, image, width, height, zoom, parameters={}):
+        image = ImageSurface(self.__format, int(width * zoom), int(height * zoom))
+        self.__set_cached_image(image, width, height, zoom, parameters)
+        return False, self.__image, zoom
+
+    def __set_cached_image(self, image, width, height, zoom, parameters={}):
         self.__image = image
         self.__width = width
         self.__height = height
         self.__zoom = zoom
         self.__last_parameters = parameters
 
-    def __compare_parameters(self, width, height, parameters):
+    def __compare_parameters(self, width, height, zoom, parameters):
         """Compare parameters for equality
 
         Checks if a cached image is existing, the the dimensions agree and finally if the properties are equal. If
         so, True is returned, else False,
         :param width: The width of the image
         :param height: The height of the image
+        :param zoom: The current scale/zoom factor
         :param parameters: The parameters used for the image
         :return: True if all parameters are equal, False else
         """
@@ -58,8 +63,10 @@ class ImageCache(object):
         if self.__width != width or self.__height != height:
             return False
 
+        # TODO: Maybe implement zoom factor comparison
+        print "equal size"
         for key in parameters:
             if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
                 return False
-
+        print "equal"
         return True
