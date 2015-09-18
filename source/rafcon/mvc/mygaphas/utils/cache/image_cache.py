@@ -13,6 +13,9 @@ class ImageCache(object):
         the drawing routine is called again with the same parameters as before, the image is just copied.
         """
         self.__image = None
+        self.__width = None
+        self.__height = None
+        self.__zoom = None
         self.__format = FORMAT_ARGB32
         self.__last_parameters = {}
 
@@ -28,13 +31,14 @@ class ImageCache(object):
         :return: bool, ImageSurface -- The flag is True when the image is retrieved from the cache, otherwise False
         """
         if self.__compare_parameters(width, height, parameters):
-            return self.__image
-        else:
-            self.__image = ImageSurface(self.__format, int(width), int(height))
-            return None  # False, self.__image
+            return self.__image, self.__zoom
+        return None, None
 
-    def set_cached_image(self, image, parameters={}):
+    def set_cached_image(self, image, width, height, zoom, parameters={}):
         self.__image = image
+        self.__width = width
+        self.__height = height
+        self.__zoom = zoom
         self.__last_parameters = parameters
 
     def __compare_parameters(self, width, height, parameters):
@@ -51,7 +55,7 @@ class ImageCache(object):
         if not self.__image:
             return False
 
-        if self.__image.get_width() != int(width) or self.__image.get_height() != int(height):
+        if self.__width != width or self.__height != height:
             return False
 
         for key in parameters:

@@ -254,24 +254,26 @@ class StateView(Element):
             'port_side_size': self.port_side_size
         }
 
-        image = self._image_cache.get_cached_image(int(self.width), int(self.height), parameters)
+        image, scale_factor = self._image_cache.get_cached_image(self.width, self.height, parameters)
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if image:
             # print "from cache"
             c.save()
+            c.scale(1./scale_factor, 1./scale_factor)
             c.set_source_surface(image, int(nw.x.value), int(nw.y.value))
             c.paint()
             c.restore()
 
+        # Parameters have changed or nothing in cache => redraw
         else:
             # print "draw"
-
-            image = ImageSurface(FORMAT_ARGB32, int(self.width), int(self.height))
+            scale_factor = self.canvas.get_first_view().get_zoom_factor()
+            image = ImageSurface(FORMAT_ARGB32, int(self.width*scale_factor), int(self.height*scale_factor))
             cairo_context = cairo.Context(image)
             c = CairoContext(cairo_context)
+            c.scale(scale_factor, scale_factor)
 
-            # Parameters have changed or nothing in cache => redraw
             c.set_line_width(0.1 / self.hierarchy_level)
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
@@ -300,11 +302,15 @@ class StateView(Element):
             c.set_source_color(Color(constants.BLACK_COLOR))
             c.stroke()
 
+            # Copy image surface to current cairo context
             context.cairo.save()
+            context.cairo.scale(1./scale_factor, 1./scale_factor)
             context.cairo.set_source_surface(image, int(nw.x.value), int(nw.y.value))
             context.cairo.paint()
             context.cairo.restore()
-            self._image_cache.set_cached_image(image, parameters)
+
+            # Store the image surface for caching
+            self._image_cache.set_cached_image(image, self.width, self.height, scale_factor, parameters)
 
         self._income.port_side_size = self.port_side_size
         self._income.draw(context, self)
