@@ -8,6 +8,7 @@ import cairo
 from gtk.gdk import Color, CairoContext
 
 from rafcon.utils import constants
+from rafcon.utils.geometry import deg2rad
 
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.library_state import LibraryState
@@ -19,6 +20,7 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide, Direction
+from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
 class PortView(Model, object):
 
@@ -62,6 +64,9 @@ class PortView(Model, object):
         self.update_port_side_size()
 
         self.label_print_inside = label_print_inside
+
+        self._port_image_cache = ImageCache()
+        self._name_image_cache = ImageCache()
 
     @property
     def side(self):
@@ -168,9 +173,10 @@ class PortView(Model, object):
         raise NotImplementedError
 
     def draw_port(self, context, fill_color, transparent, draw_label=True, value=None):
-        self.update_port_side_size()
         c = context.cairo
+        self.update_port_side_size()
         outcome_side = self.port_side_size
+
         c.set_line_width(outcome_side * 0.03)
 
         direction = None
@@ -185,21 +191,21 @@ class PortView(Model, object):
             direction = Direction.UP if self._is_in_port else Direction.DOWN
 
         if self._draw_single_port_arrow:
-            self._draw_execution_state_port(self.pos, direction, c, outcome_side, transparent,
+            self._draw_execution_state_port(c, self.pos, direction, outcome_side, transparent,
                                             self.connected_incoming or self.connected_outgoing, fill_color)
         else:
-            self._draw_container_state_port(self.pos, direction, c, outcome_side, transparent, self.connected_incoming,
-                                            self.connected_outgoing, fill_color)
+            self._draw_container_state_port(c, self.pos, direction, outcome_side, transparent,
+                                            self.connected_incoming, self.connected_outgoing, fill_color)
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
-            self.draw_name(context, transparent, value)
+            self.draw_name(c, transparent, value)
 
-    def draw_name(self, context, transparent, value):
+    def draw_name(self, cairo_context, transparent, value):
         if self.is_connected_to_scoped_variable():
             return
 
         outcome_side = self.port_side_size
-        c = context.cairo
+        c = cairo_context
 
         # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
         if isinstance(c, CairoContext):
@@ -224,7 +230,7 @@ class PortView(Model, object):
         print_side = self.side if not self.label_print_inside else self.side.opposite()
 
         fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparent)
-        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, fill_color, text_size, self.pos,
+        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(cairo_context, fill_color, text_size, self.pos,
                                                                     print_side, self.port_side_size,
                                                                     self._draw_connection_to_port, self._fill)
 
@@ -245,7 +251,7 @@ class PortView(Model, object):
             value_text_size = (value_layout.get_size()[0] / float(SCALE), text_size[1])
 
             fill_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR))
-            rot_angle, move_x, move_y = gap_draw_helper.draw_data_value_rect(context, fill_color, value_text_size,
+            rot_angle, move_x, move_y = gap_draw_helper.draw_data_value_rect(c, fill_color, value_text_size,
                                                                              text_size, (move_x, move_y), print_side)
 
             c.move_to(move_x, move_y)
@@ -260,53 +266,80 @@ class PortView(Model, object):
         c.move_to(outcome_side, outcome_side)
 
     @staticmethod
-    def _draw_execution_state_port(pos, direction, context_cairo, outcome_side, transparent, filled, color):
+    def _draw_execution_state_port(context_cairo, pos, direction, border_width, transparency, port_connected, color):
+        """Draw the port of a execution state
+
+        Connector for execution states can only be connected to the outside. Thus the connector fills the whole
+        border of the state.
+
+        :param context_cairo: Cairo context
+        :param pos: The position of the port
+        :param direction: The direction the port is pointing to
+        :param border_width: The width of the border the port is drawn on
+        :param transparency: The level of transparency
+        :param port_connected: Flag whether the port is connected
+        :param color: Desired color of the port
+        """
         c = context_cairo
 
-        side_half = outcome_side / 2.
-        side_sixth = outcome_side / 6.
+        port_height = border_width  # height is from arrow top to opposite side
+        arrow_height = port_height / 6
+        port_width = border_width / 1.5
 
-        port_draw_width_half = outcome_side / 3.
-
+        # Save/restore context, as we move annd rotate the connector to the desired pose
+        c.save()
+        c.move_to(pos.x.value, pos.y.value)
         if direction is Direction.UP:
-            c.move_to(pos.x - port_draw_width_half, pos.y + side_half)
-            c.line_to(pos.x - port_draw_width_half, pos.y - side_sixth)
-            c.line_to(pos.x, pos.y - side_half)
-            c.line_to(pos.x + port_draw_width_half, pos.y - side_sixth)
-            c.line_to(pos.x + port_draw_width_half, pos.y + side_half)
-            c.line_to(pos.x - port_draw_width_half, pos.y + side_half)
+            pass
         elif direction is Direction.RIGHT:
-            c.move_to(pos.x - side_half, pos.y - port_draw_width_half)
-            c.line_to(pos.x + side_sixth, pos.y - port_draw_width_half)
-            c.line_to(pos.x + side_half, pos.y)
-            c.line_to(pos.x + side_sixth, pos.y + port_draw_width_half)
-            c.line_to(pos.x - side_half, pos.y + port_draw_width_half)
-            c.line_to(pos.x - side_half, pos.y - port_draw_width_half)
+            c.rotate(deg2rad(90))
         elif direction is Direction.DOWN:
-            c.move_to(pos.x - port_draw_width_half, pos.y - side_half)
-            c.line_to(pos.x - port_draw_width_half, pos.y + side_sixth)
-            c.line_to(pos.x, pos.y + side_half)
-            c.line_to(pos.x + port_draw_width_half, pos.y + side_sixth)
-            c.line_to(pos.x + port_draw_width_half, pos.y - side_half)
-            c.line_to(pos.x - port_draw_width_half, pos.y - side_half)
+            c.rotate(deg2rad(180))
         elif direction is Direction.LEFT:
-            c.move_to(pos.x + side_half, pos.y - port_draw_width_half)
-            c.line_to(pos.x - side_sixth, pos.y - port_draw_width_half)
-            c.line_to(pos.x - side_half, pos.y)
-            c.line_to(pos.x - side_sixth, pos.y + port_draw_width_half)
-            c.line_to(pos.x + side_half, pos.y + port_draw_width_half)
-            c.line_to(pos.x + side_half, pos.y - port_draw_width_half)
+            c.rotate(deg2rad(-90))
+        PortView._draw_connector_arrow(c, port_width, port_height, arrow_height)
+        c.restore()
 
-        if filled:
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        # Colorize the generated connector path
+        if port_connected:
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         else:
             c.set_source_color(Color(constants.BLACK_COLOR))
         c.fill_preserve()
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         c.stroke()
 
     @staticmethod
-    def _draw_container_state_port(pos, direction, context_cairo, outcome_side, transparent, incoming_conn,
+    def _draw_connector_arrow(context_cairo, width, height, arrow_height):
+        """Draw the connector for execution states
+
+        Connector for execution states can only be connected to the outside. Thus the connector fills the whole
+        border of the state.
+
+        :param context_cairo: Cairo context
+        :param float width: Width of the connector
+        :param float height: Total height of connector
+        :param float arrow_height: Partial height of the tip of the connector
+        """
+        c = context_cairo
+        # Current pos is center
+        # Arrow is drawn upright
+
+        # First move to bottom left corner
+        c.rel_move_to(-width/2., height/2.)
+        # Draw line to bottom right corner
+        c.rel_line_to(width, 0)
+        # Draw line to upper right corner
+        c.rel_line_to(0, -(height - arrow_height))
+        # Draw line to center top (arrow)
+        c.rel_line_to(-width/2., -arrow_height)
+        # Draw line to upper left corner
+        c.rel_line_to(-width/2., arrow_height)
+        # Draw line back to the origin (lower left corner)
+        c.close_path()
+
+    @staticmethod
+    def _draw_container_state_port(context_cairo, pos, direction, outcome_side, transparent, incoming_conn,
                                    outgoing_conn, color):
         c = context_cairo
 

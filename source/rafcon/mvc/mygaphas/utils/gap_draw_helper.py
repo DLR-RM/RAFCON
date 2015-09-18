@@ -45,7 +45,7 @@ def get_col_rgba(col, transparent=False, alpha=None):
     return r, g, b, a
 
 
-def draw_data_value_rect(context, color, value_size, name_size, pos, port_side):
+def draw_data_value_rect(cairo_context, color, value_size, name_size, pos, port_side):
     """
     This method draws the containing rect for the data port value, depending on the side and size of the label.
     :param context: Draw Context
@@ -57,7 +57,7 @@ def draw_data_value_rect(context, color, value_size, name_size, pos, port_side):
     :return: Rotation Angle (to rotate value accordingly), X-Position of value label start point, Y-Position
              of value label start point
     """
-    c = context.cairo
+    c = cairo_context
 
     rot_angle = .0
     move_x = 0.
@@ -197,7 +197,8 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     return rot_angle, move_x, move_y
 
 
-def draw_name_label(context, color, name_size, handle_pos, port_side, port_side_size, draw_connection_to_port=False,
+def draw_name_label(cairo_context, color, name_size, handle_pos, port_side, port_side_size,
+                    draw_connection_to_port=False,
                     fill=False):
     """
     Draws a normal label indicating the port name.
@@ -212,7 +213,7 @@ def draw_name_label(context, color, name_size, handle_pos, port_side, port_side_
     :return: Rotation Angle (to rotate name accordingly), X-Position of name label start point, Y-Position
              of name label start point
     """
-    c = context.cairo
+    c = cairo_context
     c.set_line_width(port_side_size * .03)
 
     c.set_source_rgba(*color)
