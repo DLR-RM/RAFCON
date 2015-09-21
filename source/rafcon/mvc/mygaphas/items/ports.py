@@ -21,7 +21,8 @@ from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide, Direction
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
-class PortView(Model, object):
+
+class PortView(Model):
 
     side = None
 
@@ -165,12 +166,9 @@ class PortView(Model, object):
     def draw_port(self, context, fill_color, transparent, draw_label=True, value=None):
         c = context.cairo
         self.update_port_side_size()
-        outcome_side = self.port_side_size
-
-        c.set_line_width(outcome_side * 0.03)
+        side_length = self.port_side_size
 
         direction = None
-
         if self.side is SnappedSide.LEFT:
             direction = Direction.RIGHT if self._is_in_port else Direction.LEFT
         elif self.side is SnappedSide.TOP:
@@ -180,10 +178,51 @@ class PortView(Model, object):
         elif self.side is SnappedSide.BOTTOM:
             direction = Direction.UP if self._is_in_port else Direction.DOWN
 
-        if isinstance(self._parent.model.state, ContainerState):
-            self._draw_container_state_port(c, direction, outcome_side, fill_color, transparent)
+        parameters = {
+            'direction': direction,
+            'side_length': side_length,
+            'fill_color': fill_color,
+            'transparency': transparent,
+            'incoming': self.connected_incoming,
+            'outgoing': self.connected_outgoing,
+        }
+
+        current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
+        # current_zoom = 1
+        from_cache, image, zoom = self._port_image_cache.get_cached_image(side_length, side_length,
+                                                                          current_zoom, parameters)
+
+        upper_left_corner = (self.pos.x.value - side_length / 2., self.pos.y.value - side_length / 2.)
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
+            c.save()
+            c.scale(1./zoom, 1./zoom)
+            c.set_source_surface(image, int(upper_left_corner[0] * zoom),
+                                        int(upper_left_corner[1] * zoom))
+            c.paint()
+            c.restore()
+
+        # Parameters have changed or nothing in cache => redraw
         else:
-            self._draw_simple_state_port(c, direction, outcome_side, fill_color, transparent)
+            # print "draw"
+            cairo_context = cairo.Context(image)
+            c = CairoContext(cairo_context)
+            c.scale(current_zoom, current_zoom)
+
+            c.move_to(0, 0)
+            if isinstance(self._parent.model.state, ContainerState):
+                self._draw_container_state_port(c, direction, side_length, fill_color, transparent)
+            else:
+                self._draw_simple_state_port(c, direction, side_length, fill_color, transparent)
+
+            # Copy image surface to current cairo context
+            context.cairo.save()
+            context.cairo.scale(1. / current_zoom, 1. / current_zoom)
+            context.cairo.set_source_surface(image, int(upper_left_corner[0] * current_zoom),
+                                                    int(upper_left_corner[1] * current_zoom))
+            context.cairo.paint()
+            context.cairo.restore()
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
             self.draw_name(c, transparent, value)
@@ -268,10 +307,12 @@ class PortView(Model, object):
         c = context
 
         port_size = border_width
+        c.set_line_width(border_width * 0.03)
 
         # Save/restore context, as we move and rotate the connector to the desired pose
         c.save()
-        PortView._move_and_rotate_context(c, self.pos, direction)
+        c.rel_move_to(port_size / 2., port_size / 2.)
+        PortView._rotate_context(c, direction)
         PortView._draw_single_connector(c, port_size)
         c.restore()
 
@@ -298,10 +339,13 @@ class PortView(Model, object):
         c = context
 
         port_size = border_width
+        c.set_line_width(border_width * 0.03)
 
         # Save/restore context, as we move and rotate the connector to the desired pose
+        cur_point = c.get_current_point()
         c.save()
-        PortView._move_and_rotate_context(c, self.pos, direction)
+        c.rel_move_to(port_size / 2., port_size / 2.)
+        PortView._rotate_context(c, direction)
         PortView._draw_inner_connector(c, port_size)
         c.restore()
 
@@ -313,8 +357,10 @@ class PortView(Model, object):
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         c.stroke()
 
+        c.move_to(*cur_point)
         c.save()
-        PortView._move_and_rotate_context(c, self.pos, direction)
+        c.rel_move_to(port_size / 2., port_size / 2.)
+        PortView._rotate_context(c, direction)
         PortView._draw_outer_connector(c, port_size)
         c.restore()
 
@@ -325,34 +371,6 @@ class PortView(Model, object):
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         c.stroke()
-
-    @staticmethod
-    def _draw_inner_connector(context, port_size):
-        """Draw the connector for container states
-
-        Connector for container states can be connected from the inside and the outside. Thus the connector is split
-        in two parts: A rectangle on the inside and an arrow on the outside. This methods draws the inner rectangle.
-
-        :param context: Cairo context
-        :param float port_size: The side length of the port
-        """
-        c = context
-        # Current pos is center
-        # Arrow is drawn upright
-
-        height = port_size
-        width = port_size / 1.5
-        gap = height / 6.
-        connector_height = (height - gap) / 2.
-
-        # First move to bottom left corner
-        c.rel_move_to(-width/2., height/2.)
-
-        # Draw inner connector (rectangle)
-        c.rel_line_to(width, 0)
-        c.rel_line_to(0, -connector_height)
-        c.rel_line_to(-width, 0)
-        c.close_path()
 
     @staticmethod
     def _draw_single_connector(context, port_size):
@@ -383,6 +401,34 @@ class PortView(Model, object):
         # Draw line to upper left corner
         c.rel_line_to(-width/2., arrow_height)
         # Draw line back to the origin (lower left corner)
+        c.close_path()
+
+    @staticmethod
+    def _draw_inner_connector(context, port_size):
+        """Draw the connector for container states
+
+        Connector for container states can be connected from the inside and the outside. Thus the connector is split
+        in two parts: A rectangle on the inside and an arrow on the outside. This methods draws the inner rectangle.
+
+        :param context: Cairo context
+        :param float port_size: The side length of the port
+        """
+        c = context
+        # Current pos is center
+        # Arrow is drawn upright
+
+        height = port_size
+        width = port_size / 1.5
+        gap = height / 6.
+        connector_height = (height - gap) / 2.
+
+        # First move to bottom left corner
+        c.rel_move_to(-width/2., height/2.)
+
+        # Draw inner connector (rectangle)
+        c.rel_line_to(width, 0)
+        c.rel_line_to(0, -connector_height)
+        c.rel_line_to(-width, 0)
         c.close_path()
 
     @staticmethod
@@ -420,14 +466,12 @@ class PortView(Model, object):
         c.close_path()
 
     @staticmethod
-    def _move_and_rotate_context(context, position, direction):
+    def _rotate_context(context, direction):
         """Moves the current position to 'position' and rotates the context according to 'direction'
 
         :param context: Cairo context
-        :param position: Gaphas position
         :param direction: Direction enum
         """
-        context.move_to(position.x.value, position.y.value)
         if direction is Direction.UP:
             pass
         elif direction is Direction.RIGHT:
