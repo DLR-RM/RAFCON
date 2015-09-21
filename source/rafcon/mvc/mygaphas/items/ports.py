@@ -191,11 +191,9 @@ class PortView(Model, object):
             direction = Direction.UP if self._is_in_port else Direction.DOWN
 
         if self._draw_single_port_arrow:
-            self._draw_execution_state_port(c, self.pos, direction, outcome_side,
-                                            self.connected_incoming or self.connected_outgoing, fill_color, transparent)
+            self._draw_execution_state_port(c, direction, outcome_side, fill_color, transparent)
         else:
-            self._draw_container_state_port(c, self.pos, direction, outcome_side,
-                                            self.connected_incoming, self.connected_outgoing, fill_color, transparent)
+            self._draw_container_state_port(c, direction, outcome_side, fill_color, transparent)
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
             self.draw_name(c, transparent, value)
@@ -265,33 +263,30 @@ class PortView(Model, object):
 
         c.move_to(outcome_side, outcome_side)
 
-    @staticmethod
-    def _draw_execution_state_port(context_cairo, pos, direction, border_width, port_connected, color, transparency):
+    def _draw_execution_state_port(self, context, direction, border_width, color, transparency):
         """Draw the port of a execution state
 
         Connector for execution states can only be connected to the outside. Thus the connector fills the whole
         border of the state.
 
-        :param context_cairo: Cairo context
-        :param pos: The position of the port
+        :param context: Cairo context
         :param direction: The direction the port is pointing to
         :param border_width: The width of the border the port is drawn on
-        :param transparency: The level of transparency
-        :param port_connected: Flag whether the port is connected
         :param color: Desired color of the port
+        :param transparency: The level of transparency
         """
-        c = context_cairo
+        c = context
 
         port_size = border_width
 
         # Save/restore context, as we move and rotate the connector to the desired pose
         c.save()
-        PortView._move_and_rotate_context(c, pos, direction)
+        PortView._move_and_rotate_context(c, self.pos, direction)
         PortView._draw_single_connector(c, port_size)
         c.restore()
 
         # Colorize the generated connector path
-        if port_connected:
+        if self.connected_incoming or self.connected_outgoing:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         else:
             c.set_source_color(Color(constants.BLACK_COLOR))
@@ -299,20 +294,28 @@ class PortView(Model, object):
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         c.stroke()
 
-    @staticmethod
-    def _draw_container_state_port(context_cairo, pos, direction, border_width,
-                                   inner_port_connected, outer_port_connected, color, transparency):
-        c = context_cairo
+    def _draw_container_state_port(self, context, direction, border_width, color, transparency):
+        """Draw the port of a container state
+
+        Connector for container states are split in an inner connector and an outer connector.
+
+        :param context: Cairo context
+        :param direction: The direction the port is pointing to
+        :param border_width: The width of the border the port is drawn on
+        :param color: Desired color of the port
+        :param transparency: The level of transparency
+        """
+        c = context
 
         port_size = border_width
 
         # Save/restore context, as we move and rotate the connector to the desired pose
         c.save()
-        PortView._move_and_rotate_context(c, pos, direction)
+        PortView._move_and_rotate_context(c, self.pos, direction)
         PortView._draw_inner_connector(c, port_size)
         c.restore()
 
-        if inner_port_connected:
+        if self.connected_incoming:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         else:
             c.set_source_color(Color(constants.BLACK_COLOR))
@@ -321,11 +324,11 @@ class PortView(Model, object):
         c.stroke()
 
         c.save()
-        PortView._move_and_rotate_context(c, pos, direction)
+        PortView._move_and_rotate_context(c, self.pos, direction)
         PortView._draw_outer_connector(c, port_size)
         c.restore()
 
-        if outer_port_connected:
+        if self.connected_outgoing:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         else:
             c.set_source_color(Color(constants.BLACK_COLOR))
