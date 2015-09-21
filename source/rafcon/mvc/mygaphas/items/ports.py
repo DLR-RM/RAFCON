@@ -337,16 +337,16 @@ class PortView(Model, object):
         c.stroke()
 
     @staticmethod
-    def _draw_inner_connector(context_cairo, port_size):
+    def _draw_inner_connector(context, port_size):
         """Draw the connector for container states
 
         Connector for container states can be connected from the inside and the outside. Thus the connector is split
         in two parts: A rectangle on the inside and an arrow on the outside. This methods draws the inner rectangle.
 
-        :param context_cairo: Cairo context
+        :param context: Cairo context
         :param float port_size: The side length of the port
         """
-        c = context_cairo
+        c = context
         # Current pos is center
         # Arrow is drawn upright
 
@@ -365,16 +365,16 @@ class PortView(Model, object):
         c.close_path()
 
     @staticmethod
-    def _draw_single_connector(context_cairo, port_size):
+    def _draw_single_connector(context, port_size):
         """Draw the connector for execution states
 
         Connector for execution states can only be connected to the outside. Thus the connector fills the whole
         border of the state.
 
-        :param context_cairo: Cairo context
+        :param context: Cairo context
         :param float port_size: The side length of the port
         """
-        c = context_cairo
+        c = context
         # Current pos is center
         # Arrow is drawn upright
 
@@ -396,16 +396,16 @@ class PortView(Model, object):
         c.close_path()
 
     @staticmethod
-    def _draw_outer_connector(context_cairo, port_size):
+    def _draw_outer_connector(context, port_size):
         """Draw the outer connector for container states
 
         Connector for container states can be connected from the inside and the outside. Thus the connector is split
         in two parts: A rectangle on the inside and an arrow on the outside. This method draws the outer arrow.
 
-        :param context_cairo: Cairo context
+        :param context: Cairo context
         :param float port_size: The side length of the port
         """
-        c = context_cairo
+        c = context
         # Current pos is center
         # Arrow is drawn upright
 
@@ -458,7 +458,8 @@ class PortView(Model, object):
 class IncomeView(PortView):
 
     def __init__(self, parent, port_side_size):
-        super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent, side=SnappedSide.LEFT)
+        super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent,
+                                         side=SnappedSide.LEFT)
 
     def draw(self, context, state):
         self.draw_port(context, constants.LABEL_COLOR, state.transparent)
@@ -467,7 +468,8 @@ class IncomeView(PortView):
 class OutcomeView(PortView):
 
     def __init__(self, outcome_m, parent, port_side_size):
-        super(OutcomeView, self).__init__(in_port=False, port_side_size=port_side_size, name=outcome_m.outcome.name, parent=parent)
+        super(OutcomeView, self).__init__(in_port=False, port_side_size=port_side_size, name=outcome_m.outcome.name,
+                                          parent=parent)
 
         assert isinstance(outcome_m, OutcomeModel)
         self._outcome_m = ref(outcome_m)
@@ -496,6 +498,7 @@ class OutcomeView(PortView):
         draw_label = True
         if self.has_outgoing_connection():
             draw_label = False
+
         self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
 
 
