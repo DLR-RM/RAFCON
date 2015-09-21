@@ -10,8 +10,7 @@ from gtk.gdk import Color, CairoContext
 from rafcon.utils import constants
 from rafcon.utils.geometry import deg2rad
 
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models.outcome import OutcomeModel
@@ -28,7 +27,7 @@ class PortView(Model, object):
 
     __observables__ = ('side', )
 
-    def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT, label_print_inside=True):
+    def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
         Model.__init__(self)
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
@@ -36,19 +35,10 @@ class PortView(Model, object):
         self.side = side
         self._parent = parent
 
-        self._draw_single_port_arrow = None
-        if parent:
-            self._draw_single_port_arrow = isinstance(parent.model.state, (ExecutionState, LibraryState))
-
-        self._fill = False
         self._draw_connection_to_port = False
 
-        if self._fill:
-            self.text_color = constants.STATE_BACKGROUND_COLOR
-            self.fill_color = constants.LABEL_COLOR
-        else:
-            self.text_color = constants.LABEL_COLOR
-            self.fill_color = constants.LABEL_COLOR
+        self.text_color = constants.LABEL_COLOR
+        self.fill_color = constants.LABEL_COLOR
 
         self._incoming_handles = []
         self._outgoing_handles = []
@@ -63,7 +53,7 @@ class PortView(Model, object):
         self._port_side_size = port_side_size
         self.update_port_side_size()
 
-        self.label_print_inside = label_print_inside
+        self.label_print_inside = True
 
         self._port_image_cache = ImageCache()
         self._name_image_cache = ImageCache()
@@ -190,10 +180,10 @@ class PortView(Model, object):
         elif self.side is SnappedSide.BOTTOM:
             direction = Direction.UP if self._is_in_port else Direction.DOWN
 
-        if self._draw_single_port_arrow:
-            self._draw_execution_state_port(c, direction, outcome_side, fill_color, transparent)
-        else:
+        if isinstance(self._parent.model.state, ContainerState):
             self._draw_container_state_port(c, direction, outcome_side, fill_color, transparent)
+        else:
+            self._draw_simple_state_port(c, direction, outcome_side, fill_color, transparent)
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
             self.draw_name(c, transparent, value)
@@ -230,7 +220,7 @@ class PortView(Model, object):
         fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparent)
         rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(cairo_context, fill_color, text_size, self.pos,
                                                                     print_side, self.port_side_size,
-                                                                    self._draw_connection_to_port, self._fill)
+                                                                    self._draw_connection_to_port)
 
         c.move_to(move_x, move_y)
 
@@ -263,8 +253,8 @@ class PortView(Model, object):
 
         c.move_to(outcome_side, outcome_side)
 
-    def _draw_execution_state_port(self, context, direction, border_width, color, transparency):
-        """Draw the port of a execution state
+    def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
+        """Draw the port of a simple state (ExecutionState, LibraryState)
 
         Connector for execution states can only be connected to the outside. Thus the connector fills the whole
         border of the state.
@@ -639,22 +629,18 @@ class ScopedVariablePortView(PortView):
 
 class DataPortView(PortView):
 
-    def __init__(self, in_port, parent, port_m, side, port_side_size, label_print_inside=True):
+    def __init__(self, in_port, parent, port_m, side, port_side_size):
         assert isinstance(port_m, DataPortModel)
         super(DataPortView, self).__init__(in_port=in_port, port_side_size=port_side_size, name=port_m.data_port.name,
-                                           parent=parent, side=side, label_print_inside=label_print_inside)
+                                           parent=parent, side=side)
 
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
 
         self._value = None
 
-        if self._fill:
-            self.text_color = constants.STATE_BACKGROUND_COLOR
-            self.fill_color = constants.DATA_PORT_COLOR
-        else:
-            self.text_color = constants.DATA_PORT_COLOR
-            self.fill_color = constants.DATA_PORT_COLOR
+        self.text_color = constants.DATA_PORT_COLOR
+        self.fill_color = constants.DATA_PORT_COLOR
 
     @property
     def port_m(self):
@@ -676,7 +662,8 @@ class DataPortView(PortView):
 class InputPortView(DataPortView):
 
     def __init__(self, parent, port_m, port_side_size):
-        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size, False)
+        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size)
+        self.label_print_inside = False
 
     def draw(self, context, state):
         input_data = self.parent.model.state.input_data
@@ -689,6 +676,7 @@ class OutputPortView(DataPortView):
 
     def __init__(self, parent, port_m, port_side_size):
         super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT, port_side_size)
+        self.label_print_inside = True
 
     def draw(self, context, state):
         output_data = self.parent.model.state.output_data

@@ -197,7 +197,7 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     return rot_angle, move_x, move_y
 
 
-def draw_name_label(cairo_context, color, name_size, handle_pos, port_side, port_side_size,
+def draw_name_label(context, color, name_size, handle_pos, port_side, port_side_size,
                     draw_connection_to_port=False,
                     fill=False):
     """
@@ -213,7 +213,7 @@ def draw_name_label(cairo_context, color, name_size, handle_pos, port_side, port
     :return: Rotation Angle (to rotate name accordingly), X-Position of name label start point, Y-Position
              of name label start point
     """
-    c = cairo_context
+    c = context
     c.set_line_width(port_side_size * .03)
 
     c.set_source_rgba(*color)
