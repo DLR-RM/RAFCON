@@ -181,12 +181,6 @@ class PerpLine(Line):
     def _draw_name(self, context):
         c = context.cairo
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
-
         if len(self._handles) % 2:
             index = len(self._handles) / 2
             cx, cy = self._handles[index].pos
@@ -213,10 +207,9 @@ class PerpLine(Line):
         else:
             outcome_side = 5.
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(ANTIALIAS_SUBPIXEL)
+        c.set_antialias(ANTIALIAS_SUBPIXEL)
 
-        layout = pcc.create_layout()
+        layout = c.create_layout()
         layout.set_text(self.name)
 
         font_name = constants.FONT_NAMES[0]
@@ -225,15 +218,15 @@ class PerpLine(Line):
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
 
-        cc.set_source_rgba(*self._arrow_color)
-        pcc.update_layout(layout)
+        c.set_source_rgba(*self._arrow_color)
+        c.update_layout(layout)
         c.save()
 
         c.move_to(cx, cy)
         if global_gui_config.get_config_value("ROTATE_NAMES_ON_CONNECTIONS", default=False):
             c.rotate(angle)
 
-        pcc.show_layout(layout)
+        c.show_layout(layout)
 
         c.restore()
 

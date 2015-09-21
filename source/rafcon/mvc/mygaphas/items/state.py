@@ -334,16 +334,9 @@ class StateView(Element):
     def _draw_symbol(self, context, symbol, is_library_state, max_size):
         c = context.cairo
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
+        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        layout = pcc.create_layout()
+        layout = c.create_layout()
 
         font_name = constants.FONT_NAMES[1]
 
@@ -379,10 +372,10 @@ class StateView(Element):
         elif is_library_state:
             alpha = 0.25
 
-        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), is_library_state,
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), is_library_state,
                                                          alpha=alpha))
-        pcc.update_layout(layout)
-        pcc.show_layout(layout)
+        c.update_layout(layout)
+        c.show_layout(layout)
 
     def get_transitions(self):
         transitions = []
@@ -815,12 +808,6 @@ class NameView(Element):
 
         c = context.cairo
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
-
         if context.selected:
             c.rectangle(0, 0, self.width, self.height)
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), alpha=.1))
@@ -828,10 +815,9 @@ class NameView(Element):
             c.set_source_rgba(0, 0, 0, 0)
             c.stroke()
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
-        layout = pcc.create_layout()
+        layout = c.create_layout()
         layout.set_wrap(WRAP_WORD)
         layout.set_width(int(self.width) * SCALE)
         layout.set_text(self.name)
@@ -859,6 +845,6 @@ class NameView(Element):
             self.__font_size_cache = {'text': self.name, 'width': self.width, 'height': self.height, 'size': font_size}
 
         c.move_to(*self.handles()[NW].pos)
-        cc.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
-        pcc.update_layout(layout)
-        pcc.show_layout(layout)
+        c.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
+        c.update_layout(layout)
+        c.show_layout(layout)

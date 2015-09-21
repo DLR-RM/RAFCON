@@ -222,17 +222,9 @@ class PortView(Model):
 
         outcome_side = self.port_side_size
         c = cairo_context
+        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
-
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        layout = pcc.create_layout()
+        layout = c.create_layout()
         layout.set_text(self.name)
 
         font_name = constants.FONT_NAMES[0]
@@ -252,15 +244,15 @@ class PortView(Model):
 
         c.move_to(move_x, move_y)
 
-        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(self.text_color), transparent))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(self.text_color), transparent))
 
-        pcc.update_layout(layout)
-        pcc.rotate(rot_angle)
-        pcc.show_layout(layout)
-        pcc.rotate(-rot_angle)
+        c.update_layout(layout)
+        c.rotate(rot_angle)
+        c.show_layout(layout)
+        c.rotate(-rot_angle)
 
         if global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value:
-            value_layout = pcc.create_layout()
+            value_layout = c.create_layout()
             value_layout.set_text(gap_draw_helper.limit_value_string_length(value))
             value_layout.set_font_description(font)
 
@@ -272,14 +264,14 @@ class PortView(Model):
 
             c.move_to(move_x, move_y)
 
-            cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
 
-            pcc.update_layout(value_layout)
-            pcc.rotate(rot_angle)
-            pcc.show_layout(value_layout)
-            pcc.rotate(-rot_angle)
+            c.update_layout(value_layout)
+            c.rotate(rot_angle)
+            c.show_layout(value_layout)
+            c.rotate(-rot_angle)
 
-        c.move_to(outcome_side, outcome_side)
+        # c.move_to(outcome_side, outcome_side)
 
     def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
         """Draw the port of a simple state (ExecutionState, LibraryState)
@@ -563,16 +555,9 @@ class ScopedVariablePortView(PortView):
         outcome_side = self.port_side_size
         c = context.cairo
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
+        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        layout = pcc.create_layout()
+        layout = c.create_layout()
         layout.set_text(self.name)
 
         font_name = constants.FONT_NAMES[0]
@@ -583,7 +568,7 @@ class ScopedVariablePortView(PortView):
 
         name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
 
-        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparent))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparent))
 
         rot_angle = .0
         draw_pos = self._get_draw_position(name_size[0], outcome_side)
@@ -597,10 +582,10 @@ class ScopedVariablePortView(PortView):
         elif self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
             c.move_to(draw_pos[0], draw_pos[1])
 
-        pcc.update_layout(layout)
-        pcc.rotate(rot_angle)
-        pcc.show_layout(layout)
-        pcc.rotate(-rot_angle)
+        c.update_layout(layout)
+        c.rotate(rot_angle)
+        c.show_layout(layout)
+        c.rotate(-rot_angle)
 
         c.move_to(*self.pos)
 
@@ -639,16 +624,9 @@ class ScopedVariablePortView(PortView):
         outcome_side = self.port_side_size
         c = context.cairo
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
+        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        layout = pcc.create_layout()
+        layout = c.create_layout()
         layout.set_text(self.name)
 
         font_name = constants.FONT_NAMES[0]

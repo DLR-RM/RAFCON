@@ -234,29 +234,21 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
             port_side_size = self._head_length
 
         c.set_source_color(Color(constants.DATA_PORT_COLOR))
+        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
-
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        scoped_layout = pcc.create_layout()
+        scoped_layout = c.create_layout()
         port_layout = None
 
         has_connected_port = False
         if from_scoped and self.to_port:
             self._print_side = self.to_port.side
             has_connected_port = True
-            port_layout = pcc.create_layout()
+            port_layout = c.create_layout()
             port_layout.set_text(" " + self.to_port.name + " ")
         elif not from_scoped and self.from_port:
             self._print_side = self.from_port.side.opposite()
             has_connected_port = True
-            port_layout = pcc.create_layout()
+            port_layout = c.create_layout()
             port_layout.set_text(" " + self.from_port.name + " ")
         scoped_layout.set_text(" " + self.name + " ")
 
@@ -306,10 +298,10 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
         else:
             c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
-        pcc.update_layout(scoped_layout)
-        pcc.rotate(rot_angle)
-        pcc.show_layout(scoped_layout)
-        pcc.rotate(-rot_angle)
+        c.update_layout(scoped_layout)
+        c.rotate(rot_angle)
+        c.show_layout(scoped_layout)
+        c.rotate(-rot_angle)
 
         if port_layout:
             if self._print_side is SnappedSide.RIGHT or self._print_side is SnappedSide.LEFT:
@@ -320,10 +312,10 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
                 c.move_to(move_x + scoped_name_size[1], move_y)
             c.set_source_color(Color(constants.DATA_PORT_COLOR))
 
-            pcc.update_layout(port_layout)
-            pcc.rotate(rot_angle)
-            pcc.show_layout(port_layout)
-            pcc.rotate(-rot_angle)
+            c.update_layout(port_layout)
+            c.rotate(rot_angle)
+            c.show_layout(port_layout)
+            c.rotate(-rot_angle)
 
         parent_state = self.parent.model.state
         if (global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and port_layout and
@@ -332,7 +324,7 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
             if scoped_data_id in parent_state.scoped_data.iterkeys():
                 value = parent_state.scoped_data[scoped_data_id].value
 
-                value_layout = pcc.create_layout()
+                value_layout = c.create_layout()
                 value_layout.set_text(gap_draw_helper.limit_value_string_length(value))
                 set_font_description(value_layout)
                 font = FontDescription(font_name + " " + str(name_size[1] * .9))
@@ -347,12 +339,12 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
 
                 c.move_to(move_x, move_y)
 
-                cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
 
-                pcc.update_layout(value_layout)
-                pcc.rotate(rot_angle)
-                pcc.show_layout(value_layout)
-                pcc.rotate(-rot_angle)
+                c.update_layout(value_layout)
+                c.rotate(rot_angle)
+                c.show_layout(value_layout)
+                c.rotate(-rot_angle)
 
 
 class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
