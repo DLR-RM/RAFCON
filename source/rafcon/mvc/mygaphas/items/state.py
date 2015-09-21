@@ -787,7 +787,7 @@ class NameView(Element):
 
         self.moving = False
 
-        self.__font_size_cache = {'text': None, 'width': None, 'height': None, 'size': None}
+        self._image_cache = ImageCache()
 
     @property
     def name(self):
@@ -808,32 +808,47 @@ class NameView(Element):
 
         c = context.cairo
 
-        if context.selected:
-            c.rectangle(0, 0, self.width, self.height)
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), alpha=.1))
-            c.fill_preserve()
-            c.set_source_rgba(0, 0, 0, 0)
-            c.stroke()
+        parameters = {
+            'name': self.name,
+            'selected': context.selected
+        }
 
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        upper_left_corner = (0, 0)
+        current_zoom = self.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height,
+                                                                          current_zoom, parameters)
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
+            self._image_cache.copy_image_to_context(c, upper_left_corner)
 
-        layout = c.create_layout()
-        layout.set_wrap(WRAP_WORD)
-        layout.set_width(int(self.width) * SCALE)
-        layout.set_text(self.name)
-
-        def set_font_description():
-            font = FontDescription(font_name + " " + str(font_size))
-            layout.set_font_description(font)
-
-        font_name = constants.FONT_NAMES[0]
-
-        if self.__font_size_cache['width'] == self.width and self.__font_size_cache['height'] == self.height and \
-                self.__font_size_cache['text'] == self.name:
-            font_size = self.__font_size_cache['size']
-            set_font_description()
-
+        # Parameters have changed or nothing in cache => redraw
         else:
+            # print "draw"
+            cairo_context = cairo.Context(image)
+            c = CairoContext(cairo_context)
+            c.scale(current_zoom, current_zoom)
+
+            if context.selected:
+                c.rectangle(0, 0, self.width, self.height)
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), alpha=.1))
+                c.fill_preserve()
+                c.set_source_rgba(0, 0, 0, 0)
+                c.stroke()
+
+            c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+            layout = c.create_layout()
+            layout.set_wrap(WRAP_WORD)
+            layout.set_width(int(self.width) * SCALE)
+            layout.set_text(self.name)
+
+            def set_font_description():
+                font = FontDescription(font_name + " " + str(font_size))
+                layout.set_font_description(font)
+
+            font_name = constants.FONT_NAMES[0]
+
             font_size = self.height * 0.8
 
             set_font_description()
@@ -842,9 +857,10 @@ class NameView(Element):
                 font_size *= 0.9
                 set_font_description()
 
-            self.__font_size_cache = {'text': self.name, 'width': self.width, 'height': self.height, 'size': font_size}
+            c.move_to(*self.handles()[NW].pos)
+            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
+            c.update_layout(layout)
+            c.show_layout(layout)
 
-        c.move_to(*self.handles()[NW].pos)
-        c.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
-        c.update_layout(layout)
-        c.show_layout(layout)
+            # Copy image surface to current cairo context
+            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
