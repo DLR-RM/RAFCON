@@ -187,21 +187,15 @@ class PortView(Model):
             'outgoing': self.connected_outgoing,
         }
 
+        upper_left_corner = (self.pos.x.value - side_length / 2., self.pos.y.value - side_length / 2.)
         current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
-        # current_zoom = 1
         from_cache, image, zoom = self._port_image_cache.get_cached_image(side_length, side_length,
                                                                           current_zoom, parameters)
 
-        upper_left_corner = (self.pos.x.value - side_length / 2., self.pos.y.value - side_length / 2.)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
             # print "from cache"
-            c.save()
-            c.scale(1./zoom, 1./zoom)
-            c.set_source_surface(image, int(upper_left_corner[0] * zoom),
-                                        int(upper_left_corner[1] * zoom))
-            c.paint()
-            c.restore()
+            self._port_image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
@@ -217,12 +211,7 @@ class PortView(Model):
                 self._draw_simple_state_port(c, direction, side_length, fill_color, transparent)
 
             # Copy image surface to current cairo context
-            context.cairo.save()
-            context.cairo.scale(1. / current_zoom, 1. / current_zoom)
-            context.cairo.set_source_surface(image, int(upper_left_corner[0] * current_zoom),
-                                                    int(upper_left_corner[1] * current_zoom))
-            context.cairo.paint()
-            context.cairo.restore()
+            self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
             self.draw_name(c, transparent, value)

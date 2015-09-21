@@ -252,17 +252,14 @@ class StateView(Element):
             'port_side_size': self.port_side_size
         }
 
+        upper_left_corner = (nw.x.value, nw.y.value)
         current_zoom = self.canvas.get_first_view().get_zoom_factor()
         from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height, current_zoom, parameters)
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
             # print "from cache"
-            c.save()
-            c.scale(1./zoom, 1./zoom)
-            c.set_source_surface(image, int(nw.x.value), int(nw.y.value))
-            c.paint()
-            c.restore()
+            self._image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
@@ -300,11 +297,7 @@ class StateView(Element):
             c.stroke()
 
             # Copy image surface to current cairo context
-            context.cairo.save()
-            context.cairo.scale(1. / current_zoom, 1. / current_zoom)
-            context.cairo.set_source_surface(image, int(nw.x.value), int(nw.y.value))
-            context.cairo.paint()
-            context.cairo.restore()
+            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
 
         self._income.port_side_size = self.port_side_size
         self._income.draw(context, self)
