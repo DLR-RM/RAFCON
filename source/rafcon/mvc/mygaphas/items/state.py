@@ -264,9 +264,7 @@ class StateView(Element):
         # Parameters have changed or nothing in cache => redraw
         else:
             # print "draw"
-            cairo_context = cairo.Context(image)
-            c = CairoContext(cairo_context)
-            c.scale(current_zoom, current_zoom)
+            c = self._image_cache.get_context_for_image(current_zoom)
 
             c.set_line_width(0.1 / self.hierarchy_level)
             c.rectangle(nw.x, nw.y, self.width, self.height)
@@ -825,9 +823,7 @@ class NameView(Element):
         # Parameters have changed or nothing in cache => redraw
         else:
             # print "draw"
-            cairo_context = cairo.Context(image)
-            c = CairoContext(cairo_context)
-            c.scale(current_zoom, current_zoom)
+            c = self._image_cache.get_context_for_image(current_zoom)
 
             if context.selected:
                 c.rectangle(0, 0, self.width, self.height)

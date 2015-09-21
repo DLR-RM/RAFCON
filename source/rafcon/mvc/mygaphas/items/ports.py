@@ -200,9 +200,7 @@ class PortView(Model):
         # Parameters have changed or nothing in cache => redraw
         else:
             # print "draw"
-            cairo_context = cairo.Context(image)
-            c = CairoContext(cairo_context)
-            c.scale(current_zoom, current_zoom)
+            c = self._port_image_cache.get_context_for_image(current_zoom)
 
             c.move_to(0, 0)
             if isinstance(self._parent.model.state, ContainerState):

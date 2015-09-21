@@ -1,6 +1,6 @@
 
-from cairo import ImageSurface
-from cairo import FORMAT_ARGB32
+from cairo import ImageSurface, FORMAT_ARGB32, Context
+from gtk.gdk import CairoContext
 
 
 class ImageCache(object):
@@ -51,6 +51,17 @@ class ImageCache(object):
         context.set_source_surface(self.__image, int(position[0] * zoom), int(position[1] * zoom))
         context.paint()
         context.restore()
+
+    def get_context_for_image(self, zoom):
+        """Creates a temporary cairo context for the image surface
+
+        :param zoom: The current scaling factor
+        :return: Cairo context to draw on
+        """
+        cairo_context = Context(self.__image)
+        c = CairoContext(cairo_context)
+        c.scale(zoom, zoom)
+        return c
 
     def __set_cached_image(self, image, width, height, zoom, parameters={}):
         self.__image = image
