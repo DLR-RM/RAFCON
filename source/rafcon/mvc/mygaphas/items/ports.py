@@ -214,62 +214,35 @@ class PortView(Model):
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
             self.draw_name(c, transparent, value)
 
-    def draw_name(self, cairo_context, transparent, value):
+    def draw_name(self, context, transparency, value):
         if self.is_connected_to_scoped_variable():
             return
 
-        outcome_side = self.port_side_size
-        c = cairo_context
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        c = context
+        side_length = self.port_side_size
+        label_position = self.side if not self.label_print_inside else self.side.opposite()
+        fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparency)
 
-        layout = c.create_layout()
-        layout.set_text(self.name)
+        show_additional_value = False
+        if global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value is not None:
+            show_additional_value = True
 
-        font_name = constants.FONT_NAMES[0]
-        font_size = outcome_side
+        parameters = {
+            'name': self.name,
+            'side_length': side_length,
+            'side': label_position,
+            'fill_color': fill_color,
+            'show_additional_value': show_additional_value
+        }
 
-        font = FontDescription(font_name + " " + str(font_size))
-        layout.set_font_description(font)
+        # add value to parameters only when value is shown on label
+        if show_additional_value:
+            parameters['value'] = value
 
-        text_size = (layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE))
-
-        print_side = self.side if not self.label_print_inside else self.side.opposite()
-
-        fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparent)
-        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(cairo_context, fill_color, text_size, self.pos,
-                                                                    print_side, self.port_side_size,
-                                                                    self._draw_connection_to_port)
-
-        c.move_to(move_x, move_y)
-
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(self.text_color), transparent))
-
-        c.update_layout(layout)
-        c.rotate(rot_angle)
-        c.show_layout(layout)
-        c.rotate(-rot_angle)
-
-        if global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value:
-            value_layout = c.create_layout()
-            value_layout.set_text(gap_draw_helper.limit_value_string_length(value))
-            value_layout.set_font_description(font)
-
-            value_text_size = (value_layout.get_size()[0] / float(SCALE), text_size[1])
-
-            fill_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR))
-            rot_angle, move_x, move_y = gap_draw_helper.draw_data_value_rect(c, fill_color, value_text_size,
-                                                                             text_size, (move_x, move_y), print_side)
-
-            c.move_to(move_x, move_y)
-
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
-
-            c.update_layout(value_layout)
-            c.rotate(rot_angle)
-            c.show_layout(value_layout)
-            c.rotate(-rot_angle)
-
-        # c.move_to(outcome_side, outcome_side)
+        c.move_to(self.pos.x.value, self.pos.y.value)
+        gap_draw_helper.draw_port_label(context, self.name, fill_color, self.text_color, transparency,
+                                        False, label_position, side_length, self._draw_connection_to_port,
+                                        show_additional_value, value)
 
     def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
         """Draw the port of a simple state (ExecutionState, LibraryState)
@@ -549,7 +522,7 @@ class ScopedVariablePortView(PortView):
 
         self.draw_name(context, state.transparent)
 
-    def draw_name(self, context, transparent):
+    def draw_name(self, context, transparency):
         outcome_side = self.port_side_size
         c = context.cairo
 
@@ -566,7 +539,7 @@ class ScopedVariablePortView(PortView):
 
         name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
 
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparent))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparency))
 
         rot_angle = .0
         draw_pos = self._get_draw_position(name_size[0], outcome_side)
