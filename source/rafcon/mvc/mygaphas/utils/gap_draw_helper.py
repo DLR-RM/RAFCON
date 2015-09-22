@@ -259,6 +259,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
 
     c.set_line_width(port_side_length * .03)
     c.set_source_rgba(*label_color)
+    label_extents = c.stroke_extents()
     if fill:
         c.fill_preserve()
     c.stroke()
@@ -301,6 +302,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
         c.restore()
 
         # Draw filled outline
+        value_extents = c.stroke_extents()
         c.set_source_rgba(*get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR)))
         c.fill_preserve()
         c.set_source_color(Color(constants.BLACK_COLOR))
@@ -323,6 +325,11 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
         c.update_layout(value_layout)
         c.show_layout(value_layout)
         c.restore()
+
+        label_extents = min(label_extents[0], value_extents[0]), min(label_extents[1], value_extents[1]), \
+                        max(label_extents[2], value_extents[2]), max(label_extents[3], value_extents[3])
+
+    return label_extents
 
 
 def draw_label_path(context, width, height, arrow_height, distance_to_port, draw_connection_to_port):
