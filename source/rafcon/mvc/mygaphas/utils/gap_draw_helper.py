@@ -201,7 +201,8 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
 
 
 def draw_port_label(context, text, label_color, text_color, transparency, fill, label_position, port_side_length,
-                    draw_connection_to_port=False, show_additional_value=False, additional_value=None):
+                    draw_connection_to_port=False, show_additional_value=False, additional_value=None,
+                    only_extent_calculations=False):
     """
     Draws a normal label indicating the port name.
     :param context: Draw Context
@@ -215,6 +216,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     :param draw_connection_to_port: Whether there should be a line connecting the label to the port
     :param show_additional_value: Whether to show an additional value (for data ports)
     :param additional_value: The additional value to be shown
+    :param only_extent_calculations: Calculate only the extends and do not actually draw
     """
     c = context
     c.set_antialias(ANTIALIAS_SUBPIXEL)
@@ -252,6 +254,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
         text_angle = deg2rad(90)
 
     # Draw (filled) outline of label
+    c.move_to(*port_position)
     c.save()
     c.rotate(label_angle)
     draw_label_path(c, width, height, arrow_height, port_distance, draw_connection_to_port)
@@ -260,27 +263,31 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     c.set_line_width(port_side_length * .03)
     c.set_source_rgba(*label_color)
     label_extents = c.stroke_extents()
-    if fill:
-        c.fill_preserve()
-    c.stroke()
 
-    # Move to the upper left corner of the desired text position
-    c.save()
-    c.move_to(*port_position)
-    c.rotate(label_angle)
-    c.rel_move_to(-text_size[1] / 2., text_size[0] + port_distance + arrow_height + margin)
-    c.restore()
+    if only_extent_calculations:
+        c.new_path()
+    else:
+        if fill:
+            c.fill_preserve()
+        c.stroke()
 
-    # Show text in correct orientation
-    c.save()
-    c.rotate(text_angle)
-    # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
-    if label_position is SnappedSide.RIGHT:
-        c.rel_move_to(-text_size[0], -text_size[1])
-    c.set_source_rgba(*get_col_rgba(Color(text_color), transparency))
-    c.update_layout(layout)
-    c.show_layout(layout)
-    c.restore()
+        # Move to the upper left corner of the desired text position
+        c.save()
+        c.move_to(*port_position)
+        c.rotate(label_angle)
+        c.rel_move_to(-text_size[1] / 2., text_size[0] + port_distance + arrow_height + margin)
+        c.restore()
+
+        # Show text in correct orientation
+        c.save()
+        c.rotate(text_angle)
+        # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
+        if label_position is SnappedSide.RIGHT:
+            c.rel_move_to(-text_size[0], -text_size[1])
+        c.set_source_rgba(*get_col_rgba(Color(text_color), transparency))
+        c.update_layout(layout)
+        c.show_layout(layout)
+        c.restore()
 
     if show_additional_value:
         value_text = limit_value_string_length(additional_value)
@@ -301,30 +308,34 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
         c.close_path()
         c.restore()
 
-        # Draw filled outline
         value_extents = c.stroke_extents()
-        c.set_source_rgba(*get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR)))
-        c.fill_preserve()
-        c.set_source_color(Color(constants.BLACK_COLOR))
-        c.stroke()
 
-        # Move to the upper left corner of the desired text position
-        c.save()
-        c.move_to(*port_position)
-        c.rotate(label_angle)
-        c.rel_move_to(-text_size[1] / 2., value_text_size[0] + margin + height + port_distance)
-        c.restore()
+        if only_extent_calculations:
+            c.new_path()
+        else:
+            # Draw filled outline
+            c.set_source_rgba(*get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR)))
+            c.fill_preserve()
+            c.set_source_color(Color(constants.BLACK_COLOR))
+            c.stroke()
 
-        # Show text in correct orientation
-        c.save()
-        c.rotate(text_angle)
-        # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
-        if label_position is SnappedSide.RIGHT:
-            c.rel_move_to(-value_text_size[0], -text_size[1])
-        c.set_source_rgba(*get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
-        c.update_layout(value_layout)
-        c.show_layout(value_layout)
-        c.restore()
+            # Move to the upper left corner of the desired text position
+            c.save()
+            c.move_to(*port_position)
+            c.rotate(label_angle)
+            c.rel_move_to(-text_size[1] / 2., value_text_size[0] + margin + height + port_distance)
+            c.restore()
+
+            # Show text in correct orientation
+            c.save()
+            c.rotate(text_angle)
+            # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
+            if label_position is SnappedSide.RIGHT:
+                c.rel_move_to(-value_text_size[0], -text_size[1])
+            c.set_source_rgba(*get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
+            c.update_layout(value_layout)
+            c.show_layout(value_layout)
+            c.restore()
 
         label_extents = min(label_extents[0], value_extents[0]), min(label_extents[1], value_extents[1]), \
                         max(label_extents[2], value_extents[2]), max(label_extents[3], value_extents[3])
