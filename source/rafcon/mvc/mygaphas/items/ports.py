@@ -544,104 +544,111 @@ class ScopedVariablePortView(PortView):
         return self.model.scoped_variable.name
 
     def draw(self, context, state):
-        name_size = self._get_name_size(context)
-
-        self.update_port_side_size()
         c = context.cairo
-        outcome_side = self.port_side_size
 
-        self._draw_rectangle(c, name_size[0], outcome_side)
+        name_size = self.draw_name(c, 0, only_calculate_size=True)
+        self.update_port_side_size()
+        side_length = self.port_side_size
+
+        self._draw_rectangle_path(c, name_size[0], side_length)
+        c.set_line_width(self.port_side_size / 50.)
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR), state.transparent))
         c.fill_preserve()
         c.stroke()
 
-        self.draw_name(context, state.transparent)
+        self.draw_name(c, state.transparent)
 
-    def draw_name(self, context, transparency):
-        outcome_side = self.port_side_size
-        c = context.cairo
+    def draw_name(self, context, transparency, only_calculate_size=False):
+        """Draws the name of the port
 
+        Offers the option to only calculate the size of the name.
+
+        :param context: The context to draw on
+        :param transparency: The transparency of the text
+        :param only_calculate_size: Whether to only calculate the size
+        :return: Size of the name
+        :rtype: float, float
+        """
+        c = context
         c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
+        side_length = self.port_side_size
+
         layout = c.create_layout()
-        layout.set_text(self.name)
-
         font_name = constants.FONT_NAMES[0]
-        font_size = outcome_side * .8
-
+        font_size = side_length * .6
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
+        layout.set_text(self.name)
 
-        name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
+        # Determine the size of the text, increase the width to have more margin left and right of the text
+        real_name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
+        name_size = real_name_size[0] + real_name_size[1] / 2., real_name_size[1]
+
+        # Only the size is required, stop here
+        if only_calculate_size:
+            return name_size
+
+        center_pos = self._get_port_center_position(name_size[0])
+        c.save()
+        c.move_to(*center_pos)
+        if self.side is SnappedSide.RIGHT or self.side is SnappedSide.LEFT:
+            c.rotate(deg2rad(-90))
+        c.rel_move_to(-real_name_size[0] / 2., -real_name_size[1] / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparency))
-
-        rot_angle = .0
-        draw_pos = self._get_draw_position(name_size[0], outcome_side)
-
-        if self.side is SnappedSide.RIGHT:
-            c.move_to(draw_pos[0] + outcome_side, draw_pos[1])
-            rot_angle = pi / 2
-        elif self.side is SnappedSide.LEFT:
-            c.move_to(draw_pos[0], draw_pos[1] + name_size[0])
-            rot_angle = - pi / 2
-        elif self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
-            c.move_to(draw_pos[0], draw_pos[1])
-
         c.update_layout(layout)
-        c.rotate(rot_angle)
         c.show_layout(layout)
-        c.rotate(-rot_angle)
+        c.restore()
 
-        c.move_to(*self.pos)
+        return name_size
 
-    def _draw_rectangle(self, context_cairo, text_width, port_height):
-        c = context_cairo
+    def _draw_rectangle_path(self, context, width, height):
+        """Draws the rectangle path for the port
 
-        text_width_half = text_width / 2. + port_height * .2
+        The rectangle is correctly rotated. Height therefore refers to the border thickness and width to the length
+        of the port.
 
-        draw_pos = self._get_draw_position(text_width, port_height)
+        :param context: The context to draw on
+        :param float width: The width of the rectangle
+        :param float height: The height of the rectangle
+        """
+        c = context
+        center_pos = self._get_port_center_position(width)
 
+        c.save()
+        c.move_to(*center_pos)
+        if self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
+            c.rotate(deg2rad(90))
+        c.rel_move_to(-width / 2., - height / 2.)
+        c.rel_line_to(width, 0)
+        c.rel_line_to(0, height)
+        c.rel_line_to(-width, 0)
+        c.close_path()
+        c.restore()
+
+    def _get_port_center_position(self, width):
+        """Calculates the center position of the port rectangle
+
+        The port itself can be positioned in the corner, the center of the port rectangle however is restricted by
+        the width of the rectangle. This method therefore calculates the center, depending on the position of the
+        port and the width of the rectangle.
+        :param float width: The width of the rectangle
+        :return: The center position of the rectangle
+        :rtype: float, float
+        """
+        x, y = self.pos.x.value, self.pos.y.value
         if self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
-            c.rectangle(draw_pos[0], draw_pos[1], text_width_half * 2., port_height)
-        elif self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
-            c.rectangle(draw_pos[0], draw_pos[1], port_height, text_width_half * 2.)
-
-    def _get_draw_position(self, text_width, port_height):
-        text_width_half = text_width / 2. + port_height * .2
-        height_half = port_height / 2.
-
-        offset = .0
-
-        if self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
-            if self.pos.x - text_width_half < 0:
-                offset = self.pos.x - text_width_half
-            elif self.pos.x + text_width_half > self.parent.width:
-                offset = self.pos.x + text_width_half - self.parent.width
-            return self.pos.x - text_width_half - offset, self.pos.y - height_half
-        elif self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
-            if self.pos.y - text_width_half < 0:
-                offset = self.pos.y - text_width_half
-            elif self.pos.y + text_width_half > self.parent.height:
-                offset = self.pos.y + text_width_half - self.parent.height
-            return self.pos.x - height_half, self.pos.y - text_width_half - offset
-
-    def _get_name_size(self, context):
-        outcome_side = self.port_side_size
-        c = context.cairo
-
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        layout = c.create_layout()
-        layout.set_text(self.name)
-
-        font_name = constants.FONT_NAMES[0]
-        font_size = outcome_side * .8
-
-        font = FontDescription(font_name + " " + str(font_size))
-        layout.set_font_description(font)
-
-        return layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
+            if x - width / 2. < 0:
+                x = width / 2
+            elif x + width / 2. > self.parent.width:
+                x = self.parent.width - width / 2.
+        else:
+            if y - width / 2. < 0:
+                y = width / 2
+            elif y + width / 2. > self.parent.height:
+                y = self.parent.height - width / 2.
+        return x, y
 
 
 class DataPortView(PortView):
