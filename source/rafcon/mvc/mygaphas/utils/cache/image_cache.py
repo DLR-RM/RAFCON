@@ -2,6 +2,7 @@
 from cairo import ImageSurface, FORMAT_ARGB32, Context
 from gtk.gdk import CairoContext
 
+from math import ceil
 
 class ImageCache(object):
 
@@ -19,7 +20,7 @@ class ImageCache(object):
         self.__format = FORMAT_ARGB32
         self.__last_parameters = {}
 
-    def get_cached_image(self, width, height, zoom, parameters={}):
+    def get_cached_image(self, width, height, zoom, parameters={}, clear=False):
         """Get ImageSurface object, if possible, cached
 
         The method checks whether the image was already rendered. This is done by comparing the passed size and
@@ -29,12 +30,15 @@ class ImageCache(object):
         :param height: The height of the image
         :param zoom: The current scale/zoom factor
         :param parameters: The parameters used for the image
-        :return: bool, ImageSurface -- The flag is True when the image is retrieved from the cache, otherwise False
+        :param clear: If True, the cache is emptied, thus the image won't be retrieved from cache
+        :returns: The flag is True when the image is retrieved from the cache, otherwise False; The cached image
+          surface or a blank one with the desired size; The zoom parameter when the image was stored
+        :rtype: bool, ImageSurface, float
         """
-        if self.__compare_parameters(width, height, zoom, parameters):
+        if self.__compare_parameters(width, height, zoom, parameters) and not clear:
             return True, self.__image, self.__zoom
 
-        image = ImageSurface(self.__format, int(width * zoom), int(height * zoom))
+        image = ImageSurface(self.__format, int(ceil(width * zoom)), int(ceil(height * zoom)))
         self.__set_cached_image(image, width, height, zoom, parameters)
         return False, self.__image, zoom
 
@@ -48,7 +52,7 @@ class ImageCache(object):
             zoom = self.__zoom
         context.save()
         context.scale(1. / zoom, 1. / zoom)
-        context.set_source_surface(self.__image, int(position[0] * zoom), int(position[1] * zoom))
+        context.set_source_surface(self.__image, round(position[0] * zoom), round(position[1] * zoom))
         context.paint()
         context.restore()
 
