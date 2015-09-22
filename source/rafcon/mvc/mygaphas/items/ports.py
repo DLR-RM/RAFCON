@@ -57,7 +57,9 @@ class PortView(Model):
         self.label_print_inside = True
 
         self._port_image_cache = ImageCache()
-        self._name_image_cache = ImageCache()
+        self._label_image_cache = ImageCache()
+        self._last_label_size = 0, 0
+        self._last_label_relative_pos = 0, 0
 
     @property
     def side(self):
@@ -239,10 +241,43 @@ class PortView(Model):
         if show_additional_value:
             parameters['value'] = value
 
-        c.move_to(self.pos.x.value, self.pos.y.value)
-        gap_draw_helper.draw_port_label(context, self.name, fill_color, self.text_color, transparency,
-                                        False, label_position, side_length, self._draw_connection_to_port,
-                                        show_additional_value, value)
+        upper_left_corner = (self.pos[0] + self._last_label_relative_pos[0],
+                             self.pos[1] + self._last_label_relative_pos[1])
+        current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._label_image_cache.get_cached_image(self._last_label_size[0],
+                                                                           self._last_label_size[1],
+                                                                           current_zoom, parameters)
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
+            self._label_image_cache.copy_image_to_context(c, upper_left_corner)
+
+        # Parameters have changed or nothing in cache => redraw
+        else:
+            # print "draw"
+
+            # First we have to do a "dry run", in order to determine the size of the new label
+            context.move_to(self.pos.x.value, self.pos.y.value)
+            extents = gap_draw_helper.draw_port_label(context, self.name, fill_color, self.text_color, transparency,
+                                                      False, label_position, side_length, self._draw_connection_to_port,
+                                                      show_additional_value, value, only_extent_calculations=True)
+            label_pos = extents[0], extents[1]
+            relative_pos = label_pos[0] - self.pos[0], label_pos[1] - self.pos[1]
+            label_size = extents[2] - extents[0], extents[3] - extents[1]
+            self._last_label_relative_pos = relative_pos
+            self._last_label_size = label_size
+
+            # The size information is used to update the caching parameters and retrieve an image with the correct size
+            self._label_image_cache.get_cached_image(label_size[0], label_size[1], current_zoom, parameters, clear=True)
+            c = self._label_image_cache.get_context_for_image(current_zoom)
+            c.move_to(-relative_pos[0], -relative_pos[1])
+
+            gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
+                                            False, label_position, side_length, self._draw_connection_to_port,
+                                            show_additional_value, value)
+
+            # Copy image surface to current cairo context
+            self._label_image_cache.copy_image_to_context(context, label_pos, current_zoom)
 
     def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
         """Draw the port of a simple state (ExecutionState, LibraryState)
