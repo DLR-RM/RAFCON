@@ -214,13 +214,13 @@ class PortView(Model):
             self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
-            self.draw_name(c, transparent, value)
+            self.draw_name(context, transparent, value)
 
     def draw_name(self, context, transparency, value):
         if self.is_connected_to_scoped_variable():
             return
 
-        c = context
+        c = context.cairo
         side_length = self.port_side_size
         label_position = self.side if not self.label_print_inside else self.side.opposite()
         fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparency)
@@ -257,8 +257,8 @@ class PortView(Model):
             # print "draw"
 
             # First we have to do a "dry run", in order to determine the size of the new label
-            context.move_to(self.pos.x.value, self.pos.y.value)
-            extents = gap_draw_helper.draw_port_label(context, self.name, fill_color, self.text_color, transparency,
+            c.move_to(self.pos.x.value, self.pos.y.value)
+            extents = gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
                                                       False, label_position, side_length, self._draw_connection_to_port,
                                                       show_additional_value, value, only_extent_calculations=True)
             label_pos = extents[0], extents[1]
@@ -277,7 +277,8 @@ class PortView(Model):
                                             show_additional_value, value)
 
             # Copy image surface to current cairo context
-            self._label_image_cache.copy_image_to_context(context, label_pos, current_zoom)
+            upper_left_corner = (self.pos[0] + relative_pos[0], self.pos[1] + relative_pos[1])
+            self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
 
     def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
         """Draw the port of a simple state (ExecutionState, LibraryState)
@@ -590,7 +591,7 @@ class ScopedVariablePortView(PortView):
             # Set the current point to be in the center of the rectangle
             c.move_to(port_size[0] / 2., port_size[1] / 2.)
             self._draw_rectangle_path(c, name_size[0], side_length)
-            c.set_line_width(self.port_side_size / 50.)
+            c.set_line_width(self.port_side_size / 50. * self._port_image_cache.multiplicator)
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR), state.transparent))
             c.fill_preserve()
             c.stroke()
@@ -629,7 +630,7 @@ class ScopedVariablePortView(PortView):
         layout.set_text(self.name)
 
         # Determine the size of the text, increase the width to have more margin left and right of the text
-        real_name_size = layout.get_size()[0] / float(SCALE), side_length
+        real_name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
         name_size = real_name_size[0] + side_length / 2., side_length
 
         # Only the size is required, stop here
@@ -640,7 +641,7 @@ class ScopedVariablePortView(PortView):
         c.save()
         if self.side is SnappedSide.RIGHT or self.side is SnappedSide.LEFT:
             c.rotate(deg2rad(-90))
-        c.rel_move_to(-real_name_size[0] / 2., -side_length / 2.)
+        c.rel_move_to(-real_name_size[0] / 2., -real_name_size[1] / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparency))
         c.update_layout(layout)
