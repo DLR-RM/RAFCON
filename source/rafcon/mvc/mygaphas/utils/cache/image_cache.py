@@ -1,17 +1,21 @@
 
-from cairo import ImageSurface, FORMAT_ARGB32, Context
+from cairo import ImageSurface, FORMAT_ARGB32, Context, Error as CairoError
 from gtk.gdk import CairoContext
 
 from math import ceil
 
+
 class ImageCache(object):
 
-    def __init__(self):
+    def __init__(self, multiplicator=2):
         """The ImageCache class can be used for caching ImageSurfaces
 
         The intentional use is for drawing methods. Instead of directly drawing to the cairo context, it is drawn on
         an ImageSurface. This allows the drawing to be buffered. The properties used for drawing are remembered. If
         the drawing routine is called again with the same parameters as before, the image is just copied.
+
+        :param float multiplicator: The zoom factor is multiplied with this value to prepare the cached image for
+          higher zoom levels.
         """
         self.__image = None
         self.__width = None
@@ -19,6 +23,7 @@ class ImageCache(object):
         self.__zoom = None
         self.__format = FORMAT_ARGB32
         self.__last_parameters = {}
+        self.__multiplicator = multiplicator
 
     def get_cached_image(self, width, height, zoom, parameters={}, clear=False):
         """Get ImageSurface object, if possible, cached
@@ -38,7 +43,14 @@ class ImageCache(object):
         if self.__compare_parameters(width, height, zoom, parameters) and not clear:
             return True, self.__image, self.__zoom
 
-        image = ImageSurface(self.__format, int(ceil(width * zoom)), int(ceil(height * zoom)))
+        max_allowed_size_length = 5000
+        max_side_length = max(int(ceil(width * zoom * self.__multiplicator)),
+                              int(ceil(height * zoom * self.__multiplicator)))
+        if max_side_length > max_allowed_size_length:
+            zoom /= max_side_length / max_allowed_size_length
+        image = ImageSurface(self.__format, int(ceil(width * zoom * self.__multiplicator)),
+                                            int(ceil(height * zoom * self.__multiplicator)))
+
         self.__set_cached_image(image, width, height, zoom, parameters)
         return False, self.__image, zoom
 
@@ -51,10 +63,15 @@ class ImageCache(object):
         if not zoom:
             zoom = self.__zoom
         context.save()
-        context.scale(1. / zoom, 1. / zoom)
-        context.set_source_surface(self.__image, round(position[0] * zoom), round(position[1] * zoom))
+        context.scale(1. / (zoom * self.__multiplicator), 1. / (zoom * self.__multiplicator))
+        context.set_source_surface(self.__image, round(position[0] * zoom * self.__multiplicator),
+                                                 round(position[1] * zoom * self.__multiplicator))
         context.paint()
         context.restore()
+
+    @property
+    def multiplicator(self):
+        return self.__multiplicator
 
     def get_context_for_image(self, zoom):
         """Creates a temporary cairo context for the image surface
@@ -64,7 +81,7 @@ class ImageCache(object):
         """
         cairo_context = Context(self.__image)
         c = CairoContext(cairo_context)
-        c.scale(zoom, zoom)
+        c.scale(zoom * self.__multiplicator, zoom * self.__multiplicator)
         return c
 
     def __set_cached_image(self, image, width, height, zoom, parameters={}):
@@ -93,6 +110,10 @@ class ImageCache(object):
             return False
 
         # TODO: Maybe implement zoom factor comparison
+        # print zoom, self.__zoom
+        if zoom > self.__zoom * self.__multiplicator:
+            return False
+
         for key in parameters:
             if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
                 return False

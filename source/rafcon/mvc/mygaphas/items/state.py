@@ -265,8 +265,9 @@ class StateView(Element):
         else:
             # print "draw"
             c = self._image_cache.get_context_for_image(current_zoom)
+            multiplicator = self._image_cache.multiplicator
 
-            c.set_line_width(0.1 / self.hierarchy_level)
+            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
             if self.model.state.active:
@@ -278,19 +279,19 @@ class StateView(Element):
             c.fill_preserve()
             if self.model.state.active:
                 c.set_source_color(Color(constants.STATE_ACTIVE_BORDER_COLOR))
-                c.set_line_width(.25 / self.hierarchy_level)
+                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
             elif self.selected:
                 c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
-                c.set_line_width(.25 / self.hierarchy_level)
+                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
             else:
                 c.set_source_color(Color(constants.BLACK_COLOR))
             c.stroke()
-            c.set_line_width(0.1 / self.hierarchy_level)
 
             inner_nw, inner_se = self.get_state_drawing_area(self)
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
             c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR)))
             c.fill_preserve()
+            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
             c.set_source_color(Color(constants.BLACK_COLOR))
             c.stroke()
 
@@ -785,7 +786,7 @@ class NameView(Element):
 
         self.moving = False
 
-        self._image_cache = ImageCache()
+        self._image_cache = ImageCache(multiplicator=1.5)
 
     @property
     def name(self):
