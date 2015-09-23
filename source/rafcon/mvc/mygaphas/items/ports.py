@@ -530,6 +530,7 @@ class ScopedVariablePortView(PortView):
 
         assert isinstance(scoped_variable_m, ScopedVariableModel)
         self._scoped_variable_m = ref(scoped_variable_m)
+        self._last_label_span = 0
 
     @property
     def model(self):
@@ -545,18 +546,64 @@ class ScopedVariablePortView(PortView):
 
     def draw(self, context, state):
         c = context.cairo
-
-        name_size = self.draw_name(c, 0, only_calculate_size=True)
         self.update_port_side_size()
         side_length = self.port_side_size
 
-        self._draw_rectangle_path(c, name_size[0], side_length)
-        c.set_line_width(self.port_side_size / 50.)
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR), state.transparent))
-        c.fill_preserve()
-        c.stroke()
+        parameters = {
+            'name': self.name,
+            'side': self.side,
+            'side_length': side_length,
+            'transparency': state.transparent
+        }
+        current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._port_image_cache.get_cached_image(self._last_label_size[0],
+                                                                          self._last_label_size[1],
+                                                                          current_zoom, parameters)
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
 
-        self.draw_name(c, state.transparent)
+            center_pos = self._get_port_center_position(self._last_label_span)
+            upper_left_corner = center_pos[0] - self._last_label_size[0] / 2., \
+                                center_pos[1] - self._last_label_size[1] / 2.
+            self._port_image_cache.copy_image_to_context(c, upper_left_corner)
+
+        # Parameters have changed or nothing in cache => redraw
+        else:
+            # print "draw"
+
+            # First we have to do a "dry run", in order to determine the size of the port
+            c.move_to(*self.pos)
+            name_size = self.draw_name(c, state.transparent, only_calculate_size=True)
+            extents = self._draw_rectangle_path(c, name_size[0], side_length, only_get_extents=True)
+
+            port_size = extents[2] - extents[0], extents[3] - extents[1]
+            self._last_label_size = port_size
+            self._last_label_span = name_size[0]
+
+            # The size information is used to update the caching parameters and retrieve a new context with an image
+            # surface of the correct size
+            self._port_image_cache.get_cached_image(port_size[0], port_size[1], current_zoom, parameters, clear=True)
+            c = self._port_image_cache.get_context_for_image(current_zoom)
+
+            # First, draw the filled rectangle
+            # Set the current point to be in the center of the rectangle
+            c.move_to(port_size[0] / 2., port_size[1] / 2.)
+            self._draw_rectangle_path(c, name_size[0], side_length)
+            c.set_line_width(self.port_side_size / 50.)
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR), state.transparent))
+            c.fill_preserve()
+            c.stroke()
+
+            # Second, write the text in the rectangle (scoped variable name)
+            # Set the current point to be in the center of the rectangle
+            c.move_to(port_size[0] / 2., port_size[1] / 2.)
+            self.draw_name(c, state.transparent)
+
+            # Copy image surface to current cairo context
+            center_pos = self._get_port_center_position(name_size[0])
+            upper_left_corner = center_pos[0] - port_size[0] / 2., center_pos[1] - port_size[1] / 2.
+            self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
 
     def draw_name(self, context, transparency, only_calculate_size=False):
         """Draws the name of the port
@@ -582,19 +629,18 @@ class ScopedVariablePortView(PortView):
         layout.set_text(self.name)
 
         # Determine the size of the text, increase the width to have more margin left and right of the text
-        real_name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
-        name_size = real_name_size[0] + real_name_size[1] / 2., real_name_size[1]
+        real_name_size = layout.get_size()[0] / float(SCALE), side_length
+        name_size = real_name_size[0] + side_length / 2., side_length
 
         # Only the size is required, stop here
         if only_calculate_size:
             return name_size
 
-        center_pos = self._get_port_center_position(name_size[0])
+        # Current position is the center of the port rectangle
         c.save()
-        c.move_to(*center_pos)
         if self.side is SnappedSide.RIGHT or self.side is SnappedSide.LEFT:
             c.rotate(deg2rad(-90))
-        c.rel_move_to(-real_name_size[0] / 2., -real_name_size[1] / 2.)
+        c.rel_move_to(-real_name_size[0] / 2., -side_length / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparency))
         c.update_layout(layout)
@@ -603,7 +649,7 @@ class ScopedVariablePortView(PortView):
 
         return name_size
 
-    def _draw_rectangle_path(self, context, width, height):
+    def _draw_rectangle_path(self, context, width, height, only_get_extents=False):
         """Draws the rectangle path for the port
 
         The rectangle is correctly rotated. Height therefore refers to the border thickness and width to the length
@@ -614,10 +660,9 @@ class ScopedVariablePortView(PortView):
         :param float height: The height of the rectangle
         """
         c = context
-        center_pos = self._get_port_center_position(width)
 
+        # Current position is the center of the rectangle
         c.save()
-        c.move_to(*center_pos)
         if self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
             c.rotate(deg2rad(90))
         c.rel_move_to(-width / 2., - height / 2.)
@@ -626,6 +671,11 @@ class ScopedVariablePortView(PortView):
         c.rel_line_to(-width, 0)
         c.close_path()
         c.restore()
+
+        if only_get_extents:
+            extents = c.path_extents()
+            c.new_path()
+            return extents
 
     def _get_port_center_position(self, width):
         """Calculates the center position of the port rectangle
