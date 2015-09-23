@@ -1,8 +1,10 @@
 
-from cairo import ImageSurface, FORMAT_ARGB32, Context, Error as CairoError
+from cairo import ImageSurface, FORMAT_ARGB32, Context
 from gtk.gdk import CairoContext
 
 from math import ceil
+
+from rafcon.mvc.config import global_gui_config
 
 
 class ImageCache(object):
@@ -102,15 +104,15 @@ class ImageCache(object):
         :param parameters: The parameters used for the image
         :return: True if all parameters are equal, False else
         """
-        # if not isinstance(self.__image, ImageSurface):
+        if not global_gui_config.get_config_value('ENABLE_CACHING', True):
+            return False
+
         if not self.__image:
             return False
 
         if self.__width != width or self.__height != height:
             return False
 
-        # TODO: Maybe implement zoom factor comparison
-        # print zoom, self.__zoom
         if zoom > self.__zoom * self.__multiplicator:
             return False
 
