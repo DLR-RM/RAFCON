@@ -441,48 +441,6 @@ class ContainerState(State):
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
         self._transitions.pop(transition_id, None)
 
-    def is_valid_transition_id(self, transition_id):
-        """Checks if transition_id valid type and points to element of state.
-
-        :param int transition_id:
-        :return:
-        """
-        #check if types are valid
-        if not isinstance(transition_id, int):
-            raise TypeError("transition_id must be of type int")
-        # consistency check
-        if transition_id not in self.transitions:
-            raise AttributeError("transition_id %s has to be in container_state %s transitions-list" %
-                                 (transition_id, self.state_id))
-
-    def is_valid_data_flow_id(self, data_flow_id):
-        """Checks if data_flow_id valid type and points to element of state.
-
-        :param int data_flow_id:
-        :return:
-        """
-        #check if types are valid
-        if not isinstance(data_flow_id, int):
-            raise TypeError("data_flow_id must be of type int")
-        # consistency check
-        if data_flow_id not in self.data_flows:
-            raise AttributeError("data_flow_id %s has to be in container_state %s data_flows-list" %
-                                 (data_flow_id, self.state_id))
-
-    def is_valid_state_id(self, state_id):
-        """Checks if state_id valid type and points to element of state.
-
-        :param str state_id:
-        :return:
-        """
-        #check if types are valid
-        if not isinstance(state_id, str):
-            raise TypeError("state_id must be of type str")
-        # consistency check
-        if state_id not in self.states:
-            raise AttributeError("state_id %s has to be child of container_state %s" %
-                                 (state_id, self.state_id))
-
     def remove_outcome_hook(self, outcome_id):
         """Removes internal transition going to the outcome
         """
@@ -527,7 +485,8 @@ class ContainerState(State):
         :param int data_flow_id: the id of the data_flow to remove
 
         """
-        self.is_valid_data_flow_id(data_flow_id)
+        if data_flow_id not in self.data_flows:
+            raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
         self.data_flows.pop(data_flow_id, None)
 
     def remove_data_flows_with_data_port_id(self, data_port_id):
