@@ -499,13 +499,12 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             input_port_v.handle.pos = port_meta['rel_pos']
         else:
-            pos_x, pos_y, side = self._calculate_unoccupied_position(input_port_v.port_side_size, SnappedSide.LEFT,
-                                                                     input_port_v, in_port=True)
-            if pos_x is None:
-                self.model.state.remove_input_data_port(input_port_v.port_id)
-                return
+            # Distribute input ports on the left side of the state, starting from bottom
+            input_port_v.side = SnappedSide.LEFT
+            num_inputs = len(self._inputs)
+            pos_x = 0
+            pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
             input_port_v.handle.pos = pos_x, pos_y
-            input_port_v.side = side
         self.add_rect_constraint_for_port(input_port_v)
 
     def remove_input_port(self, input_port_v):
@@ -526,13 +525,12 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             output_port_v.handle.pos = port_meta['rel_pos']
         else:
-            pos_x, pos_y, side = self._calculate_unoccupied_position(output_port_v.port_side_size, SnappedSide.RIGHT,
-                                                                     output_port_v)
-            if pos_x is None:
-                self.model.state.remove_output_data_port(output_port_v.port_id)
-                return
+            # Distribute output ports on the right side of the state, starting from bottom
+            output_port_v.side = SnappedSide.RIGHT
+            num_inputs = len(self._outputs)
+            pos_x = self.width
+            pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
             output_port_v.handle.pos = pos_x, pos_y
-            output_port_v.side = side
         self.add_rect_constraint_for_port(output_port_v)
 
     def remove_output_port(self, output_port_v):
