@@ -48,7 +48,7 @@ class ImageCache(object):
 
         # Restrict image surface size to prevent excessive use of memory
         self.__limiting_multiplicator = 1
-        max_allowed_size_length = 10000.
+        max_allowed_size_length = 5000.
         max_side_length = max(width * zoom * self.__zoom_multiplicator, height * zoom * self.__zoom_multiplicator)
         if max_side_length > max_allowed_size_length:
             self.__limiting_multiplicator = max_allowed_size_length / max_side_length
@@ -107,18 +107,28 @@ class ImageCache(object):
         :param parameters: The parameters used for the image
         :return: True if all parameters are equal, False else
         """
+
+        # Deactivated caching
         if not global_gui_config.get_config_value('ENABLE_CACHING', True):
             return False
 
+        # Empty cache
         if not self.__image:
             return False
 
+        # Changed image size
         if self.__width != width or self.__height != height:
             return False
 
+        # Current zoom greater then prepared zoom
         if zoom > self.__zoom * self.__zoom_multiplicator:
             return False
 
+        # Current zoom much smaller than prepared zoom, causes high memory usage and imperfect anti-aliasing
+        if zoom < self.__zoom / self.__zoom_multiplicator:
+            return False
+
+        # Changed drawing parameter
         for key in parameters:
             if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
                 return False
