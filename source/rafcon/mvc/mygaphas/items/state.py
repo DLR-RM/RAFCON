@@ -449,7 +449,8 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             income_v.handle.pos = port_meta['rel_pos']
         else:
-            # Position input on the top of the left state side
+            # Position income on the top of the left state side
+            income_v.side = SnappedSide.LEFT
             pos_x = 0
             pos_y = self._calculate_port_pos_on_line(1, self.height)
             income_v.handle.pos = pos_x, pos_y
@@ -466,15 +467,18 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             outcome_v.handle.pos = port_meta['rel_pos']
         else:
-            # Distribute outcomes on the right side of the state, starting from top
-            num_outcomes = len([o for o in self.outcomes if o.outcome_m.outcome.outcome_id >= 0])
-            side_length = self.height
-            line_pos = self._calculate_port_pos_on_line(num_outcomes, side_length)
-            pos_x = self.width
-            pos_y = line_pos
-            side = SnappedSide.RIGHT
+            if outcome_m.outcome.outcome_id < 0:
+                # Position aborted/preempted in upper right corner
+                outcome_v.side = SnappedSide.TOP
+                pos_x = self.width - self._calculate_port_pos_on_line(abs(outcome_m.outcome.outcome_id), self.width)
+                pos_y = 0
+            else:
+                # Distribute outcomes on the right side of the state, starting from top
+                outcome_v.side = SnappedSide.RIGHT
+                pos_x = self.width
+                num_outcomes = len([o for o in self.outcomes if o.outcome_m.outcome.outcome_id >= 0])
+                pos_y = self._calculate_port_pos_on_line(num_outcomes, self.height)
             outcome_v.handle.pos = pos_x, pos_y
-            outcome_v.side = side
         self.add_rect_constraint_for_port(outcome_v)
 
     def remove_outcome(self, outcome_v):
