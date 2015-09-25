@@ -25,7 +25,8 @@ class ImageCache(object):
         self.__zoom = None
         self.__format = FORMAT_ARGB32
         self.__last_parameters = {}
-        self.__multiplicator = multiplicator
+        self.__zoom_multiplicator = multiplicator
+        self.__limiting_multiplicator = 1
 
     def get_cached_image(self, width, height, zoom, parameters={}, clear=False):
         """Get ImageSurface object, if possible, cached
@@ -45,13 +46,15 @@ class ImageCache(object):
         if self.__compare_parameters(width, height, zoom, parameters) and not clear:
             return True, self.__image, self.__zoom
 
-        max_allowed_size_length = 5000
-        max_side_length = max(int(ceil(width * zoom * self.__multiplicator)),
-                              int(ceil(height * zoom * self.__multiplicator)))
+        # Restrict image surface size to prevent excessive use of memory
+        self.__limiting_multiplicator = 1
+        max_allowed_size_length = 10000.
+        max_side_length = max(width * zoom * self.__zoom_multiplicator, height * zoom * self.__zoom_multiplicator)
         if max_side_length > max_allowed_size_length:
-            zoom /= max_side_length / max_allowed_size_length
-        image = ImageSurface(self.__format, int(ceil(width * zoom * self.__multiplicator)),
-                                            int(ceil(height * zoom * self.__multiplicator)))
+            self.__limiting_multiplicator = max_allowed_size_length / max_side_length
+
+        image = ImageSurface(self.__format, int(ceil(width * zoom * self.multiplicator)),
+                                            int(ceil(height * zoom * self.multiplicator)))
 
         self.__set_cached_image(image, width, height, zoom, parameters)
         return False, self.__image, zoom
@@ -65,15 +68,15 @@ class ImageCache(object):
         if not zoom:
             zoom = self.__zoom
         context.save()
-        context.scale(1. / (zoom * self.__multiplicator), 1. / (zoom * self.__multiplicator))
-        context.set_source_surface(self.__image, round(position[0] * zoom * self.__multiplicator),
-                                                 round(position[1] * zoom * self.__multiplicator))
+        context.scale(1. / (zoom * self.multiplicator), 1. / (zoom * self.multiplicator))
+        context.set_source_surface(self.__image, round(position[0] * zoom * self.multiplicator),
+                                                 round(position[1] * zoom * self.multiplicator))
         context.paint()
         context.restore()
 
     @property
     def multiplicator(self):
-        return self.__multiplicator
+        return self.__zoom_multiplicator * self.__limiting_multiplicator
 
     def get_context_for_image(self, zoom):
         """Creates a temporary cairo context for the image surface
@@ -83,7 +86,7 @@ class ImageCache(object):
         """
         cairo_context = Context(self.__image)
         c = CairoContext(cairo_context)
-        c.scale(zoom * self.__multiplicator, zoom * self.__multiplicator)
+        c.scale(zoom * self.multiplicator, zoom * self.multiplicator)
         return c
 
     def __set_cached_image(self, image, width, height, zoom, parameters={}):
@@ -113,7 +116,7 @@ class ImageCache(object):
         if self.__width != width or self.__height != height:
             return False
 
-        if zoom > self.__zoom * self.__multiplicator:
+        if zoom > self.__zoom * self.__zoom_multiplicator:
             return False
 
         for key in parameters:
