@@ -23,6 +23,7 @@ from rafcon.mvc.mygaphas.items.connection import TransitionView
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
+from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
 
 logger = log.get_logger(__name__)
@@ -61,6 +62,7 @@ class StateView(Element):
         self._show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
 
         self.__symbol_size_cache = {}
+        self._image_cache = ImageCache()
 
         if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['size'], tuple):
             name_width = self.width * 0.8
@@ -240,34 +242,61 @@ class StateView(Element):
             return
         c = context.cairo
 
-        c.set_line_width(0.1 / self.hierarchy_level)
         nw = self._handles[NW].pos
-        c.rectangle(nw.x, nw.y, self.width, self.height)
 
-        if self.model.state.active:
-            c.set_source_color(Color(constants.STATE_ACTIVE_COLOR))
-        elif self.selected:
-            c.set_source_color(Color(constants.STATE_SELECTED_COLOR))
+        parameters = {
+            'hierarchy': self.hierarchy_level,
+            'active':  self.model.state.active,
+            'selected': self.selected,
+            'moving': self.moving,
+            'port_side_size': self.port_side_size
+        }
+
+        upper_left_corner = (nw.x.value, nw.y.value)
+        current_zoom = self.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height, current_zoom, parameters)
+
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
+            self._image_cache.copy_image_to_context(c, upper_left_corner)
+
+        # Parameters have changed or nothing in cache => redraw
         else:
-            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
-        c.fill_preserve()
-        if self.model.state.active:
-            c.set_source_color(Color(constants.STATE_ACTIVE_BORDER_COLOR))
-            c.set_line_width(.25 / self.hierarchy_level)
-        elif self.selected:
-            c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
-            c.set_line_width(.25 / self.hierarchy_level)
-        else:
+            # print "draw"
+            c = self._image_cache.get_context_for_image(current_zoom)
+            multiplicator = self._image_cache.multiplicator
+
+            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
+            c.rectangle(nw.x, nw.y, self.width, self.height)
+
+            if self.model.state.active:
+                c.set_source_color(Color(constants.STATE_ACTIVE_COLOR))
+            elif self.selected:
+                c.set_source_color(Color(constants.STATE_SELECTED_COLOR))
+            else:
+                c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
+            c.fill_preserve()
+            if self.model.state.active:
+                c.set_source_color(Color(constants.STATE_ACTIVE_BORDER_COLOR))
+                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
+            elif self.selected:
+                c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
+                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
+            else:
+                c.set_source_color(Color(constants.BLACK_COLOR))
+            c.stroke()
+
+            inner_nw, inner_se = self.get_state_drawing_area(self)
+            c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
+            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR)))
+            c.fill_preserve()
+            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
             c.set_source_color(Color(constants.BLACK_COLOR))
-        c.stroke()
-        c.set_line_width(0.1 / self.hierarchy_level)
+            c.stroke()
 
-        inner_nw, inner_se = self.get_state_drawing_area(self)
-        c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-        c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR)))
-        c.fill_preserve()
-        c.set_source_color(Color(constants.BLACK_COLOR))
-        c.stroke()
+            # Copy image surface to current cairo context
+            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
 
         self._income.port_side_size = self.port_side_size
         self._income.draw(context, self)
@@ -300,19 +329,13 @@ class StateView(Element):
             max_height = self.height - 2 * self.port_side_size
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
 
+
     def _draw_symbol(self, context, symbol, is_library_state, max_size):
         c = context.cairo
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
+        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        layout = pcc.create_layout()
+        layout = c.create_layout()
 
         font_name = constants.FONT_NAMES[1]
 
@@ -348,10 +371,10 @@ class StateView(Element):
         elif is_library_state:
             alpha = 0.25
 
-        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), is_library_state,
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), is_library_state,
                                                          alpha=alpha))
-        pcc.update_layout(layout)
-        pcc.show_layout(layout)
+        c.update_layout(layout)
+        c.show_layout(layout)
 
     def get_transitions(self):
         transitions = []
@@ -763,7 +786,7 @@ class NameView(Element):
 
         self.moving = False
 
-        self.__font_size_cache = {'text': None, 'width': None, 'height': None, 'size': None}
+        self._image_cache = ImageCache(multiplicator=1.5)
 
     @property
     def name(self):
@@ -784,39 +807,45 @@ class NameView(Element):
 
         c = context.cairo
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
+        parameters = {
+            'name': self.name,
+            'selected': context.selected
+        }
+
+        upper_left_corner = (0, 0)
+        current_zoom = self.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height,
+                                                                          current_zoom, parameters)
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
+            self._image_cache.copy_image_to_context(c, upper_left_corner)
+
+        # Parameters have changed or nothing in cache => redraw
         else:
-            cc = c._cairo
+            # print "draw"
+            c = self._image_cache.get_context_for_image(current_zoom)
 
-        if context.selected:
-            c.rectangle(0, 0, self.width, self.height)
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), alpha=.1))
-            c.fill_preserve()
-            c.set_source_rgba(0, 0, 0, 0)
-            c.stroke()
+            if context.selected:
+                c.rectangle(0, 0, self.width, self.height)
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), alpha=.1))
+                c.fill_preserve()
+                c.set_source_rgba(0, 0, 0, 0)
+                c.stroke()
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+            c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
-        layout = pcc.create_layout()
-        layout.set_wrap(WRAP_WORD)
-        layout.set_width(int(self.width) * SCALE)
-        layout.set_text(self.name)
+            layout = c.create_layout()
+            layout.set_wrap(WRAP_WORD)
+            layout.set_width(int(self.width) * SCALE)
+            layout.set_text(self.name)
 
-        def set_font_description():
-            font = FontDescription(font_name + " " + str(font_size))
-            layout.set_font_description(font)
+            def set_font_description():
+                font = FontDescription(font_name + " " + str(font_size))
+                layout.set_font_description(font)
 
-        font_name = constants.FONT_NAMES[0]
+            font_name = constants.FONT_NAMES[0]
 
-        if self.__font_size_cache['width'] == self.width and self.__font_size_cache['height'] == self.height and \
-                self.__font_size_cache['text'] == self.name:
-            font_size = self.__font_size_cache['size']
-            set_font_description()
-
-        else:
             font_size = self.height * 0.8
 
             set_font_description()
@@ -825,9 +854,10 @@ class NameView(Element):
                 font_size *= 0.9
                 set_font_description()
 
-            self.__font_size_cache = {'text': self.name, 'width': self.width, 'height': self.height, 'size': font_size}
+            c.move_to(*self.handles()[NW].pos)
+            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
+            c.update_layout(layout)
+            c.show_layout(layout)
 
-        c.move_to(*self.handles()[NW].pos)
-        cc.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
-        pcc.update_layout(layout)
-        pcc.show_layout(layout)
+            # Copy image surface to current cairo context
+            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)

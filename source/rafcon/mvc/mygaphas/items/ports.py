@@ -8,9 +8,9 @@ import cairo
 from gtk.gdk import Color, CairoContext
 
 from rafcon.utils import constants
+from rafcon.utils.geometry import deg2rad
 
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models.outcome import OutcomeModel
@@ -19,14 +19,16 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide, Direction
+from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
-class PortView(Model, object):
+
+class PortView(Model):
 
     side = None
 
     __observables__ = ('side', )
 
-    def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT, label_print_inside=True):
+    def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
         Model.__init__(self)
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
@@ -34,19 +36,10 @@ class PortView(Model, object):
         self.side = side
         self._parent = parent
 
-        self._draw_single_port_arrow = None
-        if parent:
-            self._draw_single_port_arrow = isinstance(parent.model.state, (ExecutionState, LibraryState))
-
-        self._fill = False
         self._draw_connection_to_port = False
 
-        if self._fill:
-            self.text_color = constants.STATE_BACKGROUND_COLOR
-            self.fill_color = constants.LABEL_COLOR
-        else:
-            self.text_color = constants.LABEL_COLOR
-            self.fill_color = constants.LABEL_COLOR
+        self.text_color = constants.LABEL_COLOR
+        self.fill_color = constants.LABEL_COLOR
 
         self._incoming_handles = []
         self._outgoing_handles = []
@@ -61,7 +54,12 @@ class PortView(Model, object):
         self._port_side_size = port_side_size
         self.update_port_side_size()
 
-        self.label_print_inside = label_print_inside
+        self.label_print_inside = True
+
+        self._port_image_cache = ImageCache()
+        self._label_image_cache = ImageCache()
+        self._last_label_size = 0, 0
+        self._last_label_relative_pos = 0, 0
 
     @property
     def side(self):
@@ -168,13 +166,11 @@ class PortView(Model, object):
         raise NotImplementedError
 
     def draw_port(self, context, fill_color, transparent, draw_label=True, value=None):
-        self.update_port_side_size()
         c = context.cairo
-        outcome_side = self.port_side_size
-        c.set_line_width(outcome_side * 0.03)
+        self.update_port_side_size()
+        side_length = self.port_side_size
 
         direction = None
-
         if self.side is SnappedSide.LEFT:
             direction = Direction.RIGHT if self._is_in_port else Direction.LEFT
         elif self.side is SnappedSide.TOP:
@@ -184,193 +180,294 @@ class PortView(Model, object):
         elif self.side is SnappedSide.BOTTOM:
             direction = Direction.UP if self._is_in_port else Direction.DOWN
 
-        if self._draw_single_port_arrow:
-            self._draw_execution_state_port(self.pos, direction, c, outcome_side, transparent,
-                                            self.connected_incoming or self.connected_outgoing, fill_color)
+        parameters = {
+            'direction': direction,
+            'side_length': side_length,
+            'fill_color': fill_color,
+            'transparency': transparent,
+            'incoming': self.connected_incoming,
+            'outgoing': self.connected_outgoing,
+        }
+
+        upper_left_corner = (self.pos.x.value - side_length / 2., self.pos.y.value - side_length / 2.)
+        current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._port_image_cache.get_cached_image(side_length, side_length,
+                                                                          current_zoom, parameters)
+
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
+            self._port_image_cache.copy_image_to_context(c, upper_left_corner)
+
+        # Parameters have changed or nothing in cache => redraw
         else:
-            self._draw_container_state_port(self.pos, direction, c, outcome_side, transparent, self.connected_incoming,
-                                            self.connected_outgoing, fill_color)
+            # print "draw"
+            c = self._port_image_cache.get_context_for_image(current_zoom)
+
+            c.move_to(0, 0)
+            if isinstance(self._parent.model.state, ContainerState):
+                self._draw_container_state_port(c, direction, side_length, fill_color, transparent)
+            else:
+                self._draw_simple_state_port(c, direction, side_length, fill_color, transparent)
+
+            # Copy image surface to current cairo context
+            self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
             self.draw_name(context, transparent, value)
 
-    def draw_name(self, context, transparent, value):
+    def draw_name(self, context, transparency, value):
         if self.is_connected_to_scoped_variable():
             return
 
-        outcome_side = self.port_side_size
         c = context.cairo
+        side_length = self.port_side_size
+        label_position = self.side if not self.label_print_inside else self.side.opposite()
+        fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparency)
 
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
+        show_additional_value = False
+        if global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value is not None:
+            show_additional_value = True
+
+        parameters = {
+            'name': self.name,
+            'side_length': side_length,
+            'side': label_position,
+            'fill_color': fill_color,
+            'show_additional_value': show_additional_value
+        }
+
+        # add value to parameters only when value is shown on label
+        if show_additional_value:
+            parameters['value'] = value
+
+        upper_left_corner = (self.pos[0] + self._last_label_relative_pos[0],
+                             self.pos[1] + self._last_label_relative_pos[1])
+        current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._label_image_cache.get_cached_image(self._last_label_size[0],
+                                                                           self._last_label_size[1],
+                                                                           current_zoom, parameters)
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
+            self._label_image_cache.copy_image_to_context(c, upper_left_corner)
+
+        # Parameters have changed or nothing in cache => redraw
         else:
-            cc = c._cairo
+            # print "draw"
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+            # First we have to do a "dry run", in order to determine the size of the new label
+            c.move_to(self.pos.x.value, self.pos.y.value)
+            extents = gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
+                                                      False, label_position, side_length, self._draw_connection_to_port,
+                                                      show_additional_value, value, only_extent_calculations=True)
+            label_pos = extents[0], extents[1]
+            relative_pos = label_pos[0] - self.pos[0], label_pos[1] - self.pos[1]
+            label_size = extents[2] - extents[0], extents[3] - extents[1]
+            self._last_label_relative_pos = relative_pos
+            self._last_label_size = label_size
 
-        layout = pcc.create_layout()
-        layout.set_text(self.name)
+            # The size information is used to update the caching parameters and retrieve an image with the correct size
+            self._label_image_cache.get_cached_image(label_size[0], label_size[1], current_zoom, parameters, clear=True)
+            c = self._label_image_cache.get_context_for_image(current_zoom)
+            c.move_to(-relative_pos[0], -relative_pos[1])
 
-        font_name = constants.FONT_NAMES[0]
-        font_size = outcome_side
+            gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
+                                            False, label_position, side_length, self._draw_connection_to_port,
+                                            show_additional_value, value)
 
-        font = FontDescription(font_name + " " + str(font_size))
-        layout.set_font_description(font)
+            # Copy image surface to current cairo context
+            upper_left_corner = (self.pos[0] + relative_pos[0], self.pos[1] + relative_pos[1])
+            self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
 
-        text_size = (layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE))
+    def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
+        """Draw the port of a simple state (ExecutionState, LibraryState)
 
-        print_side = self.side if not self.label_print_inside else self.side.opposite()
+        Connector for execution states can only be connected to the outside. Thus the connector fills the whole
+        border of the state.
 
-        fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparent)
-        rot_angle, move_x, move_y = gap_draw_helper.draw_name_label(context, fill_color, text_size, self.pos,
-                                                                    print_side, self.port_side_size,
-                                                                    self._draw_connection_to_port, self._fill)
+        :param context: Cairo context
+        :param direction: The direction the port is pointing to
+        :param border_width: The width of the border the port is drawn on
+        :param color: Desired color of the port
+        :param transparency: The level of transparency
+        """
+        c = context
 
-        c.move_to(move_x, move_y)
+        port_size = border_width
+        c.set_line_width(border_width * 0.03 * self._port_image_cache.multiplicator)
 
-        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(self.text_color), transparent))
+        # Save/restore context, as we move and rotate the connector to the desired pose
+        c.save()
+        c.rel_move_to(port_size / 2., port_size / 2.)
+        PortView._rotate_context(c, direction)
+        PortView._draw_single_connector(c, port_size)
+        c.restore()
 
-        pcc.update_layout(layout)
-        pcc.rotate(rot_angle)
-        pcc.show_layout(layout)
-        pcc.rotate(-rot_angle)
-
-        if global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value:
-            value_layout = pcc.create_layout()
-            value_layout.set_text(gap_draw_helper.limit_value_string_length(value))
-            value_layout.set_font_description(font)
-
-            value_text_size = (value_layout.get_size()[0] / float(SCALE), text_size[1])
-
-            fill_color = gap_draw_helper.get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR))
-            rot_angle, move_x, move_y = gap_draw_helper.draw_data_value_rect(context, fill_color, value_text_size,
-                                                                             text_size, (move_x, move_y), print_side)
-
-            c.move_to(move_x, move_y)
-
-            cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
-
-            pcc.update_layout(value_layout)
-            pcc.rotate(rot_angle)
-            pcc.show_layout(value_layout)
-            pcc.rotate(-rot_angle)
-
-        c.move_to(outcome_side, outcome_side)
-
-    @staticmethod
-    def _draw_execution_state_port(pos, direction, context_cairo, outcome_side, transparent, filled, color):
-        c = context_cairo
-
-        side_half = outcome_side / 2.
-        side_sixth = outcome_side / 6.
-
-        port_draw_width_half = outcome_side / 3.
-
-        if direction is Direction.UP:
-            c.move_to(pos.x - port_draw_width_half, pos.y + side_half)
-            c.line_to(pos.x - port_draw_width_half, pos.y - side_sixth)
-            c.line_to(pos.x, pos.y - side_half)
-            c.line_to(pos.x + port_draw_width_half, pos.y - side_sixth)
-            c.line_to(pos.x + port_draw_width_half, pos.y + side_half)
-            c.line_to(pos.x - port_draw_width_half, pos.y + side_half)
-        elif direction is Direction.RIGHT:
-            c.move_to(pos.x - side_half, pos.y - port_draw_width_half)
-            c.line_to(pos.x + side_sixth, pos.y - port_draw_width_half)
-            c.line_to(pos.x + side_half, pos.y)
-            c.line_to(pos.x + side_sixth, pos.y + port_draw_width_half)
-            c.line_to(pos.x - side_half, pos.y + port_draw_width_half)
-            c.line_to(pos.x - side_half, pos.y - port_draw_width_half)
-        elif direction is Direction.DOWN:
-            c.move_to(pos.x - port_draw_width_half, pos.y - side_half)
-            c.line_to(pos.x - port_draw_width_half, pos.y + side_sixth)
-            c.line_to(pos.x, pos.y + side_half)
-            c.line_to(pos.x + port_draw_width_half, pos.y + side_sixth)
-            c.line_to(pos.x + port_draw_width_half, pos.y - side_half)
-            c.line_to(pos.x - port_draw_width_half, pos.y - side_half)
-        elif direction is Direction.LEFT:
-            c.move_to(pos.x + side_half, pos.y - port_draw_width_half)
-            c.line_to(pos.x - side_sixth, pos.y - port_draw_width_half)
-            c.line_to(pos.x - side_half, pos.y)
-            c.line_to(pos.x - side_sixth, pos.y + port_draw_width_half)
-            c.line_to(pos.x + side_half, pos.y + port_draw_width_half)
-            c.line_to(pos.x + side_half, pos.y - port_draw_width_half)
-
-        if filled:
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        # Colorize the generated connector path
+        if self.connected_incoming or self.connected_outgoing:
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         else:
             c.set_source_color(Color(constants.BLACK_COLOR))
         c.fill_preserve()
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        c.stroke()
+
+    def _draw_container_state_port(self, context, direction, border_width, color, transparency):
+        """Draw the port of a container state
+
+        Connector for container states are split in an inner connector and an outer connector.
+
+        :param context: Cairo context
+        :param direction: The direction the port is pointing to
+        :param border_width: The width of the border the port is drawn on
+        :param color: Desired color of the port
+        :param transparency: The level of transparency
+        """
+        c = context
+
+        port_size = border_width
+        c.set_line_width(border_width * 0.03 * self._port_image_cache.multiplicator)
+
+        # Save/restore context, as we move and rotate the connector to the desired pose
+        cur_point = c.get_current_point()
+        c.save()
+        c.rel_move_to(port_size / 2., port_size / 2.)
+        PortView._rotate_context(c, direction)
+        PortView._draw_inner_connector(c, port_size)
+        c.restore()
+
+        if self.connected_incoming:
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        else:
+            c.set_source_color(Color(constants.BLACK_COLOR))
+        c.fill_preserve()
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        c.stroke()
+
+        c.move_to(*cur_point)
+        c.save()
+        c.rel_move_to(port_size / 2., port_size / 2.)
+        PortView._rotate_context(c, direction)
+        PortView._draw_outer_connector(c, port_size)
+        c.restore()
+
+        if self.connected_outgoing:
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        else:
+            c.set_source_color(Color(constants.BLACK_COLOR))
+        c.fill_preserve()
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         c.stroke()
 
     @staticmethod
-    def _draw_container_state_port(pos, direction, context_cairo, outcome_side, transparent, incoming_conn,
-                                   outgoing_conn, color):
-        c = context_cairo
+    def _draw_single_connector(context, port_size):
+        """Draw the connector for execution states
 
-        side_half = outcome_side / 2.
-        side_third = outcome_side / 3.
-        side_sixth = outcome_side / 6.
+        Connector for execution states can only be connected to the outside. Thus the connector fills the whole
+        border of the state.
 
-        port_draw_width_half = outcome_side / 3.
+        :param context: Cairo context
+        :param float port_size: The side length of the port
+        """
+        c = context
+        # Current pos is center
+        # Arrow is drawn upright
 
-        # Rectangle (incoming port)
+        height = port_size
+        width = port_size / 1.5
+        arrow_height = height / 6.
+
+        # First move to bottom left corner
+        c.rel_move_to(-width/2., height/2.)
+        # Draw line to bottom right corner
+        c.rel_line_to(width, 0)
+        # Draw line to upper right corner
+        c.rel_line_to(0, -(height - arrow_height))
+        # Draw line to center top (arrow)
+        c.rel_line_to(-width/2., -arrow_height)
+        # Draw line to upper left corner
+        c.rel_line_to(-width/2., arrow_height)
+        # Draw line back to the origin (lower left corner)
+        c.close_path()
+
+    @staticmethod
+    def _draw_inner_connector(context, port_size):
+        """Draw the connector for container states
+
+        Connector for container states can be connected from the inside and the outside. Thus the connector is split
+        in two parts: A rectangle on the inside and an arrow on the outside. This methods draws the inner rectangle.
+
+        :param context: Cairo context
+        :param float port_size: The side length of the port
+        """
+        c = context
+        # Current pos is center
+        # Arrow is drawn upright
+
+        height = port_size
+        width = port_size / 1.5
+        gap = height / 6.
+        connector_height = (height - gap) / 2.
+
+        # First move to bottom left corner
+        c.rel_move_to(-width/2., height/2.)
+
+        # Draw inner connector (rectangle)
+        c.rel_line_to(width, 0)
+        c.rel_line_to(0, -connector_height)
+        c.rel_line_to(-width, 0)
+        c.close_path()
+
+    @staticmethod
+    def _draw_outer_connector(context, port_size):
+        """Draw the outer connector for container states
+
+        Connector for container states can be connected from the inside and the outside. Thus the connector is split
+        in two parts: A rectangle on the inside and an arrow on the outside. This method draws the outer arrow.
+
+        :param context: Cairo context
+        :param float port_size: The side length of the port
+        """
+        c = context
+        # Current pos is center
+        # Arrow is drawn upright
+
+        height = port_size
+        width = port_size / 1.5
+        arrow_height = height / 6.
+        gap = height / 6.
+        connector_height = (height - gap) / 2.
+
+        # Move to bottom left corner of outer connector
+        c.rel_move_to(-width/2., -gap/2.)
+
+        # Draw line to bottom right corner
+        c.rel_line_to(width, 0)
+        # Draw line to upper right corner
+        c.rel_line_to(0, -(connector_height - arrow_height))
+        # Draw line to center top (arrow)
+        c.rel_line_to(-width/2., -arrow_height)
+        # Draw line to upper left corner
+        c.rel_line_to(-width/2., arrow_height)
+        # Draw line back to the origin (lower left corner)
+        c.close_path()
+
+    @staticmethod
+    def _rotate_context(context, direction):
+        """Moves the current position to 'position' and rotates the context according to 'direction'
+
+        :param context: Cairo context
+        :param direction: Direction enum
+        """
         if direction is Direction.UP:
-            c.rectangle(pos.x - port_draw_width_half, pos.y + side_sixth, 2 * port_draw_width_half, side_third)
+            pass
         elif direction is Direction.RIGHT:
-            c.rectangle(pos.x - side_half, pos.y - port_draw_width_half, side_third, 2 * port_draw_width_half)
+            context.rotate(deg2rad(90))
         elif direction is Direction.DOWN:
-            c.rectangle(pos.x - port_draw_width_half, pos.y - side_half, 2 * port_draw_width_half, side_third)
+            context.rotate(deg2rad(180))
         elif direction is Direction.LEFT:
-            c.rectangle(pos.x + side_sixth, pos.y - port_draw_width_half, side_third, 2 * port_draw_width_half)
-
-        if incoming_conn:
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
-        else:
-            c.set_source_color(Color(constants.BLACK_COLOR))
-        c.fill_preserve()
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
-        c.stroke()
-
-        # Triangle (outgoing port)
-        if direction is Direction.UP:
-            c.move_to(pos.x - port_draw_width_half, pos.y)
-            c.line_to(pos.x - port_draw_width_half, pos.y - side_sixth)
-            c.line_to(pos.x, pos.y - side_half)
-            c.line_to(pos.x + port_draw_width_half, pos.y - side_sixth)
-            c.line_to(pos.x + port_draw_width_half, pos.y)
-            c.line_to(pos.x - port_draw_width_half, pos.y)
-        elif direction is Direction.RIGHT:
-            c.move_to(pos.x, pos.y - port_draw_width_half)
-            c.line_to(pos.x + side_sixth, pos.y - port_draw_width_half)
-            c.line_to(pos.x + side_half, pos.y)
-            c.line_to(pos.x + side_sixth, pos.y + port_draw_width_half)
-            c.line_to(pos.x, pos.y + port_draw_width_half)
-            c.line_to(pos.x, pos.y - port_draw_width_half)
-        elif direction is Direction.DOWN:
-            c.move_to(pos.x - port_draw_width_half, pos.y)
-            c.line_to(pos.x - port_draw_width_half, pos.y + side_sixth)
-            c.line_to(pos.x, pos.y + side_half)
-            c.line_to(pos.x + port_draw_width_half, pos.y + side_sixth)
-            c.line_to(pos.x + port_draw_width_half, pos.y)
-            c.line_to(pos.x - port_draw_width_half, pos.y)
-        elif direction is Direction.LEFT:
-            c.move_to(pos.x, pos.y - port_draw_width_half)
-            c.line_to(pos.x - side_sixth, pos.y - port_draw_width_half)
-            c.line_to(pos.x - side_half, pos.y)
-            c.line_to(pos.x - side_sixth, pos.y + port_draw_width_half)
-            c.line_to(pos.x, pos.y + port_draw_width_half)
-            c.line_to(pos.x, pos.y - port_draw_width_half)
-
-        if outgoing_conn:
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
-        else:
-            c.set_source_color(Color(constants.BLACK_COLOR))
-        c.fill_preserve()
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparent))
-        c.stroke()
+            context.rotate(deg2rad(-90))
 
     def update_port_side_size(self):
         return
@@ -383,7 +480,8 @@ class PortView(Model, object):
 class IncomeView(PortView):
 
     def __init__(self, parent, port_side_size):
-        super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent, side=SnappedSide.LEFT)
+        super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent,
+                                         side=SnappedSide.LEFT)
 
     def draw(self, context, state):
         self.draw_port(context, constants.LABEL_COLOR, state.transparent)
@@ -392,7 +490,8 @@ class IncomeView(PortView):
 class OutcomeView(PortView):
 
     def __init__(self, outcome_m, parent, port_side_size):
-        super(OutcomeView, self).__init__(in_port=False, port_side_size=port_side_size, name=outcome_m.outcome.name, parent=parent)
+        super(OutcomeView, self).__init__(in_port=False, port_side_size=port_side_size, name=outcome_m.outcome.name,
+                                          parent=parent)
 
         assert isinstance(outcome_m, OutcomeModel)
         self._outcome_m = ref(outcome_m)
@@ -421,6 +520,7 @@ class OutcomeView(PortView):
         draw_label = True
         if self.has_outgoing_connection():
             draw_label = False
+
         self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
 
 
@@ -431,6 +531,7 @@ class ScopedVariablePortView(PortView):
 
         assert isinstance(scoped_variable_m, ScopedVariableModel)
         self._scoped_variable_m = ref(scoped_variable_m)
+        self._last_label_span = 0
 
     @property
     def model(self):
@@ -445,138 +546,176 @@ class ScopedVariablePortView(PortView):
         return self.model.scoped_variable.name
 
     def draw(self, context, state):
-        name_size = self._get_name_size(context)
-
+        c = context.cairo
         self.update_port_side_size()
-        c = context.cairo
-        outcome_side = self.port_side_size
+        side_length = self.port_side_size
 
-        self._draw_rectangle(c, name_size[0], outcome_side)
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR), state.transparent))
-        c.fill_preserve()
-        c.stroke()
+        parameters = {
+            'name': self.name,
+            'side': self.side,
+            'side_length': side_length,
+            'transparency': state.transparent
+        }
+        current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._port_image_cache.get_cached_image(self._last_label_size[0],
+                                                                          self._last_label_size[1],
+                                                                          current_zoom, parameters)
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "from cache"
 
-        self.draw_name(context, state.transparent)
+            center_pos = self._get_port_center_position(self._last_label_span)
+            upper_left_corner = center_pos[0] - self._last_label_size[0] / 2., \
+                                center_pos[1] - self._last_label_size[1] / 2.
+            self._port_image_cache.copy_image_to_context(c, upper_left_corner)
 
-    def draw_name(self, context, transparent):
-        outcome_side = self.port_side_size
-        c = context.cairo
-
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
+        # Parameters have changed or nothing in cache => redraw
         else:
-            cc = c._cairo
+            # print "draw"
 
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+            # First we have to do a "dry run", in order to determine the size of the port
+            c.move_to(*self.pos)
+            name_size = self.draw_name(c, state.transparent, only_calculate_size=True)
+            extents = self._draw_rectangle_path(c, name_size[0], side_length, only_get_extents=True)
 
-        layout = pcc.create_layout()
-        layout.set_text(self.name)
+            port_size = extents[2] - extents[0], extents[3] - extents[1]
+            self._last_label_size = port_size
+            self._last_label_span = name_size[0]
 
+            # The size information is used to update the caching parameters and retrieve a new context with an image
+            # surface of the correct size
+            self._port_image_cache.get_cached_image(port_size[0], port_size[1], current_zoom, parameters, clear=True)
+            c = self._port_image_cache.get_context_for_image(current_zoom)
+
+            # First, draw the filled rectangle
+            # Set the current point to be in the center of the rectangle
+            c.move_to(port_size[0] / 2., port_size[1] / 2.)
+            self._draw_rectangle_path(c, name_size[0], side_length)
+            c.set_line_width(self.port_side_size / 50. * self._port_image_cache.multiplicator)
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR), state.transparent))
+            c.fill_preserve()
+            c.stroke()
+
+            # Second, write the text in the rectangle (scoped variable name)
+            # Set the current point to be in the center of the rectangle
+            c.move_to(port_size[0] / 2., port_size[1] / 2.)
+            self.draw_name(c, state.transparent)
+
+            # Copy image surface to current cairo context
+            center_pos = self._get_port_center_position(name_size[0])
+            upper_left_corner = center_pos[0] - port_size[0] / 2., center_pos[1] - port_size[1] / 2.
+            self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
+
+    def draw_name(self, context, transparency, only_calculate_size=False):
+        """Draws the name of the port
+
+        Offers the option to only calculate the size of the name.
+
+        :param context: The context to draw on
+        :param transparency: The transparency of the text
+        :param only_calculate_size: Whether to only calculate the size
+        :return: Size of the name
+        :rtype: float, float
+        """
+        c = context
+        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+
+        side_length = self.port_side_size
+
+        layout = c.create_layout()
         font_name = constants.FONT_NAMES[0]
-        font_size = outcome_side * .8
-
+        font_size = side_length * .6
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
-
-        name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
-
-        cc.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparent))
-
-        rot_angle = .0
-        draw_pos = self._get_draw_position(name_size[0], outcome_side)
-
-        if self.side is SnappedSide.RIGHT:
-            c.move_to(draw_pos[0] + outcome_side, draw_pos[1])
-            rot_angle = pi / 2
-        elif self.side is SnappedSide.LEFT:
-            c.move_to(draw_pos[0], draw_pos[1] + name_size[0])
-            rot_angle = - pi / 2
-        elif self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
-            c.move_to(draw_pos[0], draw_pos[1])
-
-        pcc.update_layout(layout)
-        pcc.rotate(rot_angle)
-        pcc.show_layout(layout)
-        pcc.rotate(-rot_angle)
-
-        c.move_to(*self.pos)
-
-    def _draw_rectangle(self, context_cairo, text_width, port_height):
-        c = context_cairo
-
-        text_width_half = text_width / 2. + port_height * .2
-
-        draw_pos = self._get_draw_position(text_width, port_height)
-
-        if self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
-            c.rectangle(draw_pos[0], draw_pos[1], text_width_half * 2., port_height)
-        elif self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
-            c.rectangle(draw_pos[0], draw_pos[1], port_height, text_width_half * 2.)
-
-    def _get_draw_position(self, text_width, port_height):
-        text_width_half = text_width / 2. + port_height * .2
-        height_half = port_height / 2.
-
-        offset = .0
-
-        if self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
-            if self.pos.x - text_width_half < 0:
-                offset = self.pos.x - text_width_half
-            elif self.pos.x + text_width_half > self.parent.width:
-                offset = self.pos.x + text_width_half - self.parent.width
-            return self.pos.x - text_width_half - offset, self.pos.y - height_half
-        elif self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
-            if self.pos.y - text_width_half < 0:
-                offset = self.pos.y - text_width_half
-            elif self.pos.y + text_width_half > self.parent.height:
-                offset = self.pos.y + text_width_half - self.parent.height
-            return self.pos.x - height_half, self.pos.y - text_width_half - offset
-
-    def _get_name_size(self, context):
-        outcome_side = self.port_side_size
-        c = context.cairo
-
-        # Ensure that we have CairoContext anf not CairoBoundingBoxContext (needed for pango)
-        if isinstance(c, CairoContext):
-            cc = c
-        else:
-            cc = c._cairo
-
-        pcc = CairoContext(cc)
-        pcc.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-
-        layout = pcc.create_layout()
         layout.set_text(self.name)
 
-        font_name = constants.FONT_NAMES[0]
-        font_size = outcome_side * .8
+        # Determine the size of the text, increase the width to have more margin left and right of the text
+        real_name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
+        name_size = real_name_size[0] + side_length / 2., side_length
 
-        font = FontDescription(font_name + " " + str(font_size))
-        layout.set_font_description(font)
+        # Only the size is required, stop here
+        if only_calculate_size:
+            return name_size
 
-        return layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
+        # Current position is the center of the port rectangle
+        c.save()
+        if self.side is SnappedSide.RIGHT or self.side is SnappedSide.LEFT:
+            c.rotate(deg2rad(-90))
+        c.rel_move_to(-real_name_size[0] / 2., -real_name_size[1] / 2.)
+
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparency))
+        c.update_layout(layout)
+        c.show_layout(layout)
+        c.restore()
+
+        return name_size
+
+    def _draw_rectangle_path(self, context, width, height, only_get_extents=False):
+        """Draws the rectangle path for the port
+
+        The rectangle is correctly rotated. Height therefore refers to the border thickness and width to the length
+        of the port.
+
+        :param context: The context to draw on
+        :param float width: The width of the rectangle
+        :param float height: The height of the rectangle
+        """
+        c = context
+
+        # Current position is the center of the rectangle
+        c.save()
+        if self.side is SnappedSide.LEFT or self.side is SnappedSide.RIGHT:
+            c.rotate(deg2rad(90))
+        c.rel_move_to(-width / 2., - height / 2.)
+        c.rel_line_to(width, 0)
+        c.rel_line_to(0, height)
+        c.rel_line_to(-width, 0)
+        c.close_path()
+        c.restore()
+
+        if only_get_extents:
+            extents = c.path_extents()
+            c.new_path()
+            return extents
+
+    def _get_port_center_position(self, width):
+        """Calculates the center position of the port rectangle
+
+        The port itself can be positioned in the corner, the center of the port rectangle however is restricted by
+        the width of the rectangle. This method therefore calculates the center, depending on the position of the
+        port and the width of the rectangle.
+        :param float width: The width of the rectangle
+        :return: The center position of the rectangle
+        :rtype: float, float
+        """
+        x, y = self.pos.x.value, self.pos.y.value
+        if self.side is SnappedSide.TOP or self.side is SnappedSide.BOTTOM:
+            if x - width / 2. < 0:
+                x = width / 2
+            elif x + width / 2. > self.parent.width:
+                x = self.parent.width - width / 2.
+        else:
+            if y - width / 2. < 0:
+                y = width / 2
+            elif y + width / 2. > self.parent.height:
+                y = self.parent.height - width / 2.
+        return x, y
 
 
 class DataPortView(PortView):
 
-    def __init__(self, in_port, parent, port_m, side, port_side_size, label_print_inside=True):
+    def __init__(self, in_port, parent, port_m, side, port_side_size):
         assert isinstance(port_m, DataPortModel)
         super(DataPortView, self).__init__(in_port=in_port, port_side_size=port_side_size, name=port_m.data_port.name,
-                                           parent=parent, side=side, label_print_inside=label_print_inside)
+                                           parent=parent, side=side)
 
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
 
         self._value = None
 
-        if self._fill:
-            self.text_color = constants.STATE_BACKGROUND_COLOR
-            self.fill_color = constants.DATA_PORT_COLOR
-        else:
-            self.text_color = constants.DATA_PORT_COLOR
-            self.fill_color = constants.DATA_PORT_COLOR
+        self.text_color = constants.DATA_PORT_COLOR
+        self.fill_color = constants.DATA_PORT_COLOR
 
     @property
     def port_m(self):
@@ -598,7 +737,8 @@ class DataPortView(PortView):
 class InputPortView(DataPortView):
 
     def __init__(self, parent, port_m, port_side_size):
-        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size, False)
+        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size)
+        self.label_print_inside = False
 
     def draw(self, context, state):
         input_data = self.parent.model.state.input_data
@@ -611,6 +751,7 @@ class OutputPortView(DataPortView):
 
     def __init__(self, parent, port_m, port_side_size):
         super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT, port_side_size)
+        self.label_print_inside = True
 
     def draw(self, context, state):
         output_data = self.parent.model.state.output_data

@@ -26,3 +26,12 @@ class ExtendedGtkView(GtkView):
 
     def redraw_complete_screen(self):
         self.queue_draw_area(0, 0, self.allocation[2], self.allocation[3])
+
+    def get_zoom_factor(self):
+        """Returns the current zoom factor of the view
+
+        The zoom factor can be read out from the view's matrix. _matrix[0] should be equal _matrix[3]. Index 0 is for
+        the zoom in x direction, index 3 for the y direction
+        :return: Current zoom factor
+        """
+        return self._matrix[0]

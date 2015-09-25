@@ -122,6 +122,11 @@ class MyCanvas(Canvas):
             projection = projection.variable()
         return projection
 
+    def get_first_view(self):
+        """Return first registered view object
+        """
+        return next(iter(self._registered_views))
+
     def update_matrices(self, items):
         return self._update_matrices_moving(items)
 
