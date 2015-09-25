@@ -463,11 +463,13 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             outcome_v.handle.pos = port_meta['rel_pos']
         else:
-            pos_x, pos_y, side = self._calculate_unoccupied_position(outcome_v.port_side_size, SnappedSide.RIGHT,
-                                                                     outcome_v, logic=True)
-            if pos_x is None:
-                self.model.state.remove_outcome(outcome_v.outcome_id)
-                return
+            # Distribute outcomes on the right side of the state, starting from top
+            num_outcomes = len([o for o in self.outcomes if o.outcome_m.outcome.outcome_id >= 0])
+            side_length = self.height
+            line_pos = self._calculate_port_pos_on_line(num_outcomes, side_length)
+            pos_x = self.width
+            pos_y = line_pos
+            side = SnappedSide.RIGHT
             outcome_v.handle.pos = pos_x, pos_y
             outcome_v.side = side
         self.add_rect_constraint_for_port(outcome_v)
@@ -570,6 +572,22 @@ class StateView(Element):
         solver = self.canvas.solver
         solver.add_constraint(constraint)
         self.port_constraints[port] = constraint
+
+    def _calculate_port_pos_on_line(self, port_num, side_length):
+        """Calculate the position of a port on a line
+
+        The position depends on the number of element. Elements are equally spaced. If the end of the line is
+        reached, ports are stacked.
+        :param int port_num: The number of the port of that type
+        :param float side_length: The length of the side the element is placed on
+        :return: The position on the line for the given port
+        :rtype: float
+        """
+        port_size = self.port_side_size
+        pos = (0.5 + 2 * port_num) * port_size
+        outermost_pos = max(side_length / 2., side_length - 1.5 * port_size)
+        pos = min(pos, outermost_pos)
+        return pos
 
     def _calculate_unoccupied_position(self, port_size, side, new_port, logic=False, in_port=False, scoped=False):
         if in_port:
