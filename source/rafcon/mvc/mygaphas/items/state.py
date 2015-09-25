@@ -527,9 +527,9 @@ class StateView(Element):
         else:
             # Distribute output ports on the right side of the state, starting from bottom
             output_port_v.side = SnappedSide.RIGHT
-            num_inputs = len(self._outputs)
+            num_outputs = len(self._outputs)
             pos_x = self.width
-            pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
+            pos_y = self.height - self._calculate_port_pos_on_line(num_outputs, self.height)
             output_port_v.handle.pos = pos_x, pos_y
         self.add_rect_constraint_for_port(output_port_v)
 
@@ -553,14 +553,13 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             scoped_variable_port_v.handle.pos = port_meta['rel_pos']
         else:
-            pos_x, pos_y, side = self._calculate_unoccupied_position(scoped_variable_port_v.port_side_size,
-                                                                     SnappedSide.TOP, scoped_variable_port_v,
-                                                                     scoped=True)
-            if pos_x is None:
-                self.model.state.remove_scoped_variable(scoped_variable_port_v.port_id)
-                return
+            # Distribute scoped variables on the top side of the state, starting from left
+            scoped_variable_port_v.side = SnappedSide.TOP
+            num_scoped_vars = len(self._scoped_variables_ports)
+            pos_x = self._calculate_port_pos_on_line(num_scoped_vars, self.width,
+                                                     port_width=self.port_side_size * 4)
+            pos_y = 0
             scoped_variable_port_v.handle.pos = pos_x, pos_y
-            scoped_variable_port_v.side = side
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)
 
@@ -578,19 +577,22 @@ class StateView(Element):
         solver.add_constraint(constraint)
         self.port_constraints[port] = constraint
 
-    def _calculate_port_pos_on_line(self, port_num, side_length):
+    def _calculate_port_pos_on_line(self, port_num, side_length, port_width=None):
         """Calculate the position of a port on a line
 
         The position depends on the number of element. Elements are equally spaced. If the end of the line is
         reached, ports are stacked.
         :param int port_num: The number of the port of that type
         :param float side_length: The length of the side the element is placed on
+        :param float port_width: The width of one port
         :return: The position on the line for the given port
         :rtype: float
         """
-        port_size = self.port_side_size
-        pos = (0.5 + 2 * port_num) * port_size
-        outermost_pos = max(side_length / 2., side_length - 1.5 * port_size)
+        if port_width is None:
+            port_width = 2 * self.port_side_size
+        border_size = self.port_side_size
+        pos = 0.5 * border_size + port_num * port_width
+        outermost_pos = max(side_length / 2., side_length - 0.5 * border_size - port_width)
         pos = min(pos, outermost_pos)
         return pos
 
