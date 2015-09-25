@@ -449,7 +449,10 @@ class StateView(Element):
         if isinstance(port_meta['rel_pos'], tuple):
             income_v.handle.pos = port_meta['rel_pos']
         else:
-            income_v.handle.pos = 0, self.height * .05
+            # Position input on the top of the left state side
+            pos_x = 0
+            pos_y = self._calculate_port_pos_on_line(1, self.height)
+            income_v.handle.pos = pos_x, pos_y
         self.add_rect_constraint_for_port(income_v)
         return income_v
 
