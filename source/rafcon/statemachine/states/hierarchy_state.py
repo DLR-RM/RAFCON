@@ -83,7 +83,7 @@ class HierarchyState(ContainerState):
                 self.backward_execution = False
                 if self.preempted:
                     logger.debug("Preempted flag: True")
-                    if last_transition.from_outcome == -2:
+                    if last_transition and last_transition.from_outcome == -2:
                         # normally execute the next state
                         logger.debug("Execute the preemption handling state for state %s" % str(last_state.name))
                     else:
