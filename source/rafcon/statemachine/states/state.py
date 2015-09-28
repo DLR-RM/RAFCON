@@ -290,12 +290,15 @@ class State(Observable, yaml.YAMLObject):
             for ip_id, output_port in self.input_data_ports.iteritems():
                 if output_port.name == name:
                     return ip_id
-            raise AttributeError("Name %s is not in input_data_ports", name)
+            raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
         elif data_port_type is DataPortType.OUTPUT:
             for op_id, output_port in self.output_data_ports.iteritems():
                 if output_port.name == name:
                     return op_id
-            raise AttributeError("Name %s is not in output_data_ports", name)
+            # 'error' is an automatically generated output port in case of errors and exception and doesn't have an id
+            if name == "error":
+                return
+            raise AttributeError("Name '{0}' is not in output_data_ports".format(name))
 
     def get_data_port_by_id(self, data_port_id):
         """Search for the given data port id in the data ports of the state
