@@ -45,17 +45,24 @@ class ExecutionState(State):
 
         outcome_item = self.script.execute(self, execute_inputs, execute_outputs, backward_execution)
 
+        # in the case of backward execution the outcome is not relevant
         if backward_execution:
-            return  # in the case of backward execution the outcome is not relevant
+            return
 
-        if outcome_item in self.outcomes.keys():
+        # If the state was preempted, the state must be left on the preempted outcome
+        if self.preempted:
+            return Outcome(-2, "preempted")
+
+        # Outcome id was returned
+        if outcome_item in self.outcomes:
             return self.outcomes[outcome_item]
 
+        # Outcome name was returned
         for outcome_id, outcome in self.outcomes.iteritems():
             if outcome.name == outcome_item:
                 return self.outcomes[outcome_id]
 
-        logger.error("No valid outcome for execution state %s returned. Outcome item is %s.", self.name, outcome_item)
+        logger.error("Returned outcome for execution state '{0}' not existing: {1}".format(self.name, outcome_item))
         return Outcome(-1, "aborted")
 
     def run(self):
@@ -84,9 +91,6 @@ class ExecutionState(State):
                 self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                 # check output data
                 self.check_output_data_type()
-
-                if self.preempted:
-                    outcome = Outcome(-2, "preempted")
 
                 return self.finalize(outcome)
 
