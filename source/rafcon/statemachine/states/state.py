@@ -581,16 +581,13 @@ class State(Observable, yaml.YAMLObject):
         :param state_id: The new state if of the state
         :return:
         """
-        new_state_id = None
         if state_id is None:
-            new_state_id = state_id_generator()
-        else:
-            new_state_id = state_id
+            state_id = state_id_generator()
         if not self.is_root_state:
-            while self.parent.state_id_exists(new_state_id):
-                new_state_id = state_id_generator()
+            while state_id in self.parent.states:
+                state_id = state_id_generator()
 
-        self._state_id = new_state_id
+        self._state_id = state_id
 
     def __str__(self):
         return "State '{0}' with ID '{1}' and and type {2}".format(self.name, self.state_id, type(self))
