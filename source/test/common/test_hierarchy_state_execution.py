@@ -10,6 +10,7 @@ import rafcon.statemachine.singleton
 
 # test environment elements
 import test_utils
+import pytest
 
 
 def create_hierarchy_state():
@@ -37,7 +38,7 @@ def create_hierarchy_state():
     return state2
 
 
-def test_hierarchy_state_execution():
+def test_hierarchy_state_execution(caplog):
     hierarchy_state = create_hierarchy_state()
 
     state_machine = StateMachine(hierarchy_state)
@@ -52,8 +53,10 @@ def test_hierarchy_state_execution():
     test_utils.test_multithrading_lock.release()
 
     assert hierarchy_state.output_data["output1"] == 52.0
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
-def test_hierarchy_save_load_test():
+
+def test_hierarchy_save_load_test(caplog):
     s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
     hierarchy_state = create_hierarchy_state()
@@ -74,8 +77,7 @@ def test_hierarchy_save_load_test():
     test_utils.test_multithrading_lock.release()
 
     assert state_machine.root_state.output_data["output1"] == 52.0
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_hierarchy_state_execution()
-    test_hierarchy_save_load_test()
+    pytest.main([__file__])

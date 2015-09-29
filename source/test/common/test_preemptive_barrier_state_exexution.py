@@ -9,6 +9,7 @@ import rafcon.statemachine.singleton
 
 # test environment elements
 import test_utils
+import pytest
 
 
 def create_preemption_statemachine():
@@ -34,7 +35,7 @@ def create_preemption_statemachine():
     return StateMachine(state3)
 
 
-def test_concurrency_preemption_state_execution():
+def test_concurrency_preemption_state_execution(caplog):
 
     preemption_state_sm = create_preemption_statemachine()
 
@@ -48,10 +49,11 @@ def test_concurrency_preemption_state_execution():
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
     assert preemption_state_sm.root_state.final_outcome.outcome_id == 3
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
+    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 
 
-def test_concurrency_preemption_save_load():
+def test_concurrency_preemption_save_load(caplog):
     test_utils.test_multithrading_lock.acquire()
     s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
@@ -68,9 +70,8 @@ def test_concurrency_preemption_save_load():
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
+    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_concurrency_preemption_state_execution()
-    test_concurrency_preemption_save_load()
+    pytest.main([__file__])

@@ -8,9 +8,11 @@ import rafcon.statemachine.singleton
 
 # test environment elements
 import test_utils
+import pytest
 
 
-def custom_entry_point():
+def test_custom_entry_point(caplog):
+    test_utils.remove_all_libraries()
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     test_utils.test_multithrading_lock.acquire()
@@ -21,8 +23,9 @@ def custom_entry_point():
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert not rafcon.statemachine.singleton.global_variable_manager.variable_exist("start_id21")
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':
-    custom_entry_point()
+    pytest.main([__file__])

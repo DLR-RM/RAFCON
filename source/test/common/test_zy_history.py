@@ -36,9 +36,13 @@ from test_z_gui_state_type_change import store_state_elements, check_state_eleme
     check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
     get_state_editor_ctrl_and_store_id_dict
 from test_z_gui_states_editor_widget import check_state_editor_models
+import pytest
 
 NO_SAVE = False
 TEST_PATH = TMP_TEST_PATH + "/test_history"
+
+with_prints = False
+
 
 def on_save_activate(state_machine_m, logger):
     if state_machine_m is None or NO_SAVE:
@@ -335,7 +339,7 @@ def get_state_model_by_path(state_model, path):
     return current_state_model
 
 
-def test_add_remove_history(with_print=False):
+def test_add_remove_history(caplog):
     ##################
     # Root_state elements
 
@@ -672,8 +676,10 @@ def test_add_remove_history(with_print=False):
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
-def test_state_property_changes_history(with_print=False):
+
+def test_state_property_changes_history(caplog):
     ##################
     # state properties
 
@@ -847,8 +853,10 @@ def test_state_property_changes_history(with_print=False):
 
     save_state_machine(sm_model, TEST_PATH + "_state_properties", logger, with_gui=False)
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
-def test_outcome_property_changes_history(with_print=False):
+
+def test_outcome_property_changes_history(caplog):
     ##################
     # outcome properties
 
@@ -896,6 +904,8 @@ def test_outcome_property_changes_history(with_print=False):
     do_check_for_state(state_dict, state_name='Container')
     save_state_machine(sm_model, TEST_PATH + "_outcome_properties", logger, with_gui=False)
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
+
 
 def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
     assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
@@ -910,7 +920,7 @@ def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
     return state_editor_ctrl, time_waited
 
 
-def test_transition_property_changes_history(with_print=False):
+def test_transition_property_changes_history(caplog):
     ##################
     # transition properties
 
@@ -1019,8 +1029,10 @@ def test_transition_property_changes_history(with_print=False):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_transition_properties", logger, with_gui=False)
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
-def test_input_port_modify_notification(with_print=False):
+
+def test_input_port_modify_notification(caplog):
     ##################
     # input_data_port properties
 
@@ -1064,8 +1076,10 @@ def test_input_port_modify_notification(with_print=False):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_input_port_properties", logger, with_gui=False)
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
-def test_output_port_modify_notification(with_print=False):
+
+def test_output_port_modify_notification(caplog):
 
     ##################
     # output_data_port properties
@@ -1108,8 +1122,10 @@ def test_output_port_modify_notification(with_print=False):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_output_port_properties", logger, with_gui=False)
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
-def test_scoped_variable_modify_notification(with_print=False):
+
+def test_scoped_variable_modify_notification(caplog):
     ##################
     # scoped_variable properties
 
@@ -1158,8 +1174,10 @@ def test_scoped_variable_modify_notification(with_print=False):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_scoped_variable_properties", logger, with_gui=False)
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
-def test_data_flow_property_changes_history(with_print=False):
+
+def test_data_flow_property_changes_history(caplog):
     ##################
     # data_flow properties
 
@@ -1287,13 +1305,15 @@ def test_data_flow_property_changes_history(with_print=False):
 
     save_state_machine(sm_model, TEST_PATH + "_data_flow_properties", logger, with_gui=False)
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
+
 
 def setup_logger(logging_view):
     log.debug_filter.set_logging_test_view(logging_view)
     log.error_filter.set_logging_test_view(logging_view)
 
 
-def test_type_changes_without_gui():
+def test_type_changes_without_gui(caplog):
 
     with_gui = False
 
@@ -1309,6 +1329,7 @@ def test_type_changes_without_gui():
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
@@ -1324,8 +1345,11 @@ def test_type_changes_without_gui():
     trigger_state_type_change_tests(sm_manager_model, None, sm_m, state_dict, with_gui, logger)
     os.chdir(rafcon.__path__[0] + "/../test")
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
-def test_state_machine_changes_with_gui(with_gui=True):
+
+@pytest.mark.parametrize("with_gui", [True])
+def test_state_machine_changes_with_gui(with_gui, caplog):
 
     test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
@@ -1340,6 +1364,7 @@ def test_state_machine_changes_with_gui(with_gui=True):
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
     if test_utils.sm_manager_model is None:
@@ -1379,6 +1404,8 @@ def test_state_machine_changes_with_gui(with_gui=True):
     else:
         os.chdir(rafcon.__path__[0] + "/../test/common")
         thread.join()
+
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def trigger_state_type_change_tests(*args):
@@ -1875,20 +1902,4 @@ def trigger_state_type_change_tests(*args):
 
 
 if __name__ == '__main__':
-    # pytest.main()
-    with_prints = False
-    test_add_remove_history(with_prints)
-    test_state_property_changes_history(with_prints)
-
-    test_outcome_property_changes_history(with_prints)
-    test_transition_property_changes_history(with_prints)
-
-    test_input_port_modify_notification(with_prints)
-    test_output_port_modify_notification(with_prints)
-    test_scoped_variable_modify_notification(with_prints)
-
-    test_data_flow_property_changes_history(with_prints)
-
-    test_type_changes_without_gui()
-
-    test_state_machine_changes_with_gui()
+    pytest.main([__file__])

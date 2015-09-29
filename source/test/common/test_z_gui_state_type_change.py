@@ -31,6 +31,7 @@ from rafcon.statemachine.config import global_config
 # test environment elements
 import test_utils
 from test_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+import pytest
 
 
 def create_models(*args, **kargs):
@@ -575,6 +576,14 @@ def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controlle
     return state_editor_ctrl, list_store_id_from_state_type_dict
 
 
+# def test_state_type_change_without_gui():
+#     state_type_change_test(with_gui=False)
+#
+#
+# def test_state_type_change_with_gui():
+#     state_type_change_test(with_gui=True)
+
+
 def trigger_state_type_change_tests(*args):
     """
     Does only works with gui at the moment.
@@ -598,7 +607,11 @@ def trigger_state_type_change_tests(*args):
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
-    call_gui_callback(sm_m.selection.set, [state_m])
+
+    if with_gui:
+        call_gui_callback(sm_m.selection.set, [state_m])
+    else:
+        sm_m.selection.set([state_m])
 
     # HS -> BCS
     # - get state-editor controller and find right row in combo box
@@ -717,19 +730,12 @@ def trigger_state_type_change_tests(*args):
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_state_type_change_with_gui():
-    state_type_change_test(with_gui=True)
-
-
-def _test_state_type_change_without_gui():
-    state_type_change_test(with_gui=False)
-
-
-def state_type_change_test(with_gui=False):
-
+def test_state_type_change_test(caplog):
+    with_gui = True
     test_multithrading_lock.acquire()
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc")
+    os.chdir(test_utils.RAFCON_PATH + "/mvc")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
@@ -739,6 +745,7 @@ def state_type_change_test(with_gui=False):
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
     if test_utils.sm_manager_model is None:
@@ -771,14 +778,14 @@ def state_type_change_test(with_gui=False):
             logger.debug("Joined currently executing state machine!")
             thread.join()
             logger.debug("Joined test triggering thread!")
-        os.chdir(rafcon.__path__[0] + "/../test/common")
+        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
         test_multithrading_lock.release()
     else:
-        os.chdir(rafcon.__path__[0] + "/../test/common")
+        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
         thread.join()
+
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':
-    # _test_state_type_change_without_gui()
-
-    test_state_type_change_with_gui()
+    pytest.main([__file__])

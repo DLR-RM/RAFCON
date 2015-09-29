@@ -1,3 +1,4 @@
+import pytest
 # test for expected exceptions
 from pytest import raises
 
@@ -41,7 +42,7 @@ def create_statemachine():
     return StateMachine(state2)
 
 
-def test_default_values_of_data_ports():
+def test_default_values_of_data_ports(caplog):
 
     test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
@@ -60,13 +61,14 @@ def test_default_values_of_data_ports():
     root_state.join()
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 
     print root_state.output_data
     assert root_state.output_data["output_data_port1"] == "default_value"
 
 
-def test_unique_port_names():
+def test_unique_port_names(caplog):
 
     state = ExecutionState('execution state')
 
@@ -130,7 +132,8 @@ def test_unique_port_names():
     assert len(state.output_data_ports) == 3
     assert len(state.scoped_variables) == 3
 
+    test_utils.assert_logger_warnings_and_errors(caplog)
+
 
 if __name__ == '__main__':
-    test_default_values_of_data_ports()
-    test_unique_port_names()
+    pytest.main([__file__])

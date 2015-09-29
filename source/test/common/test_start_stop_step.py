@@ -11,16 +11,17 @@ import rafcon.statemachine.singleton
 
 # test environment elements
 import test_utils
+import pytest
 
 
 def return_loop_state_machine():
-    state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts", filename="loop_state1.py")
+    state1 = ExecutionState("MyFirstState", path=test_utils.TEST_SM_PATH, filename="loop_state1.py")
     state1.add_outcome("MyFirstOutcome", 3)
 
-    state2 = ExecutionState("MySecondState", path=rafcon.__path__[0] + "/../test_scripts", filename="loop_state2.py")
+    state2 = ExecutionState("MySecondState", path=test_utils.TEST_SM_PATH, filename="loop_state2.py")
     state2.add_outcome("FirstOutcome", 3)
 
-    state3 = HierarchyState("MyFirstHierarchyState", path=rafcon.__path__[0] + "/../test_scripts", filename="hierarchy_state.py")
+    state3 = HierarchyState("MyFirstHierarchyState", path=test_utils.TEST_SM_PATH, filename="hierarchy_state.py")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
@@ -30,13 +31,13 @@ def return_loop_state_machine():
     return StateMachine(state3)
 
 
-def test_start_stop_pause_step():
+def test_start_stop_pause_step(caplog):
 
     sm = return_loop_state_machine()
     rafcon.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
 
-    s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
-    s.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    s = StateMachineStorage(test_utils.get_test_sm_path("stored_statemachine"))
+    s.save_statemachine_as_yaml(sm, test_utils.get_test_sm_path("stored_statemachine"))
     sm_loaded, version, creation_time = s.load_statemachine_from_yaml()
 
     test_utils.test_multithrading_lock.acquire()
@@ -55,8 +56,8 @@ def test_start_stop_pause_step():
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded.state_machine_id)
+    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_start_stop_pause_step()
+    pytest.main([__file__])

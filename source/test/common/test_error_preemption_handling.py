@@ -1,3 +1,4 @@
+import pytest
 import rafcon
 import test_utils
 
@@ -170,4 +171,4 @@ class TestErrorPreemptionHandling():
         test_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
 if __name__ == '__main__':
-    TestErrorPreemptionHandling()
+    pytest.main([__file__])

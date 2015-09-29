@@ -10,6 +10,7 @@ import rafcon.statemachine.singleton
 
 # test environment elements
 import test_utils
+import pytest
 
 
 def create_statemachine():
@@ -49,7 +50,7 @@ def create_statemachine():
 
 # remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
 # states)
-def test_scoped_data():
+def test_scoped_data(caplog):
     s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
     sm = create_statemachine()
@@ -69,7 +70,7 @@ def test_scoped_data():
     test_utils.test_multithrading_lock.release()
 
     assert state_machine.root_state.output_data["data_output_port1"] == 42.0
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_scoped_data()
+    pytest.main([__file__])

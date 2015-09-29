@@ -6,6 +6,8 @@ from rafcon.statemachine.state_machine import StateMachine
 # singleton elements
 import rafcon.statemachine.singleton
 
+import pytest
+
 # test environment elements
 import test_utils
 
@@ -31,7 +33,7 @@ def create_state_machine():
     return StateMachine(state3)
 
 
-def test_concurrency_barrier_state_execution():
+def test_concurrency_barrier_state_execution(caplog):
 
     test_utils.test_multithrading_lock.acquire()
     sm = create_state_machine()
@@ -46,9 +48,8 @@ def test_concurrency_barrier_state_execution():
     test_utils.test_multithrading_lock.release()
 
     assert root_state.output_data["output_data_port1"] == 42
-    print root_state.output_data
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_concurrency_barrier_state_execution()
+    pytest.main([__file__])

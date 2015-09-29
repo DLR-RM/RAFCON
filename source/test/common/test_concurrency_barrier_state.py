@@ -9,6 +9,7 @@ from rafcon.statemachine.script import Script, ScriptType
 import rafcon.statemachine.singleton
 
 # test environment elements
+import pytest
 import test_utils
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
@@ -55,7 +56,7 @@ def create_concurrency_barrier_state():
     return barrier_state
 
 
-def test_concurrency_barrier_save_load():
+def test_concurrency_barrier_save_load(caplog):
     concurrency_barrier_state = create_concurrency_barrier_state()
 
     state_machine = StateMachine(concurrency_barrier_state)
@@ -84,7 +85,8 @@ def test_concurrency_barrier_save_load():
     assert root_state.final_outcome.outcome_id == 4
 
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    test_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
     test_utils.test_multithrading_lock.release()
 
 if __name__ == '__main__':
-    test_concurrency_barrier_save_load()
+    pytest.main([__file__])

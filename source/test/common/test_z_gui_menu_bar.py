@@ -27,10 +27,12 @@ import rafcon.mvc.singleton
 # test environment elements
 import test_utils
 from test_utils import call_gui_callback
+import pytest
 
 
-def setup_module(module=None):
+def setup_module(module):
     # set the test_libraries path temporarily to the correct value
+    test_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: ", dirname(__file__), dirname(dirname(__file__))
 
@@ -287,11 +289,11 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_gui():
+def test_gui(caplog):
     test_utils.test_multithrading_lock.acquire()
     # delete all old state machines
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc/")
+    os.chdir(test_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
@@ -313,10 +315,10 @@ def test_gui():
 
     gtk.main()
     logger.debug("after gtk main")
-    os.chdir(rafcon.__path__[0] + "/../test/common")
+    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
+    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':
-    setup_module()
-    test_gui()
+    pytest.main([__file__])

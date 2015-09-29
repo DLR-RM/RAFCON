@@ -28,6 +28,7 @@ from rafcon.statemachine.config import global_config
 import test_utils
 from test_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
+import pytest
 
 
 def create_models(*args, **kargs):
@@ -310,19 +311,12 @@ def trigger_state_type_change_tests(*args):
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_state_type_change_with_gui():
-    state_type_change_test(with_gui=True)
-
-
-def _test_state_type_change_without_gui():
-    state_type_change_test(with_gui=False)
-
-
-def state_type_change_test(with_gui=False):
+@pytest.mark.parametrize("with_gui", [True])
+def test_state_type_change_test(with_gui, caplog):
 
     test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc")
+    os.chdir(test_utils.RAFCON_PATH + "/mvc")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
@@ -332,6 +326,7 @@ def state_type_change_test(with_gui=False):
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
     if test_utils.sm_manager_model is None:
@@ -364,14 +359,14 @@ def state_type_change_test(with_gui=False):
             logger.debug("Joined currently executing state machine!")
             thread.join()
             logger.debug("Joined test triggering thread!")
-        os.chdir(rafcon.__path__[0] + "/../test/common")
+        os.chdir(test_utils.TEST_SM_PATH + "/../test/common")
         test_multithrading_lock.release()
     else:
-        os.chdir(rafcon.__path__[0] + "/../test/common")
+        os.chdir(test_utils.TEST_SM_PATH + "/../test/common")
         thread.join()
+
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':
-    # _test_state_type_change_without_gui()
-
-    test_state_type_change_with_gui()
+    pytest.main([__file__])

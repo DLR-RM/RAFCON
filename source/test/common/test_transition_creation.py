@@ -12,6 +12,7 @@ import rafcon.statemachine.singleton
 # test environment elements
 from pytest import raises
 import test_utils
+import pytest
 
 
 def create_statemachine():
@@ -63,7 +64,7 @@ def create_statemachine():
     return StateMachine(state4)
 
 
-def test_transition_creation():
+def test_transition_creation(caplog):
 
     test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
@@ -83,9 +84,9 @@ def test_transition_creation():
     root_state.join()
     time.sleep(0.2)
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_transition_creation()
+    pytest.main([__file__])
