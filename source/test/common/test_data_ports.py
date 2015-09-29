@@ -11,7 +11,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import utils
+import test_utils
 
 
 def create_statemachine():
@@ -53,14 +53,14 @@ def test_default_values_of_data_ports():
     root_state = sm_loaded.root_state
 
     state_machine = StateMachine(root_state)
-    utils.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
     root_state.join()
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    utils.test_multithrading_lock.release()
+    test_utils.test_multithrading_lock.release()
 
     print root_state.output_data
     assert root_state.output_data["output_data_port1"] == "default_value"

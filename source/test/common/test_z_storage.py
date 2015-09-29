@@ -17,7 +17,7 @@ import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
 # test environment elements
-from utils import call_gui_callback, TMP_TEST_PATH
+from test_utils import call_gui_callback, TMP_TEST_PATH
 
 
 def create_models(*args, **kargs):

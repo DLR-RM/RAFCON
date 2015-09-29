@@ -7,7 +7,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import utils
+import test_utils
 
 
 def create_state_machine():
@@ -33,7 +33,7 @@ def create_state_machine():
 
 def test_concurrency_barrier_state_execution():
 
-    utils.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
     sm = create_state_machine()
     root_state = sm.root_state
     state_machine = StateMachine(root_state)
@@ -43,7 +43,7 @@ def test_concurrency_barrier_state_execution():
     root_state.join()
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    utils.test_multithrading_lock.release()
+    test_utils.test_multithrading_lock.release()
 
     assert root_state.output_data["output_data_port1"] == 42
     print root_state.output_data

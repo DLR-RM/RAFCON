@@ -7,13 +7,13 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton
 
 # test environment elements
-import utils
+import test_utils
 
 
 def custom_entry_point():
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    utils.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(
@@ -21,7 +21,7 @@ def custom_entry_point():
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert not rafcon.statemachine.singleton.global_variable_manager.variable_exist("start_id21")
 
-    utils.test_multithrading_lock.release()
+    test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':

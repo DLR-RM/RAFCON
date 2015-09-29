@@ -1,4 +1,4 @@
-import variables_for_pytest
+import test_utils
 
 # system libs
 from multiprocessing import Process, Queue

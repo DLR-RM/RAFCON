@@ -25,8 +25,8 @@ from rafcon.mvc.views import LoggingView
 import rafcon.mvc.singleton
 
 # test environment elements
-import utils
-from utils import call_gui_callback
+import test_utils
+from test_utils import call_gui_callback
 
 
 def setup_module(module=None):
@@ -288,7 +288,7 @@ def trigger_gui_signals(*args):
 
 
 def test_gui():
-    utils.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
     # delete all old state machines
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(rafcon.__path__[0] + "/mvc/")
@@ -302,19 +302,19 @@ def test_gui():
 
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[utils.sm_manager_model,
+    thread = threading.Thread(target=trigger_gui_signals, args=[test_utils.sm_manager_model,
                                                                 main_window_controller])
     thread.start()
 
     gtk.main()
     logger.debug("after gtk main")
     os.chdir(rafcon.__path__[0] + "/../test/common")
-    utils.test_multithrading_lock.release()
+    test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':

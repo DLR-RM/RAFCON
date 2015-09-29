@@ -7,19 +7,19 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton
 
 # test environment elements
-import utils
+import test_utils
 
 
 def test_error_propagation():
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    utils.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
 
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(rafcon.__path__[0] + "/../test_scripts/error_propagation_test")
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert sm.root_state.output_data["error_check"] == "successfull"
 
-    utils.test_multithrading_lock.release()
+    test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':

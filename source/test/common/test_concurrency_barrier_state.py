@@ -9,7 +9,7 @@ from rafcon.statemachine.script import Script, ScriptType
 import rafcon.statemachine.singleton
 
 # test environment elements
-import utils
+import test_utils
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 
@@ -61,8 +61,8 @@ def test_concurrency_barrier_save_load():
     state_machine = StateMachine(concurrency_barrier_state)
     test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/decider_test_statemachine")
     # test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
-    test_storage.save_statemachine_as_yaml(state_machine, utils.TMP_TEST_PATH + "/decider_test_statemachine")
-    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml(utils.TMP_TEST_PATH +
+    test_storage.save_statemachine_as_yaml(state_machine, test_utils.TMP_TEST_PATH + "/decider_test_statemachine")
+    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml(test_utils.TMP_TEST_PATH +
                                                                                  "/decider_test_statemachine")
 
     root_state = sm_loaded.root_state
@@ -72,7 +72,7 @@ def test_concurrency_barrier_save_load():
     root_state.output_data = output_data
 
     state_machine = StateMachine(root_state)
-    utils.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
@@ -84,7 +84,7 @@ def test_concurrency_barrier_save_load():
     assert root_state.final_outcome.outcome_id == 4
 
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    utils.test_multithrading_lock.release()
+    test_utils.test_multithrading_lock.release()
 
 if __name__ == '__main__':
     test_concurrency_barrier_save_load()

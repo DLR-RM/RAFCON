@@ -19,8 +19,8 @@ from rafcon.mvc.views import LoggingView
 import rafcon.mvc.singleton
 
 # test environment elements
-import utils
-from utils import call_gui_callback
+import test_utils
+from test_utils import call_gui_callback
 
 
 def create_models():
@@ -86,7 +86,7 @@ def trigger_gui_signals(*args):
 
 def test_backward_stepping():
 
-    utils.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(rafcon.__path__[0] + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
@@ -103,16 +103,16 @@ def test_backward_stepping():
 
     main_window_view = MainWindowView(logging_view)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    if utils.sm_manager_model is None:
-        utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if test_utils.sm_manager_model is None:
+        test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
-    utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+    test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                   editor_type="LogicDataGrouped")
     thread = threading.Thread(target=trigger_gui_signals,
-                              args=[utils.sm_manager_model, main_window_controller])
+                              args=[test_utils.sm_manager_model, main_window_controller])
     thread.start()
 
     gtk.main()
@@ -124,7 +124,7 @@ def test_backward_stepping():
         thread.join()
         logger.debug("Joined test triggering thread!")
     os.chdir(rafcon.__path__[0] + "/../test/common")
-    utils.test_multithrading_lock.release()
+    test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':

@@ -29,8 +29,8 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
 # test environment elements
-import utils
-from utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+import test_utils
+from test_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
     check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
     check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
@@ -1342,16 +1342,16 @@ def test_state_machine_changes_with_gui(with_gui=True):
     print "init libs"
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    if utils.sm_manager_model is None:
-            utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if test_utils.sm_manager_model is None:
+            test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     print "initialize MainWindow"
     main_window_view = MainWindowView(logging_view)
 
     # load the meta data for the state machine
-    utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+    test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
-    main_window_controller = MainWindowController(utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
     # thread = threading.Thread(target=test_add_remove_history,
@@ -1360,7 +1360,7 @@ def test_state_machine_changes_with_gui(with_gui=True):
     # time.sleep(1)
     print "start thread"
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[utils.sm_manager_model, main_window_controller,
+                              args=[test_utils.sm_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
 
     thread.start()
