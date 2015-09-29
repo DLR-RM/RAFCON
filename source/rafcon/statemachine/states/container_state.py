@@ -92,7 +92,7 @@ class ContainerState(State):
 
         :return:
         """
-        State.setup_run(self)
+        super(ContainerState, self).setup_run()
         # reset the scoped data
         self._scoped_data = {}
         self.add_default_values_of_scoped_variables_to_scoped_data()

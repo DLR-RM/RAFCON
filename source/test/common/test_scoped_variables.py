@@ -8,7 +8,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import variables_for_pytest
+import utils
 
 
 def create_statemachine():
@@ -63,14 +63,14 @@ def test_scoped_variables():
 
     state_machine = StateMachine(sm_loaded.root_state)
 
-    variables_for_pytest.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
     sm_loaded.root_state.join()
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    variables_for_pytest.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
     assert state_machine.root_state.output_data["output_data_port1"] == 42
 

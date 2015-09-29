@@ -12,7 +12,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import variables_for_pytest
+import utils
 
 
 def setup_module(module=None):
@@ -123,7 +123,7 @@ def test_save_nested_library_state():
 
 
 def test_hierarchy_state_library():
-    variables_for_pytest.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     library_container_state_sm = create_hierarchy_state_library_state_machine()
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
@@ -135,11 +135,11 @@ def test_hierarchy_state_library():
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
-    variables_for_pytest.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
 
 def test_execution_state_library():
-    variables_for_pytest.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     library_container_state_sm = create_execution_state_library_state_machine()
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
@@ -151,11 +151,11 @@ def test_execution_state_library():
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
-    variables_for_pytest.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
 
 def test_nested_library_state_machine():
-    variables_for_pytest.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.library_manager.initialize()
     nested_library_state = LibraryState("test_libraries", "library_with_nested_library", "0.1", "library_state_name")
     state_machine = StateMachine(nested_library_state)
@@ -169,7 +169,7 @@ def test_nested_library_state_machine():
     # print output_data["data_output_port1"]
     assert nested_library_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    variables_for_pytest.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
 
 def teardown_module(module=None):

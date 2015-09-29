@@ -10,7 +10,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import variables_for_pytest
+import utils
 
 
 def return_loop_state_machine():
@@ -39,7 +39,7 @@ def test_start_stop_pause_step():
     s.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
     sm_loaded, version, creation_time = s.load_statemachine_from_yaml()
 
-    variables_for_pytest.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm_loaded)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = sm_loaded.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.step_mode()
@@ -55,7 +55,7 @@ def test_start_stop_pause_step():
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded.state_machine_id)
-    variables_for_pytest.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
 if __name__ == '__main__':
     #pytest.main()

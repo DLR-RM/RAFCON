@@ -8,7 +8,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import variables_for_pytest
+import utils
 
 
 def create_preemptive_wait_statemachine():
@@ -30,7 +30,7 @@ def create_preemptive_wait_statemachine():
 
 
 def test_preemptive_wait_daemon():
-    variables_for_pytest.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_1_wait', 0.5)
     gvm.set_variable('state_2_wait', None)
@@ -42,7 +42,7 @@ def test_preemptive_wait_daemon():
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    variables_for_pytest.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
 
 def run_statemachine():
@@ -57,7 +57,7 @@ def run_statemachine():
 
 
 def test_preemptive_wait_timeout():
-    variables_for_pytest.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_1_wait', 0.5)
     gvm.set_variable('state_2_wait', 1.)
@@ -69,11 +69,11 @@ def test_preemptive_wait_timeout():
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    variables_for_pytest.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
 
 def test_preemptive_wait2_timeout():
-    variables_for_pytest.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_2_wait', 0.5)
     gvm.set_variable('state_1_wait', 1.)
@@ -85,7 +85,7 @@ def test_preemptive_wait2_timeout():
     assert gvm.get_variable('state_1_preempted')
     assert not gvm.get_variable('state_2_preempted')
 
-    variables_for_pytest.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
 if __name__ == '__main__':
     test_preemptive_wait_timeout()

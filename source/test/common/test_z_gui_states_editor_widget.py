@@ -25,8 +25,8 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
 # test environment elements
-import variables_for_pytest
-from variables_for_pytest import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+import utils
+from utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
 
 
@@ -334,24 +334,24 @@ def state_type_change_test(with_gui=False):
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    if variables_for_pytest.sm_manager_model is None:
-            variables_for_pytest.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if utils.sm_manager_model is None:
+            utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     main_window_controller = None
     if with_gui:
         main_window_view = MainWindowView(logging_view)
 
         # load the meta data for the state machine
-        variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+        utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
-        main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view,
+        main_window_controller = MainWindowController(utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
     else:
         # load the meta data for the state machine
-        variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+        utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[variables_for_pytest.sm_manager_model, main_window_controller,
+                              args=[utils.sm_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
     thread.start()
 
