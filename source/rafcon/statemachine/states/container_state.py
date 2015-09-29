@@ -169,21 +169,6 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
 
     @Observable.observed
-    # Primary key is state_id, as one should be able to change the name of the state without updating all connections
-    def create_state(self, name, state_id=None):
-        """Creates a state for the container state.
-
-        :param name: the name of the new state
-        :param state_id: the optional state_id for the new state
-        :return state_id: the state_id of the created state
-        """
-        if state_id is None:
-            state_id = state_id_generator()
-        state = State(state_id, name)
-        self._states[state_id] = state
-        return state_id
-
-    @Observable.observed
     def add_state(self, state, storage_load=False):
         """Adds a state to the container state.
 
@@ -754,17 +739,6 @@ class ContainerState(State):
             if data_flow.to_state == old_state_id:
                 data_flow.to_state = self.state_id
 
-    def state_id_exists(self, new_state_id):
-        """
-        Checks if a specific key already exists among the child states.
-        :param new_state_id: the state id to check
-        :return: True if the key already exists, False else.
-        """
-        for state_id in self.states.keys():
-            if state_id == new_state_id:
-                return True
-        return False
-
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
 
@@ -778,18 +752,6 @@ class ContainerState(State):
             return self
         else:
             return self.states[transition.to_state]
-
-    def get_scoped_variables_as_dict(self, dict):
-        """ Get the scoped variables of the state as dictionary
-
-        :param dict: the dict that is filled with the scoped variables
-        :return:
-        """
-        for key_svar, svar in self.scoped_variables.iteritems():
-            for key_sdata, sdata in self.scoped_data.iteritems():
-                if svar.name == sdata.name and sdata.from_state == self.state_id:
-                    if sdata.data_port_type is DataPortType.SCOPED:
-                        dict[svar.name] = sdata.value
 
     def write_output_data(self):
         """ Write the scoped data to output of the state. Called before exiting the container state.
@@ -1307,20 +1269,6 @@ class ContainerState(State):
             if not isinstance(s, ScopedData):
                 raise TypeError("element of scoped_data must be of type ScopedData")
         self._scoped_data = scoped_data
-
-    @property
-    def current_state(self):
-        """Property for the _current_state field
-
-        """
-        return self._current_state
-
-    @current_state.setter
-    #@Observable.observed
-    def current_state(self, current_state):
-        if not isinstance(current_state, State):
-            raise TypeError("current_state must be of type State")
-        self._current_state = current_state
 
     @property
     def v_checker(self):
