@@ -327,9 +327,9 @@ class StateModel(ModelMT):
                     del tmp_meta["scoped_variable" + str(s_id)]
             # assign the meta data to the state
             self.meta = tmp_meta
-        # Print warning only if the state has a location different from the tmp directory
+        # Print info only if the state has a location different from the tmp directory
         elif meta_path[0:5] != '/tmp/':
-            logger.warn("path to load meta data for state model of state '{0}' does not exist".format(self.state.name))
+            logger.info("State '{0}' has no meta data. It will now be generated automatically.".format(self.state.name))
 
     def copy_meta_data_from_state_model(self, source_state):
 
