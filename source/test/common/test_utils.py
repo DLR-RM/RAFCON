@@ -1,9 +1,26 @@
+import rafcon
+from os.path import join, dirname
 import getpass
 from threading import Lock, Condition
 
 test_multithrading_lock = Lock()
 
 TMP_TEST_PATH = "/tmp/{0}/rafcon_unit_tests".format(getpass.getuser())
+
+RAFCON_PATH = rafcon.__path__[0]
+TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
+
+
+def get_test_sm_path(state_machine_name):
+    return join(TEST_SM_PATH, state_machine_name)
+
+
+def remove_all_libraries():
+    from rafcon.statemachine.config import global_config
+    library_paths = global_config.get_config_value("LIBRARY_PATHS")
+    libs = [lib for lib in library_paths]
+    for lib in libs:
+        del library_paths[lib]
 
 
 def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0):
