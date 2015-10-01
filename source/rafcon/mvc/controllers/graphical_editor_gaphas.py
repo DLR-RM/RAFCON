@@ -299,6 +299,11 @@ class GraphicalEditorController(ExtendedController):
                     if output_port_v.port_id == arguments[1]:
                         state_v.remove_output_port(output_port_v)
                         self.canvas.request_update(state_v, matrix=False)
+            elif method_name == 'change_data_type':
+                pass
+            elif method_name == 'default_value':
+                pass
+
             # ----------------------------------
             #         SCOPED VARIABLES
             # ----------------------------------
@@ -545,12 +550,9 @@ class GraphicalEditorController(ExtendedController):
         self._remove_connection_view(parent_state_m)
 
     def get_view_for_model(self, model):
-        for item in self.canvas.get_root_items():
+        for item in self.canvas.get_all_items():
             if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.model is model:
                 return item
-            for child in list(self.canvas.get_all_children(item)):
-                if isinstance(child, (StateView, TransitionView, DataFlowView)) and child.model is model:
-                    return child
 
     def add_state_view_to_parent(self, state_m, parent_state_m):
         parent_state_v = self.get_view_for_model(parent_state_m)
