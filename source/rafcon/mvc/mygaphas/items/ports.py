@@ -479,7 +479,17 @@ class PortView(Model):
         #     self._port_side_size = 5.
 
 
-class IncomeView(PortView):
+class LogicPortView(PortView):
+    """Base class for ports connecting transitions
+
+    A logic port is either a income our an outcome.
+    """
+
+    def draw(self, context, state):
+        raise NotImplementedError
+
+
+class IncomeView(LogicPortView):
 
     def __init__(self, parent, port_side_size):
         super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent,
@@ -489,7 +499,7 @@ class IncomeView(PortView):
         self.draw_port(context, constants.LABEL_COLOR, state.transparent)
 
 
-class OutcomeView(PortView):
+class OutcomeView(LogicPortView):
 
     def __init__(self, outcome_m, parent, port_side_size):
         super(OutcomeView, self).__init__(in_port=False, port_side_size=port_side_size, name=outcome_m.outcome.name,
