@@ -329,16 +329,18 @@ class GraphicalEditorController(ExtendedController):
             #            STATE NAME
             # ----------------------------------
             elif method_name == 'name':
+                # The name of a state was changed
                 if not isinstance(model, StateModel):
                     parent_model = model.parent
+                # The name of a port (input, output, scoped var, outcome) was changed
                 else:
                     parent_model = model
                 state_v = self.get_view_for_model(parent_model)
                 if parent_model is model:
                     state_v.name_view.name = arguments[1]
-                    self.canvas.request_update(state_v.name_view)
+                    self.canvas.request_update(state_v.name_view, matrix=False)
                 else:
-                    self.canvas.request_update(state_v)
+                    self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'state_execution_status':
                 state_v = self.get_view_for_model(model)
                 self.canvas.request_update(state_v, matrix=False)
@@ -433,7 +435,8 @@ class GraphicalEditorController(ExtendedController):
 
     @staticmethod
     def _extract_info_data(info):
-        if info['method_name'] == 'state_change':
+        if info['method_name'] in ['state_change', 'input_data_port_change', 'output_data_port_change',
+                                   'scoped_variable_change', 'outcome_change']:
             if 'info' in info:
                 info = info['info']
             elif 'kwargs' in info:
