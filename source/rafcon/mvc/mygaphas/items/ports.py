@@ -249,18 +249,19 @@ class PortView(Model):
                                                                            current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "from cache"
+            # print "draw port name from cache"
             self._label_image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw"
+            # print "draw port name"
 
             # First we have to do a "dry run", in order to determine the size of the new label
             c.move_to(self.pos.x.value, self.pos.y.value)
             extents = gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
                                                       False, label_position, side_length, self._draw_connection_to_port,
                                                       show_additional_value, value, only_extent_calculations=True)
+            extents = gap_draw_helper.extend_extents(extents, factor=1.1)
             label_pos = extents[0], extents[1]
             relative_pos = label_pos[0] - self.pos[0], label_pos[1] - self.pos[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]
