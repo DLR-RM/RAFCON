@@ -476,42 +476,55 @@ class HandleMoveTool(HandleTool):
         else:
             self._handle_reset_ports(item, handle, start_parent)
 
-    def _handle_transition_view_change(self, item, handle):
-        start_parent = self._start_port.parent
-        last_parent = None
-        if self._last_active_port:
-            last_parent = self._last_active_port.parent
+    def _handle_transition_view_change(self, transition_v, handle):
+        """Handle the change of a transition origin or target modification
 
-        # Connection changed: outcome-to-outcome to outcome-to-outcome
-        if (isinstance(self._check_port, OutcomeView) and
-                isinstance(self._start_port, OutcomeView) and
-                isinstance(self._last_active_port, OutcomeView)):
-            self._handle_transition_change(item, start_parent, last_parent, oto_to_oto=True)
-        # Connection changed: outcome-to-outcome to outcome-to-income
-        elif (isinstance(self._check_port, OutcomeView) and
-                isinstance(self._start_port, OutcomeView) and
-                isinstance(self._last_active_port, IncomeView)):
-            self._handle_transition_change(item, start_parent, last_parent, oto_to_oti=True)
-        # Connection changed: outcome-to-income to outcome-to-outcome
-        elif (isinstance(self._check_port, OutcomeView) and
-                isinstance(self._start_port, IncomeView) and
-                isinstance(self._last_active_port, OutcomeView)):
-            self._handle_transition_change(item, start_parent, last_parent, oti_to_oto=True)
-        # Connection changed: outcome-to-income to outcome-to-income
-        elif ((isinstance(self._check_port, IncomeView) and
-                isinstance(self._start_port, OutcomeView) and
-                isinstance(self._last_active_port, OutcomeView)) or
-                (isinstance(self._check_port, OutcomeView) and
-                    isinstance(self._start_port, IncomeView) and
-                    isinstance(self._last_active_port, IncomeView))):
-            self._handle_transition_change(item, start_parent, last_parent, oti_to_oti=True)
-        # Connection changed: income-to-income to income-to-income (Start State changed)
-        elif (isinstance(self._check_port, IncomeView) and
-                isinstance(self._start_port, IncomeView) and
-                isinstance(self._last_active_port, IncomeView)):
-            self._handle_transition_change(item, start_parent, last_parent, iti_to_iti=True)
+        The method changes the origin or target of an already existing transition.
+
+        :param transition_v: The transition view that was changed
+        :param handle: The handle of the changed port
+        """
+        start_parent = self._start_port.parent
+
+        # The reconnection of the transition was aborted
+        if not self._last_active_port:
+            self._handle_reset_ports(transition_v, handle, start_parent)
+            return
+
+        # No change of transition
+        if self._last_active_port == self._start_port:
+            self._handle_reset_ports(transition_v, handle, start_parent)
+            return
+
+        last_parent_state_m = self._last_active_port.parent.model
+        modify_target = self._check_port == transition_v.from_port
+        transition_m = transition_v.model
+
+        if modify_target:
+            to_state_id = last_parent_state_m.state.state_id
+            if isinstance(self._last_active_port, IncomeView):
+                to_outcome_id = None
+            else:
+                to_outcome_id = self._last_active_port.outcome_id
+
+            try:
+                transition_m.transition.modify_target(to_state_id, to_outcome_id)
+            except ValueError as e:
+                logger.error(e)
+            self._handle_reset_ports(transition_v, handle, start_parent)
         else:
-            self._handle_reset_ports(item, handle, start_parent)
+            if isinstance(self._last_active_port, IncomeView):
+                from_state_id = None
+                from_outcome_id = None
+            else:
+                from_state_id = last_parent_state_m.state.state_id
+                from_outcome_id = self._last_active_port.outcome_id
+
+            try:
+                transition_m.transition.modify_origin(from_state_id, from_outcome_id)
+            except ValueError as e:
+                logger.error(e)
+                self._handle_reset_ports(transition_v, handle, start_parent)
 
     def _handle_data_flow_change(self, item, start_parent, last_parent, iti_to_iti=False, iti_to_oti=False,
                                  oti_to_iti=False, oti_to_oti=False, oti_to_oto=False, oto_to_oti=False,
@@ -625,90 +638,6 @@ class HandleMoveTool(HandleTool):
             return self.view.canvas.get_parent(port_parent)
         else:
             return None
-
-    def _handle_transition_change(self, item, start_parent, last_parent, oto_to_oto=False, oto_to_oti=False,
-                                  oti_to_oto=False, oti_to_oti=False, iti_to_iti=False):
-        """This method handles the change of transitions
-
-        I checks if the new transition is valid. Exactly one of the optional parameters need be set to True
-
-        :param item: TransitionView holding the changed transition
-        :param start_parent: Parent of start_port
-        :param last_parent: Parent of last_active_port
-        :param oto_to_oto: Indicates check for 'outcome-to-outcome to outcome-to-outcome' change
-        :param oto_to_oti: Indicates check for 'outcome-to-outcome to outcome-to-income' change
-        :param oti_to_oto: Indicates check for 'outcome-to-income to outcome-to-outcome' change
-        :param oti_to_oti: Indicates check for 'outcome-to-income to outcome-to-income' change
-        :param iti_to_iti: Indicates check for 'income-to-income to income-to-income' change
-        """
-        if last_parent is None:
-            return
-        if not gap_helper.assert_exactly_one_true([oto_to_oto, oto_to_oti, oti_to_oto, oti_to_oti, iti_to_iti]):
-            return
-
-        start_outcome_id = None
-        from_outcome_id = None
-        last_outcome_id = None
-
-        check = self._check_port
-        start = self._start_port
-        last = self._last_active_port
-
-        port_moved = None
-        if check is item.from_port:
-            port_moved = PortMoved.TO
-        elif check is item.to_port:
-            port_moved = PortMoved.FROM
-
-        if isinstance(start, OutcomeView):
-            start_outcome_id = start.outcome_id
-        if isinstance(check, OutcomeView):
-            from_outcome_id = check.outcome_id
-        if isinstance(last, OutcomeView):
-            last_outcome_id = last.outcome_id
-        state_id = last_parent.model.state.state_id
-
-        if oti_to_oto:
-            state_id = start_parent.model.state.state_id
-            start_parent = self.view.canvas.get_parent(start_parent)
-
-        # if check_port is from_port then to_port has changed
-        if port_moved == PortMoved.TO:
-            # if start_port parent is last_active_port parent then connection is still in parent state
-            if start_parent is last_parent and (oto_to_oto or oti_to_oto):
-                item.model.transition.to_outcome = last_outcome_id
-            elif oto_to_oti or oti_to_oto or oti_to_oti or iti_to_iti:
-                item.model.transition.to_state = state_id
-            # if not in same parent reset transition to initial connection
-            else:
-                item.model.transition.to_outcome = start_outcome_id
-            return
-        elif oti_to_oto:
-            item.model.transition.from_outcome = from_outcome_id
-            return
-        elif iti_to_iti:
-            self._handle_reset_ports(item, item.from_handle(), start_parent)
-            return
-        # if check_port is to_port then from_port has changed
-        elif port_moved == PortMoved.FROM and (oto_to_oto or oti_to_oti):
-            # if start_port parent is last_active_port parent then connection is still in parent state
-            if start_parent is last_parent:
-                if not last.has_outgoing_connection():
-                    item.model.transition.from_outcome = last_outcome_id
-                else:
-                    item.model.transition.from_outcome = start_outcome_id
-                return
-            # if not in same parent but other state outcome then modify origin
-            else:
-                if not last.has_outgoing_connection():
-                    if self.is_state_id_root_state(state_id):
-                        item.model.transition.from_outcome = start_outcome_id
-                    else:
-                        item.model.transition.modify_origin(state_id, last_outcome_id)
-                    return
-                else:
-                    item.model.transition.from_outcome = start_outcome_id
-                return
 
     def is_state_id_root_state(self, state_id):
         for state_v in self.view.canvas.get_root_items():

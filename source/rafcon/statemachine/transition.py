@@ -137,7 +137,7 @@ class Transition(Observable, yaml.YAMLObject):
         if not valid:
             self._from_state = old_to_state
             self._from_outcome = old_to_outcome
-            raise ValueError("The transition origin could not be changed: {0}".format(message))
+            raise ValueError("The transition target could not be changed: {0}".format(message))
 
     @property
     def from_state(self):
