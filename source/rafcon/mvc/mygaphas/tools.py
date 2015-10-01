@@ -266,31 +266,6 @@ class HandleMoveTool(HandleTool):
 
             return True
 
-    def _get_drop_item(self, pos):
-        """
-        Find state the new connection was dropped on. Returns the state if valid connection found, None otherwise.
-        Invalid connections are: state connection to itself, connection across hierarchy levels.
-        :param pos: Position to check for drop_item
-        :return: State connection was dropped on or None
-        """
-        get_parent = self.view.canvas.get_parent
-        drop_item = self.view.get_item_at_point_exclude(pos, exclude=[self._new_connection])
-        if drop_item and not isinstance(drop_item, StateView):
-            drop_item = get_parent(drop_item)
-        parent = self._start_state
-
-        if (isinstance(self._new_connection.from_port, IncomeView) and
-                drop_item not in self.view.canvas.get_children(parent)):
-            drop_item = None
-        elif (isinstance(self._new_connection.from_port, OutcomeView) and
-              drop_item not in self.view.canvas.get_children(get_parent(parent))):
-            drop_item = None
-
-        if drop_item:
-            assert isinstance(drop_item, StateView)
-
-        return drop_item
-
     def on_button_release(self, event):
         # Create new transition if pull beginning at port occurred
         if self._new_connection:
