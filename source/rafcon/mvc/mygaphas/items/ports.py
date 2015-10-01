@@ -261,7 +261,8 @@ class PortView(Model):
             extents = gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
                                                       False, label_position, side_length, self._draw_connection_to_port,
                                                       show_additional_value, value, only_extent_calculations=True)
-            extents = gap_draw_helper.extend_extents(extents, factor=1.1)
+            from rafcon.mvc.mygaphas.utils.gap_helper import extend_extents
+            extents = extend_extents(extents, factor=1.1)
             label_pos = extents[0], extents[1]
             relative_pos = label_pos[0] - self.pos[0], label_pos[1] - self.pos[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]

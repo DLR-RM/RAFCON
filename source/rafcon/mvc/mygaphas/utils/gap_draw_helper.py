@@ -374,23 +374,3 @@ def draw_label_path(context, width, height, arrow_height, distance_to_port, draw
     c.rel_line_to(-width / 2., -arrow_height)
     # Close path
     c.close_path()
-
-
-def extend_extents(extents, factor=1.1):
-    """Extend a given bounding box
-
-    The bounding box (x1, y1, x2, y2) is centrally stretched by the given factor.
-
-    :param extents: The bound box extents
-    :param factor: The factor for stretching
-    :return: (x1, y1, x2, y2) of the extended bounding box
-    """
-    width = extents[2] - extents[0]
-    height = extents[3] - extents[1]
-    add_width = (factor - 1) * width
-    add_height = (factor - 1) * height
-    x1 = extents[0] - add_width / 2
-    x2 = extents[2] + add_width / 2
-    y1 = extents[1] - add_height / 2
-    y2 = extents[3] + add_height / 2
-    return x1, y1, x2, y2
