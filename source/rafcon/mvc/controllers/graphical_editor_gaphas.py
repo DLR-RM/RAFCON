@@ -260,18 +260,14 @@ class GraphicalEditorController(ExtendedController):
                 for outcome_m in state_m.outcomes:
                     if outcome_m.outcome.outcome_id == result:
                         state_v.add_outcome(outcome_m)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_outcome':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for outcome_v in state_v.outcomes:
                     if outcome_v.outcome_id == arguments[1]:
                         state_v.remove_outcome(outcome_v)
-                        self.canvas.request_update(state_v)
-            elif method_name == 'outcome_change':
-                state_m = model
-                state_v = self.get_view_for_model(state_m)
-                self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             # ----------------------------------
             #           DATA PORTS
             # ----------------------------------
@@ -281,28 +277,28 @@ class GraphicalEditorController(ExtendedController):
                 for input_data_port_m in state_m.input_data_ports:
                     if input_data_port_m.data_port.data_port_id == result:
                         state_v.add_input_port(input_data_port_m)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'add_output_data_port':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for output_data_port_m in state_m.output_data_ports:
                     if output_data_port_m.data_port.data_port_id == result:
                         state_v.add_output_port(output_data_port_m)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_input_data_port':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for input_port_v in state_v.inputs:
                     if input_port_v.port_id == arguments[1]:
                         state_v.remove_input_port(input_port_v)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_output_data_port':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for output_port_v in state_v.outputs:
                     if output_port_v.port_id == arguments[1]:
                         state_v.remove_output_port(output_port_v)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             # ----------------------------------
             #         SCOPED VARIABLES
             # ----------------------------------
@@ -312,18 +308,14 @@ class GraphicalEditorController(ExtendedController):
                 for scoped_variable_m in state_m.scoped_variables:
                     if scoped_variable_m.scoped_variable.data_port_id == result:
                         state_v.add_scoped_variable(scoped_variable_m)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_scoped_variable':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for scoped_variable_v in state_v.scoped_variables:
                     if scoped_variable_v.port_id == arguments[1]:
                         state_v.remove_scoped_variable(scoped_variable_v)
-                        self.canvas.request_update(state_v)
-            elif method_name == 'scoped_variable_change':
-                state_m = model
-                state_v = self.get_view_for_model(state_m)
-                self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
 
             # ----------------------------------
             #            STATE NAME
