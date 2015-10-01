@@ -26,8 +26,7 @@ PortMoved = Enum('PORT', 'FROM TO')
 
 
 class RemoveItemTool(Tool):
-    """
-    This tool is responsible of deleting the selected item
+    """This tool is responsible of deleting the selected item
     """
 
     def __init__(self, graphical_editor_view, view=None):
@@ -52,8 +51,7 @@ class RemoveItemTool(Tool):
 
 
 class MoveItemTool(ItemTool):
-    """
-    This class is responsible of moving states, names, connections, etc.
+    """This class is responsible of moving states, names, connections, etc.
     """
 
     def __init__(self, graphical_editor_view, view=None, buttons=(1,)):
@@ -96,13 +94,14 @@ class MoveItemTool(ItemTool):
             self.view.redraw_complete_screen()
 
         if isinstance(self.view.focused_item, NameView):
-            self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model, "Move name", False)
+            self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model,
+                                             "Move name", False)
 
         return super(MoveItemTool, self).on_button_release(event)
 
     def on_motion_notify(self, event):
-        """
-        Normally do nothing.
+        """Normally do nothing.
+
         If a button is pressed move the items around.
         """
         if event.state & gtk.gdk.BUTTON_PRESS_MASK:
@@ -118,7 +117,8 @@ class MoveItemTool(ItemTool):
 
             for inmotion in self._movable_items:
                 inmotion.move((event.x, event.y))
-                rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item, inmotion.item.handles()[NW])
+                rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
+                                                            inmotion.item.handles()[NW])
                 if isinstance(inmotion.item, StateView):
                     state_m = inmotion.item.model
                     state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
@@ -293,7 +293,8 @@ class HandleMoveTool(HandleTool):
             self._handle_reset_ports(item, handle, self._start_port.parent)
 
         if isinstance(self._active_connection_view, TransitionView):
-            gap_helper.update_transition_waypoints(self._graphical_editor_view, self._active_connection_view, self._waypoint_list)
+            gap_helper.update_transition_waypoints(self._graphical_editor_view, self._active_connection_view,
+                                                   self._waypoint_list)
 
         if isinstance(self.grabbed_item, (StateView, NameView)):
 
@@ -326,9 +327,9 @@ class HandleMoveTool(HandleTool):
         super(HandleMoveTool, self).on_button_release(event)
 
     def on_motion_notify(self, event):
-        """
-        Handle motion events. If a handle is grabbed: drag it around,
-        else, if the pointer is over a handle, make the owning item the
+        """Handle motion events
+
+        If a handle is grabbed: drag it around, else, if the pointer is over a handle, make the owning item the
         hovered-item.
         """
         view = self.view
@@ -450,8 +451,8 @@ class HandleMoveTool(HandleTool):
             self._handle_data_flow_change(item, start_parent, last_parent, oti_to_iti=True)
         # Connection changed: output-to-input to output-to-input
         elif ((is_output_port(self._check_port) and
-                    is_input_port(self._start_port) and
-                    is_input_port(self._last_active_port)) or
+                is_input_port(self._start_port) and
+                is_input_port(self._last_active_port)) or
                 (is_input_port(self._check_port) and
                     is_output_port(self._start_port) and
                     is_output_port(self._last_active_port))):
@@ -498,8 +499,8 @@ class HandleMoveTool(HandleTool):
             self._handle_transition_change(item, start_parent, last_parent, oti_to_oto=True)
         # Connection changed: outcome-to-income to outcome-to-income
         elif ((isinstance(self._check_port, IncomeView) and
-                    isinstance(self._start_port, OutcomeView) and
-                    isinstance(self._last_active_port, OutcomeView)) or
+                isinstance(self._start_port, OutcomeView) and
+                isinstance(self._last_active_port, OutcomeView)) or
                 (isinstance(self._check_port, OutcomeView) and
                     isinstance(self._start_port, IncomeView) and
                     isinstance(self._last_active_port, IncomeView))):
@@ -610,11 +611,14 @@ class HandleMoveTool(HandleTool):
         self.view.canvas.update()
 
     def get_parents_parent_for_port(self, port):
-        """
-        Returns the StateView which is the parent of the StateView containing the port. If the ports parent
-        is neither of Type StateView nor ScopedVariableView or the parent is the root state, None is returned.
+        """Returns the StateView which is the parent of the StateView containing the port.
+
+        If the ports parent is neither of Type StateView nor ScopedVariableView or the parent is the root state,
+        None is returned.
+
         :param port: Port to return parent's parent
-        :return: View containing the parent of the port, None if parent is root state or not of type StateView or ScopedVariableView
+        :return: View containing the parent of the port, None if parent is root state or not of type StateView or
+          ScopedVariableView
         """
         port_parent = port.parent
         if isinstance(port_parent, StateView):
@@ -624,9 +628,10 @@ class HandleMoveTool(HandleTool):
 
     def _handle_transition_change(self, item, start_parent, last_parent, oto_to_oto=False, oto_to_oti=False,
                                   oti_to_oto=False, oti_to_oti=False, iti_to_iti=False):
-        """
-        This method handles the change of transitions and checks if the new transition is valid.
-        Exactly one of the optional parameters need be set to True
+        """This method handles the change of transitions
+
+        I checks if the new transition is valid. Exactly one of the optional parameters need be set to True
+
         :param item: TransitionView holding the changed transition
         :param start_parent: Parent of start_port
         :param last_parent: Parent of last_active_port
@@ -712,8 +717,7 @@ class HandleMoveTool(HandleTool):
         return False
 
     def _set_motion_handle(self, event):
-        """
-        Sets motion handle to currently grabbed handle
+        """Sets motion handle to currently grabbed handle
         """
         item = self.grabbed_item
         handle = self.grabbed_handle
@@ -722,11 +726,13 @@ class HandleMoveTool(HandleTool):
         self.motion_handle.start_move(pos)
 
     def check_sink_item(self, item, handle, connection):
-        """
+        """Check for sink item
+
         Checks if the ConnectionSink's item is a StateView and if so tries for every port (income, outcome, input,
         output) to connect the ConnectionSink's port to the corresponding handle.
         If no matching_port was found or the item is no StateView the last active port is disconnected, as no valid
         connection is currently available for the connection.
+
         :param item: ItemConnectionSink holding the state and port to connect
         :param handle: Handle to connect port to
         :param connection: Connection containing handle
@@ -759,9 +765,10 @@ class HandleMoveTool(HandleTool):
         self.disconnect_last_active_port(handle, connection)
 
     def disconnect_last_active_port(self, handle, connection):
-        """
-        Disconnects the last active port and updates the connected handles in the port as well as removes the port
-        from the connected list in the connection.
+        """Disconnects the last active port
+
+        Updates the connected handles in the port as well as removes the port from the connected list in the connection.
+
         :param handle: Handle to disconnect from
         :param connection: ConnectionView to be disconnected, holding the handle
         """
@@ -773,11 +780,12 @@ class HandleMoveTool(HandleTool):
             self._last_active_port = None
 
     def set_matching_port(self, port_list, matching_port, handle, connection):
-        """
-        Takes a list of PortViews and sets the port matching the matching_port to connected.
+        """Takes a list of PortViews and sets the port matching the matching_port to connected.
+
         It also updates the ConnectionView's connected port for the given handle and tells the PortView the new
         connected handle.
         If the matching port was found the last active port is disconnected and set to the matching_port
+
         :param port_list: List of ports to check
         :param matching_port: Port to look for in list
         :param handle: Handle to connect to matching_port
@@ -803,8 +811,7 @@ class HandleMoveTool(HandleTool):
 
 
 class ConnectHandleMoveTool(HandleMoveTool):
-    """
-    Tool for connecting two items.
+    """Tool for connecting two items.
 
     There are two items involved. Handle of connecting item (usually
     a line) is being dragged by an user towards another item (item in
@@ -814,9 +821,7 @@ class ConnectHandleMoveTool(HandleMoveTool):
     """
 
     def glue(self, item, handle, vpos):
-        """
-        Perform a small glue action to ensure the handle is at a proper
-        location for connecting.
+        """Perform a small glue action to ensure the handle is at a proper location for connecting.
         """
 
         # glue_distance is the snapping radius
@@ -831,8 +836,7 @@ class ConnectHandleMoveTool(HandleMoveTool):
             return HandleInMotion(item, handle, self.view).glue(vpos, glue_distance)
 
     def connect(self, item, handle, vpos):
-        """
-        Connect a handle of a item to connectable item.
+        """Connect a handle of a item to connectable item.
 
         Connectable item is found by `ConnectHandleTool.glue` method.
 
@@ -849,7 +853,7 @@ class ConnectHandleMoveTool(HandleMoveTool):
         # find connectable item and its port
         sink = self.glue(item, handle, vpos)
 
-        # no new connectable item, then diconnect and exit
+        # no new connectable item, then disconnect and exit
         if sink:
             connector.connect(sink)
         else:
