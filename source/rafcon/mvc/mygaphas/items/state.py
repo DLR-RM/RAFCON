@@ -258,12 +258,12 @@ class StateView(Element):
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "from cache"
+            # print "draw state from cache"
             self._image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw"
+            # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
 

@@ -294,11 +294,9 @@ class HandleMoveTool(HandleTool):
     def on_button_release(self, event):
         # Create new transition if pull beginning at port occurred
         if self._new_connection:
-            drop_item = self._get_drop_item((event.x, event.y))
-            gap_helper.create_new_connection(self._start_state,
-                                             self._new_connection.from_port,
-                                             self._new_connection.to_port,
-                                             drop_state=drop_item)
+            # drop_item = self._get_drop_item((event.x, event.y))
+            gap_helper.create_new_connection(self._new_connection.from_port,
+                                             self._new_connection.to_port)
 
             # remove placeholder from canvas
             self._new_connection.remove_connection_from_ports()
