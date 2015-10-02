@@ -135,8 +135,8 @@ class Transition(Observable, yaml.YAMLObject):
 
         valid, message = self._check_validity()
         if not valid:
-            self._from_state = old_to_state
-            self._from_outcome = old_to_outcome
+            self._to_state = old_to_state
+            self._to_outcome = old_to_outcome
             raise ValueError("The transition target could not be changed: {0}".format(message))
 
     @property
