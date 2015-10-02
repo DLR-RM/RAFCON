@@ -216,7 +216,7 @@ class HandleMoveTool(HandleTool):
         self._last_hovered_state = None
         self._glue_distance = .5
 
-        self._active_connection_view = None
+        self._active_connection_v = None
         self._active_connection_view_handle = None
         self._start_port = None  # Port where connection view pull starts
         self._check_port = None  # Port of connection view that is not pulled
@@ -232,7 +232,7 @@ class HandleMoveTool(HandleTool):
             # what is the connections other end)
             if handle is item.handles()[1] or handle is item.handles()[len(item.handles()) - 2]:
                 return False
-            self._active_connection_view = item
+            self._active_connection_v = item
             self._active_connection_view_handle = handle
             if handle is item.from_handle():
                 self._start_port = item.from_port
@@ -267,6 +267,11 @@ class HandleMoveTool(HandleTool):
             return True
 
     def on_button_release(self, event):
+
+        handle = self._active_connection_view_handle
+        connection_v = self._active_connection_v
+        handle_is_waypoint = connection_v and handle not in connection_v.end_handles()
+
         # Create new transition if pull beginning at port occurred
         if self._new_connection:
             # drop_item = self._get_drop_item((event.x, event.y))
@@ -278,23 +283,22 @@ class HandleMoveTool(HandleTool):
             self.view.canvas.remove(self._new_connection)
 
         # if connection has been pulled to another port, update port
-        if self._last_active_port is not self._start_port:
-            item = self._active_connection_view
-            handle = self._active_connection_view_handle
-            if isinstance(item, TransitionView) and handle in item.end_handles():
-                self._handle_transition_view_change(item, handle)
-            elif isinstance(item, DataFlowView) and handle in item.end_handles():
-                self._handle_data_flow_view_change(item, handle)
-        # if connection has been put back to original position, reset port
-        elif (self._last_active_port is self._start_port and self._active_connection_view and
-                self._active_connection_view_handle in self._active_connection_view.end_handles()):
-            item = self._active_connection_view
-            handle = self._active_connection_view_handle
-            self._handle_reset_ports(item, handle, self._start_port.parent)
+        elif self._last_active_port and self._last_active_port is not self._start_port and not handle_is_waypoint:
+            if isinstance(connection_v, TransitionView):
+                self._handle_transition_view_change(connection_v, handle)
+            elif isinstance(connection_v, DataFlowView):
+                self._handle_data_flow_view_change(connection_v, handle)
+        # if connection has been put back to original position or is released on empty space, reset the connection
+        elif (not self._last_active_port or
+              self._last_active_port is self._start_port and connection_v) and not handle_is_waypoint:
+            if isinstance(connection_v, TransitionView):
+                self._reset_transition(connection_v, handle, self._start_port.parent)
+            elif isinstance(connection_v, DataFlowView):
+                self._reset_data_flow(connection_v, handle, self._start_port.parent)
 
-        if isinstance(self._active_connection_view, TransitionView):
-            gap_helper.update_transition_waypoints(self._graphical_editor_view, self._active_connection_view,
-                                                   self._waypoint_list)
+        # Check, whether a transition waypoint was moved
+        if isinstance(connection_v, TransitionView):
+            gap_helper.update_transition_waypoints(self._graphical_editor_view, connection_v, self._waypoint_list)
 
         if isinstance(self.grabbed_item, (StateView, NameView)):
 
@@ -318,7 +322,7 @@ class HandleMoveTool(HandleTool):
         self._start_state = None
         self._start_width = None
         self._start_height = None
-        self._active_connection_view = None
+        self._active_connection_v = None
         self._active_connection_view_handle = None
         self._waypoint_list = None
         self._glue_distance = 0
@@ -442,7 +446,7 @@ class HandleMoveTool(HandleTool):
                 data_flow.modify_target(to_state_id, to_port_id)
             except ValueError as e:
                 logger.error(e)
-                self._handle_reset_ports(data_flow_v, handle, start_parent)
+                self._reset_data_flow(data_flow_v, handle, start_parent)
         else:
             from_state_id = last_active_port_parent_state.state_id
             from_port_id = self._last_active_port.port_id
@@ -451,7 +455,7 @@ class HandleMoveTool(HandleTool):
                 data_flow.modify_origin(from_state_id, from_port_id)
             except ValueError as e:
                 logger.error(e)
-                self._handle_reset_ports(data_flow_v, handle, start_parent)
+                self._reset_data_flow(data_flow_v, handle, start_parent)
 
     def _handle_transition_view_change(self, transition_v, handle):
         """Handle the change of a transition origin or target modification
@@ -477,7 +481,7 @@ class HandleMoveTool(HandleTool):
                 transition.modify_target(to_state_id, to_outcome_id)
             except ValueError as e:
                 logger.error(e)
-                self._handle_reset_ports(transition_v, handle, start_parent)
+                self._reset_transition(transition_v, handle, start_parent)
         else:
             if isinstance(self._last_active_port, IncomeView):
                 from_state_id = None
@@ -490,33 +494,48 @@ class HandleMoveTool(HandleTool):
                 transition.modify_origin(from_state_id, from_outcome_id)
             except ValueError as e:
                 logger.error(e)
-                self._handle_reset_ports(transition_v, handle, start_parent)
+                self._reset_transition(transition_v, handle, start_parent)
 
-    def _handle_reset_ports(self, connection, handle, start_parent):
+    def _reset_transition(self, transition_v, handle, start_parent):
+        """Reset a transition that has been modified
 
-        if handle not in connection.handles():
+        :param transition_v: The view of the modified transition
+        :param handle: The handle of the transition that has been modified
+        :param start_parent: The parent state of the modified transition
+        """
+        if handle not in transition_v.handles():
             return
 
-        self.disconnect_last_active_port(handle, connection)
-        self.view.canvas.disconnect_item(connection, handle)
+        self.disconnect_last_active_port(handle, transition_v)
+        self.view.canvas.disconnect_item(transition_v, handle)
 
-        if isinstance(connection, TransitionView):
-            start_outcome_id = None
-            if isinstance(self._start_port, OutcomeView):
-                start_outcome_id = self._start_port.outcome_id
+        if isinstance(self._start_port, OutcomeView):
+            start_outcome_id = self._start_port.outcome_id
+            start_parent.connect_to_outcome(start_outcome_id, transition_v, handle)
+        else:
+            start_parent.connect_to_income(transition_v, handle)
 
-            if start_outcome_id is None:
-                start_parent.connect_to_income(connection, handle)
-            else:
-                start_parent.connect_to_outcome(start_outcome_id, connection, handle)
-        elif isinstance(connection, DataFlowView):
-            if isinstance(start_parent, StateView):
-                if isinstance(self._start_port, InputPortView):
-                    start_parent.connect_to_input_port(self._start_port.port_id, connection, handle)
-                if isinstance(self._start_port, OutputPortView):
-                    start_parent.connect_to_output_port(self._start_port.port_id, connection, handle)
-                if isinstance(self._start_port, ScopedVariablePortView):
-                    start_parent.connect_to_scoped_variable_port(self._start_port.port_id, connection, handle)
+        self.view.canvas.update()
+
+    def _reset_data_flow(self, data_flow_v, handle, start_parent):
+        """Reset a data flow that has been modified
+
+        :param data_flow_v: The view of the modified data flow
+        :param handle: The handle of the data flow that has been modified
+        :param start_parent: The parent state of the modified data flow
+        """
+        if handle not in data_flow_v.handles():
+            return
+
+        self.disconnect_last_active_port(handle, data_flow_v)
+        self.view.canvas.disconnect_item(data_flow_v, handle)
+
+        if isinstance(self._start_port, InputPortView):
+            start_parent.connect_to_input_port(self._start_port.port_id, data_flow_v, handle)
+        elif isinstance(self._start_port, OutputPortView):
+            start_parent.connect_to_output_port(self._start_port.port_id, data_flow_v, handle)
+        elif isinstance(self._start_port, ScopedVariablePortView):
+            start_parent.connect_to_scoped_variable_port(self._start_port.port_id, data_flow_v, handle)
 
         self.view.canvas.update()
 
