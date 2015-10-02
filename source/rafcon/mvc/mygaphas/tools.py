@@ -250,21 +250,8 @@ class HandleMoveTool(HandleTool):
             self._start_width = item.width
             self._start_height = item.height
 
-        if handle:
-            # Deselect all items unless CTRL or SHIFT is pressed
-            # or the item is already selected.
-            if not (event.state & (gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
-                    or view.hovered_item in view.selected_items):
-                del view.selected_items
-
-            view.hovered_item = item
-            view.focused_item = item
-
-            self.motion_handle = None
-
-            self.grab_handle(item, handle)
-
-            return True
+        # Select handle
+        return super(HandleMoveTool, self).on_button_press(event)
 
     def on_button_release(self, event):
 
@@ -410,7 +397,9 @@ class HandleMoveTool(HandleTool):
                     self._child_resize = True
                     item.resize_all_children(old_size)
             elif isinstance(item, StateView):
-                self.motion_handle.move(pos, 0.)
+                # Move handles only with ctrl modifier clicked
+                if event.state & gtk.gdk.CONTROL_MASK:
+                    self.motion_handle.move(pos, 0.)
             # All other handles
             else:
                 self.motion_handle.move(pos, 5.0)
