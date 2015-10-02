@@ -499,6 +499,10 @@ class StateTransitionsListController(ExtendedController):
     @ExtendedController.observe("change_root_state_type", after=True)
     @ExtendedController.observe("change_state_type", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+        # The method causing the change raised an exception, thus nothing was changed
+        if 'result' in info['kwargs']:
+            if isinstance(info['kwargs']['result'], str) and "CRASH" in info['kwargs']['result']:
+                return
         # self.notification_logs(model, prop_name, info)
         if self.no_update and info.method_name in ["change_state_type" and "change_root_state_type"]:
             # print "DO_UNLOCK TRANSITION WIDGET"
