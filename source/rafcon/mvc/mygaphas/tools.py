@@ -421,60 +421,37 @@ class HandleMoveTool(HandleTool):
             self._last_hovered_state = item_below
             self._glue_distance = item_below.port_side_size / 2.
 
-    def _handle_data_flow_view_change(self, item, handle):
+    def _handle_data_flow_view_change(self, data_flow_v, handle):
+        """Handle the change of a data flow origin or target modification
 
-        def is_output_port(port):
-            return isinstance(port, OutputPortView) or isinstance(port, ScopedVariablePortView)
+        The method changes the origin or target of an already existing data flow.
 
-        def is_input_port(port):
-            return isinstance(port, InputPortView) or isinstance(port, ScopedVariablePortView)
-
+        :param data_flow_v: The data flow view that was changed
+        :param handle: The handle of the changed port
+        """
         start_parent = self._start_port.parent
-        last_parent = None
-        if self._last_active_port:
-            last_parent = self._last_active_port.parent
+        last_active_port_parent_state = self._last_active_port.parent.model.state
+        modify_target = self._check_port == data_flow_v.from_port
+        data_flow = data_flow_v.model.data_flow
 
-        # Connection changed: input-to-input to input-to-input
-        if (is_input_port(self._check_port) and
-                is_input_port(self._start_port) and
-                is_input_port(self._last_active_port)):
-            self._handle_data_flow_change(item, start_parent, last_parent, iti_to_iti=True)
-        # Connection changed: input-to-input to output-to-input
-        elif (is_input_port(self._check_port) and
-                is_input_port(self._start_port) and
-                is_output_port(self._last_active_port)):
-            self._handle_data_flow_change(item, start_parent, last_parent, iti_to_oti=True)
-        # Connection changed: output-to-input to input-to-input
-        elif (is_input_port(self._check_port) and
-                is_output_port(self._start_port) and
-                is_input_port(self._last_active_port)):
-            self._handle_data_flow_change(item, start_parent, last_parent, oti_to_iti=True)
-        # Connection changed: output-to-input to output-to-input
-        elif ((is_output_port(self._check_port) and
-                is_input_port(self._start_port) and
-                is_input_port(self._last_active_port)) or
-                (is_input_port(self._check_port) and
-                    is_output_port(self._start_port) and
-                    is_output_port(self._last_active_port))):
-            self._handle_data_flow_change(item, start_parent, last_parent, oti_to_oti=True)
-        # Connection changed: output-to-input to output-to-output
-        elif (is_output_port(self._check_port) and
-                is_input_port(self._start_port) and
-                is_output_port(self._last_active_port)):
-            self._handle_data_flow_change(item, start_parent, last_parent, oti_to_oto=True)
-        # Connection changed: output-to-output to output-to-input
-        elif (is_output_port(self._check_port) and
-                is_output_port(self._start_port) and
-                is_input_port(self._last_active_port)):
-            self._handle_data_flow_change(item, start_parent, last_parent, oto_to_oti=True)
-        # Connection changed: output-to-output to output-to-output
-        elif (is_output_port(self._check_port) and
-                is_output_port(self._start_port) and
-                is_output_port(self._last_active_port)):
-            self._handle_data_flow_change(item, start_parent, last_parent, oto_to_oto=True)
-        # Everything else: Reset to original position
+        if modify_target:
+            to_state_id = last_active_port_parent_state.state_id
+            to_port_id = self._last_active_port.port_id
+
+            try:
+                data_flow.modify_target(to_state_id, to_port_id)
+            except ValueError as e:
+                logger.error(e)
+                self._handle_reset_ports(data_flow_v, handle, start_parent)
         else:
-            self._handle_reset_ports(item, handle, start_parent)
+            from_state_id = last_active_port_parent_state.state_id
+            from_port_id = self._last_active_port.port_id
+
+            try:
+                data_flow.modify_origin(from_state_id, from_port_id)
+            except ValueError as e:
+                logger.error(e)
+                self._handle_reset_ports(data_flow_v, handle, start_parent)
 
     def _handle_transition_view_change(self, transition_v, handle):
         """Handle the change of a transition origin or target modification
@@ -485,115 +462,35 @@ class HandleMoveTool(HandleTool):
         :param handle: The handle of the changed port
         """
         start_parent = self._start_port.parent
-
-        # The reconnection of the transition was aborted
-        if not self._last_active_port:
-            self._handle_reset_ports(transition_v, handle, start_parent)
-            return
-
-        # No change of transition
-        if self._last_active_port == self._start_port:
-            self._handle_reset_ports(transition_v, handle, start_parent)
-            return
-
-        last_parent_state_m = self._last_active_port.parent.model
+        last_active_port_parent_state = self._last_active_port.parent.model.state
         modify_target = self._check_port == transition_v.from_port
-        transition_m = transition_v.model
+        transition = transition_v.model.transition
 
         if modify_target:
-            to_state_id = last_parent_state_m.state.state_id
+            to_state_id = last_active_port_parent_state.state_id
             if isinstance(self._last_active_port, IncomeView):
                 to_outcome_id = None
             else:
                 to_outcome_id = self._last_active_port.outcome_id
 
             try:
-                transition_m.transition.modify_target(to_state_id, to_outcome_id)
+                transition.modify_target(to_state_id, to_outcome_id)
             except ValueError as e:
                 logger.error(e)
-            self._handle_reset_ports(transition_v, handle, start_parent)
+                self._handle_reset_ports(transition_v, handle, start_parent)
         else:
             if isinstance(self._last_active_port, IncomeView):
                 from_state_id = None
                 from_outcome_id = None
             else:
-                from_state_id = last_parent_state_m.state.state_id
+                from_state_id = last_active_port_parent_state.state_id
                 from_outcome_id = self._last_active_port.outcome_id
 
             try:
-                transition_m.transition.modify_origin(from_state_id, from_outcome_id)
+                transition.modify_origin(from_state_id, from_outcome_id)
             except ValueError as e:
                 logger.error(e)
                 self._handle_reset_ports(transition_v, handle, start_parent)
-
-    def _handle_data_flow_change(self, item, start_parent, last_parent, iti_to_iti=False, iti_to_oti=False,
-                                 oti_to_iti=False, oti_to_oti=False, oti_to_oto=False, oto_to_oti=False,
-                                 oto_to_oto=False):
-        if last_parent is None:
-            return
-        if not gap_helper.assert_exactly_one_true([iti_to_iti, iti_to_oti, oti_to_iti, oti_to_oti, oti_to_oto,
-                                                   oto_to_oti, oto_to_oto]):
-            return
-
-        check = self._check_port
-        last = self._last_active_port
-
-        port_moved = None
-        if check is item.from_port:
-            port_moved = PortMoved.TO
-        elif check is item.to_port:
-            port_moved = PortMoved.FROM
-
-        def reset_handle():
-            if port_moved is PortMoved.TO:
-                self._handle_reset_ports(item, item.to_handle(), start_parent)
-            elif port_moved is PortMoved.FROM:
-                self._handle_reset_ports(item, item.from_handle(), start_parent)
-
-        if port_moved is PortMoved.TO:
-            # If other port in same parent
-            if start_parent is last_parent and (iti_to_iti or oti_to_oti or oto_to_oto):
-                item.model.data_flow.to_key = last.port_id
-            # If other port not in same parent
-            elif start_parent is not last_parent and (iti_to_iti or oti_to_oti or oti_to_oto or oto_to_oti):
-                # Check if InputPortView (not at ScopedVariable) is already connected
-                if isinstance(last, InputPortView) and last.has_incoming_connection():
-                    reset_handle()
-                    return
-                # Only connect output to output if to_port is in parent of from_port parent
-                elif oti_to_oto and last_parent is not self.get_parents_parent_for_port(item.from_port):
-                    reset_handle()
-                    return
-                to_state_id = gap_helper.get_state_id_for_port(last)
-                to_key = last.port_id
-                item.model.data_flow.modify_target(to_state_id, to_key)
-            else:
-                reset_handle()
-                return
-        elif port_moved is PortMoved.FROM:
-            # If other port in same parent
-            if start_parent is last_parent and (iti_to_iti or oti_to_oti or oto_to_oto):
-                item.model.data_flow.from_key = last.port_id
-            # If other port not in same parent
-            elif start_parent is not last_parent and (iti_to_oti or oti_to_iti or oti_to_oti or oto_to_oto):
-                # Prevent to connect input from state in same hierarchy or below
-                if oti_to_iti and last_parent is not self.get_parents_parent_for_port(item.to_port):
-                    reset_handle()
-                    return
-                # Prevent to connect output of parent to input of child
-                elif oti_to_oti and last_parent is self.get_parents_parent_for_port(item.to_port):
-                    reset_handle()
-                    return
-                # Prevent to connect output with output of same state
-                elif oto_to_oto and last_parent is item.to_port.parent:
-                    reset_handle()
-                    return
-                from_state_id = gap_helper.get_state_id_for_port(last)
-                from_key = last.port_id
-                item.model.data_flow.modify_origin(from_state_id, from_key)
-            else:
-                reset_handle()
-                return
 
     def _handle_reset_ports(self, connection, handle, start_parent):
 
