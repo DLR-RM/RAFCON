@@ -215,6 +215,11 @@ class GraphicalEditorController(ExtendedController):
 
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
+
+            # The method causing the change raised an exception, thus nothing was changed
+            if isinstance(result, str) and "CRASH" in result:
+                return
+
             if method_name == 'add_state':
                 new_state = arguments[1]
                 new_state_m = model.states[new_state.state_id]
@@ -299,7 +304,7 @@ class GraphicalEditorController(ExtendedController):
                     if output_port_v.port_id == arguments[1]:
                         state_v.remove_output_port(output_port_v)
                         self.canvas.request_update(state_v, matrix=False)
-            elif method_name == 'change_data_type':
+            elif method_name in ['data_type', 'change_data_type']:
                 pass
             elif method_name == 'default_value':
                 pass
@@ -433,7 +438,7 @@ class GraphicalEditorController(ExtendedController):
     @staticmethod
     def _extract_info_data(info):
         if info['method_name'] in ['state_change', 'input_data_port_change', 'output_data_port_change',
-                                   'scoped_variable_change', 'outcome_change']:
+                                   'scoped_variable_change', 'outcome_change', 'transition_change', 'data_flow_change']:
             if 'info' in info:
                 info = info['info']
             elif 'kwargs' in info:
