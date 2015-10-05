@@ -17,11 +17,9 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 
-def setup_logger(logging_view):
+def setup_logger():
     import sys
     # Set the views for the loggers
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -41,8 +39,7 @@ def run_empty_statemachine():
 
     # setup logging view first
     logging_view = LoggingView()
-    setup_logger(logging_view)
-    setup_logger(logging_view)
+    setup_logger()
     logger = log.get_logger("turtle demo")
 
     home_path = os.path.join(os.path.expanduser('~'), '.rafcon')

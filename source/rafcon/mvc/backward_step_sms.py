@@ -19,11 +19,6 @@ import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
 
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
-
-
 def create_models():
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
@@ -49,7 +44,6 @@ def run_sm():
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     # setup logging view first
     logging_view = LoggingView()
-    setup_logger(logging_view)
 
     rafcon.statemachine.singleton.library_manager.initialize()
 

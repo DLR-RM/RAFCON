@@ -24,12 +24,8 @@ from rafcon.statemachine.config import global_config
 from rafcon.statemachine.states.library_state import LibraryState
 
 
-def setup_logger(logging_view):
+def setup_logger():
     import sys
-    # Set the views for the loggers
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
-
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
@@ -153,7 +149,7 @@ def run_turtle_demo():
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     # setup logging view first
     logging_view = LoggingView()
-    setup_logger(logging_view)
+    setup_logger()
     logger = log.get_logger("turtle demo")
 
     home_path = os.path.join(os.path.expanduser('~'), '.config/rafcon')

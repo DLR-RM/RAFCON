@@ -34,11 +34,9 @@ if global_net_config.get_config_value("NETWORK_CONNECTIONS"):
     from rafcon.network.singleton import network_connections
 
 
-def setup_logger(logging_view):
+def setup_logger():
     import sys
     # Set the views for the loggers
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -80,7 +78,7 @@ def config_path(path):
 if __name__ == '__main__':
     # setup logging view first
     logging_view = LoggingView()
-    setup_logger(logging_view)
+    setup_logger()
     # from rafcon.utils import log
     logger = log.get_logger("start")
     logger.info("RAFCON launcher")

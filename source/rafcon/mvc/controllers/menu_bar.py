@@ -338,8 +338,7 @@ class MenuBarController(ExtendedController):
         # glib.idle_add(rafcon.statemachine.config.global_config.save_configuration)
         # glib.idle_add(rafcon.mvc.config.global_gui_config.save_configuration)
         self.logging_view.quit_flag = True
-        glib.idle_add(log.debug_filter.set_logging_test_view, None)
-        glib.idle_add(log.error_filter.set_logging_test_view, None)
+        glib.idle_add(log.unregister_logging_view, 'main')
         if reactor.running:
             glib.idle_add(reactor.stop)
 

@@ -29,11 +29,6 @@ def check_requirements():
     return
 
 
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
-
-
 def create_models(*args, **kargs):
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
@@ -118,7 +113,6 @@ if __name__ == '__main__':
     #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
     #setup_logger(logging_view['main_frame'])
     logging_view = LoggingView()
-    setup_logger(logging_view)
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)

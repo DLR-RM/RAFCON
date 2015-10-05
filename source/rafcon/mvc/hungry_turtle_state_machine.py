@@ -14,11 +14,6 @@ import rafcon.mvc.singleton
 import gobject
 
 
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
-
-
 def create_models():
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
@@ -66,7 +61,6 @@ def clean_data_flows_ids(container_state):
 
 def run_turtle_demo():
     logging_view = LoggingView()
-    setup_logger(logging_view)
     rafcon.statemachine.singleton.library_manager.initialize()
     # set base path of global storage
     rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/hungry_turtle_demo"
