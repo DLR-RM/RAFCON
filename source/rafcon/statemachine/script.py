@@ -13,16 +13,19 @@ import imp
 import sys
 import yaml
 from gtkmvc import Observable
-from enum import Enum
 
 from rafcon.statemachine.id_generator import *
 import rafcon.statemachine.singleton
+from rafcon.utils.config import read_file
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
 
 
-ScriptType = Enum('SCRIPT_TYPE', 'EXECUTION CONTAINER LIBRARY')
+DEFAULT_SCRIPT_FILE = "default_script.py"
+
+DEFAULT_SCRIPT = read_file(os.path.dirname(__file__), DEFAULT_SCRIPT_FILE)
+
 
 class Script(Observable, yaml.YAMLObject):
 
@@ -34,39 +37,13 @@ class Script(Observable, yaml.YAMLObject):
     :ivar filename: the full name of the script file
     :ivar _compiled_module: the compiled module
     :ivar _script_id: the id of the script
-    :ivar script_type: the type of the script i.e. Execution or Container
     :ivar check_path: a flag to indicate if the path should be checked for existence
 
     """
 
-    DEFAULT_SCRIPT_EXECUTION = """
-
-def execute(self, inputs, outputs, gvm):
-    self.logger.debug("Hello world")
-    return 0
-
-"""
-
-    DEFAULT_SCRIPT_CONTAINER = """
-
-###########################################################
-# Container States do not have a script
-###########################################################
-
-"""
-
-    DEFAULT_SCRIPT_LIBRARY = """
-
-###########################################################
-# Do not add anything here, as it won't be executed anyway!
-# For further information please refer to the API.
-###########################################################
-
-"""
-
     yaml_tag = u'!Script'
 
-    def __init__(self, path=None, filename=None, script_type=None, check_path=True, state=None):
+    def __init__(self, path=None, filename=None, check_path=True, state=None):
 
         Observable.__init__(self)
 
@@ -75,12 +52,8 @@ def execute(self, inputs, outputs, gvm):
         self._compiled_module = None
         self._script_id = generate_script_id()
         self._state = state
-        if script_type == ScriptType.EXECUTION:
-            self.script = Script.DEFAULT_SCRIPT_EXECUTION
-        elif script_type == ScriptType.LIBRARY:
-            self.script = Script.DEFAULT_SCRIPT_LIBRARY
-        else:
-            self.script = Script.DEFAULT_SCRIPT_CONTAINER
+        self.script = DEFAULT_SCRIPT
+
         if path is None:
             self._path = os.path.join(DEFAULT_SCRIPT_PATH, state.get_path())
             if not os.path.exists(self._path):
