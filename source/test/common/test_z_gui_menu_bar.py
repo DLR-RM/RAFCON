@@ -19,7 +19,6 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 
 # singleton elements
 import rafcon.mvc.singleton
@@ -38,11 +37,6 @@ def setup_module(module):
 
     library_paths["ros"] = join(rafcon.__path__[0] + "/..", "test_scripts", "ros_libraries")
     library_paths["turtle_libraries"] = join(rafcon.__path__[0] + "/..", "test_scripts", "turtle_libraries")
-
-
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
 
 def create_models(*args, **kargs):
@@ -305,16 +299,12 @@ def test_gui(caplog):
     os.chdir(test_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
-    #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
-    #setup_logger(logging_view['main_frame'])
-    logging_view = LoggingView()
-    setup_logger(logging_view)
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 

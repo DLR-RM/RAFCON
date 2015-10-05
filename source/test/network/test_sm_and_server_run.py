@@ -173,8 +173,6 @@ def start_rafcon_server(name, q, execution_signal_queue):
     # initialize the logging view
     os.chdir("../../rafcon_server/mvc/")
     debug_view = DebugView()
-    log.debug_filter.set_logging_test_view(debug_view)
-    log.error_filter.set_logging_test_view(debug_view)
 
     rafcon.statemachine.singleton.library_manager.initialize()
 

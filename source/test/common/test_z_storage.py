@@ -100,11 +100,6 @@ def create_models(*args, **kargs):
     return logger, ctr_state, sm_m, state_dict
 
 
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
-
-
 def on_save_activate(state_machine_m, logger):
         if state_machine_m is None:
             return
@@ -220,9 +215,6 @@ def test_storage_without_gui(caplog):
     with_gui=False
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    # logging_view = LoggingView()
-    # setup_logger(logging_view)
-    # time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
@@ -242,9 +234,6 @@ def _test_storage_with_gui(caplog):
     os.chdir(rafcon.__path__[0] + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    # logging_view = LoggingView()
-    # setup_logger(logging_view)
-    # time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"

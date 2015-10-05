@@ -6,7 +6,6 @@ import gtk
 from rafcon.utils import log
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 from rafcon.mvc.models import GlobalVariableManagerModel
 import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
@@ -60,7 +59,6 @@ def clean_data_flows_ids(container_state):
 
 
 def run_turtle_demo():
-    logging_view = LoggingView()
     rafcon.statemachine.singleton.library_manager.initialize()
     # set base path of global storage
     rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/hungry_turtle_demo"
@@ -74,7 +72,7 @@ def run_turtle_demo():
 
     rafcon.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 

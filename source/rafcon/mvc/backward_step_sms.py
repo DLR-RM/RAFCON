@@ -12,7 +12,6 @@ import signal
 
 from rafcon.utils import log
 from rafcon.mvc.controllers import MainWindowController
-from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.mvc.models import GlobalVariableManagerModel
 import rafcon.statemachine.singleton
@@ -43,7 +42,6 @@ def run_sm():
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     # setup logging view first
-    logging_view = LoggingView()
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
@@ -75,7 +73,7 @@ def run_sm():
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_library_test")
 
     [logger, gvm_model] = create_models()
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 

@@ -1308,11 +1308,6 @@ def test_data_flow_property_changes_history(caplog):
     test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
-
-
 def test_type_changes_without_gui(caplog):
 
     with_gui = False
@@ -1323,8 +1318,6 @@ def test_type_changes_without_gui(caplog):
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
-    logging_view = LoggingView()
-    setup_logger(logging_view)
     # time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
@@ -1358,8 +1351,6 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
-    logging_view = LoggingView()
-    setup_logger(logging_view)
     time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
@@ -1371,7 +1362,7 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
             test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     print "initialize MainWindow"
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
 
     # load the meta data for the state machine
     test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()

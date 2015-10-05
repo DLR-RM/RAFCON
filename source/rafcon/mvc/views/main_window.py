@@ -1,7 +1,7 @@
 import gtk
 from gtkmvc import View
 from rafcon.mvc.views import GlobalVariableEditorView, StateMachineTreeView, LibraryTreeView, MenuBarView, \
-    ToolBarView, StateMachineHistoryView, TopToolBarView, ExecutionHistoryView
+    ToolBarView, StateMachineHistoryView, TopToolBarView, ExecutionHistoryView, LoggingView
 from rafcon.mvc.views.states_editor import StatesEditorView
 from rafcon.mvc.views.state_machines_editor import StateMachinesEditorView
 from rafcon.mvc.views.network_connections import NetworkConnectionsView
@@ -13,12 +13,12 @@ class MainWindowView(View):
     builder = './glade/main_window.glade'
     top = 'main_window'
 
-    def __init__(self, logging_view):
+    def __init__(self):
         View.__init__(self)
 
         # self['main_window'].set_decorated(False)
 
-        self.logging_view = logging_view
+        self.logging_view = LoggingView()
 
         # insert library-tree
         self.library_tree = LibraryTreeView()
@@ -153,7 +153,7 @@ class MainWindowView(View):
         self['button_show_warning'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True))
         self['button_show_error'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True))
 
-        logging_view.update_filtered_buffer()
+        self.logging_view.update_filtered_buffer()
 
     def create_button_label(self, icon):
         label = gtk.Label()

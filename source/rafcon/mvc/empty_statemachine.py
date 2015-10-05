@@ -6,7 +6,6 @@ import signal
 
 from rafcon.utils import log
 from rafcon.mvc.controllers import MainWindowController
-from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
@@ -38,7 +37,6 @@ def run_empty_statemachine():
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
 
     # setup logging view first
-    logging_view = LoggingView()
     setup_logger()
     logger = log.get_logger("turtle demo")
 
@@ -55,7 +53,7 @@ def run_empty_statemachine():
     state_machine = StateMachine(root_state)
 
     rafcon.statemachine.singleton.library_manager.initialize()
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 

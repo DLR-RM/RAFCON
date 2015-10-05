@@ -22,7 +22,6 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
 
 from rafcon.mvc.controllers import MainWindowController
-from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.main_window import MainWindowView
 
 import rafcon.mvc.singleton as mvc_singletons
@@ -76,8 +75,6 @@ def config_path(path):
 
 
 if __name__ == '__main__':
-    # setup logging view first
-    logging_view = LoggingView()
     setup_logger()
     # from rafcon.utils import log
     logger = log.get_logger("start")
@@ -142,7 +139,7 @@ if __name__ == '__main__':
     sm_singletons.global_storage.base_path = "/tmp"
 
     # Create the GUI
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
 
     if setup_config['sm_paths']:
         storage = StateMachineStorage()

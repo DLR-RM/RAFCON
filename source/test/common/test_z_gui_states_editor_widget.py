@@ -17,7 +17,6 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.mvc.models import GlobalVariableManagerModel, ContainerStateModel
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 
 # singleton elements
 import rafcon.mvc.singleton
@@ -121,11 +120,6 @@ def create_models(*args, **kargs):
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
     return logger, ctr_state, global_var_manager_model, sm_m, state_dict
-
-
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
 
 def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
@@ -321,8 +315,6 @@ def test_state_type_change_test(with_gui, caplog):
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
-    logging_view = LoggingView()
-    setup_logger(logging_view)
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
@@ -334,7 +326,7 @@ def test_state_type_change_test(with_gui, caplog):
 
     main_window_controller = None
     if with_gui:
-        main_window_view = MainWindowView(logging_view)
+        main_window_view = MainWindowView()
 
         # load the meta data for the state machine
         test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()

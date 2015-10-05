@@ -13,7 +13,6 @@ from rafcon.utils import log
 from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 
 # singleton elements
 import rafcon.mvc.singleton
@@ -42,11 +41,6 @@ def create_models():
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
     return logger, global_var_manager_model
-
-
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
 
 def trigger_gui_signals(*args):
@@ -92,8 +86,6 @@ def test_backward_stepping(caplog):
     os.chdir(test_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    logging_view = LoggingView()
-    setup_logger(logging_view)
 
     logger, gvm_model = create_models()
 
@@ -102,7 +94,7 @@ def test_backward_stepping(caplog):
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
         global_storage.load_statemachine_from_yaml(test_utils.get_test_sm_path("backward_step_barrier_test"))
 
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     if test_utils.sm_manager_model is None:
         test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
