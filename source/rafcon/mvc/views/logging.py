@@ -65,7 +65,7 @@ class LoggingView(View):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color")
         elif 20 < log_level <= 30 and self.warning:
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color")
-        elif 30 < self.error:
+        elif 30 < log_level and self.error:
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color")
         self._lock.release()
 
