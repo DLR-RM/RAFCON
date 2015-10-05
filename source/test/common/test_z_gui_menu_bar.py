@@ -152,10 +152,10 @@ def trigger_gui_signals(*args):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     current_sm_length = len(sm_manager_model.state_machines)
-    print "1:", sm_manager_model.state_machines.keys()
+    # print "1:", sm_manager_model.state_machines.keys()
     first_sm_id = sm_manager_model.state_machines.keys()[0]
     call_gui_callback(menubar_ctrl.on_new_activate, None)
-    print "2:", sm_manager_model.state_machines.keys()
+    # print "2:", sm_manager_model.state_machines.keys()
 
     # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
@@ -164,13 +164,13 @@ def trigger_gui_signals(*args):
     # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
     assert len(sm_manager_model.state_machines) == current_sm_length+2
 
-    print "3:", sm_manager_model.state_machines.keys(), first_sm_id+2
+    # print "3:", sm_manager_model.state_machines.keys(), first_sm_id+2
     sleep_time_short = 1.0
     sm_m = sm_manager_model.state_machines[first_sm_id+2]
     sm_m.history.fake = True
     time.sleep(sleep_time_short)
-    print "focus"
-    time.sleep(5)
+    # print "focus"
+    # time.sleep(5)
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
     sm_manager_model.selected_state_machine_id = first_sm_id+2
@@ -185,27 +185,27 @@ def trigger_gui_signals(*args):
 
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/UEPNNW')
     print "\n\n %s \n\n" % state_m.state.name
-    print "set"
+    # print "set"
     call_gui_callback(sm_m.selection.set, [state_m])
-    time.sleep(3)
-    print "copy"
+    # time.sleep(3)
+    # print "copy"
     # copy the state to clipboard
     call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
-    time.sleep(3)
-    print "set"
+    # time.sleep(3)
+    # print "set"
     # select other state
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
     print state_m.state.states.keys()
     print "\n\n %s \n\n" % state_m.state.name
     call_gui_callback(sm_m.selection.set, [state_m])
-    time.sleep(3)
+    # time.sleep(3)
     old_child_state_count = len(state_m.state.states)
-    print "focus"
+    # print "focus"
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
     page.children()[0].grab_focus()
-    time.sleep(3)
-    print "paste"
+    # time.sleep(3)
+    # print "paste"
     # print dir(page.children()[0]), "\n\n", page.children()[0], "\n\n", page.children()[0].has_focus()
     call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
