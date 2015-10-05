@@ -10,7 +10,7 @@ from rafcon.utils import log
 
 # core elements
 from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -66,7 +66,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
     def print_states(state):
         if hasattr(state, "states"):
             for state_id, child_state in state.states.iteritems():
-                print child_state.get_path(), child_state.script._path
+                print child_state.get_path()
                 print_states(child_state)
     print_states(sm_model.state_machine.root_state)
 
@@ -780,8 +780,8 @@ def test_state_property_changes_history(caplog):
     sm_model.history.redo()
 
     # script(self, script) Script
-    state_dict['Nested'].script = Script(script_type=ScriptType.CONTAINER, state=state_dict['Nested'])
-    state_dict['Nested'].script = Script(script_type=ScriptType.EXECUTION, state=state_dict['Nested'])
+    state_dict['Nested'].script = Script(state=state_dict['Nested'])
+    state_dict['Nested'].script = Script(state=state_dict['Nested'])
     sm_model.history.undo()
     sm_model.history.redo()
 
@@ -1902,4 +1902,4 @@ def trigger_state_type_change_tests(*args):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    pytest.main(['-s',__file__])

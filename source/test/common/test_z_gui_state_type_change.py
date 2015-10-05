@@ -788,4 +788,4 @@ def test_state_type_change_test(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    pytest.main('-s', [__file__])

@@ -19,7 +19,7 @@ def create_hierarchy_state():
     state1.add_input_data_port("data_input_port1", "float")
     state1.add_output_data_port("data_output_port1", "float")
 
-    state2 = HierarchyState("MyFirstHierarchyState", path=rafcon.__path__[0] + "/../test_scripts", filename="hierarchy_state.py")
+    state2 = HierarchyState("MyFirstHierarchyState")
     state2.add_state(state1)
     state2.set_start_state(state1.state_id)
     state2.add_outcome("Container_Outcome", 6)

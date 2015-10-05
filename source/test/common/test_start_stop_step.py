@@ -21,7 +21,7 @@ def return_loop_state_machine():
     state2 = ExecutionState("MySecondState", path=test_utils.TEST_SM_PATH, filename="loop_state2.py")
     state2.add_outcome("FirstOutcome", 3)
 
-    state3 = HierarchyState("MyFirstHierarchyState", path=test_utils.TEST_SM_PATH, filename="hierarchy_state.py")
+    state3 = HierarchyState("MyFirstHierarchyState")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)

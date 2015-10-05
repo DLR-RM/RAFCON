@@ -22,8 +22,7 @@ def create_statemachine():
     input_state1 = state1.add_input_data_port("input_data_port1", "str", "default_value")
     output_state1 = state1.add_output_data_port("output_data_port1", "str")
 
-    state2 = HierarchyState("MyFirstHierarchyState", path=rafcon.__path__[0] + "/../test_scripts",
-                            filename="hierarchy_state.py")
+    state2 = HierarchyState("MyFirstHierarchyState")
     state2.add_state(state1)
     state2.set_start_state(state1.state_id)
     state2.add_outcome("Container_Outcome", 6)

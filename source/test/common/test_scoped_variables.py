@@ -20,8 +20,7 @@ def create_statemachine():
     input2_state1 = state1.add_input_data_port("input_data_port2", "float")
     output_state1 = state1.add_output_data_port("output_data_port1", "float")
 
-    state2 = HierarchyState("scoped_data_hierarchy_state", path=test_utils.TEST_SM_PATH,
-                            filename="scoped_variable_hierarchy_state.py")
+    state2 = HierarchyState("scoped_data_hierarchy_state")
     state2.add_state(state1)
     state2.set_start_state(state1.state_id)
     state2.add_transition(state1.state_id, 0, state2.state_id, 0)

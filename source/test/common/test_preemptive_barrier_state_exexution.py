@@ -21,8 +21,7 @@ def create_preemption_statemachine():
     state2.add_outcome("FirstOutcome", 3)
     input_state2 = state2.add_input_data_port("input_data_port1", "float")
 
-    state3 = PreemptiveConcurrencyState("FirstConcurrencyState", path=rafcon.__path__[0] + "/../test_scripts",
-                                        filename="concurrency_container.py")
+    state3 = PreemptiveConcurrencyState("FirstConcurrencyState")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.add_outcome("State1 preempted", 3)

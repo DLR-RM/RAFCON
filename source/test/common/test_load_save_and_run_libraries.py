@@ -34,7 +34,7 @@ def test_save_libraries(caplog):
     input_state2 = state2.add_input_data_port("data_input_port1", "float")
     output_state2 = state2.add_output_data_port("data_output_port1", "float")
 
-    state3 = HierarchyState("library_hierarchy_state1", path=test_utils.TEST_SM_PATH, filename="library_hierarchy_state.py")
+    state3 = HierarchyState("library_hierarchy_state1")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
@@ -72,8 +72,7 @@ def test_save_libraries(caplog):
 
 def create_hierarchy_state_library_state_machine():
     rafcon.statemachine.singleton.library_manager.initialize()
-    library_container_state = HierarchyState("LibContainerState", path=rafcon.__path__[0] + "/../test_scripts",
-                                             filename="hierarchy_state.py")
+    library_container_state = HierarchyState("LibContainerState")
     lib_state = LibraryState("test_libraries", "hierarchy_library", "0.1", "library_state")
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
@@ -96,8 +95,7 @@ def create_hierarchy_state_library_state_machine():
 
 def create_execution_state_library_state_machine():
     rafcon.statemachine.singleton.library_manager.initialize()
-    library_container_state = HierarchyState("LibContainerState", path=test_utils.TEST_SM_PATH,
-                                             filename="hierarchy_state.py")
+    library_container_state = HierarchyState("LibContainerState")
     lib_state = LibraryState("test_libraries", "execution_library", "0.1", "library_state")
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)

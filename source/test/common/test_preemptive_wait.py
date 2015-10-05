@@ -19,8 +19,7 @@ def create_preemptive_wait_statemachine():
     state2 = ExecutionState("state_2", path=rafcon.__path__[0] + "/../test_scripts", filename="preemptive_wait_test.py")
     state2.add_outcome("FirstOutcome", 3)
 
-    ctr_state = PreemptiveConcurrencyState("FirstConcurrencyState", path=rafcon.__path__[0] + "/../test_scripts",
-                                           filename="concurrency_container.py")
+    ctr_state = PreemptiveConcurrencyState("FirstConcurrencyState")
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_outcome("end", 3)
