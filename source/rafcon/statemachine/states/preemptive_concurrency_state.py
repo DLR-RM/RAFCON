@@ -163,8 +163,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
                                            transitions=None,
                                            data_flows=None,
                                            scoped_variables=dict_representation['scoped_variables'],
-                                           v_checker=None,
-                                           check_path=False)
+                                           v_checker=None)
         try:
             state.description = dict_representation['description']
         except (ValueError, TypeError, KeyError):

@@ -12,7 +12,6 @@ import copy
 from gtkmvc import Observable
 
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
-from rafcon.statemachine.script import Script, ScriptType
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.transition import Transition
 from rafcon.statemachine.outcome import Outcome
@@ -20,7 +19,7 @@ from rafcon.statemachine.data_flow import DataFlow
 from rafcon.statemachine.scope import ScopedData, ScopedVariable
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
-from rafcon.statemachine.singleton import global_storage, state_machine_manager, state_machine_execution_engine
+from rafcon.statemachine.singleton import global_storage, state_machine_execution_engine
 from rafcon.utils.type_helpers import type_inherits_of_type
 from rafcon.utils import log
 logger = log.get_logger(__name__)

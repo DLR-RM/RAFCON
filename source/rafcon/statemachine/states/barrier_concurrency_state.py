@@ -35,8 +35,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
-                 v_checker=None, decider_state=None,
-                 load_from_storage=False):
+                 v_checker=None, decider_state=None, load_from_storage=False):
 
         if not load_from_storage:
             if states is not None and UNIQUE_DECIDER_STATE_ID not in states:
@@ -325,7 +324,6 @@ class BarrierConcurrencyState(ConcurrencyState):
                                         data_flows=None,
                                         scoped_variables=dict_representation['scoped_variables'],
                                         v_checker=None,
-                                        check_path=False,
                                         load_from_storage=True)
         try:
             state.description = dict_representation['description']

@@ -202,7 +202,7 @@ class LibraryState(State):
         output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']
         return LibraryState(library_path, library_name, version, name, state_id, input_data_ports,
-                            output_data_ports, outcomes, check_path=False)
+                            output_data_ports, outcomes)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
