@@ -15,6 +15,7 @@ def read_file(path, filename):
     if os.path.isfile(file_path):
         file_pointer = open(file_path, 'r')
         file_content = file_pointer.read()
+        file_pointer.close()
 
     return file_content
 
