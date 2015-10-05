@@ -12,7 +12,6 @@ logger = log.get_logger(__name__)
 from rafcon.statemachine.data_port import DataPort
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.script import Script
 from rafcon.statemachine.id_generator import *
 
 
@@ -45,7 +44,6 @@ class State(Observable, yaml.YAMLObject):
         self._input_data_ports = {}
         self._output_data_ports = {}
         self._outcomes = {}
-        self._script = None
         # the input data of the state during execution
         self._input_data = {}
         # the output data of the state during execution
@@ -563,17 +561,6 @@ class State(Observable, yaml.YAMLObject):
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- misc functions ---------------------------------------
     # ---------------------------------------------------------------------------------------------
-
-    @Observable.observed
-    def set_script_text(self, new_text):
-        """
-        Sets the text of the script. This function can be overridden to prevent setting the script under certain
-        circumstances.
-        :param new_text: The new text to replace to old text with.
-        :return: Returns True if the script was successfully set.
-        """
-        self.script.script = new_text
-        return True
 
     def change_state_id(self, state_id=None):
         """

@@ -10,7 +10,6 @@
 from gtkmvc import Observable
 
 from rafcon.statemachine.enums import StateExecutionState
-from rafcon.statemachine.script import Script, ScriptType
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.singleton import library_manager
 from rafcon.utils import log
@@ -34,14 +33,12 @@ class LibraryState(State):
 
     def __init__(self, library_path=None, library_name=None, version=None,  # library state specific attributes
                  # the following are the container state specific attributes
-                 name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 path=None, filename=None, check_path=True):
+                 name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None):
 
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
         self.initialized = False
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
-        self.script = Script(path, filename, script_type=ScriptType.LIBRARY, check_path=check_path, state=self)
 
         self._library_path = None
         self.library_path = library_path
@@ -178,19 +175,6 @@ class LibraryState(State):
         else:
             return State.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
 
-    def set_script_text(self, new_text):
-        """
-        Overwrites the set_script_text method of the
-        circumstances.
-        :param new_text: the new text
-        :return:
-        """
-        if self.initialized:
-            logger.error("It is not allowed to set the script text of a library state")
-            return False
-        else:
-            return State.set_script_text(self, new_text)
-
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = {
@@ -223,20 +207,6 @@ class LibraryState(State):
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
-
-    @property
-    def script(self):
-        """Property for the _script field
-
-        """
-        return self._script
-
-    @script.setter
-    @Observable.observed
-    def script(self, script):
-        if not isinstance(script, Script):
-            raise TypeError("script must be of type Script")
-        self._script = script
 
     @property
     def library_path(self):

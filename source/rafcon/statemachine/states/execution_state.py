@@ -15,7 +15,7 @@ from rafcon.statemachine.states.state import State
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateExecutionState
 
 
@@ -32,7 +32,8 @@ class ExecutionState(State):
                  path=None, filename=None, check_path=True):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
-        self.script = Script(path, filename, script_type=ScriptType.EXECUTION, check_path=check_path, state=self)
+        self._script = None
+        self.script = Script(path, filename, check_path=check_path, state=self)
         self.logger = log.get_logger(self.name)
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
@@ -157,3 +158,14 @@ class ExecutionState(State):
         if not isinstance(script, Script):
             raise TypeError("script must be of type Script")
         self._script = script
+
+    @Observable.observed
+    def set_script_text(self, new_text):
+        """
+        Sets the text of the script. This function can be overridden to prevent setting the script under certain
+        circumstances.
+        :param new_text: The new text to replace to old text with.
+        :return: Returns True if the script was successfully set.
+        """
+        self.script.script = new_text
+        return True

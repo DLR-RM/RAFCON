@@ -43,7 +43,7 @@ class ContainerState(State):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, v_checker=None, path=None, filename=None, check_path=True):
+                 scoped_variables=None, v_checker=None):
 
         self._states = {}
         self._transitions = {}
@@ -58,8 +58,6 @@ class ContainerState(State):
         self._child_execution = False
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
-
-        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
         self.scoped_variables = scoped_variables
         self.states = states

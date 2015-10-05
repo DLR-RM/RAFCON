@@ -34,8 +34,7 @@ class HierarchyState(ContainerState):
                  v_checker=None, path=None, filename=None, check_path=True):
 
         ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
-                                transitions, data_flows, start_state_id, scoped_variables, v_checker, path, filename,
-                                check_path=check_path)
+                                transitions, data_flows, start_state_id, scoped_variables, v_checker)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the hierarchy is executed
