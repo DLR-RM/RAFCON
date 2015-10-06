@@ -187,14 +187,6 @@ class ScopedVariableDataFlowView(DataFlowView):
         if self.from_port:
             self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
 
-    def reset_from_port(self):
-        self.relieve_model(self.from_port)
-        super(ScopedVariableDataFlowView, self).reset_from_port()
-
-    def reset_to_port(self):
-        self.relieve_model(self.to_port)
-        super(ScopedVariableDataFlowView, self).reset_to_port()
-
     @property
     def name(self):
         return self._scoped_variable.name
