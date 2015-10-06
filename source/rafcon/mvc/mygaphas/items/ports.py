@@ -2,10 +2,10 @@ from weakref import ref
 from math import pi
 from pango import SCALE, FontDescription
 
+from gaphas.state import observed
 from gaphas.connector import PointPort, Handle
-from gtkmvc.model import Model
 import cairo
-from gtk.gdk import Color, CairoContext
+from gtk.gdk import Color
 
 from rafcon.utils import constants
 from rafcon.utils.geometry import deg2rad
@@ -22,14 +22,9 @@ from rafcon.mvc.mygaphas.utils.enums import SnappedSide, Direction
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
 
-class PortView(Model):
-
-    side = None
-
-    __observables__ = ('side', )
+class PortView(object):
 
     def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
-        Model.__init__(self)
         self.handle = Handle(connectable=True)
         self.port = PointPort(self.handle.pos)
         self._side = None
@@ -66,7 +61,7 @@ class PortView(Model):
         return self._side
 
     @side.setter
-    @Model.setter('side')
+    @observed
     def side(self, side):
         assert isinstance(side, SnappedSide)
         self._side = side

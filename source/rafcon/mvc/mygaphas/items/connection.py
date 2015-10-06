@@ -1,9 +1,9 @@
 from weakref import ref
 from pango import FontDescription, SCALE
 
-from gtkmvc import Observer
 import cairo
-from gtk.gdk import Color, CairoContext
+from gtk.gdk import Color
+from gaphas.state import observers
 
 from rafcon.utils import constants
 
@@ -137,10 +137,9 @@ class DataFlowView(ConnectionView):
         super(DataFlowView, self).draw(context)
 
 
-class ScopedVariableDataFlowView(DataFlowView, Observer):
+class ScopedVariableDataFlowView(DataFlowView):
 
     def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
-        Observer.__init__(self)
         super(ScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level)
 
         self._name_width = 10.
@@ -164,7 +163,6 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
     def from_port(self, port):
         assert isinstance(port, PortView)
         self._from_port = port
-        self.observe_model(port)
         self._head_length = port.port_side_size
         if not self._from_waypoint:
             self._from_waypoint = self.add_perp_waypoint()
@@ -180,7 +178,6 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
     def to_port(self, port):
         assert isinstance(port, PortView)
         self._to_port = port
-        self.observe_model(port)
         self._to_head_length = port.port_side_size
         if not self._to_waypoint:
             self._to_waypoint = self.add_perp_waypoint(begin=False)
@@ -189,14 +186,6 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
             self.canvas.solver.add_constraint(self._to_port_constraint)
         if self.from_port:
             self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
-
-    def reset_from_port(self):
-        self.relieve_model(self.from_port)
-        super(ScopedVariableDataFlowView, self).reset_from_port()
-
-    def reset_to_port(self):
-        self.relieve_model(self.to_port)
-        super(ScopedVariableDataFlowView, self).reset_to_port()
 
     @property
     def name(self):
@@ -250,6 +239,8 @@ class ScopedVariableDataFlowView(DataFlowView, Observer):
             has_connected_port = True
             port_layout = c.create_layout()
             port_layout.set_text(" " + self.from_port.name + " ")
+        else:
+            raise NotImplementedError("Scoped variable cannot draw label when not connected")
         scoped_layout.set_text(" " + self.name + " ")
 
         font_name = constants.FONT_NAMES[0]
@@ -349,6 +340,7 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
     def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
         super(FromScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level, scoped_variable)
+        observers.add(self._to_port_changed_side)
 
     @property
     def connected(self):
@@ -384,9 +376,11 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
                 self._update_label_selection_waypoint(True)
                 # self.add_waypoint((self.to_handle().x + 2 * self._head_length + self._name_width, self.to_handle().y))
 
-    @Observer.observe('side', assign=True)
-    def _to_port_changed_side(self, model, prop_name, info):
-        self._update_label_selection_waypoint(True)
+    def _to_port_changed_side(self, event):
+        func_name = event[0].__name__
+        args = event[1]
+        if func_name == 'side' and args[0] == self.to_port:
+            self._update_label_selection_waypoint(True)
 
     def _update_label_selection_waypoint(self, side_changed=False):
         if not self._name_width_updated or side_changed:
@@ -444,6 +438,7 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
     def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
         super(ToScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level, scoped_variable)
+        observers.add(self._from_port_changed_side)
 
     @property
     def connected(self):
@@ -470,9 +465,11 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
                 self._update_label_selection_waypoint(True)
                 # self.add_waypoint((self.from_handle().x + 2 * self._head_length + self._name_width, self.from_handle().y))
 
-    @Observer.observe('side', assign=True)
-    def _from_port_changed_side(self, model, prop_name, info):
-        self._update_label_selection_waypoint(True)
+    def _from_port_changed_side(self, event):
+        func_name = event[0].__name__
+        args = event[1]
+        if func_name == 'side' and args[0] == self.from_port:
+            self._update_label_selection_waypoint(True)
 
     def _update_label_selection_waypoint(self, side_changed=False):
         if not self._name_width_updated or side_changed:
