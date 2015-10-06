@@ -62,7 +62,6 @@ class PortView():
         return self._side
 
     @side.setter
-    @Model.setter('side')
     @observed
     def side(self, side):
         assert isinstance(side, SnappedSide)
