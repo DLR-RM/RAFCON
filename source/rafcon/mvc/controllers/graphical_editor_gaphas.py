@@ -518,14 +518,14 @@ class GraphicalEditorController(ExtendedController):
         from_port_m = from_state_m.get_data_port_model(from_key)
         to_port_m = to_state_m.get_data_port_model(to_key)
 
-        if isinstance(from_port_m, ScopedVariableModel):
-            new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
-                                                             from_port_m.scoped_variable)
-        elif isinstance(to_port_m, ScopedVariableModel):
-            new_data_flow_v = ToScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
-                                                           to_port_m.scoped_variable)
-        else:
-            new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
+        # if isinstance(from_port_m, ScopedVariableModel):
+        #     new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
+        #                                                      from_port_m.scoped_variable)
+        # elif isinstance(to_port_m, ScopedVariableModel):
+        #     new_data_flow_v = ToScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
+        #                                                    to_port_m.scoped_variable)
+        # else:
+        new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
 
         self.canvas.add(new_data_flow_v, parent_state_v)
 
@@ -771,14 +771,14 @@ class GraphicalEditorController(ExtendedController):
             from_port_m = from_state_m.get_data_port_model(from_key)
             to_port_m = to_state_m.get_data_port_model(to_key)
 
-            if isinstance(from_port_m, ScopedVariableModel):
-                scoped_variable = from_port_m.scoped_variable
-                data_flow_v = FromScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
-            elif isinstance(to_port_m, ScopedVariableModel):
-                scoped_variable = to_port_m.scoped_variable
-                data_flow_v = ToScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
-            else:
-                data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
+            # if isinstance(from_port_m, ScopedVariableModel):
+            #     scoped_variable = from_port_m.scoped_variable
+            #     data_flow_v = FromScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
+            # elif isinstance(to_port_m, ScopedVariableModel):
+            #     scoped_variable = to_port_m.scoped_variable
+            #     data_flow_v = ToScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
+            # else:
+            data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
             self.canvas.add(data_flow_v, parent_state_v)
 
             self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
