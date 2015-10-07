@@ -595,10 +595,8 @@ class ScopedVariablePortView(PortView):
             extents = self._draw_rectangle_path(c, name_size[0], side_length, only_get_extents=True)
 
             port_size = extents[2] - extents[0], extents[3] - extents[1]
-            print "old port size", self.port.width, self.port.height
             self.port.width = port_size[0]
             self.port.height = port_size[1]
-            print "new port size", self.port.width, self.port.height
             self._last_label_size = port_size
             self._last_label_span = name_size[0]
 
