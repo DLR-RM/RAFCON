@@ -9,6 +9,8 @@ from rafcon.mvc.statemachine_helper import StateMachineHelper
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
+from rafcon.mvc.config import global_gui_config
+
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.item import NW
 from gaphas.aspect import HandleFinder, ItemConnectionSink
@@ -214,7 +216,6 @@ class HandleMoveTool(HandleTool):
         self._start_height = None
 
         self._last_hovered_state = None
-        self._glue_distance = .5
 
         self._active_connection_v = None
         self._active_connection_view_handle = None
@@ -312,7 +313,6 @@ class HandleMoveTool(HandleTool):
         self._active_connection_v = None
         self._active_connection_view_handle = None
         self._waypoint_list = None
-        self._glue_distance = 0
         self._last_hovered_state = None
 
         super(HandleMoveTool, self).on_button_release(event)
@@ -379,14 +379,16 @@ class HandleMoveTool(HandleTool):
             if not self.motion_handle:
                 self._set_motion_handle(event)
 
+            snap_distance = self.view.pixel_to_cairo(global_gui_config.get_config_value("PORT_SNAP_DISTANCE", 5))
+
             # If current handle is from_handle of a connection view
             if isinstance(item, ConnectionView) and item.from_handle() is handle:
                 self._get_port_side_size_for_hovered_state(pos)
-                self.check_sink_item(self.motion_handle.move(pos, self._glue_distance), handle, item)
+                self.check_sink_item(self.motion_handle.move(pos, snap_distance), handle, item)
             # If current handle is to_handle of a connection view
             elif isinstance(item, ConnectionView) and item.to_handle() is handle:
                 self._get_port_side_size_for_hovered_state(pos)
-                self.check_sink_item(self.motion_handle.move(pos, self._glue_distance), handle, item)
+                self.check_sink_item(self.motion_handle.move(pos, snap_distance), handle, item)
             elif isinstance(item, TransitionView) and handle not in item.end_handles():
                 self.motion_handle.move(pos, 0.)
             # If current handle is port or corner of a state view (for ports it only works if CONTROL key is pressed)
@@ -412,7 +414,6 @@ class HandleMoveTool(HandleTool):
             item_below = self.view.canvas.get_parent(item_below)
         if isinstance(item_below, StateView) and item_below is not self._last_hovered_state:
             self._last_hovered_state = item_below
-            self._glue_distance = item_below.port_side_size / 2.
 
     def _handle_data_flow_view_change(self, data_flow_v, handle):
         """Handle the change of a data flow origin or target modification
