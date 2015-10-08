@@ -10,6 +10,7 @@ from rafcon.statemachine.transition import Transition
 from rafcon.statemachine.script import Script
 from rafcon.statemachine.states.state import State, DataPort
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
 from rafcon.mvc.models.container_state import ContainerState
@@ -50,7 +51,7 @@ def get_state_tuple(state, state_m=None):
 
     import copy
     # TODO: check this
-    if isinstance(state, ContainerState):
+    if isinstance(state, ContainerState) or isinstance(state, LibraryState):
         script_content = "Dummy Script"
         script = Script(state=state)
     else:
