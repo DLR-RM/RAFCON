@@ -347,6 +347,9 @@ class MainWindowController(ExtendedController):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
         view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").destroy)
+        # hide not usable buttons
+        self.view['button_step_shortcut'].hide()
+        self.view['button_step_backward_shortcut'].hide()
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
@@ -452,6 +455,9 @@ class MainWindowController(ExtendedController):
             logger.info("Statemachine running")
             self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
 
+        self.view['button_step_shortcut'].hide()
+        self.view['button_step_backward_shortcut'].hide()
+
     def on_button_pause_shortcut_toggled(self, widget, event=None):
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.PAUSED:
             self.get_controller("menu_bar_controller").on_pause_activate(None)
@@ -462,6 +468,9 @@ class MainWindowController(ExtendedController):
             logger.info("Statemachine paused")
             self.set_button_active(True, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
 
+        self.view['button_step_shortcut'].hide()
+        self.view['button_step_backward_shortcut'].hide()
+
     def on_button_stop_shortcut_clicked(self, widget, event=None):
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             self.get_controller("menu_bar_controller").on_stop_activate(None)
@@ -469,6 +478,9 @@ class MainWindowController(ExtendedController):
         self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
         self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
         self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+
+        self.view['button_step_shortcut'].hide()
+        self.view['button_step_backward_shortcut'].hide()
 
     def on_button_step_mode_shortcut_toggled(self, widget, event=None):
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STEP:
@@ -479,6 +491,9 @@ class MainWindowController(ExtendedController):
         else:
             logger.info("Statemachine stepping")
             self.set_button_active(True, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+
+        self.view['button_step_shortcut'].show()
+        self.view['button_step_backward_shortcut'].show()
 
     def on_button_step_shortcut_clicked(self, widget, event=None):
         self.get_controller("menu_bar_controller").on_step_activate(None)

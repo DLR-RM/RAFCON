@@ -3,7 +3,7 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.script import Script
 
 # singleton elements
 import rafcon.statemachine.singleton
@@ -29,9 +29,7 @@ def create_concurrency_barrier_state():
     input_state2 = state2.add_input_data_port("input_data_port1", "float")
     output_state2 = state2.add_output_data_port("output_data_port1", "float")
 
-    barrier_state = BarrierConcurrencyState("FirstConcurrencyState", "barrier_state_id",
-                                            path=rafcon.__path__[0] + "/../test_scripts",
-                                            filename="concurrency_container.py")
+    barrier_state = BarrierConcurrencyState("FirstConcurrencyState", "barrier_state_id")
     barrier_state.add_state(state1)
     barrier_state.add_state(state2)
     input1_state3 = barrier_state.add_input_data_port("input_data_port1", "float", 0.1)
@@ -45,7 +43,7 @@ def create_concurrency_barrier_state():
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].name = "decider_state"
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].script = Script(path=rafcon.__path__[0] + "/../test_scripts",
                                                                   filename="decider_state.py",
-                                                                  script_type=ScriptType.EXECUTION, check_path=True,
+                                                                  check_path=True,
                                                                   state=barrier_state.states[UNIQUE_DECIDER_STATE_ID])
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].add_outcome("FirstOutcomeDecider", 3)
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].add_outcome("SecondOutcomeDecider", 4)
