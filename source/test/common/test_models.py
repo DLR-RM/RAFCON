@@ -1,7 +1,7 @@
 from gtkmvc.observer import Observer
 
 # core elements
-from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -1115,8 +1115,8 @@ def test_state_property_changes_history(caplog):
     sm_model.history.redo()
 
     # script(self, script) Script
-    state_dict['Nested'].script = Script(script_type=ScriptType.CONTAINER, state=state_dict['Nested'])
-    state_dict['Nested'].script = Script(script_type=ScriptType.EXECUTION, state=state_dict['Nested'])
+    state_dict['Nested'].script = Script(state=state_dict['Nested'])
+    state_dict['Nested'].script = Script(state=state_dict['Nested'])
     sm_model.history.undo()
     sm_model.history.redo()
 
