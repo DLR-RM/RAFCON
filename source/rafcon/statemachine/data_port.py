@@ -230,3 +230,10 @@ class DataPort(Observable, yaml.YAMLObject):
                 not callable(getattr(self.parent, 'check_child_validity')):
             return True, "no parental check"
         return self.parent.check_child_validity(self)
+
+
+class InputDataPort(DataPort):
+    pass
+
+class OutputDataPort(DataPort):
+    pass
