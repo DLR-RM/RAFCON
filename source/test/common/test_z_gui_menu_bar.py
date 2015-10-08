@@ -315,7 +315,7 @@ def test_gui(caplog):
     gtk.main()
     logger.debug("after gtk main")
     os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    test_utils.assert_logger_warnings_and_errors(caplog, 1)
     test_utils.test_multithrading_lock.release()
 
 

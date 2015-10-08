@@ -84,9 +84,9 @@ class GuiConfig(DefaultConfig):
             font_style_origin = os.path.join(self.path_to_tool, constants.FONT_STYLE_PATHS[style])
             font_style_target = os.path.join(path, style)
 
-            # Remove old versions
-            if os.path.isfile(font_style_target):
-                os.remove(os.path.join(path, style))
+            # # Remove old versions
+            # if os.path.isfile(font_style_target):
+            #     os.remove(os.path.join(path, style))
 
             # Copy current version
             shutil.copy(font_style_origin, path)

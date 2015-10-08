@@ -255,6 +255,7 @@ class StateMachinesEditorController(ExtendedController):
     def remove_state_machine(self, state_machine_m):
         sm_id = get_state_machine_id(state_machine_m)
 
+        # logger.debug("id of self %s" % str(id(self)))
         self.remove_controller(sm_id)
 
         # Close tab and remove info
@@ -262,7 +263,11 @@ class StateMachinesEditorController(ExtendedController):
         self.view.notebook.remove_page(page_id)
         del self.tabs[sm_id]
 
-        self.model.state_machine_manager.remove_state_machine(sm_id)
+        # self.model is the state_machine_manager_model
+        # if the state_machine is removed by a core function the state_machine_editor listens to this event, closes
+        # the sm-tab and calls this function; in this case do not remove the state machine from the core smm again!
+        if sm_id in self.model.state_machine_manager.state_machines:
+            self.model.state_machine_manager.remove_state_machine(sm_id)
 
         # Open tab with next state machine
         sm_keys = self.model.state_machine_manager.state_machines.keys()
