@@ -5,6 +5,7 @@ import gtk
 import signal
 
 from rafcon.utils import log
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.mvc.config import global_gui_config
@@ -47,7 +48,7 @@ def run_empty_statemachine():
     rafcon.statemachine.singleton.library_manager.initialize()
 
     # set base path of global storage
-    rafcon.statemachine.singleton.global_storage.base_path = "/tmp"
+    rafcon.statemachine.singleton.global_storage.base_path = GLOBAL_STORAGE_BASE_PATH
 
     root_state = HierarchyState()
     state_machine = StateMachine(root_state)

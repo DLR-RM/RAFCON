@@ -26,6 +26,8 @@ except ImportError as e:
     # logger.error("%s, %s" % (e.message, traceback.format_exc()))
     GAPHAS_AVAILABLE = False
 
+STATE_MACHINE_ACTIVE_COLOR = "#39af57"
+STATE_MACHINE_NOT_ACTIVE_COLOR = "#fefefe"
 
 def create_tab_close_button(callback, *additional_parameters):
     close_button = gtk.Button()
@@ -131,8 +133,7 @@ class StateMachinesEditorController(ExtendedController):
         page = notebook.get_nth_page(page_num)
         for tab_info in self.tabs.itervalues():
             if tab_info['page'] is page:
-                state_machine_m = tab_info['state_machine_m']
-                new_sm_id = get_state_machine_id(state_machine_m)
+                new_sm_id = get_state_machine_id(tab_info['state_machine_m'])
                 # set active state machine id
                 rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = new_sm_id
                 if self.model.selected_state_machine_id != new_sm_id:
@@ -189,8 +190,24 @@ class StateMachinesEditorController(ExtendedController):
             return
 
         page_id = self.get_page_id(selected_state_machine_id)
+
+        # to retrieve the current tab colors
+        number_of_pages = self.view["notebook"].get_n_pages()
+        old_label_colors = range(number_of_pages)
+        for p in range(number_of_pages):
+            page = self.view["notebook"].get_nth_page(p)
+            label = self.view["notebook"].get_tab_label(page).get_children()[0]
+            old_label_colors[p] = label.get_style().fg[gtk.STATE_NORMAL]
+
         if not self.view.notebook.get_current_page() == page_id:
             self.view.notebook.set_current_page(page_id)
+
+        # set the old colors
+        for p in range(number_of_pages):
+            page = self.view["notebook"].get_nth_page(p)
+            label = self.view["notebook"].get_tab_label(page).get_children()[0]
+            label.modify_fg(gtk.STATE_ACTIVE, old_label_colors[p])
+            label.modify_fg(gtk.STATE_INSENSITIVE, old_label_colors[p])
 
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
@@ -211,19 +228,17 @@ class StateMachinesEditorController(ExtendedController):
     def sm_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_mark_dirty
         if sm_id in self.model.state_machine_manager.state_machines:
+            label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
             tab_title = compose_tab_title(sm_id, self.tabs[sm_id]["state_machine_m"].root_state.state.name, '*')
-            tab_label = \
-                create_tab_header(tab_title, self.on_close_clicked, self.tabs[sm_id]["state_machine_m"], 'refused')
-            self.view.notebook.set_tab_label(self.tabs[sm_id]["page"], tab_label)
+            label.set_label(tab_title)
 
     @ExtendedController.observe("state_machine_un_mark_dirty", assign=True)
     def sm_un_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_un_mark_dirty
         if sm_id in self.model.state_machine_manager.state_machines:
+            label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
             tab_title = compose_tab_title(sm_id, self.tabs[sm_id]["state_machine_m"].root_state.state.name)
-            tab_label = \
-                create_tab_header(tab_title, self.on_close_clicked, self.tabs[sm_id]["state_machine_m"], 'refused')
-            self.view.notebook.set_tab_label(self.tabs[sm_id]["page"], tab_label)
+            label.set_label(tab_title)
 
     def on_close_clicked(self, event, state_machine_m, result, force=False):
         """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
@@ -262,7 +277,11 @@ class StateMachinesEditorController(ExtendedController):
         self.view.notebook.remove_page(page_id)
         del self.tabs[sm_id]
 
-        self.model.state_machine_manager.remove_state_machine(sm_id)
+        # self.model is the state_machine_manager_model
+        # if the state_machine is removed by a core function the state_machine_editor listens to this event, closes
+        # the sm-tab and calls this function; in this case do not remove the state machine from the core smm again!
+        if sm_id in self.model.state_machine_manager.state_machines:
+            self.model.state_machine_manager.remove_state_machine(sm_id)
 
         # Open tab with next state machine
         sm_keys = self.model.state_machine_manager.state_machines.keys()

@@ -2,7 +2,7 @@ import pytest
 from pytest import raises
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.state import DataPort
+from rafcon.statemachine.states.state import InputDataPort
 from test_utils import assert_logger_warnings_and_errors
 
 def test_create_state(caplog):
@@ -54,7 +54,7 @@ def test_create_state(caplog):
     state2 = ExecutionState(name="State2", state_id=state1.state_id)
 
     # This should work, as data_type and default_value are optional parameters
-    port = DataPort('input')
+    port = InputDataPort('input')
 
     with raises(AttributeError):
         # The name of the port differs in key and class member

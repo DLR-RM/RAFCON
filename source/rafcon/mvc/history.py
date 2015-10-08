@@ -8,8 +8,10 @@ from rafcon.statemachine.outcome import Outcome
 from rafcon.statemachine.data_flow import DataFlow
 from rafcon.statemachine.transition import Transition
 from rafcon.statemachine.script import Script
-from rafcon.statemachine.states.state import State, DataPort
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.data_port import DataPort
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
 from rafcon.mvc.models.container_state import ContainerState
@@ -48,9 +50,7 @@ def get_state_tuple(state, state_m=None):
     else:
         state_meta_dict = {}
 
-    import copy
-    # TODO: check this
-    if isinstance(state, ContainerState):
+    if not isinstance(state, ExecutionState):
         script_content = "Dummy Script"
         script = Script(state=state)
     else:
@@ -932,10 +932,13 @@ class History(ModelMT):
 
     def finish_new_action(self, model, prop_name, info):
         # logger.debug("History stores AFTER")
-        self.actual_action.set_after(model, prop_name, info)
-        self.state_machine_model.history.changes.insert_action(self.actual_action)
-        # logger.debug("history is now: %s" % self.state_machine_model.history.changes.single_trail_history())
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        try:
+            self.actual_action.set_after(model, prop_name, info)
+            self.state_machine_model.history.changes.insert_action(self.actual_action)
+            # logger.debug("history is now: %s" % self.state_machine_model.history.changes.single_trail_history())
+            self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        except:
+            pass
 
     def meta_changed_notify_after(self, changed_parent_model, changed_model, recursive_changes):
         self.manual_changed_notify_after("gui_meta_data_changed", changed_parent_model, changed_model, recursive_changes)

@@ -4,7 +4,6 @@ import copy
 from gtkmvc import ModelMT
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
-from rafcon.statemachine.states.state import State
 from rafcon.statemachine.outcome import Outcome
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.singleton import global_storage, state_machine_manager
@@ -14,7 +13,7 @@ from rafcon.mvc.models.outcome import OutcomeModel
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 class StateModel(AbstractStateModel):
     """This model class manages a State, for the moment only ExecutionStates
@@ -247,7 +246,7 @@ class StateModel(AbstractStateModel):
             # assign the meta data to the state
             self.meta = tmp_meta
         # Print info only if the state has a location different from the tmp directory
-        elif meta_path[0:5] != '/tmp/':
+        elif meta_path[0:5] != GLOBAL_STORAGE_BASE_PATH:
             logger.info("State '{0}' has no meta data. It will now be generated automatically.".format(self.state.name))
 
     def copy_meta_data_from_state_model(self, source_state):

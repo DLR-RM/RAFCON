@@ -20,6 +20,7 @@ from gtkmvc import Observable
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 from rafcon.utils.storage_utils import StorageUtils
 from rafcon.utils.config import read_file
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
@@ -48,7 +49,7 @@ class StateMachineStorage(Observable):
     STATEMACHINE_FILE = 'statemachine.yaml'
     LIBRARY_FILE = 'library.yaml'
 
-    def __init__(self, base_path='/tmp'):
+    def __init__(self, base_path=GLOBAL_STORAGE_BASE_PATH):
         Observable.__init__(self)
 
         self.storage_utils = StorageUtils(base_path)

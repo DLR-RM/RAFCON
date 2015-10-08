@@ -2,6 +2,8 @@ import gtk
 import os
 from pylint import epylint as lint
 
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.states.library_state import LibraryState
 
@@ -15,7 +17,7 @@ class SourceEditorController(ExtendedController):
     # - Code function-expander
     # - Code completion
 
-    tmp_file = os.path.join('/tmp', 'file_to_get_pylinted.py')
+    tmp_file = os.path.join(GLOBAL_STORAGE_BASE_PATH, 'file_to_get_pylinted.py')
 
     def __init__(self, model, view):
         """Constructor
@@ -104,7 +106,6 @@ class SourceEditorController(ExtendedController):
         # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
         os.remove(self.tmp_file)
 
-        # (pylint_stdout, pylint_stderr) = lint.py_run("/tmp/file_to_get_pylinted.py", True)
         pylint_stdout_data = pylint_stdout.readlines()
         pylint_stderr_data = pylint_stderr.readlines()
 

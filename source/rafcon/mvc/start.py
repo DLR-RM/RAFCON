@@ -14,6 +14,7 @@ from os.path import realpath, dirname, join, exists, expanduser, expandvars, isd
 import rafcon
 
 from rafcon.utils import log
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 from rafcon.statemachine.config import global_config
 from rafcon.statemachine.storage.storage import StateMachineStorage
@@ -136,7 +137,7 @@ if __name__ == '__main__':
     sm_singletons.library_manager.initialize()
 
     # Set base path of global storage
-    sm_singletons.global_storage.base_path = "/tmp"
+    sm_singletons.global_storage.base_path = GLOBAL_STORAGE_BASE_PATH
 
     # Create the GUI
     main_window_view = MainWindowView()
