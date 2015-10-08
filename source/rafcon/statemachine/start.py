@@ -8,6 +8,7 @@ from twisted.internet import reactor
 from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
 logger.info("initialize RAFCON ... ")
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 import logging
 import os
@@ -129,7 +130,7 @@ if __name__ == '__main__':
     sm_singletons.library_manager.initialize()
 
     # Set base path of global storage
-    sm_singletons.global_storage.base_path = "/tmp"
+    sm_singletons.global_storage.base_path = GLOBAL_STORAGE_BASE_PATH
 
     start_state_machine()
 

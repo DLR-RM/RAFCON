@@ -8,6 +8,7 @@ import yaml
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 from rafcon.statemachine.data_port import DataPort
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
@@ -364,7 +365,7 @@ class State(Observable, yaml.YAMLObject):
             if self._file_system_path:
                 return self._file_system_path
             else:
-                return "/tmp/" + str(self.get_path())
+                return GLOBAL_STORAGE_BASE_PATH + str(self.get_path())
         else:
             return self.get_sm_for_state().file_system_path + "/" + self.get_path()
 

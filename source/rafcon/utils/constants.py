@@ -117,3 +117,16 @@ FLAG_LENGTH = 3
 HEADER_LENGTH = CHECKSUM_LENGTH + ACK_INDICATOR_LENGTH + FLAG_LENGTH
 
 BROWSER_SIZE_MULTIPLIER = 10
+
+import random
+import string
+import time
+import datetime
+import os
+ts = time.time()
+datetime_ts = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d%H_%M_%S')
+
+GLOBAL_STORAGE_BASE_PATH = "/tmp/rafcon_"+\
+                           os.environ.get('USER', 'anonymous')+"_"+\
+                           str(datetime_ts)+"_"+\
+                           ''.join(random.choice(string.ascii_uppercase) for x in range(10))
