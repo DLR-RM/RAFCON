@@ -10,6 +10,21 @@ from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureControl
 from rafcon.mvc.models.state import StateModel
 
 
+def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
+    path1 = treemodel.get_path(iter1)[0]
+    path2 = treemodel.get_path(iter2)[0]
+    name1 = treemodel[path1][0]
+    name2 = treemodel[path2][0]
+    name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
+    name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
+    if name1_as_bits == name2_as_bits:
+        return 0
+    elif name1_as_bits > name2_as_bits:
+        return 1
+    else:
+        return -1
+
+
 class DataPortListController(ExtendedController):
 
     def __init__(self, model, view, io_type):
@@ -215,7 +230,7 @@ class DataPortListController(ExtendedController):
                         idp_model.data_port.data_port_id])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, StateModel.dataport_compare_method)
+        tms.set_sort_func(0, dataport_compare_method)
         tms.sort_column_changed()
         tmp = tms
         self.data_port_list_store.clear()

@@ -1,78 +1,35 @@
-from gtkmvc import ModelMT
-
 import os
 import copy
 
+from gtkmvc import ModelMT
+from rafcon.mvc.models.abstract_state import AbstractStateModel
+
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.data_port import DataPort
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.singleton import global_storage, state_machine_manager
 
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
 
-from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateModel(ModelMT):
-    """This model class manages a State
+class StateModel(AbstractStateModel):
+    """This model class manages a State, for the moment only ExecutionStates
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
-    :param State state: The state to be managed
+    :param rafcon.statemachine.states.state.State state: The state to be managed
+    :param AbstractStateModel parent: The state to be managed
+    :param rafcon.utils.vividict.Vividict meta: The meta data of the state
      """
-
-    is_start = None
-    state = None
-    outcomes = []
-    input_data_ports = []
-    output_data_ports = []
-
-    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start")
 
     def __init__(self, state, parent=None, meta=None):
         """Constructor
         """
-        ModelMT.__init__(self)
-        assert isinstance(state, State)
-
-        self.state = state
-
-        # True if root_state or state is parent start_state_id else False
-        self.is_start = True if state.is_root_state or state.state_id == state.parent.start_state_id else False
-
-        if isinstance(meta, Vividict):
-            self.meta = meta
-        else:
-            self.meta = Vividict()
-
-        self.temp = Vividict()
-
-        if isinstance(parent, StateModel):
-            self.parent = parent
-        else:
-            self.parent = None
-
-        self.register_observer(self)
-        self.input_data_ports = []
-        self.output_data_ports = []
-        self.outcomes = []
-        self.reload_input_data_port_models()
-        self.reload_output_data_port_models()
-        self.reload_outcome_models()
-
-    def is_element_of_self(self, instance):
-
-        if isinstance(instance, DataPort) and instance.data_port_id in self.state.input_data_ports:
-            return True
-        if isinstance(instance, DataPort) and instance.data_port_id in self.state.output_data_ports:
-            return True
-        if isinstance(instance, Outcome) and instance.outcome_id in self.state.outcomes:
-            return True
-        return False
+        super(StateModel, self).__init__(state, parent, meta)
 
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, prop_name, info):
@@ -143,44 +100,6 @@ class StateModel(ModelMT):
         if self.parent is not None:
             self.parent.model_changed(model, prop_name, info)
 
-    def get_outcome_model(self, outcome_id):
-        """Searches and return the outcome model in this state model
-        :param outcome_id: The outcome id to be searched
-        :return: The model of the data flow or None if it is not found
-        """
-        for outcome_m in self.outcomes:
-            if outcome_m.outcome.outcome_id == outcome_id:
-                return outcome_m
-        return None
-
-    def get_data_port_model(self, data_port_id):
-        """Searches and returns the model of a data port of a given state
-
-        The method searches a port with the given id in the data ports of the given state model. If the state model
-        is a container state, not only the input and output data ports are looked at, but also the scoped variables.
-        :param state_m: The state model to search the data port in
-        :param data_port_id: The data port id to be searched
-        :return: The model of the data port or None if it is not found
-        """
-        def find_port_in_list(data_port_list):
-            """Helper method to search for a port within a given list
-
-            :param data_port_list: The list to search the data port in
-            :return: The model of teh data port or None if it is not found
-            """
-            for port_m in data_port_list:
-                if port_m.data_port.data_port_id == data_port_id:
-                    return port_m
-            return None
-
-        port_m = find_port_in_list(self.input_data_ports)
-        if port_m is not None:
-            return port_m
-        port_m = find_port_in_list(self.output_data_ports)
-        if port_m is not None:
-            return port_m
-        return None
-
     def get_model_info(self, model):
         model_key = None
         if model == "input_data_port":
@@ -224,21 +143,21 @@ class StateModel(ModelMT):
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
 
-    def reload_input_data_port_models(self):
+    def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state
         """
         self.input_data_ports = []
         for input_data_port in self.state.input_data_ports.itervalues():
             self.input_data_ports.append(DataPortModel(input_data_port, self))
 
-    def reload_output_data_port_models(self):
+    def _load_output_data_port_models(self):
         """Reloads the output data port models directly from the the state
         """
         self.output_data_ports = []
         for output_data_port in self.state.output_data_ports.itervalues():
             self.output_data_ports.append(DataPortModel(output_data_port, self))
 
-    def reload_outcome_models(self):
+    def _load_outcome_models(self):
         """Reloads the input data port models directly from the the state
         """
         self.outcomes = []
@@ -275,7 +194,8 @@ class StateModel(ModelMT):
                     del model_list[model_item]
                 return
 
-    def overwrite_editor_meta(self, meta):
+    @staticmethod
+    def overwrite_editor_meta(meta):
         """
         This function is for backward compatibility for state machines that still uses the "editor" key in their meta
         :param meta:
@@ -288,7 +208,6 @@ class StateModel(ModelMT):
 
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
-        #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
         meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
             tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
@@ -385,18 +304,3 @@ class StateModel(ModelMT):
                     scoped_variable_model.meta
 
         global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)
-
-    @staticmethod
-    def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
-        path1 = treemodel.get_path(iter1)[0]
-        path2 = treemodel.get_path(iter2)[0]
-        name1 = treemodel[path1][0]
-        name2 = treemodel[path2][0]
-        name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
-        name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
-        if name1_as_bits == name2_as_bits:
-            return 0
-        elif name1_as_bits > name2_as_bits:
-            return 1
-        else:
-            return -1
