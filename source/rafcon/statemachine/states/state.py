@@ -643,9 +643,15 @@ class State(Observable, yaml.YAMLObject):
             raise TypeError("input_data_ports must be of type dict")
         for port_id, port in input_data_ports.iteritems():
             if not isinstance(port, InputDataPort):
-                raise TypeError("element of input_data_ports must be of type DataPort")
+                if type(port) == DataPort:
+                    # This is a fix for older state machines, which didn't distinguish between input and output ports
+                    port = InputDataPort(port.name, port.data_type, port.default_value, port.data_port_id)
+                    input_data_ports[port_id] = port
+                else:
+                    raise TypeError("Elements of input_data_ports must be of type InputDataPort, given: {0}".format(
+                        type(port)))
             if not port_id == port.data_port_id:
-                raise AttributeError("the key of the input dictionary and the id of the data port do not match")
+                raise AttributeError("The key of the input dictionary and the id of the data port do not match")
             port.parent = self
         self._input_data_ports = input_data_ports
 
@@ -666,9 +672,15 @@ class State(Observable, yaml.YAMLObject):
             raise TypeError("output_data_ports must be of type dict")
         for port_id, port in output_data_ports.iteritems():
             if not isinstance(port, OutputDataPort):
-                raise TypeError("element of output_data_ports must be of type DataPort")
+                if type(port) == DataPort:
+                    # This is a fix for older state machines, which didn't distinguish between input and output ports
+                    port = OutputDataPort(port.name, port.data_type, port.default_value, port.data_port_id)
+                    output_data_ports[port_id] = port
+                else:
+                    raise TypeError("Elements of output_data_ports must be of type OutputDataPort, given: {0}".format(
+                        type(port)))
             if not port_id == port.data_port_id:
-                raise AttributeError("the key of the output dictionary and the id of the data port do not match")
+                raise AttributeError("The key of the output dictionary and the id of the data port do not match")
             port.parent = self
         self._output_data_ports = output_data_ports
 
