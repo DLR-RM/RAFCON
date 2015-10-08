@@ -17,6 +17,7 @@ from rafcon.mvc.models.outcome import OutcomeModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
+from rafcon.mvc.mygaphas.connector import RectanglePointPort
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide, Direction
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
@@ -26,7 +27,7 @@ class PortView(object):
 
     def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
         self.handle = Handle(connectable=True)
-        self.port = PointPort(self.handle.pos)
+        self.port = RectanglePointPort(self.handle.pos, port_side_size, port_side_size)
         self._side = None
         self.side = side
         self._parent = parent
@@ -73,6 +74,8 @@ class PortView(object):
     @port_side_size.setter
     def port_side_size(self, port_side_size):
         self._port_side_size = port_side_size
+        self.port.width = port_side_size
+        self.port.height = port_side_size
 
     @property
     def name(self):
@@ -552,6 +555,12 @@ class ScopedVariablePortView(PortView):
     def name(self):
         return self.model.scoped_variable.name
 
+    @PortView.port_side_size.setter
+    def port_side_size(self, port_side_size):
+        # Methods needs to be overwritten, to prevent the change of the port size here, as the port size is
+        # calculated in the draw method, depending on the length of the port name
+        self._port_side_size = port_side_size
+
     def draw(self, context, state):
         c = context.cairo
         self.update_port_side_size()
@@ -586,6 +595,8 @@ class ScopedVariablePortView(PortView):
             extents = self._draw_rectangle_path(c, name_size[0], side_length, only_get_extents=True)
 
             port_size = extents[2] - extents[0], extents[3] - extents[1]
+            self.port.width = port_size[0]
+            self.port.height = port_size[1]
             self._last_label_size = port_size
             self._last_label_span = name_size[0]
 
