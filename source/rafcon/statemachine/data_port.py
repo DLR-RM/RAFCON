@@ -18,16 +18,15 @@ logger = log.get_logger(__name__)
 
 
 class DataPort(Observable, yaml.YAMLObject):
-
-    #TODO: should the value of the data port be stored here as well?
     """A class for representing a data ports in a state
 
     :ivar name: the name of the data port
     :ivar data_type: the value type of the data port
     :ivar default_value: the default value of the data port
-
     """
     def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None):
+        if type(self) == DataPort:
+            raise NotImplementedError
         Observable.__init__(self)
 
         # Prevents validity checks by parent before all parameters are set

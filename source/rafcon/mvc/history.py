@@ -8,9 +8,10 @@ from rafcon.statemachine.outcome import Outcome
 from rafcon.statemachine.data_flow import DataFlow
 from rafcon.statemachine.transition import Transition
 from rafcon.statemachine.script import Script
-from rafcon.statemachine.states.state import State, DataPort
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.data_port import DataPort
 from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
 from rafcon.mvc.models.container_state import ContainerState

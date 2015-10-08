@@ -5,7 +5,7 @@ import copy
 
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.data_port import DataPort
+from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.singleton import global_storage, state_machine_manager
 
@@ -66,9 +66,9 @@ class StateModel(ModelMT):
 
     def is_element_of_self(self, instance):
 
-        if isinstance(instance, DataPort) and instance.data_port_id in self.state.input_data_ports:
+        if isinstance(instance, InputDataPort) and instance.data_port_id in self.state.input_data_ports:
             return True
-        if isinstance(instance, DataPort) and instance.data_port_id in self.state.output_data_ports:
+        if isinstance(instance, OutputDataPort) and instance.data_port_id in self.state.output_data_ports:
             return True
         if isinstance(instance, Outcome) and instance.outcome_id in self.state.outcomes:
             return True
