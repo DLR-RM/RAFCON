@@ -2,7 +2,6 @@ from gtkmvc import ModelMT
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.singleton import state_machine_manager
 
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
@@ -58,10 +57,7 @@ class StateModel(AbstractStateModel):
             # do not track the active flag when marking the sm dirty
             pass
         else:
-            if self.state.get_sm_for_state():
-                own_sm_id = self.state.get_sm_for_state().state_machine_id
-                if own_sm_id is not None:
-                    state_machine_manager.state_machines[own_sm_id].marked_dirty = True
+            self._mark_state_machine_as_dirty()
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument
