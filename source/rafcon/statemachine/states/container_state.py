@@ -1212,7 +1212,7 @@ class ContainerState(State):
         if start_state_id is not None and start_state_id not in self.states:
             raise ValueError("start_state_id does not exist")
 
-        if start_state_id is None and to_outcome is not None:
+        if start_state_id is None and to_outcome is not None:  # this is the case if the start state is the state itself
             if to_outcome not in self.outcomes:
                 raise ValueError("to_outcome does not exist")
             if start_state_id != self.state_id:

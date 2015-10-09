@@ -1,3 +1,4 @@
+from __builtin__ import staticmethod
 import threading
 import sys
 import Queue
@@ -156,9 +157,16 @@ class State(Observable, yaml.YAMLObject):
         :param state: the state to get the default input values for
 
         """
+        from rafcon.statemachine.states.library_state import LibraryState
         result_dict = {}
         for input_port_key, value in state.input_data_ports.iteritems():
-            default = value.default_value
+            if isinstance(state, LibraryState):
+                if state.use_runtime_value_input_data_ports[input_port_key]:
+                    default = state.input_data_port_runtime_values[input_port_key]
+                else:
+                    default = value.default_value
+            else:
+                default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
             if isinstance(default, str) and len(default) > 0 and default[0] == '$':
@@ -175,15 +183,20 @@ class State(Observable, yaml.YAMLObject):
                 result_dict[value.name] = copy.copy(default)
         return result_dict
 
-    def create_output_dictionary_for_state(self, state):
+    @staticmethod
+    def create_output_dictionary_for_state(state):
         """Return empty output dictionary for a state
 
         :param state: the state of which the output data is determined
         :return: the output data of the target state
         """
+        from rafcon.statemachine.states.library_state import LibraryState
         result_dict = {}
         for key, data_port in state.output_data_ports.iteritems():
-            result_dict[data_port.name] = data_port.default_value
+            if isinstance(state, LibraryState) and state.use_runtime_value_output_data_ports[key]:
+                result_dict[data_port.name] = copy.copy(state.output_data_port_runtime_values[key])
+            else:
+                result_dict[data_port.name] = copy.copy(data_port.default_value)
         return result_dict
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data port functions -------------------------------------

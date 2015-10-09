@@ -33,12 +33,14 @@ class LibraryState(State):
 
     def __init__(self, library_path=None, library_name=None, version=None,  # library state specific attributes
                  # the following are the container state specific attributes
-                 name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None):
+                 name=None, state_id=None, outcomes=None,
+                 input_data_port_runtime_values={}, use_runtime_value_input_data_ports={},
+                 output_data_port_runtime_values={}, use_runtime_value_output_data_ports={}):
 
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
         self.initialized = False
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
+        State.__init__(self, name, state_id, None, None, outcomes)
 
         self._library_path = None
         self.library_path = library_path
@@ -65,25 +67,32 @@ class LibraryState(State):
             raise AttributeError("Library does not have the correct version!")
 
         # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
-
+        self.outcomes = self.state_copy.outcomes
         self.input_data_ports = self.state_copy.input_data_ports
-        # copy input_port default values
-        if input_data_ports is not None:
-            for i_key, i_data_port in input_data_ports.iteritems():
-                if i_key in self.input_data_ports:
-                    self.input_data_ports[i_key].default_value = i_data_port.default_value
-                    # Use data type of library, user should not be able to overwrite the data type of a port
-                    # self.input_data_ports[i_key].data_type = i_data_port.data_type
         self.output_data_ports = self.state_copy.output_data_ports
 
-        # copy output_port default values
-        if output_data_ports is not None:
-            for o_key, o_data_port in output_data_ports.iteritems():
-                if o_key in self.output_data_ports:
-                    self.output_data_ports[o_key].default_value = o_data_port.default_value
-                    self.output_data_ports[o_key].data_type = o_data_port.data_type
+        # handle runtime values
+        # input runtime values
+        self._input_data_port_runtime_values = {}
+        self._use_runtime_value_input_data_ports = {}
+        if len(input_data_port_runtime_values) == 0:  # no input data port runtime values specified
+            for key, idp in self.input_data_ports.iteritems():
+                self.input_data_port_runtime_values[key] = idp.default_value
+                self.use_runtime_value_input_data_ports[key] = True  # TODO: True or False better here?
+        else:
+            self.input_data_port_runtime_values = input_data_port_runtime_values
+            self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
 
-        self.outcomes = self.state_copy.outcomes
+        # output runtime values
+        self._output_data_port_runtime_values = {}
+        self._use_runtime_value_output_data_ports = {}
+        if len(output_data_port_runtime_values) == 0:  # no output data port runtime values specified
+            for key, idp in self.output_data_ports.iteritems():
+                self.output_data_port_runtime_values[key] = idp.default_value
+                self.use_runtime_value_output_data_ports[key] = True
+        else:
+            self.output_data_port_runtime_values = output_data_port_runtime_values
+            self.use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
 
         logger.debug("Initialized library state with name %s" % name)
         self.initialized = True
@@ -175,6 +184,18 @@ class LibraryState(State):
         else:
             return State.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
 
+    def add_input_runtime_value(self, input_data_port_id, value):
+        self.input_data_port_runtime_values[input_data_port_id] = value
+
+    def set_use_input_runtime_value(self, input_data_port_id, use_value):
+        self.use_runtime_value_input_data_ports[input_data_port_id] = use_value
+        
+    def add_output_runtime_value(self, output_data_port_id, value):
+        self.output_data_port_runtime_values[output_data_port_id] = value
+
+    def set_use_output_runtime_value(self, output_data_port_id, use_value):
+        self.use_runtime_value_output_data_ports[output_data_port_id] = use_value
+
     @classmethod
     def to_yaml(cls, dumper, data):
         dict_representation = {
@@ -183,8 +204,10 @@ class LibraryState(State):
             'version': data.version,
             'name': data.name,
             'state_id': data.state_id,
-            'input_data_ports': data.input_data_ports,
-            'output_data_ports': data.output_data_ports,
+            'input_data_port_runtime_values': data.input_data_port_runtime_values,
+            'use_runtime_value_input_data_ports': data.use_runtime_value_input_data_ports,
+            'output_data_port_runtime_values': data.output_data_port_runtime_values,
+            'use_runtime_value_output_data_ports': data.use_runtime_value_output_data_ports,
             'outcomes': data.outcomes,
         }
         node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
@@ -198,11 +221,30 @@ class LibraryState(State):
         version = dict_representation['version']
         name = dict_representation['name']
         state_id = dict_representation['state_id']
-        input_data_ports = dict_representation['input_data_ports']
-        output_data_ports = dict_representation['output_data_ports']
         outcomes = dict_representation['outcomes']
-        return LibraryState(library_path, library_name, version, name, state_id, input_data_ports,
-                            output_data_ports, outcomes)
+
+        input_data_port_runtime_values = {}
+        use_runtime_value_input_data_ports = {}
+        output_data_port_runtime_values = {}
+        use_runtime_value_output_data_ports = {}
+
+        if 'input_data_ports' in dict_representation:  # this case is for backward compatibility
+            for idp_id, input_data_port in dict_representation['input_data_ports'].iteritems():
+                input_data_port_runtime_values[idp_id] = input_data_port.default_value
+                use_runtime_value_input_data_ports[idp_id] = True
+            
+            for odp_id, output_data_port in dict_representation['output_data_ports'].iteritems():
+                output_data_port_runtime_values[odp_id] = output_data_port.default_value
+                use_runtime_value_output_data_ports[odp_id] = True
+        else:  # this is the default case
+            input_data_port_runtime_values = dict_representation['input_data_port_runtime_values']
+            use_runtime_value_input_data_ports = dict_representation['use_runtime_value_input_data_ports']
+            output_data_port_runtime_values = dict_representation['output_data_port_runtime_values']
+            use_runtime_value_output_data_ports = dict_representation['use_runtime_value_output_data_ports']
+
+        return LibraryState(library_path, library_name, version, name, state_id, outcomes,
+                            input_data_port_runtime_values, use_runtime_value_input_data_ports,
+                            output_data_port_runtime_values, use_runtime_value_output_data_ports)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -267,6 +309,62 @@ class LibraryState(State):
             raise TypeError("state_copy must be of type State")
 
         self._state_copy = state_copy
+
+    @property
+    def input_data_port_runtime_values(self):
+        """Property for the _input_data_port_runtime_values field
+
+        """
+        return self._input_data_port_runtime_values
+
+    @input_data_port_runtime_values.setter
+    @Observable.observed
+    def input_data_port_runtime_values(self, input_data_port_runtime_values):
+        if not isinstance(input_data_port_runtime_values, dict):
+            raise TypeError("input_data_port_runtime_values must be of type dict")
+        self._input_data_port_runtime_values = input_data_port_runtime_values
+
+    @property
+    def use_runtime_value_input_data_ports(self):
+        """Property for the _use_runtime_value_input_data_ports field
+
+        """
+        return self._use_runtime_value_input_data_ports
+
+    @use_runtime_value_input_data_ports.setter
+    @Observable.observed
+    def use_runtime_value_input_data_ports(self, use_runtime_value_input_data_ports):
+        if not isinstance(use_runtime_value_input_data_ports, dict):
+            raise TypeError("use_runtime_value_input_data_ports must be of type dict")
+        self._use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
+
+    @property
+    def output_data_port_runtime_values(self):
+        """Property for the _output_data_port_runtime_values field
+
+        """
+        return self._output_data_port_runtime_values
+
+    @output_data_port_runtime_values.setter
+    @Observable.observed
+    def output_data_port_runtime_values(self, output_data_port_runtime_values):
+        if not isinstance(output_data_port_runtime_values, dict):
+            raise TypeError("output_data_port_runtime_values must be of type dict")
+        self._output_data_port_runtime_values = output_data_port_runtime_values
+
+    @property
+    def use_runtime_value_output_data_ports(self):
+        """Property for the _use_runtime_value_output_data_ports field
+
+        """
+        return self._use_runtime_value_output_data_ports
+
+    @use_runtime_value_output_data_ports.setter
+    @Observable.observed
+    def use_runtime_value_output_data_ports(self, use_runtime_value_output_data_ports):
+        if not isinstance(use_runtime_value_output_data_ports, dict):
+            raise TypeError("use_runtime_value_output_data_ports must be of type dict")
+        self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
 
     @staticmethod
     def copy_state(source_state):
