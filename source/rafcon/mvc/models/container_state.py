@@ -1,12 +1,13 @@
 from gtkmvc import ModelMT
 
-from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
+
+from rafcon.mvc.models.abstract_state import state_to_state_model
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -42,12 +43,11 @@ class ContainerStateModel(StateModel):
         states = container_state.states
         for state in states.itervalues():
             # Create hierarchy
-            model_class = self.state_to_state_model(state)
+            model_class = state_to_state_model(state)
             if model_class is not None:
                 self.states[state.state_id] = model_class(state, parent=self)
             else:
                 logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
-                logger.error(state)
 
         for transition in container_state.transitions.itervalues():
             self.transitions.append(TransitionModel(transition, self))
@@ -160,7 +160,7 @@ class ContainerStateModel(StateModel):
                 data_list = self.state.states
                 model_name = "state"
                 # Defer state type from class type (Execution, Hierarchy, ...)
-                model_class = self.state_to_state_model(info.args[1])
+                model_class = state_to_state_model(info.args[1])
                 model_key = "state_id"
             return model_list, data_list, model_name, model_class, model_key
 
@@ -179,21 +179,12 @@ class ContainerStateModel(StateModel):
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
 
-    @staticmethod
-    def state_to_state_model(state):
-        if isinstance(state, ContainerState):
-            return ContainerStateModel
-        elif isinstance(state, State):
-            return StateModel
-        else:
-            return None
-
     def get_data_port_model(self, data_port_id):
         """Searches and returns the model of a data port of a given state
 
         The method searches a port with the given id in the data ports of the given state model. If the state model
         is a container state, not only the input and output data ports are looked at, but also the scoped variables.
-        :param state_m: The state model to search the data port in
+
         :param data_port_id: The data port id to be searched
         :return: The model of the data port or None if it is not found
         """
@@ -206,37 +197,33 @@ class ContainerStateModel(StateModel):
 
     def get_transition_model(self, transition_id):
         """Searches and return the transition model with the given in the given container state model
-        :param state_m: The state model to search the transition in
+
         :param transition_id: The transition id to be searched
         :return: The model of the transition or None if it is not found
         """
-        if isinstance(self, ContainerStateModel):
-            for transition_m in self.transitions:
-                if transition_m.transition.transition_id == transition_id:
-                    return transition_m
+        for transition_m in self.transitions:
+            if transition_m.transition.transition_id == transition_id:
+                return transition_m
         return None
 
     def get_data_flow_model(self, data_flow_id):
         """Searches and return the data flow model with the given in the given container state model
-        :param state_m: The state model to search the transition in
+
         :param data_flow_id: The data flow id to be searched
         :return: The model of the data flow or None if it is not found
         """
-        if isinstance(self, ContainerStateModel):
-            for data_flow_m in self.data_flows:
-                if data_flow_m.data_flow.data_flow_id == data_flow_id:
-                    return data_flow_m
+        for data_flow_m in self.data_flows:
+            if data_flow_m.data_flow.data_flow_id == data_flow_id:
+                return data_flow_m
         return None
 
     # ---------------------------------------- storage functions ---------------------------------------------
     def load_meta_data_for_state(self):
-        # logger.debug("load recursively graphics file from yaml for state model of state %s" % self.state.name)
         StateModel.load_meta_data_for_state(self)
         for state_key, state in self.states.iteritems():
             state.load_meta_data_for_state()
 
     def store_meta_data_for_state(self):
-        # logger.debug("store recursively graphics file to yaml for state model of state %s" % self.state.name)
         StateModel.store_meta_data_for_state(self)
         for state_key, state in self.states.iteritems():
             state.store_meta_data_for_state()

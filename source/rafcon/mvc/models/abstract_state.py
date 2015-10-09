@@ -1,14 +1,34 @@
 from gtkmvc import ModelMT
 
 from rafcon.statemachine.states.state import State
-
+from rafcon.statemachine.states.container_state import ContainerState
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+def state_to_state_model(state):
+    """Determines the model required for the given state class
+
+    :param state: Instance of a state (ExecutionState, BarrierConcurrencyState, ...)
+    :return: The model class required for holding such a state instance
+    """
+    from rafcon.mvc.models.state import StateModel
+    from rafcon.mvc.models.container_state import ContainerStateModel
+    from rafcon.mvc.models.library_state import LibraryStateModel
+    if isinstance(state, ContainerState):
+        return ContainerStateModel
+    elif isinstance(state, LibraryState):
+        return LibraryStateModel
+    elif isinstance(state, State):
+        return StateModel
+    else:
+        return None
+
+
 class AbstractStateModel(ModelMT):
-    """This is an abstract class serving as base classs for state models
+    """This is an abstract class serving as base class for state models
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
@@ -37,7 +57,8 @@ class AbstractStateModel(ModelMT):
         self.state = state
 
         # True if root_state or state is parent start_state_id else False
-        self.is_start = True if state.is_root_state or state.state_id == state.parent.start_state_id else False
+        self.is_start = state.is_root_state or parent is None or isinstance(parent.state, LibraryState) or \
+                        state.state_id == state.parent.start_state_id
 
         if isinstance(meta, Vividict):
             self.meta = meta
@@ -52,6 +73,7 @@ class AbstractStateModel(ModelMT):
             self.parent = None
 
         self.register_observer(self)
+
         self.input_data_ports = []
         self.output_data_ports = []
         self.outcomes = []
