@@ -159,6 +159,14 @@ class AbstractStateModel(ModelMT):
                 meta['gui']['editor_opengl'] = deepcopy(meta['gui']['editor'])
             del meta['gui']['editor']
 
+    def _mark_state_machine_as_dirty(self):
+        state_machine = self.state.get_sm_for_state()
+        if state_machine:
+            state_machine_id = self.state.get_sm_for_state().state_machine_id
+            if state_machine_id is not None:
+                from rafcon.statemachine.singleton import state_machine_manager
+                state_machine_manager.state_machines[state_machine_id].marked_dirty = True
+
     # ---------------------------------------- meta data methods ---------------------------------------------
 
     def load_meta_data(self, path=None):
