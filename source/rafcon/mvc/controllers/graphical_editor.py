@@ -20,6 +20,8 @@ from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.statemachine_helper import StateMachineHelper
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models.library_state import LibraryStateModel
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
@@ -302,7 +304,7 @@ class GraphicalEditorController(ExtendedController):
                     self._create_new_transition(outcome_state, outcome_key)
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
-            elif self.selected_outcome is not None and isinstance(new_selection, StateModel) and \
+            elif self.selected_outcome is not None and isinstance(new_selection, AbstractStateModel) and \
                     ((new_selection.parent is self.selected_outcome[0].parent and
                               self.selected_outcome[1] is not None) or
                          (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
@@ -329,7 +331,7 @@ class GraphicalEditorController(ExtendedController):
                     else:
                         self._create_new_data_flow(port_model)
                 # Allow the user to create waypoints while creating a new data flow
-                elif self.selected_port_connector and isinstance(new_selection, StateModel):
+                elif self.selected_port_connector and isinstance(new_selection, AbstractStateModel):
                     self._handle_new_waypoint()
 
             self._redraw()
@@ -447,7 +449,7 @@ class GraphicalEditorController(ExtendedController):
                         offset = None
                         model_meta = model.meta['gui']['editor_opengl']
                         model_temp = model.temp['gui']['editor']
-                        if isinstance(model, StateModel):
+                        if isinstance(model, AbstractStateModel):
                             self.changed_models.append(model)
                             offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
                             model_temp['original_rel_pos'] = copy(model_meta['rel_pos'])
@@ -467,7 +469,7 @@ class GraphicalEditorController(ExtendedController):
                         self.drag_origin_offset.append(offset)
                 for i, model in enumerate(self.model.selection):
                     if self.drag_origin_offset[i] is not None:
-                        if isinstance(model, StateModel):
+                        if isinstance(model, AbstractStateModel):
                             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
                             self._move_state(model, new_pos, redraw=False, publish_changes=False)
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
@@ -484,7 +486,7 @@ class GraphicalEditorController(ExtendedController):
 
             # Move the current state, if the user didn't click on an outcome (wants to create a transition) or a
             # resize handler (wants to resize the state)
-            elif isinstance(self.single_selection, StateModel) and \
+            elif isinstance(self.single_selection, AbstractStateModel) and \
                             self.selected_outcome is None and self.selected_resizer is None:
                 selected_state_m = self.single_selection
                 # Initially store starting position and offset (see comment above)
@@ -605,7 +607,7 @@ class GraphicalEditorController(ExtendedController):
         :param gtkmvc.Model selected_model: The model that was clicked on
         :param tuple coords: Coordinates to search for outcomes
         """
-        if isinstance(selected_model, StateModel):  # and self.single_selection is not self.root_state_m:
+        if isinstance(selected_model, AbstractStateModel):  # and self.single_selection is not self.root_state_m:
             state_m = selected_model
             outcomes_close_threshold = state_m.temp['gui']['editor']['outcome_radius']
             outcomes = state_m.temp['gui']['editor']['outcome_pos']
@@ -638,7 +640,7 @@ class GraphicalEditorController(ExtendedController):
                 selected_port_type = "inner" if isinstance(port_model, DataPortModel) else "scope"
                 return port_model, selected_port_type, True
 
-        elif isinstance(selected_model, StateModel):
+        elif isinstance(selected_model, AbstractStateModel):
             state_m = selected_model
 
             for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
@@ -657,7 +659,7 @@ class GraphicalEditorController(ExtendedController):
         :param gtkmvc.Model selected_model: The selected_model that was clicked on
         :param tuple coords: Coordinates to check for the resizer
         """
-        if isinstance(selected_model, StateModel):
+        if isinstance(selected_model, AbstractStateModel):
             state_meta = selected_model.meta['gui']['editor_opengl']
             state_temp = selected_model.temp['gui']['editor']
             # Calculate corner points of resizer
@@ -794,7 +796,7 @@ class GraphicalEditorController(ExtendedController):
         selected outcome as starting point and the passed state model and outcome id as target point for the new
         transition.
 
-        :param rafcon.mvc.models.state.StateModel to_state_m: The to state model of the new transition
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel to_state_m: The to state model of the new transition
         :param int to_outcome_id: The id of the to outcome or None if the transition does not go to the parent state
         """
         from_state_id = self.selected_outcome[0].state.state_id
@@ -873,7 +875,7 @@ class GraphicalEditorController(ExtendedController):
         The method moves the state and all its child states with their transitions, data flows and waypoints. The
         state is kept within its parent, thus restricting the movement.
 
-        :param rafcon.mvc.models.state.StateModel state_m: The model of the state to be moved
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel state_m: The model of the state to be moved
         :param tuple new_pos: The desired new absolute position (x, y)
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
@@ -972,7 +974,7 @@ class GraphicalEditorController(ExtendedController):
         if self.view.editor.has_focus():
             if self.model.selection:
                 for model in self.model.selection:
-                    if isinstance(model, StateModel):
+                    if isinstance(model, AbstractStateModel):
                         move_state(model, redraw=False, publish_changes=False)
                     elif isinstance(model, (DataPortModel, ScopedVariableModel)):
                         move_port(model, redraw=False, publish_changes=False)
@@ -985,7 +987,7 @@ class GraphicalEditorController(ExtendedController):
                     state_m = reduced_list[0]
                 self._publish_changes(state_m, affects_children)
                 self._redraw()
-            elif isinstance(self.single_selection, StateModel):
+            elif isinstance(self.single_selection, AbstractStateModel):
                 move_state(self.single_selection)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
                 move_port(self.single_selection)
@@ -1072,7 +1074,7 @@ class GraphicalEditorController(ExtendedController):
          - Ctrl also causes the child states to be resized
          - Shift caused the resized states to keep their width to height ratio
 
-        :param rafcon.mvc.models.state.StateModel state_m: The model of the state to be resized
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel state_m: The model of the state to be resized
         :param tuple new_corner_pos: The absolute coordinates of the new desired lower right corner
         :param keep_ratio: Flag, if set, the size ratio is kept constant
         :param resize_content: Flag, if set, the content of the state is also resized
@@ -1285,12 +1287,12 @@ class GraphicalEditorController(ExtendedController):
         Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
         done in the view, which is called from this method with the appropriate arguments.
 
-        :param rafcon.mvc.models.state.StateModel state_m: The state to be drawn
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel state_m: The state to be drawn
         :param tuple rel_pos: The default relative position (x, y) if there is no relative position stored
         :param tuple size: The default size (width, height) if there is no size stored
         :param float depth: The hierarchy level of the state
         """
-        assert isinstance(state_m, StateModel)
+        assert isinstance(state_m, AbstractStateModel)
         state_meta = state_m.meta['gui']['editor_opengl']
         state_temp = state_m.temp['gui']['editor']
 
@@ -1478,7 +1480,7 @@ class GraphicalEditorController(ExtendedController):
             else:
                 from_state = parent_state_m.states[from_state_id]
 
-                assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
+                assert isinstance(from_state, AbstractStateModel), "Transition from unknown state with ID {id:s}".format(
                     id=from_state_id)
 
                 try:
@@ -1723,7 +1725,7 @@ class GraphicalEditorController(ExtendedController):
         object with the biggest depth (furthest nested).
 
         :param ids: The ids to search for
-        :param rafcon.mvc.models.state.StateModel search_state: The state to search in
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel search_state: The state to search in
         :param float search_state_depth: The depth the search state is in
         :param gtkmvc.Model selection: The currently found object
         :param float selection_depth: The depth of the currently found object
@@ -1807,7 +1809,7 @@ class GraphicalEditorController(ExtendedController):
         """
         meta = model.meta['gui']['editor_opengl']
         temp = model.temp['gui']['editor']
-        if isinstance(model, StateModel):
+        if isinstance(model, AbstractStateModel):
             return temp['pos'][0], temp['pos'][0] + meta['size'][0], temp['pos'][1] - meta['size'][1], temp['pos'][1]
         if isinstance(model, (TransitionModel, DataFlowModel)):
             x_coordinates = [temp['from_pos'][0], temp['to_pos'][0]]
@@ -1906,7 +1908,7 @@ class GraphicalEditorController(ExtendedController):
                     for model in self.model.selection:
                         model_meta = model.meta['gui']['editor_opengl']
                         model_temp = model.temp['gui']['editor']
-                        if isinstance(model, StateModel):
+                        if isinstance(model, AbstractStateModel):
                             model_meta['rel_pos'] = model_temp['original_rel_pos']
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
                             model_meta['inner_rel_pos'] = model_temp['original_inner_rel_pos']
@@ -1916,7 +1918,7 @@ class GraphicalEditorController(ExtendedController):
                                 for waypoint_id, waypoint_pos in enumerate(waypoints):
                                     waypoints[waypoint_id] = model_temp['original_waypoint_{0}_rel_pos'.format(
                                         waypoint_id)]
-                elif isinstance(self.single_selection, StateModel):
+                elif isinstance(self.single_selection, AbstractStateModel):
                     self.single_selection.meta['gui']['editor_opengl']['rel_pos'] = \
                         self.single_selection.temp['gui']['editor']['original_rel_pos']
                 elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
