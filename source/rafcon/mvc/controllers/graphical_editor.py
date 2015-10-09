@@ -145,8 +145,12 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The property that was changed
         :param dict info: Information about the change
         """
+        # print "change", model, prop_name, info
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             self._redraw()
+        elif info['method_name'] == 'marked_dirty' and info['args'][1]:
+            self._redraw()
+
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
@@ -1298,7 +1302,41 @@ class GraphicalEditorController(ExtendedController):
 
         # Use default values if no size information is stored
         if not isinstance(state_meta['size'], tuple):
-            state_meta['size'] = size
+            if not isinstance(state_m, LibraryStateModel):
+                state_meta['size'] = size
+            else:
+                # Size ratio of library states is determined by their content
+                lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
+                # No meta information about library content
+                if not isinstance(lib_state_meta['size'], tuple):
+                    state_meta['size'] = size
+                    lib_state_meta['size'] = size
+                else:
+                    lib_size = lib_state_meta['size']
+                    parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
+                    # Reduce size if side length greater than one fourth of parent side length
+                    if lib_size[0] * 4 > parent_size[0] or lib_size[1] * 4 > parent_size[1]:
+                        lib_size_ratio = float(lib_size[0]) / lib_size[1]
+                        height = parent_size[1] / 6.
+                        if lib_size_ratio < 1:
+                            state_meta['size'] = height * lib_size_ratio, height
+                        else:
+                            state_meta['size'] = height / lib_size_ratio, height
+                    else:
+                        state_meta['size'] = lib_size
+
+        elif isinstance(state_m, LibraryStateModel):
+            lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
+            lib_size = lib_state_meta['size']
+            state_size = state_meta['size']
+            lib_size_ratio = float(lib_size[0]) / lib_size[1]
+            state_size_ratio = float(state_size[0]) / state_size[1]
+            if abs(lib_size_ratio - state_size_ratio) > 0.01:
+                # Wrong size ratio of state
+                if lib_size_ratio < 1:
+                    state_meta['size'] = state_size[1] * lib_size_ratio, state_size[1]
+                else:
+                    state_meta['size'] = state_size[0], state_size[0] / lib_size_ratio
 
         size = state_meta['size']
 
@@ -1308,7 +1346,7 @@ class GraphicalEditorController(ExtendedController):
             pos = (0, 0)
         else:
             # Use default values if no size information is stored
-            # Here the possible case of pos_x and posy_y == 0 must be handled
+            # Here the possible case of pos_x and pos_y == 0 must be handled
             if not isinstance(state_meta['rel_pos'], tuple):
                 state_m.meta['gui']['editor_opengl']['rel_pos'] = rel_pos
                 recalc = True
