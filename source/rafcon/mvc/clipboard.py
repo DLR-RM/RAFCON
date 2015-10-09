@@ -5,7 +5,6 @@ from enum import Enum
 from gtkmvc import Observable
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.mvc.models.state import StateModel
 from rafcon.statemachine.states.state_helper import StateHelper
 
 ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
@@ -124,7 +123,7 @@ class Clipboard(Observable):
         self.__create_core_object_copies(selection)
 
     def copy_meta_data_of_state_model(self, orig_state, state_copy):
-        state_copy.copy_meta_data_from_state_model(orig_state)
+        state_copy.copy_meta_data_from_state_m(orig_state)
         state_copy.meta["gui"]["editor"]["rel_pos"] = [1, 1]
         if hasattr(state_copy, "states"):
             for s_id, state_m in state_copy.states.iteritems():
@@ -202,11 +201,9 @@ class Clipboard(Observable):
             self.state_core_object_copies.append(state_copy)
 
             # copy meta data
-            if isinstance(state_model, ContainerStateModel):
-                state_model_copy = ContainerStateModel(state_copy)
-            elif isinstance(state_model, StateModel):
-                state_model_copy = StateModel(state_copy)
-            state_model_copy.copy_meta_data_from_state_model(state_model)
+            state_m_class = type(state_model)
+            state_model_copy = state_m_class(state_copy)
+            state_model_copy.copy_meta_data_from_state_m(state_model)
             self.state_model_copies.append(state_model_copy)
         # TODO: create transition copies, only relevant in multi-selection scenario
         # TODO: create data flow copies, only relevant in multi-selection scenario
