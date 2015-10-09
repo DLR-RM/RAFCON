@@ -13,6 +13,7 @@ from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.singleton import library_manager
 from rafcon.utils import log
+from rafcon.utils.type_helpers import convert_string_value_to_type_value
 
 logger = log.get_logger(__name__)
 
@@ -184,17 +185,21 @@ class LibraryState(State):
         else:
             return State.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
 
+    @Observable.observed
     def add_input_runtime_value(self, input_data_port_id, value):
-        self.input_data_port_runtime_values[input_data_port_id] = value
+        self._input_data_port_runtime_values[input_data_port_id] = value
 
+    @Observable.observed
     def set_use_input_runtime_value(self, input_data_port_id, use_value):
-        self.use_runtime_value_input_data_ports[input_data_port_id] = use_value
-        
-    def add_output_runtime_value(self, output_data_port_id, value):
-        self.output_data_port_runtime_values[output_data_port_id] = value
+        self._use_runtime_value_input_data_ports[input_data_port_id] = use_value
 
+    @Observable.observed
+    def add_output_runtime_value(self, output_data_port_id, value):
+        self._output_data_port_runtime_values[output_data_port_id] = value
+
+    @Observable.observed
     def set_use_output_runtime_value(self, output_data_port_id, use_value):
-        self.use_runtime_value_output_data_ports[output_data_port_id] = use_value
+        self._use_runtime_value_output_data_ports[output_data_port_id] = use_value
 
     @classmethod
     def to_yaml(cls, dumper, data):

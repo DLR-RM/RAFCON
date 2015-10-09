@@ -1,8 +1,10 @@
 import gtk
 from gtk import ListStore
+from gtk import TreeViewColumn, CellRendererText
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+from rafcon.utils.type_helpers import convert_string_value_to_type_value
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -30,7 +32,10 @@ class DataPortListController(ExtendedController):
             self.state_data_port_dict = self.model.state.output_data_ports
             self.data_port_model_list = self.model.output_data_ports
 
-        self.data_port_list_store = ListStore(str, str, str, int)
+        if not isinstance(self.model.state, LibraryState):
+            self.data_port_list_store = ListStore(str, str, str, int)
+        else:
+            self.data_port_list_store = ListStore(str, str, str, int, bool, str)
         self.reload_data_port_list_store()
 
     def register_view(self, view):
@@ -53,6 +58,24 @@ class DataPortListController(ExtendedController):
 
         view['name_text'].connect("edited", self.on_name_changed)
         view['data_type_text'].connect("edited", self.on_data_type_changed)
+
+        if isinstance(self.model.state, LibraryState):
+
+            view['use_runtime_value_text'] = CellRendererText()
+            view['use_runtime_value_col'] = TreeViewColumn("Use Runtime Value")
+            view.get_top_widget().append_column(view['use_runtime_value_col'])
+            view['use_runtime_value_col'].pack_start(view['use_runtime_value_text'], True)
+            view['use_runtime_value_col'].add_attribute(view['use_runtime_value_text'], 'text', 4)
+            view['use_runtime_value_text'].set_property("editable", True)
+            view['use_runtime_value_text'].connect("edited", self.on_use_runtime_value_edited)
+
+            view['runtime_value_text'] = CellRendererText()
+            view['runtime_value_col'] = TreeViewColumn("Runtime Value")
+            view.get_top_widget().append_column(view['runtime_value_col'])
+            view['runtime_value_col'].pack_start(view['runtime_value_text'], True)
+            view['runtime_value_col'].add_attribute(view['runtime_value_text'], 'text', 5)
+            view['runtime_value_text'].set_property("editable", True)
+            view['runtime_value_text'].connect("edited", self.on_runtime_value_edited)
 
         self.tab_edit_controller.register_view()
 
@@ -163,6 +186,24 @@ class DataPortListController(ExtendedController):
             return None
         return cursor[0][0]
 
+    def on_use_runtime_value_edited(self, widget, column_id, text):
+        """Try to set the use runtime value flag to the newly entered one
+        """
+        logger.info("on_use_runtime_value_edited widget: {0} path: {1} text: {2}".format(widget, column_id, text))
+        try:
+            data_port_id = self.get_data_port_id_from_selection()
+            bool_value = convert_string_value_to_type_value(text, bool)
+            print bool_value
+            if self.type == "input":
+                self.model.state.set_use_input_runtime_value(data_port_id, bool_value)
+            else:
+                self.model.state.set_use_output_runtime_value(data_port_id, bool_value)
+        except TypeError as e:
+            logger.error("Error while trying to change the port name: {0}".format(e))
+
+    def on_runtime_value_edited(self, widget, column_id, text):
+        pass
+
     def on_name_changed(self, widget, column_id, text):
         """Try to set the port name to the newly entered one
         """
@@ -196,7 +237,10 @@ class DataPortListController(ExtendedController):
     def reload_data_port_list_store(self):
         """Reloads the input data port list store from the data port models
         """
-        tmp = ListStore(str, str, str, int)
+        if not isinstance(self.model.state, LibraryState):
+            tmp = ListStore(str, str, str, int)
+        else:
+            tmp = ListStore(str, str, str, int, bool, str)
         for idp_model in self.data_port_model_list:
             data_type = idp_model.data_port.data_type
             # get name of type (e.g. ndarray)
@@ -210,9 +254,22 @@ class DataPortListController(ExtendedController):
                 default_value = "<None>"
             else:
                 default_value = idp_model.data_port.default_value
-            tmp.append([idp_model.data_port.name, data_type_name,
-                        default_value,
-                        idp_model.data_port.data_port_id])
+
+            if not isinstance(self.model.state, LibraryState):
+                tmp.append([idp_model.data_port.name, data_type_name, default_value, idp_model.data_port.data_port_id])
+            else:
+                if self.type == "input":
+                    use_rt_value = self.model.state.use_runtime_value_input_data_ports[idp_model.data_port.data_port_id]
+                    rt_value = self.model.state.input_data_port_runtime_values[idp_model.data_port.data_port_id]
+                else:
+                    use_rt_value = self.model.state.use_runtime_value_output_data_ports[idp_model.data_port.data_port_id]
+                    rt_value = self.model.state.output_data_port_runtime_values[idp_model.data_port.data_port_id]
+                tmp.append([idp_model.data_port.name,
+                            data_type_name,
+                            default_value,
+                            idp_model.data_port.data_port_id,
+                            use_rt_value,
+                            rt_value])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
         tms.set_sort_func(0, StateModel.dataport_compare_method)

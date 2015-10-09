@@ -9,6 +9,7 @@ import sys
 import os
 import gtk
 import signal
+from os.path import join, dirname
 
 from rafcon.utils import log
 from rafcon.mvc.controllers import MainWindowController
@@ -41,9 +42,6 @@ def create_models():
 def run_sm():
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    # setup logging view first
-
-    rafcon.statemachine.singleton.library_manager.initialize()
 
     # set base path of global storage
     rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/basic_turtle_demo_sm"
@@ -57,8 +55,8 @@ def run_sm():
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/barrier_concurrency_test_sm")
 
-    [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
+    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_barrier_test")
 
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/return_none_test_sm")
@@ -71,6 +69,16 @@ def run_sm():
 
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_library_test")
+
+    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths["test_libraries"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'test_libraries')
+
+    rafcon.statemachine.singleton.library_manager.initialize()
+
+    # print rafcon.statemachine.singleton.library_manager.libraries
+
+    [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+        global_storage.load_statemachine_from_yaml("../../test_scripts/test_libraries/library_with_nested_library")
 
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView()

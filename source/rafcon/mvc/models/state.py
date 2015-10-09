@@ -132,6 +132,9 @@ class StateModel(ModelMT):
                 isinstance(info.instance, Outcome) and self is model.parent:
             changed_list = self.outcomes
             cause = "outcome_change"
+        elif "set_use_input_runtime_value" in info.method_name and self is model:
+            changed_list = self.input_data_ports
+            cause = "input_data_port_change"
 
         if not (cause is None or changed_list is None):
             if hasattr(info, 'before') and info['before']:

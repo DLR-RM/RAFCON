@@ -190,9 +190,9 @@ def teardown_module(module=None):
 
 if __name__ == '__main__':
     setup_module()
-    # test_save_libraries(None)
-    # test_execution_state_library(None)
-    # test_hierarchy_state_library(None)
-    # test_save_nested_library_state(None)
+    test_save_libraries(None)
+    test_execution_state_library(None)
+    test_hierarchy_state_library(None)
+    test_save_nested_library_state(None)
     test_nested_library_state_machine(None)
     # pytest.main([__file__])
