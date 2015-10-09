@@ -5,14 +5,11 @@ from copy import copy
 
 from rafcon.utils import constants, log
 
-from rafcon.statemachine.states.library_state import LibraryState
-
 from rafcon.mvc.config import global_gui_config
-from rafcon.mvc.models.state import StateModel
-from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 
 import cairo
-from gtk.gdk import CairoContext, Color
+from gtk.gdk import Color
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 
@@ -37,7 +34,7 @@ class StateView(Element):
 
     def __init__(self, state_m, size, hierarchy_level):
         super(StateView, self).__init__(size[0], size[1])
-        assert isinstance(state_m, StateModel)
+        assert isinstance(state_m, AbstractStateModel)
 
         self._state_m = ref(state_m)
         self.hierarchy_level = hierarchy_level
@@ -319,7 +316,7 @@ class StateView(Element):
             scoped_variable.port_side_size = self.port_side_size
             scoped_variable.draw(context, self)
 
-        if isinstance(self.model.state, LibraryState) and not self.moving:
+        if isinstance(self.model, LibraryStateModel) and not self.moving:
             max_width = self.width / 2.
             max_height = self.height / 2.
             self._draw_symbol(context, constants.SIGN_LIB, True, (max_width, max_height))
