@@ -822,7 +822,7 @@ class GraphicalEditorController(ExtendedController):
             else:
                 transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
                                                                           to_outcome_id)
-                transition_m = responsible_parent_m.get_transition_model(transition_id)
+                transition_m = responsible_parent_m.get_transition_m(transition_id)
                 transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
         except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
@@ -860,7 +860,7 @@ class GraphicalEditorController(ExtendedController):
             try:
                 data_flow_id = responsible_parent.state.add_data_flow(from_state_id, from_port_id,
                                                                       target_state_id, target_port_id)
-                data_flow_m = responsible_parent.get_data_flow_model(data_flow_id)
+                data_flow_m = responsible_parent.get_data_flow_m(data_flow_id)
                 data_flow_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
             except AttributeError as e:
                 logger.warn("Data flow couldn't be added: {0}".format(e))
@@ -1544,8 +1544,8 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            from_port = from_state.get_data_port_model(from_key)
-            to_port = to_state.get_data_port_model(to_key)
+            from_port = from_state.get_data_port_m(from_key)
+            to_port = to_state.get_data_port_m(to_key)
 
             if from_port is None:
                 logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,

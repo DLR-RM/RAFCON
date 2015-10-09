@@ -1,21 +1,14 @@
-import os
-import copy
-
 from gtkmvc import ModelMT
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
-from rafcon.statemachine.states.state import State
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
-from rafcon.statemachine.storage.storage import StateMachineStorage
-from rafcon.statemachine.singleton import global_storage, state_machine_manager
+from rafcon.statemachine.singleton import state_machine_manager
 
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-
 
 class StateModel(AbstractStateModel):
     """This model class manages a State, for the moment only ExecutionStates
@@ -194,114 +187,3 @@ class StateModel(AbstractStateModel):
                 else:
                     del model_list[model_item]
                 return
-
-    @staticmethod
-    def overwrite_editor_meta(meta):
-        """
-        This function is for backward compatibility for state machines that still uses the "editor" key in their meta
-        :param meta:
-        :return:
-        """
-        if "editor" in meta['gui']:
-            if "editor_opengl" not in meta['gui']:
-                meta['gui']['editor_opengl'] = copy.deepcopy(meta['gui']['editor'])
-            del meta['gui']['editor']
-
-    # ---------------------------------------- storage functions ---------------------------------------------
-    def load_meta_data_for_state(self):
-        meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
-        if os.path.exists(meta_path):
-            tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
-
-            # For backwards compatibility
-            # move all meta data from editor to editor_opengl
-            self.overwrite_editor_meta(tmp_meta)
-
-            for input_data_port_model in self.input_data_ports:
-                i_id = input_data_port_model.data_port.data_port_id
-                self.overwrite_editor_meta(tmp_meta["input_data_port" + str(i_id)])
-                input_data_port_model.meta = tmp_meta["input_data_port" + str(i_id)]
-                del tmp_meta["input_data_port" + str(i_id)]
-            for output_data_port_model in self.output_data_ports:
-                o_id = output_data_port_model.data_port.data_port_id
-                self.overwrite_editor_meta(tmp_meta["output_data_port" + str(o_id)])
-                output_data_port_model.meta = tmp_meta["output_data_port" + str(o_id)]
-                del tmp_meta["output_data_port" + str(o_id)]
-
-            # check the type implicitly by checking if the state has the states attribute
-            if hasattr(self.state, 'states'):
-                for transition_model in self.transitions:
-                    t_id = transition_model.transition.transition_id
-                    self.overwrite_editor_meta(tmp_meta["transition" + str(t_id)])
-                    transition_model.meta = tmp_meta["transition" + str(t_id)]
-                    del tmp_meta["transition" + str(t_id)]
-                for data_flow_model in self.data_flows:
-                    d_id = data_flow_model.data_flow.data_flow_id
-                    self.overwrite_editor_meta(tmp_meta["data_flow" + str(d_id)])
-                    data_flow_model.meta = tmp_meta["data_flow" + str(d_id)]
-                    del tmp_meta["data_flow" + str(d_id)]
-                for scoped_variable_model in self.scoped_variables:
-                    s_id = scoped_variable_model.scoped_variable.data_port_id
-                    self.overwrite_editor_meta(tmp_meta["scoped_variable" + str(s_id)])
-                    scoped_variable_model.meta = tmp_meta["scoped_variable" + str(s_id)]
-                    del tmp_meta["scoped_variable" + str(s_id)]
-            # assign the meta data to the state
-            self.meta = tmp_meta
-        # Print info only if the state has a location different from the tmp directory
-        elif meta_path[0:5] != '/tmp/':
-            logger.info("State '{0}' has no meta data. It will now be generated automatically.".format(self.state.name))
-
-    def copy_meta_data_from_state_model(self, source_state):
-
-        self.meta = copy.deepcopy(source_state.meta)
-        counter = 0
-        for input_data_port_model in self.input_data_ports:
-            input_data_port_model.meta = \
-                copy.deepcopy(source_state.input_data_ports[counter].meta)
-            counter += 1
-        counter = 0
-        for output_data_port_model in self.output_data_ports:
-            output_data_port_model.meta = \
-                copy.deepcopy(source_state.output_data_ports[counter].meta)
-            counter += 1
-
-        if hasattr(self.state, 'states'):
-            counter = 0
-            for transition_model in self.transitions:
-                transition_model.meta = \
-                    copy.deepcopy(source_state.transitions[counter].meta)
-                counter += 1
-            counter = 0
-            for data_flow_model in self.data_flows:
-                data_flow_model.meta = \
-                    copy.deepcopy(source_state.data_flows[counter].meta)
-                counter += 1
-            counter = 0
-            for scoped_variable_model in self.scoped_variables:
-                scoped_variable_model.meta = \
-                    copy.deepcopy(source_state.scoped_variables[counter].meta)
-                counter += 1
-
-    def store_meta_data_for_state(self):
-        #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
-
-        for input_data_port_model in self.input_data_ports:
-            self.meta["input_data_port" + str(input_data_port_model.data_port.data_port_id)] = \
-                input_data_port_model.meta
-
-        for output_data_port_model in self.output_data_ports:
-            self.meta["output_data_port" + str(output_data_port_model.data_port.data_port_id)] = \
-                output_data_port_model.meta
-
-        # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file
-        if hasattr(self.state, 'states'):
-            for transition_model in self.transitions:
-                self.meta["transition" + str(transition_model.transition.transition_id)] = transition_model.meta
-            for data_flow_model in self.data_flows:
-                self.meta["data_flow" + str(data_flow_model.data_flow.data_flow_id)] = data_flow_model.meta
-            for scoped_variable_model in self.scoped_variables:
-                self.meta["scoped_variable" + str(scoped_variable_model.scoped_variable.data_port_id)] =\
-                    scoped_variable_model.meta
-
-        global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)

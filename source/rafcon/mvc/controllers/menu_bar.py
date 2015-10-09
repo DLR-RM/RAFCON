@@ -152,7 +152,7 @@ class MenuBarController(ExtendedController):
             self.model.get_selected_state_machine_model().state_machine.file_system_path,
             delete_old_state_machine=False, save_as=save_as)
 
-        self.model.get_selected_state_machine_model().root_state.store_meta_data_for_state()
+        self.model.get_selected_state_machine_model().root_state.store_meta_data()
         logger.debug("Successfully saved graphics meta data.")
 
     def on_save_as_activate(self, widget=None, data=None, path=None):

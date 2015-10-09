@@ -24,7 +24,7 @@ def test_execute_script_returns_none(caplog):
         test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
-    test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+    test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
     state_machine.root_state.join()

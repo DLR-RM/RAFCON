@@ -199,7 +199,7 @@ class LibraryTreeController(ExtendedController):
 
         current_state.add_state(state_copy)
         current_state_model = current_selection.get_states()[0]
-        current_state_model.states[state_machine.root_state.state_id].load_meta_data_for_state()
+        current_state_model.states[state_machine.root_state.state_id].load_meta_data()
         current_state_model.states[state_machine.root_state.state_id].temp['gui']['editor']['recalc'] = True
 
     def open_button_clicked(self, widget):

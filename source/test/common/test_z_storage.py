@@ -112,7 +112,7 @@ def on_save_activate(state_machine_m, logger):
             state_machine_m.state_machine,
             state_machine_m.state_machine.base_path, delete_old_state_machine=False)
 
-        state_machine_m.root_state.store_meta_data_for_state()
+        state_machine_m.root_state.store_meta_data()
         logger.debug("Successfully saved graphics meta data.")
 
 
