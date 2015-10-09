@@ -1,3 +1,5 @@
+from os.path import join
+
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.library_state import LibraryState
 
@@ -6,6 +8,8 @@ from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
 
 from rafcon.mvc.models.abstract_state import state_to_state_model
+
+from rafcon.statemachine.singleton import library_manager
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -53,3 +57,16 @@ class LibraryStateModel(AbstractStateModel):
         self.outcomes = []
         for outcome in self.state.outcomes.itervalues():
             self.outcomes.append(OutcomeModel(outcome, self))
+
+    # ---------------------------------------- meta data methods ---------------------------------------------
+
+    def load_meta_data(self, path=None):
+        """Load meta data of container states from filesystem
+
+        Recursively loads meta data of child states.
+        """
+        super(LibraryStateModel, self).load_meta_data(path)
+        lib_os_path, _, _ = library_manager.get_os_path_to_library(self.state.library_path,
+                                                                   self.state.library_name)
+        root_state_path = join(lib_os_path, self.state_copy.state.state_id)
+        self.state_copy.load_meta_data(root_state_path)
