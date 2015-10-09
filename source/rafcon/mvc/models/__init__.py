@@ -1,4 +1,5 @@
 from state import StateModel
+from abstract_state import AbstractStateModel
 from container_state import ContainerStateModel
 from transition import TransitionModel
 from data_flow import DataFlowModel

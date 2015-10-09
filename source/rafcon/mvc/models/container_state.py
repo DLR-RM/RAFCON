@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from gtkmvc import ModelMT
 
 from rafcon.statemachine.states.container_state import ContainerState
@@ -179,7 +181,18 @@ class ContainerStateModel(StateModel):
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
 
-    def get_data_port_model(self, data_port_id):
+    def get_scoped_variable_m(self, data_port_id):
+        """Returns the scoped variable model for the given data port id
+
+        :param data_port_id: The data port id to search for
+        :return: The model of the scoped variable with the given id
+        """
+        for scoped_variable_m in self.scoped_variables:
+            if scoped_variable_m.scoped_variable.data_port_id == data_port_id:
+                return scoped_variable_m
+        return None
+
+    def get_data_port_m(self, data_port_id):
         """Searches and returns the model of a data port of a given state
 
         The method searches a port with the given id in the data ports of the given state model. If the state model
@@ -193,9 +206,9 @@ class ContainerStateModel(StateModel):
             if scoped_var_m.scoped_variable.data_port_id == data_port_id:
                 return scoped_var_m
 
-        return StateModel.get_data_port_model(self, data_port_id)
+        return StateModel.get_data_port_m(self, data_port_id)
 
-    def get_transition_model(self, transition_id):
+    def get_transition_m(self, transition_id):
         """Searches and return the transition model with the given in the given container state model
 
         :param transition_id: The transition id to be searched
@@ -206,7 +219,7 @@ class ContainerStateModel(StateModel):
                 return transition_m
         return None
 
-    def get_data_flow_model(self, data_flow_id):
+    def get_data_flow_m(self, data_flow_id):
         """Searches and return the data flow model with the given in the given container state model
 
         :param data_flow_id: The data flow id to be searched
@@ -217,18 +230,85 @@ class ContainerStateModel(StateModel):
                 return data_flow_m
         return None
 
-    # ---------------------------------------- storage functions ---------------------------------------------
-    def load_meta_data_for_state(self):
-        StateModel.load_meta_data_for_state(self)
-        for state_key, state in self.states.iteritems():
-            state.load_meta_data_for_state()
+    # ---------------------------------------- meta data methods ---------------------------------------------
 
-    def store_meta_data_for_state(self):
-        StateModel.store_meta_data_for_state(self)
-        for state_key, state in self.states.iteritems():
-            state.store_meta_data_for_state()
+    def load_meta_data(self):
+        """Load meta data of container states from filesystem
 
-    def copy_meta_data_from_state_model(self, source_state):
-        StateModel.copy_meta_data_from_state_model(self, source_state)
+        Recursively loads meta data of child states.
+        """
+        super(ContainerStateModel, self).load_meta_data()
         for state_key, state in self.states.iteritems():
-            state.copy_meta_data_from_state_model(source_state.states[state_key])
+            state.load_meta_data()
+
+    def store_meta_data(self):
+        """Store meta data of container states to the filesystem
+
+        Recursively stores meta data of child states.
+        """
+        super(ContainerStateModel, self).store_meta_data()
+        for state_key, state in self.states.iteritems():
+            state.store_meta_data()
+
+    def copy_meta_data_from_state_m(self, source_state_m):
+        """Dismiss current meta data and copy meta data from given state model
+
+        In addition to the state model method, also the meta data of container states is copied. Then, the meta data
+        of child states are recursively copied.
+
+        :param source_state_m: State model to load the meta data from
+        """
+        super(ContainerStateModel, self).copy_meta_data_from_state_m(source_state_m)
+
+        for scoped_variable_m in self.data_flows:
+            source_scoped_variable_m = source_state_m.get_scoped_variable_m(
+                scoped_variable_m.scoped_variable.data_flow_id)
+            scoped_variable_m.meta = deepcopy(source_scoped_variable_m.meta)
+
+        for transition_m in self.transitions:
+            source_transition_m = source_state_m.get_transition_m(transition_m.transition.transition_id)
+            transition_m.meta = deepcopy(source_transition_m.meta)
+
+        for data_flow_m in self.data_flows:
+            source_data_flow_m = source_state_m.get_data_flow_m(data_flow_m.data_flow.data_flow_id)
+            data_flow_m.meta = deepcopy(source_data_flow_m.meta)
+
+        for state_key, state in self.states.iteritems():
+            state.copy_meta_data_from_state_m(source_state_m.states[state_key])
+
+    def _parse_for_element_meta_data(self, meta_data):
+        """Load meta data for container state elements
+
+        In addition to the meta data of states, this method also parses for meta data of container state elements.
+
+        :param meta_data: Dictionary of loaded meta data
+        """
+        super(ContainerStateModel, self)._parse_for_element_meta_data(meta_data)
+        for transition_m in self.transitions:
+            self._copy_element_meta_data_from_meta_file_data(meta_data, transition_m, "transition",
+                                                             transition_m.transition.transition_id)
+        for data_flow_m in self.data_flows:
+            self._copy_element_meta_data_from_meta_file_data(meta_data, data_flow_m, "data_flow",
+                                                             data_flow_m.data_flow.data_flow_id)
+        for scoped_variable_m in self.scoped_variables:
+            self._copy_element_meta_data_from_meta_file_data(meta_data, scoped_variable_m, "scoped_variable",
+                                         scoped_variable_m.scoped_variable.data_port_id)
+
+    def _generate_element_meta_data(self, meta_data):
+        """Generate meta data for state elements and add it to the given dictionary
+
+        This method retrieves the meta data of the container state elements (data flows, transitions) and adds it
+        to the given meta data dictionary.
+
+        :param meta_data: Dictionary of meta data
+        """
+        super(ContainerStateModel, self)._generate_element_meta_data(meta_data)
+        for transition_m in self.transitions:
+            self._copy_element_meta_data_to_meta_file_data(meta_data, transition_m, "transition",
+                                                           transition_m.transition.transition_id)
+        for data_flow_m in self.data_flows:
+            self._copy_element_meta_data_to_meta_file_data(meta_data, data_flow_m, "data_flow",
+                                                           data_flow_m.data_flow.data_flow_id)
+        for scoped_variable_m in self.scoped_variables:
+            self._copy_element_meta_data_to_meta_file_data(meta_data, scoped_variable_m, "scoped_variable",
+                                                           scoped_variable_m.scoped_variable.data_port_id)

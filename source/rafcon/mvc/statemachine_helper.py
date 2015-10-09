@@ -382,10 +382,10 @@ class StateMachineHelper():
             if not (isinstance(new_state_m.parent.state, PreemptiveConcurrencyState) or
                     isinstance(new_state_m.parent.state, BarrierConcurrencyState)):
                 for t_id, t_meta in orig_model_linkage_meta_data['transitions'].iteritems():
-                    parent_m.get_transition_model(t_id).meta = t_meta
+                    parent_m.get_transition_m(t_id).meta = t_meta
 
             for df_id, df_meta in orig_model_linkage_meta_data['data_flows'].iteritems():
-                parent_m.get_data_flow_model(df_id).meta = df_meta
+                parent_m.get_data_flow_m(df_id).meta = df_meta
 
         return new_state_m
 

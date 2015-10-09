@@ -1,8 +1,16 @@
+from os import path
+from copy import deepcopy
+
 from gtkmvc import ModelMT
+
+from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.singleton import global_storage
 
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
+
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -81,7 +89,29 @@ class AbstractStateModel(ModelMT):
         self._load_output_data_port_models()
         self._load_outcome_models()
 
-    def get_data_port_model(self, data_port_id):
+    def get_input_data_port_m(self, data_port_id):
+        """Returns the input data port model for the given data port id
+
+        :param data_port_id: The data port id to search for
+        :return: The model of the data port with the given id
+        """
+        for data_port_m in self.input_data_ports:
+            if data_port_m.data_port.data_port_id == data_port_id:
+                return data_port_m
+        return None
+
+    def get_output_data_port_m(self, data_port_id):
+        """Returns the output data port model for the given data port id
+
+        :param data_port_id: The data port id to search for
+        :return: The model of the data port with the given id
+        """
+        for data_port_m in self.output_data_ports:
+            if data_port_m.data_port.data_port_id == data_port_id:
+                return data_port_m
+        return None
+
+    def get_data_port_m(self, data_port_id):
         """Searches and returns the model of a data port of a given state
 
         The method searches a port with the given id in the data ports of the given state model. If the state model
@@ -97,6 +127,17 @@ class AbstractStateModel(ModelMT):
                 return data_port_m
         return None
 
+    def get_outcome_m(self, outcome_id):
+        """Returns the outcome model for the given outcome id
+
+        :param outcome_id: The outcome id to search for
+        :return: The model of the outcome with the given id
+        """
+        for outcome_m in self.outcomes:
+            if outcome_m.outcome.outcome_id == outcome_id:
+                return outcome_m
+        return False
+
     def _load_input_data_port_models(self):
         raise NotImplementedError
 
@@ -105,3 +146,139 @@ class AbstractStateModel(ModelMT):
 
     def _load_outcome_models(self):
         raise NotImplementedError
+
+    @staticmethod
+    def overwrite_editor_meta(meta):
+        """
+        This function is for backward compatibility for state machines that still uses the "editor" key in their meta
+        :param meta:
+        :return:
+        """
+        if "editor" in meta['gui']:
+            if "editor_opengl" not in meta['gui']:
+                meta['gui']['editor_opengl'] = deepcopy(meta['gui']['editor'])
+            del meta['gui']['editor']
+
+    # ---------------------------------------- meta data methods ---------------------------------------------
+
+    def load_meta_data(self):
+        """Load meta data of state model from the file system
+
+        The meta data of the state model is loaded from the file system and stored in the meta property of the model.
+        Existing meta data is removed. Also the meta data of all state elements (data ports, outcomes,
+        etc) are loaded, as it is stored in the same file as the meta data of the state.
+        """
+        meta_path = path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
+        if path.exists(meta_path):
+            tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
+            # For backwards compatibility: move all meta data from editor to editor_opengl
+            self.overwrite_editor_meta(tmp_meta)
+            self._parse_for_element_meta_data(tmp_meta)
+            # assign the meta data to the state
+            self.meta = tmp_meta
+        # Print info only if the state has a location different from the tmp directory
+        elif meta_path[0:len(GLOBAL_STORAGE_BASE_PATH)] != GLOBAL_STORAGE_BASE_PATH:
+            logger.info("State '{0}' has no meta data. It will now be generated automatically.".format(self.state.name))
+
+    def store_meta_data(self):
+        """Save meta data of state model to the file system
+
+        This method generates a dictionary of the meta data of the state together with the meta data of all state
+        elements (data ports, outcomes, etc.) and stores it on the filesystem.
+        """
+        meta_path = path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
+        meta_data = deepcopy(self.meta)
+        self._generate_element_meta_data(meta_data)
+        global_storage.storage_utils.write_dict_to_yaml(meta_data, meta_path)
+
+    def copy_meta_data_from_state_m(self, source_state_m):
+        """Dismiss current meta data and copy meta data from given state model
+
+        The meta data of the given state model is used as meta data for this state. Also the meta data of all state
+        elements (data ports, outcomes, etc.) is overwritten with the meta data of the elements of the given state.
+
+        :param source_state_m: State model to load the meta data from
+        """
+
+        self.meta = deepcopy(source_state_m.meta)
+
+        for input_data_port_m in self.input_data_ports:
+            source_data_port_m = source_state_m.get_input_data_port_m(input_data_port_m.data_port.data_port_id)
+            input_data_port_m.meta = deepcopy(source_data_port_m.meta)
+        for output_data_port_m in self.output_data_ports:
+            source_data_port_m = source_state_m.get_output_data_port_m(output_data_port_m.data_port.data_port_id)
+            output_data_port_m.meta = deepcopy(source_data_port_m.meta)
+        for outcome_m in self.outcomes:
+            source_outcome_m = source_state_m.get_outcome_m(outcome_m.outcome.outcome_id)
+            outcome_m.meta = deepcopy(source_outcome_m.meta)
+
+    def _parse_for_element_meta_data(self, meta_data):
+        """Load meta data for state elements
+
+        The meta data of the state meta data file also contains the meta data for state elements (data ports,
+        outcomes, etc). This method parses the loaded meta data for each state element model. The meta data of the
+        elements is removed from the passed dictionary.
+
+        :param meta_data: Dictionary of loaded meta data
+        """
+        for data_port_m in self.input_data_ports:
+            self._copy_element_meta_data_from_meta_file_data(meta_data, data_port_m, "input_data_port",
+                                                             data_port_m.data_port.data_port_id)
+        for data_port_m in self.output_data_ports:
+            self._copy_element_meta_data_from_meta_file_data(meta_data, data_port_m, "output_data_port",
+                                                             data_port_m.data_port.data_port_id)
+        for outcome_m in self.outcomes:
+            self._copy_element_meta_data_from_meta_file_data(meta_data, outcome_m, "outcome",
+                                                             outcome_m.outcome.outcome_id)
+
+    @staticmethod
+    def _copy_element_meta_data_from_meta_file_data(meta_data, element_m, element_name, element_id):
+        """Helper method to assign the meta of the given element
+
+        The method assigns the meta data of the elements from the given meta data dictionary. The copied meta data is
+        then removed from the dictionary.
+
+        :param meta_data: The loaded meta data
+        :param element_m: The element model that is supposed to retrieve the meta data
+        :param element_name: The name string of the element type in the dictionary
+        :param element_id: The id of the element
+        """
+        meta_data_element_id = element_name + str(element_id)
+        meta_data_element = meta_data[meta_data_element_id]
+        AbstractStateModel.overwrite_editor_meta(meta_data_element)
+        element_m.meta = meta_data_element
+        del meta_data[meta_data_element_id]
+
+    def _generate_element_meta_data(self, meta_data):
+        """Generate meta data for state elements and add it to the given dictionary
+
+        This method retrieves the meta data of the state elements (data ports, outcomes, etc) and adds it to the
+        given meta data dictionary.
+
+        :param meta_data: Dictionary of meta data
+        """
+        for data_port_m in self.input_data_ports:
+            self._copy_element_meta_data_to_meta_file_data(meta_data, data_port_m, "input_data_port",
+                                                           data_port_m.data_port.data_port_id)
+        for data_port_m in self.output_data_ports:
+            self._copy_element_meta_data_to_meta_file_data(meta_data, data_port_m, "output_data_port",
+                                                           data_port_m.data_port.data_port_id)
+        for outcome_m in self.outcomes:
+            self._copy_element_meta_data_to_meta_file_data(meta_data, outcome_m, "outcome",
+                                                           outcome_m.outcome.outcome_id)
+
+    @staticmethod
+    def _copy_element_meta_data_to_meta_file_data(meta_data, element_m, element_name, element_id):
+        """Helper method to generate meta data for meta data file for the given element
+
+        The methods loads teh meta data of the given element and copies it into the given meta data dictionary
+        intended for being stored on the filesystem.
+
+        :param meta_data: The meta data to be stored
+        :param element_m: The element model to get the meta data from
+        :param element_name: The name string of the element type in the dictionary
+        :param element_id: The id of the element
+        """
+        meta_data_element_id = element_name + str(element_id)
+        meta_data_element = element_m.meta
+        meta_data[meta_data_element_id] = meta_data_element

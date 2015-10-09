@@ -515,8 +515,8 @@ class GraphicalEditorController(ExtendedController):
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
 
-        from_port_m = from_state_m.get_data_port_model(from_key)
-        to_port_m = to_state_m.get_data_port_model(to_key)
+        from_port_m = from_state_m.get_data_port_m(from_key)
+        to_port_m = to_state_m.get_data_port_m(to_key)
 
         # if isinstance(from_port_m, ScopedVariableModel):
         #     new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
@@ -768,8 +768,8 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            from_port_m = from_state_m.get_data_port_model(from_key)
-            to_port_m = to_state_m.get_data_port_model(to_key)
+            from_port_m = from_state_m.get_data_port_m(from_key)
+            to_port_m = to_state_m.get_data_port_m(to_key)
 
             # if isinstance(from_port_m, ScopedVariableModel):
             #     scoped_variable = from_port_m.scoped_variable
@@ -799,8 +799,8 @@ class GraphicalEditorController(ExtendedController):
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
 
-        from_port_m = from_state_m.get_data_port_model(from_key)
-        to_port_m = to_state_m.get_data_port_model(to_key)
+        from_port_m = from_state_m.get_data_port_m(from_key)
+        to_port_m = to_state_m.get_data_port_m(to_key)
 
         if from_port_m is None:
             logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
