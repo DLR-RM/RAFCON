@@ -9,7 +9,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.statemachine_helper import StateMachineHelper
 
 from rafcon.mvc.models.state_machine import StateMachineModel
-from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models import ContainerStateModel, StateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
@@ -603,7 +603,7 @@ class GraphicalEditorController(ExtendedController):
         :param tuple size: The default size (width, height) if there is no size stored
         :param float depth: The hierarchy level of the state
         """
-        assert isinstance(state_m, StateModel)
+        assert isinstance(state_m, AbstractStateModel)
         state_meta_gaphas = state_m.meta['gui']['editor_gaphas']
         state_meta_opengl = state_m.meta['gui']['editor_opengl']
         state_temp = state_m.temp['gui']['editor']
