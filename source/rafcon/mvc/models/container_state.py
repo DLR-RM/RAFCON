@@ -232,12 +232,12 @@ class ContainerStateModel(StateModel):
 
     # ---------------------------------------- meta data methods ---------------------------------------------
 
-    def load_meta_data(self):
+    def load_meta_data(self, path=None):
         """Load meta data of container states from filesystem
 
         Recursively loads meta data of child states.
         """
-        super(ContainerStateModel, self).load_meta_data()
+        super(ContainerStateModel, self).load_meta_data(path)
         for state_key, state in self.states.iteritems():
             state.load_meta_data()
 

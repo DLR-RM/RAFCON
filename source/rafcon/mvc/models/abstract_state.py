@@ -1,4 +1,4 @@
-from os import path
+import os.path
 from copy import deepcopy
 
 from gtkmvc import ModelMT
@@ -161,15 +161,17 @@ class AbstractStateModel(ModelMT):
 
     # ---------------------------------------- meta data methods ---------------------------------------------
 
-    def load_meta_data(self):
+    def load_meta_data(self, path=None):
         """Load meta data of state model from the file system
 
         The meta data of the state model is loaded from the file system and stored in the meta property of the model.
         Existing meta data is removed. Also the meta data of all state elements (data ports, outcomes,
         etc) are loaded, as it is stored in the same file as the meta data of the state.
         """
-        meta_path = path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
-        if path.exists(meta_path):
+        if not path:
+            path = self.state.get_file_system_path()
+        meta_path = os.path.join(path, StateMachineStorage.GRAPHICS_FILE)
+        if os.path.exists(meta_path):
             tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
             # For backwards compatibility: move all meta data from editor to editor_opengl
             self.overwrite_editor_meta(tmp_meta)
