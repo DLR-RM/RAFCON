@@ -1,4 +1,5 @@
 from copy import deepcopy
+from os.path import join
 
 from gtkmvc import ModelMT
 
@@ -238,8 +239,9 @@ class ContainerStateModel(StateModel):
         Recursively loads meta data of child states.
         """
         super(ContainerStateModel, self).load_meta_data(path)
-        for state_key, state in self.states.iteritems():
-            state.load_meta_data()
+        for state_key, state_m in self.states.iteritems():
+            child_path = None if not path else join(path, state_key)
+            state_m.load_meta_data(child_path)
 
     def store_meta_data(self):
         """Store meta data of container states to the filesystem

@@ -196,7 +196,7 @@ class AbstractStateModel(ModelMT):
         This method generates a dictionary of the meta data of the state together with the meta data of all state
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         """
-        meta_path = path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
+        meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
         meta_data = deepcopy(self.meta)
         self._generate_element_meta_data(meta_data)
         global_storage.storage_utils.write_dict_to_yaml(meta_data, meta_path)
