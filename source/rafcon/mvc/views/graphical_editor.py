@@ -323,8 +323,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param outcomes: outcomes of the state (list with outcome objects)
         :param input_ports_m: input ports of the state
         :param output_ports_m: output ports of the state
-        :param scoped_vars_m: scoped variable ports of the state
-        :param active: whether to display the state as active/selected
+        :param selected: whether to display the state as selected
+        :param active: whether to display the state as active
         :param depth: The z layer
         :return: The OpenGL id and the positions of teh outcomes (as dictionary with outcome id as key)
         """
