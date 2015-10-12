@@ -1231,7 +1231,7 @@ class GraphicalEditorController(ExtendedController):
                         new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
                         child_state_m.meta['gui']['editor_opengl']['size'] = new_size
 
-                        if isinstance(state_m, (ContainerStateModel, LibraryStateModel)):
+                        if isinstance(child_state_m, (ContainerStateModel, LibraryStateModel)):
                             resize_children(child_state_m, old_size, new_size)
 
             # Start recursive call of the content resize
