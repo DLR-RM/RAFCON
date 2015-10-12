@@ -56,7 +56,7 @@ def pos_equal(pos1, pos2):
 def calculate_size(current_size, maximum_size):
     # Current size smaller than maximum size, leave as is
     if current_size[0] <= maximum_size[0] and current_size[1] <= maximum_size[1]:
-        return current_size
+        return copy(current_size)
     # Otherwise calculate new size
     width_ratio = float(current_size[0]) / maximum_size[0]
     height_ratio = float(current_size[1]) / maximum_size[1]
@@ -1339,28 +1339,22 @@ class GraphicalEditorController(ExtendedController):
 
         size = state_meta['size']
 
-        recalc = False
         # Root state is always in the origin
         if state_m.state.is_root_state:
             pos = (0, 0)
         else:
             # Use default values if no size information is stored
-            # Here the possible case of pos_x and pos_y == 0 must be handled
             if not isinstance(state_meta['rel_pos'], tuple):
                 state_m.meta['gui']['editor_opengl']['rel_pos'] = rel_pos
-                recalc = True
+
+                state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
+                self._move_state(state_m, state_abs_pos, redraw=False, publish_changes=False)
+                redraw = True
 
             rel_pos = state_meta['rel_pos']
             pos = self._get_absolute_position(state_m.parent, rel_pos)
 
         state_temp['pos'] = pos
-
-        # Keep state within parent if default values are used
-        # TODO: first check whether this is the case or not
-        if recalc and not state_m.state.is_root_state:
-            state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
-            self._move_state(state_m, state_abs_pos, redraw=False, publish_changes=False)
-            redraw = True
 
         # Was the state selected?
         selected_states = self.model.selection.get_states()
