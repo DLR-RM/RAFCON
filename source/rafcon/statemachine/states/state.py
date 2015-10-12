@@ -868,6 +868,11 @@ class State(Observable, yaml.YAMLObject):
     def is_root_state(self):
         return not isinstance(self.parent, State)
 
+    @property
+    def is_root_state_of_library(self):
+        from rafcon.statemachine.states.library_state import LibraryState
+        return isinstance(self.parent, LibraryState)
+
     def finalize(self, outcome=None):
         """Finalize state
 
