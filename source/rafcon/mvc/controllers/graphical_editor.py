@@ -1198,8 +1198,9 @@ class GraphicalEditorController(ExtendedController):
 
                 if isinstance(state_m, LibraryStateModel):
                     root_state_m = state_m.state_copy
-                    root_state_m.meta['gui']['editor_opengl']['size'] = new_size
-                    resize_children(root_state_m, old_size, new_size)
+                    root_state_m.meta['gui']['editor_opengl']['size'] = copy(new_size)
+                    if isinstance(root_state_m, ContainerStateModel):
+                        resize_children(root_state_m, old_size, new_size)
 
                 elif isinstance(state_m, ContainerStateModel):
                     # Resize all transitions

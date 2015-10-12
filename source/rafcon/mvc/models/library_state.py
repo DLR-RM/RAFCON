@@ -70,4 +70,7 @@ class LibraryStateModel(AbstractStateModel):
                                                                    self.state.library_name)
         root_state_path = join(lib_os_path, self.state_copy.state.state_id)
         self.state_copy.load_meta_data(root_state_path)
-        self._mark_state_machine_as_dirty()
+        # Path is not None if library is nested within another library
+        # In this case, do not mark state machine as dirty, as this is done by the root library
+        if not path:
+            self._mark_state_machine_as_dirty()
