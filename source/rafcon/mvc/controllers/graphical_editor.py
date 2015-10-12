@@ -1408,6 +1408,11 @@ class GraphicalEditorController(ExtendedController):
                     return False
                 redraw = True
 
+            ratio = self.view.editor.pixel_to_size_ratio()
+            minimum_size = global_gui_config.get_config_value('MINIMUM_SIZE_FOR_CONTENT', 30) / ratio
+            if (size[0] < minimum_size or size[1] < minimum_size) and not self._is_first_draw_of_state(state_m):
+                return False
+
             num_child_state = 0
             width = size[0]
             height = size[1]
