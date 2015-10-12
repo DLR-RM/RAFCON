@@ -2046,18 +2046,10 @@ class GraphicalEditorController(ExtendedController):
             old_size = state_orig_m.meta['gui']['editor_opengl']['size']
             target_size = target_state_m.meta['gui']['editor_opengl']['size']
 
-            # Use the old size, if it is smaller than the target state
-            if old_size[0] < target_size[0] and old_size[1] < target_size[1]:
-                new_size = old_size
-            # Resize to 1/3 of the target state, but keep the size ratio
-            else:
-                new_size = (target_size[0] / 3., target_size[1] / 3.)
-                old_size_ratio = old_size[0] / old_size[1]
-                if old_size_ratio < new_size[0] / new_size[1]:
-                    new_size = (new_size[1] * old_size_ratio, new_size[1])
-                else:
-                    new_size = (new_size[0], new_size[0] / old_size_ratio)
+            new_size = calculate_size(old_size, (target_size[0] / 5., target_size[1] / 5.))
 
+            pos = self._get_absolute_position(state_copy_m.parent, state_copy_m.meta['gui']['editor_opengl']['rel_pos'])
+            state_copy_m.temp['gui']['editor']['pos'] = pos
             new_corner_pos = add_pos(state_copy_m.temp['gui']['editor']['pos'], new_size)
             self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
 
