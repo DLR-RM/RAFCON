@@ -53,6 +53,23 @@ def pos_equal(pos1, pos2):
     return pos1[0] == pos2[0] and pos1[1] == pos2[1]
 
 
+def calculate_size(current_size, maximum_size):
+    # Current size smaller than maximum size, leave as is
+    if current_size[0] <= maximum_size[0] and current_size[1] <= maximum_size[1]:
+        return current_size
+    # Otherwise calculate new size
+    width_ratio = float(current_size[0]) / maximum_size[0]
+    height_ratio = float(current_size[1]) / maximum_size[1]
+    current_size_ratio = float(current_size[0]) / current_size[1]
+    if width_ratio > height_ratio:
+        new_width = maximum_size[0]
+        new_height = new_width / current_size_ratio
+    else:
+        new_height = maximum_size[1]
+        new_width = new_height * current_size_ratio
+    return new_width, new_height
+
+
 class GraphicalEditorController(ExtendedController):
     """Controller handling the graphical editor
 
@@ -197,10 +214,13 @@ class GraphicalEditorController(ExtendedController):
         # Prepare the drawing process
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
-        self.draw_state(self.root_state_m)
+        # print "draw sm"
+        redraw = self.draw_state(self.root_state_m)
         self.draw_state_machine()
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
+        if redraw:
+            self._redraw()
 
     def _redraw(self, timer_triggered=False):
         """Force the graphical editor to be redrawn
@@ -1070,7 +1090,8 @@ class GraphicalEditorController(ExtendedController):
         if redraw:
             self._redraw()
 
-    def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False, publish_changes=False):
+    def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False, publish_changes=False,
+                      redraw=True):
         """Resize the state by the given delta width and height
 
         The resize function checks the child states and keeps the state around the children, thus limiting the minimum
@@ -1082,6 +1103,7 @@ class GraphicalEditorController(ExtendedController):
         :param tuple new_corner_pos: The absolute coordinates of the new desired lower right corner
         :param keep_ratio: Flag, if set, the size ratio is kept constant
         :param resize_content: Flag, if set, the content of the state is also resized
+        :param redraw: Whether to call redraw() at the end or not
         """
         state_temp = state_m.temp['gui']['editor']
         state_meta = state_m.meta['gui']['editor_opengl']
@@ -1102,7 +1124,7 @@ class GraphicalEditorController(ExtendedController):
         min_right_edge = state_temp['pos'][0]
         max_bottom_edge = state_temp['pos'][1]
 
-        # If the content is not supposed to be resized, with have to calculate the inner edges, which define the
+        # If the content is not supposed to be resized, we have to calculate the inner edges, which define the
         # minimum size of our state
         if not resize_content and self.has_content(state_m):
             # Check lower right corner of all child states
@@ -1174,8 +1196,12 @@ class GraphicalEditorController(ExtendedController):
                     new_rel_pos_y = new_parent_size[1] * old_rel_pos_y_rel
                     return new_rel_pos_x, new_rel_pos_y
 
-                # Only container states have content
-                if self.has_content(state_m):
+                if isinstance(state_m, LibraryStateModel):
+                    root_state_m = state_m.state_copy
+                    root_state_m.meta['gui']['editor_opengl']['size'] = new_size
+                    resize_children(root_state_m, old_size, new_size)
+
+                elif isinstance(state_m, ContainerStateModel):
                     # Resize all transitions
                     for transition_m in state_m.transitions:
                         # By repositioning all waypoints
@@ -1205,7 +1231,7 @@ class GraphicalEditorController(ExtendedController):
                         new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
                         child_state_m.meta['gui']['editor_opengl']['size'] = new_size
 
-                        if self.has_content(child_state_m):
+                        if isinstance(state_m, (ContainerStateModel, LibraryStateModel)):
                             resize_children(child_state_m, old_size, new_size)
 
             # Start recursive call of the content resize
@@ -1213,7 +1239,8 @@ class GraphicalEditorController(ExtendedController):
 
         if publish_changes:
             self._publish_changes(state_m, affects_children=resize_content)
-        self._redraw()
+        if redraw:
+            self._redraw()
 
     def _move_view(self, rel_motion, opengl_coords=False):
         """Move the view according to the relative coordinates
@@ -1299,44 +1326,12 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(state_m, AbstractStateModel)
         state_meta = state_m.meta['gui']['editor_opengl']
         state_temp = state_m.temp['gui']['editor']
+        redraw = False
+        # print "depth", depth
 
         # Use default values if no size information is stored
         if not isinstance(state_meta['size'], tuple):
-            if not isinstance(state_m, LibraryStateModel):
-                state_meta['size'] = size
-            else:
-                # Size ratio of library states is determined by their content
-                lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
-                # No meta information about library content
-                if not isinstance(lib_state_meta['size'], tuple):
-                    state_meta['size'] = size
-                    lib_state_meta['size'] = size
-                else:
-                    lib_size = lib_state_meta['size']
-                    parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
-                    # Reduce size if side length greater than one fourth of parent side length
-                    if lib_size[0] * 4 > parent_size[0] or lib_size[1] * 4 > parent_size[1]:
-                        lib_size_ratio = float(lib_size[0]) / lib_size[1]
-                        height = parent_size[1] / 6.
-                        if lib_size_ratio < 1:
-                            state_meta['size'] = height * lib_size_ratio, height
-                        else:
-                            state_meta['size'] = height / lib_size_ratio, height
-                    else:
-                        state_meta['size'] = lib_size
-
-        elif isinstance(state_m, LibraryStateModel):
-            lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
-            lib_size = lib_state_meta['size']
-            state_size = state_meta['size']
-            lib_size_ratio = float(lib_size[0]) / lib_size[1]
-            state_size_ratio = float(state_size[0]) / state_size[1]
-            if abs(lib_size_ratio - state_size_ratio) > 0.01:
-                # Wrong size ratio of state
-                if lib_size_ratio < 1:
-                    state_meta['size'] = state_size[1] * lib_size_ratio, state_size[1]
-                else:
-                    state_meta['size'] = state_size[0], state_size[0] / lib_size_ratio
+            state_meta['size'] = size
 
         size = state_meta['size']
 
@@ -1357,9 +1352,11 @@ class GraphicalEditorController(ExtendedController):
         state_temp['pos'] = pos
 
         # Keep state within parent if default values are used
+        # TODO: first check whether this is the case or not
         if recalc and not state_m.state.is_root_state:
             state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
-            self._move_state(state_m, state_abs_pos, redraw=True, publish_changes=False)
+            self._move_state(state_m, state_abs_pos, redraw=False, publish_changes=False)
+            redraw = True
 
         # Was the state selected?
         selected_states = self.model.selection.get_states()
@@ -1410,7 +1407,7 @@ class GraphicalEditorController(ExtendedController):
                 child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
                 num_child_state += 1
 
-                self.draw_state(child_state, child_rel_pos, child_size, depth + 1)
+                redraw |= self.draw_state(child_state, child_rel_pos, child_size, depth + 1)
 
             if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
                 self.draw_inner_data_ports(state_m, depth)
@@ -1420,10 +1417,29 @@ class GraphicalEditorController(ExtendedController):
             if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
                 self.draw_data_flows(state_m, depth)
 
+        elif isinstance(state_m, LibraryStateModel):
+            self.draw_state(state_m.state_copy, (0, 0), size, depth + 1)
+            lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
+            if isinstance(lib_state_meta['size'], tuple) and state_meta['size'] != lib_state_meta['size']:
+                # print "size of library state and root state differ", state_meta['size'], lib_state_meta['size']
+                # print "temp", state_m.state_copy.temp['gui']['editor']
+                parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
+                new_size = calculate_size(lib_state_meta['size'], (parent_size[0] / 5, parent_size[1] / 5))
+                new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
+                # print "resize lib"
+                self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
+                                   redraw=False)
+                # print "resized", lib_state_meta['size']
+                state_meta['size'] = lib_state_meta['size']
+                redraw = True
+            pass
+
         self._handle_new_transition(state_m, depth)
 
         if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
             self._handle_new_data_flow(state_m, depth)
+
+        return redraw
 
     def draw_inner_data_ports(self, parent_state_m, parent_depth):
         """Draw the inner ports of a state
