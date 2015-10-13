@@ -177,11 +177,15 @@ class DataPort(Observable, yaml.YAMLObject):
 
         if default_value is None:
             default_value = self.default_value
+
         if type_helpers.type_inherits_of_type(type(default_value), self._data_type):
             self._default_value = default_value
         else:
-            if old_data_type == "float" and data_type == "int":
-                self._default_value = default_value
+
+            if old_data_type.__name__ == "float" and data_type == "int":
+                self._default_value = int(default_value)
+            elif old_data_type.__name__ == "int" and data_type == "float":
+                self._default_value = float(default_value)
             else:
                 self._default_value = None
 

@@ -38,6 +38,6 @@ def test_runtime_values(caplog):
 
 
 if __name__ == '__main__':
-    setup_module()
-    test_runtime_values(None)
-    # pytest.main([__file__])
+    # setup_module()
+    # test_runtime_values(None)
+    pytest.main([__file__])

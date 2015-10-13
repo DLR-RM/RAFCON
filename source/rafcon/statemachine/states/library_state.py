@@ -205,7 +205,8 @@ class LibraryState(State):
     def set_use_output_runtime_value(self, output_data_port_id, use_value):
         self._use_runtime_value_output_data_ports[output_data_port_id] = use_value
 
-    # overwrite data port function of State class
+    # overwrite data port function of State class, actually not necessary as the data ports cannot be changed
+    # from the library state, but have to be changed in the library-statemachine itself
 
     @Observable.observed
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):

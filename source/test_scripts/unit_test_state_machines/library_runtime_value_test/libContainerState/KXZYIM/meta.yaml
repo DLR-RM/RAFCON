@@ -1,5 +1,5 @@
 !LibraryState
-input_data_port_runtime_values: {5: 1.0}
+input_data_port_runtime_values: {5: 7.0}
 library_name: hierarchy_library
 library_path: unit_test_state_machines
 name: library_hierarchy_state
