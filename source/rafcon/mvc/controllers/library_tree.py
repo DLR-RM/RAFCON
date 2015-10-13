@@ -173,12 +173,14 @@ class LibraryTreeController(ExtendedController):
         # If inserted as template, we have to extract the state_copy and load the meta data manually
         else:
             template = library_state.state_copy
+            orig_state_id = template.state_id
+            template.change_state_id()
             current_state.add_state(template)
 
             from os.path import join
             lib_os_path, _, _ = library_manager.get_os_path_to_library(library_state.library_path,
                                                                        library_state.library_name)
-            root_state_path = join(lib_os_path, template.state_id)
+            root_state_path = join(lib_os_path, orig_state_id)
             template_m = current_state_m.states[template.state_id]
             template_m.load_meta_data(root_state_path)
             # Causes the template to be resized
