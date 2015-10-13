@@ -1121,12 +1121,15 @@ class GraphicalEditorController(ExtendedController):
             else:
                 new_width = new_height * state_size_ratio
 
+        if isinstance(state_m, LibraryStateModel):
+            resize_content = True
+
         min_right_edge = state_temp['pos'][0]
         max_bottom_edge = state_temp['pos'][1]
 
         # If the content is not supposed to be resized, we have to calculate the inner edges, which define the
         # minimum size of our state
-        if not resize_content and self.has_content(state_m):
+        if not resize_content and isinstance(state_m, ContainerStateModel):
             # Check lower right corner of all child states
             for child_state_m in state_m.states.itervalues():
                 _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
@@ -1804,7 +1807,7 @@ class GraphicalEditorController(ExtendedController):
             pass
         return selection
 
-    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth, all=False,
+    def _selection_ids_to_model(self, ids, search_state_m, search_state_depth, selection, selection_depth, all=False,
                                 find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Searches recursively for objects with the given ids
 
@@ -1812,7 +1815,7 @@ class GraphicalEditorController(ExtendedController):
         object with the biggest depth (furthest nested).
 
         :param ids: The ids to search for
-        :param rafcon.mvc.models.abstract_state.AbstractStateModel search_state: The state to search in
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel search_state_m: The state to search in
         :param float search_state_depth: The depth the search state is in
         :param gtkmvc.Model selection: The currently found object
         :param float selection_depth: The depth of the currently found object
@@ -1834,21 +1837,21 @@ class GraphicalEditorController(ExtendedController):
         # Only the element which is furthest down in the hierarchy is selected
         if (search_state_depth > selection_depth or all) and find_states:
             # Check whether the id of the current state matches an id in the selected ids
-            if search_state.temp['gui']['editor']['id'] and search_state.temp['gui']['editor']['id'] in ids:
+            if search_state_m.temp['gui']['editor']['id'] and search_state_m.temp['gui']['editor']['id'] in ids:
                 # if so, add the state to the list of selected states
-                selection = update_selection(selection, search_state)
+                selection = update_selection(selection, search_state_m)
                 selection_depth = search_state_depth
                 # remove the id from the list to fasten up further searches
-                ids.remove(search_state.temp['gui']['editor']['id'])
+                ids.remove(search_state_m.temp['gui']['editor']['id'])
 
         # Return if there is nothing more to find
         if len(ids) == 0:
             return selection, selection_depth
 
         # If it is a container state, check its transitions, data flows and child states
-        if self.has_content(search_state):
+        if isinstance(search_state_m, ContainerStateModel):
 
-            for state in search_state.states.itervalues():
+            for state in search_state_m.states.itervalues():
                 if len(ids) > 0:
                     (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
                                                                                 selection, selection_depth, all,
@@ -1866,26 +1869,20 @@ class GraphicalEditorController(ExtendedController):
                 return current_selection
 
             if find_transitions:
-                selection = search_selection_in_model_list(search_state.transitions, selection)
+                selection = search_selection_in_model_list(search_state_m.transitions, selection)
                 if len(ids) == 0:
                     return selection, selection_depth
 
             if find_data_flows:
-                selection = search_selection_in_model_list(search_state.data_flows, selection)
+                selection = search_selection_in_model_list(search_state_m.data_flows, selection)
                 if len(ids) == 0:
                     return selection, selection_depth
 
             if find_data_ports:
-                selection = search_selection_in_model_list(search_state.input_data_ports, selection)
-                selection = search_selection_in_model_list(search_state.output_data_ports, selection)
-                selection = search_selection_in_model_list(search_state.scoped_variables, selection)
+                selection = search_selection_in_model_list(search_state_m.input_data_ports, selection)
+                selection = search_selection_in_model_list(search_state_m.output_data_ports, selection)
+                selection = search_selection_in_model_list(search_state_m.scoped_variables, selection)
         return selection, selection_depth
-
-    @staticmethod
-    def has_content(state_m):
-        if isinstance(state_m, ContainerStateModel):
-            return True
-        return False
 
     @staticmethod
     def get_boundaries(model, include_waypoints=False):
