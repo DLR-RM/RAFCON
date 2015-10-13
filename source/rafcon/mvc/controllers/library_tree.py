@@ -147,6 +147,10 @@ class LibraryTreeController(ExtendedController):
         library = model[row][1]
         library_path = model[row][2]
 
+        if not smm_m.selected_state_machine_id:
+            logger.error("Please select a container state within a state machine first")
+            return
+
         current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
         if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
             logger.error("Please select exactly one state for the insertion of a library")
