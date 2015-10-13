@@ -1,19 +1,19 @@
 import gtk
 import gobject
+from functools import partial
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-import rafcon.statemachine.singleton
-from rafcon.utils import log
-logger = log.get_logger(__name__)
+
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.state_helper import StateHelper
+from rafcon.statemachine.singleton import library_manager
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 class LibraryTreeController(ExtendedController):
 
-    """
-
-    """
     def __init__(self, model=None, view=None, state_machine_manager_model=None):
         ExtendedController.__init__(self, model, view)
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
@@ -47,11 +47,11 @@ class LibraryTreeController(ExtendedController):
             menu = gtk.Menu()
             add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
             add_link_menu_item.set_label("Add as library (link)")
-            add_link_menu_item.connect("activate", self.add_link_button_clicked)
+            add_link_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=False))
 
             add_template_menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
             add_template_menu_item.set_label("Add as template (copy)")
-            add_template_menu_item.connect("activate", self.add_template_button_clicked)
+            add_template_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=True))
 
             open_menu_item = gtk.ImageMenuItem(gtk.STOCK_OPEN)
             open_menu_item.set_label("Open")
@@ -119,7 +119,7 @@ class LibraryTreeController(ExtendedController):
         self.store_expansion_state()
         self.library_tree_store.clear()
         self.library_row_iter_dict_by_library_path.clear()
-        for library_key, library_item in rafcon.statemachine.singleton.library_manager.libraries.iteritems():
+        for library_key, library_item in library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")
         self.redo_expansion_state()
 
@@ -140,7 +140,7 @@ class LibraryTreeController(ExtendedController):
         # The user clicked on an entry in the tree store
         return
 
-    def add_link_button_clicked(self, widget):
+    def insert_button_clicked(self, widget, as_template=False):
         smm_m = self.state_machine_manager_model
         (model, row) = self.view.get_selection().get_selected()
         library_key = model[row][0]
@@ -152,7 +152,8 @@ class LibraryTreeController(ExtendedController):
             logger.error("Please select exactly one state for the insertion of a library")
             return
 
-        current_state = current_selection.get_states()[0].state
+        current_state_m = current_selection.get_states()[0]
+        current_state = current_state_m.state
         if not isinstance(current_state, ContainerState):
             logger.error("Libraries can only be inserted in container states")
             return
@@ -161,45 +162,23 @@ class LibraryTreeController(ExtendedController):
                      (str(library_key), str(library), str(library_path)))
 
         library_state = LibraryState(library_path, library_key, "0.1", library_key)
-        current_state.add_state(library_state)
 
-    def add_template_button_clicked(self, widget):
-        smm_m = self.state_machine_manager_model
-        (model, row) = self.view.get_selection().get_selected()
-        library_key = model[row][0]
-        library = model[row][1]
-        library_path = model[row][2]
+        # If inserted as library, we can just insert the library state
+        if not as_template:
+            current_state.add_state(library_state)
+        # If inserted as template, we have to extract the state_copy and load the meta data manually
+        else:
+            template = library_state.state_copy
+            current_state.add_state(template)
 
-        current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-        if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
-            logger.error("Please select exactly one state for the insertion of a library template")
-            return
-
-        current_state = current_selection.get_states()[0].state
-        if not isinstance(current_state, ContainerState):
-            logger.error("Templates can only be inserted in container states")
-            return
-
-        logger.debug("Insert library template state %s (with file path %s, and library path %s) into the state machine" %
-                     (str(library_key), str(library), str(library_path)))
-
-        library_name = library_key
-
-        path_list = library_path.split("/")
-        target_lib_dict = rafcon.statemachine.singleton.library_manager.libraries
-        for element in path_list:
-            target_lib_dict = target_lib_dict[element]
-        logger.debug("Load state to which this library state links")
-        state_machine, lib_version, creation_time = rafcon.statemachine.singleton.library_manager.storage.\
-            load_statemachine_from_yaml(target_lib_dict[library_name])
-
-        state_copy = StateHelper.get_state_copy(state_machine.root_state)
-        state_copy.change_state_id()
-
-        current_state.add_state(state_copy)
-        current_state_model = current_selection.get_states()[0]
-        current_state_model.states[state_machine.root_state.state_id].load_meta_data()
-        current_state_model.states[state_machine.root_state.state_id].temp['gui']['editor']['recalc'] = True
+            from os.path import join
+            lib_os_path, _, _ = library_manager.get_os_path_to_library(library_state.library_path,
+                                                                       library_state.library_name)
+            root_state_path = join(lib_os_path, template.state_id)
+            template_m = current_state_m.states[template.state_id]
+            template_m.load_meta_data(root_state_path)
+            # Causes the template to be resized
+            template_m.temp['gui']['editor']['template'] = True
 
     def open_button_clicked(self, widget):
         try:
@@ -208,8 +187,9 @@ class LibraryTreeController(ExtendedController):
             logger.error("Could not open library: {0}".format(e))
 
     def open_run_button_clicked(self, widget):
+        from rafcon.statemachine.singleton import state_machine_execution_engine
         state_machine = self.open_library_as_state_machine()
-        rafcon.statemachine.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
+        state_machine_execution_engine.start(state_machine.state_machine_id)
 
     def open_library_as_state_machine(self):
         from rafcon.statemachine.singleton import global_storage
