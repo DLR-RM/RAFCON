@@ -11,7 +11,7 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.enums import StateType
-from rafcon.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 import rafcon.mvc.singleton
@@ -30,8 +30,8 @@ class StateMachineHelper():
         container_m = model.parent
         if container_m is None:
             return False
-        assert isinstance(container_m, StateModel)
-        if isinstance(model, StateModel):
+        assert isinstance(container_m, ContainerStateModel)
+        if isinstance(model, AbstractStateModel):
             state_id = model.state.state_id
             try:
                 if state_id in container_m.state.states:
