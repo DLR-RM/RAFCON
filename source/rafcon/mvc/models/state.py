@@ -86,9 +86,8 @@ class StateModel(AbstractStateModel):
             elif hasattr(info, 'after') and info['after']:
                 changed_list._notify_method_after(info.instance, cause, None, (model,), info)
 
-        # Notify the parent state about the change (this causes a recursive call up to the root state)
-        if self.parent is not None:
-            self.parent.model_changed(model, prop_name, info)
+        # Notifies parent state
+        super(StateModel, self).model_changed(model, prop_name, info)
 
     def get_model_info(self, model):
         model_key = None
