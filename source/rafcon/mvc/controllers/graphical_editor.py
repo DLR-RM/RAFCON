@@ -1360,11 +1360,13 @@ class GraphicalEditorController(ExtendedController):
         # Was the state selected?
         selected_states = self.model.selection.get_states()
         selected = False if state_m not in selected_states else True
+        selected = selected if not (state_m.state.is_root_state_of_library and state_m.parent in selected_states) \
+            else True
 
         # Is the state active (executing)?
         active = 0
-        if state_m.state.active:
-            if self.has_content(state_m) and state_m.state.child_execution:
+        if state_m.state.active or (state_m.state.is_root_state_of_library and state_m.parent.state.active):
+            if isinstance(state_m, (ContainerStateModel, LibraryStateModel)) and state_m.state.child_execution:
                 active = 0.5
             else:
                 active = 1
@@ -1446,11 +1448,11 @@ class GraphicalEditorController(ExtendedController):
             if not isinstance(state_temp['library_level'], int):
                 state_temp['library_level'] = 1
 
-# Resize inner states of library states if not done before or if meta data has changed
+            # Resize inner states of library states if not done before or if meta data has changed
             lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
             if isinstance(lib_state_meta['size'], tuple) and state_meta['size'] != lib_state_meta['size']:
                 parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
-                new_size = calculate_size(lib_state_meta['size'], (parent_size[0] / 5, parent_size[1] / 5))
+                new_size = calculate_size(lib_state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
                 new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
                 self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
                                    redraw=False)
