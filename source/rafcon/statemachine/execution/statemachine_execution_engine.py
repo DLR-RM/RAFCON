@@ -74,12 +74,14 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
 
+            self.start_state_paths = []
+
             if start_state_path:
                 path_list = start_state_path.split("/")
                 cur_path = ""
                 for path in path_list:
                     if cur_path == "":
-                        cur_path = curr_path = path
+                        cur_path = path
                     else:
                         cur_path = cur_path + "/" + path
                     self.start_state_paths.append(cur_path)
@@ -188,14 +190,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
             return StateMachineExecutionStatus.STOPPED
         return return_value
-
-    def start_from_selected_state(self, state):
-        """Starts the active statemachine from a given state
-
-        :param state: the state the execution should start at
-        """
-        self._create_dependency_tree(state)
-        self._start_tree()
 
     @staticmethod
     def execute_state_machine_from_path(path, start_state_path=None, wait_for_execution_finished=True):

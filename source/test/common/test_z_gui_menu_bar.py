@@ -320,4 +320,6 @@ def test_gui(caplog):
 
 
 if __name__ == '__main__':
+    # setup_module(None)
+    # test_gui(None)
     pytest.main([__file__])

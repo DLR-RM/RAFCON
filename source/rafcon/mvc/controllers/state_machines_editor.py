@@ -1,5 +1,7 @@
 import gtk
 import traceback
+import copy
+import collections
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.views.graphical_editor import GraphicalEditorView
@@ -93,6 +95,7 @@ class StateMachinesEditorController(ExtendedController):
             self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
         self.tabs = {}
+        self.last_opened_state_machines = collections.deque(maxlen=10)
 
     def register_view(self, view):
         self.view['notebook'].connect("add_state_machine", add_state_machine)
@@ -128,6 +131,9 @@ class StateMachinesEditorController(ExtendedController):
         self.on_close_clicked(None, state_machine_m, None, force=False)
 
     def on_switch_page(self, notebook, page_pointer, page_num):
+        # Important: The method notification_selected_sm_changed will trigger this method, which in turn will trigger
+        #               the notification_selected_sm_changed method again, thus some parts of this function will be
+        #               triggerd twice => take care
         # From documentation: Note the page parameter is a GPointer and not usable within PyGTK. Use the page_num
         # parameter to retrieve the new current page using the get_nth_page() method.
         page = notebook.get_nth_page(page_num)
@@ -138,6 +144,8 @@ class StateMachinesEditorController(ExtendedController):
                 rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = new_sm_id
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
+                if self.last_opened_state_machines[len(self.last_opened_state_machines) - 1] != new_sm_id:
+                    self.last_opened_state_machines.append(new_sm_id)
                 return
 
     def get_page_id(self, state_machine_id):
@@ -180,6 +188,7 @@ class StateMachinesEditorController(ExtendedController):
 
         graphical_editor_view.show()
         self.view.notebook.show()
+        self.last_opened_state_machines.append(sm_id)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
@@ -272,10 +281,16 @@ class StateMachinesEditorController(ExtendedController):
 
         self.remove_controller(sm_id)
 
+        copy_of_last_opened_state_machines = copy.deepcopy(self.last_opened_state_machines)
+
+        # the following statement will switch the acitve notebook tab automaically and the history of the
+        # last opened state machines will be destroyed
         # Close tab and remove info
         page_id = self.get_page_id(sm_id)
         self.view.notebook.remove_page(page_id)
         del self.tabs[sm_id]
+
+        self.last_opened_state_machines = copy_of_last_opened_state_machines
 
         # self.model is the state_machine_manager_model
         # if the state_machine is removed by a core function the state_machine_editor listens to this event, closes
@@ -285,14 +300,20 @@ class StateMachinesEditorController(ExtendedController):
 
         # Open tab with next state machine
         sm_keys = self.model.state_machine_manager.state_machines.keys()
+
         if len(sm_keys) > 0:
-            self.model.selected_state_machine_id = \
-                self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
+            sm_id = -1
+            while sm_id not in sm_keys:
+                if len(self.last_opened_state_machines) > 0:
+                    sm_id = self.last_opened_state_machines.pop()
+                else:
+                    sm_id = self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
+
+            # set active state machine id
+            self.model.selected_state_machine_id = sm_id
         else:
             self.model.selected_state_machine_id = None
 
-        # if state_machine_m.state_machine.marked_dirty:
-        #     state_machine_m.state_machine.marked_dirty = False
 
     def close_all_pages(self):
         """Closes all tabs of the state machines editor

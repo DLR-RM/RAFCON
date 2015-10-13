@@ -134,6 +134,8 @@ class MenuBarController(ExtendedController):
             rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
         except AttributeError as e:
             logger.error('Error while trying to open state-machine: {0}'.format(e))
+            import traceback
+            logger.error("Traceback: {0}".format(str(traceback.format_exc())))
 
     def on_save_activate(self, widget, data=None, save_as=False):
         state_machine_m = self.model.get_selected_state_machine_model()

@@ -683,10 +683,12 @@ class StateDataFlowsEditorController(ExtendedController):
         view['internal_d_checkbutton'].connect('toggled', self.toggled_button, 'data_flows_internal')
 
         if isinstance(self.model.state, LibraryState):
-            view['add_d_button'].set_sensitive(False)
-            view['remove_d_button'].set_sensitive(False)
             view['internal_d_checkbutton'].set_sensitive(False)
             view['internal_d_checkbutton'].set_active(False)
+
+        if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState):
+            view['add_d_button'].set_sensitive(False)
+            view['remove_d_button'].set_sensitive(False)
 
         if self.model.state.is_root_state:
             self.df_list_ctrl.view_dict['data_flows_external'] = False
