@@ -147,6 +147,15 @@ class AbstractStateModel(ModelMT):
     def _load_outcome_models(self):
         raise NotImplementedError
 
+    @ModelMT.observe("state", after=True, before=True)
+    def model_changed(self, model, prop_name, info):
+        """This method notifies parent state about changes
+        """
+
+        # Notify the parent state about the change (this causes a recursive call up to the root state)
+        if self.parent is not None:
+            self.parent.model_changed(model, prop_name, info)
+
     @staticmethod
     def overwrite_editor_meta(meta):
         """
