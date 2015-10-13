@@ -278,3 +278,12 @@ class LibraryState(State):
         state_copy = LibraryState()
         # TODO: copy fields from source_state into the state_copy
         return state_copy
+
+    @property
+    def child_execution(self):
+        """Property for the _child_execution field
+        """
+        if self.state_execution_status is StateExecutionState.EXECUTE_CHILDREN:
+            return True
+        else:
+            return False

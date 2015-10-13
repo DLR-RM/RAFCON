@@ -1284,17 +1284,8 @@ class ContainerState(State):
     @property
     def child_execution(self):
         """Property for the _child_execution field
-
         """
         if self.state_execution_status is StateExecutionState.EXECUTE_CHILDREN:
             return True
         else:
             return False
-
-            # @child_execution.setter
-            # @Observable.observed
-            # def child_execution(self, child_execution):
-            #     if child_execution is not None:
-            #         if not isinstance(child_execution, bool):
-            #             raise TypeError("child_execution must be of type str")
-            #     self._child_execution = child_execution
