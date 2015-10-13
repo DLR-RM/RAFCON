@@ -137,6 +137,16 @@ class DataPortListController(ExtendedController):
             if selected_data_port_id is not None:
                 self.select_entry(selected_data_port_id)
 
+    @ExtendedController.observe("state", after=True)
+    def runtime_values_changed(self, model, prop_name, info):
+        # handles cases for the library runtime values
+        if "_input_runtime_value" in info.method_name and self.model is model:
+            if self.type == "input":
+                self.input_data_ports_changed(model, prop_name, info)
+        elif "_output_runtime_value" in info.method_name and self.model is model:
+            if self.type == "output":
+                self.output_data_ports_changed(model, prop_name, info)
+
     def on_new_port_button_clicked(self, widget, data=None):
         """Add a new port with default values and select it
         """
@@ -189,20 +199,27 @@ class DataPortListController(ExtendedController):
     def on_use_runtime_value_edited(self, widget, column_id, text):
         """Try to set the use runtime value flag to the newly entered one
         """
-        logger.info("on_use_runtime_value_edited widget: {0} path: {1} text: {2}".format(widget, column_id, text))
+        # logger.info("on_use_runtime_value_edited widget: {0} path: {1} text: {2}".format(widget, column_id, text))
         try:
             data_port_id = self.get_data_port_id_from_selection()
             bool_value = convert_string_value_to_type_value(text, bool)
-            print bool_value
             if self.type == "input":
                 self.model.state.set_use_input_runtime_value(data_port_id, bool_value)
             else:
                 self.model.state.set_use_output_runtime_value(data_port_id, bool_value)
         except TypeError as e:
-            logger.error("Error while trying to change the port name: {0}".format(e))
+            logger.error("Error while trying to change the use_runtime_value flag: {0}".format(e))
 
     def on_runtime_value_edited(self, widget, column_id, text):
-        pass
+        logger.info("on_runtime_value_edited widget: {0} path: {1} text: {2}".format(widget, column_id, text))
+        try:
+            data_port_id = self.get_data_port_id_from_selection()
+            if self.type == "input":
+                self.model.state.set_input_runtime_value(data_port_id, text)
+            else:
+                self.model.state.set_output_runtime_value(data_port_id, text)
+        except TypeError as e:
+            logger.error("Error while trying to change the runtime value: {0}".format(e))
 
     def on_name_changed(self, widget, column_id, text):
         """Try to set the port name to the newly entered one

@@ -956,9 +956,13 @@ class History(ModelMT):
         if change_type == 'gui_meta_data_changed':
             # store meta data
 
-            logger.debug("state %s '%s' history got notification that Meta data has changed" %
-                         (changed_model.state.state_id, changed_model.state.name))
-            # -> in case of undo/redo overwrite Model.meta-dict
+            from rafcon.mvc.models.state import StateModel
+            from rafcon.mvc.models.container_state import ContainerState
+
+            if isinstance(changed_model, StateModel) or isinstance(changed_model, ContainerState):
+                logger.debug("state %s '%s' history got notification that Meta data has changed" %
+                             (changed_model.state.state_id, changed_model.state.name))
+                # -> in case of undo/redo overwrite Model.meta-dict
 
             # self.actual_action = Action('meta_data_changed', changed_parent_model.state.get_path(),  # instance path of parent
             #                             changed_model, 'meta_data_changed', {},

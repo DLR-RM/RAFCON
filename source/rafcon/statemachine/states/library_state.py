@@ -51,6 +51,7 @@ class LibraryState(State):
         self.version = version
 
         self._state_copy = None
+
         lib_os_path, new_library_path, new_library_name = \
             library_manager.get_os_path_to_library(library_path, library_name)
 
@@ -76,24 +77,25 @@ class LibraryState(State):
         # input runtime values
         self._input_data_port_runtime_values = {}
         self._use_runtime_value_input_data_ports = {}
-        if len(input_data_port_runtime_values) == 0:  # no input data port runtime values specified
-            for key, idp in self.input_data_ports.iteritems():
+
+        self.input_data_port_runtime_values = input_data_port_runtime_values
+        self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
+        for key, idp in self.input_data_ports.iteritems():  # check if all input data ports have a runtime value
+            if key not in self.input_data_port_runtime_values.iterkeys():
                 self.input_data_port_runtime_values[key] = idp.default_value
-                self.use_runtime_value_input_data_ports[key] = True  # TODO: True or False better here?
-        else:
-            self.input_data_port_runtime_values = input_data_port_runtime_values
-            self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
+                self.use_runtime_value_input_data_ports[key] = True
 
         # output runtime values
         self._output_data_port_runtime_values = {}
         self._use_runtime_value_output_data_ports = {}
-        if len(output_data_port_runtime_values) == 0:  # no output data port runtime values specified
-            for key, idp in self.output_data_ports.iteritems():
+
+        self.output_data_port_runtime_values = output_data_port_runtime_values
+        self.use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
+        for key, idp in self.output_data_ports.iteritems():  # check if all output data ports have a runtime value
+            if key not in self.output_data_port_runtime_values.iterkeys():
                 self.output_data_port_runtime_values[key] = idp.default_value
                 self.use_runtime_value_output_data_ports[key] = True
-        else:
-            self.output_data_port_runtime_values = output_data_port_runtime_values
-            self.use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
+
 
         logger.debug("Initialized library state with name %s" % name)
         self.initialized = True
@@ -186,20 +188,48 @@ class LibraryState(State):
             return State.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
 
     @Observable.observed
-    def add_input_runtime_value(self, input_data_port_id, value):
-        self._input_data_port_runtime_values[input_data_port_id] = value
+    def set_input_runtime_value(self, input_data_port_id, value):
+        checked_value = self.state_copy.input_data_ports[input_data_port_id].check_default_value(value)
+        self._input_data_port_runtime_values[input_data_port_id] = checked_value
 
     @Observable.observed
     def set_use_input_runtime_value(self, input_data_port_id, use_value):
         self._use_runtime_value_input_data_ports[input_data_port_id] = use_value
 
     @Observable.observed
-    def add_output_runtime_value(self, output_data_port_id, value):
-        self._output_data_port_runtime_values[output_data_port_id] = value
+    def set_output_runtime_value(self, output_data_port_id, value):
+        checked_value = self.state_copy.output_data_ports[output_data_port_id].check_default_value(value)
+        self._output_data_port_runtime_values[output_data_port_id] = checked_value
 
     @Observable.observed
     def set_use_output_runtime_value(self, output_data_port_id, use_value):
         self._use_runtime_value_output_data_ports[output_data_port_id] = use_value
+
+    # overwrite data port function of State class
+
+    @Observable.observed
+    def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
+        self._use_runtime_value_input_data_ports[data_port_id] = False
+        self._input_data_port_runtime_values[data_port_id] = default_value
+        return State.add_input_data_port(name, data_type, default_value, data_port_id)
+
+    @Observable.observed
+    def remove_input_data_port(self, data_port_id):
+        del self._use_runtime_value_input_data_ports[data_port_id]
+        del self._input_data_port_runtime_values[data_port_id]
+        State.remove_input_data_port(data_port_id)
+
+    @Observable.observed
+    def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
+        self._use_runtime_value_output_data_ports[data_port_id] = False
+        self._output_data_port_runtime_values[data_port_id] = default_value
+        State.add_output_data_port(name, data_type, default_value, data_port_id)
+
+    @Observable.observed
+    def remove_output_data_port(self, data_port_id):
+        del self._use_runtime_value_output_data_ports[data_port_id]
+        del self._output_data_port_runtime_values[data_port_id]
+        State.remove_output_data_port(data_port_id)
 
     @classmethod
     def to_yaml(cls, dumper, data):

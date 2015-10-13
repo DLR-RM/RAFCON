@@ -71,14 +71,14 @@ def run_sm():
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_library_test")
 
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'test_libraries')
+    library_paths["unit_test_state_machines"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'unit_test_state_machines')
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
     # print rafcon.statemachine.singleton.library_manager.libraries
 
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/test_libraries/library_with_nested_library")
+        global_storage.load_statemachine_from_yaml("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
 
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView()

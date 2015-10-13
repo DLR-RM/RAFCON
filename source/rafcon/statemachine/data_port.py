@@ -172,6 +172,7 @@ class DataPort(Observable, yaml.YAMLObject):
         :param default_value: The new default value
         :return:
         """
+        old_data_type = self.data_type
         self.data_type = data_type
 
         if default_value is None:
@@ -179,7 +180,10 @@ class DataPort(Observable, yaml.YAMLObject):
         if type_helpers.type_inherits_of_type(type(default_value), self._data_type):
             self._default_value = default_value
         else:
-            self._default_value = None
+            if old_data_type == "float" and data_type == "int":
+                self._default_value = default_value
+            else:
+                self._default_value = None
 
     def __change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
