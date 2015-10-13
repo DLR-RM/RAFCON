@@ -160,11 +160,8 @@ class LibraryTreeController(ExtendedController):
         logger.debug("Link library state %s (with file path %s, and library path %s) into the state machine" %
                      (str(library_key), str(library), str(library_path)))
 
-        from rafcon.mvc.statemachine_helper import StateMachineHelper
         library_state = LibraryState(library_path, library_key, "0.1", library_key)
         current_state.add_state(library_state)
-        libarary_state_m = StateMachineHelper.get_state_model_for_state(library_state)
-        libarary_state_m.load_meta_data()
 
     def add_template_button_clicked(self, widget):
         smm_m = self.state_machine_manager_model
