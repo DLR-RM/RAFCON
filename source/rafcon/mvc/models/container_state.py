@@ -31,7 +31,7 @@ class ContainerStateModel(StateModel):
 
     __observables__ = ("states", "transitions", "data_flows", "scoped_variables")
 
-    def __init__(self, container_state, parent=None, meta=None):
+    def __init__(self, container_state, parent=None, meta=None, load_meta_data=True):
         """Constructor
         """
         assert isinstance(container_state, ContainerState)
@@ -60,6 +60,9 @@ class ContainerStateModel(StateModel):
 
         for scoped_variable in self.state.scoped_variables.itervalues():
             self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
+
+        if load_meta_data:
+            self.load_meta_data()
 
         # this class is an observer of its own properties:
         self.register_observer(self)

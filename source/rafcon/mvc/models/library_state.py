@@ -25,7 +25,7 @@ class LibraryStateModel(AbstractStateModel):
 
     state_copy = None
 
-    def __init__(self, state, parent=None, meta=None):
+    def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         """Constructor
         """
         super(LibraryStateModel, self).__init__(state, parent, meta)
@@ -36,6 +36,9 @@ class LibraryStateModel(AbstractStateModel):
             self.state_copy = model_class(state.state_copy, parent=self)
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
+
+        if load_meta_data:
+            self.load_meta_data()
 
     def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state
@@ -70,7 +73,3 @@ class LibraryStateModel(AbstractStateModel):
                                                                    self.state.library_name)
         root_state_path = join(lib_os_path, self.state_copy.state.state_id)
         self.state_copy.load_meta_data(root_state_path)
-        # Path is not None if library is nested within another library
-        # In this case, do not mark state machine as dirty, as this is done by the root library
-        if not path:
-            self._mark_state_machine_as_dirty()

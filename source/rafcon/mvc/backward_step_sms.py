@@ -85,9 +85,6 @@ def run_sm():
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
-    # load the meta data for the state machine
-    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model)
 
     reactor.run()

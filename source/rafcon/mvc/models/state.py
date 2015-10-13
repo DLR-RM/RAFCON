@@ -19,10 +19,13 @@ class StateModel(AbstractStateModel):
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state
      """
 
-    def __init__(self, state, parent=None, meta=None):
+    def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         """Constructor
         """
         super(StateModel, self).__init__(state, parent, meta)
+
+        if load_meta_data and type(self) == StateModel:
+            self.load_meta_data()
 
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, prop_name, info):
