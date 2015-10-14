@@ -2056,7 +2056,11 @@ class GraphicalEditorController(ExtendedController):
 
             new_size = calculate_size(old_size, (target_size[0] / 5., target_size[1] / 5.))
 
-            pos = self._get_absolute_position(state_copy_m.parent, state_copy_m.meta['gui']['editor_opengl']['rel_pos'])
+            rel_pos_x, rel_pos_y = state_copy_m.meta['gui']['editor_opengl']['rel_pos']
+            rel_pos_x = target_size[0] * 4 / 5. if rel_pos_x > target_size[0] * 4 / 5. else rel_pos_x
+            rel_pos_y = -target_size[1] * 4 / 5. if rel_pos_y < -target_size[1] * 4 / 5. else rel_pos_y
+            pos = self._get_absolute_position(state_copy_m.parent, (rel_pos_x, rel_pos_y))
+            state_copy_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos_x, rel_pos_y)
             state_copy_m.temp['gui']['editor']['pos'] = pos
             new_corner_pos = add_pos(state_copy_m.temp['gui']['editor']['pos'], new_size)
             self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
