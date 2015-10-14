@@ -152,6 +152,8 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("down", partial(self._move_in_direction, Direction.bottom))
 
     @ExtendedController.observe("state_machine", after=True)
+    @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
+    @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of any state within state machine changed
     def state_machine_change(self, model, prop_name, info):
         """Called on any change within th state machine
 
@@ -163,11 +165,15 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         # print "change", model, prop_name, info
-        if 'method_name' in info and info['method_name'] == 'root_state_after_change':
-            self._redraw()
-        elif info['method_name'] == 'marked_dirty' and info['args'][1]:
-            self._redraw()
-
+        if 'method_name' in info:
+            if info['method_name'] == 'root_state_after_change':
+                self._redraw()
+            elif info['method_name'] == 'marked_dirty' and info['args'][1]:
+                self._redraw()
+        elif 'signal' in info:
+            if isinstance(info['arg'], dict):
+                if info['arg']['info']['arg'] in ['show_content']:
+                    self._redraw()
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
@@ -183,7 +189,6 @@ class GraphicalEditorController(ExtendedController):
             logger.debug("The root state was exchanged")
             self.root_state_m = model.root_state
             self._redraw()
-
 
     @ExtendedController.observe("selection", after=True)
     def selection_change(self, model, prop_name, info):
@@ -1304,11 +1309,6 @@ class GraphicalEditorController(ExtendedController):
             # Move view to keep the previous mouse position in the view
             self._move_view(diff, opengl_coords=True)
 
-    @staticmethod
-    def _is_first_draw_of_state(state_m):
-        state_temp = state_m.temp['gui']['editor']
-        return not isinstance(state_temp['pos'], tuple)
-
     def draw_state_machine(self):
         """Draws remaining components of the state machine
 
@@ -1335,6 +1335,7 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(state_m, AbstractStateModel)
         state_meta = state_m.meta['gui']['editor_opengl']
         state_temp = state_m.temp['gui']['editor']
+        is_first_draw_of_state = not isinstance(state_temp['pos'], tuple)
         redraw = False
 
         # Use default values if no size information is stored
@@ -1374,8 +1375,10 @@ class GraphicalEditorController(ExtendedController):
             else:
                 active = 1
 
+        is_child_of_library = False
         # Increase hierarchy level if child of a library state
         if not state_m.state.is_root_state and isinstance(state_m.parent.temp['gui']['editor']['library_level'], int):
+            is_child_of_library = True
             if state_m.state.is_root_state_of_library:
                 state_temp['library_level'] = state_m.parent.temp['gui']['editor']['library_level']
             else:
@@ -1400,17 +1403,16 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(state_m, ContainerStateModel):
 
             # Draw library states only up to a certain hierarchy level
-            if isinstance(state_temp['library_level'], int) and \
-                    state_temp['library_level'] >= global_gui_config.get_config_value(
-                        'MAX_VISIBLE_LIBRARY_HIERARCHY', 2):
+            if is_child_of_library and state_temp['library_level'] >= global_gui_config.get_config_value(
+                    'MAX_VISIBLE_LIBRARY_HIERARCHY', 2):
                 # All states must be drawn once to create meta data
-                if not self._is_first_draw_of_state(state_m):
+                if not is_first_draw_of_state:
                     return False
                 redraw = True
 
             ratio = self.view.editor.pixel_to_size_ratio()
             minimum_size = global_gui_config.get_config_value('MINIMUM_SIZE_FOR_CONTENT', 30) / ratio
-            if (size[0] < minimum_size or size[1] < minimum_size) and not self._is_first_draw_of_state(state_m):
+            if (size[0] < minimum_size or size[1] < minimum_size) and not is_first_draw_of_state:
                 return False
 
             num_child_state = 0
@@ -1452,23 +1454,28 @@ class GraphicalEditorController(ExtendedController):
                 redraw = True
 
         elif isinstance(state_m, LibraryStateModel):
-            # First draw inner states to generate meta data
-            self.draw_state(state_m.state_copy, (0, 0), size, depth)
-
-            # Start calculation hierarchy level within a library
-            if not isinstance(state_temp['library_level'], int):
-                state_temp['library_level'] = 1
-
-            # Resize inner states of library states if not done before or if meta data has changed
             lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
-            if isinstance(lib_state_meta['size'], tuple) and state_meta['size'] != lib_state_meta['size']:
-                parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
-                new_size = calculate_size(lib_state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
-                new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
-                self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
-                                   redraw=False)
-                state_meta['size'] = lib_state_meta['size']
-                redraw = True
+            lib_size_has_changed = isinstance(lib_state_meta['size'], tuple) and \
+                state_meta['size'] != lib_state_meta['size']
+
+            if is_first_draw_of_state or state_m.meta['gui']['show_content'] is True or \
+                    lib_size_has_changed or is_child_of_library:
+                # First draw inner states to generate meta data
+                self.draw_state(state_m.state_copy, (0, 0), size, depth)
+
+                # Start calculation hierarchy level within a library
+                if not is_child_of_library:
+                    state_temp['library_level'] = 1
+
+                # Resize inner states of library states if not done before or if meta data has changed
+                if lib_size_has_changed:
+                    parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
+                    new_size = calculate_size(lib_state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
+                    new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
+                    self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
+                                       redraw=False)
+                    state_meta['size'] = lib_state_meta['size']
+                    redraw = True
 
         self._handle_new_transition(state_m, depth)
 
