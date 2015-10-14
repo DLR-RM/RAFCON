@@ -134,7 +134,7 @@ class StateMachineModel(ModelMT):
         :return: True if the operation was a list operation, False else
         """
         if prop_name in ["states", "transitions", "data_flows", "input_data_ports", "output_data_ports",
-                         "scoped_variables"]:
+                         "scoped_variables", "outcomes"]:
             if info['method_name'] in ["append", "extend", "insert", "pop", "remove", "reverse", "sort",
                                        "__delitem__", "__setitem__"]:
                 return True
