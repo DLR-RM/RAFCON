@@ -9,7 +9,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.models.state import StateModel
+from rafcon.mvc.controllers.io_data_port_list import dataport_compare_method
 
 
 class ScopedVariableListController(ExtendedController):
@@ -150,7 +150,7 @@ class ScopedVariableListController(ExtendedController):
                             sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
             tms = gtk.TreeModelSort(tmp)
             tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-            tms.set_sort_func(0, StateModel.dataport_compare_method)
+            tms.set_sort_func(0, dataport_compare_method)
             tms.sort_column_changed()
             tmp = tms
             self.scoped_variables_list_store.clear()

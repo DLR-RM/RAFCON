@@ -584,7 +584,7 @@ class State(Observable, yaml.YAMLObject):
         """
         if state_id is None:
             state_id = state_id_generator()
-        if not self.is_root_state:
+        if not self.is_root_state and not self.is_root_state_of_library:
             while state_id in self.parent.states:
                 state_id = state_id_generator()
 
@@ -867,6 +867,11 @@ class State(Observable, yaml.YAMLObject):
     @property
     def is_root_state(self):
         return not isinstance(self.parent, State)
+
+    @property
+    def is_root_state_of_library(self):
+        from rafcon.statemachine.states.library_state import LibraryState
+        return isinstance(self.parent, LibraryState)
 
     def finalize(self, outcome=None):
         """Finalize state

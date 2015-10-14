@@ -9,7 +9,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.statemachine_helper import StateMachineHelper
 
 from rafcon.mvc.models.state_machine import StateMachineModel
-from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models import ContainerStateModel, StateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
@@ -515,8 +515,8 @@ class GraphicalEditorController(ExtendedController):
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
 
-        from_port_m = from_state_m.get_data_port_model(from_key)
-        to_port_m = to_state_m.get_data_port_model(to_key)
+        from_port_m = from_state_m.get_data_port_m(from_key)
+        to_port_m = to_state_m.get_data_port_m(to_key)
 
         # if isinstance(from_port_m, ScopedVariableModel):
         #     new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
@@ -603,7 +603,7 @@ class GraphicalEditorController(ExtendedController):
         :param tuple size: The default size (width, height) if there is no size stored
         :param float depth: The hierarchy level of the state
         """
-        assert isinstance(state_m, StateModel)
+        assert isinstance(state_m, AbstractStateModel)
         state_meta_gaphas = state_m.meta['gui']['editor_gaphas']
         state_meta_opengl = state_m.meta['gui']['editor_opengl']
         state_temp = state_m.temp['gui']['editor']
@@ -768,8 +768,8 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            from_port_m = from_state_m.get_data_port_model(from_key)
-            to_port_m = to_state_m.get_data_port_model(to_key)
+            from_port_m = from_state_m.get_data_port_m(from_key)
+            to_port_m = to_state_m.get_data_port_m(to_key)
 
             # if isinstance(from_port_m, ScopedVariableModel):
             #     scoped_variable = from_port_m.scoped_variable
@@ -799,8 +799,8 @@ class GraphicalEditorController(ExtendedController):
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
 
-        from_port_m = from_state_m.get_data_port_model(from_key)
-        to_port_m = to_state_m.get_data_port_model(to_key)
+        from_port_m = from_state_m.get_data_port_m(from_key)
+        to_port_m = to_state_m.get_data_port_m(to_key)
 
         if from_port_m is None:
             logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,

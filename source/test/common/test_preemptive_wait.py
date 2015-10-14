@@ -82,8 +82,8 @@ def test_preemptive_wait2_timeout(caplog):
 
     run_statemachine()
 
-    assert 0.5 < gvm.get_variable('state_1_wait_time') < 0.55
-    assert 0.5 < gvm.get_variable('state_2_wait_time') < 0.55
+    assert 0.5 < gvm.get_variable('state_1_wait_time') < 0.8
+    assert 0.5 < gvm.get_variable('state_2_wait_time') < 0.8
     assert gvm.get_variable('state_1_preempted')
     assert not gvm.get_variable('state_2_preempted')
 

@@ -56,7 +56,7 @@ def on_save_activate(state_machine_m, logger):
         state_machine_m.state_machine,
         state_machine_m.state_machine.file_system_path, delete_old_state_machine=True)
 
-    state_machine_m.root_state.store_meta_data_for_state()
+    state_machine_m.root_state.store_meta_data()
     logger.debug("Successfully saved graphics meta data.")
 
 
@@ -390,7 +390,7 @@ def test_add_remove_history(caplog):
             sm_model.state_machine,
             path,
             delete_old_state_machine=True)
-        sm_model.root_state.store_meta_data_for_state()
+        sm_model.root_state.store_meta_data()
 
     sm_history = sm_model.history
 
@@ -1328,7 +1328,7 @@ def test_type_changes_without_gui(caplog):
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
-    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     # thread = threading.Thread(target=test_add_remove_history,
     #                           args=[True, variables_for_pytest.sm_manager_model, main_window_controller,
@@ -1365,7 +1365,7 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
     main_window_view = MainWindowView()
 
     # load the meta data for the state machine
-    test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+    test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')

@@ -329,13 +329,13 @@ def test_state_type_change_test(with_gui, caplog):
         main_window_view = MainWindowView()
 
         # load the meta data for the state machine
-        test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+        test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
         main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
     else:
         # load the meta data for the state machine
-        test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+        test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     thread = threading.Thread(target=trigger_state_type_change_tests,
                               args=[test_utils.sm_manager_model, main_window_controller,

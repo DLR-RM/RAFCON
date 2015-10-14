@@ -74,9 +74,6 @@ class StateMachineManagerModel(ModelMT, Observable):
                 if sm_id not in self.state_machines:
                     logger.debug("Create new state machine model for state machine with id %s", sm.state_machine_id)
                     self.state_machines[sm_id] = StateMachineModel(sm, self)
-                    #TODO: check when meta data cannot be loaded
-                    logger.debug("Load meta data for state machine with state machine id %s " % str(sm_id))
-                    self.state_machines[sm_id].root_state.load_meta_data_for_state()
                     self.selected_state_machine_id = sm_id
         elif info["method_name"] == "remove_state_machine":
             sm_id_to_delete = None

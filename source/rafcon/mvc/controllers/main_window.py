@@ -100,14 +100,8 @@ class MainWindowController(ExtendedController):
                                                               border=constants.BORDER_WIDTH_TEXTVIEW)
         view["tree_notebook_1"].insert_page(library_notebook_widget, library_tab_label, page_num)
 
-        # view['add_link_button'].connect("clicked", library_controller.add_link_button_clicked,
-        #                                 state_machine_manager_model)
-        # view['add_template_button'].connect("clicked", library_controller.add_template_button_clicked,
-        #                                     state_machine_manager_model)
-        view['add_link_menu_entry'].connect("activate", library_controller.add_link_button_clicked,
-                                        state_machine_manager_model)
-        view['add_template_menu_entry'].connect("activate", library_controller.add_template_button_clicked,
-                                            state_machine_manager_model)
+        view['add_link_menu_entry'].connect("activate", library_controller.insert_button_clicked, None, False)
+        view['add_template_menu_entry'].connect("activate", library_controller.insert_button_clicked, None, True)
 
         view['main_window'].add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
                                gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)

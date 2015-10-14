@@ -20,6 +20,8 @@ from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.statemachine_helper import StateMachineHelper
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models.library_state import LibraryStateModel
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
@@ -49,6 +51,23 @@ def pos_equal(pos1, pos2):
     check_pos(pos1)
     check_pos(pos2)
     return pos1[0] == pos2[0] and pos1[1] == pos2[1]
+
+
+def calculate_size(current_size, maximum_size):
+    # Current size smaller than maximum size, leave as is
+    if current_size[0] <= maximum_size[0] and current_size[1] <= maximum_size[1]:
+        return copy(current_size)
+    # Otherwise calculate new size
+    width_ratio = float(current_size[0]) / maximum_size[0]
+    height_ratio = float(current_size[1]) / maximum_size[1]
+    current_size_ratio = float(current_size[0]) / current_size[1]
+    if width_ratio > height_ratio:
+        new_width = maximum_size[0]
+        new_height = new_width / current_size_ratio
+    else:
+        new_height = maximum_size[1]
+        new_width = new_height * current_size_ratio
+    return new_width, new_height
 
 
 class GraphicalEditorController(ExtendedController):
@@ -143,8 +162,12 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The property that was changed
         :param dict info: Information about the change
         """
+        # print "change", model, prop_name, info
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             self._redraw()
+        elif info['method_name'] == 'marked_dirty' and info['args'][1]:
+            self._redraw()
+
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
@@ -191,10 +214,13 @@ class GraphicalEditorController(ExtendedController):
         # Prepare the drawing process
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
-        self.draw_state(self.root_state_m)
+        # print "draw sm"
+        redraw = self.draw_state(self.root_state_m)
         self.draw_state_machine()
         # Finish the drawing process (e.g. swap buffers)
         self.view.editor.expose_finish(args)
+        if redraw:
+            self._redraw()
 
     def _redraw(self, timer_triggered=False):
         """Force the graphical editor to be redrawn
@@ -302,7 +328,7 @@ class GraphicalEditorController(ExtendedController):
                     self._create_new_transition(outcome_state, outcome_key)
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
-            elif self.selected_outcome is not None and isinstance(new_selection, StateModel) and \
+            elif self.selected_outcome is not None and isinstance(new_selection, AbstractStateModel) and \
                     ((new_selection.parent is self.selected_outcome[0].parent and
                               self.selected_outcome[1] is not None) or
                          (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
@@ -329,7 +355,7 @@ class GraphicalEditorController(ExtendedController):
                     else:
                         self._create_new_data_flow(port_model)
                 # Allow the user to create waypoints while creating a new data flow
-                elif self.selected_port_connector and isinstance(new_selection, StateModel):
+                elif self.selected_port_connector and isinstance(new_selection, AbstractStateModel):
                     self._handle_new_waypoint()
 
             self._redraw()
@@ -447,7 +473,7 @@ class GraphicalEditorController(ExtendedController):
                         offset = None
                         model_meta = model.meta['gui']['editor_opengl']
                         model_temp = model.temp['gui']['editor']
-                        if isinstance(model, StateModel):
+                        if isinstance(model, AbstractStateModel):
                             self.changed_models.append(model)
                             offset = self._get_position_relative_to_state(model, self.mouse_move_start_coords)
                             model_temp['original_rel_pos'] = copy(model_meta['rel_pos'])
@@ -467,7 +493,7 @@ class GraphicalEditorController(ExtendedController):
                         self.drag_origin_offset.append(offset)
                 for i, model in enumerate(self.model.selection):
                     if self.drag_origin_offset[i] is not None:
-                        if isinstance(model, StateModel):
+                        if isinstance(model, AbstractStateModel):
                             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
                             self._move_state(model, new_pos, redraw=False, publish_changes=False)
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
@@ -484,7 +510,7 @@ class GraphicalEditorController(ExtendedController):
 
             # Move the current state, if the user didn't click on an outcome (wants to create a transition) or a
             # resize handler (wants to resize the state)
-            elif isinstance(self.single_selection, StateModel) and \
+            elif isinstance(self.single_selection, AbstractStateModel) and \
                             self.selected_outcome is None and self.selected_resizer is None:
                 selected_state_m = self.single_selection
                 # Initially store starting position and offset (see comment above)
@@ -605,7 +631,7 @@ class GraphicalEditorController(ExtendedController):
         :param gtkmvc.Model selected_model: The model that was clicked on
         :param tuple coords: Coordinates to search for outcomes
         """
-        if isinstance(selected_model, StateModel):  # and self.single_selection is not self.root_state_m:
+        if isinstance(selected_model, AbstractStateModel):  # and self.single_selection is not self.root_state_m:
             state_m = selected_model
             outcomes_close_threshold = state_m.temp['gui']['editor']['outcome_radius']
             outcomes = state_m.temp['gui']['editor']['outcome_pos']
@@ -638,7 +664,7 @@ class GraphicalEditorController(ExtendedController):
                 selected_port_type = "inner" if isinstance(port_model, DataPortModel) else "scope"
                 return port_model, selected_port_type, True
 
-        elif isinstance(selected_model, StateModel):
+        elif isinstance(selected_model, AbstractStateModel):
             state_m = selected_model
 
             for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports):
@@ -657,7 +683,7 @@ class GraphicalEditorController(ExtendedController):
         :param gtkmvc.Model selected_model: The selected_model that was clicked on
         :param tuple coords: Coordinates to check for the resizer
         """
-        if isinstance(selected_model, StateModel):
+        if isinstance(selected_model, AbstractStateModel):
             state_meta = selected_model.meta['gui']['editor_opengl']
             state_temp = selected_model.temp['gui']['editor']
             # Calculate corner points of resizer
@@ -794,7 +820,7 @@ class GraphicalEditorController(ExtendedController):
         selected outcome as starting point and the passed state model and outcome id as target point for the new
         transition.
 
-        :param rafcon.mvc.models.state.StateModel to_state_m: The to state model of the new transition
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel to_state_m: The to state model of the new transition
         :param int to_outcome_id: The id of the to outcome or None if the transition does not go to the parent state
         """
         from_state_id = self.selected_outcome[0].state.state_id
@@ -820,7 +846,7 @@ class GraphicalEditorController(ExtendedController):
             else:
                 transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
                                                                           to_outcome_id)
-                transition_m = responsible_parent_m.get_transition_model(transition_id)
+                transition_m = responsible_parent_m.get_transition_m(transition_id)
                 transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
         except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
@@ -858,7 +884,7 @@ class GraphicalEditorController(ExtendedController):
             try:
                 data_flow_id = responsible_parent.state.add_data_flow(from_state_id, from_port_id,
                                                                       target_state_id, target_port_id)
-                data_flow_m = responsible_parent.get_data_flow_model(data_flow_id)
+                data_flow_m = responsible_parent.get_data_flow_m(data_flow_id)
                 data_flow_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
             except AttributeError as e:
                 logger.warn("Data flow couldn't be added: {0}".format(e))
@@ -873,7 +899,7 @@ class GraphicalEditorController(ExtendedController):
         The method moves the state and all its child states with their transitions, data flows and waypoints. The
         state is kept within its parent, thus restricting the movement.
 
-        :param rafcon.mvc.models.state.StateModel state_m: The model of the state to be moved
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel state_m: The model of the state to be moved
         :param tuple new_pos: The desired new absolute position (x, y)
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
@@ -972,7 +998,7 @@ class GraphicalEditorController(ExtendedController):
         if self.view.editor.has_focus():
             if self.model.selection:
                 for model in self.model.selection:
-                    if isinstance(model, StateModel):
+                    if isinstance(model, AbstractStateModel):
                         move_state(model, redraw=False, publish_changes=False)
                     elif isinstance(model, (DataPortModel, ScopedVariableModel)):
                         move_port(model, redraw=False, publish_changes=False)
@@ -985,7 +1011,7 @@ class GraphicalEditorController(ExtendedController):
                     state_m = reduced_list[0]
                 self._publish_changes(state_m, affects_children)
                 self._redraw()
-            elif isinstance(self.single_selection, StateModel):
+            elif isinstance(self.single_selection, AbstractStateModel):
                 move_state(self.single_selection)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
                 move_port(self.single_selection)
@@ -1064,7 +1090,8 @@ class GraphicalEditorController(ExtendedController):
         if redraw:
             self._redraw()
 
-    def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False, publish_changes=False):
+    def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False, publish_changes=False,
+                      redraw=True):
         """Resize the state by the given delta width and height
 
         The resize function checks the child states and keeps the state around the children, thus limiting the minimum
@@ -1072,10 +1099,11 @@ class GraphicalEditorController(ExtendedController):
          - Ctrl also causes the child states to be resized
          - Shift caused the resized states to keep their width to height ratio
 
-        :param rafcon.mvc.models.state.StateModel state_m: The model of the state to be resized
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel state_m: The model of the state to be resized
         :param tuple new_corner_pos: The absolute coordinates of the new desired lower right corner
         :param keep_ratio: Flag, if set, the size ratio is kept constant
         :param resize_content: Flag, if set, the content of the state is also resized
+        :param redraw: Whether to call redraw() at the end or not
         """
         state_temp = state_m.temp['gui']['editor']
         state_meta = state_m.meta['gui']['editor_opengl']
@@ -1093,12 +1121,15 @@ class GraphicalEditorController(ExtendedController):
             else:
                 new_width = new_height * state_size_ratio
 
+        if isinstance(state_m, LibraryStateModel):
+            resize_content = True
+
         min_right_edge = state_temp['pos'][0]
         max_bottom_edge = state_temp['pos'][1]
 
-        # If the content is not supposed to be resized, with have to calculate the inner edges, which define the
+        # If the content is not supposed to be resized, we have to calculate the inner edges, which define the
         # minimum size of our state
-        if not resize_content and self.has_content(state_m):
+        if not resize_content and isinstance(state_m, ContainerStateModel):
             # Check lower right corner of all child states
             for child_state_m in state_m.states.itervalues():
                 _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
@@ -1168,8 +1199,13 @@ class GraphicalEditorController(ExtendedController):
                     new_rel_pos_y = new_parent_size[1] * old_rel_pos_y_rel
                     return new_rel_pos_x, new_rel_pos_y
 
-                # Only container states have content
-                if self.has_content(state_m):
+                if isinstance(state_m, LibraryStateModel):
+                    root_state_m = state_m.state_copy
+                    root_state_m.meta['gui']['editor_opengl']['size'] = copy(new_size)
+                    if isinstance(root_state_m, ContainerStateModel):
+                        resize_children(root_state_m, old_size, new_size)
+
+                elif isinstance(state_m, ContainerStateModel):
                     # Resize all transitions
                     for transition_m in state_m.transitions:
                         # By repositioning all waypoints
@@ -1199,7 +1235,7 @@ class GraphicalEditorController(ExtendedController):
                         new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
                         child_state_m.meta['gui']['editor_opengl']['size'] = new_size
 
-                        if self.has_content(child_state_m):
+                        if isinstance(child_state_m, (ContainerStateModel, LibraryStateModel)):
                             resize_children(child_state_m, old_size, new_size)
 
             # Start recursive call of the content resize
@@ -1207,7 +1243,8 @@ class GraphicalEditorController(ExtendedController):
 
         if publish_changes:
             self._publish_changes(state_m, affects_children=resize_content)
-        self._redraw()
+        if redraw:
+            self._redraw()
 
     def _move_view(self, rel_motion, opengl_coords=False):
         """Move the view according to the relative coordinates
@@ -1267,6 +1304,11 @@ class GraphicalEditorController(ExtendedController):
             # Move view to keep the previous mouse position in the view
             self._move_view(diff, opengl_coords=True)
 
+    @staticmethod
+    def _is_first_draw_of_state(state_m):
+        state_temp = state_m.temp['gui']['editor']
+        return not isinstance(state_temp['pos'], tuple)
+
     def draw_state_machine(self):
         """Draws remaining components of the state machine
 
@@ -1285,14 +1327,15 @@ class GraphicalEditorController(ExtendedController):
         Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
         done in the view, which is called from this method with the appropriate arguments.
 
-        :param rafcon.mvc.models.state.StateModel state_m: The state to be drawn
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel state_m: The state to be drawn
         :param tuple rel_pos: The default relative position (x, y) if there is no relative position stored
         :param tuple size: The default size (width, height) if there is no size stored
         :param float depth: The hierarchy level of the state
         """
-        assert isinstance(state_m, StateModel)
+        assert isinstance(state_m, AbstractStateModel)
         state_meta = state_m.meta['gui']['editor_opengl']
         state_temp = state_m.temp['gui']['editor']
+        redraw = False
 
         # Use default values if no size information is stored
         if not isinstance(state_meta['size'], tuple):
@@ -1300,43 +1343,48 @@ class GraphicalEditorController(ExtendedController):
 
         size = state_meta['size']
 
-        recalc = False
         # Root state is always in the origin
         if state_m.state.is_root_state:
             pos = (0, 0)
         else:
             # Use default values if no size information is stored
-            # Here the possible case of pos_x and posy_y == 0 must be handled
             if not isinstance(state_meta['rel_pos'], tuple):
                 state_m.meta['gui']['editor_opengl']['rel_pos'] = rel_pos
-                recalc = True
+
+                state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
+                self._move_state(state_m, state_abs_pos, redraw=False, publish_changes=False)
+                redraw = True
 
             rel_pos = state_meta['rel_pos']
             pos = self._get_absolute_position(state_m.parent, rel_pos)
 
         state_temp['pos'] = pos
 
-        # Keep state within parent if default values are used
-        if recalc and not state_m.state.is_root_state:
-            state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
-            self._move_state(state_m, state_abs_pos, redraw=True, publish_changes=False)
-
         # Was the state selected?
         selected_states = self.model.selection.get_states()
         selected = False if state_m not in selected_states else True
+        selected = selected if not (state_m.state.is_root_state_of_library and state_m.parent in selected_states) \
+            else True
 
         # Is the state active (executing)?
         active = 0
-        if state_m.state.active:
-            if self.has_content(state_m) and state_m.state.child_execution:
+        if state_m.state.active or (state_m.state.is_root_state_of_library and state_m.parent.state.active):
+            if isinstance(state_m, (ContainerStateModel, LibraryStateModel)) and state_m.state.child_execution:
                 active = 0.5
             else:
                 active = 1
 
+        # Increase hierarchy level if child of a library state
+        if not state_m.state.is_root_state and isinstance(state_m.parent.temp['gui']['editor']['library_level'], int):
+            if state_m.state.is_root_state_of_library:
+                state_temp['library_level'] = state_m.parent.temp['gui']['editor']['library_level']
+            else:
+                state_temp['library_level'] = state_m.parent.temp['gui']['editor']['library_level'] + 1
+
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
         (opengl_id, income_pos, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
-            state_m.state.name, pos, size,
+            state_m.state.name if not state_m.state.is_root_state_of_library else "", pos, size,
             state_m.state.outcomes,
             state_m.input_data_ports if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
             state_m.output_data_ports if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
@@ -1349,7 +1397,22 @@ class GraphicalEditorController(ExtendedController):
 
         # If the state is a container state, we also have to draw its transitions and data flows as well as
         # recursively its child states
-        if self.has_content(state_m):
+        if isinstance(state_m, ContainerStateModel):
+
+            # Draw library states only up to a certain hierarchy level
+            if isinstance(state_temp['library_level'], int) and \
+                    state_temp['library_level'] >= global_gui_config.get_config_value(
+                        'MAX_VISIBLE_LIBRARY_HIERARCHY', 2):
+                # All states must be drawn once to create meta data
+                if not self._is_first_draw_of_state(state_m):
+                    return False
+                redraw = True
+
+            ratio = self.view.editor.pixel_to_size_ratio()
+            minimum_size = global_gui_config.get_config_value('MINIMUM_SIZE_FOR_CONTENT', 30) / ratio
+            if (size[0] < minimum_size or size[1] < minimum_size) and not self._is_first_draw_of_state(state_m):
+                return False
+
             num_child_state = 0
             width = size[0]
             height = size[1]
@@ -1370,7 +1433,7 @@ class GraphicalEditorController(ExtendedController):
                 child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
                 num_child_state += 1
 
-                self.draw_state(child_state, child_rel_pos, child_size, depth + 1)
+                redraw |= self.draw_state(child_state, child_rel_pos, child_size, depth + 1)
 
             if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
                 self.draw_inner_data_ports(state_m, depth)
@@ -1380,10 +1443,39 @@ class GraphicalEditorController(ExtendedController):
             if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
                 self.draw_data_flows(state_m, depth)
 
+            if isinstance(state_temp['template'], bool) and state_temp['template'] is True:
+                parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
+                new_size = calculate_size(state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
+                new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
+                self._resize_state(state_m, new_corner_pos, keep_ratio=True, resize_content=True, redraw=False)
+                state_temp['template'] = False
+                redraw = True
+
+        elif isinstance(state_m, LibraryStateModel):
+            # First draw inner states to generate meta data
+            self.draw_state(state_m.state_copy, (0, 0), size, depth)
+
+            # Start calculation hierarchy level within a library
+            if not isinstance(state_temp['library_level'], int):
+                state_temp['library_level'] = 1
+
+            # Resize inner states of library states if not done before or if meta data has changed
+            lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
+            if isinstance(lib_state_meta['size'], tuple) and state_meta['size'] != lib_state_meta['size']:
+                parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
+                new_size = calculate_size(lib_state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
+                new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
+                self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
+                                   redraw=False)
+                state_meta['size'] = lib_state_meta['size']
+                redraw = True
+
         self._handle_new_transition(state_m, depth)
 
         if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
             self._handle_new_data_flow(state_m, depth)
+
+        return redraw
 
     def draw_inner_data_ports(self, parent_state_m, parent_depth):
         """Draw the inner ports of a state
@@ -1478,7 +1570,7 @@ class GraphicalEditorController(ExtendedController):
             else:
                 from_state = parent_state_m.states[from_state_id]
 
-                assert isinstance(from_state, StateModel), "Transition from unknown state with ID {id:s}".format(
+                assert isinstance(from_state, AbstractStateModel), "Transition from unknown state with ID {id:s}".format(
                     id=from_state_id)
 
                 try:
@@ -1542,8 +1634,8 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            from_port = from_state.get_data_port_model(from_key)
-            to_port = to_state.get_data_port_model(to_key)
+            from_port = from_state.get_data_port_m(from_key)
+            to_port = to_state.get_data_port_m(to_key)
 
             if from_port is None:
                 logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
@@ -1715,7 +1807,7 @@ class GraphicalEditorController(ExtendedController):
             pass
         return selection
 
-    def _selection_ids_to_model(self, ids, search_state, search_state_depth, selection, selection_depth, all=False,
+    def _selection_ids_to_model(self, ids, search_state_m, search_state_depth, selection, selection_depth, all=False,
                                 find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Searches recursively for objects with the given ids
 
@@ -1723,7 +1815,7 @@ class GraphicalEditorController(ExtendedController):
         object with the biggest depth (furthest nested).
 
         :param ids: The ids to search for
-        :param rafcon.mvc.models.state.StateModel search_state: The state to search in
+        :param rafcon.mvc.models.abstract_state.AbstractStateModel search_state_m: The state to search in
         :param float search_state_depth: The depth the search state is in
         :param gtkmvc.Model selection: The currently found object
         :param float selection_depth: The depth of the currently found object
@@ -1745,21 +1837,21 @@ class GraphicalEditorController(ExtendedController):
         # Only the element which is furthest down in the hierarchy is selected
         if (search_state_depth > selection_depth or all) and find_states:
             # Check whether the id of the current state matches an id in the selected ids
-            if search_state.temp['gui']['editor']['id'] and search_state.temp['gui']['editor']['id'] in ids:
+            if search_state_m.temp['gui']['editor']['id'] and search_state_m.temp['gui']['editor']['id'] in ids:
                 # if so, add the state to the list of selected states
-                selection = update_selection(selection, search_state)
+                selection = update_selection(selection, search_state_m)
                 selection_depth = search_state_depth
                 # remove the id from the list to fasten up further searches
-                ids.remove(search_state.temp['gui']['editor']['id'])
+                ids.remove(search_state_m.temp['gui']['editor']['id'])
 
         # Return if there is nothing more to find
         if len(ids) == 0:
             return selection, selection_depth
 
         # If it is a container state, check its transitions, data flows and child states
-        if self.has_content(search_state):
+        if isinstance(search_state_m, ContainerStateModel):
 
-            for state in search_state.states.itervalues():
+            for state in search_state_m.states.itervalues():
                 if len(ids) > 0:
                     (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
                                                                                 selection, selection_depth, all,
@@ -1777,26 +1869,20 @@ class GraphicalEditorController(ExtendedController):
                 return current_selection
 
             if find_transitions:
-                selection = search_selection_in_model_list(search_state.transitions, selection)
+                selection = search_selection_in_model_list(search_state_m.transitions, selection)
                 if len(ids) == 0:
                     return selection, selection_depth
 
             if find_data_flows:
-                selection = search_selection_in_model_list(search_state.data_flows, selection)
+                selection = search_selection_in_model_list(search_state_m.data_flows, selection)
                 if len(ids) == 0:
                     return selection, selection_depth
 
             if find_data_ports:
-                selection = search_selection_in_model_list(search_state.input_data_ports, selection)
-                selection = search_selection_in_model_list(search_state.output_data_ports, selection)
-                selection = search_selection_in_model_list(search_state.scoped_variables, selection)
+                selection = search_selection_in_model_list(search_state_m.input_data_ports, selection)
+                selection = search_selection_in_model_list(search_state_m.output_data_ports, selection)
+                selection = search_selection_in_model_list(search_state_m.scoped_variables, selection)
         return selection, selection_depth
-
-    @staticmethod
-    def has_content(state_m):
-        if isinstance(state_m, ContainerStateModel):
-            return True
-        return False
 
     @staticmethod
     def get_boundaries(model, include_waypoints=False):
@@ -1807,7 +1893,7 @@ class GraphicalEditorController(ExtendedController):
         """
         meta = model.meta['gui']['editor_opengl']
         temp = model.temp['gui']['editor']
-        if isinstance(model, StateModel):
+        if isinstance(model, AbstractStateModel):
             return temp['pos'][0], temp['pos'][0] + meta['size'][0], temp['pos'][1] - meta['size'][1], temp['pos'][1]
         if isinstance(model, (TransitionModel, DataFlowModel)):
             x_coordinates = [temp['from_pos'][0], temp['to_pos'][0]]
@@ -1906,7 +1992,7 @@ class GraphicalEditorController(ExtendedController):
                     for model in self.model.selection:
                         model_meta = model.meta['gui']['editor_opengl']
                         model_temp = model.temp['gui']['editor']
-                        if isinstance(model, StateModel):
+                        if isinstance(model, AbstractStateModel):
                             model_meta['rel_pos'] = model_temp['original_rel_pos']
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
                             model_meta['inner_rel_pos'] = model_temp['original_inner_rel_pos']
@@ -1916,7 +2002,7 @@ class GraphicalEditorController(ExtendedController):
                                 for waypoint_id, waypoint_pos in enumerate(waypoints):
                                     waypoints[waypoint_id] = model_temp['original_waypoint_{0}_rel_pos'.format(
                                         waypoint_id)]
-                elif isinstance(self.single_selection, StateModel):
+                elif isinstance(self.single_selection, AbstractStateModel):
                     self.single_selection.meta['gui']['editor_opengl']['rel_pos'] = \
                         self.single_selection.temp['gui']['editor']['original_rel_pos']
                 elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
@@ -1968,18 +2054,10 @@ class GraphicalEditorController(ExtendedController):
             old_size = state_orig_m.meta['gui']['editor_opengl']['size']
             target_size = target_state_m.meta['gui']['editor_opengl']['size']
 
-            # Use the old size, if it is smaller than the target state
-            if old_size[0] < target_size[0] and old_size[1] < target_size[1]:
-                new_size = old_size
-            # Resize to 1/3 of the target state, but keep the size ratio
-            else:
-                new_size = (target_size[0] / 3., target_size[1] / 3.)
-                old_size_ratio = old_size[0] / old_size[1]
-                if old_size_ratio < new_size[0] / new_size[1]:
-                    new_size = (new_size[1] * old_size_ratio, new_size[1])
-                else:
-                    new_size = (new_size[0], new_size[0] / old_size_ratio)
+            new_size = calculate_size(old_size, (target_size[0] / 5., target_size[1] / 5.))
 
+            pos = self._get_absolute_position(state_copy_m.parent, state_copy_m.meta['gui']['editor_opengl']['rel_pos'])
+            state_copy_m.temp['gui']['editor']['pos'] = pos
             new_corner_pos = add_pos(state_copy_m.temp['gui']['editor']['pos'], new_size)
             self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
 

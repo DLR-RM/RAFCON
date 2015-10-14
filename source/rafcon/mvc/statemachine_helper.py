@@ -11,7 +11,7 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.enums import StateType
-from rafcon.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 import rafcon.mvc.singleton
@@ -30,8 +30,8 @@ class StateMachineHelper():
         container_m = model.parent
         if container_m is None:
             return False
-        assert isinstance(container_m, StateModel)
-        if isinstance(model, StateModel):
+        assert isinstance(container_m, ContainerStateModel)
+        if isinstance(model, AbstractStateModel):
             state_id = model.state.state_id
             try:
                 if state_id in container_m.state.states:
@@ -382,10 +382,10 @@ class StateMachineHelper():
             if not (isinstance(new_state_m.parent.state, PreemptiveConcurrencyState) or
                     isinstance(new_state_m.parent.state, BarrierConcurrencyState)):
                 for t_id, t_meta in orig_model_linkage_meta_data['transitions'].iteritems():
-                    parent_m.get_transition_model(t_id).meta = t_meta
+                    parent_m.get_transition_m(t_id).meta = t_meta
 
             for df_id, df_meta in orig_model_linkage_meta_data['data_flows'].iteritems():
-                parent_m.get_data_flow_model(df_id).meta = df_meta
+                parent_m.get_data_flow_m(df_id).meta = df_meta
 
         return new_state_m
 
