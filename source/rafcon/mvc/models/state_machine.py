@@ -1,4 +1,4 @@
-from gtkmvc import ModelMT
+from gtkmvc import ModelMT, Signal
 
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.mvc.models import ContainerStateModel, StateModel
@@ -23,8 +23,10 @@ class StateMachineModel(ModelMT):
     state_machine = None
     selection = None
     root_state = None
+    meta_signal = Signal()
+    state_meta_signal = Signal()
 
-    __observables__ = ("state_machine", "root_state", "selection")
+    __observables__ = ("state_machine", "root_state", "selection", "meta_signal", "state_meta_signal")
 
     def __init__(self, state_machine, sm_manager_model, meta=None):
         """Constructor
@@ -59,6 +61,8 @@ class StateMachineModel(ModelMT):
             self.meta = meta
         else:
             self.meta = Vividict()
+        self.meta_signal = Signal()
+        self.state_meta_signal = Signal()
 
         self.temp = Vividict()
 
@@ -122,6 +126,14 @@ class StateMachineModel(ModelMT):
                                                        instance=info['instance'],
                                                        method_name=info['method_name'], result=info['result'],
                                                        args=info['args'], info=info['kwargs'])
+
+    @ModelMT.observe("meta_signal", signal=True)
+    def meta_changed(self, model, prop_name, info):
+        if model is not self:
+            orig_model = info.arg['model']
+            orig_prop_name = info.arg['prop_name']
+            orig_info = info.arg['info']
+            self.state_meta_signal.emit({'model': orig_model, 'prop_name': orig_prop_name, 'info': orig_info})
 
     @staticmethod
     def _list_modified(prop_name, info):
