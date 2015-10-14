@@ -43,8 +43,10 @@ def run_sm():
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
 
-    # set base path of global storage
-    rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/basic_turtle_demo_sm"
+    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths["unit_test_state_machines"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'unit_test_state_machines')
+
+    rafcon.statemachine.singleton.library_manager.initialize()
 
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/error_propagation_test")
@@ -67,18 +69,11 @@ def run_sm():
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_hierarchy_test")
 
-    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_library_test")
-
-    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["unit_test_state_machines"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'unit_test_state_machines')
-
-    rafcon.statemachine.singleton.library_manager.initialize()
-
-    # print rafcon.statemachine.singleton.library_manager.libraries
-
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
+        global_storage.load_statemachine_from_yaml("../../test_scripts/backward_step_library_test")
+
+    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_yaml("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
 
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView()

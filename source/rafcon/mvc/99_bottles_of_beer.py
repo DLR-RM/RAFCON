@@ -47,13 +47,6 @@ def run_turtle_demo():
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    # set base path of global storage
-    rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/99_bottles_of_beer"
-
-    # load the state machine
-    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/basic_turtle_demo_sm")
-
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/99_bottles_of_beer")
 
