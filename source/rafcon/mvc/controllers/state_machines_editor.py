@@ -255,26 +255,26 @@ class StateMachinesEditorController(ExtendedController):
         if force:
             self.remove_state_machine(state_machine_m)
         elif state_machine_m.state_machine.marked_dirty:
+
+            def on_message_dialog_response_signal(widget, response_id, state_machine_m):
+                if response_id == 42:
+                    self.remove_state_machine(state_machine_m)
+                else:
+                    logger.debug("Closing of state machine model canceled")
+                widget.destroy()
+
+            from rafcon.utils.dialog import RAFCONDialog
             sm_id = get_state_machine_id(state_machine_m)
             root_state_name = state_machine_m.root_state.state.name
-            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-            message_string = "There are unsaved changed in the state machine. Do you want to close the " \
-                             "state machine '{0}' with id {1} anyway?".format(root_state_name, sm_id)
-            message.set_markup(message_string)
-            message.add_button("Yes", 42)
-            message.add_button("No", 43)
-            message.connect('response', self.on_close_message_dialog_response_signal, state_machine_m)
-            helper.set_button_children_size_request(message)
-            message.show()
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
+                             "the state machine anyway?".format(root_state_name, sm_id)
+            dialog.set_markup(message_string)
+            dialog.add_button("Close without saving", 42)
+            dialog.add_button("Cancel", 43)
+            dialog.finalize(on_message_dialog_response_signal, state_machine_m)
         else:
             self.remove_state_machine(state_machine_m)
-
-    def on_close_message_dialog_response_signal(self, widget, response_id, state_machine_m):
-        if response_id == 42:
-            self.remove_state_machine(state_machine_m)
-        else:
-            logger.debug("Closing of state machine model canceled")
-        widget.destroy()
 
     def remove_state_machine(self, state_machine_m):
         sm_id = get_state_machine_id(state_machine_m)

@@ -64,13 +64,13 @@ class StateMachineManager(ModelMT, Observable):
         logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
         return None
 
-    def check_if_dirty_sms(self):
+    def has_dirty_state_machine(self):
         """
         Checks if one of the registered sm has the marked_dirty flag set to True (i.e. the sm was recently modified,
         without being saved)
         :return:
         """
-        for sm_id, sm in self.state_machines.iteritems():
+        for sm in self.state_machines.itervalues():
             if sm.marked_dirty:
                 return True
         return False
