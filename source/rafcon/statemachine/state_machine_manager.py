@@ -44,10 +44,9 @@ class StateMachineManager(ModelMT, Observable):
                 self.add_state_machine(state_machine)
 
     def delete_all_state_machines(self):
-        import copy
-        sm_keys = copy.deepcopy(self.state_machines.keys())
-        for key in sm_keys:
-            self.remove_state_machine(key)
+        sm_ids = [sm_id for sm_id in self.state_machines]
+        for sm_id in sm_ids:
+            self.remove_state_machine(sm_id)
 
     def refresh_state_machines(self, sm_ids, state_machine_id_to_path):
         for sm_idx in range(len(state_machine_id_to_path)):
