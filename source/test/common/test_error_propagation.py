@@ -21,6 +21,7 @@ def test_error_propagation(caplog):
     state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert sm.root_state.output_data["error_check"] == "successfull"
 
+    test_utils.reload_config()
     test_utils.assert_logger_warnings_and_errors(caplog, 0, 2)
     test_utils.test_multithrading_lock.release()
 

@@ -82,6 +82,7 @@ def trigger_gui_signals(*args):
 def test_backward_stepping(caplog):
 
     test_utils.test_multithrading_lock.acquire()
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(test_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
@@ -99,9 +100,6 @@ def test_backward_stepping(caplog):
     if test_utils.sm_manager_model is None:
         test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
-    # load the meta data for the state machine
-    test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
     main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                   editor_type="LogicDataGrouped")
     thread = threading.Thread(target=trigger_gui_signals,
@@ -117,6 +115,8 @@ def test_backward_stepping(caplog):
         thread.join()
         logger.debug("Joined test triggering thread!")
     os.chdir(test_utils.RAFCON_PATH + "/../test/common")
+
+    test_utils.reload_config()
     test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 

@@ -185,7 +185,7 @@ def test_nested_library_state_machine(caplog):
 
 
 def teardown_module(module=None):
-    pass
+    test_utils.reload_config()
 
 
 if __name__ == '__main__':
