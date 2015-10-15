@@ -358,7 +358,7 @@ class State(Observable, yaml.YAMLObject):
             else:
                 return self.parent.get_sm_for_state()
 
-        logger.debug("sm_id is not found as long as the state does not belong to a state machine yet")
+        logger.debug("The root state does not belong to a state machine. Therefore there is no state_machine_id, yet")
         return None
 
     def set_file_system_path(self, file_system_path):
