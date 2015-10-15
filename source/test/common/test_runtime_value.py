@@ -22,7 +22,6 @@ def setup_module(module=None):
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = test_utils.get_test_sm_path("unit_test_state_machines")
     logger.debug(library_paths["unit_test_state_machines"])
-    print library_paths
 
 
 def test_runtime_values(caplog):
@@ -35,6 +34,10 @@ def test_runtime_values(caplog):
 
     test_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
     test_utils.test_multithrading_lock.release()
+
+
+def teardown_module(module=None):
+    test_utils.reload_config()
 
 
 if __name__ == '__main__':

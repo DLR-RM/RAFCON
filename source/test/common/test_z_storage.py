@@ -224,6 +224,7 @@ def test_storage_without_gui(caplog):
                        menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
+    test_utils.reload_config()
     test_utils.assert_logger_warnings_and_errors(caplog)
 
 

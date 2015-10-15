@@ -357,6 +357,7 @@ def test_state_type_change_test(with_gui, caplog):
         os.chdir(test_utils.TEST_SM_PATH + "/../test/common")
         thread.join()
 
+    test_utils.reload_config()
     test_utils.assert_logger_warnings_and_errors(caplog)
 
 

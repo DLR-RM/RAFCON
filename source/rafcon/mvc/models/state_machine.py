@@ -1,9 +1,10 @@
-from gtkmvc import ModelMT
+from gtkmvc import ModelMT, Signal
 
-from rafcon.statemachine.state_machine import StateMachine
+from rafcon.mvc.models.abstract_state import MetaSignalMsg, Notification
 from rafcon.mvc.models import ContainerStateModel, StateModel
 from rafcon.mvc.selection import Selection
 
+from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.config import global_gui_config
@@ -23,8 +24,10 @@ class StateMachineModel(ModelMT):
     state_machine = None
     selection = None
     root_state = None
+    meta_signal = Signal()
+    state_meta_signal = Signal()
 
-    __observables__ = ("state_machine", "root_state", "selection")
+    __observables__ = ("state_machine", "root_state", "selection", "meta_signal", "state_meta_signal")
 
     def __init__(self, state_machine, sm_manager_model, meta=None):
         """Constructor
@@ -59,6 +62,8 @@ class StateMachineModel(ModelMT):
             self.meta = meta
         else:
             self.meta = Vividict()
+        self.meta_signal = Signal()
+        self.state_meta_signal = Signal()
 
         self.temp = Vividict()
 
@@ -123,6 +128,12 @@ class StateMachineModel(ModelMT):
                                                        method_name=info['method_name'], result=info['result'],
                                                        args=info['args'], info=info['kwargs'])
 
+    @ModelMT.observe("meta_signal", signal=True)
+    def meta_changed(self, model, prop_name, info):
+        if model is not self:
+            msg = info.arg
+            self.state_meta_signal.emit(msg)
+
     @staticmethod
     def _list_modified(prop_name, info):
         """Check whether the given operation is a list operation
@@ -134,7 +145,7 @@ class StateMachineModel(ModelMT):
         :return: True if the operation was a list operation, False else
         """
         if prop_name in ["states", "transitions", "data_flows", "input_data_ports", "output_data_ports",
-                         "scoped_variables"]:
+                         "scoped_variables", "outcomes"]:
             if info['method_name'] in ["append", "extend", "insert", "pop", "remove", "reverse", "sort",
                                        "__delitem__", "__setitem__"]:
                 return True

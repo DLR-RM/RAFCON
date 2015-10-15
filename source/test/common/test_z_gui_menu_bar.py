@@ -39,6 +39,10 @@ def setup_module(module):
     library_paths["turtle_libraries"] = join(rafcon.__path__[0] + "/..", "test_scripts", "turtle_libraries")
 
 
+def teardown_module(module):
+    test_utils.reload_config()
+
+
 def create_models(*args, **kargs):
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)

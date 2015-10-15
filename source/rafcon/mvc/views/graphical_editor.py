@@ -216,7 +216,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # logger.debug("configure")
         # OpenGL begin
-        if not gldrawable.gl_begin(glcontext):
+        if not gldrawable or not gldrawable.gl_begin(glcontext):
             return False
 
         # Draw on the full viewport
@@ -270,7 +270,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         glcontext = self.get_gl_context()
 
         # OpenGL begin
-        if not gldrawable.gl_begin(glcontext):
+        if not gldrawable or not gldrawable.gl_begin(glcontext):
             return False
 
         # logger.debug("expose_init")
@@ -292,6 +292,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # and rendering context.
         gldrawable = self.get_gl_drawable()
         # glcontext = self.get_gl_context()
+
+        if not gldrawable:
+            return
 
         # Put the buffer on the screen!
         if gldrawable.is_double_buffered():

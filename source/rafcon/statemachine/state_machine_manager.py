@@ -44,10 +44,9 @@ class StateMachineManager(ModelMT, Observable):
                 self.add_state_machine(state_machine)
 
     def delete_all_state_machines(self):
-        import copy
-        sm_keys = copy.deepcopy(self.state_machines.keys())
-        for key in sm_keys:
-            self.remove_state_machine(key)
+        sm_ids = [sm_id for sm_id in self.state_machines]
+        for sm_id in sm_ids:
+            self.remove_state_machine(sm_id)
 
     def refresh_state_machines(self, sm_ids, state_machine_id_to_path):
         for sm_idx in range(len(state_machine_id_to_path)):
@@ -64,13 +63,13 @@ class StateMachineManager(ModelMT, Observable):
         logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
         return None
 
-    def check_if_dirty_sms(self):
+    def has_dirty_state_machine(self):
         """
         Checks if one of the registered sm has the marked_dirty flag set to True (i.e. the sm was recently modified,
         without being saved)
         :return:
         """
-        for sm_id, sm in self.state_machines.iteritems():
+        for sm in self.state_machines.itervalues():
             if sm.marked_dirty:
                 return True
         return False

@@ -5,7 +5,7 @@
   <object class="GtkTable" id="properties_widget">
     <property name="visible">True</property>
     <property name="border_width">5</property>
-    <property name="n_rows">3</property>
+    <property name="n_rows">4</property>
     <property name="n_columns">5</property>
     <property name="column_spacing">5</property>
     <property name="row_spacing">5</property>
@@ -35,8 +35,8 @@
         <property name="label" translatable="yes">Type</property>
       </object>
       <packing>
-        <property name="top_attach">2</property>
-        <property name="bottom_attach">3</property>
+        <property name="top_attach">3</property>
+        <property name="bottom_attach">4</property>
       </packing>
     </child>
     <child>
@@ -50,8 +50,8 @@
       <packing>
         <property name="left_attach">1</property>
         <property name="right_attach">2</property>
-        <property name="top_attach">2</property>
-        <property name="bottom_attach">3</property>
+        <property name="top_attach">3</property>
+        <property name="bottom_attach">4</property>
       </packing>
     </child>
     <child>
@@ -62,8 +62,8 @@
       <packing>
         <property name="left_attach">3</property>
         <property name="right_attach">4</property>
-        <property name="top_attach">2</property>
-        <property name="bottom_attach">3</property>
+        <property name="top_attach">3</property>
+        <property name="bottom_attach">4</property>
       </packing>
     </child>
     <child>
@@ -75,8 +75,8 @@
       <packing>
         <property name="left_attach">4</property>
         <property name="right_attach">5</property>
-        <property name="top_attach">2</property>
-        <property name="bottom_attach">3</property>
+        <property name="top_attach">3</property>
+        <property name="bottom_attach">4</property>
       </packing>
     </child>
     <child>
@@ -92,8 +92,8 @@
       <packing>
         <property name="left_attach">2</property>
         <property name="right_attach">3</property>
-        <property name="top_attach">2</property>
-        <property name="bottom_attach">3</property>
+        <property name="top_attach">3</property>
+        <property name="bottom_attach">4</property>
       </packing>
     </child>
     <child>
@@ -120,6 +120,34 @@
         <property name="right_attach">5</property>
         <property name="top_attach">1</property>
         <property name="bottom_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="label_show_content">
+        <property name="visible">True</property>
+        <property name="xalign">0</property>
+        <property name="label" translatable="yes">Library content</property>
+      </object>
+      <packing>
+        <property name="top_attach">2</property>
+        <property name="bottom_attach">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkCheckButton" id="show_content_checkbutton">
+        <property name="label" translatable="yes">show</property>
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">False</property>
+        <property name="border_width">5</property>
+        <property name="focus_on_click">False</property>
+        <property name="draw_indicator">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="right_attach">5</property>
+        <property name="top_attach">2</property>
+        <property name="bottom_attach">3</property>
       </packing>
     </child>
   </object>

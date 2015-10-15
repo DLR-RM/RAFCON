@@ -1,23 +1,24 @@
 import gtk
-
+from functools import partial
 from twisted.internet import reactor
 
+from rafcon.statemachine import interface
+from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
-import rafcon.statemachine.singleton
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.utils import log
-from rafcon.mvc.views.about_dialog import MyAboutDialog
-from rafcon.statemachine.enums import StateMachineExecutionStatus
+from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager, global_storage, \
+    library_manager
 
+from rafcon.mvc.singleton import state_machine_manager_model
+from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.views.about_dialog import MyAboutDialog
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
-logger = log.get_logger(__name__)
+from rafcon.utils.dialog import RAFCONDialog
 from rafcon.utils import helper
-from rafcon.statemachine import interface
-import rafcon.mvc.singleton
-from functools import partial
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class MenuBarController(ExtendedController):
@@ -104,8 +105,8 @@ class MenuBarController(ExtendedController):
         logger.debug("Creating new state-machine...")
         root_state = HierarchyState("new root state")
         state_machine = StateMachine(root_state)
-        rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-        rafcon.statemachine.singleton.state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+        state_machine_manager.add_state_machine(state_machine)
+        state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
         state_machine_m = self.model.get_selected_state_machine_model()
         # If idle_add isn't used, gaphas crashes, as the view is not ready
         glib.idle_add(state_machine_m.selection.set, state_machine_m.root_state)
@@ -129,9 +130,8 @@ class MenuBarController(ExtendedController):
             load_path = path
 
         try:
-            [state_machine, version, creation_time] = rafcon.statemachine.singleton. \
-                global_storage.load_statemachine_from_yaml(load_path)
-            rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+            [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(load_path)
+            state_machine_manager.add_state_machine(state_machine)
         except AttributeError as e:
             logger.error('Error while trying to open state-machine: {0}'.format(e))
             import traceback
@@ -147,7 +147,7 @@ class MenuBarController(ExtendedController):
                 return
 
         logger.debug("Saving state machine to {0}".format(save_path))
-        rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        global_storage.save_statemachine_as_yaml(
             self.model.get_selected_state_machine_model().state_machine,
             self.model.get_selected_state_machine_model().state_machine.file_system_path,
             delete_old_state_machine=False, save_as=save_as)
@@ -177,7 +177,7 @@ class MenuBarController(ExtendedController):
         :param data: optional data
         :return:
         """
-        rafcon.statemachine.singleton.library_manager.refresh_libraries()
+        library_manager.refresh_libraries()
 
     def on_refresh_all_activate(self, widget, data=None, force=False):
         """
@@ -189,44 +189,43 @@ class MenuBarController(ExtendedController):
         if force:
             self.refresh_libs_and_statemachines()
         else:
-            if rafcon.statemachine.singleton.state_machine_manager.check_if_dirty_sms():
-                message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-                message_string = "Are you sure you want to reload the libraries and thus all state_machines. " \
-                                 "The following state machines were modified and not saved: "
-                for sm_id, sm in rafcon.statemachine.singleton.state_machine_manager.state_machines.iteritems():
+            if state_machine_manager.has_dirty_state_machine():
+
+                def on_message_dialog_response_signal(widget, response_id):
+                    if response_id == 42:
+                        self.refresh_libs_and_statemachines()
+                    else:
+                        logger.debug("Refresh canceled")
+                    widget.destroy()
+
+                dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+                message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
+                                 "The following state machines have been modified and not saved. "\
+                                 "These changes will get lost:"
+                for sm_id, sm in state_machine_manager.state_machines.iteritems():
                     if sm.marked_dirty:
-                        message_string = "%s %s " % (message_string, str(sm_id))
-                message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
-                                 "before will be deleted!)" % message_string
-                message.set_markup(message_string)
-                message.add_button("Yes", 42)
-                message.add_button("No", 43)
-                message.connect('response', self.on_refresh_message_dialog_response_signal)
-                message.show()
+                        message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
+                dialog.set_markup(message_string)
+                dialog.add_button("Reload anyway", 42)
+                dialog.add_button("Cancel", 43)
+                dialog.finalize(on_message_dialog_response_signal)
             else:
                 self.refresh_libs_and_statemachines()
-
-    def on_refresh_message_dialog_response_signal(self, widget, response_id):
-        if response_id == 42:
-            self.refresh_libs_and_statemachines()
-        else:
-            logger.debug("Refresh canceled")
-        widget.destroy()
 
     def refresh_libs_and_statemachines(self):
         """
         Deletes all libraries and state machines and reloads them freshly from the file system.
         :return:
         """
-        rafcon.statemachine.singleton.library_manager.refresh_libraries()
+        library_manager.refresh_libraries()
 
         # delete dirty flags for state machines
-        rafcon.statemachine.singleton.state_machine_manager.reset_dirty_flags()
+        state_machine_manager.reset_dirty_flags()
 
         # create a dictionary from state machine id to state machine path
         state_machine_id_to_path = {}
         sm_keys = []
-        for sm_id, sm in rafcon.statemachine.singleton.state_machine_manager.state_machines.iteritems():
+        for sm_id, sm in state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
             if sm.file_system_path is not None:
                 # print sm.root_state.get_file_system_path()
@@ -243,8 +242,7 @@ class MenuBarController(ExtendedController):
         self.state_machines_editor_ctrl.close_all_pages()
 
         # reload state machines from file system
-        rafcon.statemachine.singleton.state_machine_manager.refresh_state_machines(sm_keys,
-                                                                                         state_machine_id_to_path)
+        state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
 
     def on_quit_activate(self, widget, data=None):
         avoid_shutdown = self.on_delete_event(self, widget, None)
@@ -265,65 +263,61 @@ class MenuBarController(ExtendedController):
         return False
 
     def check_sm_modified(self):
-        if rafcon.statemachine.singleton.state_machine_manager.check_if_dirty_sms():
-            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-            message_string = "Are you sure you want to close the main window? " \
-                             "The following state machines were modified and not saved: "
-            for sm_id, sm in rafcon.statemachine.singleton.state_machine_manager.state_machines.iteritems():
+        if state_machine_manager.has_dirty_state_machine():
+
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id == 42:
+                    widget.destroy()
+                    if state_machine_execution_engine.status.execution_mode \
+                            is not StateMachineExecutionStatus.STOPPED:
+                        self.check_sm_running()
+                    else:
+                        self._prepare_destruction()
+                        self.destroy(None)
+                elif response_id == 43:
+                    logger.debug("Close main window canceled")
+                    widget.destroy()
+
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            message_string = "Are you sure you want to exit RAFCON?\n\n" \
+                             "The following state machines have been modified and not saved. "\
+                             "These changes will get lost:"
+            for sm_id, sm in state_machine_manager.state_machines.iteritems():
                 if sm.marked_dirty:
-                    message_string = "%s %s " % (message_string, str(sm_id))
-            message_string = "%s \n(Note: all state machines that are freshly created and have never been saved " \
-                             "before will be deleted!)" % message_string
-            message.set_markup(message_string)
-            message.add_button("Yes", 42)
-            message.add_button("No", 43)
-            message.connect('response', self.on_quit_message_dialog_response_signal_open_changes)
-            helper.set_button_children_size_request(message)
-            message.show()
+                    message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
+            dialog.set_markup(message_string)
+            dialog.add_button("Close without saving", 42)
+            dialog.add_button("Cancel", 43)
+            dialog.finalize(on_message_dialog_response_signal)
             return True
         return False
 
     def check_sm_running(self):
-        if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode \
-                is not StateMachineExecutionStatus.STOPPED:
-            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+        if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id == 42:
+                    state_machine_execution_engine.stop()
+                    logger.debug("State machine is shut down now!")
+                    widget.destroy()
+                    self._prepare_destruction()
+                    self.destroy(None)
+                elif response_id == 43:
+                    logger.debug("State machine will stay running!")
+                    widget.destroy()
+                    self.main_window_view.hide()
+                    # state machine cannot be shutdown in a controlled manner as after self.destroy()
+                    # the signal handler does not trigger any more
+                    # self.destroy(None)
+
+            dialog = RAFCONDialog(type=gtk.MESSAGE_INFO)
             message_string = "The state machine is still running. Do you want to stop the state machine before closing?"
-            message.set_markup(message_string)
-            message.add_button("Yes", 42)
-            message.add_button("No", 43)
-            message.connect('response', self.on_quit_message_dialog_response_signal_sm_running)
-            helper.set_button_children_size_request(message)
-            message.show()
+            dialog.set_markup(message_string)
+            dialog.add_button("Stop state machine", 42)
+            dialog.add_button("Keep running", 43)
+            dialog.finalize(on_message_dialog_response_signal)
             return True
         return False
-
-    def on_quit_message_dialog_response_signal_open_changes(self, widget, response_id):
-        if response_id == 42:
-            widget.destroy()
-            if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode \
-                    is not StateMachineExecutionStatus.STOPPED:
-                self.check_sm_running()
-            else:
-                self._prepare_destruction()
-                self.destroy(None)
-        elif response_id == 43:
-            logger.debug("Close main window canceled")
-            widget.destroy()
-
-    def on_quit_message_dialog_response_signal_sm_running(self, widget, response_id):
-        if response_id == 42:
-            rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-            logger.debug("State machine is shut down now!")
-            widget.destroy()
-            self._prepare_destruction()
-            self.destroy(None)
-        elif response_id == 43:
-            logger.debug("State machine will stay running!")
-            widget.destroy()
-            self.main_window_view.hide()
-            # state machine cannot be shutdown in a controlled manner as after self.destroy()
-            # the signal handler does not trigger any more
-            # self.destroy(None)
 
     def destroy(self, widget, data=None):
         import glib
@@ -437,37 +431,36 @@ class MenuBarController(ExtendedController):
     ######################################################
     def on_start_activate(self, widget, data=None):
         logger.debug("Start execution engine ...")
-        rafcon.statemachine.singleton.state_machine_execution_engine.start(self.model.selected_state_machine_id)
+        state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Start from selected state ...")
-        sel = rafcon.mvc.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        sel = state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:
             logger.error("Exactly one state must be selected!")
         else:
-            rafcon.statemachine.singleton.state_machine_execution_engine.start(
-                self.model.selected_state_machine_id, state_list[0].state.get_path())
+            state_machine_execution_engine.start(self.model.selected_state_machine_id, state_list[0].state.get_path())
 
     def on_pause_activate(self, widget, data=None):
         logger.debug("Pause execution engine ...")
-        rafcon.statemachine.singleton.state_machine_execution_engine.pause()
+        state_machine_execution_engine.pause()
 
     def on_stop_activate(self, widget, data=None):
         logger.debug("Stop execution engine ...")
-        rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+        state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
         logger.debug("Activate execution engine step mode ...")
-        rafcon.statemachine.singleton.state_machine_execution_engine.step_mode()
+        state_machine_execution_engine.step_mode()
 
     def on_step_activate(self, widget, data=None):
         logger.debug("Execution step ...")
-        rafcon.statemachine.singleton.state_machine_execution_engine.step()
+        state_machine_execution_engine.step()
 
     def on_backward_step_activate(self, widget, data=None):
         logger.debug("Executing backward step ...")
-        rafcon.statemachine.singleton.state_machine_execution_engine.backward_step()
+        state_machine_execution_engine.backward_step()
 
     ######################################################
     # menu bar functionality - Help

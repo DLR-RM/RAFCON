@@ -1,4 +1,4 @@
-from gtk import Button
+from gtk import Button, Container
 from gtk.gdk import color_parse
 from rafcon.utils import constants
 
@@ -22,6 +22,8 @@ def global_color_pool():
 
 def set_button_children_size_request(widget):
     try:
+        if not isinstance(widget, Container):
+            return
         for child in widget.get_children():
             if isinstance(child, Button):
                 child.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)

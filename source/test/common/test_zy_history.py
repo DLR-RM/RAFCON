@@ -21,7 +21,6 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 from gtkmvc.observer import Observer
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 
 # singleton elements
 import rafcon.statemachine.singleton
@@ -1338,6 +1337,7 @@ def test_type_changes_without_gui(caplog):
     trigger_state_type_change_tests(sm_manager_model, None, sm_m, state_dict, with_gui, logger)
     os.chdir(rafcon.__path__[0] + "/../test")
 
+    test_utils.reload_config()
     test_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1396,6 +1396,7 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
         os.chdir(rafcon.__path__[0] + "/../test/common")
         thread.join()
 
+    test_utils.reload_config()
     test_utils.assert_logger_warnings_and_errors(caplog)
 
 

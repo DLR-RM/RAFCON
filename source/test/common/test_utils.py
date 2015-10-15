@@ -15,6 +15,14 @@ def get_test_sm_path(state_machine_name):
     return join(TEST_SM_PATH, state_machine_name)
 
 
+def reload_config(config=True, gui_config=True):
+    import rafcon
+    if config:
+        rafcon.statemachine.config.global_config.load()
+    if gui_config:
+        rafcon.mvc.config.global_gui_config.load()
+
+
 def remove_all_libraries():
     from rafcon.statemachine.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
@@ -51,10 +59,12 @@ def call_gui_callback(callback, *args):
     def fun():
         """Call callback and notify condition variable
         """
-        callback(*args)
-        condition.acquire()
-        condition.notify()
-        condition.release()
+        try:
+            callback(*args)
+        finally:  # Finally is also executed in the case of exceptions and reraises the exception at the end
+            condition.acquire()
+            condition.notify()
+            condition.release()
 
     glib.idle_add(fun)
     # Wait for the condition to be notified
