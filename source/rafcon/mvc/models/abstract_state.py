@@ -1,5 +1,6 @@
 import os.path
 from copy import deepcopy
+from collections import namedtuple
 
 from gtkmvc import ModelMT, Signal
 
@@ -33,6 +34,10 @@ def state_to_state_model(state):
         return StateModel
     else:
         return None
+
+MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_children', 'notification'])
+
+Notification = namedtuple('Notification', ['model', 'prop_name', 'info'])
 
 
 class AbstractStateModel(ModelMT):
