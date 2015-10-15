@@ -186,10 +186,9 @@ class PerpLine(Line):
             cx, cy = self._handles[index].pos
             angle = 0
         else:
-            index1 = len(self._handles) / 2 - 1
-            index2 = index1 + 1
+            index = len(self._handles) / 2 - 1
 
-            p1, p2 = self._handles[index1].pos, self._handles[index2].pos
+            p1, p2 = self._handles[index].pos, self._handles[index + 1].pos
 
             cx = (p1.x + p2.x) / 2
             cy = (p1.y + p2.y) / 2
@@ -202,10 +201,8 @@ class PerpLine(Line):
 
         if self.from_port:
             outcome_side = self.from_port.port_side_size
-        elif self.to_port:
+        else:  # self.to_port:
             outcome_side = self.to_port.port_side_size
-        else:
-            outcome_side = 5.
 
         c.set_antialias(ANTIALIAS_SUBPIXEL)
 
