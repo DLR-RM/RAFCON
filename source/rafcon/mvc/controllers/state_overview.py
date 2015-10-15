@@ -1,17 +1,17 @@
 import gtk
 from gtk.gdk import keyval_name
-from rafcon.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 
 from rafcon.statemachine.enums import StateType
 
-from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.models.abstract_state import MetaSignalMsg
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -141,7 +141,8 @@ class StateOverviewController(ExtendedController, Model):
 
     def on_toggle_show_content(self, checkbox):
         self.model.meta['gui']['show_content'] = checkbox.get_active()
-        self.model.meta_signal.emit('show_content')
+        msg = MetaSignalMsg(origin='state_overview', change='show_content', affects_children=False)
+        self.model.meta_signal.emit(msg)
 
     @Model.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):

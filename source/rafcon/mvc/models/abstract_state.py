@@ -36,6 +36,7 @@ def state_to_state_model(state):
         return None
 
 MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_children', 'notification'])
+MetaSignalMsg.__new__.__defaults__ = (False, None)  # Make last two parameters optional
 
 Notification = namedtuple('Notification', ['model', 'prop_name', 'info'])
 
@@ -167,11 +168,17 @@ class AbstractStateModel(ModelMT):
     def meta_changed(self, model, prop_name, info):
         """This method notifies the parent state about changes made to the meta data
         """
-        # print "meta", self.state.name, self.state.state_id, model, prop_name, info
+        msg = info.arg
         if self.parent is not None:
+            # Notify parent about change of meta data
             self.parent.meta_changed(model, prop_name, info)
-        elif not isinstance(info.arg, dict):
-            self.meta_signal.emit({'model': model, 'prop_name': prop_name, 'info': info})
+        elif msg.notification is None:  # Prevent recursive call
+            # If we are the root state, inform the state machine model by emitting our own meta signal
+            # To make the signal distinguishable for a change of meta data to our state, the notification property of
+            # the message is set
+            notification = Notification(model, prop_name, info)
+            msg = msg._replace(notification=notification)
+            self.meta_signal.emit(msg)
 
     @staticmethod
     def overwrite_editor_meta(meta):
@@ -212,7 +219,7 @@ class AbstractStateModel(ModelMT):
             self._parse_for_element_meta_data(tmp_meta)
             # assign the meta data to the state
             self.meta = tmp_meta
-            self.meta_signal.emit("load_meta_data")
+            self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
         # Print info only if the state has a location different from the tmp directory
         elif meta_path[0:len(GLOBAL_STORAGE_BASE_PATH)] != GLOBAL_STORAGE_BASE_PATH:
             logger.info("State '{0}' has no meta data. It will now be generated automatically.".format(self.state.name))
@@ -249,7 +256,7 @@ class AbstractStateModel(ModelMT):
             source_outcome_m = source_state_m.get_outcome_m(outcome_m.outcome.outcome_id)
             outcome_m.meta = deepcopy(source_outcome_m.meta)
 
-        self.meta_signal.emit("copy_meta_data_from_state_m")
+        self.meta_signal.emit(MetaSignalMsg("copy_meta_data_from_state_m", "all", True))
 
     def _parse_for_element_meta_data(self, meta_data):
         """Load meta data for state elements

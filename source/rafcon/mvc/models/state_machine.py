@@ -1,9 +1,10 @@
 from gtkmvc import ModelMT, Signal
 
-from rafcon.statemachine.state_machine import StateMachine
+from rafcon.mvc.models.abstract_state import MetaSignalMsg, Notification
 from rafcon.mvc.models import ContainerStateModel, StateModel
 from rafcon.mvc.selection import Selection
 
+from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.config import global_gui_config
@@ -130,10 +131,8 @@ class StateMachineModel(ModelMT):
     @ModelMT.observe("meta_signal", signal=True)
     def meta_changed(self, model, prop_name, info):
         if model is not self:
-            orig_model = info.arg['model']
-            orig_prop_name = info.arg['prop_name']
-            orig_info = info.arg['info']
-            self.state_meta_signal.emit({'model': orig_model, 'prop_name': orig_prop_name, 'info': orig_info})
+            msg = info.arg
+            self.state_meta_signal.emit(msg)
 
     @staticmethod
     def _list_modified(prop_name, info):

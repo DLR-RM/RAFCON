@@ -171,9 +171,9 @@ class GraphicalEditorController(ExtendedController):
             elif info['method_name'] == 'marked_dirty' and info['args'][1]:
                 self._redraw()
         elif 'signal' in info:
-            if isinstance(info['arg'], dict):
-                if info['arg']['info']['arg'] in ['show_content']:
-                    self._redraw()
+            msg = info.arg
+            if msg.change == 'show_content':
+                self._redraw()
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):

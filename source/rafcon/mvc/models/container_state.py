@@ -263,8 +263,6 @@ class ContainerStateModel(StateModel):
 
         :param source_state_m: State model to load the meta data from
         """
-        super(ContainerStateModel, self).copy_meta_data_from_state_m(source_state_m)
-
         for scoped_variable_m in self.data_flows:
             source_scoped_variable_m = source_state_m.get_scoped_variable_m(
                 scoped_variable_m.scoped_variable.data_flow_id)
@@ -280,6 +278,8 @@ class ContainerStateModel(StateModel):
 
         for state_key, state in self.states.iteritems():
             state.copy_meta_data_from_state_m(source_state_m.states[state_key])
+
+        super(ContainerStateModel, self).copy_meta_data_from_state_m(source_state_m)
 
     def _parse_for_element_meta_data(self, meta_data):
         """Load meta data for container state elements
