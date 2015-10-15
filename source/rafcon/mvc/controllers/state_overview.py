@@ -1,17 +1,17 @@
 import gtk
 from gtk.gdk import keyval_name
-from rafcon.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 
 from rafcon.statemachine.enums import StateType
 
-from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.models.abstract_state import MetaSignalMsg
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -78,11 +78,16 @@ class StateOverviewController(ExtendedController, Model):
         # Prepare LAbel for state_name -> Library states cannot be changed
         if isinstance(self.model.state, LibraryState):
             l_store.prepend(['LIBRARY'])
-            self.view['library_path'].set_text(self.model.state.library_path + "/" + self.model.state.library_name)
             combo.set_sensitive(False)
+
+            self.view['library_path'].set_text(self.model.state.library_path + "/" + self.model.state.library_name)
+            view['show_content_checkbutton'].set_active(self.model.meta['gui']['show_content'] is True)
+            view['show_content_checkbutton'].connect('toggled', self.on_toggle_show_content)
         else:
             self.view['label_library_path'].destroy()
             self.view['library_path'].destroy()
+            self.view['label_show_content'].destroy()
+            self.view['show_content_checkbutton'].destroy()
 
             for key, value in self.state_types_dict.iteritems():
                 if value['class'] == type(self.model.state):
@@ -120,11 +125,10 @@ class StateOverviewController(ExtendedController, Model):
         self.view['entry_name'].grab_focus()
 
     def on_toggle_is_start_state(self, button):
-
-        if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
+        if not button.get_active() == self.model.is_start:
             if not self.model.state.is_root_state:
                 try:
-                    if self.view['is_start_state_checkbutton'].get_active():
+                    if button.get_active():
                         self.model.parent.state.start_state_id = self.model.state.state_id
                         logger.debug("New start state '{0}'".format(self.model.state.name))
                     else:
@@ -133,7 +137,12 @@ class StateOverviewController(ExtendedController, Model):
                 except ValueError as e:
                     logger.warn("Could no change start state: {0}".format(e))
                     # avoid to toggle button
-                    self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
+                    button.set_active(bool(self.model.is_start))
+
+    def on_toggle_show_content(self, checkbox):
+        self.model.meta['gui']['show_content'] = checkbox.get_active()
+        msg = MetaSignalMsg(origin='state_overview', change='show_content', affects_children=False)
+        self.model.meta_signal.emit(msg)
 
     @Model.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):

@@ -1,7 +1,8 @@
 import os.path
 from copy import deepcopy
+from collections import namedtuple
 
-from gtkmvc import ModelMT
+from gtkmvc import ModelMT, Signal
 
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.singleton import global_storage
@@ -34,6 +35,11 @@ def state_to_state_model(state):
     else:
         return None
 
+MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_children', 'notification'])
+MetaSignalMsg.__new__.__defaults__ = (False, None)  # Make last two parameters optional
+
+Notification = namedtuple('Notification', ['model', 'prop_name', 'info'])
+
 
 class AbstractStateModel(ModelMT):
     """This is an abstract class serving as base class for state models
@@ -50,8 +56,9 @@ class AbstractStateModel(ModelMT):
     outcomes = []
     input_data_ports = []
     output_data_ports = []
+    meta_signal = Signal()
 
-    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start")
+    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal")
 
     def __init__(self, state, parent=None, meta=None):
         """Constructor
@@ -72,6 +79,7 @@ class AbstractStateModel(ModelMT):
             self.meta = meta
         else:
             self.meta = Vividict()
+        self.meta_signal = Signal()
 
         self.temp = Vividict()
 
@@ -149,12 +157,28 @@ class AbstractStateModel(ModelMT):
 
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, prop_name, info):
-        """This method notifies parent state about changes
+        """This method notifies parent state about changes made to the state
         """
 
         # Notify the parent state about the change (this causes a recursive call up to the root state)
         if self.parent is not None:
             self.parent.model_changed(model, prop_name, info)
+
+    @ModelMT.observe("meta_signal", signal=True)
+    def meta_changed(self, model, prop_name, info):
+        """This method notifies the parent state about changes made to the meta data
+        """
+        msg = info.arg
+        if self.parent is not None:
+            # Notify parent about change of meta data
+            self.parent.meta_changed(model, prop_name, info)
+        elif msg.notification is None:  # Prevent recursive call
+            # If we are the root state, inform the state machine model by emitting our own meta signal
+            # To make the signal distinguishable for a change of meta data to our state, the notification property of
+            # the message is set
+            notification = Notification(model, prop_name, info)
+            msg = msg._replace(notification=notification)
+            self.meta_signal.emit(msg)
 
     @staticmethod
     def overwrite_editor_meta(meta):
@@ -195,6 +219,7 @@ class AbstractStateModel(ModelMT):
             self._parse_for_element_meta_data(tmp_meta)
             # assign the meta data to the state
             self.meta = tmp_meta
+            self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
         # Print info only if the state has a location different from the tmp directory
         elif meta_path[0:len(GLOBAL_STORAGE_BASE_PATH)] != GLOBAL_STORAGE_BASE_PATH:
             logger.info("State '{0}' has no meta data. It will now be generated automatically.".format(self.state.name))
@@ -230,6 +255,8 @@ class AbstractStateModel(ModelMT):
         for outcome_m in self.outcomes:
             source_outcome_m = source_state_m.get_outcome_m(outcome_m.outcome.outcome_id)
             outcome_m.meta = deepcopy(source_outcome_m.meta)
+
+        self.meta_signal.emit(MetaSignalMsg("copy_meta_data_from_state_m", "all", True))
 
     def _parse_for_element_meta_data(self, meta_data):
         """Load meta data for state elements
