@@ -310,7 +310,7 @@ class MenuBarController(ExtendedController):
                     # the signal handler does not trigger any more
                     # self.destroy(None)
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_INFO)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_QUESTION)
             message_string = "The state machine is still running. Do you want to stop the state machine before closing?"
             dialog.set_markup(message_string)
             dialog.add_button("Stop state machine", 42)

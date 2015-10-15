@@ -8,6 +8,10 @@ class RAFCONDialog(MessageDialog):
     def __init__(self, type=MESSAGE_INFO, buttons=BUTTONS_NONE, flags=DIALOG_MODAL):
         super(RAFCONDialog, self).__init__(type=type, buttons=buttons, flags=flags)
 
+    def set_markup(self, markup_text):
+        from cgi import escape
+        super(RAFCONDialog, self).set_markup(escape(markup_text))
+
     def finalize(self, callback, *args):
         self.connect('response', callback, *args)
         margin = 15
