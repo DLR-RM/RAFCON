@@ -171,9 +171,9 @@ class AbstractStateModel(ModelMT):
     def _mark_state_machine_as_dirty(self):
         state_machine = self.state.get_sm_for_state()
         if state_machine:
-            state_machine_id = self.state.get_sm_for_state().state_machine_id
-            if state_machine_id is not None:
-                from rafcon.statemachine.singleton import state_machine_manager
+            state_machine_id = state_machine.state_machine_id
+            from rafcon.statemachine.singleton import state_machine_manager
+            if state_machine_id is not None and state_machine_id in state_machine_manager.state_machines:
                 state_machine_manager.state_machines[state_machine_id].marked_dirty = True
 
     # ---------------------------------------- meta data methods ---------------------------------------------
