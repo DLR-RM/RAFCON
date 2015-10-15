@@ -1370,7 +1370,12 @@ class GraphicalEditorController(ExtendedController):
         # Is the state active (executing)?
         active = 0
         if state_m.state.active or (state_m.state.is_root_state_of_library and state_m.parent.state.active):
-            if isinstance(state_m, (ContainerStateModel, LibraryStateModel)) and state_m.state.child_execution:
+            if isinstance(state_m, ContainerStateModel) and state_m.state.child_execution:
+                active = 0.5
+            elif isinstance(state_m, LibraryStateModel) and not state_m.meta['gui']['show_content']:
+                active = 1
+            elif isinstance(state_m, LibraryStateModel) and isinstance(state_m.state_copy, ContainerStateModel) and \
+                    state_m.state_copy.state.child_execution:
                 active = 0.5
             else:
                 active = 1
