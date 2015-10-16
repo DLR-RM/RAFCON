@@ -1163,10 +1163,14 @@ class GraphicalEditorController(ExtendedController):
         max_right_edge = sys.maxint
         min_bottom_edge = -sys.maxint - 1
         if not state_m.state.is_root_state:
-            max_right_edge = state_m.parent.temp['gui']['editor']['pos'][0] + \
-                             state_m.parent.meta['gui']['editor_opengl']['size'][0]
-            min_bottom_edge = state_m.parent.temp['gui']['editor']['pos'][1] - \
-                              state_m.parent.meta['gui']['editor_opengl']['size'][1]
+            if state_m.state.is_root_state_of_library:
+                parent_state_m = state_m.parent.parent
+            else:
+                parent_state_m = state_m.parent
+            max_right_edge = parent_state_m.temp['gui']['editor']['pos'][0] + \
+                             parent_state_m.meta['gui']['editor_opengl']['size'][0]
+            min_bottom_edge = parent_state_m.temp['gui']['editor']['pos'][1] - \
+                              parent_state_m.meta['gui']['editor_opengl']['size'][1]
 
         # Desired new edges
         desired_right_edge = state_temp['pos'][0] + new_width
@@ -1453,6 +1457,7 @@ class GraphicalEditorController(ExtendedController):
             if isinstance(state_temp['template'], bool) and state_temp['template'] is True:
                 parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
                 new_size = calculate_size(state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
+                new_size = new_size[0], -new_size[1]  # inverted y axis
                 new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
                 self._resize_state(state_m, new_corner_pos, keep_ratio=True, resize_content=True, redraw=False)
                 state_temp['template'] = False
@@ -1476,6 +1481,7 @@ class GraphicalEditorController(ExtendedController):
                 if lib_size_has_changed:
                     parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
                     new_size = calculate_size(lib_state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
+                    new_size = new_size[0], -new_size[1]  # inverted y axis
                     new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
                     self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
                                        redraw=False)
