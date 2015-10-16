@@ -21,6 +21,8 @@ class StateElementModel(ModelMT):
     meta_signal = Signal()
     temp = None
 
+    __observables__ = ("meta_signal",)
+
     def __init__(self, parent, meta=None):
         """Constructor
         """
@@ -50,11 +52,10 @@ class StateElementModel(ModelMT):
     def meta_changed(self, model, prop_name, info):
         """This method notifies the parent state about changes made to the meta data
         """
-        msg = info.arg
-        # Add information about notification to the signal message
-        notification = Notification(model, prop_name, info)
-        msg = msg._replace(notification=notification)
-        info.arg = msg
-
         if self.parent is not None:
+            msg = info.arg
+            # Add information about notification to the signal message
+            notification = Notification(model, prop_name, info)
+            msg = msg._replace(notification=notification)
+            info.arg = msg
             self.parent.meta_changed(model, prop_name, info)
