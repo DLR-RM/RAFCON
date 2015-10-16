@@ -32,11 +32,10 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
-                 v_checker=None, path=None, filename=None, check_path=True):
+                 v_checker=None):
 
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
-                                  transitions, data_flows, start_state_id, scoped_variables, v_checker, path, filename,
-                                  check_path=check_path)
+                                  transitions, data_flows, start_state_id, scoped_variables, v_checker)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the preemptive concurrency state is executed
@@ -164,8 +163,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
                                            transitions=None,
                                            data_flows=None,
                                            scoped_variables=dict_representation['scoped_variables'],
-                                           v_checker=None,
-                                           check_path=False)
+                                           v_checker=None)
         try:
             state.description = dict_representation['description']
         except (ValueError, TypeError, KeyError):

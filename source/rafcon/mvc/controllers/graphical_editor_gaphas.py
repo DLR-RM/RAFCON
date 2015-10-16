@@ -1,8 +1,6 @@
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
-from rafcon.mvc.controllers.gap import segment  # do not remove - needed for GUI to work
-
 from rafcon.statemachine.enums import StateType
 from gaphas.item import NW
 
@@ -10,21 +8,20 @@ from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.statemachine_helper import StateMachineHelper
 
+from rafcon.mvc.models.abstract_state import MetaSignalMsg
 from rafcon.mvc.models.state_machine import StateMachineModel
-from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models import ContainerStateModel, StateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
-from rafcon.mvc.views.gap.state import StateView
-from rafcon.mvc.views.gap.connection import DataFlowView, TransitionView, FromScopedVariableDataFlowView,\
+from rafcon.mvc.mygaphas.items.state import StateView
+from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView, FromScopedVariableDataFlowView,\
     ToScopedVariableDataFlowView
 
 from rafcon.mvc.config import global_gui_config
 
-from rafcon.mvc.views.gap.canvas import MyCanvas
+from rafcon.mvc.mygaphas.canvas import MyCanvas
 
-from gaphas import Canvas
-import rafcon.mvc.controllers.gap.guide
 from functools import partial
 
 class GraphicalEditorController(ExtendedController):
@@ -189,8 +186,9 @@ class GraphicalEditorController(ExtendedController):
         self.model.selection.clear()
 
     def _meta_data_changed(self, view, model, name, affects_children):
-        self.model.state_machine.marked_dirty = True
-        logger.info("meta data changed")
+        msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
+        model.meta_signal.emit(msg)
+        # logger.info("meta data '{0}' of model '{1}' changed".format(name, model))
         # History.meta_changed_notify_after(self, model, name, affects_children)
 
     @ExtendedController.observe("state_machine", after=True)
@@ -219,6 +217,11 @@ class GraphicalEditorController(ExtendedController):
 
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
+
+            # The method causing the change raised an exception, thus nothing was changed
+            if isinstance(result, str) and "CRASH" in result:
+                return
+
             if method_name == 'add_state':
                 new_state = arguments[1]
                 new_state_m = model.states[new_state.state_id]
@@ -264,18 +267,14 @@ class GraphicalEditorController(ExtendedController):
                 for outcome_m in state_m.outcomes:
                     if outcome_m.outcome.outcome_id == result:
                         state_v.add_outcome(outcome_m)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_outcome':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for outcome_v in state_v.outcomes:
                     if outcome_v.outcome_id == arguments[1]:
                         state_v.remove_outcome(outcome_v)
-                        self.canvas.request_update(state_v)
-            elif method_name == 'outcome_change':
-                state_m = model
-                state_v = self.get_view_for_model(state_m)
-                self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             # ----------------------------------
             #           DATA PORTS
             # ----------------------------------
@@ -285,28 +284,33 @@ class GraphicalEditorController(ExtendedController):
                 for input_data_port_m in state_m.input_data_ports:
                     if input_data_port_m.data_port.data_port_id == result:
                         state_v.add_input_port(input_data_port_m)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'add_output_data_port':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for output_data_port_m in state_m.output_data_ports:
                     if output_data_port_m.data_port.data_port_id == result:
                         state_v.add_output_port(output_data_port_m)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_input_data_port':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for input_port_v in state_v.inputs:
                     if input_port_v.port_id == arguments[1]:
                         state_v.remove_input_port(input_port_v)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_output_data_port':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for output_port_v in state_v.outputs:
                     if output_port_v.port_id == arguments[1]:
                         state_v.remove_output_port(output_port_v)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
+            elif method_name in ['data_type', 'change_data_type']:
+                pass
+            elif method_name == 'default_value':
+                pass
+
             # ----------------------------------
             #         SCOPED VARIABLES
             # ----------------------------------
@@ -316,33 +320,31 @@ class GraphicalEditorController(ExtendedController):
                 for scoped_variable_m in state_m.scoped_variables:
                     if scoped_variable_m.scoped_variable.data_port_id == result:
                         state_v.add_scoped_variable(scoped_variable_m)
-                        self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_scoped_variable':
                 state_m = model
                 state_v = self.get_view_for_model(state_m)
                 for scoped_variable_v in state_v.scoped_variables:
                     if scoped_variable_v.port_id == arguments[1]:
                         state_v.remove_scoped_variable(scoped_variable_v)
-                        self.canvas.request_update(state_v)
-            elif method_name == 'scoped_variable_change':
-                state_m = model
-                state_v = self.get_view_for_model(state_m)
-                self.canvas.request_update(state_v)
+                        self.canvas.request_update(state_v, matrix=False)
 
             # ----------------------------------
             #            STATE NAME
             # ----------------------------------
             elif method_name == 'name':
+                # The name of a state was changed
                 if not isinstance(model, StateModel):
                     parent_model = model.parent
+                # The name of a port (input, output, scoped var, outcome) was changed
                 else:
                     parent_model = model
                 state_v = self.get_view_for_model(parent_model)
                 if parent_model is model:
                     state_v.name_view.name = arguments[1]
-                    self.canvas.request_update(state_v.name_view)
+                    self.canvas.request_update(state_v.name_view, matrix=False)
                 else:
-                    self.canvas.request_update(state_v)
+                    self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'state_execution_status':
                 state_v = self.get_view_for_model(model)
                 self.canvas.request_update(state_v, matrix=False)
@@ -437,7 +439,8 @@ class GraphicalEditorController(ExtendedController):
 
     @staticmethod
     def _extract_info_data(info):
-        if info['method_name'] == 'state_change':
+        if info['method_name'] in ['state_change', 'input_data_port_change', 'output_data_port_change',
+                                   'scoped_variable_change', 'outcome_change', 'transition_change', 'data_flow_change']:
             if 'info' in info:
                 info = info['info']
             elif 'kwargs' in info:
@@ -514,17 +517,17 @@ class GraphicalEditorController(ExtendedController):
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
 
-        from_port_m = from_state_m.get_data_port_model(from_key)
-        to_port_m = to_state_m.get_data_port_model(to_key)
+        from_port_m = from_state_m.get_data_port_m(from_key)
+        to_port_m = to_state_m.get_data_port_m(to_key)
 
-        if isinstance(from_port_m, ScopedVariableModel):
-            new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
-                                                             from_port_m.scoped_variable)
-        elif isinstance(to_port_m, ScopedVariableModel):
-            new_data_flow_v = ToScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
-                                                           to_port_m.scoped_variable)
-        else:
-            new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
+        # if isinstance(from_port_m, ScopedVariableModel):
+        #     new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
+        #                                                      from_port_m.scoped_variable)
+        # elif isinstance(to_port_m, ScopedVariableModel):
+        #     new_data_flow_v = ToScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
+        #                                                    to_port_m.scoped_variable)
+        # else:
+        new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
 
         self.canvas.add(new_data_flow_v, parent_state_v)
 
@@ -554,12 +557,9 @@ class GraphicalEditorController(ExtendedController):
         self._remove_connection_view(parent_state_m)
 
     def get_view_for_model(self, model):
-        for item in self.canvas.get_root_items():
+        for item in self.canvas.get_all_items():
             if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.model is model:
                 return item
-            for child in list(self.canvas.get_all_children(item)):
-                if isinstance(child, (StateView, TransitionView, DataFlowView)) and child.model is model:
-                    return child
 
     def add_state_view_to_parent(self, state_m, parent_state_m):
         parent_state_v = self.get_view_for_model(parent_state_m)
@@ -605,7 +605,7 @@ class GraphicalEditorController(ExtendedController):
         :param tuple size: The default size (width, height) if there is no size stored
         :param float depth: The hierarchy level of the state
         """
-        assert isinstance(state_m, StateModel)
+        assert isinstance(state_m, AbstractStateModel)
         state_meta_gaphas = state_m.meta['gui']['editor_gaphas']
         state_meta_opengl = state_m.meta['gui']['editor_opengl']
         state_temp = state_m.temp['gui']['editor']
@@ -770,17 +770,17 @@ class GraphicalEditorController(ExtendedController):
             from_key = data_flow_m.data_flow.from_key
             to_key = data_flow_m.data_flow.to_key
 
-            from_port_m = from_state_m.get_data_port_model(from_key)
-            to_port_m = to_state_m.get_data_port_model(to_key)
+            from_port_m = from_state_m.get_data_port_m(from_key)
+            to_port_m = to_state_m.get_data_port_m(to_key)
 
-            if isinstance(from_port_m, ScopedVariableModel):
-                scoped_variable = from_port_m.scoped_variable
-                data_flow_v = FromScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
-            elif isinstance(to_port_m, ScopedVariableModel):
-                scoped_variable = to_port_m.scoped_variable
-                data_flow_v = ToScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
-            else:
-                data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
+            # if isinstance(from_port_m, ScopedVariableModel):
+            #     scoped_variable = from_port_m.scoped_variable
+            #     data_flow_v = FromScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
+            # elif isinstance(to_port_m, ScopedVariableModel):
+            #     scoped_variable = to_port_m.scoped_variable
+            #     data_flow_v = ToScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
+            # else:
+            data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
             self.canvas.add(data_flow_v, parent_state_v)
 
             self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
@@ -801,8 +801,8 @@ class GraphicalEditorController(ExtendedController):
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
 
-        from_port_m = from_state_m.get_data_port_model(from_key)
-        to_port_m = to_state_m.get_data_port_model(to_key)
+        from_port_m = from_state_m.get_data_port_m(from_key)
+        to_port_m = to_state_m.get_data_port_m(to_key)
 
         if from_port_m is None:
             logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,

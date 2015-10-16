@@ -10,6 +10,7 @@
 import os
 
 from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 
 class StateHelper(object):
@@ -29,13 +30,15 @@ class StateHelper(object):
         :return: the copy of the source state
         """
         state_copy = None
-        local_storage = StateMachineStorage("/tmp/DFC/state_copy_tmp_folder")
+        local_storage = StateMachineStorage(GLOBAL_STORAGE_BASE_PATH+"/state_copy_tmp_folder")
 
         if not os.path.exists(local_storage.base_path):
             os.makedirs(local_storage.base_path)
         local_storage.save_state_recursively(source_state, "", True)
         state_copy = local_storage.load_state_from_yaml(os.path.join(local_storage.base_path, source_state.state_id))
-        state_copy.script.script = source_state.script.script
+        from rafcon.statemachine.states.execution_state import ExecutionState
+        if isinstance(state_copy, ExecutionState):
+            state_copy.script.script = source_state.script.script
         # state_copy.script.reset_script(state_copy.get_path())
         # change the id of the state
         state_copy.change_state_id()

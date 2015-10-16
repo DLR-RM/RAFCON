@@ -1,8 +1,10 @@
 from rafcon.statemachine.global_variable_manager import GlobalVariableManager
+import pytest
+import test_utils
 from pytest import raises
 
 
-def test_references():
+def test_references(caplog):
     gvm = GlobalVariableManager()
     d = {'a': 1, 'b': 2}
 
@@ -36,9 +38,10 @@ def test_references():
 
     with raises(RuntimeError):
         gvm.get_variable('c', per_reference=True)
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_locks():
+def test_locks(caplog):
     gvm = GlobalVariableManager()
     gvm.set_variable('a', 1)
     a = gvm.get_variable('a')
@@ -53,8 +56,8 @@ def test_locks():
     assert a == 1
     gvm.set_variable('a', 2, access_key=access_key)
     assert gvm.get_variable('a', access_key=access_key) == 2
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':
-    test_locks()
-    test_references()
+    pytest.main([__file__])

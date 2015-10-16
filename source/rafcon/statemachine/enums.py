@@ -10,6 +10,7 @@
 
 from enum import Enum
 import os
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
 StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY DECIDER_STATE')
@@ -19,4 +20,4 @@ StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED ST
 
 # Constants
 UNIQUE_DECIDER_STATE_ID = "unique_decider_state_id"
-DEFAULT_SCRIPT_PATH = os.path.join("/tmp", os.environ.get('USER', 'anonymous'), "DFC")
+DEFAULT_SCRIPT_PATH = GLOBAL_STORAGE_BASE_PATH

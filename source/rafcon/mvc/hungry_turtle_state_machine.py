@@ -6,17 +6,11 @@ import gtk
 from rafcon.utils import log
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 from rafcon.mvc.models import GlobalVariableManagerModel
 import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
 import gobject
-
-
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
 
 def create_models():
@@ -65,8 +59,6 @@ def clean_data_flows_ids(container_state):
 
 
 def run_turtle_demo():
-    logging_view = LoggingView()
-    setup_logger(logging_view)
     rafcon.statemachine.singleton.library_manager.initialize()
     # set base path of global storage
     rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/hungry_turtle_demo"
@@ -80,12 +72,9 @@ def run_turtle_demo():
 
     rafcon.statemachine.singleton.library_manager.initialize()
     [logger, gvm_model] = create_models()
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
-
-    # load the meta data for the state machine
-    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model,
                                                   editor_type="LogicDataGrouped")

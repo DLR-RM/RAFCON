@@ -11,7 +11,8 @@ import rafcon.statemachine.singleton
 
 # test environment elements
 from pytest import raises
-import variables_for_pytest
+import test_utils
+import pytest
 
 
 def create_statemachine():
@@ -63,7 +64,7 @@ def create_statemachine():
     return StateMachine(state4)
 
 
-def test_transition_creation():
+def test_transition_creation(caplog):
 
     test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
@@ -75,7 +76,7 @@ def test_transition_creation():
     root_state = sm_loaded.root_state
 
     state_machine = StateMachine(root_state)
-    assert variables_for_pytest.test_multithrading_lock.acquire(False)
+    assert test_utils.test_multithrading_lock.acquire(False)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
@@ -83,9 +84,9 @@ def test_transition_creation():
     root_state.join()
     time.sleep(0.2)
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-    variables_for_pytest.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
+    test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_transition_creation()
+    pytest.main([__file__])

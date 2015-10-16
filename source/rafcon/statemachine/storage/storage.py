@@ -20,7 +20,9 @@ from gtkmvc import Observable
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 from rafcon.utils.storage_utils import StorageUtils
+from rafcon.utils.config import read_file
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
 
 from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
@@ -47,7 +49,7 @@ class StateMachineStorage(Observable):
     STATEMACHINE_FILE = 'statemachine.yaml'
     LIBRARY_FILE = 'library.yaml'
 
-    def __init__(self, base_path='/tmp'):
+    def __init__(self, base_path=GLOBAL_STORAGE_BASE_PATH):
         Observable.__init__(self)
 
         self.storage_utils = StorageUtils(base_path)
@@ -126,7 +128,7 @@ class StateMachineStorage(Observable):
         statemachine.file_system_path = self.base_path
         logger.debug("Successfully saved statemachine!")
 
-    def save_script_file_for_state_and_source_path(self, state, state_path, force_full_load=False):
+    def save_script_file_for_state_and_source_path(self, state, state_path):
         """
         Saves the script file for a state to the directory of the state. The script name will be set to the SCRIPT_FILE
         constant.
@@ -134,11 +136,8 @@ class StateMachineStorage(Observable):
         :param state_path: The path of the state meta file
         :return:
         """
-        # only save the script file if the state is not a library state
-        # if not hasattr(state, "library_name"):  # ugly!
-        from rafcon.statemachine.states.library_state import LibraryState
-        from rafcon.statemachine.states.container_state import ContainerState
-        if not isinstance(state, LibraryState) and not isinstance(state, ContainerState) or force_full_load:
+        from rafcon.statemachine.states.execution_state import ExecutionState
+        if isinstance(state, ExecutionState):
             state_path_full = os.path.join(self.base_path, state_path)
             source_script_file = os.path.join(state.get_file_system_path(), state.script.filename)
             destination_script_file = os.path.join(state_path_full, self.SCRIPT_FILE)
@@ -150,8 +149,9 @@ class StateMachineStorage(Observable):
                             script_file.close()
                     else:
                         shutil.copyfile(source_script_file, destination_script_file)
-                except Exception, e:
-                    logger.warning("copy of file failed!!! %s -> %s" % (source_script_file, destination_script_file))
+                except Exception:
+                    logger.warning("Copy of script file failed: {0} -> {1}".format(source_script_file,
+                                                                                   destination_script_file))
                     raise
 
                 state.script.reload_path(self.SCRIPT_FILE)
@@ -174,15 +174,18 @@ class StateMachineStorage(Observable):
         :param parent_path:
         :return:
         """
+        from rafcon.statemachine.states.execution_state import ExecutionState
+        from rafcon.statemachine.states.container_state import ContainerState
         state_path = os.path.join(parent_path, str(state.state_id))
         state_path_full = os.path.join(self.base_path, state_path)
         StorageUtils.create_path(state_path_full)
-        self.save_script_file_for_state_and_source_path(state, state_path, force_full_load)
+        if isinstance(state, ExecutionState):
+            self.save_script_file_for_state_and_source_path(state, state_path)
         StorageUtils.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
 
-        #create yaml files for all children
-        if hasattr(state, 'states'):
-            for key, state in state.states.iteritems():
+        # create yaml files for all children
+        if isinstance(state, ContainerState):
+            for state in state.states.itervalues():
                 self.save_state_recursively(state, state_path, force_full_load)
 
     def clean_transitions_of_sm(self, root_state):
@@ -210,9 +213,7 @@ class StateMachineStorage(Observable):
         try:
             stream = file(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'r')
         except IOError:
-            import sys
-            exc = AttributeError("Provided path doesn't contain a valid state-machine: {0}".format(base_path))
-            raise AttributeError, exc, sys.exc_info()[2]
+            raise AttributeError("Provided path doesn't contain a valid state-machine: {0}".format(base_path))
         tmp_dict = yaml.load(stream)
         root_state_id = tmp_dict['root_state']
         version = tmp_dict['version']
@@ -276,14 +277,9 @@ class StateMachineStorage(Observable):
             # as the parent is None the state cannot calculate its path, therefore the path is cached for it
             state.set_file_system_path(state_path)
 
-        from rafcon.statemachine.states.container_state import ContainerState
-        if not isinstance(state, ContainerState):
+        from rafcon.statemachine.states.execution_state import ExecutionState
+        if isinstance(state, ExecutionState):
             state.script.reload_path(self.SCRIPT_FILE)
-
-        # the library state sets his script file to the script file of the root state of its library, thus it should
-        # not be overwritten in this case
-        from rafcon.statemachine.states.library_state import LibraryState
-        if not isinstance(state, LibraryState) and not isinstance(state, ContainerState):
             self.load_script_file(state)
 
         # load child states
@@ -299,13 +295,12 @@ class StateMachineStorage(Observable):
 
         return state
 
-    def load_script_file(self, state):
-        from rafcon.statemachine.states.container_state import ContainerState
-        if not isinstance(state, ContainerState):
-            script_file = open(os.path.join(state.get_file_system_path(), state.script.filename), 'r')
-            text = script_file.read()
-            script_file.close()
-            state.script.script = text
+    @staticmethod
+    def load_script_file(state):
+        from rafcon.statemachine.states.execution_state import ExecutionState
+        if isinstance(state, ExecutionState):
+            script = read_file(state.get_file_system_path(), state.script.filename)
+            state.script.script = script
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc

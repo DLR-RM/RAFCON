@@ -17,7 +17,9 @@ import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
 # test environment elements
-from variables_for_pytest import call_gui_callback, TMP_TEST_PATH
+import test_utils
+from test_utils import call_gui_callback, TMP_TEST_PATH
+import pytest
 
 
 def create_models(*args, **kargs):
@@ -98,11 +100,6 @@ def create_models(*args, **kargs):
     return logger, ctr_state, sm_m, state_dict
 
 
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
-
-
 def on_save_activate(state_machine_m, logger):
         if state_machine_m is None:
             return
@@ -115,7 +112,7 @@ def on_save_activate(state_machine_m, logger):
             state_machine_m.state_machine,
             state_machine_m.state_machine.base_path, delete_old_state_machine=False)
 
-        state_machine_m.root_state.store_meta_data_for_state()
+        state_machine_m.root_state.store_meta_data()
         logger.debug("Successfully saved graphics meta data.")
 
 
@@ -214,33 +211,30 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_gui_meta_data=Fal
     return missing_elements, actual_exists
 
 
-def test_storage_without_gui():
+def test_storage_without_gui(caplog):
     with_gui=False
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    # logging_view = LoggingView()
-    # setup_logger(logging_view)
-    # time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
     save_state_machine(sm_model=sm_m, path=TMP_TEST_PATH + "/test_storage_without_gui", logger=logger, with_gui=with_gui,
                        menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
+    test_utils.reload_config()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def _test_storage_with_gui():
+def _test_storage_with_gui(caplog):
     with_gui = True
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(rafcon.__path__[0] + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    # logging_view = LoggingView()
-    # setup_logger(logging_view)
-    # time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
@@ -251,3 +245,8 @@ def _test_storage_with_gui():
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
     os.chdir(rafcon.__path__[0] + "/../test/common")
+    test_utils.assert_logger_warnings_and_errors(caplog)
+
+
+if __name__ == '__main__':
+    pytest.main([__file__])

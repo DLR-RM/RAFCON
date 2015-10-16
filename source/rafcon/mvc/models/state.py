@@ -1,78 +1,31 @@
 from gtkmvc import ModelMT
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 
-import os
-import copy
-
-from rafcon.statemachine.states.state import State
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.data_port import DataPort
-from rafcon.statemachine.storage.storage import StateMachineStorage
-from rafcon.statemachine.singleton import global_storage, state_machine_manager
 
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
 
-from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
-
-class StateModel(ModelMT):
-    """This model class manages a State
+class StateModel(AbstractStateModel):
+    """This model class manages a State, for the moment only ExecutionStates
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
-    :param State state: The state to be managed
+    :param rafcon.statemachine.states.state.State state: The state to be managed
+    :param AbstractStateModel parent: The state to be managed
+    :param rafcon.utils.vividict.Vividict meta: The meta data of the state
      """
 
-    is_start = None
-    state = None
-    outcomes = []
-    input_data_ports = []
-    output_data_ports = []
-
-    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start")
-
-    def __init__(self, state, parent=None, meta=None):
+    def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         """Constructor
         """
-        ModelMT.__init__(self)
-        assert isinstance(state, State)
+        super(StateModel, self).__init__(state, parent, meta)
 
-        self.state = state
-
-        # True if root_state or state is parent start_state_id else False
-        self.is_start = True if state.is_root_state or state.state_id == state.parent.start_state_id else False
-
-        if isinstance(meta, Vividict):
-            self.meta = meta
-        else:
-            self.meta = Vividict()
-
-        self.temp = Vividict()
-
-        if isinstance(parent, StateModel):
-            self.parent = parent
-        else:
-            self.parent = None
-
-        self.register_observer(self)
-        self.input_data_ports = []
-        self.output_data_ports = []
-        self.outcomes = []
-        self.reload_input_data_port_models()
-        self.reload_output_data_port_models()
-        self.reload_outcome_models()
-
-    def is_element_of_self(self, instance):
-
-        if isinstance(instance, DataPort) and instance.data_port_id in self.state.input_data_ports:
-            return True
-        if isinstance(instance, DataPort) and instance.data_port_id in self.state.output_data_ports:
-            return True
-        if isinstance(instance, Outcome) and instance.outcome_id in self.state.outcomes:
-            return True
-        return False
+        if load_meta_data and type(self) == StateModel:
+            self.load_meta_data()
 
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, prop_name, info):
@@ -107,10 +60,7 @@ class StateModel(ModelMT):
             # do not track the active flag when marking the sm dirty
             pass
         else:
-            if self.state.get_sm_for_state():
-                own_sm_id = self.state.get_sm_for_state().state_machine_id
-                if own_sm_id is not None:
-                    state_machine_manager.state_machines[own_sm_id].marked_dirty = True
+            self._mark_state_machine_as_dirty()
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument
@@ -139,47 +89,8 @@ class StateModel(ModelMT):
             elif hasattr(info, 'after') and info['after']:
                 changed_list._notify_method_after(info.instance, cause, None, (model,), info)
 
-        # Notify the parent state about the change (this causes a recursive call up to the root state)
-        if self.parent is not None:
-            self.parent.model_changed(model, prop_name, info)
-
-    def get_outcome_model(self, outcome_id):
-        """Searches and return the outcome model in this state model
-        :param outcome_id: The outcome id to be searched
-        :return: The model of the data flow or None if it is not found
-        """
-        for outcome_m in self.outcomes:
-            if outcome_m.outcome.outcome_id == outcome_id:
-                return outcome_m
-        return None
-
-    def get_data_port_model(self, data_port_id):
-        """Searches and returns the model of a data port of a given state
-
-        The method searches a port with the given id in the data ports of the given state model. If the state model
-        is a container state, not only the input and output data ports are looked at, but also the scoped variables.
-        :param state_m: The state model to search the data port in
-        :param data_port_id: The data port id to be searched
-        :return: The model of the data port or None if it is not found
-        """
-        def find_port_in_list(data_port_list):
-            """Helper method to search for a port within a given list
-
-            :param data_port_list: The list to search the data port in
-            :return: The model of teh data port or None if it is not found
-            """
-            for port_m in data_port_list:
-                if port_m.data_port.data_port_id == data_port_id:
-                    return port_m
-            return None
-
-        port_m = find_port_in_list(self.input_data_ports)
-        if port_m is not None:
-            return port_m
-        port_m = find_port_in_list(self.output_data_ports)
-        if port_m is not None:
-            return port_m
-        return None
+        # Notifies parent state
+        super(StateModel, self).model_changed(model, prop_name, info)
 
     def get_model_info(self, model):
         model_key = None
@@ -224,21 +135,21 @@ class StateModel(ModelMT):
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
 
-    def reload_input_data_port_models(self):
+    def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state
         """
         self.input_data_ports = []
         for input_data_port in self.state.input_data_ports.itervalues():
             self.input_data_ports.append(DataPortModel(input_data_port, self))
 
-    def reload_output_data_port_models(self):
+    def _load_output_data_port_models(self):
         """Reloads the output data port models directly from the the state
         """
         self.output_data_ports = []
         for output_data_port in self.state.output_data_ports.itervalues():
             self.output_data_ports.append(DataPortModel(output_data_port, self))
 
-    def reload_outcome_models(self):
+    def _load_outcome_models(self):
         """Reloads the input data port models directly from the the state
         """
         self.outcomes = []
@@ -274,129 +185,3 @@ class StateModel(ModelMT):
                 else:
                     del model_list[model_item]
                 return
-
-    def overwrite_editor_meta(self, meta):
-        """
-        This function is for backward compatibility for state machines that still uses the "editor" key in their meta
-        :param meta:
-        :return:
-        """
-        if "editor" in meta['gui']:
-            if "editor_opengl" not in meta['gui']:
-                meta['gui']['editor_opengl'] = copy.deepcopy(meta['gui']['editor'])
-            del meta['gui']['editor']
-
-    # ---------------------------------------- storage functions ---------------------------------------------
-    def load_meta_data_for_state(self):
-        #logger.debug("load graphics file from yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
-        if os.path.exists(meta_path):
-            tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
-
-            # For backwards compatibility
-            # move all meta data from editor to editor_opengl
-            self.overwrite_editor_meta(tmp_meta)
-
-            for input_data_port_model in self.input_data_ports:
-                i_id = input_data_port_model.data_port.data_port_id
-                self.overwrite_editor_meta(tmp_meta["input_data_port" + str(i_id)])
-                input_data_port_model.meta = tmp_meta["input_data_port" + str(i_id)]
-                del tmp_meta["input_data_port" + str(i_id)]
-            for output_data_port_model in self.output_data_ports:
-                o_id = output_data_port_model.data_port.data_port_id
-                self.overwrite_editor_meta(tmp_meta["output_data_port" + str(o_id)])
-                output_data_port_model.meta = tmp_meta["output_data_port" + str(o_id)]
-                del tmp_meta["output_data_port" + str(o_id)]
-
-            # check the type implicitly by checking if the state has the states attribute
-            if hasattr(self.state, 'states'):
-                for transition_model in self.transitions:
-                    t_id = transition_model.transition.transition_id
-                    self.overwrite_editor_meta(tmp_meta["transition" + str(t_id)])
-                    transition_model.meta = tmp_meta["transition" + str(t_id)]
-                    del tmp_meta["transition" + str(t_id)]
-                for data_flow_model in self.data_flows:
-                    d_id = data_flow_model.data_flow.data_flow_id
-                    self.overwrite_editor_meta(tmp_meta["data_flow" + str(d_id)])
-                    data_flow_model.meta = tmp_meta["data_flow" + str(d_id)]
-                    del tmp_meta["data_flow" + str(d_id)]
-                for scoped_variable_model in self.scoped_variables:
-                    s_id = scoped_variable_model.scoped_variable.data_port_id
-                    self.overwrite_editor_meta(tmp_meta["scoped_variable" + str(s_id)])
-                    scoped_variable_model.meta = tmp_meta["scoped_variable" + str(s_id)]
-                    del tmp_meta["scoped_variable" + str(s_id)]
-            # assign the meta data to the state
-            self.meta = tmp_meta
-        # Print warning only if the state has a location different from the tmp directory
-        elif meta_path[0:5] != '/tmp/':
-            logger.warn("path to load meta data for state model of state '{0}' does not exist".format(self.state.name))
-
-    def copy_meta_data_from_state_model(self, source_state):
-
-        self.meta = copy.deepcopy(source_state.meta)
-        counter = 0
-        for input_data_port_model in self.input_data_ports:
-            input_data_port_model.meta = \
-                copy.deepcopy(source_state.input_data_ports[counter].meta)
-            counter += 1
-        counter = 0
-        for output_data_port_model in self.output_data_ports:
-            output_data_port_model.meta = \
-                copy.deepcopy(source_state.output_data_ports[counter].meta)
-            counter += 1
-
-        if hasattr(self.state, 'states'):
-            counter = 0
-            for transition_model in self.transitions:
-                transition_model.meta = \
-                    copy.deepcopy(source_state.transitions[counter].meta)
-                counter += 1
-            counter = 0
-            for data_flow_model in self.data_flows:
-                data_flow_model.meta = \
-                    copy.deepcopy(source_state.data_flows[counter].meta)
-                counter += 1
-            counter = 0
-            for scoped_variable_model in self.scoped_variables:
-                scoped_variable_model.meta = \
-                    copy.deepcopy(source_state.scoped_variables[counter].meta)
-                counter += 1
-
-    def store_meta_data_for_state(self):
-        #logger.debug("store graphics file to yaml for state model of state %s" % self.state.name)
-        meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
-
-        for input_data_port_model in self.input_data_ports:
-            self.meta["input_data_port" + str(input_data_port_model.data_port.data_port_id)] = \
-                input_data_port_model.meta
-
-        for output_data_port_model in self.output_data_ports:
-            self.meta["output_data_port" + str(output_data_port_model.data_port.data_port_id)] = \
-                output_data_port_model.meta
-
-        # add transition meta data and data_flow meta data to the state meta data before saving it to a yaml file
-        if hasattr(self.state, 'states'):
-            for transition_model in self.transitions:
-                self.meta["transition" + str(transition_model.transition.transition_id)] = transition_model.meta
-            for data_flow_model in self.data_flows:
-                self.meta["data_flow" + str(data_flow_model.data_flow.data_flow_id)] = data_flow_model.meta
-            for scoped_variable_model in self.scoped_variables:
-                self.meta["scoped_variable" + str(scoped_variable_model.scoped_variable.data_port_id)] =\
-                    scoped_variable_model.meta
-
-        global_storage.storage_utils.write_dict_to_yaml(self.meta, meta_path)
-
-    @staticmethod
-    def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
-        path1 = treemodel.get_path(iter1)[0]
-        path2 = treemodel.get_path(iter2)[0]
-        name1 = treemodel[path1][0]
-        name2 = treemodel[path2][0]
-        name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
-        name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
-        if name1_as_bits == name2_as_bits:
-            return 0
-        elif name1_as_bits > name2_as_bits:
-            return 1
-        else:
-            return -1

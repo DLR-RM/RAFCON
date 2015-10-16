@@ -12,7 +12,6 @@ import copy
 from gtkmvc import Observable
 
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
-from rafcon.statemachine.script import Script, ScriptType
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.transition import Transition
 from rafcon.statemachine.outcome import Outcome
@@ -20,7 +19,7 @@ from rafcon.statemachine.data_flow import DataFlow
 from rafcon.statemachine.scope import ScopedData, ScopedVariable
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
-from rafcon.statemachine.singleton import global_storage, state_machine_manager, state_machine_execution_engine
+from rafcon.statemachine.singleton import global_storage, state_machine_execution_engine
 from rafcon.utils.type_helpers import type_inherits_of_type
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -43,7 +42,7 @@ class ContainerState(State):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, v_checker=None, path=None, filename=None, check_path=True):
+                 scoped_variables=None, v_checker=None):
 
         self._states = {}
         self._transitions = {}
@@ -58,8 +57,6 @@ class ContainerState(State):
         self._child_execution = False
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
-
-        self.script = Script(path, filename, script_type=ScriptType.CONTAINER, check_path=check_path, state=self)
 
         self.scoped_variables = scoped_variables
         self.states = states
@@ -92,7 +89,7 @@ class ContainerState(State):
 
         :return:
         """
-        State.setup_run(self)
+        super(ContainerState, self).setup_run()
         # reset the scoped data
         self._scoped_data = {}
         self.add_default_values_of_scoped_variables_to_scoped_data()
@@ -167,21 +164,6 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- state functions --------------------------------------
     # ---------------------------------------------------------------------------------------------
-
-    @Observable.observed
-    # Primary key is state_id, as one should be able to change the name of the state without updating all connections
-    def create_state(self, name, state_id=None):
-        """Creates a state for the container state.
-
-        :param name: the name of the new state
-        :param state_id: the optional state_id for the new state
-        :return state_id: the state_id of the created state
-        """
-        if state_id is None:
-            state_id = state_id_generator()
-        state = State(state_id, name)
-        self._states[state_id] = state
-        return state_id
 
     @Observable.observed
     def add_state(self, state, storage_load=False):
@@ -441,48 +423,6 @@ class ContainerState(State):
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
         self._transitions.pop(transition_id, None)
 
-    def is_valid_transition_id(self, transition_id):
-        """Checks if transition_id valid type and points to element of state.
-
-        :param int transition_id:
-        :return:
-        """
-        #check if types are valid
-        if not isinstance(transition_id, int):
-            raise TypeError("transition_id must be of type int")
-        # consistency check
-        if transition_id not in self.transitions:
-            raise AttributeError("transition_id %s has to be in container_state %s transitions-list" %
-                                 (transition_id, self.state_id))
-
-    def is_valid_data_flow_id(self, data_flow_id):
-        """Checks if data_flow_id valid type and points to element of state.
-
-        :param int data_flow_id:
-        :return:
-        """
-        #check if types are valid
-        if not isinstance(data_flow_id, int):
-            raise TypeError("data_flow_id must be of type int")
-        # consistency check
-        if data_flow_id not in self.data_flows:
-            raise AttributeError("data_flow_id %s has to be in container_state %s data_flows-list" %
-                                 (data_flow_id, self.state_id))
-
-    def is_valid_state_id(self, state_id):
-        """Checks if state_id valid type and points to element of state.
-
-        :param str state_id:
-        :return:
-        """
-        #check if types are valid
-        if not isinstance(state_id, str):
-            raise TypeError("state_id must be of type str")
-        # consistency check
-        if state_id not in self.states:
-            raise AttributeError("state_id %s has to be child of container_state %s" %
-                                 (state_id, self.state_id))
-
     def remove_outcome_hook(self, outcome_id):
         """Removes internal transition going to the outcome
         """
@@ -527,7 +467,8 @@ class ContainerState(State):
         :param int data_flow_id: the id of the data_flow to remove
 
         """
-        self.is_valid_data_flow_id(data_flow_id)
+        if data_flow_id not in self.data_flows:
+            raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
         self.data_flows.pop(data_flow_id, None)
 
     def remove_data_flows_with_data_port_id(self, data_port_id):
@@ -589,6 +530,13 @@ class ContainerState(State):
             scoped_variable_id = generate_data_flow_id()
         self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value,
                                                                     scoped_variable_id, self)
+
+        # Check for name uniqueness
+        valid, message = self._check_data_port_name(self._scoped_variables[scoped_variable_id])
+        if not valid:
+            del self._scoped_variables[scoped_variable_id]
+            raise ValueError(message)
+
         return scoped_variable_id
 
     @Observable.observed
@@ -788,17 +736,6 @@ class ContainerState(State):
             if data_flow.to_state == old_state_id:
                 data_flow.to_state = self.state_id
 
-    def state_id_exists(self, new_state_id):
-        """
-        Checks if a specific key already exists among the child states.
-        :param new_state_id: the state id to check
-        :return: True if the key already exists, False else.
-        """
-        for state_id in self.states.keys():
-            if state_id == new_state_id:
-                return True
-        return False
-
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
 
@@ -812,18 +749,6 @@ class ContainerState(State):
             return self
         else:
             return self.states[transition.to_state]
-
-    def get_scoped_variables_as_dict(self, dict):
-        """ Get the scoped variables of the state as dictionary
-
-        :param dict: the dict that is filled with the scoped variables
-        :return:
-        """
-        for key_svar, svar in self.scoped_variables.iteritems():
-            for key_sdata, sdata in self.scoped_data.iteritems():
-                if svar.name == sdata.name and sdata.from_state == self.state_id:
-                    if sdata.data_port_type is DataPortType.SCOPED:
-                        dict[svar.name] = sdata.value
 
     def write_output_data(self):
         """ Write the scoped data to output of the state. Called before exiting the container state.
@@ -907,14 +832,6 @@ class ContainerState(State):
                     return False, "Connection of two non-compatible data types"
         return True, "valid"
 
-    def _check_data_port_validity(self, check_data_port):
-        valid, message = super(ContainerState, self)._check_data_port_validity(check_data_port)
-        if not valid:
-            return False, message
-        if check_data_port.data_port_id not in self.scoped_variables:
-            return True, message
-        return self._check_scoped_variable_name(check_data_port)
-
     def _check_data_port_id(self, data_port):
         """Checks the validity of a data port id
 
@@ -935,19 +852,27 @@ class ContainerState(State):
                 return False, "data port id already existing in state"
         return True, message
 
-    def _check_scoped_variable_name(self, check_scoped_variable):
-        """Checks the validity of a scoped variable name
+    def _check_data_port_name(self, data_port):
+        """Checks the validity of a data port name
 
-        Checks whether the name of the given scoped variable is already used by anther scoped variable within the state.
+        Checks whether the name of the given data port is already used by anther data port within the state. Names
+        must be unique with input data ports, output data ports and scoped variables.
 
-        :param rafcon.statemachine.scope.ScopedVariable check_scoped_variable: The scoped variable to be checked
+        :param rafcon.statemachine.data_port.DataPort data_port: The data port to be checked
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
-            more information especially if the scoped variable is not valid
+            more information especially if the data port is not valid
         """
-        for scoped_variable in self.scoped_variables.values():
-            if check_scoped_variable.name == scoped_variable.name and check_scoped_variable is not scoped_variable:
-                return False, "Name of scoped variable already used by another scoped variable within the state"
-        return True, "valid"
+        # First check inputs and outputs
+        valid, message = super(ContainerState, self)._check_data_port_name(data_port)
+        if not valid:
+            return False, message
+
+        if data_port.data_port_id in self.scoped_variables:
+            for scoped_variable in self.scoped_variables.itervalues():
+                if data_port.name == scoped_variable.name and data_port is not scoped_variable:
+                    return False, "scoped variable name already existing in state's scoped variables"
+
+        return True, message
 
     def _check_data_flow_validity(self, check_data_flow):
         """Checks the validity of a data flow
@@ -1050,7 +975,8 @@ class ContainerState(State):
         from_data_port = self.get_data_port(check_data_flow.from_state, check_data_flow.from_key)
         to_data_port = self.get_data_port(check_data_flow.to_state, check_data_flow.to_key)
         if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
-            return False, "Data flow origin and target do not have matching data types"
+            return False, "Data flow origin and target do not have matching data types (from '{0}' to '{1}')".format(
+                from_data_port.data_type, to_data_port.data_type)
         return True, "valid"
 
     def _check_transition_validity(self, check_transition):
@@ -1287,7 +1213,7 @@ class ContainerState(State):
         if start_state_id is not None and start_state_id not in self.states:
             raise ValueError("start_state_id does not exist")
 
-        if start_state_id is None and to_outcome is not None:
+        if start_state_id is None and to_outcome is not None:  # this is the case if the start state is the state itself
             if to_outcome not in self.outcomes:
                 raise ValueError("to_outcome does not exist")
             if start_state_id != self.state_id:
@@ -1343,20 +1269,6 @@ class ContainerState(State):
         self._scoped_data = scoped_data
 
     @property
-    def current_state(self):
-        """Property for the _current_state field
-
-        """
-        return self._current_state
-
-    @current_state.setter
-    #@Observable.observed
-    def current_state(self, current_state):
-        if not isinstance(current_state, State):
-            raise TypeError("current_state must be of type State")
-        self._current_state = current_state
-
-    @property
     def v_checker(self):
         """Property for the _v_checker field
 
@@ -1373,17 +1285,8 @@ class ContainerState(State):
     @property
     def child_execution(self):
         """Property for the _child_execution field
-
         """
         if self.state_execution_status is StateExecutionState.EXECUTE_CHILDREN:
             return True
         else:
             return False
-
-            # @child_execution.setter
-            # @Observable.observed
-            # def child_execution(self, child_execution):
-            #     if child_execution is not None:
-            #         if not isinstance(child_execution, bool):
-            #             raise TypeError("child_execution must be of type str")
-            #     self._child_execution = child_execution

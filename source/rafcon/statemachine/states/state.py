@@ -1,3 +1,4 @@
+from __builtin__ import staticmethod
 import threading
 import sys
 import Queue
@@ -8,11 +9,11 @@ import yaml
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
-from rafcon.statemachine.data_port import DataPort
+from rafcon.statemachine.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.script import Script
 from rafcon.statemachine.id_generator import *
 
 
@@ -45,7 +46,6 @@ class State(Observable, yaml.YAMLObject):
         self._input_data_ports = {}
         self._output_data_ports = {}
         self._outcomes = {}
-        self._script = None
         # the input data of the state during execution
         self._input_data = {}
         # the output data of the state during execution
@@ -157,9 +157,16 @@ class State(Observable, yaml.YAMLObject):
         :param state: the state to get the default input values for
 
         """
+        from rafcon.statemachine.states.library_state import LibraryState
         result_dict = {}
         for input_port_key, value in state.input_data_ports.iteritems():
-            default = value.default_value
+            if isinstance(state, LibraryState):
+                if state.use_runtime_value_input_data_ports[input_port_key]:
+                    default = state.input_data_port_runtime_values[input_port_key]
+                else:
+                    default = value.default_value
+            else:
+                default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
             if isinstance(default, str) and len(default) > 0 and default[0] == '$':
@@ -176,15 +183,20 @@ class State(Observable, yaml.YAMLObject):
                 result_dict[value.name] = copy.copy(default)
         return result_dict
 
-    def create_output_dictionary_for_state(self, state):
+    @staticmethod
+    def create_output_dictionary_for_state(state):
         """Return empty output dictionary for a state
 
         :param state: the state of which the output data is determined
         :return: the output data of the target state
         """
+        from rafcon.statemachine.states.library_state import LibraryState
         result_dict = {}
         for key, data_port in state.output_data_ports.iteritems():
-            result_dict[data_port.name] = data_port.default_value
+            if isinstance(state, LibraryState) and state.use_runtime_value_output_data_ports[key]:
+                result_dict[data_port.name] = copy.copy(state.output_data_port_runtime_values[key])
+            else:
+                result_dict[data_port.name] = copy.copy(data_port.default_value)
         return result_dict
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- data port functions -------------------------------------
@@ -197,11 +209,19 @@ class State(Observable, yaml.YAMLObject):
         :param name: the name of the new input data port
         :param data_type: the type of the new input data port
         :param default_value: the default value of the data port
-
+        :param data_port_id: the data_port_id of the new data port
+        :return: data_port_id of new input data port
         """
         if data_port_id is None:
             data_port_id = generate_data_flow_id()
-        self._input_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id, self)
+        self._input_data_ports[data_port_id] = InputDataPort(name, data_type, default_value, data_port_id, self)
+
+        # Check for name uniqueness
+        valid, message = self._check_data_port_name(self._input_data_ports[data_port_id])
+        if not valid:
+            del self._input_data_ports[data_port_id]
+            raise ValueError(message)
+
         return data_port_id
 
     @Observable.observed
@@ -243,12 +263,19 @@ class State(Observable, yaml.YAMLObject):
         :param name: the name of the new output data port
         :param data_type: the type of the new output data port
         :param default_value: the default value of the data port
-
+        :param data_port_id: the data_port_id of the new data port
+        :return: data_port_id of new output data port
         """
-
         if data_port_id is None:
             data_port_id = generate_data_flow_id()
-        self._output_data_ports[data_port_id] = DataPort(name, data_type, default_value, data_port_id, self)
+        self._output_data_ports[data_port_id] = OutputDataPort(name, data_type, default_value, data_port_id, self)
+
+        # Check for name uniqueness
+        valid, message = self._check_data_port_name(self._output_data_ports[data_port_id])
+        if not valid:
+            del self._output_data_ports[data_port_id]
+            raise ValueError(message)
+
         return data_port_id
 
     @Observable.observed
@@ -275,12 +302,15 @@ class State(Observable, yaml.YAMLObject):
             for ip_id, output_port in self.input_data_ports.iteritems():
                 if output_port.name == name:
                     return ip_id
-            raise AttributeError("Name %s is not in input_data_ports", name)
+            raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
         elif data_port_type is DataPortType.OUTPUT:
             for op_id, output_port in self.output_data_ports.iteritems():
                 if output_port.name == name:
                     return op_id
-            raise AttributeError("Name %s is not in output_data_ports", name)
+            # 'error' is an automatically generated output port in case of errors and exception and doesn't have an id
+            if name == "error":
+                return
+            raise AttributeError("Name '{0}' is not in output_data_ports".format(name))
 
     def get_data_port_by_id(self, data_port_id):
         """Search for the given data port id in the data ports of the state
@@ -328,7 +358,7 @@ class State(Observable, yaml.YAMLObject):
             else:
                 return self.parent.get_sm_for_state()
 
-        logger.debug("sm_id is not found as long as the state does not belong to a state machine yet")
+        logger.debug("The root state does not belong to a state machine. Therefore there is no state_machine_id, yet")
         return None
 
     def set_file_system_path(self, file_system_path):
@@ -348,7 +378,7 @@ class State(Observable, yaml.YAMLObject):
             if self._file_system_path:
                 return self._file_system_path
             else:
-                return "/tmp/" + str(self.get_path())
+                return GLOBAL_STORAGE_BASE_PATH + str(self.get_path())
         else:
             return self.get_sm_for_state().file_system_path + "/" + self.get_path()
 
@@ -411,20 +441,6 @@ class State(Observable, yaml.YAMLObject):
         """
         pass
 
-    def is_valid_outcome_id(self, outcome_id):
-        """Checks if outcome_id valid type and points to element of state.
-
-        :param int outcome_id:
-        :return:
-        """
-        # check if types are valid
-        if not isinstance(outcome_id, int):
-            raise TypeError("outcome_id must be of type int")
-        # consistency check
-        if outcome_id not in self.outcomes:
-            raise AttributeError("outcome_id %s has to be in container_state %s outcomes-list" %
-                                 (outcome_id, self.state_id))
-
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- check methods ---------------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -477,6 +493,10 @@ class State(Observable, yaml.YAMLObject):
         if not valid:
             return False, message
 
+        valid, message = self._check_data_port_name(check_data_port)
+        if not valid:
+            return False, message
+
         # Check whether the type matches any connected data port type
         # Only relevant, if there is a parent state, otherwise the port cannot be connected to data flows
         # TODO: check of internal connections
@@ -502,6 +522,28 @@ class State(Observable, yaml.YAMLObject):
         for output_data_port_id, output_data_port in self.output_data_ports.iteritems():
             if data_port.data_port_id == output_data_port_id and data_port is not output_data_port:
                 return False, "data port id already existing in state"
+        return True, "valid"
+
+    def _check_data_port_name(self, data_port):
+        """Checks the validity of a data port name
+
+        Checks whether the name of the given data port is already used by anther data port within the state. Names
+        must be unique with input data ports and output data ports.
+
+        :param rafcon.statemachine.data_port.DataPort data_port: The data port to be checked
+        :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
+            more information especially if the data port is not valid
+        """
+        if data_port.data_port_id in self.input_data_ports:
+            for input_data_port in self.input_data_ports.itervalues():
+                if data_port.name == input_data_port.name and data_port is not input_data_port:
+                    return False, "data port name already existing in state's input data ports"
+
+        elif data_port.data_port_id in self.output_data_ports:
+            for output_data_port in self.output_data_ports.itervalues():
+                if data_port.name == output_data_port.name and data_port is not output_data_port:
+                    return False, "data port name already existing in state's output data ports"
+
         return True, "valid"
 
     def check_input_data_type(self, input_data):
@@ -534,33 +576,19 @@ class State(Observable, yaml.YAMLObject):
     # -------------------------------------- misc functions ---------------------------------------
     # ---------------------------------------------------------------------------------------------
 
-    @Observable.observed
-    def set_script_text(self, new_text):
-        """
-        Sets the text of the script. This function can be overridden to prevent setting the script under certain
-        circumstances.
-        :param new_text: The new text to replace to old text with.
-        :return: Returns True if the script was successfully set.
-        """
-        self.script.script = new_text
-        return True
-
     def change_state_id(self, state_id=None):
         """
         Changes the id of the state to a new id. If now state_id is passed as parameter, a new state id is generated.
         :param state_id: The new state if of the state
         :return:
         """
-        new_state_id = None
         if state_id is None:
-            new_state_id = state_id_generator()
-        else:
-            new_state_id = state_id
-        if not self.is_root_state:
-            while self.parent.state_id_exists(new_state_id):
-                new_state_id = state_id_generator()
+            state_id = state_id_generator()
+        if not self.is_root_state and not self.is_root_state_of_library:
+            while state_id in self.parent.states:
+                state_id = state_id_generator()
 
-        self._state_id = new_state_id
+        self._state_id = state_id
 
     def __str__(self):
         return "State '{0}' with ID '{1}' and and type {2}".format(self.name, self.state_id, type(self))
@@ -627,10 +655,16 @@ class State(Observable, yaml.YAMLObject):
         if not isinstance(input_data_ports, dict):
             raise TypeError("input_data_ports must be of type dict")
         for port_id, port in input_data_ports.iteritems():
-            if not isinstance(port, DataPort):
-                raise TypeError("element of input_data_ports must be of type DataPort")
+            if not isinstance(port, InputDataPort):
+                if type(port) == DataPort:
+                    # This is a fix for older state machines, which didn't distinguish between input and output ports
+                    port = InputDataPort(port.name, port.data_type, port.default_value, port.data_port_id)
+                    input_data_ports[port_id] = port
+                else:
+                    raise TypeError("Elements of input_data_ports must be of type InputDataPort, given: {0}".format(
+                        type(port)))
             if not port_id == port.data_port_id:
-                raise AttributeError("the key of the input dictionary and the id of the data port do not match")
+                raise AttributeError("The key of the input dictionary and the id of the data port do not match")
             port.parent = self
         self._input_data_ports = input_data_ports
 
@@ -650,10 +684,16 @@ class State(Observable, yaml.YAMLObject):
         if not isinstance(output_data_ports, dict):
             raise TypeError("output_data_ports must be of type dict")
         for port_id, port in output_data_ports.iteritems():
-            if not isinstance(port, DataPort):
-                raise TypeError("element of output_data_ports must be of type DataPort")
+            if not isinstance(port, OutputDataPort):
+                if type(port) == DataPort:
+                    # This is a fix for older state machines, which didn't distinguish between input and output ports
+                    port = OutputDataPort(port.name, port.data_type, port.default_value, port.data_port_id)
+                    output_data_ports[port_id] = port
+                else:
+                    raise TypeError("Elements of output_data_ports must be of type OutputDataPort, given: {0}".format(
+                        type(port)))
             if not port_id == port.data_port_id:
-                raise AttributeError("the key of the output dictionary and the id of the data port do not match")
+                raise AttributeError("The key of the output dictionary and the id of the data port do not match")
             port.parent = self
         self._output_data_ports = output_data_ports
 
@@ -827,6 +867,11 @@ class State(Observable, yaml.YAMLObject):
     @property
     def is_root_state(self):
         return not isinstance(self.parent, State)
+
+    @property
+    def is_root_state_of_library(self):
+        from rafcon.statemachine.states.library_state import LibraryState
+        return isinstance(self.parent, LibraryState)
 
     def finalize(self, outcome=None):
         """Finalize state

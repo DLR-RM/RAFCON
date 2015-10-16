@@ -5,13 +5,12 @@ import gtk
 import gobject
 
 from gtkmvc import View
-
 from gaphas import tool
 from gaphas import painter
-from rafcon.mvc.controllers.gap.tools import ConnectHandleMoveTool, HoverItemTool, RemoveItemTool, MoveItemTool, \
+from rafcon.mvc.mygaphas.view import ExtendedGtkView
+from rafcon.mvc.mygaphas.tools import ConnectHandleMoveTool, HoverItemTool, RemoveItemTool, MoveItemTool, \
     MultiselectionTool
-from rafcon.mvc.controllers.gap.painter import CustomColorHandlePainter
-from rafcon.mvc.views.gap.view import ExtendedGtkView
+from rafcon.mvc.mygaphas.painter import CustomColorHandlePainter
 
 
 class GraphicalEditorView(View, gobject.GObject):

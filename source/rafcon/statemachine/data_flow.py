@@ -235,9 +235,10 @@ class DataFlow(Observable, yaml.YAMLObject):
         if not valid:
             setattr(self, property_name, old_value)
             if property_name == '_parent':
-                raise ValueError("Data flow of state '{0}' [{1}] invalid: {2}".format(value.name,
+                raise ValueError("Data flow with id {3} of state '{0}' [{1}] invalid: {2}".format(value.name,
                                                                                       value.state_id,
-                                                                                      message))
+                                                                                      message,
+                                                                                      self.data_flow_id))
             raise ValueError("The data flow's '{0}' could not be changed: {1}".format(property_name[1:], message))
 
     def _check_validity(self):

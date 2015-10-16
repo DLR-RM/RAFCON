@@ -14,6 +14,7 @@ from os.path import realpath, dirname, join, exists, expanduser, expandvars, isd
 import rafcon
 
 from rafcon.utils import log
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 from rafcon.statemachine.config import global_config
 from rafcon.statemachine.storage.storage import StateMachineStorage
@@ -22,21 +23,20 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
 
 from rafcon.mvc.controllers import MainWindowController
-from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.main_window import MainWindowView
+
 import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-
 from rafcon.network.network_config import global_net_config
-from rafcon.network.singleton import network_connections
+
+if global_net_config.get_config_value("NETWORK_CONNECTIONS"):
+    from rafcon.network.singleton import network_connections
 
 
-def setup_logger(logging_view):
+def setup_logger():
     import sys
     # Set the views for the loggers
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -76,9 +76,7 @@ def config_path(path):
 
 
 if __name__ == '__main__':
-    # setup logging view first
-    logging_view = LoggingView()
-    setup_logger(logging_view)
+    setup_logger()
     # from rafcon.utils import log
     logger = log.get_logger("start")
     logger.info("RAFCON launcher")
@@ -128,7 +126,8 @@ if __name__ == '__main__':
     global_net_config.load(path=setup_config['net_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
 
-    network_connections.initialize()
+    if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
+        network_connections.initialize()
 
     # Make mvc directory the working directory
     # Needed for views, which assume to be in the mvc path and import glade files relatively
@@ -138,10 +137,10 @@ if __name__ == '__main__':
     sm_singletons.library_manager.initialize()
 
     # Set base path of global storage
-    sm_singletons.global_storage.base_path = "/tmp"
+    sm_singletons.global_storage.base_path = GLOBAL_STORAGE_BASE_PATH
 
     # Create the GUI
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
 
     if setup_config['sm_paths']:
         storage = StateMachineStorage()

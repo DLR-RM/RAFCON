@@ -1,0 +1,26 @@
+!HierarchyState
+data_flows:
+    7: !DataFlow {data_flow_id: 7, from_key: 5, from_state: FLNELL, to_key: 1, to_state: MTQKFH}
+    8: !DataFlow {data_flow_id: 8, from_key: 2, from_state: MTQKFH, to_key: 3, to_state: IFWPMR}
+    9: !DataFlow {data_flow_id: 9, from_key: 4, from_state: IFWPMR, to_key: 6, to_state: FLNELL}
+description: null
+input_data_ports:
+    5: !InputDataPort {data_port_id: 5, data_type: &id001 !!python/name:__builtin__.float '',
+        default_value: 1.0, name: data_input_port1}
+name: library_hierarchy_state1
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+output_data_ports:
+    3: !OutputDataPort {data_port_id: 3, data_type: *id001, default_value: 10.0, name: output0}
+    6: !OutputDataPort {data_port_id: 6, data_type: *id001, default_value: 2.0, name: data_output_port1}
+scoped_variables: {}
+state_id: FLNELL
+transitions:
+    1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: MTQKFH,
+        transition_id: 1}
+    2: !Transition {from_outcome: 0, from_state: MTQKFH, to_outcome: null, to_state: IFWPMR,
+        transition_id: 2}
+    3: !Transition {from_outcome: 0, from_state: IFWPMR, to_outcome: 0, to_state: FLNELL,
+        transition_id: 3}

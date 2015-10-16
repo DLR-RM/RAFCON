@@ -3,13 +3,14 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.script import Script
 
 # singleton elements
 import rafcon.statemachine.singleton
 
 # test environment elements
-import variables_for_pytest
+import pytest
+import test_utils
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 
@@ -28,9 +29,7 @@ def create_concurrency_barrier_state():
     input_state2 = state2.add_input_data_port("input_data_port1", "float")
     output_state2 = state2.add_output_data_port("output_data_port1", "float")
 
-    barrier_state = BarrierConcurrencyState("FirstConcurrencyState", "barrier_state_id",
-                                            path=rafcon.__path__[0] + "/../test_scripts",
-                                            filename="concurrency_container.py")
+    barrier_state = BarrierConcurrencyState("FirstConcurrencyState", "barrier_state_id")
     barrier_state.add_state(state1)
     barrier_state.add_state(state2)
     input1_state3 = barrier_state.add_input_data_port("input_data_port1", "float", 0.1)
@@ -44,7 +43,7 @@ def create_concurrency_barrier_state():
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].name = "decider_state"
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].script = Script(path=rafcon.__path__[0] + "/../test_scripts",
                                                                   filename="decider_state.py",
-                                                                  script_type=ScriptType.EXECUTION, check_path=True,
+                                                                  check_path=True,
                                                                   state=barrier_state.states[UNIQUE_DECIDER_STATE_ID])
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].add_outcome("FirstOutcomeDecider", 3)
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].add_outcome("SecondOutcomeDecider", 4)
@@ -55,14 +54,14 @@ def create_concurrency_barrier_state():
     return barrier_state
 
 
-def test_concurrency_barrier_save_load():
+def test_concurrency_barrier_save_load(caplog):
     concurrency_barrier_state = create_concurrency_barrier_state()
 
     state_machine = StateMachine(concurrency_barrier_state)
     test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/decider_test_statemachine")
     # test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
-    test_storage.save_statemachine_as_yaml(state_machine, variables_for_pytest.TMP_TEST_PATH + "/decider_test_statemachine")
-    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml(variables_for_pytest.TMP_TEST_PATH +
+    test_storage.save_statemachine_as_yaml(state_machine, test_utils.TMP_TEST_PATH + "/decider_test_statemachine")
+    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml(test_utils.TMP_TEST_PATH +
                                                                                  "/decider_test_statemachine")
 
     root_state = sm_loaded.root_state
@@ -72,7 +71,7 @@ def test_concurrency_barrier_save_load():
     root_state.output_data = output_data
 
     state_machine = StateMachine(root_state)
-    variables_for_pytest.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
@@ -84,7 +83,8 @@ def test_concurrency_barrier_save_load():
     assert root_state.final_outcome.outcome_id == 4
 
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    variables_for_pytest.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
+    test_utils.test_multithrading_lock.release()
 
 if __name__ == '__main__':
-    test_concurrency_barrier_save_load()
+    pytest.main([__file__])

@@ -1,0 +1,18 @@
+!PreemptiveConcurrencyState
+data_flows: {}
+description: null
+input_data_ports: {}
+name: Inner Action Block
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+    1: !Outcome {name: success2, outcome_id: 1}
+output_data_ports: {}
+scoped_variables: {}
+state_id: DJCDHE
+transitions:
+    15: !Transition {from_outcome: 0, from_state: TXOTLO, to_outcome: 0, to_state: DJCDHE,
+        transition_id: 15}
+    16: !Transition {from_outcome: 0, from_state: TBJQYC, to_outcome: 1, to_state: DJCDHE,
+        transition_id: 16}

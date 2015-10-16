@@ -9,11 +9,8 @@ import signal
 import gtk
 
 from rafcon.utils import log
-from rafcon.mvc.models import ContainerStateModel, StateModel, GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController, StateDataPortEditorController,\
-    SingleWidgetWindowController, SourceEditorController
+from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView, StateDataportEditorView, SingleWidgetWindowView, SourceEditorView
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.execution_state import ExecutionState
 import rafcon.statemachine.singleton
@@ -27,11 +24,6 @@ def check_requirements():
     import gtkmvc
     gtkmvc.require("1.99.1")
     return
-
-
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
 
 def create_models(*args, **kargs):
@@ -115,16 +107,12 @@ if __name__ == '__main__':
     rafcon.statemachine.singleton.library_manager.initialize()
     check_requirements()
 
-    #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
-    #setup_logger(logging_view['main_frame'])
-    logging_view = LoggingView()
-    setup_logger(logging_view)
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     main_window_controller = MainWindowController(sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 

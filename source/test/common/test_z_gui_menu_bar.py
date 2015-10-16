@@ -19,18 +19,19 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 
 # singleton elements
 import rafcon.mvc.singleton
 
 # test environment elements
-import variables_for_pytest
-from variables_for_pytest import call_gui_callback
+import test_utils
+from test_utils import call_gui_callback
+import pytest
 
 
-def setup_module(module=None):
+def setup_module(module):
     # set the test_libraries path temporarily to the correct value
+    test_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: ", dirname(__file__), dirname(dirname(__file__))
 
@@ -38,9 +39,8 @@ def setup_module(module=None):
     library_paths["turtle_libraries"] = join(rafcon.__path__[0] + "/..", "test_scripts", "turtle_libraries")
 
 
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
+def teardown_module(module):
+    test_utils.reload_config()
 
 
 def create_models(*args, **kargs):
@@ -150,8 +150,10 @@ def trigger_gui_signals(*args):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     current_sm_length = len(sm_manager_model.state_machines)
-    call_gui_callback(menubar_ctrl.on_new_activate, None)
+    # print "1:", sm_manager_model.state_machines.keys()
     first_sm_id = sm_manager_model.state_machines.keys()[0]
+    call_gui_callback(menubar_ctrl.on_new_activate, None)
+    # print "2:", sm_manager_model.state_machines.keys()
 
     # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
@@ -160,11 +162,13 @@ def trigger_gui_signals(*args):
     # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
     assert len(sm_manager_model.state_machines) == current_sm_length+2
 
+    # print "3:", sm_manager_model.state_machines.keys(), first_sm_id+2
     sleep_time_short = 1.0
     sm_m = sm_manager_model.state_machines[first_sm_id+2]
     sm_m.history.fake = True
     time.sleep(sleep_time_short)
-
+    # print "focus"
+    # time.sleep(5)
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
     sm_manager_model.selected_state_machine_id = first_sm_id+2
@@ -179,22 +183,27 @@ def trigger_gui_signals(*args):
 
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/UEPNNW')
     print "\n\n %s \n\n" % state_m.state.name
+    # print "set"
     call_gui_callback(sm_m.selection.set, [state_m])
-
+    # time.sleep(3)
+    # print "copy"
     # copy the state to clipboard
     call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
-
+    # time.sleep(3)
+    # print "set"
     # select other state
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
     print state_m.state.states.keys()
     print "\n\n %s \n\n" % state_m.state.name
     call_gui_callback(sm_m.selection.set, [state_m])
-
+    # time.sleep(3)
     old_child_state_count = len(state_m.state.states)
-
+    # print "focus"
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
     page.children()[0].grab_focus()
+    # time.sleep(3)
+    # print "paste"
     # print dir(page.children()[0]), "\n\n", page.children()[0], "\n\n", page.children()[0].has_focus()
     call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
     state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
@@ -287,36 +296,34 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_gui():
-    variables_for_pytest.test_multithrading_lock.acquire()
+def test_gui(caplog):
+    test_utils.test_multithrading_lock.acquire()
     # delete all old state machines
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc/")
+    os.chdir(test_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
-    #logging_view = SingleWidgetWindowView(LoggingView, width=500, height=200, title='Logging')
-    #setup_logger(logging_view['main_frame'])
-    logging_view = LoggingView()
-    setup_logger(logging_view)
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    variables_for_pytest.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
-    main_window_view = MainWindowView(logging_view)
-    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view,
+    test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    main_window_view = MainWindowView()
+    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[variables_for_pytest.sm_manager_model,
+    thread = threading.Thread(target=trigger_gui_signals, args=[test_utils.sm_manager_model,
                                                                 main_window_controller])
     thread.start()
 
     gtk.main()
     logger.debug("after gtk main")
-    os.chdir(rafcon.__path__[0] + "/../test/common")
-    variables_for_pytest.test_multithrading_lock.release()
+    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
+    test_utils.assert_logger_warnings_and_errors(caplog)
+    test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':
-    setup_module()
-    test_gui()
+    # setup_module(None)
+    # test_gui(None)
+    pytest.main([__file__])

@@ -1,18 +1,19 @@
 from gtkmvc import ModelMT
 
+from rafcon.mvc.models.state_element import StateElementModel
+
 from rafcon.statemachine.data_flow import DataFlow
-from rafcon.utils.vividict import Vividict
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class DataFlowModel(ModelMT):
+class DataFlowModel(StateElementModel):
     """This model class manages a DataFlow
 
-    The model class is part of the MVC architecture. It holds the data to be shown (in this case a data flow).
-
-    :param DataFlow data_flow: The data flow to be managed
+    :param rafcon.statemachine.data_flow.DataFlow data_flow: The data flow to be wrapped
+    :param rafcon.mvc.models.abstract_state.AbstractStateModel parent: The state model of the state element
+    :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
      """
 
     data_flow = None
@@ -22,25 +23,11 @@ class DataFlowModel(ModelMT):
     def __init__(self, data_flow, parent, meta=None):
         """Constructor
         """
+        super(DataFlowModel, self).__init__(parent, meta)
 
-        ModelMT.__init__(self)  # pass columns as separate parameters
-        
         assert isinstance(data_flow, DataFlow)
-        self.parent = parent
-
         self.data_flow = data_flow
 
-        if isinstance(meta, Vividict):
-            self.meta = meta
-        else:
-            self.meta = Vividict()
-
-        self.temp = Vividict()
-
-        # this class is an observer of its own properties:
-        self.register_observer(self)
-
     @ModelMT.observe("data_flow", before=True, after=True)
-    def model_changed(self, model, name, info):
-        if self.parent is not None:
-            self.parent.model_changed(model, name, info)
+    def model_changed(self, model, prop_name, info):
+        super(DataFlowModel, self).model_changed(model, prop_name, info)

@@ -11,7 +11,7 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.enums import StateType
-from rafcon.mvc.models import StateModel, ContainerStateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 import rafcon.mvc.singleton
@@ -30,8 +30,8 @@ class StateMachineHelper():
         container_m = model.parent
         if container_m is None:
             return False
-        assert isinstance(container_m, StateModel)
-        if isinstance(model, StateModel):
+        assert isinstance(container_m, ContainerStateModel)
+        if isinstance(model, AbstractStateModel):
             state_id = model.state.state_id
             try:
                 if state_id in container_m.state.states:
@@ -166,7 +166,7 @@ class StateMachineHelper():
         """
 
         current_state_is_container = isinstance(source_state, ContainerState)
-        new_state_is_container = target_state_class in [HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
+        new_state_is_container = issubclass(target_state_class, ContainerState)
 
         if current_state_is_container and new_state_is_container:  # TRANSFORM from CONTAINER- TO CONTAINER-STATE
 
@@ -174,13 +174,13 @@ class StateMachineHelper():
             # -> because switch from Barrier, Preemptive or Hierarchy has always different rules
             state_transitions = {}
             state_start_state_id = None
-            logger.info("type change from %s to %s" % (type(source_state), target_state_class))
+            logger.info("Type change from %s to %s" % (type(source_state), target_state_class))
 
             # decider state is removed because it is unique for BarrierConcurrencyState
             if isinstance(source_state, BarrierConcurrencyState):
                 source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
-                if UNIQUE_DECIDER_STATE_ID in source_state.states:
-                    assert False
+                assert UNIQUE_DECIDER_STATE_ID not in source_state.states
+
             new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                            input_data_ports=source_state.input_data_ports,
                                            output_data_ports=source_state.output_data_ports,
@@ -188,15 +188,12 @@ class StateMachineHelper():
                                            transitions=state_transitions, data_flows=source_state.data_flows,
                                            start_state_id=state_start_state_id,
                                            scoped_variables=source_state.scoped_variables,
-                                           v_checker=source_state.v_checker,
-                                           path=source_state.get_file_system_path(),
-                                           check_path=False)
+                                           v_checker=source_state.v_checker)
         else:  # TRANSFORM from EXECUTION- TO CONTAINER-STATE or FROM CONTAINER- TO EXECUTION-STATE
             new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                            input_data_ports=source_state.input_data_ports,
                                            output_data_ports=source_state.output_data_ports,
-                                           outcomes=source_state.outcomes)  # , path=state.get_file_system_path(), filename=state.script.filename,
-                                        # check_path=False)
+                                           outcomes=source_state.outcomes)
 
         if source_state.description is not None and len(source_state.description) > 0:
             new_state.description = source_state.description
@@ -385,10 +382,10 @@ class StateMachineHelper():
             if not (isinstance(new_state_m.parent.state, PreemptiveConcurrencyState) or
                     isinstance(new_state_m.parent.state, BarrierConcurrencyState)):
                 for t_id, t_meta in orig_model_linkage_meta_data['transitions'].iteritems():
-                    parent_m.get_transition_model(t_id).meta = t_meta
+                    parent_m.get_transition_m(t_id).meta = t_meta
 
             for df_id, df_meta in orig_model_linkage_meta_data['data_flows'].iteritems():
-                parent_m.get_data_flow_model(df_id).meta = df_meta
+                parent_m.get_data_flow_m(df_id).meta = df_meta
 
         return new_state_m
 

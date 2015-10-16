@@ -1,9 +1,0 @@
-!Vividict
-gui: !Vividict
-    editor: !Vividict
-        outcome_pos:
-            -2: !!python/tuple [165.09124955119697, -37.42957067819161]
-            -1: !!python/tuple [169.5555428690161, -37.42957067819161]
-            0: !!python/tuple [171.78768952792566, -48.590303972739456]
-        rel_pos: !!python/tuple [9.481962212765957, -5.134651914893617]
-        size: !!python/tuple [4.0, 4.0]

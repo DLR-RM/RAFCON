@@ -5,8 +5,8 @@ import gtk
 import signal
 
 from rafcon.utils import log
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 from rafcon.mvc.controllers import MainWindowController
-from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
@@ -17,11 +17,9 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 
-def setup_logger(logging_view):
+def setup_logger():
     import sys
     # Set the views for the loggers
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -40,9 +38,7 @@ def run_empty_statemachine():
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
 
     # setup logging view first
-    logging_view = LoggingView()
-    setup_logger(logging_view)
-    setup_logger(logging_view)
+    setup_logger()
     logger = log.get_logger("turtle demo")
 
     home_path = os.path.join(os.path.expanduser('~'), '.rafcon')
@@ -52,13 +48,13 @@ def run_empty_statemachine():
     rafcon.statemachine.singleton.library_manager.initialize()
 
     # set base path of global storage
-    rafcon.statemachine.singleton.global_storage.base_path = "/tmp"
+    rafcon.statemachine.singleton.global_storage.base_path = GLOBAL_STORAGE_BASE_PATH
 
     root_state = HierarchyState()
     state_machine = StateMachine(root_state)
 
     rafcon.statemachine.singleton.library_manager.initialize()
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 

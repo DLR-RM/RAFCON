@@ -1,18 +1,19 @@
 from gtkmvc import ModelMT
 
+from rafcon.mvc.models.state_element import StateElementModel
+
 from rafcon.statemachine.data_port import DataPort
-from rafcon.utils.vividict import Vividict
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class DataPortModel(ModelMT):
+class DataPortModel(StateElementModel):
     """This model class manages a DataPort
 
-    The model class is part of the MVC architecture. It holds the data to be shown (in this case a data port).
-
-    :param DataPort data_port: The data port to be managed
+    :param rafcon.statemachine.dat_port.DataPort data port: The input/output data port to be wrapped
+    :param rafcon.mvc.models.abstract_state.AbstractStateModel parent: The state model of the state element
+    :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
      """
 
     data_port = None
@@ -22,22 +23,11 @@ class DataPortModel(ModelMT):
     def __init__(self, data_port, parent, meta=None):
         """Constructor
         """
-        ModelMT.__init__(self)  # pass columns as separate parameters
-        self.register_observer(self)
+        super(DataPortModel, self).__init__(parent, meta)
 
         assert isinstance(data_port, DataPort)
-
         self.data_port = data_port
-        self.parent = parent
-
-        if isinstance(meta, Vividict):
-            self.meta = meta
-        else:
-            self.meta = Vividict()
-
-        self.temp = Vividict()
 
     @ModelMT.observe("data_port", before=True, after=True)
     def model_changed(self, model, prop_name, info):
-        if self.parent is not None:
-            self.parent.model_changed(model, prop_name, info)
+        super(DataPortModel, self).model_changed(model, prop_name, info)

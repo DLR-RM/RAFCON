@@ -13,14 +13,14 @@ from rafcon.utils import log
 from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 
 # singleton elements
 import rafcon.mvc.singleton
 
 # test environment elements
-import variables_for_pytest
-from variables_for_pytest import call_gui_callback
+import test_utils
+from test_utils import call_gui_callback
+import pytest
 
 
 def create_models():
@@ -41,11 +41,6 @@ def create_models():
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
     return logger, global_var_manager_model
-
-
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
 
 def trigger_gui_signals(*args):
@@ -84,35 +79,31 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_backward_stepping():
+def test_backward_stepping(caplog):
 
-    variables_for_pytest.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc/")
+    os.chdir(test_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    logging_view = LoggingView()
-    setup_logger(logging_view)
 
     logger, gvm_model = create_models()
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml(rafcon.__path__[0] + "/../test_scripts/backward_step_barrier_test")
+        global_storage.load_statemachine_from_yaml(test_utils.get_test_sm_path("backward_step_barrier_test"))
 
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    if variables_for_pytest.sm_manager_model is None:
-        variables_for_pytest.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if test_utils.sm_manager_model is None:
+        test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
-    # load the meta data for the state machine
-    variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
-
-    main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                   editor_type="LogicDataGrouped")
     thread = threading.Thread(target=trigger_gui_signals,
-                              args=[variables_for_pytest.sm_manager_model, main_window_controller])
+                              args=[test_utils.sm_manager_model, main_window_controller])
     thread.start()
 
     gtk.main()
@@ -123,9 +114,12 @@ def test_backward_stepping():
         logger.debug("Joined currently executing state machine!")
         thread.join()
         logger.debug("Joined test triggering thread!")
-    os.chdir(rafcon.__path__[0] + "/../test/common")
-    variables_for_pytest.test_multithrading_lock.release()
+    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
+
+    test_utils.reload_config()
+    test_utils.assert_logger_warnings_and_errors(caplog)
+    test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':
-    test_backward_stepping()
+    pytest.main([__file__])

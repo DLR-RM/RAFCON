@@ -1,12 +1,14 @@
 import gtk
 import os
-from rafcon.mvc.controllers.extended_controller import ExtendedController
 from pylint import epylint as lint
+
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+
+from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-import rafcon.statemachine.singleton
-from rafcon.statemachine.states.library_state import LibraryState
 
 #TODO: comment
 
@@ -15,7 +17,7 @@ class SourceEditorController(ExtendedController):
     # - Code function-expander
     # - Code completion
 
-    tmp_file = os.path.join('/tmp', 'file_to_get_pylinted.py')
+    tmp_file = os.path.join(GLOBAL_STORAGE_BASE_PATH, 'file_to_get_pylinted.py')
 
     def __init__(self, model, view):
         """Constructor
@@ -58,12 +60,20 @@ class SourceEditorController(ExtendedController):
         pass
 
     def _undo(self, *args):
-        logger.debug('run Undo on script editor')
-        pass
+        buffer = self.view.textview.get_buffer()
+        if self.view.textview.has_focus() and buffer.can_undo():
+            logger.debug('run Undo on script editor')
+            return buffer.undo()
+        else:
+            return False
 
     def _redo(self, *args):
-        logger.debug('run Redo on script editor')
-        pass
+        buffer = self.view.textview.get_buffer()
+        if self.view.textview.has_focus() and buffer.can_redo():
+            logger.debug('run Redo on script editor')
+            return buffer.redo()
+        else:
+            return False
 
     #===============================================================
     def code_changed(self, source):
@@ -86,7 +96,7 @@ class SourceEditorController(ExtendedController):
 
         ###############
         # do syntax-check on script
-        text_file = open("/tmp/file_to_get_pylinted.py", "w")
+        text_file = open(self.tmp_file, "w")
         text_file.write(current_text)
         text_file.close()
 
@@ -94,8 +104,8 @@ class SourceEditorController(ExtendedController):
             self.tmp_file + " --errors-only --disable=print-statement ",
             True, script="epylint")
         # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
+        os.remove(self.tmp_file)
 
-        # (pylint_stdout, pylint_stderr) = lint.py_run("/tmp/file_to_get_pylinted.py", True)
         pylint_stdout_data = pylint_stdout.readlines()
         pylint_stderr_data = pylint_stderr.readlines()
 
@@ -109,25 +119,30 @@ class SourceEditorController(ExtendedController):
                     invalid_sytax = True
 
         if invalid_sytax:
-            from rafcon.utils.helper import set_button_children_size_request
-            message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+
+            def on_message_dialog_response_signal(widget, response_id, current_text):
+                if response_id == 42:
+                    self.model.state.set_script_text(current_text)
+                    logger.debug("File saved")
+                else:
+                    logger.debug("File not saved")
+                widget.destroy()
+
+            from rafcon.utils.dialog import RAFCONDialog
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
             message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
             for elem in pylint_stdout_data:
                 if "error" in elem:
                     if self.filter_out_not_compatible_modules(elem):
                         error_string = self.format_error_string(str(elem))
                         message_string += "\n\n" + error_string
-            message.set_markup(message_string)
-            message.add_button("Yes", 42)
-            message.add_button("No", 43)
-            message.connect('response', self.on_message_dialog_response_signal, current_text)
-            set_button_children_size_request(message)
-            message.show()
+            dialog.set_markup(message_string)
+            dialog.add_button("Save with errors", 42)
+            dialog.add_button("Do not save", 43)
+            dialog.finalize(on_message_dialog_response_signal, current_text)
         else:
             if self.model.state.set_script_text(current_text):
                 logger.debug("File saved")
-                # rafcon.statemachine.singleton.global_storage.save_script_file(self.model.state)  # why we store it to a file here???
-            # self.view.set_text(self.model.state.script.script)
 
     def filter_out_not_compatible_modules(self, pylint_msg):
         """
@@ -151,19 +166,6 @@ class SourceEditorController(ExtendedController):
 
     def cancel_clicked(self, button):
         self.view.set_text(self.model.state.script.script)
-
-    def on_message_dialog_response_signal(self, widget, response_id, current_text):
-        if response_id == 42:
-            # # we make it observable !!!!
-            # script = self.model.state.script
-            # script.script = current_text
-            # self.model.state.script = script  # so we use the setter !!!
-            self.model.state.set_script_text(current_text)
-            # rafcon.statemachine.singleton.global_storage.save_script_file(self.model.state)  # why do we save it to file???
-            logger.debug("File saved")
-        else:
-            logger.debug("File not saved")
-        widget.destroy()
 
     @ExtendedController.observe("state", after=True)
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):

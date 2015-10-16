@@ -1,5 +1,5 @@
 from gtkmvc import Observable
-from rafcon.mvc.models import StateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models import AbstractStateModel, TransitionModel, DataFlowModel
 
 
 def reduce_to_parent_states(models):
@@ -69,6 +69,9 @@ class Selection(Observable):
     def __len__(self):
         return len(self.__selected)
 
+    def __getitem__(self, key):
+        return [s for s in self.__selected][key]
+
     def is_selected(self, item):
         return item in self.__selected
 
@@ -76,10 +79,10 @@ class Selection(Observable):
         return [s for s in self.__selected]
 
     def get_states(self):
-        return [s for s in self.__selected if isinstance(s, StateModel)]
+        return [s for s in self.__selected if isinstance(s, AbstractStateModel)]
 
     def get_num_states(self):
-        return sum((1 for s in self.__selected if isinstance(s, StateModel)))
+        return sum((1 for s in self.__selected if isinstance(s, AbstractStateModel)))
 
     def get_transitions(self):
         return [s for s in self.__selected if isinstance(s, TransitionModel)]

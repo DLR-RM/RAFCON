@@ -1,7 +1,7 @@
 from gtkmvc.observer import Observer
 
 # core elements
-from rafcon.statemachine.script import Script, ScriptType
+from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -12,6 +12,10 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
+import pytest
+import test_utils
+
+with_print = False
 
 class NotificationLogObserver(Observer):
     """ This observer is a abstract class to counts and store notification
@@ -706,7 +710,7 @@ def check_state_for_all_models(state, state_m):
             pass  # parent should be a state machine
 
 
-def test_add_remove_models(with_print=False):
+def test_add_remove_models(caplog):
     ##################
     # Root_state elements
 
@@ -757,7 +761,7 @@ def test_add_remove_models(with_print=False):
             sm_model.state_machine,
             path,
             delete_old_state_machine=True)
-        sm_model.root_state.store_meta_data_for_state()
+        sm_model.root_state.store_meta_data()
 
     sm_history = sm_model.history
 
@@ -1007,9 +1011,10 @@ def test_add_remove_models(with_print=False):
     do_check_for_state(state_dict, state_name='Container')
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_state_property_changes_history(with_print=False):
+def test_state_property_changes_history(caplog):
     ##################
     # state properties
 
@@ -1110,8 +1115,8 @@ def test_state_property_changes_history(with_print=False):
     sm_model.history.redo()
 
     # script(self, script) Script
-    state_dict['Nested'].script = Script(script_type=ScriptType.CONTAINER, state=state_dict['Nested'])
-    state_dict['Nested'].script = Script(script_type=ScriptType.EXECUTION, state=state_dict['Nested'])
+    state_dict['Nested'].script = Script(state=state_dict['Nested'])
+    state_dict['Nested'].script = Script(state=state_dict['Nested'])
     sm_model.history.undo()
     sm_model.history.redo()
 
@@ -1179,9 +1184,10 @@ def test_state_property_changes_history(with_print=False):
     state_dict['Nested'].scoped_variables = None
     sm_model.history.undo()
     sm_model.history.redo()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_outcome_property_changes_history(with_print=False):
+def test_outcome_property_changes_history(caplog):
     ##################
     # outcome properties
 
@@ -1227,9 +1233,10 @@ def test_outcome_property_changes_history(with_print=False):
 
     # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
     do_check_for_state(state_dict, state_name='Container')
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_transition_property_changes_history(with_print=False):
+def test_transition_property_changes_history(caplog):
     ##################
     # transition properties
 
@@ -1334,9 +1341,10 @@ def test_transition_property_changes_history(with_print=False):
     state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
     sm_model.history.undo()
     sm_model.history.redo()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_input_port_modify_notification(with_print=False):
+def test_input_port_modify_notification(caplog):
     ##################
     # input_data_port properties
 
@@ -1378,9 +1386,10 @@ def test_input_port_modify_notification(with_print=False):
                                                                                     default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_output_port_modify_notification(with_print=False):
+def test_output_port_modify_notification(caplog):
 
     ##################
     # output_data_port properties
@@ -1421,9 +1430,10 @@ def test_output_port_modify_notification(with_print=False):
                                                                                       default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_scoped_variable_modify_notification(with_print=False):
+def test_scoped_variable_modify_notification(caplog):
     ##################
     # scoped_variable properties
 
@@ -1471,9 +1481,10 @@ def test_scoped_variable_modify_notification(with_print=False):
                                                                                    default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_data_flow_property_changes_history(with_print=False):
+def test_data_flow_property_changes_history(caplog):
     ##################
     # data_flow properties
 
@@ -1598,18 +1609,8 @@ def test_data_flow_property_changes_history(with_print=False):
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
     sm_model.history.undo()
     sm_model.history.redo()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':
-    # pytest.main()
-    test_add_remove_models(True)
-    test_state_property_changes_history(True)
-
-    test_outcome_property_changes_history(True)
-    test_transition_property_changes_history(True)
-
-    test_input_port_modify_notification(True)
-    test_output_port_modify_notification(True)
-    test_scoped_variable_modify_notification(True)
-
-    test_data_flow_property_changes_history(True)
+    pytest.main([__file__])

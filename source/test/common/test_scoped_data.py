@@ -9,7 +9,8 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import variables_for_pytest
+import test_utils
+import pytest
 
 
 def create_statemachine():
@@ -23,7 +24,7 @@ def create_statemachine():
     state2.add_input_data_port("data_input_port1", "float")
     state2.add_output_data_port("data_output_port1", "float")
 
-    state3 = HierarchyState("hierarchy_state", path=rafcon.__path__[0] + "/../test_scripts", filename="hierarchy_state.py")
+    state3 = HierarchyState("hierarchy_state")
     state3.add_state(state1)
     state3.add_state(state2)
     state3.set_start_state(state1.state_id)
@@ -49,7 +50,7 @@ def create_statemachine():
 
 # remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
 # states)
-def test_scoped_data():
+def test_scoped_data(caplog):
     s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
 
     sm = create_statemachine()
@@ -59,17 +60,17 @@ def test_scoped_data():
 
     state_machine = StateMachine(sm_loaded.root_state)
 
-    variables_for_pytest.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
     sm_loaded.root_state.join()
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    variables_for_pytest.test_multithrading_lock.release()
+    test_utils.test_multithrading_lock.release()
 
     assert state_machine.root_state.output_data["data_output_port1"] == 42.0
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_scoped_data()
+    pytest.main([__file__])

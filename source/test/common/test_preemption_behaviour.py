@@ -8,22 +8,26 @@ from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveCo
 import rafcon.statemachine.singleton
 
 # test environment elements
-import variables_for_pytest
+import test_utils
+import pytest
 
 
-def test_preemption_behaviour():
+def test_preemption_behaviour(caplog):
+    test_utils.remove_all_libraries()
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    variables_for_pytest.test_multithrading_lock.acquire()
+    test_utils.test_multithrading_lock.acquire()
 
-    sm = StatemachineExecutionEngine.execute_state_machine_from_path(rafcon.__path__[0] + "/../test_scripts/preemption_bahaviour_test_sm")
+    sm = StatemachineExecutionEngine.execute_state_machine_from_path(test_utils.get_test_sm_path("preemption_bahaviour_test_sm"))
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     from rafcon.statemachine.singleton import global_variable_manager
     assert global_variable_manager.get_variable("s2") == 1.0
-    assert global_variable_manager.variable_exist("s3") == False
+    assert not global_variable_manager.variable_exist("s3")
 
-    variables_for_pytest.test_multithrading_lock.release()
+    test_utils.reload_config()
+    test_utils.assert_logger_warnings_and_errors(caplog)
+    test_utils.test_multithrading_lock.release()
 
 
 if __name__ == '__main__':
-    test_preemption_behaviour()
+    pytest.main([__file__])

@@ -8,7 +8,8 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import variables_for_pytest
+import test_utils
+import pytest
 
 
 def create_preemptive_wait_statemachine():
@@ -18,8 +19,7 @@ def create_preemptive_wait_statemachine():
     state2 = ExecutionState("state_2", path=rafcon.__path__[0] + "/../test_scripts", filename="preemptive_wait_test.py")
     state2.add_outcome("FirstOutcome", 3)
 
-    ctr_state = PreemptiveConcurrencyState("FirstConcurrencyState", path=rafcon.__path__[0] + "/../test_scripts",
-                                           filename="concurrency_container.py")
+    ctr_state = PreemptiveConcurrencyState("FirstConcurrencyState")
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_outcome("end", 3)
@@ -29,8 +29,8 @@ def create_preemptive_wait_statemachine():
     return StateMachine(ctr_state)
 
 
-def test_preemptive_wait_daemon():
-    variables_for_pytest.test_multithrading_lock.acquire()
+def test_preemptive_wait_daemon(caplog):
+    test_utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_1_wait', 0.5)
     gvm.set_variable('state_2_wait', None)
@@ -42,7 +42,8 @@ def test_preemptive_wait_daemon():
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    variables_for_pytest.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
+    test_utils.test_multithrading_lock.release()
 
 
 def run_statemachine():
@@ -56,8 +57,8 @@ def run_statemachine():
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
 
 
-def test_preemptive_wait_timeout():
-    variables_for_pytest.test_multithrading_lock.acquire()
+def test_preemptive_wait_timeout(caplog):
+    test_utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_1_wait', 0.5)
     gvm.set_variable('state_2_wait', 1.)
@@ -69,25 +70,25 @@ def test_preemptive_wait_timeout():
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    variables_for_pytest.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
+    test_utils.test_multithrading_lock.release()
 
 
-def test_preemptive_wait2_timeout():
-    variables_for_pytest.test_multithrading_lock.acquire()
+def test_preemptive_wait2_timeout(caplog):
+    test_utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_2_wait', 0.5)
     gvm.set_variable('state_1_wait', 1.)
 
     run_statemachine()
 
-    assert 0.5 < gvm.get_variable('state_1_wait_time') < 0.55
-    assert 0.5 < gvm.get_variable('state_2_wait_time') < 0.55
+    assert 0.5 < gvm.get_variable('state_1_wait_time') < 0.8
+    assert 0.5 < gvm.get_variable('state_2_wait_time') < 0.8
     assert gvm.get_variable('state_1_preempted')
     assert not gvm.get_variable('state_2_preempted')
 
-    variables_for_pytest.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
+    test_utils.test_multithrading_lock.release()
 
 if __name__ == '__main__':
-    test_preemptive_wait_timeout()
-    test_preemptive_wait2_timeout()
-    test_preemptive_wait_daemon()
+    pytest.main([__file__])

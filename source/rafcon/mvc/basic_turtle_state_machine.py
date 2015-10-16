@@ -11,7 +11,6 @@ import signal
 
 from rafcon.utils import log
 from rafcon.mvc.controllers import MainWindowController
-from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -24,11 +23,8 @@ from rafcon.statemachine.config import global_config
 from rafcon.statemachine.states.library_state import LibraryState
 
 
-def setup_logger(logging_view):
+def setup_logger():
     import sys
-    # Set the views for the loggers
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -152,8 +148,7 @@ def create_turtle_statemachine():
 def run_turtle_demo():
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     # setup logging view first
-    logging_view = LoggingView()
-    setup_logger(logging_view)
+    setup_logger()
     logger = log.get_logger("turtle demo")
 
     home_path = os.path.join(os.path.expanduser('~'), '.config/rafcon')
@@ -166,22 +161,16 @@ def run_turtle_demo():
     # basic_turtle_demo_state = create_turtle_statemachine()
 
     # set base path of global storage
-    rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/99_bottles_of_beer"
+    rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/basic_turtle_demo_sm"
 
     # load the state machine
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
         global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/basic_turtle_demo_sm")
 
-    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/99_bottles_of_beer")
-
     rafcon.statemachine.singleton.library_manager.initialize()
-    main_window_view = MainWindowView(logging_view)
+    main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
-
-    # load the meta data for the state machine
-    sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
     #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)

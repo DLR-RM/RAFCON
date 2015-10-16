@@ -21,7 +21,6 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views import LoggingView
 
 # singleton elements
 import rafcon.mvc.singleton
@@ -29,8 +28,9 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
 # test environment elements
-import variables_for_pytest
-from variables_for_pytest import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+import test_utils
+from test_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+import pytest
 
 
 def create_models(*args, **kargs):
@@ -123,11 +123,6 @@ def create_models(*args, **kargs):
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
     return logger, ctr_state, global_var_manager_model, sm_m, state_dict
-
-
-def setup_logger(logging_view):
-    log.debug_filter.set_logging_test_view(logging_view)
-    log.error_filter.set_logging_test_view(logging_view)
 
 
 def store_state_elements(state, state_m):
@@ -575,6 +570,14 @@ def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controlle
     return state_editor_ctrl, list_store_id_from_state_type_dict
 
 
+# def test_state_type_change_without_gui():
+#     state_type_change_test(with_gui=False)
+#
+#
+# def test_state_type_change_with_gui():
+#     state_type_change_test(with_gui=True)
+
+
 def trigger_state_type_change_tests(*args):
     """
     Does only works with gui at the moment.
@@ -598,7 +601,11 @@ def trigger_state_type_change_tests(*args):
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
-    call_gui_callback(sm_m.selection.set, [state_m])
+
+    if with_gui:
+        call_gui_callback(sm_m.selection.set, [state_m])
+    else:
+        sm_m.selection.set([state_m])
 
     # HS -> BCS
     # - get state-editor controller and find right row in combo box
@@ -717,48 +724,40 @@ def trigger_state_type_change_tests(*args):
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_state_type_change_with_gui():
-    state_type_change_test(with_gui=True)
-
-
-def _test_state_type_change_without_gui():
-    state_type_change_test(with_gui=False)
-
-
-def state_type_change_test(with_gui=False):
-
+def test_state_type_change_test(caplog):
+    with_gui = True
     test_multithrading_lock.acquire()
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc")
+    os.chdir(test_utils.RAFCON_PATH + "/mvc")
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
-    logging_view = LoggingView()
-    setup_logger(logging_view)
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
+    test_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    if variables_for_pytest.sm_manager_model is None:
-            variables_for_pytest.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if test_utils.sm_manager_model is None:
+            test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     main_window_controller = None
     if with_gui:
-        main_window_view = MainWindowView(logging_view)
+        main_window_view = MainWindowView()
 
         # load the meta data for the state machine
-        variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+        test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
-        main_window_controller = MainWindowController(variables_for_pytest.sm_manager_model, main_window_view,
+        main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
     else:
         # load the meta data for the state machine
-        variables_for_pytest.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data_for_state()
+        test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[variables_for_pytest.sm_manager_model, main_window_controller,
+                              args=[test_utils.sm_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
     thread.start()
 
@@ -771,14 +770,15 @@ def state_type_change_test(with_gui=False):
             logger.debug("Joined currently executing state machine!")
             thread.join()
             logger.debug("Joined test triggering thread!")
-        os.chdir(rafcon.__path__[0] + "/../test/common")
+        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
         test_multithrading_lock.release()
     else:
-        os.chdir(rafcon.__path__[0] + "/../test/common")
+        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
         thread.join()
+
+    test_utils.reload_config()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':
-    # _test_state_type_change_without_gui()
-
-    test_state_type_change_with_gui()
+    pytest.main([__file__])

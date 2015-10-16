@@ -1,9 +1,11 @@
+import pytest
 from pytest import raises
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.state import DataPort
+from rafcon.statemachine.states.state import InputDataPort
+from test_utils import assert_logger_warnings_and_errors
 
-def test_create_state():
+def test_create_state(caplog):
     state1 = ExecutionState("MyFirstState")
 
     assert len(state1.outcomes) == 3
@@ -52,7 +54,7 @@ def test_create_state():
     state2 = ExecutionState(name="State2", state_id=state1.state_id)
 
     # This should work, as data_type and default_value are optional parameters
-    port = DataPort('input')
+    port = InputDataPort('input')
 
     with raises(AttributeError):
         # The name of the port differs in key and class member
@@ -62,8 +64,10 @@ def test_create_state():
     # UTF8 strings should be allowed at least for descriptions
     state1.description = u'My English is not v\xc3ry good'
 
+    assert_logger_warnings_and_errors(caplog)
 
-def test_create_container_state():
+
+def test_create_container_state(caplog):
 
     container = ContainerState("Container")
     assert len(container.states) == 0
@@ -173,8 +177,10 @@ def test_create_container_state():
     assert len(container.transitions) == 1
     assert len(container.data_flows) == 0
 
+    assert_logger_warnings_and_errors(caplog)
 
-def test_port_and_outcome_removal():
+
+def test_port_and_outcome_removal(caplog):
     container = ContainerState("Container")
     input_container_state = container.add_input_data_port("input", "float")
     output_container_state = container.add_output_data_port("output", "float")
@@ -213,9 +219,8 @@ def test_port_and_outcome_removal():
     container.remove_scoped_variable(scoped_variable_container_state)
     assert len(container.data_flows) == 0
 
+    assert_logger_warnings_and_errors(caplog)
+
 
 if __name__ == '__main__':
-    #pytest.main()
-    test_create_state()
-    test_create_container_state()
-    test_port_and_outcome_removal()
+    pytest.main([__file__])

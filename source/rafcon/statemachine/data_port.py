@@ -18,34 +18,37 @@ logger = log.get_logger(__name__)
 
 
 class DataPort(Observable, yaml.YAMLObject):
-
-    #TODO: should the value of the data port be stored here as well?
     """A class for representing a data ports in a state
 
     :ivar name: the name of the data port
     :ivar data_type: the value type of the data port
     :ivar default_value: the default value of the data port
-
     """
-    def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None):
-        Observable.__init__(self)
 
-        # Prevents validity checks by parent before all parameters are set
-        self._parent = None
+    # Define all parameters and set their default values
+    _name = None
+    _data_port_id = None
+    _data_type = type(None)
+    _default_value = None
+
+    # Prevents validity checks by parent before all parameters are set
+    _parent = None
+
+    def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None, force_type=False):
+        if type(self) == DataPort and not force_type:
+            raise NotImplementedError
+        Observable.__init__(self)
 
         if data_port_id is None:
             self._data_port_id = generate_data_port_id()
         else:
             self._data_port_id = data_port_id
 
-        self._name = None
         self.name = name
 
-        self._data_type = type(None)
         if data_type is not None:
             self.data_type = data_type
 
-        self._default_value = None
         self.default_value = default_value
 
         # Checks for validity
@@ -66,7 +69,7 @@ class DataPort(Observable, yaml.YAMLObject):
             'data_type': data.data_type,
             'default_value': data.default_value
         }
-        node = dumper.represent_mapping(u'!DataPort', dict_representation)
+        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
         return node
 
     @classmethod
@@ -76,7 +79,12 @@ class DataPort(Observable, yaml.YAMLObject):
         name = dict_representation['name']
         data_type = dict_representation['data_type']
         default_value = dict_representation['default_value']
-        return DataPort(name, data_type, default_value, data_port_id)
+        # Allow creation of DataPort class when loading from YAML file
+        if cls == DataPort:
+            return DataPort(name, data_type, default_value, data_port_id, force_type=True)
+        # Call appropriate constructor, e.g. InputDataPort(...) for input data ports
+        else:
+            return cls(name, data_type, default_value, data_port_id, force_type=True)
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
@@ -102,7 +110,10 @@ class DataPort(Observable, yaml.YAMLObject):
         if not isinstance(name, str):
             raise TypeError("Name must be of type str")
 
-        self._name = name
+        if len(name) < 1:
+            raise ValueError("Name cannot be empty")
+
+        self.__change_property_with_validity_check('_name', name)
 
     @property
     def data_type(self):
@@ -161,14 +172,22 @@ class DataPort(Observable, yaml.YAMLObject):
         :param default_value: The new default value
         :return:
         """
+        old_data_type = self.data_type
         self.data_type = data_type
 
         if default_value is None:
             default_value = self.default_value
+
         if type_helpers.type_inherits_of_type(type(default_value), self._data_type):
             self._default_value = default_value
         else:
-            self._default_value = None
+
+            if old_data_type.__name__ == "float" and data_type == "int":
+                self._default_value = int(default_value)
+            elif old_data_type.__name__ == "int" and data_type == "float":
+                self._default_value = float(default_value)
+            else:
+                self._default_value = None
 
     def __change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
@@ -227,3 +246,13 @@ class DataPort(Observable, yaml.YAMLObject):
                 not callable(getattr(self.parent, 'check_child_validity')):
             return True, "no parental check"
         return self.parent.check_child_validity(self)
+
+
+class InputDataPort(DataPort):
+
+    yaml_tag = u'!InputDataPort'
+
+
+class OutputDataPort(DataPort):
+
+    yaml_tag = u'!OutputDataPort'

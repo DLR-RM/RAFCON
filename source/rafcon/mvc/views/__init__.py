@@ -18,9 +18,6 @@ from state_editor import StateEditorView
 from state_machine_tree import StateMachineTreeView
 from state_machine_history import StateMachineHistoryView
 from library_tree import LibraryTreeView
-#from state_editors_notebook import StateEditorsNotebookView
-#from state_machines_notebook import StateMachinesNotebookView
-#from main_window import MainWindowView
 from menu_bar import MenuBarView
 from tool_bar import ToolBarView
 from top_tool_bar import TopToolBarView
