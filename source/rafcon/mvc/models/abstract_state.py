@@ -169,15 +169,19 @@ class AbstractStateModel(ModelMT):
         """This method notifies the parent state about changes made to the meta data
         """
         msg = info.arg
+        if msg.notification is None:
+            # Meta data of this state was changed, add information about notification to the signal message
+            notification = Notification(model, prop_name, info)
+            msg = msg._replace(notification=notification)
+
         if self.parent is not None:
             # Notify parent about change of meta data
             self.parent.meta_changed(model, prop_name, info)
-        elif msg.notification is None:  # Prevent recursive call
-            # If we are the root state, inform the state machine model by emitting our own meta signal
-            # To make the signal distinguishable for a change of meta data to our state, the notification property of
-            # the message is set
-            notification = Notification(model, prop_name, info)
-            msg = msg._replace(notification=notification)
+        elif not msg.change.startswith('sm_notification_'):  # Prevent recursive call
+            # If we are the root state, inform the state machine model by emitting our own meta signal.
+            # To make the signal distinguishable for a change of meta data to our state, the change property of
+            # the message is prepended with 'sm_notification_'
+            msg = msg._replace(change='sm_notification_' + msg.change)
             self.meta_signal.emit(msg)
 
     @staticmethod

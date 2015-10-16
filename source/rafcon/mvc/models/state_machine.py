@@ -130,8 +130,10 @@ class StateMachineModel(ModelMT):
 
     @ModelMT.observe("meta_signal", signal=True)
     def meta_changed(self, model, prop_name, info):
-        if model is not self:
+        if model is not self:  # Signal was caused by the root state
             msg = info.arg
+            change = msg.change
+            msg = msg._replace(change=change.replace('sm_notification_', '', 1))
             self.state_meta_signal.emit(msg)
 
     @staticmethod
