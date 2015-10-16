@@ -425,13 +425,13 @@ class GraphicalEditorController(ExtendedController):
         if self.changed_models:
             if len(self.changed_models) > 1:
                 self.changes_affect_children = True
-            reduced_list = StateMachineHelper.reduce_to_parent_states(self.changed_models)
-            if len(reduced_list) > 1:
-                state_m = self.root_state_m
+                self.changed_models = StateMachineHelper.reduce_to_parent_states(self.changed_models)
+            if len(self.changed_models) > 1:
+                parent_m = self.root_state_m
             else:
-                state_m = reduced_list[0]
+                parent_m = self.changed_models[0]
             if self._last_meta_data_changed:
-                self._publish_changes(state_m, self._last_meta_data_changed, self.changes_affect_children)
+                self._publish_changes(parent_m, self._last_meta_data_changed, self.changes_affect_children)
                 self._last_meta_data_changed = None
             self.changed_models = []
             self.changes_affect_children = False
@@ -527,7 +527,7 @@ class GraphicalEditorController(ExtendedController):
                 # Initially store starting position and offset (see comment above)
                 if self.drag_origin_offset is None:
                     self._last_meta_data_changed = "position"
-                    self.changes_affect_children = True
+                    self.changes_affect_children = False
                     self.changed_models.append(selected_state_m)
                     offset = self._get_position_relative_to_state(selected_state_m, self.mouse_move_start_coords)
                     self.drag_origin_offset = offset
@@ -558,6 +558,7 @@ class GraphicalEditorController(ExtendedController):
             waypoint_id = self.selected_waypoint[1]
             if connection_m not in self.changed_models:
                 self._last_meta_data_changed = "waypoint_position"
+                self.changes_affect_children = False
                 self.changed_models.append(connection_m)
             snap = event.state & SHIFT_MASK != 0
             self._move_waypoint(connection_m, waypoint_id, mouse_current_coord, snap)
@@ -762,23 +763,24 @@ class GraphicalEditorController(ExtendedController):
         self.multi_selection_started = False
         self.model.temp['gui']['editor']['selection_frame'] = None
 
-    def _check_for_waypoint_removal(self, coords, connection_model):
+    def _check_for_waypoint_removal(self, coords, connection_m):
         """Checks and removes a waypoint if necessary
 
         Checks whether the coordinates given are close to a waypoint of the given connection model (transition or
         data flow). If so, the waypoint is removed.
 
         :param tuple coords: Coordinates to check for a waypoint
-        :param gtkmvc.Model connection_model: Model of a transition or data flow
+        :param gtkmvc.Model connection_m: Model of a transition or data flow
         :return: True, if a waypoint was removed, False else
         """
-        close_threshold = min(connection_model.parent.meta['gui']['editor_opengl']['size']) / 70.
+        close_threshold = min(connection_m.parent.meta['gui']['editor_opengl']['size']) / 70.
         # Check distance between all waypoints of the connection to the given coordinates
-        for waypoint in connection_model.meta['gui']['editor_opengl']['waypoints']:
-            waypoint_pos = self._get_absolute_position(connection_model.parent, waypoint)
+        for waypoint in connection_m.meta['gui']['editor_opengl']['waypoints']:
+            waypoint_pos = self._get_absolute_position(connection_m.parent, waypoint)
             if dist(waypoint_pos, coords) < close_threshold:
-                connection_model.meta['gui']['editor_opengl']['waypoints'].remove(waypoint)
+                connection_m.meta['gui']['editor_opengl']['waypoints'].remove(waypoint)
                 logger.debug('Connection waypoint removed')
+                self._publish_changes(connection_m, "waypoint_remove", False)
                 self._redraw()
                 return True
         return False
@@ -826,6 +828,8 @@ class GraphicalEditorController(ExtendedController):
                 waypoint_list.insert(i, rel_coords)
         logger.debug('Connection waypoint added at rel pos {0:.1f} | {1:.1f} (abs pos {0:.1f} | {1:.1f})'.format(
             rel_coords[0], rel_coords[1], coords[0], coords[1]))
+
+        self._publish_changes(connection_m, "waypoint_add", False)
         self._redraw()
 
     def _create_new_transition(self, to_state_m, to_outcome_id=None):
