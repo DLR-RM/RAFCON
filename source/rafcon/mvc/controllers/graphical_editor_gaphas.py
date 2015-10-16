@@ -8,6 +8,7 @@ from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.statemachine_helper import StateMachineHelper
 
+from rafcon.mvc.models.abstract_state import MetaSignalMsg
 from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models import ContainerStateModel, StateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
@@ -186,7 +187,9 @@ class GraphicalEditorController(ExtendedController):
 
     def _meta_data_changed(self, view, model, name, affects_children):
         self.model.state_machine.marked_dirty = True
-        logger.info("meta data changed")
+        msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
+        model.meta_signal.emit(msg)
+        # logger.info("meta data '{0}' of model '{1}' changed".format(name, model))
         # History.meta_changed_notify_after(self, model, name, affects_children)
 
     @ExtendedController.observe("state_machine", after=True)

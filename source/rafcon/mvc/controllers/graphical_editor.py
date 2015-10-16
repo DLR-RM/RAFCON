@@ -14,11 +14,12 @@ from copy import copy
 from functools import partial
 
 from math import sin, cos, atan2
-from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.enums import StateType
+
+from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.statemachine_helper import StateMachineHelper
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.models.abstract_state import MetaSignalMsg
 from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.library_state import LibraryStateModel
 from rafcon.mvc.models.abstract_state import AbstractStateModel
@@ -26,6 +27,7 @@ from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
+from rafcon.mvc.controllers.extended_controller import ExtendedController
 
 
 def check_pos(pos):
@@ -110,6 +112,7 @@ class GraphicalEditorController(ExtendedController):
 
         self.changed_models = []
         self.changes_affect_children = False
+        self._last_meta_data_changed = None
 
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
@@ -427,7 +430,9 @@ class GraphicalEditorController(ExtendedController):
                 state_m = self.root_state_m
             else:
                 state_m = reduced_list[0]
-            self._publish_changes(state_m, self.changes_affect_children)
+            if self._last_meta_data_changed:
+                self._publish_changes(state_m, self._last_meta_data_changed, self.changes_affect_children)
+                self._last_meta_data_changed = None
             self.changed_models = []
             self.changes_affect_children = False
 
@@ -472,6 +477,7 @@ class GraphicalEditorController(ExtendedController):
                 # - the starting position, in case the user aborts a movement
                 # - the offset of the mouse to the origin, which is kept throughout the movement to prevent jumps
                 if self.drag_origin_offset is None:
+                    self._last_meta_data_changed = "position"
                     self.drag_origin_offset = []
                     self.changes_affect_children = True
                     for model in self.model.selection:
@@ -520,6 +526,7 @@ class GraphicalEditorController(ExtendedController):
                 selected_state_m = self.single_selection
                 # Initially store starting position and offset (see comment above)
                 if self.drag_origin_offset is None:
+                    self._last_meta_data_changed = "position"
                     self.changes_affect_children = True
                     self.changed_models.append(selected_state_m)
                     offset = self._get_position_relative_to_state(selected_state_m, self.mouse_move_start_coords)
@@ -535,6 +542,7 @@ class GraphicalEditorController(ExtendedController):
                 selected_port_m = self.single_selection
                 # Initially store starting position and offset (see comment above)
                 if self.drag_origin_offset is None:
+                    self._last_meta_data_changed = "position"
                     self.changed_models.append(selected_port_m.parent)
                     self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
                                                            selected_port_m.temp['gui']['editor']['inner_pos'])
@@ -549,6 +557,7 @@ class GraphicalEditorController(ExtendedController):
             connection_m = self.selected_waypoint[0]
             waypoint_id = self.selected_waypoint[1]
             if connection_m not in self.changed_models:
+                self._last_meta_data_changed = "waypoint_position"
                 self.changed_models.append(connection_m)
             snap = event.state & SHIFT_MASK != 0
             self._move_waypoint(connection_m, waypoint_id, mouse_current_coord, snap)
@@ -560,6 +569,7 @@ class GraphicalEditorController(ExtendedController):
         if self.selected_resizer is not None:
             state_m = self.selected_resizer
             if self.drag_origin_offset is None:
+                self._last_meta_data_changed = "size"
                 self.changed_models.append(state_m)
                 lower_right_corner = (state_m.temp['gui']['editor']['pos'][0] +
                                       state_m.meta['gui']['editor_opengl']['size'][0],
@@ -925,7 +935,7 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor_gaphas']['rel_pos'] = (new_rel_pos[0], -new_rel_pos[1])
 
         if publish_changes:
-            self._publish_changes(state_m, affects_children=True)
+            self._publish_changes(state_m, "position", affects_children=False)
         if redraw:
             self._redraw()
 
@@ -959,7 +969,7 @@ class GraphicalEditorController(ExtendedController):
         port_m.meta['gui']['editor_opengl']['inner_rel_pos'] = new_rel_pos
 
         if publish_changes:
-            self._publish_changes(port_m.parent, affects_children=False)
+            self._publish_changes(port_m, "position", affects_children=False)
         if redraw:
             self._redraw()
 
@@ -1009,19 +1019,22 @@ class GraphicalEditorController(ExtendedController):
                         move_port(model, redraw=False, publish_changes=False)
 
                 affects_children = len(self.model.selection) > 1
-                reduced_list = StateMachineHelper.reduce_to_parent_states(self.model.selection)
-                if len(reduced_list) > 1:
-                    state_m = self.root_state_m
+                if affects_children:
+                    reduced_list = StateMachineHelper.reduce_to_parent_states(self.model.selection)
+                    if len(reduced_list) > 1:
+                        parent_m = self.root_state_m
+                    else:
+                        parent_m = reduced_list[0]
                 else:
-                    state_m = reduced_list[0]
-                self._publish_changes(state_m, affects_children)
+                    parent_m = self.model.selection[0]
+                self._publish_changes(parent_m, "position", affects_children)
                 self._redraw()
             elif isinstance(self.single_selection, AbstractStateModel):
                 move_state(self.single_selection)
             elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
                 move_port(self.single_selection)
-            return True # Prevent shortcut from being passed to GTK
-        return False # Allow passing of shortcut
+            return True  # Prevent shortcut from being passed to GTK
+        return False  # Allow passing of shortcut
 
     def _move_waypoint(self, connection_m, waypoint_id, new_pos, snap=False, redraw=True, publish_changes=False):
         """Moves the currently selected waypoint to the given position
@@ -1091,7 +1104,7 @@ class GraphicalEditorController(ExtendedController):
         waypoints[waypoint_id] = new_rel_pos
 
         if publish_changes:
-            self._publish_changes(connection_m, affects_children=False)
+            self._publish_changes(connection_m, "waypoint_position", affects_children=False)
         if redraw:
             self._redraw()
 
@@ -1251,7 +1264,7 @@ class GraphicalEditorController(ExtendedController):
             resize_children(state_m, old_size, state_meta['size'])
 
         if publish_changes:
-            self._publish_changes(state_m, affects_children=resize_content)
+            self._publish_changes(state_m, "size", affects_children=resize_content)
         if redraw:
             self._redraw()
 
@@ -1955,9 +1968,11 @@ class GraphicalEditorController(ExtendedController):
         abs_pos = add_pos(rel_pos, state_pos)
         return abs_pos
 
-    def _publish_changes(self, model, affects_children=False):
+    def _publish_changes(self, model, change, affects_children=False):
         self.model.state_machine.marked_dirty = True
-        self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
+        # self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
+        msg = MetaSignalMsg('graphical_editor', change, affects_children)
+        model.meta_signal.emit(msg)
         # logger.debug("publish changes to history")
 
     def _delete_selection(self, *args):
