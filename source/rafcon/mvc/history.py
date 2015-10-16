@@ -949,7 +949,7 @@ class History(ModelMT):
             traceback.print_exc(file=sys.stdout)
 
     def meta_changed_notify_after(self, changed_parent_model, changed_model, recursive_changes):
-        self.manual_changed_notify_after("gui_meta_data_changed", changed_parent_model, changed_model, recursive_changes)
+        raise DeprecationWarning
 
     def manual_changed_notify_before(self, change_type, changed_parent_model, changed_model, recursive_changes):
         pass
