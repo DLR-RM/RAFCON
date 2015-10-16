@@ -1,15 +1,19 @@
 from gtkmvc import ModelMT
 
+from rafcon.mvc.models.state_element import StateElementModel
+
 from rafcon.statemachine.scope import ScopedVariable
-from rafcon.utils.vividict import Vividict
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
-class ScopedVariableModel(ModelMT):
+class ScopedVariableModel(StateElementModel):
     """This model class manages a ScopedVariable
 
-    The model class is part of the MVC architecture. It holds the data to be shown (in this case a scoped variable).
-
-    :param ScopedVariable scoped_variable: The scoped variable to be managed
+    :param rafcon.statemachine.scoped_variable.ScopedVariable scoped_variable: The scoped variable to be wrapped
+    :param rafcon.mvc.models.abstract_state.AbstractStateModel parent: The state model of the state element
+    :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
      """
 
     scoped_variable = None
@@ -19,23 +23,11 @@ class ScopedVariableModel(ModelMT):
     def __init__(self, scoped_variable, parent, meta=None):
         """Constructor
         """
-
-        ModelMT.__init__(self)
+        super(ScopedVariableModel, self).__init__(parent, meta)
 
         assert isinstance(scoped_variable, ScopedVariable)
-        self.register_observer(self)
-
         self.scoped_variable = scoped_variable
-        self.parent = parent
-
-        if isinstance(meta, Vividict):
-            self.meta = meta
-        else:
-            self.meta = Vividict()
-
-        self.temp = Vividict()
 
     @ModelMT.observe("scoped_variable", before=True, after=True)
     def model_changed(self, model, prop_name, info):
-        if self.parent is not None:
-            self.parent.model_changed(model, prop_name, info)
+        super(ScopedVariableModel, self).model_changed(model, prop_name, info)
