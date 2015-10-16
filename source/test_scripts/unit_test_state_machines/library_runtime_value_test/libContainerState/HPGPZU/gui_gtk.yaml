@@ -1,0 +1,11 @@
+!Vividict
+gui: !Vividict
+    editor_gaphas: !Vividict
+        rel_pos: !!python/tuple [142.7494315789473, 31.38558315789472]
+    editor_opengl: !Vividict
+        rel_pos: !!python/tuple [142.7494315789473, -31.38558315789472]
+        size: !!python/tuple [31.382568421052625, 13.584370526315794]
+input_data_port2: !Vividict
+    gui: !Vividict {}
+output_data_port3: !Vividict
+    gui: !Vividict {}
