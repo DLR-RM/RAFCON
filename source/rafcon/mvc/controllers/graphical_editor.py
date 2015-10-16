@@ -1974,7 +1974,6 @@ class GraphicalEditorController(ExtendedController):
         return abs_pos
 
     def _publish_changes(self, model, change, affects_children=False):
-        self.model.state_machine.marked_dirty = True
         # self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
         msg = MetaSignalMsg('graphical_editor', change, affects_children)
         model.meta_signal.emit(msg)

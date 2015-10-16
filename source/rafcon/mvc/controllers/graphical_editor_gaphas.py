@@ -186,7 +186,6 @@ class GraphicalEditorController(ExtendedController):
         self.model.selection.clear()
 
     def _meta_data_changed(self, view, model, name, affects_children):
-        self.model.state_machine.marked_dirty = True
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
         model.meta_signal.emit(msg)
         # logger.info("meta data '{0}' of model '{1}' changed".format(name, model))

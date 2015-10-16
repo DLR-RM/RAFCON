@@ -130,7 +130,11 @@ class StateMachineModel(ModelMT):
 
     @ModelMT.observe("meta_signal", signal=True)
     def meta_changed(self, model, prop_name, info):
+        # When the meta was changed, we have to set the dirty flag, as the changes are unsaved
+        self.state_machine.marked_dirty = True
         if model is not self:  # Signal was caused by the root state
+            # Emit state_meta_signal to inform observing controllers about changes made to the meta data within the
+            # state machine
             msg = info.arg
             change = msg.change
             msg = msg._replace(change=change.replace('sm_notification_', '', 1))
