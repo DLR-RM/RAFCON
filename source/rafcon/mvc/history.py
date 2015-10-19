@@ -831,12 +831,12 @@ class History(ModelMT):
             return True
 
         if self.with_prints:
-            print overview['model']
-            print overview['prop_name']
-            print overview['instance']
-            print overview['method_name']
-            print overview['level']
-            print overview['prop_name'][-1]
+            print "SnAprint ", overview['model']
+            print "SnAprint ", overview['prop_name']
+            print "SnAprint ", overview['instance']
+            print "SnAprint ", overview['method_name']
+            print "SnAprint ", overview['level']
+            print "SnAprint ", overview['prop_name'][-1]
         # exit(1)
         # logger.debug("History stores BEFORE")
         result = True
@@ -861,18 +861,18 @@ class History(ModelMT):
                                         overview['model'][0], overview['prop_name'][0], overview['info'][-1],
                                         state_machine_model=self.state_machine_model)
 
-        elif isinstance(overview['instance'][-1], DataPort) or \
-                isinstance(overview['instance'][-1], Outcome) or \
+        elif overview['model'][-1].parent and (isinstance(overview['instance'][-1], DataPort) or
+                isinstance(overview['instance'][-1], Outcome) or
                 overview['method_name'][-1] in ['add_outcome', 'remove_outcome',
                                                 'add_output_data_port', 'remove_output_data_port',
-                                                'add_input_data_port', 'remove_input_data_port']:
+                                                'add_input_data_port', 'remove_input_data_port']):
             if self.with_prints:
-                print overview['model']
-                print overview['prop_name']
-                print overview['instance']
-                print overview['method_name']
-                print overview['level']
-                print overview['prop_name'][-1]
+                print "SnAprint1", overview['model']
+                print "SnAprint1", overview['prop_name']
+                print "SnAprint1", overview['instance']
+                print "SnAprint1", overview['method_name']
+                print "SnAprint1", overview['level']
+                print "SnAprint1", overview['prop_name'][-1]
 
             if overview['model'][-1].parent:
                 if not isinstance(overview['model'][-1].parent.state, State):
@@ -899,7 +899,7 @@ class History(ModelMT):
                                                 state_machine_model=self.state_machine_model)
                 else:
                     if self.with_prints:
-                        print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
+                        print "new .. state Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
                             overview['model'][-1].parent.state.get_path()
                     assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.parent.state.get_path().split('/')[0]
                     overview['model'][-1].parent.state.get_path()
@@ -1141,7 +1141,9 @@ class History(ModelMT):
         else:
             # logger.debug("History BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before', with_prints=self.with_prints)
+            overview = parent_state_of_notification_source(model, prop_name, info,
+                                                           before_after='before',
+                                                           with_prints=self.with_prints)
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
