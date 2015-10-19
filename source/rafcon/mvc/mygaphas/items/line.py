@@ -1,17 +1,16 @@
-from pango import FontDescription
 from math import atan2, pi
 
 from gaphas.item import Line, NW, SE
-from gtk.gdk import CairoContext
 from cairo import ANTIALIAS_SUBPIXEL
-
-from rafcon.utils import constants
+from pango import SCALE
 
 from rafcon.mvc.config import global_gui_config
 
 from rafcon.mvc.mygaphas.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, PortView
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide
+from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_text_layout
+from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
 
 class PerpLine(Line):
@@ -37,6 +36,9 @@ class PerpLine(Line):
         self._head_length = 0.
         self._to_head_length = 0.
         self._head_draw_offset = 0.
+
+        self._label_image_cache = ImageCache()
+        self._last_label_size = 0, 0
 
     @property
     def name(self):
@@ -156,12 +158,10 @@ class PerpLine(Line):
         def draw_line_end(pos, angle, draw):
             cr = context.cairo
             cr.save()
-            try:
-                cr.translate(*pos)
-                cr.rotate(angle)
-                draw(context)
-            finally:
-                cr.restore()
+            cr.translate(*pos)
+            cr.rotate(angle)
+            draw(context)
+            cr.restore()
 
         cr = context.cairo
         cr.set_line_width(self.line_width)
@@ -186,49 +186,63 @@ class PerpLine(Line):
             cx, cy = self._handles[index].pos
             angle = 0
         else:
-            index1 = len(self._handles) / 2 - 1
-            index2 = index1 + 1
+            index = len(self._handles) / 2 - 1
 
-            p1, p2 = self._handles[index1].pos, self._handles[index2].pos
+            p1, p2 = self._handles[index].pos, self._handles[index + 1].pos
 
             cx = (p1.x + p2.x) / 2
             cy = (p1.y + p2.y) / 2
 
-            angle = atan2(p2.y - p1.y, p2.x - p1.x)
-            if angle < -pi / 2.:
-                angle += pi
-            elif angle > pi / 2.:
-                angle -= pi
+            if global_gui_config.get_config_value("ROTATE_NAMES_ON_CONNECTIONS", default=False):
+                angle = atan2(p2.y - p1.y, p2.x - p1.x)
+                if angle < -pi / 2.:
+                    angle += pi
+                elif angle > pi / 2.:
+                    angle -= pi
+            else:
+                angle = 0
 
         if self.from_port:
             outcome_side = self.from_port.port_side_size
-        elif self.to_port:
+        else:  # self.to_port:
             outcome_side = self.to_port.port_side_size
-        else:
-            outcome_side = 5.
 
         c.set_antialias(ANTIALIAS_SUBPIXEL)
 
-        layout = c.create_layout()
-        layout.set_text(self.name)
+        parameters = {
+            'name': self.name,
+            'side': outcome_side,
+            'color': self._arrow_color
+        }
 
-        font_name = constants.FONT_NAMES[0]
-        font_size = outcome_side
+        upper_left_corner = cx, cy
+        current_zoom = self.canvas.get_first_view().get_zoom_factor()
+        from_cache, image, zoom = self._label_image_cache.get_cached_image(self._last_label_size[0],
+                                                                           self._last_label_size[1],
+                                                                           current_zoom, parameters)
 
-        font = FontDescription(font_name + " " + str(font_size))
-        layout.set_font_description(font)
+        # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
+        if from_cache:
+            # print "draw port name from cache"
+            self._label_image_cache.copy_image_to_context(c, upper_left_corner, angle)
 
-        c.set_source_rgba(*self._arrow_color)
-        c.update_layout(layout)
-        c.save()
+        # Parameters have changed or nothing in cache => redraw
+        else:
+            # First retrieve pango layout to determine and store size of label
+            layout = get_text_layout(c, self.name, outcome_side)
+            label_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
+            self._last_label_size = label_size
 
-        c.move_to(cx, cy)
-        if global_gui_config.get_config_value("ROTATE_NAMES_ON_CONNECTIONS", default=False):
-            c.rotate(angle)
+            # The size information is used to update the caching parameters and retrieve a new context with an image
+            # surface of the correct size
+            self._label_image_cache.get_cached_image(label_size[0], label_size[1], current_zoom, parameters, clear=True)
+            c = self._label_image_cache.get_context_for_image(current_zoom)
 
-        c.show_layout(layout)
+            c.set_source_rgba(*self._arrow_color)
+            c.update_layout(layout)
+            c.show_layout(layout)
 
-        c.restore()
+            self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
 
     def _update_ports(self):
         assert len(self._handles) >= 2, 'Not enough segments'

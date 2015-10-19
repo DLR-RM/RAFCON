@@ -374,3 +374,16 @@ def draw_label_path(context, width, height, arrow_height, distance_to_port, draw
     c.rel_line_to(-width / 2., -arrow_height)
     # Close path
     c.close_path()
+
+
+def get_text_layout(cairo_context, text, size):
+    c = cairo_context
+    layout = c.create_layout()
+    layout.set_text(text)
+
+    font_name = constants.FONT_NAMES[0]
+
+    font = FontDescription(font_name + " " + str(size))
+    layout.set_font_description(font)
+
+    return layout
