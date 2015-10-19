@@ -59,7 +59,7 @@ class ImageCache(object):
         self.__set_cached_image(image, width, height, zoom, parameters)
         return False, self.__image, zoom
 
-    def copy_image_to_context(self, context, position, zoom=None):
+    def copy_image_to_context(self, context, position, rotation=0, zoom=None):
         """Draw a cached image on the context
 
         :param context: The Cairo context to draw on
@@ -68,6 +68,7 @@ class ImageCache(object):
         if not zoom:
             zoom = self.__zoom
         context.save()
+        context.rotate(rotation)
         context.scale(1. / (zoom * self.multiplicator), 1. / (zoom * self.multiplicator))
         context.set_source_surface(self.__image, round(position[0] * zoom * self.multiplicator),
                                                  round(position[1] * zoom * self.multiplicator))
