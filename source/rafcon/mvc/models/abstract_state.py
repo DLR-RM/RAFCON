@@ -226,8 +226,9 @@ class AbstractStateModel(ModelMT):
             self.meta = tmp_meta
             self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
         # Print info only if the state has a location different from the tmp directory
-        elif meta_path[0:len(GLOBAL_STORAGE_BASE_PATH)] != GLOBAL_STORAGE_BASE_PATH:
-            logger.info("State '{0}' has no meta data. It will now be generated automatically.".format(self.state.name))
+        # elif meta_path[0:len(GLOBAL_STORAGE_BASE_PATH)] != GLOBAL_STORAGE_BASE_PATH:
+        #     logger.debug("State '{0}' has no meta data. It will now be generated automatically.".format(
+        #         self.state.name))
 
     def store_meta_data(self):
         """Save meta data of state model to the file system
