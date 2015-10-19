@@ -158,12 +158,10 @@ class PerpLine(Line):
         def draw_line_end(pos, angle, draw):
             cr = context.cairo
             cr.save()
-            try:
-                cr.translate(*pos)
-                cr.rotate(angle)
-                draw(context)
-            finally:
-                cr.restore()
+            cr.translate(*pos)
+            cr.rotate(angle)
+            draw(context)
+            cr.restore()
 
         cr = context.cairo
         cr.set_line_width(self.line_width)
