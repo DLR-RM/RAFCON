@@ -306,57 +306,53 @@ def update_port_position_meta_data(graphical_editor_view, item, handle):
             break
     if rel_pos != port_meta['rel_pos']:
         port_meta['rel_pos'] = rel_pos
-        graphical_editor_view.emit('meta_data_changed', item.model, "Move port", True)
+        graphical_editor_view.emit('meta_data_changed', item.model, "position", True)
 
 
-def update_meta_data_for_item(graphical_editor_view, grabbed_handle, item, child_resize=False):
+def update_meta_data_for_resized_item(graphical_editor_view, item, affects_children=False, publish=True):
     """This method updates the meta data of state and name views.
 
     :param graphical_editor_view: Graphical Editor the change occurred in
-    :param grabbed_handle: The handle that has been moved
-    :param item: The item which has been changed/moved
-    :param child_resize: Whether the children of the item have been resized or not
+    :param item: The item which has been changed/moved (either a StateView or NameView)
+    :param affects_children: Whether the children of the item have been resized or not
+    :param publish: Whether to publish the changes of the meta data
     """
     from gaphas.item import NW
-
-    size_msg = "Change size"
-    move_msg = "Move"
-    affect_children = False
+    from rafcon.mvc.mygaphas.items.state import StateView, NameView
 
     meta_gaphas = None
     meta_opengl = None
 
-    from rafcon.mvc.mygaphas.items.state import StateView, NameView
     if isinstance(item, StateView):
+        state_v = item
         # If handle for state resize was pulled
-        if grabbed_handle in item.corner_handles or child_resize:
-            # Update all port meta data to match with new position and size of parent
-            for port in item.get_all_ports():
-                update_port_position_meta_data(graphical_editor_view, item, port.handle)
-            meta_gaphas = item.model.meta['gui']['editor_gaphas']
-            meta_opengl = item.model.meta['gui']['editor_opengl']
-            move_msg = "Move state"
-            affect_children = True
-        # If pulled handle is port update port meta data and return
-        else:
-            update_port_position_meta_data(graphical_editor_view, item, grabbed_handle)
-            return
-    elif isinstance(item, NameView):
-        parent = graphical_editor_view.editor.canvas.get_parent(item)
-        item = parent
-        assert isinstance(parent, StateView)
+        meta_gaphas = item.model.meta['gui']['editor_gaphas']
+        meta_opengl = item.model.meta['gui']['editor_opengl']
 
-        meta_gaphas = parent.model.meta['name']['gui']['editor_gaphas']
-        size_msg = "Change name size"
-        move_msg = "Move name"
+        # Update all port meta data to match with new position and size of parent
+        for port in state_v.get_all_ports():
+            update_port_position_meta_data(graphical_editor_view, state_v, port.handle)
+
+        if affects_children:
+            for transition_v in state_v.get_transitions():
+                update_transition_waypoints(graphical_editor_view, transition_v, None)
+            for child_state_v in state_v.child_state_vs:
+                update_meta_data_for_resized_item(graphical_editor_view, child_state_v, True, publish=False)
+
+    elif isinstance(item, NameView):
+        state_v = graphical_editor_view.editor.canvas.get_parent(item)
+        assert isinstance(state_v, StateView)
+
+        meta_gaphas = state_v.model.meta['name']['gui']['editor_gaphas']
 
     rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, item, item.handles()[NW])
 
     if meta_gaphas:
         meta_gaphas['size'] = (item.width, item.height)
-        graphical_editor_view.emit('meta_data_changed', item.model, size_msg, affect_children)
         meta_gaphas['rel_pos'] = rel_pos
-        graphical_editor_view.emit('meta_data_changed', item.model, move_msg, affect_children)
     if meta_opengl:
         meta_opengl['size'] = (item.width, item.height)
         meta_opengl['rel_pos'] = (rel_pos[0], -rel_pos[1])
+
+    if publish:
+        graphical_editor_view.emit('meta_data_changed', item.model, "size", affects_children)

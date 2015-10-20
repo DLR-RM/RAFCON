@@ -98,7 +98,6 @@ class MoveItemTool(ItemTool):
             elif isinstance(inmotion.item, NameView):
                 state_m = self.view.canvas.get_parent(inmotion.item).model
                 state_m.meta['name']['gui']['editor_gaphas']['rel_pos'] = rel_pos
-                state_m.meta['name']['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
 
         if isinstance(self._item, StateView):
             self._item.moving = False
@@ -293,19 +292,13 @@ class HandleMoveTool(HandleTool):
             gap_helper.update_transition_waypoints(self._graphical_editor_view, connection_v, self._waypoint_list)
 
         if isinstance(self.grabbed_item, (StateView, NameView)):
-
-            if self._child_resize and isinstance(self.grabbed_item, StateView):
-
-                def update_meta_data(state):
-                    for transition_v in state.get_transitions():
-                        gap_helper.update_transition_waypoints(self._graphical_editor_view, transition_v, None)
-                    gap_helper.update_meta_data_for_item(self._graphical_editor_view, self.grabbed_handle, state, True)
-                    for child_state_v in state.child_state_vs:
-                        update_meta_data(child_state_v)
-
-                update_meta_data(self.grabbed_item)
-                self._child_resize = False
-            gap_helper.update_meta_data_for_item(self._graphical_editor_view, self.grabbed_handle, self.grabbed_item)
+            only_ports = self.grabbed_handle not in self.grabbed_item.corner_handles
+            if only_ports:
+                gap_helper.update_port_position_meta_data(self._graphical_editor_view, self.grabbed_item,
+                                                          self.grabbed_handle)
+            else:
+                gap_helper.update_meta_data_for_resized_item(self._graphical_editor_view, self.grabbed_item,
+                                                             self._child_resize)
 
         # reset temp variables
         self._last_active_port = None
@@ -318,6 +311,7 @@ class HandleMoveTool(HandleTool):
         self._active_connection_view_handle = None
         self._waypoint_list = None
         self._last_hovered_state = None
+        self._child_resize = False
 
         super(HandleMoveTool, self).on_button_release(event)
 
