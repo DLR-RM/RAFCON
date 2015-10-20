@@ -16,3 +16,6 @@ _static/
 *.html
 *.js
 *.inv
+
+# Profiler output
+*.prf
