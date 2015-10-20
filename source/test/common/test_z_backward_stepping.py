@@ -52,7 +52,7 @@ def trigger_gui_signals(*args):
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
     number_of_steps = 9
-    sleep_time = 0.01
+    sleep_time = 0.02
     time.sleep(sleep_time)
     for i in range(number_of_steps):
         call_gui_callback(menubar_ctrl.on_step_activate, None, None)
