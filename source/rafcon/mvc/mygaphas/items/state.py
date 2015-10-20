@@ -64,15 +64,15 @@ class StateView(Element):
         if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['size'], tuple):
             name_width = self.width * 0.8
             name_height = self.height * 0.4
-            name_size = (name_width, name_height)
-        else:
-            name_size = state_m.meta['name']['gui']['editor_gaphas']['size']
+            state_m.meta['name']['gui']['editor_gaphas']['size'] = (name_width, name_height)
+        name_size = state_m.meta['name']['gui']['editor_gaphas']['size']
 
         self._name_view = NameView(state_m.state.name, name_size)
 
-        if isinstance(state_m.meta['name']['gui']['editor_gaphas']['rel_pos'], tuple):
-            name_pos = state_m.meta['name']['gui']['editor_gaphas']['rel_pos']
-            self.name_view.matrix.translate(*name_pos)
+        if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['rel_pos'], tuple):
+            state_m.meta['name']['gui']['editor_gaphas']['rel_pos'] = (0, 0)
+        name_pos = state_m.meta['name']['gui']['editor_gaphas']['rel_pos']
+        self.name_view.matrix.translate(*name_pos)
 
     def setup_canvas(self):
         self._income = self.add_income()
