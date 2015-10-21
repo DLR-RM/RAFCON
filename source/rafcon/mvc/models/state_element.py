@@ -45,13 +45,21 @@ class StateElementModel(ModelMT):
 
     @property
     def parent(self):
+        """Getter for the parent state model of the state element
+
+        :return: None if parent is not defined, else the model of the parent state
+        :rtype: rafcon.mvc.models.abstract_state.AbstractState
+        """
         if not self._parent:
             return None
-        else:
-            return self._parent()
+        return self._parent()
 
     @parent.setter
     def parent(self, parent_m):
+        """Setter for the parent state model of the state element
+
+        :param rafcon.mvc.models.abstract_state.AbstractState parent_m: Parent state model or None
+        """
         if isinstance(parent_m, AbstractStateModel):
             self._parent = ref(parent_m)
         else:

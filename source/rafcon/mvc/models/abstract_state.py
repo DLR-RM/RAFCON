@@ -99,8 +99,7 @@ class AbstractStateModel(ModelMT):
     def parent(self):
         if not self._parent:
             return None
-        else:
-            return self._parent()
+        return self._parent()
 
     @parent.setter
     def parent(self, parent_m):
