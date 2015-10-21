@@ -12,6 +12,20 @@ def dist(p1, p2):
     return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
 
+def point_left_of_line(point, line_start, line_end):
+    """Determines whether a point is left of a line
+
+    :param point: Point to be checked (tuple with x any y coordinate)
+    :param line_start: Starting point of the line (tuple with x any y coordinate)
+    :param line_end: End point of the line (tuple with x any y coordinate)
+    :return: True if point is left of line, else False
+    """
+    # determine sign of determinant
+    # ((b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)) > 0
+    return ((line_end[0] - line_start[0]) * (point[1] - line_start[1]) -
+            (line_end[1] - line_start[1]) * (point[0] - line_start[0])) < 0
+
+
 def point_on_line(point, line_start, line_end, accuracy=50.):
     """Checks whether a point lies on a line
 
