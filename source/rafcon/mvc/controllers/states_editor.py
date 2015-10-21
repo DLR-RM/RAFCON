@@ -304,7 +304,7 @@ class StatesEditorController(ExtendedController):
         Disconnects the page from signals and removes interconnection to parent-controller or observables.
         :param tab_dict: Tab-dictionary that holds all necessary information of a page and state-editor.
         """
-        logger.info("destroy page %s" % tab_dict['controller'].model.state.get_path())
+        # logger.info("destroy page %s" % tab_dict['controller'].model.state.get_path())
         if tab_dict['source_code_changed_handler_id'] is not None:
             tab_dict['controller'].view['source_view'].get_buffer().disconnect(tab_dict['source_code_changed_handler_id'])
         self.remove_controller(tab_dict['controller'])
