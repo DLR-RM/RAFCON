@@ -1,21 +1,11 @@
-"""
-.. module:: outcome
-   :platform: Unix, Windows
-   :synopsis: A module for representing an outcome of a state
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 from gtkmvc import Observable
-import yaml
 
+from rafcon.statemachine.state_element import StateElement
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class Outcome(Observable, yaml.YAMLObject):
+class Outcome(StateElement):
     """A class for representing an outcome of a state
 
     It inherits from Observable to make a change of its fields observable.
@@ -30,16 +20,13 @@ class Outcome(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Outcome'
 
+    _outcome_id = None
+    _name = None
+
     def __init__(self, outcome_id=None, name=None, parent=None):
-        Observable.__init__(self)
+        super(Outcome, self).__init__()
 
-        # Prevents validity checks by parent before all parameters are set
-        self._parent = None
-
-        self._outcome_id = None
         self.outcome_id = outcome_id
-
-        self._name = None
         self.name = name
 
         # Checks for validity
@@ -84,7 +71,7 @@ class Outcome(Observable, yaml.YAMLObject):
         if not isinstance(outcome_id, int):
             raise TypeError("outcome_id must be of type int")
 
-        self.__change_property_with_validity_check('_outcome_id', outcome_id)
+        self._change_property_with_validity_check('_outcome_id', outcome_id)
 
     @property
     def name(self):
@@ -101,52 +88,5 @@ class Outcome(Observable, yaml.YAMLObject):
         if len(name) < 1:
             raise ValueError("Name cannot be empty")
 
-        self.__change_property_with_validity_check('_name', name)
-
-    @property
-    def parent(self):
-        return self._parent
-
-    @parent.setter
-    @Observable.observed
-    def parent(self, parent):
-        if parent is not None:
-            from rafcon.statemachine.states.state import State
-            assert isinstance(parent, State)
-
-        self.__change_property_with_validity_check('_parent', parent)
-
-    def __change_property_with_validity_check(self, property_name, value):
-        """Helper method to change a property and reset it if the validity check fails
-
-        :param str property_name: The name of the property to be changed, e.g. '_name'
-        :param value: The new desired value for this property
-        """
-        assert isinstance(property_name, str)
-        old_value = getattr(self, property_name)
-        setattr(self, property_name, value)
-
-        valid, message = self._check_validity()
-        if not valid:
-            setattr(self, property_name, old_value)
-            if property_name == '_parent':
-                raise ValueError("Outcome invalid: {0}".format(message))
-            raise ValueError("The outcome's '{0}' could not be changed: {1}".format(property_name[1:], message))
-
-    def _check_validity(self):
-        """Checks the validity of the Outcome properties
-
-        The validity of the Outcome can only be checked by the parent, to see if there are other outcomes with the
-        same name or id. Thus, the existence of a parent and a check function must be ensured and this function be
-        queried.
-
-        :return: (True, str message) if valid, (False, str reason) else
-        """
-        if not self.parent:
-            return True, "no parent"
-        if not hasattr(self.parent, 'check_child_validity') or \
-                not callable(getattr(self.parent, 'check_child_validity')):
-            return True, "no parental check"
-        return self.parent.check_child_validity(self)
-
+        self._change_property_with_validity_check('_name', name)
 

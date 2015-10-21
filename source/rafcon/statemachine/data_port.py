@@ -1,23 +1,13 @@
-"""
-.. module:: data_port
-   :platform: Unix, Windows
-   :synopsis: A module to represent a data port of a state
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 from gtkmvc import Observable
-import yaml
 
+from rafcon.statemachine.state_element import StateElement
 from rafcon.statemachine.id_generator import generate_data_port_id
 from rafcon.utils import type_helpers
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class DataPort(Observable, yaml.YAMLObject):
+class DataPort(StateElement):
     """A class for representing a data ports in a state
 
     :ivar name: the name of the data port
@@ -31,13 +21,10 @@ class DataPort(Observable, yaml.YAMLObject):
     _data_type = type(None)
     _default_value = None
 
-    # Prevents validity checks by parent before all parameters are set
-    _parent = None
-
     def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None, force_type=False):
         if type(self) == DataPort and not force_type:
             raise NotImplementedError
-        Observable.__init__(self)
+        super(DataPort, self).__init__()
 
         if data_port_id is None:
             self._data_port_id = generate_data_port_id()
@@ -45,10 +32,8 @@ class DataPort(Observable, yaml.YAMLObject):
             self._data_port_id = data_port_id
 
         self.name = name
-
         if data_type is not None:
             self.data_type = data_type
-
         self.default_value = default_value
 
         # Checks for validity
@@ -113,7 +98,7 @@ class DataPort(Observable, yaml.YAMLObject):
         if len(name) < 1:
             raise ValueError("Name cannot be empty")
 
-        self.__change_property_with_validity_check('_name', name)
+        self._change_property_with_validity_check('_name', name)
 
     @property
     def data_type(self):
@@ -130,7 +115,7 @@ class DataPort(Observable, yaml.YAMLObject):
         except ValueError as e:
             raise ValueError("Could not change data type to '{0}': {1}".format(data_type, e))
 
-        self.__change_property_with_validity_check('_data_type', new_data_type)
+        self._change_property_with_validity_check('_data_type', new_data_type)
 
     @property
     def default_value(self):
@@ -147,19 +132,6 @@ class DataPort(Observable, yaml.YAMLObject):
             self._default_value = default_value
         except (TypeError, AttributeError) as e:
             raise e
-
-    @property
-    def parent(self):
-        return self._parent
-
-    @parent.setter
-    @Observable.observed
-    def parent(self, parent):
-        if parent is not None:
-            from rafcon.statemachine.states.state import State
-            assert isinstance(parent, State)
-
-        self.__change_property_with_validity_check('_parent', parent)
 
     @Observable.observed
     def change_data_type(self, data_type, default_value=None):
@@ -189,21 +161,6 @@ class DataPort(Observable, yaml.YAMLObject):
             else:
                 self._default_value = None
 
-    def __change_property_with_validity_check(self, property_name, value):
-        """Helper method to change a property and reset it if the validity check fails
-
-        :param str property_name: The name of the property to be changed, e.g. '_data_port_id'
-        :param value: The new desired value for this property
-        """
-        assert isinstance(property_name, str)
-        old_value = getattr(self, property_name)
-        setattr(self, property_name, value)
-
-        valid, message = self._check_validity()
-        if not valid:
-            setattr(self, property_name, old_value)
-            raise ValueError("The data port's '{0}' could not be changed: {1}".format(property_name[1:], message))
-
     def check_default_value(self, default_value, data_type=None):
         """Checks the default value
 
@@ -231,21 +188,6 @@ class DataPort(Observable, yaml.YAMLObject):
                         default_value, data_type))
 
         return default_value
-
-    def _check_validity(self):
-        """Checks the validity of the data port properties
-
-        Some validity checks can only be performed by the parent, e.g. data type changes when data flows are connected.
-        Thus, the existence of a parent and a check function must be ensured and this function be queried.
-
-        :return: (True, str message) if valid, (False, str reason) else
-        """
-        if not self.parent:
-            return True, "no parent"
-        if not hasattr(self.parent, 'check_child_validity') or \
-                not callable(getattr(self.parent, 'check_child_validity')):
-            return True, "no parental check"
-        return self.parent.check_child_validity(self)
 
 
 class InputDataPort(DataPort):

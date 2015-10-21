@@ -1,22 +1,13 @@
-"""
-.. module:: transition
-   :platform: Unix, Windows
-   :synopsis: A module to represent a transition in the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 from gtkmvc import Observable
+
+from rafcon.statemachine.state_element import StateElement
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-import yaml
 
 from rafcon.statemachine.id_generator import *
 
 
-class Transition(Observable, yaml.YAMLObject):
+class Transition(StateElement):
     """A class for representing a transition in the state machine
 
     It inherits from Observable to make a change of its fields observable.
@@ -32,34 +23,27 @@ class Transition(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Transition'
 
+    _transition_id = None
+    _from_state = None
+    _from_outcome = None
+    _to_state = None
+    _to_outcome = None
+
     def __init__(self, from_state, from_outcome, to_state, to_outcome, transition_id, parent=None):
-        Observable.__init__(self)
+        super(Transition, self).__init__()
 
-        # Prevents validity checks by parent before all parameters are set
-        self._parent = None
-
-        self._transition_id = None
         if transition_id is None:
             self.transition_id = generate_transition_id()
         else:
             self.transition_id = transition_id
 
-        self._from_state = None
         self.from_state = from_state
-
-        self._from_outcome = None
         self.from_outcome = from_outcome
-
-        self._to_state = None
         self.to_state = to_state
-
-        self._to_outcome = None
         self.to_outcome = to_outcome
 
         # Checks for validity
         self.parent = parent
-
-        logger.debug(self.__str__())
 
     def __str__(self):
         return "Transition - from_state: %s, from_outcome: %s, to_state: %s, to_outcome: %s, id: %s" %\
@@ -152,7 +136,7 @@ class Transition(Observable, yaml.YAMLObject):
         if from_state is not None and not isinstance(from_state, str):
             raise ValueError("from_state must be of type str")
 
-        self.__change_property_with_validity_check('_from_state', from_state)
+        self._change_property_with_validity_check('_from_state', from_state)
 
     @property
     def from_outcome(self):
@@ -167,7 +151,7 @@ class Transition(Observable, yaml.YAMLObject):
         if from_outcome is not None and not isinstance(from_outcome, int):
             raise ValueError("from_outcome must be of type int")
 
-        self.__change_property_with_validity_check('_from_outcome', from_outcome)
+        self._change_property_with_validity_check('_from_outcome', from_outcome)
 
     @property
     def to_state(self):
@@ -182,7 +166,7 @@ class Transition(Observable, yaml.YAMLObject):
         if to_state is not None and not isinstance(to_state, str):
             raise ValueError("to_state must be of type str")
 
-        self.__change_property_with_validity_check('_to_state', to_state)
+        self._change_property_with_validity_check('_to_state', to_state)
 
     @property
     def to_outcome(self):
@@ -197,7 +181,7 @@ class Transition(Observable, yaml.YAMLObject):
         if to_outcome is not None and not isinstance(to_outcome, int):
             raise ValueError("to_outcome must be of type int")
 
-        self.__change_property_with_validity_check('_to_outcome', to_outcome)
+        self._change_property_with_validity_check('_to_outcome', to_outcome)
 
     @property
     def transition_id(self):
@@ -213,49 +197,4 @@ class Transition(Observable, yaml.YAMLObject):
             if not isinstance(transition_id, int):
                 raise ValueError("transition_id must be of type int")
 
-        self.__change_property_with_validity_check('_transition_id', transition_id)
-
-    @property
-    def parent(self):
-        return self._parent
-
-    @parent.setter
-    @Observable.observed
-    def parent(self, parent):
-        if parent is not None:
-            from rafcon.statemachine.states.state import State
-            assert isinstance(parent, State)
-
-        self.__change_property_with_validity_check('_parent', parent)
-
-    def __change_property_with_validity_check(self, property_name, value):
-        """Helper method to change a property and reset it if the validity check fails
-
-        :param str property_name: The name of the property to be changed, e.g. '_data_flow_id'
-        :param value: The new desired value for this property
-        """
-        assert isinstance(property_name, str)
-        old_value = getattr(self, property_name)
-        setattr(self, property_name, value)
-
-        valid, message = self._check_validity()
-        if not valid:
-            setattr(self, property_name, old_value)
-            if property_name == '_parent':
-                raise ValueError("Transition invalid: {0}".format(message))
-            raise ValueError("The transition's '{0}' could not be changed: {1}".format(property_name[1:], message))
-
-    def _check_validity(self):
-        """Checks the validity of the transition properties
-
-        Some validity checks can only be performed by the parent, e.g. whether the from  outcome is already connected.
-        Thus, the existence of a parent and a check function must be ensured and this function be queried.
-
-        :return: (True, str message) if valid, (False, str reason) else
-        """
-        if not self.parent:
-            return True, "no parent"
-        if not hasattr(self.parent, 'check_child_validity') or \
-                not callable(getattr(self.parent, 'check_child_validity')):
-            return True, "no parental check"
-        return self.parent.check_child_validity(self)
+        self._change_property_with_validity_check('_transition_id', transition_id)
