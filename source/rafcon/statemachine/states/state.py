@@ -3,6 +3,7 @@ import threading
 import sys
 import Queue
 import copy
+from weakref import ref
 
 from gtkmvc import Observable
 import yaml
@@ -36,12 +37,13 @@ class State(Observable, yaml.YAMLObject):
 
     """
 
+    _parent = None
+
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  parent=None):
 
         Observable.__init__(self)
         self._state_id = None
-        self._parent = None
         self._name = None
         self._input_data_ports = {}
         self._output_data_ports = {}
@@ -626,18 +628,21 @@ class State(Observable, yaml.YAMLObject):
         """Property for the _parent field
 
         """
-        return self._parent
+        if not self._parent:
+            return None
+        return self._parent()
 
     @parent.setter
     @Observable.observed
     def parent(self, parent):
-        if parent is not None:
-            if not isinstance(parent, State):
-                from rafcon.statemachine.state_machine import StateMachine
-                if not isinstance(parent, StateMachine):
-                    raise TypeError("parent must be of type State OR StateMachine")
+        if parent is None:
+            self._parent = None
+        else:
+            from rafcon.statemachine.state_machine import StateMachine
+            if not isinstance(parent, (State, StateMachine)):
+                raise TypeError("parent must be of type State or StateMachine")
 
-        self._parent = parent
+            self._parent = ref(parent)
 
     @property
     def input_data_ports(self):
