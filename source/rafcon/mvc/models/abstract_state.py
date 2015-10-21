@@ -1,6 +1,7 @@
 import os.path
 from copy import deepcopy
 from collections import namedtuple
+from weakref import ref
 
 from gtkmvc import ModelMT, Signal
 
@@ -11,7 +12,6 @@ from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -51,6 +51,7 @@ class AbstractStateModel(ModelMT):
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state
      """
 
+    _parent = None
     is_start = None
     state = None
     outcomes = []
@@ -83,10 +84,7 @@ class AbstractStateModel(ModelMT):
 
         self.temp = Vividict()
 
-        if isinstance(parent, AbstractStateModel):
-            self.parent = parent
-        else:
-            self.parent = None
+        self.parent = parent
 
         self.register_observer(self)
 
@@ -96,6 +94,20 @@ class AbstractStateModel(ModelMT):
         self._load_input_data_port_models()
         self._load_output_data_port_models()
         self._load_outcome_models()
+
+    @property
+    def parent(self):
+        if not self._parent:
+            return None
+        else:
+            return self._parent()
+
+    @parent.setter
+    def parent(self, parent_m):
+        if isinstance(parent_m, AbstractStateModel):
+            self._parent = ref(parent_m)
+        else:
+            self._parent = None
 
     def get_input_data_port_m(self, data_port_id):
         """Returns the input data port model for the given data port id

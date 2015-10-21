@@ -1,6 +1,7 @@
+from weakref import ref
 from gtkmvc import ModelMT, Signal
 
-from rafcon.mvc.models.abstract_state import Notification
+from rafcon.mvc.models.abstract_state import Notification, AbstractStateModel
 
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
@@ -16,7 +17,7 @@ class StateElementModel(ModelMT):
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
     """
 
-    parent = None
+    _parent = None
     meta = None
     meta_signal = Signal()
     temp = None
@@ -41,6 +42,20 @@ class StateElementModel(ModelMT):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
+
+    @property
+    def parent(self):
+        if not self._parent:
+            return None
+        else:
+            return self._parent()
+
+    @parent.setter
+    def parent(self, parent_m):
+        if isinstance(parent_m, AbstractStateModel):
+            self._parent = ref(parent_m)
+        else:
+            self._parent = None
 
     def model_changed(self, model, prop_name, info):
         """This method notifies the parent state about changes made to the state element
