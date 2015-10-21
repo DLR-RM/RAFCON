@@ -10,7 +10,6 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
-#TODO: comment
 
 class SourceEditorController(ExtendedController):
     # TODO Missing functions
@@ -24,12 +23,15 @@ class SourceEditorController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
         self.not_pylint_compatible_modules = ["links_and_nodes"]
+        # self.is_dirty = False
 
     def register_view(self, view):
         view.get_buffer().connect('changed', self.code_changed)
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
+        view.get_buffer().begin_not_undoable_action()
         view.set_text(self.model.state.script.script)
+        view.get_buffer().end_not_undoable_action()
 
         if isinstance(self.model.state, LibraryState):
             view.textview.set_sensitive(False)
@@ -75,9 +77,16 @@ class SourceEditorController(ExtendedController):
         else:
             return False
 
-    #===============================================================
+    # ===============================================================
     def code_changed(self, source):
-        #print "The text in the text_buffer changed"
+        # print "The text in the text_buffer changed"
+        # tbuffer = self.view.get_buffer()
+        # current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        # if self.model.state.script.script == current_text:
+        #     self.is_dirty = False
+        # else:
+        #     self.is_dirty = True
+        # print "script is dirty: {0} {1}".format(self.is_dirty, source)
         self.view.apply_tag('default')
 
     def apply_clicked(self, button):
@@ -122,10 +131,9 @@ class SourceEditorController(ExtendedController):
 
             def on_message_dialog_response_signal(widget, response_id, current_text):
                 if response_id == 42:
-                    self.model.state.set_script_text(current_text)
-                    logger.debug("File saved")
+                    self.set_script_text(current_text)
                 else:
-                    logger.debug("File not saved")
+                    logger.debug("Source script is not stored to memory")
                 widget.destroy()
 
             from rafcon.utils.dialog import RAFCONDialog
@@ -141,8 +149,17 @@ class SourceEditorController(ExtendedController):
             dialog.add_button("Do not save", 43)
             dialog.finalize(on_message_dialog_response_signal, current_text)
         else:
-            if self.model.state.set_script_text(current_text):
-                logger.debug("File saved")
+            self.set_script_text(current_text)
+
+    def set_script_text(self, text):
+        try:
+            if self.model.state.set_script_text(text):
+                logger.debug("Source script is stored to memory")
+                return True
+            else:
+                logger.debug("Source script is not stored to memory")
+        except TypeError as e:
+            logger.warning("Source script is not stored to memory: {0}".format(e))
 
     def filter_out_not_compatible_modules(self, pylint_msg):
         """
