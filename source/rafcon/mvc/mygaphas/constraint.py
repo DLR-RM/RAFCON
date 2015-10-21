@@ -145,20 +145,34 @@ class PortRectConstraint(Constraint):
         self._port = port
 
         self._distance_to_border = self._port.port_side_size / 2.
-        self.update_initial_pos()
+        self.update_port_side()
 
-    def update_initial_pos(self):
+    def update_port_side(self):
+        """Updates the initial position of the port
+
+        The port side is ignored but calculated from the port position. Then the port position is limited to the four
+        side lines of the state.
         """
-        Updates the initial position of the port to maintain correct reference
-        """
-        if self._port.side == SnappedSide.LEFT:
-            _update(self._initial_pos.x, self._initial_pos.x + self._distance_to_border)
-        elif self._port.side == SnappedSide.TOP:
-            _update(self._initial_pos.y, self._initial_pos.y + self._distance_to_border)
-        elif self._port.side == SnappedSide.RIGHT:
-            _update(self._initial_pos.x, self._initial_pos.x - self._distance_to_border)
-        elif self._port.side == SnappedSide.BOTTOM:
-            _update(self._initial_pos.y, self._initial_pos.y - self._distance_to_border)
+        from rafcon.utils.geometry import point_left_of_line
+
+        p = (self._initial_pos.x, self._initial_pos.y)
+        nw_x, nw_y, se_x, se_y = self.get_adjusted_border_positions()
+        if point_left_of_line(p, (nw_x, nw_y), (se_x, se_y)):  # upper right triangle of state
+            if point_left_of_line(p, (nw_x, se_y), (se_x, nw_y)):  # upper quarter triangle of state
+                self._port.side = SnappedSide.TOP
+                self.limit_pos(p[0], se_x, nw_x)
+            else:  # right quarter triangle of state
+                self._port.side = SnappedSide.RIGHT
+                self.limit_pos(p[1], se_y, nw_y)
+        else:  # lower left triangle of state
+            if point_left_of_line(p, (nw_x, se_y), (se_x, nw_y)):  # left quarter triangle of state
+                self._port.side = SnappedSide.LEFT
+                self.limit_pos(p[1], se_y, nw_y)
+            else:  # lower quarter triangle of state
+                self._port.side = SnappedSide.BOTTOM
+                self.limit_pos(p[0], se_x, nw_x)
+
+        self.set_nearest_border()
 
     def solve_for(self, var=None):
         self._solve()
@@ -202,7 +216,7 @@ class PortRectConstraint(Constraint):
             self._port.side = SnappedSide.BOTTOM
         # If containing state has been resized, snap ports accordingly to border
         else:
-            self.set_nearest_border(px, py)
+            self.set_nearest_border()
 
         # Update initial position for next reference
         _update(self._initial_pos.x, deepcopy(px.value))
@@ -240,12 +254,10 @@ class PortRectConstraint(Constraint):
 
         return nw_x, nw_y, se_x, se_y
 
-    def set_nearest_border(self, px, py):
+    def set_nearest_border(self):
+        """Snaps the port to the correct side upon state size change
         """
-        Snaps the port to the correct side upon state size change
-        :param px: X-Position of port
-        :param py: Y-Position of port
-        """
+        px, py = self._point
         nw_x, nw_y, se_x, se_y = self.get_adjusted_border_positions()
 
         if self._port.side == SnappedSide.RIGHT:
