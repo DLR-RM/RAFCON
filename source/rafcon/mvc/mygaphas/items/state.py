@@ -61,17 +61,18 @@ class StateView(Element):
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
 
-        if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['size'], tuple):
+        name_meta = state_m.meta['gui']['editor_gaphas']['name']
+        if not isinstance(name_meta['size'], tuple):
             name_width = self.width * 0.8
             name_height = self.height * 0.4
-            state_m.meta['name']['gui']['editor_gaphas']['size'] = (name_width, name_height)
-        name_size = state_m.meta['name']['gui']['editor_gaphas']['size']
+            name_meta['size'] = (name_width, name_height)
+        name_size = name_meta['size']
 
         self._name_view = NameView(state_m.state.name, name_size)
 
-        if not isinstance(state_m.meta['name']['gui']['editor_gaphas']['rel_pos'], tuple):
-            state_m.meta['name']['gui']['editor_gaphas']['rel_pos'] = (0, 0)
-        name_pos = state_m.meta['name']['gui']['editor_gaphas']['rel_pos']
+        if not isinstance(name_meta['rel_pos'], tuple):
+            name_meta['rel_pos'] = (0, 0)
+        name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
 
     def setup_canvas(self):
@@ -442,15 +443,14 @@ class StateView(Element):
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
 
-        port_meta = self.model.meta['income']['gui']['editor_gaphas']
-        if isinstance(port_meta['rel_pos'], tuple):
-            income_v.handle.pos = port_meta['rel_pos']
-        else:
+        port_meta = self.model.meta['gui']['editor_gaphas']['income']
+        if not isinstance(port_meta['rel_pos'], tuple):
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
             pos_x = 0
             pos_y = self._calculate_port_pos_on_line(1, self.height)
-            income_v.handle.pos = pos_x, pos_y
+            port_meta['rel_pos'] = pos_x, pos_y
+        income_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(income_v)
         return income_v
 
@@ -460,10 +460,8 @@ class StateView(Element):
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
 
-        port_meta = self.model.meta['outcome%d' % outcome_v.outcome_id]['gui']['editor_gaphas']
-        if isinstance(port_meta['rel_pos'], tuple):
-            outcome_v.handle.pos = port_meta['rel_pos']
-        else:
+        port_meta = outcome_m.meta['gui']['editor_gaphas']
+        if not isinstance(port_meta['rel_pos'], tuple):
             if outcome_m.outcome.outcome_id < 0:
                 # Position aborted/preempted in upper right corner
                 outcome_v.side = SnappedSide.TOP
@@ -475,7 +473,8 @@ class StateView(Element):
                 pos_x = self.width
                 num_outcomes = len([o for o in self.outcomes if o.outcome_m.outcome.outcome_id >= 0])
                 pos_y = self._calculate_port_pos_on_line(num_outcomes, self.height)
-            outcome_v.handle.pos = pos_x, pos_y
+            port_meta['rel_pos'] = pos_x, pos_y
+        outcome_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(outcome_v)
 
     def remove_outcome(self, outcome_v):
@@ -492,16 +491,15 @@ class StateView(Element):
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
 
-        port_meta = self.model.meta['input%d' % input_port_v.port_id]['gui']['editor_gaphas']
-        if isinstance(port_meta['rel_pos'], tuple):
-            input_port_v.handle.pos = port_meta['rel_pos']
-        else:
+        port_meta = port_m.meta['gui']['editor_gaphas']
+        if not isinstance(port_meta['rel_pos'], tuple):
             # Distribute input ports on the left side of the state, starting from bottom
             input_port_v.side = SnappedSide.LEFT
             num_inputs = len(self._inputs)
             pos_x = 0
             pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
-            input_port_v.handle.pos = pos_x, pos_y
+            port_meta['rel_pos'] = pos_x, pos_y
+        input_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(input_port_v)
 
     def remove_input_port(self, input_port_v):
@@ -518,16 +516,15 @@ class StateView(Element):
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
 
-        port_meta = self.model.meta['output%d' % output_port_v.port_id]['gui']['editor_gaphas']
-        if isinstance(port_meta['rel_pos'], tuple):
-            output_port_v.handle.pos = port_meta['rel_pos']
-        else:
+        port_meta = port_m.meta['gui']['editor_gaphas']
+        if not isinstance(port_meta['rel_pos'], tuple):
             # Distribute output ports on the right side of the state, starting from bottom
             output_port_v.side = SnappedSide.RIGHT
             num_outputs = len(self._outputs)
             pos_x = self.width
             pos_y = self.height - self._calculate_port_pos_on_line(num_outputs, self.height)
-            output_port_v.handle.pos = pos_x, pos_y
+            port_meta['rel_pos'] = pos_x, pos_y
+        output_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(output_port_v)
 
     def remove_output_port(self, output_port_v):
@@ -546,17 +543,16 @@ class StateView(Element):
 
         scoped_variable_port_v.handle.pos = self.width * (0.1 * len(self._scoped_variables_ports)), 0
 
-        port_meta = self.model.meta['scoped%d' % scoped_variable_port_v.port_id]['gui']['editor_gaphas']
-        if isinstance(port_meta['rel_pos'], tuple):
-            scoped_variable_port_v.handle.pos = port_meta['rel_pos']
-        else:
+        port_meta = scoped_variable_m.meta['gui']['editor_gaphas']
+        if not isinstance(port_meta['rel_pos'], tuple):
             # Distribute scoped variables on the top side of the state, starting from left
             scoped_variable_port_v.side = SnappedSide.TOP
             num_scoped_vars = len(self._scoped_variables_ports)
             pos_x = self._calculate_port_pos_on_line(num_scoped_vars, self.width,
                                                      port_width=self.port_side_size * 4)
             pos_y = 0
-            scoped_variable_port_v.handle.pos = pos_x, pos_y
+            port_meta['rel_pos'] = pos_x, pos_y
+        scoped_variable_port_v.handle.pos = port_meta['rel_pos']
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)
 
