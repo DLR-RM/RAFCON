@@ -147,6 +147,34 @@ class MenuBarController(ExtendedController):
                 return
 
         logger.debug("Saving state machine to {0}".format(save_path))
+
+        all_tabs = self.states_editor_ctrl.tabs.values()
+        all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
+        dirty_source_editors = [tab_dict['controller'] for tab_dict in all_tabs if tab_dict['source_code_view_is_dirty'] is True
+                                and tab_dict['state_m'].state.get_sm_for_state().state_machine_id == state_machine_m.state_machine.state_machine_id]
+        print "dirty states are ", [ctrl.model.state.name for ctrl in dirty_source_editors]
+
+        for dirty_source_editor in dirty_source_editors:
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id == 42:
+                    widget.destroy()
+                    dirty_source_editor.get_controller('source_ctrl').apply_clicked(None)
+                    logger.debug("Source script in editing stored before saving")
+
+                elif response_id == 43:
+                    logger.debug("Source script in editing is ignored while saving")
+                    widget.destroy()
+
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            message_string = "Are you sure you want to store the state machine without storing source Code in editing?\n\n" \
+                             "The changes of state: %s name: %s have to be stored or ignored while saving. " % \
+                             (dirty_source_editor.model.state.get_path(), dirty_source_editor.model.state.name)
+            dialog.set_markup(message_string)
+            dialog.add_button("Store", 42)
+            dialog.add_button("Ignore", 43)
+            dialog.grab_focus()
+            dialog.finalize(on_message_dialog_response_signal)
+
         global_storage.save_statemachine_as_yaml(
             self.model.get_selected_state_machine_model().state_machine,
             self.model.get_selected_state_machine_model().state_machine.file_system_path,
@@ -189,7 +217,10 @@ class MenuBarController(ExtendedController):
         if force:
             self.refresh_libs_and_statemachines()
         else:
-            if state_machine_manager.has_dirty_state_machine():
+            all_tabs = self.states_editor_ctrl.tabs.values()
+            all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
+            dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if tab_dict['source_code_view_is_dirty'] is True]
+            if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
 
                 def on_message_dialog_response_signal(widget, response_id):
                     if response_id == 42:
@@ -200,11 +231,13 @@ class MenuBarController(ExtendedController):
 
                 dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
                 message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
-                                 "The following state machines have been modified and not saved. "\
+                                 "The following elements have been modified and not saved. "\
                                  "These changes will get lost:"
                 for sm_id, sm in state_machine_manager.state_machines.iteritems():
                     if sm.marked_dirty:
-                        message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
+                        message_string = "%s\nstate machine: #%s: %s " % (message_string, str(sm_id), sm.root_state.name)
+                for ctrl in dirty_source_editor:
+                    message_string = "%s\nstate source: %s: %s of sm_id: #%s" % (message_string, ctrl.model.state.get_path(), ctrl.model.state.name, str(ctrl.model.state.get_sm_for_state().state_machine_id))
                 dialog.set_markup(message_string)
                 dialog.add_button("Reload anyway", 42)
                 dialog.add_button("Cancel", 43)
