@@ -239,13 +239,23 @@ class StatesEditorController(ExtendedController):
         if state_identifier in self.closed_tabs:
             state_editor_ctrl = self.closed_tabs[state_identifier]['controller']
             state_editor_view = state_editor_ctrl.view
+            handler_id = self.closed_tabs[state_identifier]['source_code_changed_handler_id']
+            source_code_view_is_dirty = self.closed_tabs[state_identifier]['source_code_view_is_dirty']
+            del self.closed_tabs[state_identifier]  # pages not in self.closed_tabs and self.tabs at the same time
         else:
             state_editor_view = StateEditorView()
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
+            if state_editor_ctrl.get_controller('source_ctrl'):
+                handler_id = state_editor_view['source_view'].get_buffer().connect('changed', self.script_text_changed, state_m)
+            else:
+                handler_id = None
             self.add_controller(state_identifier, state_editor_ctrl)
+            source_code_view_is_dirty = False
 
         tab_label_text = self.get_state_tab_name(state_m)
         tab_label_text_trimmed = limit_tab_label_text(tab_label_text)
+        if source_code_view_is_dirty:
+            tab_label_text_trimmed += '*'
 
         (tab, inner_label, sticky_button) = create_tab_header(tab_label_text_trimmed, self.on_tab_close_clicked,
                                                               self.on_toggle_sticky_clicked, state_m)
@@ -263,8 +273,42 @@ class StatesEditorController(ExtendedController):
         self.view.notebook.show()
         self.tabs[state_identifier] = {'page': page, 'state_m': state_m,
                                        'controller': state_editor_ctrl, 'sm_id': self.__my_selected_state_machine_id,
-                                       'is_sticky': False}
+                                       'is_sticky': False,
+                                       'source_code_view_is_dirty': source_code_view_is_dirty,
+                                       'source_code_changed_handler_id': handler_id}
         return page_id
+
+    def script_text_changed(self, source, state_m):
+        state_identifier = self.get_state_identifier(state_m)
+        if state_identifier in self.tabs:
+            tab_list = self.tabs
+        elif state_identifier in self.closed_tabs:
+            tab_list = self.closed_tabs
+        else:
+            logger.warning('It was tried to check a source script of a state with no state-editor')
+            return
+        if tab_list[state_identifier]['controller'].get_controller('source_ctrl') is None:
+            logger.warning('It was tried to check a source script of a state with no source-editor')
+        tbuffer = tab_list[state_identifier]['controller'].get_controller('source_ctrl').view.get_buffer()
+        current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        old_is_dirty = tab_list[state_identifier]['source_code_view_is_dirty']
+        if state_m.state.script.script == current_text:
+            tab_list[state_identifier]['source_code_view_is_dirty'] = False
+        else:
+            tab_list[state_identifier]['source_code_view_is_dirty'] = True
+        if old_is_dirty is not tab_list[state_identifier]['source_code_view_is_dirty']:
+            self.update_tab_label(state_m)
+
+    def destroy_page(self, tab_dict):
+        """ Destroys desired page
+        Disconnects the page from signals and removes interconnection to parent-controller or observables.
+        :param tab_dict: Tab-dictionary that holds all necessary information of a page and state-editor.
+        """
+        logger.info("destroy page %s" % tab_dict['controller'].model.state.get_path())
+        if tab_dict['source_code_changed_handler_id'] is not None:
+            tab_dict['controller'].view['source_view'].get_buffer().disconnect(tab_dict['source_code_changed_handler_id'])
+        self.remove_controller(tab_dict['controller'])
+        # tab_dict['controller'].view.get_top_widget().destroy()
 
     def close_page(self, state_identifier, delete=True):
         """Closes the desired page
@@ -276,7 +320,7 @@ class StatesEditorController(ExtendedController):
         """
         # delete old controller references
         if delete and state_identifier in self.closed_tabs:
-            self.remove_controller(self.closed_tabs[state_identifier]['controller'])
+            self.destroy_page(self.closed_tabs[state_identifier])
             del self.closed_tabs[state_identifier]
 
         # check for open page of state
@@ -285,10 +329,9 @@ class StatesEditorController(ExtendedController):
             current_page_id = self.view.notebook.page_num(page_to_close)
             self.view.notebook.remove_page(current_page_id)
             if not delete:
-                controller = self.tabs[state_identifier]['controller']
-                self.closed_tabs[state_identifier] = {'controller': controller}
+                self.closed_tabs[state_identifier] = self.tabs[state_identifier]
             else:
-                self.remove_controller(self.tabs[state_identifier]['controller'])
+                self.destroy_page(self.tabs[state_identifier])
             del self.tabs[state_identifier]
 
     def find_page_of_state_m(self, state_m):
@@ -507,7 +550,9 @@ class StatesEditorController(ExtendedController):
         page = self.tabs[state_identifier]['page']
         tab_label_text = self.get_state_tab_name(state_m)
         tab_label_text_trimmed = limit_tab_label_text(tab_label_text)
-        page.title_label.set_text(limit_tab_label_text(tab_label_text_trimmed))
+        if self.tabs[state_identifier]['source_code_view_is_dirty']:
+            tab_label_text_trimmed += '*'
+        page.title_label.set_text(tab_label_text_trimmed)
         page.title_label.set_tooltip_text(tab_label_text)
 
     def get_state_identifier_for_page(self, page):
