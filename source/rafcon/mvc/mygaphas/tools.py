@@ -97,7 +97,7 @@ class MoveItemTool(ItemTool):
                 state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
             elif isinstance(inmotion.item, NameView):
                 state_m = self.view.canvas.get_parent(inmotion.item).model
-                state_m.meta['name']['gui']['editor_gaphas']['rel_pos'] = rel_pos
+                state_m.meta['gui']['editor_gaphas']['rel_pos']['name'] = rel_pos
 
         if isinstance(self._item, StateView):
             self._item.moving = False

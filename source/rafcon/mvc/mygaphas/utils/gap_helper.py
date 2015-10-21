@@ -285,28 +285,39 @@ def update_port_position_meta_data(graphical_editor_view, item, handle):
 
     :param graphical_editor_view: Graphical Editor the change occurred in
     :param item: State the port was moved in
-    :param handle: Handle of moved port
+    :param handle: Handle of moved port or None if all ports are to be updated
     """
     from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
         ScopedVariablePortView
-    rel_pos = (handle.pos.x.value, handle.pos.y.value)
-    port_meta = None
     for port in item.get_all_ports():
-        if handle is port.handle:
+        if not handle or handle is port.handle:
             if isinstance(port, IncomeView):
-                port_meta = item.model.meta['income']['gui']['editor_gaphas']
+                port_m = item.model
             elif isinstance(port, OutcomeView):
-                port_meta = item.model.meta['outcome%d' % port.outcome_id]['gui']['editor_gaphas']
-            elif isinstance(port, InputPortView):
-                port_meta = item.model.meta['input%d' % port.port_id]['gui']['editor_gaphas']
-            elif isinstance(port, OutputPortView):
-                port_meta = item.model.meta['output%d' % port.port_id]['gui']['editor_gaphas']
+                port_m = port.outcome_m
+            elif isinstance(port, (InputPortView, OutputPortView)):
+                port_m = port.port_m
             elif isinstance(port, ScopedVariablePortView):
-                port_meta = item.model.meta['scoped%d' % port.port_id]['gui']['editor_gaphas']
-            break
-    if rel_pos != port_meta['rel_pos']:
-        port_meta['rel_pos'] = rel_pos
-        graphical_editor_view.emit('meta_data_changed', item.model, "position", True)
+                port_m = port.model
+            else:
+                continue
+
+            port_meta = port_m.meta['gui']['editor_gaphas']
+            if isinstance(port, IncomeView):
+                port_meta = port_meta['income']
+
+            rel_pos = (port.handle.pos.x.value, port.handle.pos.y.value)
+            print "port", port_m, rel_pos, port_meta['rel_pos']
+            if rel_pos != port_meta['rel_pos']:
+                port_meta['rel_pos'] = rel_pos
+                if handle:
+                    if isinstance(port, IncomeView):
+                        graphical_editor_view.emit('meta_data_changed', port_m, "income_position", True)
+                    else:
+                        graphical_editor_view.emit('meta_data_changed', port_m, "position", True)
+
+            if handle:  # If we were supposed to update the meta data of a specific port, we can stop here
+                break
 
 
 def update_meta_data_for_resized_item(graphical_editor_view, item, affects_children=False, publish=True):
@@ -330,8 +341,7 @@ def update_meta_data_for_resized_item(graphical_editor_view, item, affects_child
         meta_opengl = item.model.meta['gui']['editor_opengl']
 
         # Update all port meta data to match with new position and size of parent
-        for port in state_v.get_all_ports():
-            update_port_position_meta_data(graphical_editor_view, state_v, port.handle)
+        update_port_position_meta_data(graphical_editor_view, state_v, None)
 
         if affects_children:
             for transition_v in state_v.get_transitions():
@@ -343,7 +353,7 @@ def update_meta_data_for_resized_item(graphical_editor_view, item, affects_child
         state_v = graphical_editor_view.editor.canvas.get_parent(item)
         assert isinstance(state_v, StateView)
 
-        meta_gaphas = state_v.model.meta['name']['gui']['editor_gaphas']
+        meta_gaphas = state_v.model.meta['gui']['editor_gaphas']['name']
 
     rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, item, item.handles()[NW])
 
