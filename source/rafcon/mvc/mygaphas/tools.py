@@ -86,6 +86,20 @@ class MoveItemTool(ItemTool):
         return True
 
     def on_button_release(self, event):
+
+        for inmotion in self._movable_items:
+            inmotion.move((event.x, event.y))
+            rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
+                                                        inmotion.item.handles()[NW])
+            if isinstance(inmotion.item, StateView):
+                state_m = inmotion.item.model
+                state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
+                state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
+            elif isinstance(inmotion.item, NameView):
+                state_m = self.view.canvas.get_parent(inmotion.item).model
+                state_m.meta['name']['gui']['editor_gaphas']['rel_pos'] = rel_pos
+                state_m.meta['name']['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
+
         if isinstance(self._item, StateView):
             self._item.moving = False
             self.view.canvas.request_update(self._item)
@@ -119,16 +133,6 @@ class MoveItemTool(ItemTool):
 
             for inmotion in self._movable_items:
                 inmotion.move((event.x, event.y))
-                rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
-                                                            inmotion.item.handles()[NW])
-                if isinstance(inmotion.item, StateView):
-                    state_m = inmotion.item.model
-                    state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
-                    state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
-                elif isinstance(inmotion.item, NameView):
-                    state_m = self.view.canvas.get_parent(inmotion.item).model
-                    state_m.meta['name']['gui']['editor_gaphas']['rel_pos'] = rel_pos
-                    state_m.meta['name']['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
 
             return True
 

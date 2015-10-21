@@ -1362,6 +1362,13 @@ class GraphicalEditorController(ExtendedController):
 
         # Use default values if no size information is stored
         if not isinstance(state_meta['size'], tuple):
+            if isinstance(state_m, LibraryStateModel):
+                # Try to get size from library (will later be resized to fit in state
+                lib_size = state_m.state_copy.meta['gui']['editor_opengl']['size']
+                if isinstance(lib_size, tuple):
+                    state_meta['size'] = lib_size
+                else:
+                    state_meta['size'] = size
             state_meta['size'] = size
 
         size = state_meta['size']
@@ -1483,11 +1490,8 @@ class GraphicalEditorController(ExtendedController):
 
         elif isinstance(state_m, LibraryStateModel):
             lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
-            lib_size_has_changed = isinstance(lib_state_meta['size'], tuple) and \
-                state_meta['size'] != lib_state_meta['size']
 
-            if is_first_draw_of_state or state_m.meta['gui']['show_content'] is True or \
-                    lib_size_has_changed or is_child_of_library:
+            if is_first_draw_of_state or state_m.meta['gui']['show_content'] is True or is_child_of_library:
                 # First draw inner states to generate meta data
                 self.draw_state(state_m.state_copy, (0, 0), size, depth)
 
@@ -1496,12 +1500,16 @@ class GraphicalEditorController(ExtendedController):
                     state_temp['library_level'] = 1
 
                 # Resize inner states of library states if not done before or if meta data has changed
-                if lib_size_has_changed:
-                    parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
-                    new_size = calculate_size(lib_state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
+                parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
+                if is_first_draw_of_state:
+                    if state_meta['size'][0] > parent_size[0] or state_meta['size'][1] > parent_size[1]:
+                        target_size = parent_size[0] / 5., parent_size[1] / 5.
+                    else:
+                        target_size = copy(state_meta['size'])
+                    new_size = calculate_size(state_meta['size'], target_size)
                     new_size = new_size[0], -new_size[1]  # inverted y axis
                     new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
-                    self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
+                    self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=False, resize_content=True,
                                        redraw=False)
                     state_meta['size'] = lib_state_meta['size']
                     redraw = True

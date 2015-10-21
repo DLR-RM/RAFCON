@@ -209,7 +209,7 @@ class PortView(object):
                 self._draw_simple_state_port(c, direction, side_length, fill_color, transparent)
 
             # Copy image surface to current cairo context
-            self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
+            self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
             self.draw_name(context, transparent, value)
@@ -278,7 +278,7 @@ class PortView(object):
 
             # Copy image surface to current cairo context
             upper_left_corner = (self.pos[0] + relative_pos[0], self.pos[1] + relative_pos[1])
-            self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
+            self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
     def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
         """Draw the port of a simple state (ExecutionState, LibraryState)
@@ -622,7 +622,7 @@ class ScopedVariablePortView(PortView):
             # Copy image surface to current cairo context
             center_pos = self._get_port_center_position(name_size[0])
             upper_left_corner = center_pos[0] - port_size[0] / 2., center_pos[1] - port_size[1] / 2.
-            self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
+            self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
     def draw_name(self, context, transparency, only_calculate_size=False):
         """Draws the name of the port

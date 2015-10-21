@@ -293,7 +293,7 @@ class StateView(Element):
             c.stroke()
 
             # Copy image surface to current cairo context
-            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
+            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
         self._income.port_side_size = self.port_side_size
         self._income.draw(context, self)
@@ -755,4 +755,4 @@ class NameView(Element):
             c.show_layout(layout)
 
             # Copy image surface to current cairo context
-            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, current_zoom)
+            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)

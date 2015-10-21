@@ -54,20 +54,20 @@ class KeepRectangleWithinConstraint(Constraint):
             child_height = parent_height - 2 * self.margin
         # Left edge (west)
         if self.parent_nw[0].value > self.child_nw[0].value - self.margin:
-            self.child_nw[0].value = self.parent_nw[0].value + self.margin
-            self.child_se[0].value = self.child_nw[0].value + child_width
+            _update(self.child_nw[0], self.parent_nw[0].value + self.margin)
+            _update(self.child_se[0], self.child_nw[0].value + child_width)
         # Right edge (east)
         if self.parent_se[0].value < self.child_se[0].value + self.margin:
-            self.child_se[0].value = self.parent_se[0].value - self.margin
-            self.child_nw[0].value = self.child_se[0].value - child_width
+            _update(self.child_se[0], self.parent_se[0].value - self.margin)
+            _update(self.child_nw[0], self.child_se[0].value - child_width)
         # Upper edge (north)
         if self.parent_nw[1].value > self.child_nw[1].value - self.margin:
-            self.child_nw[1].value = self.parent_nw[1].value + self.margin
-            self.child_se[1].value = self.child_nw[1].value + child_height
+            _update(self.child_nw[1], self.parent_nw[1].value + self.margin)
+            _update(self.child_se[1], self.child_nw[1].value + child_height)
         # Lower edge (south)
         if self.parent_se[1].value < self.child_se[1].value + self.margin:
-            self.child_se[1].value = self.parent_se[1].value - self.margin
-            self.child_nw[1].value = self.child_se[1].value - child_height
+            _update(self.child_se[1], self.parent_se[1].value - self.margin)
+            _update(self.child_nw[1], self.child_se[1].value - child_height)
 
 
 class KeepPointWithinConstraint(KeepRectangleWithinConstraint):
@@ -95,8 +95,8 @@ class KeepRelativePositionConstraint(Constraint):
         self._dy = point.y.value - anchor.y.value
 
     def solve_for(self, var):
-        self.point.x = self._dx + self.anchor.x.value
-        self.point.y = self._dy + self.anchor.y.value
+        _update(self.point.x, self._dx + self.anchor.x)
+        _update(self.point.y, self._dy + self.anchor.y)
 
 
 class KeepPortDistanceConstraint(Constraint):
@@ -115,17 +115,17 @@ class KeepPortDistanceConstraint(Constraint):
     def solve_for(self, var):
         distance = self.distance
         if self.port.side is SnappedSide.TOP:
-            self.point[0].value = self.anchor[0]
-            self.point[1].value = self.anchor[1].value - distance if self.incoming else self.anchor[1].value + distance
+            _update(self.point[0], self.anchor[0])
+            _update(self.point[1], self.anchor[1].value - distance if self.incoming else self.anchor[1].value + distance)
         elif self.port.side is SnappedSide.BOTTOM:
-            self.point[0].value = self.anchor[0]
-            self.point[1].value = self.anchor[1].value + distance if self.incoming else self.anchor[1].value - distance
+            _update(self.point[0], self.anchor[0])
+            _update(self.point[1], self.anchor[1].value + distance if self.incoming else self.anchor[1].value - distance)
         elif self.port.side is SnappedSide.LEFT:
-            self.point[0].value = self.anchor[0].value - distance if self.incoming else self.anchor[0].value + distance
-            self.point[1].value = self.anchor[1]
+            _update(self.point[0], self.anchor[0].value - distance if self.incoming else self.anchor[0].value + distance)
+            _update(self.point[1], self.anchor[1])
         elif self.port.side is SnappedSide.RIGHT:
-            self.point[0].value = self.anchor[0].value + distance if self.incoming else self.anchor[0].value - distance
-            self.point[1].value = self.anchor[1]
+            _update(self.point[0], self.anchor[0].value + distance if self.incoming else self.anchor[0].value - distance)
+            _update(self.point[1], self.anchor[1])
 
 
 class PortRectConstraint(Constraint):
