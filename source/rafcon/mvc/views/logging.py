@@ -52,7 +52,9 @@ class LoggingView(View):
         clear_item.show()
 
     def _clear_buffer(self, widget, data=None):
-        self.update_filtered_buffer()
+        self._log_entries = []
+        self.print_filtered_buffer()
+        self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
 
     def print_message(self, message, log_level, new=True):
         self._lock.acquire()
