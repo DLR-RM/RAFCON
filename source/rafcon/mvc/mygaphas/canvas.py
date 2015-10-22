@@ -11,3 +11,11 @@ class MyCanvas(Canvas):
         """Return first registered view object
         """
         return next(iter(self._registered_views))
+
+    def get_view_for_model(self, model):
+        from rafcon.mvc.mygaphas.items.state import StateView
+        from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
+        for item in self.get_all_items():
+            if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.model is model:
+                return item
+        return None
