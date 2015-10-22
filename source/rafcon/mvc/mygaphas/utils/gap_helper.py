@@ -261,7 +261,7 @@ def convert_handles_pos_list_to_rel_pos_list(canvas, transition):
     return rel_pos_list
 
 
-def update_transition_waypoints(graphical_editor_view, transition_v, last_waypoint_list):
+def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, last_waypoint_list):
     """This method updates the relative position meta data of the transitions waypoints if they changed
 
     :param graphical_editor_view: Graphical Editor the change occurred in
@@ -280,7 +280,7 @@ def update_transition_waypoints(graphical_editor_view, transition_v, last_waypoi
         graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
 
 
-def update_port_position_meta_data(graphical_editor_view, item, handle):
+def update_meta_data_for_port(graphical_editor_view, item, handle):
     """This method updates the meta data of the states ports if they changed.
 
     :param graphical_editor_view: Graphical Editor the change occurred in
@@ -307,7 +307,6 @@ def update_port_position_meta_data(graphical_editor_view, item, handle):
                 port_meta = port_meta['income']
 
             rel_pos = (port.handle.pos.x.value, port.handle.pos.y.value)
-            print "port", port_m, rel_pos, port_meta['rel_pos']
             if rel_pos != port_meta['rel_pos']:
                 port_meta['rel_pos'] = rel_pos
                 if handle:
@@ -320,49 +319,54 @@ def update_port_position_meta_data(graphical_editor_view, item, handle):
                 break
 
 
-def update_meta_data_for_resized_item(graphical_editor_view, item, affects_children=False, publish=True):
-    """This method updates the meta data of state and name views.
+def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
+    """This method updates the meta data of a name view.
 
-    :param graphical_editor_view: Graphical Editor the change occurred in
-    :param item: The item which has been changed/moved (either a StateView or NameView)
-    :param affects_children: Whether the children of the item have been resized or not
+    :param graphical_editor_view: Graphical Editor view the change occurred in
+    :param name_v: The name view which has been changed/moved
     :param publish: Whether to publish the changes of the meta data
     """
     from gaphas.item import NW
-    from rafcon.mvc.mygaphas.items.state import StateView, NameView
 
-    meta_gaphas = None
-    meta_opengl = None
+    rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, name_v, name_v.handles()[NW])
 
-    if isinstance(item, StateView):
-        state_v = item
-        # If handle for state resize was pulled
-        meta_gaphas = item.model.meta['gui']['editor_gaphas']
-        meta_opengl = item.model.meta['gui']['editor_opengl']
-
-        # Update all port meta data to match with new position and size of parent
-        update_port_position_meta_data(graphical_editor_view, state_v, None)
-
-        if affects_children:
-            for transition_v in state_v.get_transitions():
-                update_transition_waypoints(graphical_editor_view, transition_v, None)
-            for child_state_v in state_v.child_state_vs:
-                update_meta_data_for_resized_item(graphical_editor_view, child_state_v, True, publish=False)
-
-    elif isinstance(item, NameView):
-        state_v = graphical_editor_view.editor.canvas.get_parent(item)
-        assert isinstance(state_v, StateView)
-
-        meta_gaphas = state_v.model.meta['gui']['editor_gaphas']['name']
-
-    rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, item, item.handles()[NW])
-
-    if meta_gaphas:
-        meta_gaphas['size'] = (item.width, item.height)
-        meta_gaphas['rel_pos'] = rel_pos
-    if meta_opengl:
-        meta_opengl['size'] = (item.width, item.height)
-        meta_opengl['rel_pos'] = (rel_pos[0], -rel_pos[1])
+    state_v = graphical_editor_view.editor.canvas.get_parent(name_v)
+    meta_gaphas = state_v.model.meta['gui']['editor_gaphas']['name']
+    meta_gaphas['size'] = (name_v.width, name_v.height)
+    meta_gaphas['rel_pos'] = rel_pos
 
     if publish:
-        graphical_editor_view.emit('meta_data_changed', item.model, "size", affects_children)
+        graphical_editor_view.emit('meta_data_changed', state_v.model, "name_size", False)
+
+
+def update_meta_data_for_state_view(graphical_editor_view, state_v, affects_children=False, publish=True):
+    """This method updates the meta data of a state view
+
+    :param graphical_editor_view: Graphical Editor view the change occurred in
+    :param state_v: The state view which has been changed/moved
+    :param affects_children: Whether the children of the state view have been resized or not
+    :param publish: Whether to publish the changes of the meta data
+    """
+    from gaphas.item import NW
+
+    # Update all port meta data to match with new position and size of parent
+    update_meta_data_for_port(graphical_editor_view, state_v, None)
+
+    if affects_children:
+        update_meta_data_for_name_view(graphical_editor_view, state_v.name_view, publish=False)
+        for transition_v in state_v.get_transitions():
+            update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, None)
+        for child_state_v in state_v.child_state_vs:
+            update_meta_data_for_state_view(graphical_editor_view, child_state_v, True, publish=False)
+
+    rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, state_v, state_v.handles()[NW])
+
+    meta_gaphas = state_v.model.meta['gui']['editor_gaphas']
+    meta_opengl = state_v.model.meta['gui']['editor_opengl']
+    meta_gaphas['size'] = (state_v.width, state_v.height)
+    meta_gaphas['rel_pos'] = rel_pos
+    meta_opengl['size'] = (state_v.width, state_v.height)
+    meta_opengl['rel_pos'] = (rel_pos[0], -rel_pos[1])
+
+    if publish:
+        graphical_editor_view.emit('meta_data_changed', state_v.model, "size", affects_children)

@@ -97,12 +97,12 @@ class MoveItemTool(ItemTool):
                 state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
             elif isinstance(inmotion.item, NameView):
                 state_m = self.view.canvas.get_parent(inmotion.item).model
-                state_m.meta['gui']['editor_gaphas']['rel_pos']['name'] = rel_pos
+                state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] = rel_pos
 
         if isinstance(self._item, StateView):
             self._item.moving = False
             self.view.canvas.request_update(self._item)
-            self._graphical_editor_view.emit('meta_data_changed', self._item.model, "Move state", True)
+            self._graphical_editor_view.emit('meta_data_changed', self._item.model, "position", True)
 
             self._item = None
 
@@ -110,7 +110,7 @@ class MoveItemTool(ItemTool):
 
         if isinstance(self.view.focused_item, NameView):
             self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model,
-                                             "Move name", False)
+                                             "name_position", False)
 
         return super(MoveItemTool, self).on_button_release(event)
 
@@ -289,16 +289,20 @@ class HandleMoveTool(HandleTool):
 
         # Check, whether a transition waypoint was moved
         if isinstance(connection_v, TransitionView):
-            gap_helper.update_transition_waypoints(self._graphical_editor_view, connection_v, self._waypoint_list)
+            gap_helper.update_meta_data_for_transition_waypoints(self._graphical_editor_view, connection_v,
+                                                                 self._waypoint_list)
 
-        if isinstance(self.grabbed_item, (StateView, NameView)):
+        if isinstance(self.grabbed_item, NameView):
+            gap_helper.update_meta_data_for_name_view(self._graphical_editor_view, self.grabbed_item)
+
+        elif isinstance(self.grabbed_item, StateView):
             only_ports = self.grabbed_handle not in self.grabbed_item.corner_handles
             if only_ports:
-                gap_helper.update_port_position_meta_data(self._graphical_editor_view, self.grabbed_item,
-                                                          self.grabbed_handle)
+                gap_helper.update_meta_data_for_port(self._graphical_editor_view, self.grabbed_item,
+                                                     self.grabbed_handle)
             else:
-                gap_helper.update_meta_data_for_resized_item(self._graphical_editor_view, self.grabbed_item,
-                                                             self._child_resize)
+                gap_helper.update_meta_data_for_state_view(self._graphical_editor_view, self.grabbed_item,
+                                                           self._child_resize)
 
         # reset temp variables
         self._last_active_port = None
