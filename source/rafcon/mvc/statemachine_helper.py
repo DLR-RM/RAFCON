@@ -241,7 +241,7 @@ class StateMachineHelper():
                     orig_model_linkage_meta_data['data_flows'][data_flow.data_flow_id] = data_flow_m.meta
 
         # define which model references to hold for new state
-        refs_from_model = ['meta', 'input_data_ports', 'output_data_ports']
+        refs_from_model = ['meta', 'input_data_ports', 'output_data_ports', 'outcomes']
         if current_state_is_container and new_state_is_container:  # hold some additional references
             refs_from_model.extend(['states', 'transitions', 'data_flows', 'scoped_variables'])
 
@@ -278,11 +278,11 @@ class StateMachineHelper():
             # remember related external transitions and data flows
             connected_transitions = []
             connected_data_flows = []
-            for t_id, transition in orig_state.parent.transitions.iteritems():
+            for t_id, transition in parent_state.transitions.iteritems():
                 if transition.from_state == orig_state.state_id or transition.to_state == orig_state.state_id:
                     connected_transitions.append(transition)
 
-            for df_id, data_flow in orig_state.parent.data_flows.iteritems():
+            for df_id, data_flow in parent_state.data_flows.iteritems():
                 if data_flow.from_state == orig_state.state_id or data_flow.to_state == orig_state.state_id:
                     connected_data_flows.append(data_flow)
 
@@ -367,7 +367,8 @@ class StateMachineHelper():
             if prop_name == "states":
                 for state_m in new_state_m.states.itervalues():
                     state_m.parent = new_state_m
-            if prop_name in ['input_data_ports', 'output_data_ports', 'transitions', 'data_flows', 'scoped_variables']:
+            if prop_name in ['outcomes', 'input_data_ports', 'output_data_ports', 'transitions', 'data_flows',
+                             'scoped_variables']:
                 for model in new_state_m.__getattribute__(prop_name):
                     model.parent = new_state_m
 
