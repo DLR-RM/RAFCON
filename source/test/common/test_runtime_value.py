@@ -37,7 +37,7 @@ def test_runtime_values(caplog):
 
 
 def teardown_module(module=None):
-    test_utils.reload_config()
+    test_utils.reload_config(gui_config=False)
 
 
 if __name__ == '__main__':
