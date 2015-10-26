@@ -183,7 +183,6 @@ class DataPortListController(ExtendedController):
     def runtime_values_changed(self, model, prop_name, info):
         # handles cases for the library runtime values
         if "_input_runtime_value" in info.method_name and self.model is model:
-            print "##################################### check"
             if self.type == "input":
                 self.input_data_ports_changed(model, prop_name, info)
         elif "_output_runtime_value" in info.method_name and self.model is model:
@@ -292,7 +291,6 @@ class DataPortListController(ExtendedController):
             if isinstance(self.model.state, LibraryState):
                 # this always have to be true, as the runtime value column can only be edited
                 # if the use_runtime_value flag is True
-                print self.get_use_runtime_value_from_selection()
                 if self.get_use_runtime_value_from_selection():
                     if self.type == "input":
                         self.model.state.set_input_runtime_value(data_port_id, text)
