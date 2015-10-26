@@ -158,3 +158,17 @@ class StateEditorController(ExtendedController):
     def rename(self):
         state_overview_controller = self.get_controller('properties_ctrl')
         state_overview_controller.rename()
+
+    @ExtendedController.observe("state_type_changed_signal", signal=True)
+    def state_type_changed(self, model, prop_name, info):
+        """Reopen state editor when state type is changed
+
+        When the type of the observed state changes, a new model is created. The look of this controller'S view
+        depends on the kind of model. Therefore, we have to destroy this editor and open a new one with the new model.
+        """
+        from rafcon.mvc.singleton import main_window_controller
+        msg = info['arg']
+        new_state_m = msg.new_state_m
+        states_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl')
+        states_editor_ctrl.recreate_state_editor(self.model, new_state_m)
+

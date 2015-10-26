@@ -38,6 +38,8 @@ def state_to_state_model(state):
 MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_children', 'notification'])
 MetaSignalMsg.__new__.__defaults__ = (False, None)  # Make last two parameters optional
 
+StateTypeChangeSignalMsg = namedtuple('StateTypeChangeSignalMsg', ['new_state_m'])
+
 Notification = namedtuple('Notification', ['model', 'prop_name', 'info'])
 
 
@@ -58,8 +60,11 @@ class AbstractStateModel(ModelMT):
     input_data_ports = []
     output_data_ports = []
     meta_signal = Signal()
+    state_type_changed_signal = Signal()
 
-    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal")
+
+    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal",
+                       "state_type_changed_signal")
 
     def __init__(self, state, parent=None, meta=None):
         """Constructor
@@ -85,6 +90,8 @@ class AbstractStateModel(ModelMT):
         self.temp = Vividict()
 
         self.parent = parent
+
+        self.state_type_changed_signal = Signal()
 
         self.register_observer(self)
 

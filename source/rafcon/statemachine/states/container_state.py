@@ -239,9 +239,22 @@ class ContainerState(State):
         del self.states[state_id]
 
     @Observable.observed
-    def change_state_type(self, state_m, new_state_class):
+    def change_state_type(self, state, new_state_class):
         from rafcon.mvc.statemachine_helper import StateMachineHelper
-        return StateMachineHelper.change_state_type(state_m, new_state_class)
+
+        state_id = state.state_id
+
+        if state_id not in self.states:
+            raise ValueError("State '{0}' with id '{1}' does not exist".format(state.name, state_id))
+
+        new_state = StateMachineHelper.create_new_state_from_state_with_type(state, new_state_class)
+        new_state.parent = self
+
+        assert new_state.state_id == state_id
+
+        self.states[state_id] = new_state
+
+        return new_state
 
     # @Observable.observed
     def set_start_state(self, state):
