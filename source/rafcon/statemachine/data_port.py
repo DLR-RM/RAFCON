@@ -27,7 +27,9 @@ class DataPort(StateElement):
         super(DataPort, self).__init__()
 
         if data_port_id is None:
-            self._data_port_id = generate_data_port_id()
+            self._data_port_id = generate_data_port_id([])
+            logger.warn("Look out: Instantiation of a data port without specifying its id is not recommended! The "
+                        "add_data_port* functions of the State/ContainerState class should be used!")
         else:
             self._data_port_id = data_port_id
 

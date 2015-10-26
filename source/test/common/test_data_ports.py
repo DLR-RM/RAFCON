@@ -135,4 +135,6 @@ def test_unique_port_names(caplog):
 
 
 if __name__ == '__main__':
+    # test_default_values_of_data_ports(None)
+    # test_unique_port_names(None)
     pytest.main([__file__])

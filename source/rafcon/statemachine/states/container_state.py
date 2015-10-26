@@ -527,7 +527,11 @@ class ContainerState(State):
         :return: the unique id of the added scoped variable
         """
         if scoped_variable_id is None:
-            scoped_variable_id = generate_data_flow_id()
+            # input data port, output data port and scoped variable ids has to passed to the id generation as
+            # the data port id has to be unique inside a state
+            scoped_variable_id = generate_data_port_id(self._scoped_variables.keys() +
+                                                       self._input_data_ports.keys() +
+                                                       self._output_data_ports.keys())
         self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value,
                                                                     scoped_variable_id, self)
 
@@ -614,6 +618,7 @@ class ContainerState(State):
         result_dict = {}
 
         tmp_dict = self.get_default_input_values_for_state(state)
+
         result_dict.update(tmp_dict)
 
         for input_port_key, value in state.input_data_ports.iteritems():
@@ -627,6 +632,7 @@ class ContainerState(State):
                             result_dict[value.name] = copy.deepcopy(self.scoped_data[key].value)
                         else:  # if there is not value for the data port specified, take the default value
                             result_dict[value.name] = value.default_value
+
         return result_dict
 
     # ---------------------------------------------------------------------------------------------

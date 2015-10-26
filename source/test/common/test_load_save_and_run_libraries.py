@@ -166,6 +166,7 @@ def test_save_nested_library_state(caplog):
 
 def test_nested_library_state_machine(caplog):
     test_utils.test_multithrading_lock.acquire()
+    # TODO: the library_manager is initialized a second time here
     rafcon.statemachine.singleton.library_manager.initialize()
     nested_library_state = LibraryState("test_libraries", "library_with_nested_library", "0.1",
                                         "nested_library_state_name", "nested_library_state_id")

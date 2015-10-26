@@ -54,7 +54,7 @@ def test_create_state(caplog):
     state2 = ExecutionState(name="State2", state_id=state1.state_id)
 
     # This should work, as data_type and default_value are optional parameters
-    port = InputDataPort('input')
+    port = InputDataPort('input', data_port_id=99)
 
     with raises(AttributeError):
         # The name of the port differs in key and class member
@@ -223,4 +223,7 @@ def test_port_and_outcome_removal(caplog):
 
 
 if __name__ == '__main__':
+    # test_create_state(None)
+    # test_port_and_outcome_removal(None)
+    # test_create_container_state(None)
     pytest.main([__file__])

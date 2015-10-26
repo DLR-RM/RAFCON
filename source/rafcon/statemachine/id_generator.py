@@ -18,7 +18,6 @@ STATE_ID_LENGTH = 6
 state_machine_id_counter = 0
 transition_id_counter = 0
 data_flow_id_counter = 0
-data_port_id_counter = 0
 script_id_counter = 0
 
 used_state_ids = []
@@ -34,6 +33,7 @@ def generate_state_machine_id():
     state_machine_id_counter += 1
     return state_machine_id_counter
 
+
 # As the id generation for the next functions is identical to the one above, the comments are omitted.
 def generate_transition_id():
     global transition_id_counter
@@ -48,19 +48,21 @@ def generate_data_flow_id():
 
 
 # outcome id will start with value 0
-def generate_outcome_id(used_outcomes_list):
+def generate_outcome_id(used_outcome_ids):
     outcome_id_counter = -1
-    outcome_found = False
-    while not outcome_found:
+    while True:
         outcome_id_counter += 1
-        if outcome_id_counter not in used_outcomes_list:
+        if outcome_id_counter not in used_outcome_ids:
             break
     return outcome_id_counter
 
 
-def generate_data_port_id():
-    global data_port_id_counter
-    data_port_id_counter += 1
+def generate_data_port_id(used_data_port_ids):
+    data_port_id_counter = -1
+    while True:
+        data_port_id_counter += 1
+        if data_port_id_counter not in used_data_port_ids:
+            break
     return data_port_id_counter
 
 

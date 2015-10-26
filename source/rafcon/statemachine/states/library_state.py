@@ -35,8 +35,8 @@ class LibraryState(State):
     def __init__(self, library_path=None, library_name=None, version=None,  # library state specific attributes
                  # the following are the container state specific attributes
                  name=None, state_id=None, outcomes=None,
-                 input_data_port_runtime_values={}, use_runtime_value_input_data_ports={},
-                 output_data_port_runtime_values={}, use_runtime_value_output_data_ports={}):
+                 input_data_port_runtime_values=None, use_runtime_value_input_data_ports=None,
+                 output_data_port_runtime_values=None, use_runtime_value_output_data_ports=None):
 
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
@@ -268,7 +268,7 @@ class LibraryState(State):
             for idp_id, input_data_port in dict_representation['input_data_ports'].iteritems():
                 input_data_port_runtime_values[idp_id] = input_data_port.default_value
                 use_runtime_value_input_data_ports[idp_id] = True
-            
+
             for odp_id, output_data_port in dict_representation['output_data_ports'].iteritems():
                 output_data_port_runtime_values[odp_id] = output_data_port.default_value
                 use_runtime_value_output_data_ports[odp_id] = True
@@ -356,9 +356,12 @@ class LibraryState(State):
     @input_data_port_runtime_values.setter
     @Observable.observed
     def input_data_port_runtime_values(self, input_data_port_runtime_values):
-        if not isinstance(input_data_port_runtime_values, dict):
-            raise TypeError("input_data_port_runtime_values must be of type dict")
-        self._input_data_port_runtime_values = input_data_port_runtime_values
+        if not input_data_port_runtime_values:
+            self._input_data_port_runtime_values = {}
+        else:
+            if not isinstance(input_data_port_runtime_values, dict):
+                raise TypeError("input_data_port_runtime_values must be of type dict")
+            self._input_data_port_runtime_values = input_data_port_runtime_values
 
     @property
     def use_runtime_value_input_data_ports(self):
@@ -370,9 +373,12 @@ class LibraryState(State):
     @use_runtime_value_input_data_ports.setter
     @Observable.observed
     def use_runtime_value_input_data_ports(self, use_runtime_value_input_data_ports):
-        if not isinstance(use_runtime_value_input_data_ports, dict):
-            raise TypeError("use_runtime_value_input_data_ports must be of type dict")
-        self._use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
+        if not use_runtime_value_input_data_ports:
+            self._use_runtime_value_input_data_ports = {}
+        else:
+            if not isinstance(use_runtime_value_input_data_ports, dict):
+                raise TypeError("use_runtime_value_input_data_ports must be of type dict")
+            self._use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
 
     @property
     def output_data_port_runtime_values(self):
@@ -384,9 +390,12 @@ class LibraryState(State):
     @output_data_port_runtime_values.setter
     @Observable.observed
     def output_data_port_runtime_values(self, output_data_port_runtime_values):
-        if not isinstance(output_data_port_runtime_values, dict):
-            raise TypeError("output_data_port_runtime_values must be of type dict")
-        self._output_data_port_runtime_values = output_data_port_runtime_values
+        if not output_data_port_runtime_values:
+            self._output_data_port_runtime_values = {}
+        else:
+            if not isinstance(output_data_port_runtime_values, dict):
+                raise TypeError("output_data_port_runtime_values must be of type dict")
+            self._output_data_port_runtime_values = output_data_port_runtime_values
 
     @property
     def use_runtime_value_output_data_ports(self):
@@ -398,9 +407,12 @@ class LibraryState(State):
     @use_runtime_value_output_data_ports.setter
     @Observable.observed
     def use_runtime_value_output_data_ports(self, use_runtime_value_output_data_ports):
-        if not isinstance(use_runtime_value_output_data_ports, dict):
-            raise TypeError("use_runtime_value_output_data_ports must be of type dict")
-        self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
+        if not use_runtime_value_output_data_ports:
+            self._use_runtime_value_output_data_ports = {}
+        else:
+            if not isinstance(use_runtime_value_output_data_ports, dict):
+                raise TypeError("use_runtime_value_output_data_ports must be of type dict")
+            self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
 
     @staticmethod
     def copy_state(source_state):
