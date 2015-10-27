@@ -60,7 +60,9 @@ class StateModel(AbstractStateModel):
             # do not track the active flag when marking the sm dirty
             pass
         else:
-            self._mark_state_machine_as_dirty()
+            # if the state_execution state is changed the sm must not be marked dirty
+            if info["method_name"] != "state_execution_status":
+                self._mark_state_machine_as_dirty()
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
         # notify there parent with there own instance as argument
