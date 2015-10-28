@@ -252,7 +252,7 @@ class DataPortListController(ExtendedController):
         """
         # logger.info("on_use_runtime_value_edited widget: {0} path: {1}".format(widget, path))
         try:
-            data_port_id = self.get_data_port_id_from_selection()
+            data_port_id = self.data_port_list_store[int(path)][3]
             if self.type == "input":
                 current_value = self.model.state.use_runtime_value_input_data_ports[data_port_id]
                 self.model.state.set_use_input_runtime_value(data_port_id, not current_value)
