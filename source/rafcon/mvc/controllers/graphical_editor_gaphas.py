@@ -401,6 +401,8 @@ class GraphicalEditorController(ExtendedController):
                 parent_v = self.canvas.get_parent(state_v)
                 if parent_v:
                     self.canvas.request_update(parent_v)
+            elif method_name == 'parent':
+                pass
             else:
                 logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
 
