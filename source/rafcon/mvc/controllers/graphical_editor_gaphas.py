@@ -209,6 +209,7 @@ class GraphicalEditorController(ExtendedController):
 
             if method_name == 'change_state_type':
                 self._change_state_type = True
+                return
 
             if method_name == 'remove_state':
                 if self._change_state_type:
@@ -216,9 +217,8 @@ class GraphicalEditorController(ExtendedController):
                 state_m = model.states[arguments[1]]
                 state_v = self.canvas.get_view_for_model(state_m)
                 if state_v:
-                    state_v.remove_keep_rect_within_constraint_from_parent()
                     parent_v = self.canvas.get_parent(state_v)
-                    self.canvas.remove(state_v)
+                    state_v.remove()
                     if parent_v:
                         self.canvas.request_update(parent_v)
 
@@ -249,6 +249,8 @@ class GraphicalEditorController(ExtendedController):
                     if transition_m.transition.transition_id == transition_id:
                         self.add_transition_view_for_model(transition_m, model)
             elif method_name == 'remove_transition':
+                if self._change_state_type:
+                    return
                 self.remove_transition_view_from_parent_view(model)
             elif method_name == 'transition_change':
                 transition_m = model
@@ -258,8 +260,6 @@ class GraphicalEditorController(ExtendedController):
             #           DATA FLOW
             # ----------------------------------
             elif method_name == 'add_data_flow':
-                if self._change_state_type:
-                    return
                 data_flow_models = model.data_flows
                 data_flow_id = result
                 for data_flow_m in data_flow_models:
@@ -361,29 +361,46 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'state_execution_status':
                 state_v = self.canvas.get_view_for_model(model)
                 self.canvas.request_update(state_v, matrix=False)
-            elif method_name == 'change_state_type':
+            elif method_name in ['change_state_type', 'change_root_state_type']:
                 self._change_state_type = False
-                state_m = result
-                old_state_m = arguments[1]
-                state_v = self.canvas.get_view_for_model(old_state_m)
-                state_v.model = state_m
-                if isinstance(state_m, ContainerStateModel):
+                if method_name == 'change_state_type':
+                    old_state = arguments[1]
+                    state_v = self.canvas.get_view_for_core_element(old_state)
+                    parent_state_m = model
+                    new_state = result
+                    new_state_m = parent_state_m.states[new_state.state_id]
+                else:
+                    state_machine_m = model
+                    new_state_m = state_machine_m.root_state
+                    state_v = self.canvas.get_root_items()[0]
+                state_v.model = new_state_m
+                if isinstance(new_state_m, ContainerStateModel):
                     # Check for new states, which do not have a StateView (typically DeciderState)
-                    for child_state_m in state_m.states.itervalues():
+                    for child_state_m in new_state_m.states.itervalues():
                         if not self.canvas.get_view_for_model(child_state_m):
-                            self.add_state_view_to_parent(child_state_m, state_m)
-                    # Check for old StateView, no longer existing (typically DeciderState)
-                    for child_state_v in self.canvas.get_children(state_v):
-                        if isinstance(child_state_v, StateView):
-                            if child_state_v.model.state.state_id not in state_v.model.states:
-                                child_state_v.remove_keep_rect_within_constraint_from_parent()
-                                self.canvas.remove(child_state_v)
+                            self.add_state_view_to_parent(child_state_m, new_state_m)
+                    # Check for new transitions, which do not have a TransitionView (typically related to DeciderState)
+                    for transition_m in new_state_m.transitions:
+                        if not self.canvas.get_view_for_model(transition_m):
+                            self.add_transition_view_for_model(transition_m, model)
+                    # Check for old StateViews (typically DeciderState) and TransitionViews, no longer existing
+                    for child_v in self.canvas.get_children(state_v):
+                        if isinstance(child_v, StateView):
+                            if child_v.model.state.state_id not in new_state_m.states:
+                                child_v.remove()
+                        elif isinstance(child_v, TransitionView):
+                            if child_v.model not in new_state_m.transitions:
+                                self.canvas.remove(child_v)
                 else:
                     # Remove all child states, as StateModels cannot have children
                     for child_state_v in self.canvas.get_children(state_v):
-                        if not isinstance(child_state_v, NameView):
-                            child_state_v.remove_keep_rect_within_constraint_from_parent()
+                        if isinstance(child_state_v, StateView):
+                            child_state_v.remove()
+                        elif not isinstance(child_state_v, NameView):  # Don't remove the name view
                             self.canvas.remove(child_state_v)
+                parent_v = self.canvas.get_parent(state_v)
+                if parent_v:
+                    self.canvas.request_update(parent_v)
             else:
                 logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
 
@@ -413,7 +430,6 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         self.deselect_all_items()
-
         self.handle_selected_states(info['args'][0].get_states())
 
     def handle_selected_states(self, selected_state_m_list):
