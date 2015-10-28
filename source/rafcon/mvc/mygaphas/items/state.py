@@ -111,6 +111,17 @@ class StateView(Element):
         port_list += self.scoped_variables
         return port_list
 
+    def remove(self):
+        """Remove recursively all children and then the StateView itself
+        """
+        children = self.canvas.get_children(self)
+        for child in children:
+            if isinstance(child, StateView):
+                child.remove()
+            self.canvas.remove(child)
+        self.remove_keep_rect_within_constraint_from_parent()
+        self.canvas.remove(self)
+
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
@@ -126,11 +137,14 @@ class StateView(Element):
 
     def remove_keep_rect_within_constraint_from_parent(self):
         canvas = self.canvas
-        parent = canvas.get_parent(self)
+        solver = canvas.solver
 
-        if parent is not None and isinstance(parent, StateView):
-            constraint = parent.keep_rect_constraints[self]
-            solver = canvas.solver
+        name_constraint = self.keep_rect_constraints[self.name_view]
+        solver.remove_constraint(name_constraint)
+
+        parent_state_v = canvas.get_parent(self)
+        if parent_state_v is not None and isinstance(parent_state_v, StateView):
+            constraint = parent_state_v.keep_rect_constraints[self]
             solver.remove_constraint(constraint)
 
     def has_selected_child(self):
