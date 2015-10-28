@@ -165,35 +165,29 @@ class StateOverviewController(ExtendedController, Model):
             self.view['entry_name'].set_text(self.model.state.name)
 
     def change_type(self, widget, model=None, info=None):
-        # TODO this function should be realized by a call of the ContainerState (change_type)
-        # for clean use it is a remove and add approach at the moment
         type_text = widget.get_active_text()
         if type_text not in self.state_types_dict:
             logger.error("The desired state type does not exist")
-            exit(-1)
+            return
+
         target_class = self.state_types_dict[type_text]['class']
         if target_class != type(self.model.state):
             state_name = self.model.state.name
             logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
                                                                              type(self.model.state),
                                                                              target_class))
-            if self.model.state.is_root_state:
-                from rafcon.mvc.singleton import state_machine_manager_model
-                sm_id = self.model.state.get_sm_for_state().state_machine_id
-                state_machine = state_machine_manager_model.state_machine_manager.state_machines[sm_id]
-                # TODO: refactor
-                state_model = state_machine.change_root_state_type(self.model, target_class)
-            else:
-                # TODO: refactor
-                state_model = self.model.parent.state.change_state_type(self.model, target_class)
+            try:
+                if self.model.state.is_root_state:
+                    self.model.state.parent.change_root_state_type(target_class)
+                else:
+                    self.model.state.parent.change_state_type(self.model.state, target_class)
+            except Exception as e:
+                logger.error("An error occurred while changing the state type: {0}".format(e))
 
-            self.relieve_model(self.model)
-            self.observe_model(state_model)
-            self.model = state_model
         else:
             logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(self.model.state.name,
-                                                                             type(self.model.state),
-                                                                             target_class))
+                                                                                   type(self.model.state),
+                                                                                   target_class))
 
     def check_for_enter(self, entry, event):
         key_name = keyval_name(event.keyval)

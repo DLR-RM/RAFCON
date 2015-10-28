@@ -9,6 +9,7 @@ from rafcon.mvc.models.outcome import OutcomeModel
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
+
 class StateModel(AbstractStateModel):
     """This model class manages a State, for the moment only ExecutionStates
 

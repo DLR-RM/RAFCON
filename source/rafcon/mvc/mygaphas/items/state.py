@@ -12,6 +12,7 @@ import cairo
 from gtk.gdk import Color
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
+from gaphas.matrix import Matrix
 
 from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
@@ -110,6 +111,17 @@ class StateView(Element):
         port_list += self.scoped_variables
         return port_list
 
+    def remove(self):
+        """Remove recursively all children and then the StateView itself
+        """
+        children = self.canvas.get_children(self)
+        for child in children:
+            if isinstance(child, StateView):
+                child.remove()
+            self.canvas.remove(child)
+        self.remove_keep_rect_within_constraint_from_parent()
+        self.canvas.remove(self)
+
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
@@ -125,11 +137,14 @@ class StateView(Element):
 
     def remove_keep_rect_within_constraint_from_parent(self):
         canvas = self.canvas
-        parent = canvas.get_parent(self)
+        solver = canvas.solver
 
-        if parent is not None and isinstance(parent, StateView):
-            constraint = parent.keep_rect_constraints[self]
-            solver = canvas.solver
+        name_constraint = self.keep_rect_constraints[self.name_view]
+        solver.remove_constraint(name_constraint)
+
+        parent_state_v = canvas.get_parent(self)
+        if parent_state_v is not None and isinstance(parent_state_v, StateView):
+            constraint = parent_state_v.keep_rect_constraints[self]
             solver.remove_constraint(constraint)
 
     def has_selected_child(self):
@@ -137,6 +152,15 @@ class StateView(Element):
             if isinstance(child, StateView) and child.selected:
                 return True
         return False
+
+    @property
+    def position(self):
+        _, _, _, _, x0, y0 = self.matrix
+        return x0, y0
+
+    @position.setter
+    def position(self, pos):
+        self.matrix = Matrix(x0=pos[0], y0=pos[1])
 
     @property
     def show_aborted_preempted(self):
@@ -178,6 +202,10 @@ class StateView(Element):
     @property
     def model(self):
         return self._state_m()
+
+    @model.setter
+    def model(self, state_m):
+        self._state_m = ref(state_m)
 
     @property
     def income(self):
@@ -234,6 +262,13 @@ class StateView(Element):
 
     def background(self):
         self._transparent = True
+
+    def apply_meta_data(self):
+        state_meta = self.model.meta['gui']['editor_gaphas']
+        self.position = state_meta['rel_pos']
+        self.width = state_meta['size'][0]
+        self.height = state_meta['size'][1]
+        self.name_view.apply_meta_data()
 
     def draw(self, context):
         if self.moving and self.parent and self.parent.moving:
@@ -691,6 +726,21 @@ class NameView(Element):
     @property
     def parent(self):
         return self.canvas.get_parent(self)
+
+    @property
+    def position(self):
+        _, _, _, _, x0, y0 = self.matrix
+        return x0, y0
+
+    @position.setter
+    def position(self, pos):
+        self.matrix = Matrix(x0=pos[0], y0=pos[1])
+
+    def apply_meta_data(self):
+        name_meta = self.parent.model.meta['gui']['editor_gaphas']['name']
+        self.position = name_meta['rel_pos']
+        self.width = name_meta['size'][0]
+        self.height = name_meta['size'][1]
 
     def draw(self, context):
         if self.moving:

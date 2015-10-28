@@ -102,7 +102,7 @@ class Selection(Observable):
 
     def get_selected_state(self):
         selected_states = self.get_states()
-        if len(selected_states) != 1:
+        if not selected_states:
             return None
         else:
             return selected_states[0]

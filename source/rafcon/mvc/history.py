@@ -553,7 +553,7 @@ class StateMachineAction(Action):
         else:
             new_state_class = statemachine_helper.ExecutionState
         # logger.debug("DO root version change")
-        new_state = statemachine_helper.StateMachineHelper.duplicate_state_with_other_state_type(state, new_state_class)
+        new_state = statemachine_helper.StateMachineHelper.create_new_state_from_state_with_type(state, new_state_class)
         self.update_state(new_state, root_state_version_fom_storage)
 
         # if isinstance(root_state_version_fom_storage, ContainerState):

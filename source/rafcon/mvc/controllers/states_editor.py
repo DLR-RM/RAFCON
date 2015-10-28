@@ -93,8 +93,10 @@ class StatesEditorController(ExtendedController):
         assert isinstance(model, StateMachineManagerModel)
         ExtendedController.__init__(self, model, view)
 
-        self.__my_selected_state_machine_id = None
-        self.__selected_state_machine_model = None
+        for state_machine_m in self.model.state_machines.itervalues():
+            self.observe_model(state_machine_m)
+            self.observe_model(state_machine_m.root_state)
+
         self.editor_type = editor_type
 
         # TODO: Workaround used for tab-close on middle click
@@ -104,15 +106,9 @@ class StatesEditorController(ExtendedController):
 
         self.tabs = {}
         self.closed_tabs = {}
-        self.current_state_m = None
-        self.__buffered_root_state = None  # needed to handle exchange of root_state
-        self.register_current_state_machine()
 
     def get_state_identifier(self, state_m):
-        state_machine_id = state_m.state.get_sm_for_state().state_machine_id
-        state_path = state_m.state.get_path()
-        state_identifier = "{0}|{1}".format(state_machine_id, state_path)
-        return state_identifier
+        return id(state_m)
 
     def get_state_tab_name(self, state_m):
         state_machine_id = state_m.state.get_sm_for_state().state_machine_id
@@ -134,67 +130,52 @@ class StatesEditorController(ExtendedController):
         page_to_close = widget.get_nth_page(page_num)
         self.close_page(self.get_state_identifier_for_page(page_to_close), delete=False)
 
+    @property
+    def current_state_machine_m(self):
+        if self.model.selected_state_machine_id is not None:
+            return self.model.state_machines[self.model.selected_state_machine_id]
+
     @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, property, info):
-        # logger.warn("\n\nroot_state changed %s\n\n" % info)
         old_root_state_m = info['old']
 
-        # TODO commented lines can be deleted with next clean up and function satisfies
-        # logger.debug("tabs are:")
-        # for tab in self.tabs.itervalues():
-        #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
-        # logger.debug("closed_tabs are:")
-        # for tab in self.closed_tabs.itervalues():
-        #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
-
-        # close all tabs related child models and root-state-model
         # TODO check if some models are the same in the new model - but only if widgets update if parent has changed
         def close_all_tabs_of_related_state_models_recursively(parent_state_m):
-            # logger.debug("run child removes \n%s \n%s" % (parent_state_m, parent_state_m.state))
             if isinstance(parent_state_m, ContainerStateModel):
-                # logger.debug("run child removes %s \n%s \n%s" % (parent_state_m, parent_state_m.states, parent_state_m.state))
-                # logger.debug("instance %s %s %s" % (parent_state_m, ContainerStateModel, isinstance(parent_state_m, ContainerStateModel)))
                 for child_state_m in parent_state_m.states.values():
-                    # logger.debug("try to remove: %s %s" % (child_state_m, child_state_m.state.get_path()))
                     close_all_tabs_of_related_state_models_recursively(child_state_m)
             state_identifier = self.get_state_identifier(parent_state_m)
             self.close_page(state_identifier, delete=True)
 
         close_all_tabs_of_related_state_models_recursively(old_root_state_m)
-
-        self.relieve_model(info['old'])  # supposed to be the same self.__buffered_root_state
-        self.observe_model(info['new'])  # supposed to be the same self.__selected_state_machine_model.root_state)
-        # assert to prevent inconsistencies
-        assert self.__buffered_root_state == info['old']
-        assert self.__selected_state_machine_model.root_state == info['new']
-        self.__buffered_root_state = info['new']
-
-        # TODO commented lines can be deleted with next clean up and function satisfies
-        # logger.debug("final tabs are:")
-        # for tab in self.tabs.itervalues():
-        #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
-        # logger.debug("closed_tabs are:")
-        # for tab in self.closed_tabs.itervalues():
-        #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
+        self.relieve_model(info['old'])
+        self.observe_model(info['new'])
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
-        """Check for changed open state machine
+        if self.current_state_machine_m is not None:
+            selection = self.current_state_machine_m.selection
+            if selection.get_num_states() > 0:
+                self.activate_state_tab(selection.get_states()[0])
 
-        Register the model of the new state machine, to get notifications about changes in the selection. In
-        addition, open the selected state of the new state machine.
-        """
-        self.register_current_state_machine()
-
-        selection = self.__selected_state_machine_model.selection
-        if selection.get_num_states() == 1 and len(selection) == 1:
-            self.activate_state_tab(selection.get_states()[0])
-
-    @ExtendedController.observe("state_machines", after=True)
+    @ExtendedController.observe("state_machines", before=True)
     def state_machines_notification(self, model, prop_name, info):
         """Check for closed state machine and close according states
         """
-        if info['method_name'] == '__delitem__':
+        # Observe all open state machines and their root states
+        if info['method_name'] == '__setitem__':
+            state_machine_m = info.args[1]
+            self.observe_model(state_machine_m)
+            self.observe_model(state_machine_m.root_state)
+        # Relive models of closed state machine
+        elif info['method_name'] == '__delitem__':
+            state_machine_id = info.args[0]
+            state_machine_m = self.model.state_machines[state_machine_id]
+            try:
+                self.relieve_model(state_machine_m)
+                self.relieve_model(state_machine_m.root_state)
+            except KeyError:
+                pass
             states_to_be_removed = []
             for state_identifier, tab_info in self.tabs.iteritems():
                 if tab_info['sm_id'] not in self.model.state_machines:
@@ -203,27 +184,10 @@ class StatesEditorController(ExtendedController):
             for state_identifier in states_to_be_removed:
                 self.close_page(state_identifier, delete=True)
 
-    def register_current_state_machine(self):
-        """Change the state machine that is observed for new selected states to the selected state machine.
-        """
-        # TODO there is still the problem that a states-editor can hold tabs with states from different StateMachines which are may not selected when edited
-        # relieve old models
-        if self.__my_selected_state_machine_id is not None:  # no old models available
-            self.relieve_model(self.__buffered_root_state)
-            self.relieve_model(self.__selected_state_machine_model)
-        # set own selected state machine id
-        self.__my_selected_state_machine_id = self.model.selected_state_machine_id
-        if self.__my_selected_state_machine_id is not None:
-            # observe new models
-            self.__selected_state_machine_model = self.model.state_machines[self.__my_selected_state_machine_id]
-            self.__buffered_root_state = self.__selected_state_machine_model.root_state
-            self.observe_model(self.__selected_state_machine_model.root_state)
-            self.observe_model(self.__selected_state_machine_model)  # for selection
-
     def register_view(self, view):
         self.view.notebook.connect('switch-page', self.on_switch_page)
-        if self.__selected_state_machine_model:
-            self.add_state_editor(self.__selected_state_machine_model.root_state, self.editor_type)
+        if self.current_state_machine_m:
+            self.add_state_editor(self.current_state_machine_m.root_state, self.editor_type)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -245,11 +209,11 @@ class StatesEditorController(ExtendedController):
         else:
             state_editor_view = StateEditorView()
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
+            self.add_controller(state_identifier, state_editor_ctrl)
             if state_editor_ctrl.get_controller('source_ctrl'):
                 handler_id = state_editor_view['source_view'].get_buffer().connect('changed', self.script_text_changed, state_m)
             else:
                 handler_id = None
-            self.add_controller(state_identifier, state_editor_ctrl)
             source_code_view_is_dirty = False
 
         tab_label_text = self.get_state_tab_name(state_m)
@@ -272,11 +236,16 @@ class StatesEditorController(ExtendedController):
 
         self.view.notebook.show()
         self.tabs[state_identifier] = {'page': page, 'state_m': state_m,
-                                       'controller': state_editor_ctrl, 'sm_id': self.__my_selected_state_machine_id,
+                                       'controller': state_editor_ctrl, 'sm_id': self.model.selected_state_machine_id,
                                        'is_sticky': False,
                                        'source_code_view_is_dirty': source_code_view_is_dirty,
                                        'source_code_changed_handler_id': handler_id}
         return page_id
+
+    def recreate_state_editor(self, old_state_m, new_state_m):
+        old_state_identifier = self.get_state_identifier(old_state_m)
+        self.close_page(old_state_identifier, delete=True)
+        self.add_state_editor(new_state_m)
 
     def script_text_changed(self, source, state_m):
         state_identifier = self.get_state_identifier(state_m)
@@ -289,6 +258,7 @@ class StatesEditorController(ExtendedController):
             return
         if tab_list[state_identifier]['controller'].get_controller('source_ctrl') is None:
             logger.warning('It was tried to check a source script of a state with no source-editor')
+            return
         tbuffer = tab_list[state_identifier]['controller'].get_controller('source_ctrl').view.get_buffer()
         current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
         old_is_dirty = tab_list[state_identifier]['source_code_view_is_dirty']
@@ -382,12 +352,12 @@ class StatesEditorController(ExtendedController):
             if tab_info['page'] is page:
                 state_m = tab_info['state_m']
                 sm_id = state_m.state.get_sm_for_state().state_machine_id
-                selected_state_m = self.__selected_state_machine_model.selection.get_selected_state()
+                selected_state_m = self.current_state_machine_m.selection.get_selected_state()
 
                 # If the state of the selected tab is not in the selection, set it there
                 if selected_state_m is not state_m and sm_id in self.model.state_machine_manager.state_machines:
                     self.model.selected_state_machine_id = sm_id
-                    self.__selected_state_machine_model.selection.set(state_m)
+                    self.current_state_machine_m.selection.set(state_m)
                 return
 
     def activate_state_tab(self, state_m):
@@ -451,6 +421,8 @@ class StatesEditorController(ExtendedController):
     def selection_notification(self, model, property, info):
         """If a single state is selected, open the corresponding tab
         """
+        if model != self.current_state_machine_m:
+            return
         selection = info.instance
         assert isinstance(selection, Selection)
         if selection.get_num_states() == 1 and len(selection) == 1:
@@ -570,7 +542,7 @@ class StatesEditorController(ExtendedController):
         :param key_value:
         :param modifier_mask:
         """
-        selection = self.__selected_state_machine_model.selection
+        selection = self.current_state_machine_m.selection
         if selection.get_num_states() == 1 and len(selection) == 1:
             selected_state = selection.get_states()[0]
             self.activate_state_tab(selected_state)

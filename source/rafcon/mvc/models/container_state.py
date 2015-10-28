@@ -10,7 +10,7 @@ from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
-from rafcon.mvc.models.abstract_state import state_to_state_model
+from rafcon.mvc.models.abstract_state import state_to_state_model, StateTypeChangeSignalMsg
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -87,6 +87,8 @@ class ContainerStateModel(StateModel):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
+        if info.method_name == 'change_state_type':  # Handled in method 'change_state_type'
+            return
 
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
@@ -184,6 +186,46 @@ class ContainerStateModel(StateModel):
                 self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
+
+    @ModelMT.observe("state", after=True, before=True)
+    def change_state_type(self, model, prop_name, info):
+        if info.method_name != 'change_state_type':
+            return
+        from rafcon.mvc.statemachine_helper import StateMachineHelper
+
+        old_state = info.args[1]
+        new_state_class = info.args[2]
+        state_id = old_state.state_id
+        state_m = self.states[state_id]
+
+        # Before the state type is actually changed, we extract the information from the old state model and remove
+        # the model from the selection
+        if hasattr(info, 'before') and info['before']:
+            # remove selection from StateMachineModel.selection -> find state machine model
+            from rafcon.mvc.singleton import state_machine_manager_model
+            state_machine_m = state_machine_manager_model.get_sm_m_for_state_model(state_m)
+            state_machine_m.selection.remove(state_m)
+
+            # Extract child models of state, as they have to be applied to the new state model
+            child_models = StateMachineHelper.extract_child_models_of_of_state(state_m, new_state_class)
+            self.change_state_type.__func__.child_models = child_models  # static variable of class method
+
+        # After the state has been changed in the core, we create a new model for it with all information extracted
+        # from the old state model
+        else:  # after
+            # The new state is returned by the core state class method 'change_state_type'
+            new_state = info.result
+            # Create a new state model based on the new state and apply the extracted child models
+            child_models = self.change_state_type.__func__.child_models
+            new_state_m = StateMachineHelper.create_state_model_for_state(new_state, child_models)
+            # Set this state model (self) to be the parent of our new state model
+            new_state_m.parent = self
+            # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
+            self.states._obj.__setitem__(state_id, new_state_m)
+
+            state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+
+        self.model_changed(model, prop_name, info)
 
     def get_scoped_variable_m(self, data_port_id):
         """Returns the scoped variable model for the given data port id
