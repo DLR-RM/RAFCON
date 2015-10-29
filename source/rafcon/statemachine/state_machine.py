@@ -103,12 +103,12 @@ class StateMachine(ModelMT, Observable):
 
     @Observable.observed
     def change_root_state_type(self, new_state_class):
-        from rafcon.mvc.statemachine_helper import StateMachineHelper
+        from rafcon.mvc.statemachine_helper import create_new_state_from_state_with_type
 
         state = self.root_state
         state_id = state.state_id
 
-        new_state = StateMachineHelper.create_new_state_from_state_with_type(state, new_state_class)
+        new_state = create_new_state_from_state_with_type(state, new_state_class)
         assert new_state.state_id == state_id
         self.root_state = new_state  # Also sets the parent of root_state to self
 
@@ -124,6 +124,7 @@ class StateMachine(ModelMT, Observable):
     @marked_dirty.setter
     @Observable.observed
     def marked_dirty(self, marked_dirty):
+        # print "sm-core: marked dirty changed from ", self._marked_dirty, " to ", marked_dirty
         if not isinstance(marked_dirty, bool):
             raise AttributeError("marked_dirty has to be of type bool")
         self.old_marked_dirty = self._marked_dirty

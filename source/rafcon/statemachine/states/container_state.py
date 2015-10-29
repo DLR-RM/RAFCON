@@ -240,14 +240,14 @@ class ContainerState(State):
 
     @Observable.observed
     def change_state_type(self, state, new_state_class):
-        from rafcon.mvc.statemachine_helper import StateMachineHelper
+        from rafcon.mvc.statemachine_helper import create_new_state_from_state_with_type
 
         state_id = state.state_id
 
         if state_id not in self.states:
             raise ValueError("State '{0}' with id '{1}' does not exist".format(state.name, state_id))
 
-        new_state = StateMachineHelper.create_new_state_from_state_with_type(state, new_state_class)
+        new_state = create_new_state_from_state_with_type(state, new_state_class)
         new_state.parent = self
 
         assert new_state.state_id == state_id
@@ -540,11 +540,7 @@ class ContainerState(State):
         :return: the unique id of the added scoped variable
         """
         if scoped_variable_id is None:
-            # input data port, output data port and scoped variable ids has to passed to the id generation as
-            # the data port id has to be unique inside a state
-            scoped_variable_id = generate_data_port_id(self._scoped_variables.keys() +
-                                                       self._input_data_ports.keys() +
-                                                       self._output_data_ports.keys())
+            scoped_variable_id = generate_data_flow_id()
         self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value,
                                                                     scoped_variable_id, self)
 
@@ -631,7 +627,6 @@ class ContainerState(State):
         result_dict = {}
 
         tmp_dict = self.get_default_input_values_for_state(state)
-
         result_dict.update(tmp_dict)
 
         for input_port_key, value in state.input_data_ports.iteritems():
@@ -645,7 +640,6 @@ class ContainerState(State):
                             result_dict[value.name] = copy.deepcopy(self.scoped_data[key].value)
                         else:  # if there is not value for the data port specified, take the default value
                             result_dict[value.name] = value.default_value
-
         return result_dict
 
     # ---------------------------------------------------------------------------------------------

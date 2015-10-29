@@ -161,7 +161,7 @@ class StateMachineModel(ModelMT):
     def change_root_state_type(self, model, prop_name, info):
         if info.method_name != 'change_root_state_type':
             return
-        from rafcon.mvc.statemachine_helper import StateMachineHelper
+        from rafcon.mvc import statemachine_helper
 
         new_state_class = info.args[1]
 
@@ -174,7 +174,7 @@ class StateMachineModel(ModelMT):
             self.selection.remove(state_m)
 
             # Extract child models of state, as they have to be applied to the new state model
-            child_models = StateMachineHelper.extract_child_models_of_of_state(state_m, new_state_class)
+            child_models = statemachine_helper.extract_child_models_of_of_state(state_m, new_state_class)
             self.change_root_state_type.__func__.child_models = child_models  # static variable of class method
 
         # After the state has been changed in the core, we create a new model for it with all information extracted
@@ -184,7 +184,7 @@ class StateMachineModel(ModelMT):
             new_state = info.result
             # Create a new state model based on the new state and apply the extracted child models
             child_models = self.change_root_state_type.__func__.child_models
-            new_state_m = StateMachineHelper.create_state_model_for_state(new_state, child_models)
+            new_state_m = statemachine_helper.create_state_model_for_state(new_state, child_models)
 
             new_state_m.register_observer(self)
             self.root_state = new_state_m
@@ -192,27 +192,6 @@ class StateMachineModel(ModelMT):
             state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
 
         self.__send_root_state_notification(model, prop_name, info)
-
-    # def change_root_state_type(self, new_state_class):
-    #     from rafcon.mvc.statemachine_helper import StateMachineHelper
-    #
-    #     state_m = self.root_state
-    #     state_m.unregister_observer(self)
-    #     self.selection.remove(state_m)
-    #
-    #     # Extract child models of state, as they have to be applied to the new state model
-    #     child_models = StateMachineHelper.extract_child_models_of_of_state(state_m, new_state_class)
-    #     # Command the core to change the state type
-    #     new_state = self.state_machine.change_root_state_type(new_state_class)
-    #     # Create a new state model based on the new state and apply the extracted child models
-    #     new_state_m = StateMachineHelper.create_state_model_for_state(new_state, child_models)
-    #
-    #     new_state_m.register_observer(self)
-    #     self.root_state = new_state_m
-    #
-    #     state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
-    #
-    #     return new_state_m
 
     def __send_root_state_notification(self, model, prop_name, info):
         if hasattr(info, 'before') and info.before:

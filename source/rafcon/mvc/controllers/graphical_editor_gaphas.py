@@ -5,7 +5,7 @@ from rafcon.statemachine.enums import StateType
 
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.statemachine_helper import StateMachineHelper
+from rafcon.mvc import statemachine_helper
 
 from rafcon.mvc.models.abstract_state import MetaSignalMsg
 from rafcon.mvc.models.state_machine import StateMachineModel
@@ -101,9 +101,9 @@ class GraphicalEditorController(ExtendedController):
         model = selection[0]
 
         if isinstance(model, StateModel):
-            StateMachineHelper.add_state(model, state_type)
+            statemachine_helper.add_state(model, state_type)
         if isinstance(model, (TransitionModel, DataFlowModel)):
-            StateMachineHelper.add_state(model.parent, state_type)
+            statemachine_helper.add_state(model.parent, state_type)
 
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
@@ -622,7 +622,7 @@ class GraphicalEditorController(ExtendedController):
     def _remove_state_view(self, view):
         selection = self.model.selection.get_all()
         if len(selection) > 0:
-            StateMachineHelper.delete_models(selection)
+            statemachine_helper.delete_models(selection)
             self.model.selection.clear()
 
     def setup_canvas(self):

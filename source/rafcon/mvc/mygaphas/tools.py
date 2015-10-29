@@ -4,7 +4,7 @@ from enum import Enum
 from math import pow
 
 from rafcon.mvc.singleton import state_machine_manager_model
-from rafcon.mvc.statemachine_helper import StateMachineHelper
+from rafcon.mvc import statemachine_helper
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -39,11 +39,11 @@ class RemoveItemTool(Tool):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
             # Delete Transition from state machine
             if isinstance(self.view.focused_item, TransitionView):
-                StateMachineHelper.delete_model(self.view.focused_item.model)
+                statemachine_helper.delete_model(self.view.focused_item.model)
                 return True
             # Delete DataFlow from state machine
             if isinstance(self.view.focused_item, DataFlowView):
-                StateMachineHelper.delete_model(self.view.focused_item.model)
+                statemachine_helper.delete_model(self.view.focused_item.model)
                 return True
             # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):

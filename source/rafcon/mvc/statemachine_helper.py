@@ -103,7 +103,7 @@ def delete_model(model, raise_exceptions=False):
 def delete_models(models, raise_exceptions=False):
     """Deletes all given models from their state machines
 
-    Calls the :func:`StateMachineHelper.delete_model` for all models given.
+    Calls the :func:`delete_model` for all models given.
     :param models: A single model or a list of models to be deleted
     :return: The number of models that were successfully deleted
     """
@@ -112,7 +112,7 @@ def delete_models(models, raise_exceptions=False):
     if not isinstance(models, list):
         models = [models]
     for model in models:
-        if StateMachineHelper.delete_model(model, raise_exceptions):
+        if delete_model(model, raise_exceptions):
             num_deleted += 1
     return num_deleted
 

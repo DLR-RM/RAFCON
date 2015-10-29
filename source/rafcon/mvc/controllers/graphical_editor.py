@@ -18,7 +18,7 @@ from rafcon.statemachine.enums import StateType
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.clipboard import global_clipboard
-from rafcon.mvc.statemachine_helper import StateMachineHelper
+from rafcon.mvc import statemachine_helper
 from rafcon.mvc.models.abstract_state import MetaSignalMsg
 from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.library_state import LibraryStateModel
@@ -425,7 +425,7 @@ class GraphicalEditorController(ExtendedController):
         if self.changed_models:
             if len(self.changed_models) > 1:
                 self.changes_affect_children = True
-                self.changed_models = StateMachineHelper.reduce_to_parent_states(self.changed_models)
+                self.changed_models = statemachine_helper.reduce_to_parent_states(self.changed_models)
             if len(self.changed_models) > 1:
                 parent_m = self.root_state_m
             else:
@@ -1025,7 +1025,7 @@ class GraphicalEditorController(ExtendedController):
 
                 affects_children = len(self.model.selection) > 1
                 if affects_children:
-                    reduced_list = StateMachineHelper.reduce_to_parent_states(self.model.selection)
+                    reduced_list = statemachine_helper.reduce_to_parent_states(self.model.selection)
                     if len(reduced_list) > 1:
                         parent_m = self.root_state_m
                     else:
@@ -1991,7 +1991,7 @@ class GraphicalEditorController(ExtendedController):
         if self.view.editor.has_focus():
             selection = self.model.selection.get_all()
             if len(selection) > 0:
-                StateMachineHelper.delete_models(self.model.selection.get_all())
+                statemachine_helper.delete_models(self.model.selection.get_all())
                 self.model.selection.clear()
 
     def _add_new_state(self, *args, **kwargs):
@@ -2010,9 +2010,9 @@ class GraphicalEditorController(ExtendedController):
         model = selection[0]
 
         if isinstance(model, StateModel):
-            StateMachineHelper.add_state(model, state_type)
+            statemachine_helper.add_state(model, state_type)
         if isinstance(model, (TransitionModel, DataFlowModel)):
-            StateMachineHelper.add_state(model.parent, state_type)
+            statemachine_helper.add_state(model.parent, state_type)
 
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.has_focus():
