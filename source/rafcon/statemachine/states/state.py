@@ -215,14 +215,8 @@ class State(Observable, yaml.YAMLObject):
         :return: data_port_id of new input data port
         """
         if data_port_id is None:
-            # input data port, output data port and scoped variable ids has to passed to the id generation as
-            # the data port id has to be unique inside a state
-            if hasattr(self, "_scoped_variables"):
-                data_port_id = generate_data_port_id(self._scoped_variables.keys() +
-                                                     self._input_data_ports.keys() +
-                                                     self._output_data_ports.keys())
-            else:
-                data_port_id = generate_data_port_id(self._input_data_ports.keys() + self._output_data_ports.keys())
+            # All data port ids have to passed to the id generation as the data port id has to be unique inside a state
+            data_port_id = generate_data_port_id(self.get_data_port_ids())
         self._input_data_ports[data_port_id] = InputDataPort(name, data_type, default_value, data_port_id, self)
 
         # Check for name uniqueness
@@ -276,14 +270,8 @@ class State(Observable, yaml.YAMLObject):
         :return: data_port_id of new output data port
         """
         if data_port_id is None:
-            # input data port, output data port and scoped variable ids has to passed to the id generation as
-            # the data port id has to be unique inside a state
-            if hasattr(self, "_scoped_variables"):
-                data_port_id = generate_data_port_id(self._scoped_variables.keys() +
-                                                     self._input_data_ports.keys() +
-                                                     self._output_data_ports.keys())
-            else:
-                data_port_id = generate_data_port_id(self._input_data_ports.keys() + self._output_data_ports.keys())
+            # All data port ids have to passed to the id generation as the data port id has to be unique inside a state
+            data_port_id = generate_data_port_id(self.get_data_port_ids())
         self._output_data_ports[data_port_id] = OutputDataPort(name, data_type, default_value, data_port_id, self)
 
         # Check for name uniqueness
@@ -340,6 +328,9 @@ class State(Observable, yaml.YAMLObject):
         elif data_port_id in self.output_data_ports:
             return self.output_data_ports[data_port_id]
         return None
+
+    def get_data_port_ids(self):
+        return self._scoped_variables.keys() + self._input_data_ports.keys()
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------------ outcome functions --------------------------------------

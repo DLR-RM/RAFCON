@@ -528,7 +528,6 @@ class ContainerState(State):
                 return scoped_variable_id
         raise AttributeError("Name %s is not in scoped_variables", name)
 
-    #Primary key is the name of scoped variable.str
     @Observable.observed
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
         """ Adds a scoped variable to the container state
@@ -540,7 +539,8 @@ class ContainerState(State):
         :return: the unique id of the added scoped variable
         """
         if scoped_variable_id is None:
-            scoped_variable_id = generate_data_flow_id()
+            # All data port ids have to passed to the id generation as the data port id has to be unique inside a state
+            scoped_variable_id = generate_data_port_id(self.get_data_port_ids())
         self._scoped_variables[scoped_variable_id] = ScopedVariable(name, data_type, default_value,
                                                                     scoped_variable_id, self)
 
@@ -614,6 +614,9 @@ class ContainerState(State):
             return self.scoped_variables[data_port_id]
         return None
 
+    def get_data_port_ids(self):
+        return self._scoped_variables.keys() + self._input_data_ports.keys() + self._output_data_ports.keys()
+
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- input data handling --------------------------------------
     # ---------------------------------------------------------------------------------------------
@@ -640,6 +643,7 @@ class ContainerState(State):
                             result_dict[value.name] = copy.deepcopy(self.scoped_data[key].value)
                         else:  # if there is not value for the data port specified, take the default value
                             result_dict[value.name] = value.default_value
+
         return result_dict
 
     # ---------------------------------------------------------------------------------------------
