@@ -330,7 +330,7 @@ class State(Observable, yaml.YAMLObject):
         return None
 
     def get_data_port_ids(self):
-        return self._scoped_variables.keys() + self._input_data_ports.keys()
+        return self._input_data_ports.keys() + self._output_data_ports.keys()
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------------ outcome functions --------------------------------------
