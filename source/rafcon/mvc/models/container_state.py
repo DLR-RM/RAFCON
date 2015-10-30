@@ -101,6 +101,8 @@ class ContainerStateModel(StateModel):
                 not isinstance(model, StateModel) and model.parent is not self):  # One of the member models was changed
             changed_list = self.states
             cause = 'state_change'
+            if info.method_name in ['change_state_type', 'handled_change_state_type']:
+                cause = 'change_state_type'
         # If the change happened in one of the transitions, notify the list of all transitions
         elif isinstance(model, TransitionModel) and model.parent is self:
             changed_list = self.transitions
@@ -221,10 +223,11 @@ class ContainerStateModel(StateModel):
             # Set this state model (self) to be the parent of our new state model
             new_state_m.parent = self
             # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
-            self.states._obj.__setitem__(state_id, new_state_m)
+            self.states[state_id] = new_state_m
 
             state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
 
+        info.method_name = 'handled_change_state_type'
         self.model_changed(model, prop_name, info)
 
     def get_scoped_variable_m(self, data_port_id):
