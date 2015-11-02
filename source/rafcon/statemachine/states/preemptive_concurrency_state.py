@@ -145,31 +145,6 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
 
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = ContainerState.get_container_state_yaml_dict(data)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        state = PreemptiveConcurrencyState(name=dict_representation['name'],
-                                           state_id=dict_representation['state_id'],
-                                           input_data_ports=dict_representation['input_data_ports'],
-                                           output_data_ports=dict_representation['output_data_ports'],
-                                           outcomes=dict_representation['outcomes'],
-                                           states=None,
-                                           transitions=None,
-                                           data_flows=None,
-                                           scoped_variables=dict_representation['scoped_variables'],
-                                           v_checker=None)
-        try:
-            state.description = dict_representation['description']
-        except (ValueError, TypeError, KeyError):
-            pass
-        return state, dict_representation['transitions'], dict_representation['data_flows']
-
     def _check_transition_validity(self, check_transition):
         # Transition of BarrierConcurrencyStates must least fulfill the condition of a ContainerState
         # Start transitions are already forbidden in the ConcurrencyState

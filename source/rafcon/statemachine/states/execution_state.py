@@ -38,6 +38,20 @@ class ExecutionState(State):
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
 
+    @classmethod
+    def from_dict(cls, dictionary):
+        name = dictionary['name']
+        state_id = dictionary['state_id']
+        input_data_ports = dictionary['input_data_ports']
+        output_data_ports = dictionary['output_data_ports']
+        outcomes = dictionary['outcomes']
+        state = cls(name, state_id, input_data_ports, output_data_ports, outcomes, check_path=False)
+        try:
+            state.description = dictionary['description']
+        except TypeError:
+            pass
+        return state
+
     def _execute(self, execute_inputs, execute_outputs, backward_execution=False):
         """Calls the custom execute function of the script.py of the state
 
@@ -102,38 +116,6 @@ class ExecutionState(State):
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
-
-    def get_execution_state_yaml_dict(data):
-        dict_representation = {
-            'name': data.name,
-            'state_id': data.state_id,
-            'description': data.description,
-            'input_data_ports': data.input_data_ports,
-            'output_data_ports': data.output_data_ports,
-            'outcomes': data.outcomes
-        }
-        return dict_representation
-
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = ExecutionState.get_execution_state_yaml_dict(data)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        name = dict_representation['name']
-        state_id = dict_representation['state_id']
-        input_data_ports = dict_representation['input_data_ports']
-        output_data_ports = dict_representation['output_data_ports']
-        outcomes = dict_representation['outcomes']
-        state = ExecutionState(name, state_id, input_data_ports, output_data_ports, outcomes, check_path=False)
-        try:
-            state.description = dict_representation['description']
-        except (ValueError, TypeError, KeyError):
-            pass
-        return state
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

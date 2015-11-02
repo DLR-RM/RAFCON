@@ -67,6 +67,58 @@ class ContainerState(State):
         logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
+    # ----------------------------------- generic methods -----------------------------------------
+    # ---------------------------------------------------------------------------------------------
+
+    @staticmethod
+    def state_to_dict(state):
+        dict_representation = {
+            'name': state.name,
+            'state_id': state.state_id,
+            'description': state.description,
+            'input_data_ports': state.input_data_ports,
+            'output_data_ports': state.output_data_ports,
+            'outcomes': state.outcomes,
+            'transitions': state.transitions,
+            'data_flows': state.data_flows,
+            'scoped_variables': state.scoped_variables
+        }
+        return dict_representation
+
+    @classmethod
+    def from_dict(cls, dictionary, include_connections=True):
+        transitions = dictionary['transitions']
+        data_flows = dictionary['data_flows']
+        state = cls(name=dictionary['name'],
+                    state_id=dictionary['state_id'],
+                    input_data_ports=dictionary['input_data_ports'],
+                    output_data_ports=dictionary['output_data_ports'],
+                    outcomes=dictionary['outcomes'],
+                    states=None,
+                    transitions=transitions if include_connections else None,
+                    data_flows=data_flows if include_connections else None,
+                    scoped_variables=dictionary['scoped_variables'],
+                    v_checker=None)
+        try:
+            state.description = dictionary['description']
+        except TypeError:
+            pass
+
+        if include_connections:
+            return state
+        else:
+            return state, dictionary['transitions'], dictionary['data_flows']
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node, deep=True)
+        state, transitions, data_flows = cls.from_dict(dict_representation, include_connections=False)
+        return state, transitions, data_flows
+
+    def __str__(self):
+        return "{0} [{1} child states]".format(super(ContainerState, self).__str__(), len(self.states))
+
+    # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------
     # ---------------------------------------------------------------------------------------------
 
@@ -785,24 +837,6 @@ class ContainerState(State):
                             if not self.backward_execution:
                                 logger.error("Output data with name %s was not found in the scoped data. "
                                              "This normally means a statemachine design error", output_name)
-
-    # yaml part
-    def get_container_state_yaml_dict(data):
-        dict_representation = {
-            'name': data.name,
-            'state_id': data.state_id,
-            'description': data.description,
-            'input_data_ports': data.input_data_ports,
-            'output_data_ports': data.output_data_ports,
-            'outcomes': data.outcomes,
-            'transitions': data.transitions,
-            'data_flows': data.data_flows,
-            'scoped_variables': data.scoped_variables
-        }
-        return dict_representation
-
-    def __str__(self):
-        return "{0} [{1} child states]".format(State.__str__(self), len(self.states))
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- check methods ---------------------------------------
