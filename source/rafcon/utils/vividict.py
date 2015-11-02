@@ -6,8 +6,9 @@ class Vividict(yaml.YAMLObject, dict):
     A class which inherits from dict and can store an element for an arbitrary nested key. The single elements of the
     key do not have to exist beforehand.
     """
-    def __init__(self):
-        pass
+    def __init__(self, dictionary=None):
+        if dictionary:
+            self.set_dict(dictionary)
 
     def __missing__(self, key):
         """
@@ -19,13 +20,17 @@ class Vividict(yaml.YAMLObject, dict):
         return value
 
     def set_dict(self, new_dict):
-        """
-        Sets the dictionary of the Vividict.
+        """Sets the dictionary of the Vividict
+
+        The method is able to handle nested dictionaries, by calling the method recursively.
+
         :param new_dict: The dict that will be added to the own dict
-        :return:
         """
         for key, value in new_dict.iteritems():
-            self[key] = value
+            if isinstance(value, dict):
+                self[str(key)] = Vividict(value)
+            else:
+                self[str(key)] = value
 
     yaml_tag = u'!Vividict'
 
