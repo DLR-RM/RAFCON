@@ -6,12 +6,12 @@ from weakref import ref
 from gtkmvc import ModelMT, Signal
 
 from rafcon.statemachine.storage.storage import StateMachineStorage
-from rafcon.statemachine.singleton import global_storage
 
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.utils import storage_utils
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -236,7 +236,7 @@ class AbstractStateModel(ModelMT):
             path = self.state.get_file_system_path()
         meta_path = os.path.join(path, StateMachineStorage.GRAPHICS_FILE)
         if os.path.exists(meta_path):
-            tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
+            tmp_meta = storage_utils.load_dict_from_yaml(meta_path)
             # For backwards compatibility: move all meta data from editor to editor_opengl
             self.overwrite_editor_meta(tmp_meta)
             self._parse_for_element_meta_data(tmp_meta)
@@ -257,7 +257,7 @@ class AbstractStateModel(ModelMT):
         meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
         meta_data = deepcopy(self.meta)
         self._generate_element_meta_data(meta_data)
-        global_storage.storage_utils.write_dict_to_yaml(meta_data, meta_path)
+        storage_utils.write_dict_to_yaml(meta_data, meta_path)
 
     def copy_meta_data_from_state_m(self, source_state_m):
         """Dismiss current meta data and copy meta data from given state model
