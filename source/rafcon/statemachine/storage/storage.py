@@ -31,6 +31,7 @@ if os.path.exists(DEFAULT_SCRIPT_PATH):
     for f in files:
         shutil.rmtree(f)
 
+
 class StateMachineStorage(Observable):
 
     """This class implements the Storage interface by using a file system on the disk.
@@ -43,7 +44,8 @@ class StateMachineStorage(Observable):
     :ivar ids_of_modified_state_machines: each state machine has a flag if it was modified since the last saving
     """
 
-    GRAPHICS_FILE = 'gui_gtk.yaml'
+    GRAPHICS_FILE_YAML = 'gui_gtk.yaml'
+    GRAPHICS_FILE_JSON = 'gui_gtk.json'
     META_FILE = 'meta.yaml'
     SCRIPT_FILE = 'script.py'
     STATEMACHINE_FILE = 'statemachine.yaml'
@@ -180,7 +182,7 @@ class StateMachineStorage(Observable):
         storage_utils.create_path(state_path_full)
         if isinstance(state, ExecutionState):
             self.save_script_file_for_state_and_source_path(state, state_path)
-        storage_utils.save_dict_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
+        storage_utils.write_dict_to_yaml(state, os.path.join(state_path_full, self.META_FILE))
 
         # create yaml files for all children
         if isinstance(state, ContainerState):
