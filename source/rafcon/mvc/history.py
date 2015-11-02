@@ -234,7 +234,7 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
         for state_id, state_m in state_model.states.iteritems():
             if with_prints:
                 print "FIN: ", state_id, state_m.state.state_id, meta_dict['states'].keys(), state_model.state.state_id
-            if state_m.state.state_id is not UNIQUE_DECIDER_STATE_ID:
+            if state_m.state.state_id != UNIQUE_DECIDER_STATE_ID:
                 insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_parent_linkage)
             if with_prints:
                 print "FINISHED META for STATE: ", state_m.state.state_id

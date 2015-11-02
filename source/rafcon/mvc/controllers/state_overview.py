@@ -174,8 +174,8 @@ class StateOverviewController(ExtendedController, Model):
         if target_class != type(self.model.state):
             state_name = self.model.state.name
             logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
-                                                                             type(self.model.state),
-                                                                             target_class))
+                                                                             type(self.model.state).__name__,
+                                                                             target_class.__name__))
             try:
                 if self.model.state.is_root_state:
                     self.model.state.parent.change_root_state_type(target_class)
@@ -186,8 +186,8 @@ class StateOverviewController(ExtendedController, Model):
 
         else:
             logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(self.model.state.name,
-                                                                                   type(self.model.state),
-                                                                                   target_class))
+                                                                                   type(self.model.state).__name__,
+                                                                                   target_class.__name__))
 
     def check_for_enter(self, entry, event):
         key_name = keyval_name(event.keyval)

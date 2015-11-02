@@ -17,7 +17,7 @@ DEPENDS             = gtk_etc==0, gtk_etc_python==0
 
 ARCHS               = sled11-x86-gcc4.x, sled11-x86_64-gcc4.x
 PYTHON_PATHS        = ${PKGROOT}/lib/python2.7
-ADDITIONAL_ENV      = RAFCON_PATH=${PKGROOT}/lib/python2.7/rafcon, RAFCON_LIB_PATH=${PKGROOT}/share/libraries
+ADDITIONAL_ENV      = RAFCON_PATH=${PKGROOT}/lib/python2.7/rafcon, RAFCON_LIB_PATH=${PKGROOT}/share/libraries, PATH=${PKGROOT}/bin:$${PATH}
 
 [install]
 source/rafcon => lib/python2.7/rafcon
@@ -25,3 +25,7 @@ source/rafcon_server => lib/python2.7/rafcon_server
 source/libraries => share/libraries
 share => share
 source/rafcon/documentation => docs
+bin/ | !rafcon_start | !rafcon_start_gui => bin # Symlinks are recreated in post_install step
+
+[post-install]
+cd ${PKGROOT}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui

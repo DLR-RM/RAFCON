@@ -172,7 +172,7 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
         # -> because switch from Barrier, Preemptive or Hierarchy has always different rules
         state_transitions = {}
         state_start_state_id = None
-        logger.info("Type change from %s to %s" % (type(source_state), target_state_class))
+        logger.info("Type change from %s to %s" % (type(source_state).__name__, target_state_class.__name__))
 
         # decider state is removed because it is unique for BarrierConcurrencyState
         if isinstance(source_state, BarrierConcurrencyState):
@@ -222,7 +222,8 @@ def extract_child_models_of_of_state(state_m, new_state_class):
     # define which model references to hold for new state
     model_properties = ['meta', 'input_data_ports', 'output_data_ports', 'outcomes']
     if current_state_is_container and new_state_is_container:  # hold some additional references
-        model_properties.extend(['states', 'transitions', 'data_flows', 'scoped_variables'])
+        # transition are removed when changing the state type, thus do not copy them
+        model_properties.extend(['states', 'data_flows', 'scoped_variables'])
 
     child_models = {}
     for prop_name in model_properties:
@@ -246,7 +247,7 @@ def create_state_model_for_state(new_state, state_element_models):
     new_state_m = state_m_class(new_state)
 
     # handle special case of BarrierConcurrencyState -> secure decider state model to not be overwritten
-    if isinstance(new_state_m.state, BarrierConcurrencyState):
+    if isinstance(new_state, BarrierConcurrencyState):
         decider_state_m = new_state_m.states[UNIQUE_DECIDER_STATE_ID]
 
     # by default all transitions are left out if the new and original state are container states
@@ -262,17 +263,23 @@ def create_state_model_for_state(new_state, state_element_models):
         if prop_name == "states":
             for state_m in new_state_m.states.itervalues():
                 state_m.parent = new_state_m
-        if prop_name in ['outcomes', 'input_data_ports', 'output_data_ports', 'transitions', 'data_flows',
-                         'scoped_variables']:
+            # Delete decider state model, if existing
+            if UNIQUE_DECIDER_STATE_ID in new_state_m.states:
+                del new_state_m.states[UNIQUE_DECIDER_STATE_ID]
+        if prop_name in ['outcomes', 'input_data_ports', 'output_data_ports', 'data_flows', 'scoped_variables']:
             for model in new_state_m.__getattribute__(prop_name):
                 model.parent = new_state_m
 
     # handle special case of BarrierConcurrencyState -> re-insert decider state model
-    if isinstance(new_state_m.state, BarrierConcurrencyState):
-        # new_state_m.states[decider_state_m.state.state_id] = decider_state_m
-        decider_state_id = decider_state_m.state.state_id
-        # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
-        new_state_m.states._obj.__setitem__(decider_state_id, decider_state_m)
+    if isinstance(new_state, BarrierConcurrencyState):
+        decider_state_m.parent = new_state_m
+        new_state_m.states[UNIQUE_DECIDER_STATE_ID] = decider_state_m
+
+    # Some states create transition on creation (e.g. Barrier Concurrency States), which have to be modelled
+    if isinstance(new_state, ContainerState):
+        for transition in new_state.transitions.itervalues():
+            transition_m = TransitionModel(transition, new_state_m)
+            new_state_m.transitions.append(transition_m)
 
     return new_state_m
 

@@ -210,7 +210,7 @@ class ContainerState(State):
             else:
                 global_storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].get_file_system_path())
 
-        #first delete all transitions and data_flows, which are connected to the state to be deleted
+        # first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state_id or transition.to_state == state_id:

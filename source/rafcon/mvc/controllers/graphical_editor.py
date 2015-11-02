@@ -81,6 +81,8 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
+    _change_state_type = False
+
     def __init__(self, model, view):
         """Constructor
         """
@@ -154,6 +156,12 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("up", partial(self._move_in_direction, Direction.top))
         shortcut_manager.add_callback_for_action("down", partial(self._move_in_direction, Direction.bottom))
 
+    @ExtendedController.observe("state_machine", before=True)
+    def state_machine_before_change(self, model, prop_name, info):
+        if 'method_name' in info and info['method_name'] == 'root_state_before_change':
+            if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
+                self._change_state_type = True
+
     @ExtendedController.observe("state_machine", after=True)
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
     @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of any state within state machine changed
@@ -167,8 +175,12 @@ class GraphicalEditorController(ExtendedController):
         :param str prop_name: The property that was changed
         :param dict info: Information about the change
         """
-        # print "change", model, prop_name, info
         if 'method_name' in info:
+            if self._change_state_type:
+                if info['method_name'] == 'root_state_after_change':
+                    if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
+                        self._change_state_type = False
+                        self._redraw()
             if info['method_name'] == 'root_state_after_change':
                 self._redraw()
             elif info['method_name'] == 'marked_dirty' and info['args'][1]:
@@ -218,7 +230,8 @@ class GraphicalEditorController(ExtendedController):
 
         :param args: console arguments, not used
         """
-
+        if self._change_state_type:
+            return
         # Prepare the drawing process
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
@@ -241,7 +254,8 @@ class GraphicalEditorController(ExtendedController):
         # and whether the last redraw was more than redraw_after ago
 
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
-                        self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id:
+                self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id \
+                and not self._change_state_type:
             # Remove any existing timer id
             self.timer_id = None
             self.view.editor.emit("configure_event", None)
