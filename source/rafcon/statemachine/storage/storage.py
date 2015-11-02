@@ -180,7 +180,7 @@ class StateMachineStorage(Observable):
         storage_utils.create_path(state_path_full)
         if isinstance(state, ExecutionState):
             self.save_script_file_for_state_and_source_path(state, state_path)
-        storage_utils.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
+        storage_utils.save_dict_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
 
         # create yaml files for all children
         if isinstance(state, ContainerState):
@@ -258,7 +258,7 @@ class StateMachineStorage(Observable):
         # Transitions and data flows are not added when loading a state, as also states are not added.
         # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
         # validity checks for transitions and data flows would fail
-        state_info = storage_utils.load_object_from_yaml(yaml_file)
+        state_info = storage_utils.load_dict_from_yaml(yaml_file)
         if not isinstance(state_info, tuple):
             state = state_info
         else:
