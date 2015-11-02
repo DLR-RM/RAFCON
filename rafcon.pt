@@ -28,4 +28,4 @@ source/rafcon/documentation => docs
 bin/ | !rafcon_start | !rafcon_start_gui => bin # Symlinks are recreated in post_install step
 
 [post-install]
-cd ${PKGROOT}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui
+cd ${RMPM_INSTALL_DIR}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui
