@@ -3,7 +3,7 @@ import os
 import argparse
 from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 
-from rafcon.utils.storage_utils import StorageUtils
+from rafcon.utils import storage_utils
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -44,7 +44,6 @@ class DefaultConfig(object):
         assert isinstance(default_config, str)
         self.config_file = None
         self.default_config = default_config
-        self.storage = StorageUtils()
         self.path = None
 
         if not default_config:
@@ -69,7 +68,7 @@ class DefaultConfig(object):
             try:
                 if not os.path.exists(path):
                     os.makedirs(path)
-                self.storage.write_dict_to_yaml(self.__config_dict, config_file_path, width=80, default_flow_style=False)
+                storage_utils.write_dict_to_yaml(self.__config_dict, config_file_path, width=80, default_flow_style=False)
                 self.config_file = config_file_path
                 logger.debug("Created config file {0}".format(config_file_path))
             except Exception as e:
@@ -78,7 +77,7 @@ class DefaultConfig(object):
         # Otherwise read the config file from the specified directory
         else:
             try:
-                self.__config_dict = self.storage.load_dict_from_yaml(config_file_path)
+                self.__config_dict = storage_utils.load_dict_from_yaml(config_file_path)
                 self.config_file = config_file_path
                 logger.debug("Configuration loaded from {0}".format(config_file_path))
             except Exception as e:
@@ -108,7 +107,7 @@ class DefaultConfig(object):
 
     def save_configuration(self):
         if self.config_file:
-            self.storage.write_dict_to_yaml(self.__config_dict, self.config_file, width=80, default_flow_style=False)
+            storage_utils.write_dict_to_yaml(self.__config_dict, self.config_file, width=80, default_flow_style=False)
             logger.debug("Saved configuration to {0}".format(self.config_file))
 
 
