@@ -305,6 +305,32 @@ class BarrierConcurrencyState(ConcurrencyState):
         else:
             ContainerState.remove_state(self, state_id, recursive_deletion)
 
+    @classmethod
+    def from_dict(cls, dictionary):
+        states = None if 'states' not in dictionary else dictionary['states']
+        transitions = dictionary['transitions']
+        data_flows = dictionary['data_flows']
+        state = cls(name=dictionary['name'],
+                    state_id=dictionary['state_id'],
+                    input_data_ports=dictionary['input_data_ports'],
+                    output_data_ports=dictionary['output_data_ports'],
+                    outcomes=dictionary['outcomes'],
+                    states=None,
+                    transitions=transitions if states else None,
+                    data_flows=data_flows if states else None,
+                    scoped_variables=dictionary['scoped_variables'],
+                    v_checker=None,
+                    load_from_storage=True)
+        try:
+            state.description = dictionary['description']
+        except TypeError:
+            pass
+
+        if states:
+            return state
+        else:
+            return state, dictionary['transitions'], dictionary['data_flows']
+
 
 class DeciderState(ExecutionState):
 

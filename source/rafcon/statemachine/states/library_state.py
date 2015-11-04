@@ -62,7 +62,7 @@ class LibraryState(State):
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
 
-        state_machine, lib_version, creation_time = library_manager.storage.load_statemachine_from_yaml(lib_os_path)
+        state_machine, lib_version, creation_time = library_manager.storage.load_statemachine_from_path(lib_os_path)
         self.state_copy = state_machine.root_state
         self.state_copy.parent = self
         if not str(lib_version) == version and not str(lib_version) == "None":
@@ -233,54 +233,52 @@ class LibraryState(State):
         State.remove_output_data_port(data_port_id)
 
     @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = {
-            'library_path': data.library_path,
-            'library_name': data.library_name,
-            'version': data.version,
-            'name': data.name,
-            'state_id': data.state_id,
-            'input_data_port_runtime_values': data.input_data_port_runtime_values,
-            'use_runtime_value_input_data_ports': data.use_runtime_value_input_data_ports,
-            'output_data_port_runtime_values': data.output_data_port_runtime_values,
-            'use_runtime_value_output_data_ports': data.use_runtime_value_output_data_ports,
-            'outcomes': data.outcomes,
-        }
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        library_path = dict_representation['library_path']
-        library_name = dict_representation['library_name']
-        version = dict_representation['version']
-        name = dict_representation['name']
-        state_id = dict_representation['state_id']
-        outcomes = dict_representation['outcomes']
+    def from_dict(cls, dictionary):
+        library_path = dictionary['library_path']
+        library_name = dictionary['library_name']
+        version = dictionary['version']
+        name = dictionary['name']
+        state_id = dictionary['state_id']
+        outcomes = dictionary['outcomes']
 
         input_data_port_runtime_values = {}
         use_runtime_value_input_data_ports = {}
         output_data_port_runtime_values = {}
         use_runtime_value_output_data_ports = {}
 
-        if 'input_data_ports' in dict_representation:  # this case is for backward compatibility
-            for idp_id, input_data_port in dict_representation['input_data_ports'].iteritems():
+        if 'input_data_ports' in dictionary:  # this case is for backward compatibility
+            for idp_id, input_data_port in dictionary['input_data_ports'].iteritems():
                 input_data_port_runtime_values[idp_id] = input_data_port.default_value
                 use_runtime_value_input_data_ports[idp_id] = True
 
-            for odp_id, output_data_port in dict_representation['output_data_ports'].iteritems():
+            for odp_id, output_data_port in dictionary['output_data_ports'].iteritems():
                 output_data_port_runtime_values[odp_id] = output_data_port.default_value
                 use_runtime_value_output_data_ports[odp_id] = True
         else:  # this is the default case
-            input_data_port_runtime_values = dict_representation['input_data_port_runtime_values']
-            use_runtime_value_input_data_ports = dict_representation['use_runtime_value_input_data_ports']
-            output_data_port_runtime_values = dict_representation['output_data_port_runtime_values']
-            use_runtime_value_output_data_ports = dict_representation['use_runtime_value_output_data_ports']
+            input_data_port_runtime_values = dictionary['input_data_port_runtime_values']
+            use_runtime_value_input_data_ports = dictionary['use_runtime_value_input_data_ports']
+            output_data_port_runtime_values = dictionary['output_data_port_runtime_values']
+            use_runtime_value_output_data_ports = dictionary['use_runtime_value_output_data_ports']
 
-        return LibraryState(library_path, library_name, version, name, state_id, outcomes,
-                            input_data_port_runtime_values, use_runtime_value_input_data_ports,
-                            output_data_port_runtime_values, use_runtime_value_output_data_ports)
+        return cls(library_path, library_name, version, name, state_id, outcomes,
+                   input_data_port_runtime_values, use_runtime_value_input_data_ports,
+                   output_data_port_runtime_values, use_runtime_value_output_data_ports)
+
+    @staticmethod
+    def state_to_dict(state):
+        dict_representation = {
+            'library_path': state.library_path,
+            'library_name': state.library_name,
+            'version': state.version,
+            'name': state.name,
+            'state_id': state.state_id,
+            'outcomes': state.outcomes,
+            'input_data_port_runtime_values': state.input_data_port_runtime_values,
+            'use_runtime_value_input_data_ports': state.use_runtime_value_input_data_ports,
+            'output_data_port_runtime_values': state.output_data_port_runtime_values,
+            'use_runtime_value_output_data_ports': state.use_runtime_value_output_data_ports
+        }
+        return dict_representation
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -296,7 +294,7 @@ class LibraryState(State):
     @library_path.setter
     @Observable.observed
     def library_path(self, library_path):
-        if not isinstance(library_path, str):
+        if not isinstance(library_path, basestring):
             raise TypeError("library_path must be of type str")
 
         self._library_path = library_path
@@ -311,7 +309,7 @@ class LibraryState(State):
     @library_name.setter
     @Observable.observed
     def library_name(self, library_name):
-        if not isinstance(library_name, str):
+        if not isinstance(library_name, basestring):
             raise TypeError("library_name must be of type str")
 
         self._library_name = library_name
@@ -326,7 +324,7 @@ class LibraryState(State):
     @version.setter
     @Observable.observed
     def version(self, version):
-        if not isinstance(version, str):
+        if not isinstance(version, basestring):
             raise TypeError("version must be of type str")
 
         self._version = version
