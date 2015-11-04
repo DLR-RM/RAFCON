@@ -49,29 +49,26 @@ class DataPort(StateElement):
     yaml_tag = u'!DataPort'
 
     @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = {
-            'data_port_id': data.data_port_id,
-            'name': data.name,
-            'data_type': data.data_type,
-            'default_value': data.default_value
-        }
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node)
-        data_port_id = dict_representation['data_port_id']
-        name = dict_representation['name']
-        data_type = dict_representation['data_type']
-        default_value = dict_representation['default_value']
+    def from_dict(cls, dictionary):
+        data_port_id = dictionary['data_port_id']
+        name = dictionary['name']
+        data_type = dictionary['data_type']
+        default_value = dictionary['default_value']
         # Allow creation of DataPort class when loading from YAML file
         if cls == DataPort:
             return DataPort(name, data_type, default_value, data_port_id, force_type=True)
         # Call appropriate constructor, e.g. InputDataPort(...) for input data ports
         else:
             return cls(name, data_type, default_value, data_port_id, force_type=True)
+
+    @staticmethod
+    def state_element_to_dict(state_element):
+        return {
+            'data_port_id': state_element.data_port_id,
+            'name': state_element.name,
+            'data_type': state_element.data_type,
+            'default_value': state_element.default_value
+        }
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
@@ -94,7 +91,7 @@ class DataPort(StateElement):
     @name.setter
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, str):
+        if not isinstance(name, basestring):
             raise TypeError("Name must be of type str")
 
         if len(name) < 1:

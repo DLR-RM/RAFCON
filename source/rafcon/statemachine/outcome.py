@@ -38,13 +38,15 @@ class Outcome(StateElement):
         return "Outcome '{0}' [{1}]".format(self.name, self.outcome_id)
 
     @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = {
-            'outcome_id': data.outcome_id,
-            'name': data.name,
+    def from_dict(cls, dictionary):
+        return Outcome(dictionary['outcome_id'], dictionary['name'])
+
+    @staticmethod
+    def state_element_to_dict(state_element):
+        return {
+            'outcome_id': state_element.outcome_id,
+            'name': state_element.name
         }
-        node = dumper.represent_mapping(u'!Outcome', dict_representation)
-        return node
 
     @classmethod
     def from_yaml(cls, loader, node):
@@ -82,7 +84,7 @@ class Outcome(StateElement):
     @name.setter
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, str):
+        if not isinstance(name, basestring):
             raise TypeError("name must be of type str")
 
         if len(name) < 1:

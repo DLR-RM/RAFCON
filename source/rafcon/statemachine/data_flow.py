@@ -44,26 +44,23 @@ class DataFlow(StateElement):
                (self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id)
 
     @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = {
-            'data_flow_id': data.data_flow_id,
-            'from_state': data.from_state,
-            'from_key': data.from_key,
-            'to_state': data.to_state,
-            'to_key': data.to_key
-        }
-        node = dumper.represent_mapping(u'!DataFlow', dict_representation)
-        return node
+    def from_dict(cls, dictionary):
+        from_state = dictionary['from_state']
+        from_key = dictionary['from_key']
+        to_state = dictionary['to_state']
+        to_key = dictionary['to_key']
+        data_flow_id = dictionary['data_flow_id']
+        return cls(from_state, from_key, to_state, to_key, data_flow_id)
 
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node)
-        from_state = dict_representation['from_state']
-        from_key = dict_representation['from_key']
-        to_state = dict_representation['to_state']
-        to_key = dict_representation['to_key']
-        data_flow_id = dict_representation['data_flow_id']
-        return DataFlow(from_state, from_key, to_state, to_key, data_flow_id)
+    @staticmethod
+    def state_element_to_dict(state_element):
+        return {
+            'data_flow_id': state_element.data_flow_id,
+            'from_state': state_element.from_state,
+            'from_key': state_element.from_key,
+            'to_state': state_element.to_state,
+            'to_key': state_element.to_key
+        }
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
@@ -76,7 +73,7 @@ class DataFlow(StateElement):
         :param int from_key: valid origin outcome
         :return:
         """
-        if not isinstance(from_state, str):
+        if not isinstance(from_state, basestring):
             raise ValueError("from_state must be of type str")
         if not isinstance(from_key, int):
             raise ValueError("from_key must be of type int")
@@ -101,7 +98,7 @@ class DataFlow(StateElement):
     @from_state.setter
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
-        if not isinstance(from_state, str):
+        if not isinstance(from_state, basestring):
             raise ValueError("from_state must be of type str")
 
         self._change_property_with_validity_check('_from_state', from_state)
@@ -127,7 +124,7 @@ class DataFlow(StateElement):
         :param int to_key: valid target data port
         :return:
         """
-        if not isinstance(to_state, str):
+        if not isinstance(to_state, basestring):
             raise ValueError("from_state must be of type str")
         if not isinstance(to_key, int):
             raise ValueError("from_outcome must be of type int")
@@ -152,7 +149,7 @@ class DataFlow(StateElement):
     @to_state.setter
     # @Observable.observed  # should not be observed to stay consistent
     def to_state(self, to_state):
-        if not isinstance(to_state, str):
+        if not isinstance(to_state, basestring):
             raise ValueError("to_state must be of type str")
 
         self._change_property_with_validity_check('_to_state', to_state)
