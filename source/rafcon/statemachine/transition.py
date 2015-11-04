@@ -50,26 +50,23 @@ class Transition(StateElement):
                (self._from_state, self._from_outcome, self._to_state, self._to_outcome, self._transition_id)
 
     @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = {
-            'transition_id': data.transition_id,
-            'from_state': data.from_state,
-            'from_outcome': data.from_outcome,
-            'to_state': data.to_state,
-            'to_outcome': data.to_outcome
-        }
-        node = dumper.represent_mapping(u'!Transition', dict_representation)
-        return node
+    def from_dict(cls, dictionary):
+        transition_id = dictionary['transition_id']
+        from_state = dictionary['from_state']
+        from_outcome = dictionary['from_outcome']
+        to_state = dictionary['to_state']
+        to_outcome = dictionary['to_outcome']
+        return cls(from_state, from_outcome, to_state, to_outcome, transition_id)
 
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node)
-        transition_id = dict_representation['transition_id']
-        from_state = dict_representation['from_state']
-        from_outcome = dict_representation['from_outcome']
-        to_state = dict_representation['to_state']
-        to_outcome = dict_representation['to_outcome']
-        return Transition(from_state, from_outcome, to_state, to_outcome, transition_id)
+    @staticmethod
+    def state_element_to_dict(state_element):
+        return {
+            'transition_id': state_element.transition_id,
+            'from_state': state_element.from_state,
+            'from_outcome': state_element.from_outcome,
+            'to_state': state_element.to_state,
+            'to_outcome': state_element.to_outcome
+        }
 
 #########################################################################
 # Properties for all class field that must be observed by the gtkmvc
@@ -83,7 +80,7 @@ class Transition(StateElement):
         :return:
         """
         if not (from_state is None and from_outcome is None):
-            if not isinstance(from_state, str):
+            if not isinstance(from_state, basestring):
                 raise ValueError("from_state must be of type str")
             if not isinstance(from_outcome, int):
                 raise ValueError("from_outcome must be of type int")
@@ -107,7 +104,7 @@ class Transition(StateElement):
         :return:
         """
         if not (to_state is None and (to_outcome is not int and to_outcome is not None)):
-            if not isinstance(to_state, str):
+            if not isinstance(to_state, basestring):
                 raise ValueError("to_state must be of type str")
             if not isinstance(to_outcome, int) and not to_outcome is None:
                 raise ValueError("to_outcome must be of type int or None (if to_state is of type str)")
@@ -133,7 +130,7 @@ class Transition(StateElement):
     @from_state.setter
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
-        if from_state is not None and not isinstance(from_state, str):
+        if from_state is not None and not isinstance(from_state, basestring):
             raise ValueError("from_state must be of type str")
 
         self._change_property_with_validity_check('_from_state', from_state)
@@ -163,7 +160,7 @@ class Transition(StateElement):
     @to_state.setter
     @Observable.observed
     def to_state(self, to_state):
-        if to_state is not None and not isinstance(to_state, str):
+        if to_state is not None and not isinstance(to_state, basestring):
             raise ValueError("to_state must be of type str")
 
         self._change_property_with_validity_check('_to_state', to_state)
