@@ -51,7 +51,7 @@ def state_machine_path(path):
                                                                                 StateMachineStorage.STATEMACHINE_FILE))
 
 
-def start_state_machine():
+def start_state_machine(setup_config):
     time.sleep(1.0)
     # Note: The rafcon_server has to be started before the statemachine is launched
     if not global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
@@ -60,6 +60,7 @@ def start_state_machine():
     glib.idle_add(network_connections.register_udp)
 
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(setup_config['sm_path'],
+                                                                     start_state_path=setup_config['start_state_path'],
                                                                      wait_for_execution_finished=False)
 
     sm_thread = threading.Thread(target=check_for_sm_finished, args=[sm, ])
@@ -110,6 +111,8 @@ if __name__ == '__main__':
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
+    parser.add_argument('-s', '--start_state_path', action='store', metavar='path', dest='start_state_path',
+                        default=None, nargs='?', help="path of to the state that should be launched")
 
     result = parser.parse_args()
     setup_config = vars(result)
@@ -132,7 +135,7 @@ if __name__ == '__main__':
     # Set base path of global storage
     sm_singletons.global_storage.base_path = GLOBAL_STORAGE_BASE_PATH
 
-    start_state_machine()
+    start_state_machine(setup_config)
 
     # setup network connections
     reactor.run()

@@ -72,8 +72,11 @@ def run_sm():
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_path("../../test_scripts/backward_step_library_test")
 
+    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
+
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
+        global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/test_custom_entry_point")
 
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView()

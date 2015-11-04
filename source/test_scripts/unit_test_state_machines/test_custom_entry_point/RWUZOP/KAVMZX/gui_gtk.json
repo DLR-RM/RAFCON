@@ -1,0 +1,32 @@
+{
+    "gui": {
+        "editor_gaphas": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    64.46989473684212, 
+                    50.03115789473685
+                ]
+            }
+        }, 
+        "editor_opengl": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    64.46989473684212, 
+                    -50.03115789473685
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    20.0, 
+                    20.0
+                ]
+            }
+        }
+    }, 
+    "outcome-1": {}, 
+    "outcome-2": {}, 
+    "outcome0": {}
+}
