@@ -62,8 +62,8 @@ def test_hierarchy_save_load_test(caplog):
     hierarchy_state = create_hierarchy_state()
     sm = StateMachine(hierarchy_state)
 
-    s.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
-    [sm_loaded, version, creation_time] = s.load_statemachine_from_yaml()
+    s.save_statemachine_to_path(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    [sm_loaded, version, creation_time] = s.load_statemachine_from_path()
 
     state_machine = StateMachine(sm_loaded.root_state)
 

@@ -757,7 +757,7 @@ def test_add_remove_models(caplog):
     test_history_path2 = '/home_local/test_history_after'
 
     def store_state_machine(sm_model, path):
-        rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
             sm_model.state_machine,
             path,
             delete_old_state_machine=True)

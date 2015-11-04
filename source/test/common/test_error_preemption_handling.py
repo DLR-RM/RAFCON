@@ -27,7 +27,7 @@ class TestErrorPreemptionHandling():
     def setup_class(cls):
         # This methods runs on class creation and creates the state machine
         test_utils.test_multithrading_lock.acquire()
-        state_machine, version, creation_time = global_storage.load_statemachine_from_yaml(rafcon.__path__[0] +
+        state_machine, version, creation_time = global_storage.load_statemachine_from_path(rafcon.__path__[0] +
                                                                                            "/../test_scripts/action_block_execution_test")
         cls.state_machine = state_machine
         state_machine_manager.add_state_machine(state_machine)

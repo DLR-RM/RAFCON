@@ -35,7 +35,7 @@ class NetworkStorageReader:
 
     @base_path.setter
     def base_path(self, base_path):
-        if not isinstance(base_path, str):
+        if not isinstance(base_path, basestring):
             raise TypeError("base_path must be of type str")
 
         self._base_path = base_path

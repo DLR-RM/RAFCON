@@ -165,7 +165,7 @@ def run_turtle_demo():
 
     # load the state machine
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/tutorials/basic_turtle_demo_sm")
+        global_storage.load_statemachine_from_path("../../test_scripts/tutorials/basic_turtle_demo_sm")
 
     rafcon.statemachine.singleton.library_manager.initialize()
     main_window_view = MainWindowView()

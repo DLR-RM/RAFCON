@@ -59,9 +59,9 @@ def test_concurrency_barrier_save_load(caplog):
 
     state_machine = StateMachine(concurrency_barrier_state)
     test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/decider_test_statemachine")
-    # test_storage.save_statemachine_as_yaml(state_machine, "../test_scripts/decider_test_statemachine")
-    test_storage.save_statemachine_as_yaml(state_machine, test_utils.TMP_TEST_PATH + "/decider_test_statemachine")
-    sm_loaded, version, creation_time = test_storage.load_statemachine_from_yaml(test_utils.TMP_TEST_PATH +
+    # test_storage.save_statemachine_to_path(state_machine, "../test_scripts/decider_test_statemachine")
+    test_storage.save_statemachine_to_path(state_machine, test_utils.TMP_TEST_PATH + "/decider_test_statemachine")
+    sm_loaded, version, creation_time = test_storage.load_statemachine_from_path(test_utils.TMP_TEST_PATH +
                                                                                  "/decider_test_statemachine")
 
     root_state = sm_loaded.root_state
