@@ -86,7 +86,8 @@ class ContainerState(State):
         return dict_representation
 
     @classmethod
-    def from_dict(cls, dictionary, include_connections=True):
+    def from_dict(cls, dictionary):
+        states = None if 'states' not in dictionary else dictionary['states']
         transitions = dictionary['transitions']
         data_flows = dictionary['data_flows']
         state = cls(name=dictionary['name'],
@@ -95,8 +96,8 @@ class ContainerState(State):
                     output_data_ports=dictionary['output_data_ports'],
                     outcomes=dictionary['outcomes'],
                     states=None,
-                    transitions=transitions if include_connections else None,
-                    data_flows=data_flows if include_connections else None,
+                    transitions=transitions if states else None,
+                    data_flows=data_flows if states else None,
                     scoped_variables=dictionary['scoped_variables'],
                     v_checker=None)
         try:
@@ -104,7 +105,7 @@ class ContainerState(State):
         except TypeError:
             pass
 
-        if include_connections:
+        if states:
             return state
         else:
             return state, dictionary['transitions'], dictionary['data_flows']
@@ -112,7 +113,7 @@ class ContainerState(State):
     @classmethod
     def from_yaml(cls, loader, node):
         dict_representation = loader.construct_mapping(node, deep=True)
-        state, transitions, data_flows = cls.from_dict(dict_representation, include_connections=False)
+        state, transitions, data_flows = cls.from_dict(dict_representation)
         return state, transitions, data_flows
 
     def __str__(self):

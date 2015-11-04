@@ -6,11 +6,12 @@ import copy
 from weakref import ref
 
 from gtkmvc import Observable
-import yaml
+from yaml import YAMLObject
 
+from rafcon.utils.json_utils import JSONObject
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 from rafcon.statemachine.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
@@ -21,7 +22,7 @@ from rafcon.statemachine.id_generator import *
 PATH_SEPARATOR = '/'
 
 
-class State(Observable, yaml.YAMLObject):
+class State(Observable, YAMLObject, JSONObject):
 
     """A class for representing a state in the state machine
 
@@ -206,7 +207,7 @@ class State(Observable, yaml.YAMLObject):
                 default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
-            if isinstance(default, str) and len(default) > 0 and default[0] == '$':
+            if isinstance(default, basestring) and len(default) > 0 and default[0] == '$':
                 from rafcon.statemachine.singleton import global_variable_manager as gvm
                 var_name = default[1:]
                 if not gvm.variable_exist(var_name):
@@ -657,7 +658,7 @@ class State(Observable, yaml.YAMLObject):
     @Observable.observed
     def name(self, name):
         if name is not None:
-            if not isinstance(name, str):
+            if not isinstance(name, basestring):
                 raise TypeError("Name must be of type str")
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
