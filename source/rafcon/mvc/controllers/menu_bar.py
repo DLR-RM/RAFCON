@@ -130,7 +130,7 @@ class MenuBarController(ExtendedController):
             load_path = path
 
         try:
-            [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(load_path)
+            [state_machine, version, creation_time] = global_storage.load_statemachine_from_path(load_path)
             state_machine_manager.add_state_machine(state_machine)
         except AttributeError as e:
             logger.error('Error while trying to open state-machine: {0}'.format(e))
@@ -174,7 +174,7 @@ class MenuBarController(ExtendedController):
             dialog.grab_focus()
             dialog.finalize(on_message_dialog_response_signal)
 
-        global_storage.save_statemachine_as_yaml(
+        global_storage.save_statemachine_to_path(
             self.model.get_selected_state_machine_model().state_machine,
             self.model.get_selected_state_machine_model().state_machine.file_system_path,
             delete_old_state_machine=False, save_as=save_as)

@@ -306,30 +306,30 @@ class BarrierConcurrencyState(ConcurrencyState):
             ContainerState.remove_state(self, state_id, recursive_deletion)
 
     @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = ContainerState.get_container_state_yaml_dict(data)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        state = BarrierConcurrencyState(name=dict_representation['name'],
-                                        state_id=dict_representation['state_id'],
-                                        input_data_ports=dict_representation['input_data_ports'],
-                                        output_data_ports=dict_representation['output_data_ports'],
-                                        outcomes=dict_representation['outcomes'],
-                                        states=None,
-                                        transitions=None,
-                                        data_flows=None,
-                                        scoped_variables=dict_representation['scoped_variables'],
-                                        v_checker=None,
-                                        load_from_storage=True)
+    def from_dict(cls, dictionary):
+        states = None if 'states' not in dictionary else dictionary['states']
+        transitions = dictionary['transitions']
+        data_flows = dictionary['data_flows']
+        state = cls(name=dictionary['name'],
+                    state_id=dictionary['state_id'],
+                    input_data_ports=dictionary['input_data_ports'],
+                    output_data_ports=dictionary['output_data_ports'],
+                    outcomes=dictionary['outcomes'],
+                    states=None,
+                    transitions=transitions if states else None,
+                    data_flows=data_flows if states else None,
+                    scoped_variables=dictionary['scoped_variables'],
+                    v_checker=None,
+                    load_from_storage=True)
         try:
-            state.description = dict_representation['description']
-        except (ValueError, TypeError, KeyError):
+            state.description = dictionary['description']
+        except TypeError:
             pass
-        return state, dict_representation['transitions'], dict_representation['data_flows']
+
+        if states:
+            return state
+        else:
+            return state, dictionary['transitions'], dictionary['data_flows']
 
 
 class DeciderState(ExecutionState):
@@ -398,24 +398,3 @@ class DeciderState(ExecutionState):
                 return_value = name_outcome_tuple[1]
                 break
         return return_value
-
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = ExecutionState.get_execution_state_yaml_dict(data)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        name = dict_representation['name']
-        state_id = dict_representation['state_id']
-        input_data_ports = dict_representation['input_data_ports']
-        output_data_ports = dict_representation['output_data_ports']
-        outcomes = dict_representation['outcomes']
-        state = DeciderState(name, state_id, input_data_ports, output_data_ports, outcomes, check_path=False)
-        try:
-            state.description = dict_representation['description']
-        except (ValueError, TypeError, KeyError):
-            pass
-        return state

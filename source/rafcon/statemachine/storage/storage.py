@@ -18,18 +18,22 @@ import yaml
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_machine import StateMachine
+
+from rafcon.statemachine.config import global_config
+
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+from rafcon.utils import storage_utils
+from rafcon.utils.config import read_file
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
-from rafcon.utils.storage_utils import StorageUtils
-from rafcon.utils.config import read_file
-# clean the DEFAULT_SCRIPT_PATH folder at each program start
 
+# clean the DEFAULT_SCRIPT_PATH folder at each program start
 from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
-if StorageUtils.exists_path(DEFAULT_SCRIPT_PATH):
+if os.path.exists(DEFAULT_SCRIPT_PATH):
     files = glob.glob(os.path.join(DEFAULT_SCRIPT_PATH, "*"))
     for f in files:
         shutil.rmtree(f)
+
 
 class StateMachineStorage(Observable):
 
@@ -43,8 +47,10 @@ class StateMachineStorage(Observable):
     :ivar ids_of_modified_state_machines: each state machine has a flag if it was modified since the last saving
     """
 
-    GRAPHICS_FILE = 'gui_gtk.yaml'
-    META_FILE = 'meta.yaml'
+    GRAPHICS_FILE_YAML = 'gui_gtk.yaml'
+    GRAPHICS_FILE_JSON = 'gui_gtk.json'
+    META_FILE_YAML = 'meta.yaml'
+    META_FILE_JSON = 'meta.json'
     SCRIPT_FILE = 'script.py'
     STATEMACHINE_FILE = 'statemachine.yaml'
     LIBRARY_FILE = 'library.yaml'
@@ -52,7 +58,6 @@ class StateMachineStorage(Observable):
     def __init__(self, base_path=GLOBAL_STORAGE_BASE_PATH):
         Observable.__init__(self)
 
-        self.storage_utils = StorageUtils(base_path)
         self._base_path = None
         self.base_path = os.path.abspath(base_path)
         logger.debug("Storage class initialized!")
@@ -82,7 +87,7 @@ class StateMachineStorage(Observable):
             if path in self._paths_to_remove_before_sm_save[state_machine_id]:
                 self._paths_to_remove_before_sm_save[state_machine_id].remove(path)
 
-    def save_statemachine_as_yaml(self, statemachine, base_path, version=None, delete_old_state_machine=False, save_as=False):
+    def save_statemachine_to_path(self, statemachine, base_path, version=None, delete_old_state_machine=False, save_as=False):
         """
         Saves a root state to a yaml file.
         :param statemachine: the statemachine to be saved
@@ -100,16 +105,16 @@ class StateMachineStorage(Observable):
             # remove all paths that were marked to be removed
             if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
                 for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
-                    if StorageUtils.exists_path(path):
-                        StorageUtils.remove_path(path)
+                    if os.path.exists(path):
+                        storage_utils.remove_path(path)
 
         root_state = statemachine.root_state
         # clean old path first
-        if StorageUtils.exists_path(self.base_path):
+        if os.path.exists(self.base_path):
             if delete_old_state_machine:
-                StorageUtils.remove_path(self.base_path)
-        if not StorageUtils.exists_path(self.base_path):
-            StorageUtils.create_path(self.base_path)
+                storage_utils.remove_path(self.base_path)
+        if not os.path.exists(self.base_path):
+            storage_utils.create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
         last_update = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         creation_time = last_update
@@ -178,29 +183,19 @@ class StateMachineStorage(Observable):
         from rafcon.statemachine.states.container_state import ContainerState
         state_path = os.path.join(parent_path, str(state.state_id))
         state_path_full = os.path.join(self.base_path, state_path)
-        StorageUtils.create_path(state_path_full)
+        storage_utils.create_path(state_path_full)
         if isinstance(state, ExecutionState):
             self.save_script_file_for_state_and_source_path(state, state_path)
-        StorageUtils.save_object_to_yaml_abs(state, os.path.join(state_path_full, self.META_FILE))
+
+        storage_utils.write_dict_to_yaml(state, os.path.join(state_path_full, self.META_FILE_YAML))
+        storage_utils.write_dict_to_json(state, os.path.join(state_path_full, self.META_FILE_JSON))
 
         # create yaml files for all children
         if isinstance(state, ContainerState):
             for state in state.states.itervalues():
                 self.save_state_recursively(state, state_path, force_full_load)
 
-    def clean_transitions_of_sm(self, root_state):
-        affected_sm = False
-        if hasattr(root_state, "states"):
-            for t_id, transition in root_state.transitions.iteritems():
-                if transition.to_state is None:
-                    affected_sm = True
-                    transition.to_state = root_state.state_id
-            for s_id, state in root_state.states.iteritems():
-                if hasattr(state, "states"):
-                    affected_sm |= self.clean_transitions_of_sm(state)
-        return affected_sm
-
-    def load_statemachine_from_yaml(self, base_path=None):
+    def load_statemachine_from_path(self, base_path=None):
         """
         Loads a state machine from a given path. If no path is specified the state machine is tried to be loaded
         from the base path.
@@ -232,13 +227,9 @@ class StateMachineStorage(Observable):
         sm.root_state = self.load_state_recursively(parent=sm, state_path=tmp_base_path)
         sm.marked_dirty = False
 
-        # this is a backward compatibility function to ensure that old libraries are still working
-        if self.clean_transitions_of_sm(sm.root_state):
-            self.save_statemachine_as_yaml(sm, base_path)
-
         return [sm, version, creation_time]
 
-    def load_state_from_yaml(self, state_path):
+    def load_state_from_path(self, state_path):
         """
         Loads a state from a given path
         from the base path.
@@ -250,16 +241,18 @@ class StateMachineStorage(Observable):
     def load_state_recursively(self, parent, state_path=None):
         """
         Recursively loads the state. It calls this method on each sub-state of a container state.
-        :param parent_state:  the root state of the last load call to which the loaded state will be added
+        :param parent:  the root state of the last load call to which the loaded state will be added
         :param state_path: the path on the filesystem where to find eht meta file for the state
         :return:
         """
-        yaml_file = os.path.join(state_path, self.META_FILE)
+
+        yaml_file = os.path.join(state_path, self.META_FILE_YAML)
+        json_file = os.path.join(state_path, self.META_FILE_JSON)
+        state_info = self.load_appropriate_file(yaml_file, json_file)
 
         # Transitions and data flows are not added when loading a state, as also states are not added.
         # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
         # validity checks for transitions and data flows would fail
-        state_info = self.storage_utils.load_object_from_yaml_abs(yaml_file)
         if not isinstance(state_info, tuple):
             state = state_info
         else:
@@ -296,6 +289,23 @@ class StateMachineStorage(Observable):
         return state
 
     @staticmethod
+    def load_appropriate_file(yaml_file, json_file):
+        if global_config.get_config_value("USE_JSON", True):
+            if os.path.exists(json_file):
+                return storage_utils.load_dict_from_json(json_file)
+            elif os.path.exists(yaml_file):
+                logger.debug("Loading YAML file, as JSON file is not existing: {0}".format(json_file))
+                return storage_utils.load_dict_from_yaml(yaml_file)
+        else:
+            if os.path.exists(yaml_file):
+                return storage_utils.load_dict_from_yaml(yaml_file)
+            elif os.path.exists(json_file):
+                logger.debug("Loading JSON file, as YAML file is not existing: {0}".format(yaml_file))
+                return storage_utils.load_dict_from_json(json_file)
+        raise ValueError("No state at specified path found: {0}".format(os.path.dirname(yaml_file)))
+
+
+    @staticmethod
     def load_script_file(state):
         from rafcon.statemachine.states.execution_state import ExecutionState
         if isinstance(state, ExecutionState):
@@ -316,8 +326,7 @@ class StateMachineStorage(Observable):
     @base_path.setter
     @Observable.observed
     def base_path(self, base_path):
-        if not isinstance(base_path, str):
+        if not isinstance(base_path, basestring):
             raise TypeError("base_path must be of type str")
 
         self._base_path = base_path
-        self.storage_utils.base_path = base_path

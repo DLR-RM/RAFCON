@@ -57,19 +57,19 @@ def test_save_libraries(caplog):
                          output_state3)
 
     # save hierarchy state as state machine
-    s.save_statemachine_as_yaml(StateMachine(state3), test_utils.get_test_sm_path("test_libraries/hierarchy_library"),
+    s.save_statemachine_to_path(StateMachine(state3), test_utils.get_test_sm_path("test_libraries/hierarchy_library"),
                                 "0.1")
 
     # save execution state as state machine
-    s.save_statemachine_as_yaml(StateMachine(state1), test_utils.get_test_sm_path("test_libraries/execution_library"),
+    s.save_statemachine_to_path(StateMachine(state1), test_utils.get_test_sm_path("test_libraries/execution_library"),
                                 "0.1")
 
     # save hierarchy state as nested state machines
     state3.name = "library_nested1"
-    s.save_statemachine_as_yaml(StateMachine(state3),
+    s.save_statemachine_to_path(StateMachine(state3),
                                 test_utils.get_test_sm_path("test_libraries/library_container/library_nested1"), "0.1")
     state3.name = "library_nested2"
-    s.save_statemachine_as_yaml(StateMachine(state3),
+    s.save_statemachine_to_path(StateMachine(state3),
                                 test_utils.get_test_sm_path("test_libraries/library_container/library_nested2"), "0.1")
     # test_utils.assert_logger_warnings_and_errors(caplog)
 
@@ -159,7 +159,7 @@ def test_hierarchy_state_library(caplog):
 def test_save_nested_library_state(caplog):
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
-    rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+    rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
         library_with_nested_library_sm, test_utils.get_test_sm_path("test_libraries/library_with_nested_library"), "0.1")
     # test_utils.assert_logger_warnings_and_errors(caplog)
 

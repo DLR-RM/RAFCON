@@ -6,12 +6,12 @@ from weakref import ref
 from gtkmvc import ModelMT, Signal
 
 from rafcon.statemachine.storage.storage import StateMachineStorage
-from rafcon.statemachine.singleton import global_storage
 
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.utils import storage_utils
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -234,19 +234,24 @@ class AbstractStateModel(ModelMT):
         """
         if not path:
             path = self.state.get_file_system_path()
-        meta_path = os.path.join(path, StateMachineStorage.GRAPHICS_FILE)
-        if os.path.exists(meta_path):
-            tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
+
+        meta_file_yaml = os.path.join(path, StateMachineStorage.GRAPHICS_FILE_YAML)
+        meta_file_json = os.path.join(path, StateMachineStorage.GRAPHICS_FILE_JSON)
+        try:
+            tmp_meta = StateMachineStorage.load_appropriate_file(meta_file_yaml, meta_file_json)
+        except ValueError:  # No meta file existing
+            return
+
+        # JSON returns a dict, which must be converted to a Vividict
+        tmp_meta = Vividict(tmp_meta)
+
+        if tmp_meta:
             # For backwards compatibility: move all meta data from editor to editor_opengl
             self.overwrite_editor_meta(tmp_meta)
             self._parse_for_element_meta_data(tmp_meta)
             # assign the meta data to the state
             self.meta = tmp_meta
             self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
-        # Print info only if the state has a location different from the tmp directory
-        # elif meta_path[0:len(GLOBAL_STORAGE_BASE_PATH)] != GLOBAL_STORAGE_BASE_PATH:
-        #     logger.debug("State '{0}' has no meta data. It will now be generated automatically.".format(
-        #         self.state.name))
 
     def store_meta_data(self):
         """Save meta data of state model to the file system
@@ -254,10 +259,12 @@ class AbstractStateModel(ModelMT):
         This method generates a dictionary of the meta data of the state together with the meta data of all state
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         """
-        meta_path = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
+        meta_file_yaml = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_YAML)
+        meta_file_json = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_JSON)
         meta_data = deepcopy(self.meta)
         self._generate_element_meta_data(meta_data)
-        global_storage.storage_utils.write_dict_to_yaml(meta_data, meta_path)
+        storage_utils.write_dict_to_yaml(meta_data, meta_file_yaml)
+        storage_utils.write_dict_to_json(meta_data, meta_file_json)
 
     def copy_meta_data_from_state_m(self, source_state_m):
         """Dismiss current meta data and copy meta data from given state model

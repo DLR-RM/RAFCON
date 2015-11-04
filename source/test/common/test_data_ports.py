@@ -47,8 +47,8 @@ def test_default_values_of_data_ports(caplog):
 
     sm = create_statemachine()
 
-    test_storage.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
-    [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_yaml()
+    test_storage.save_statemachine_to_path(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_path()
 
     root_state = sm_loaded.root_state
 

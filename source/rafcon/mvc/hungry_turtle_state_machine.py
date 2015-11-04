@@ -65,7 +65,7 @@ def run_turtle_demo():
 
     #load the state machine
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_yaml("../../test_scripts/hungry_turtle_demo")
+        global_storage.load_statemachine_from_path("../../test_scripts/hungry_turtle_demo")
 
     # clean_transition_ids(state_machine.root_state)
     # clean_data_flows_ids(state_machine.root_state)

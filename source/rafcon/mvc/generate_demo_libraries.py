@@ -18,7 +18,7 @@ def omnirob_move_base_rel():
                                    filename="move_base_abs.py")
     lib_node.add_outcome("success", 0)
 
-    storage.save_statemachine_as_yaml(StateMachine(lib_node),
+    storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/omnirob_libs/move_base_rel",
                                       "0.1",
                                       delete_old_state_machine=True)
@@ -29,7 +29,7 @@ def omnirob_move_base_abs():
                                    filename="move_base_rel.py")
     lib_node.add_outcome("success", 0)
 
-    storage.save_statemachine_as_yaml(StateMachine(lib_node),
+    storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/omnirob_libs/move_base_abs",
                                       "0.1",
                                       delete_old_state_machine=True)
@@ -40,7 +40,7 @@ def omnirob_move_pan_tilt():
                                    filename="move_pan_tilt.py")
     lib_node.add_outcome("success", 0)
 
-    storage.save_statemachine_as_yaml(StateMachine(lib_node),
+    storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/omnirob_libs/move_pan_tilt",
                                       "0.1",
                                       delete_old_state_machine=True)
@@ -56,7 +56,7 @@ def lwr_move_along_joint_path():
                               filename="move_along_joint_path.py")
     lib_node.add_outcome("success", 0)
 
-    storage.save_statemachine_as_yaml(StateMachine(lib_node),
+    storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/lwr_libs/move_along_joint_path",
                                       "0.1",
                                       delete_old_state_machine=True)
@@ -69,7 +69,7 @@ def lwr_move_single_joint():
                               filename="move_single_joint.py")
     lib_node.add_outcome("success", 0)
 
-    storage.save_statemachine_as_yaml(StateMachine(lib_node),
+    storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/lwr_libs/move_single_joint",
                                       "0.1",
                                       delete_old_state_machine=True)
@@ -82,7 +82,7 @@ def lwr_zero_gravity_mode():
                               filename="zero_gravity_mode.py")
     lib_node.add_outcome("success", 0)
 
-    storage.save_statemachine_as_yaml(StateMachine(lib_node),
+    storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/lwr_libs/zero_gravity_mode",
                                       "0.1",
                                       delete_old_state_machine=True)
@@ -95,7 +95,7 @@ def lwr_move_to_cartesian_pose_impedance_controlled():
                               filename="move_to_cartesian_pose_impedance_controlled.py")
     lib_node.add_outcome("success", 0)
 
-    storage.save_statemachine_as_yaml(StateMachine(lib_node),
+    storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/lwr_libs/move_to_cartesian_pose_impedance_controlled",
                                       "0.1",
                                       delete_old_state_machine=True)
@@ -108,7 +108,7 @@ def lwr_move_to_cartesian_pose_position_controlled():
                               filename="move_to_cartesian_pose_position_controlled.py")
     lib_node.add_outcome("success", 0)
 
-    storage.save_statemachine_as_yaml(StateMachine(lib_node),
+    storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/lwr_libs/move_to_cartesian_pose_position_controlled",
                                       "0.1",
                                       delete_old_state_machine=True)

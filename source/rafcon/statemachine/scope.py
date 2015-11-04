@@ -64,24 +64,24 @@ class ScopedVariable(DataPort):
                                                              self.default_value)
 
     @classmethod
-    def to_yaml(cls, dumper, data):
-        dict_representation = {
-            'scoped_variable_id': data.data_port_id,
-            'name': data.name,
-            'data_type': data.data_type,
-            'default_value': data.default_value
-        }
-        node = dumper.represent_mapping(u'!ScopedVariable', dict_representation)
-        return node
+    def from_dict(cls, dictionary):
+        if 'scoped_variable_id' in dictionary:  # This is needed for backwards compatibility
+            data_port_id = dictionary['scoped_variable_id']
+        else:
+            data_port_id = dictionary['data_port_id']
+        name = dictionary['name']
+        data_type = dictionary['data_type']
+        default_value = dictionary['default_value']
+        return cls(name, data_type, default_value, data_port_id)
 
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node)
-        scoped_variable_id = dict_representation['scoped_variable_id']
-        name = dict_representation['name']
-        data_type = dict_representation['data_type']
-        default_value = dict_representation['default_value']
-        return ScopedVariable(name, data_type, default_value, scoped_variable_id)
+    @staticmethod
+    def state_element_to_dict(state_element):
+        return {
+            'data_port_id': state_element.data_port_id,
+            'name': state_element.name,
+            'data_type': state_element.data_type,
+            'default_value': state_element.default_value
+        }
 
 
 class ScopedData(Observable):
@@ -140,7 +140,7 @@ class ScopedData(Observable):
     @name.setter
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, str):
+        if not isinstance(name, basestring):
             raise TypeError("key_name must be of type str")
         self._name = name
         #update key
@@ -192,7 +192,7 @@ class ScopedData(Observable):
     @Observable.observed
     def from_state(self, from_state):
         if not from_state is None:
-            if not isinstance(from_state, str):
+            if not isinstance(from_state, basestring):
                 raise TypeError("from_state must be of type str")
             if not self.name is None:  #this will just happen in __init__ when key_name is not yet initialized
                 #update key

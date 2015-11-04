@@ -1,9 +1,10 @@
 from gtkmvc import Observable
 from yaml import YAMLObject
 from weakref import ref
+from rafcon.utils.json_utils import JSONObject
 
 
-class StateElement(Observable, YAMLObject):
+class StateElement(Observable, YAMLObject, JSONObject):
     """A base class for all elements of a state (ports, connections)
 
     It inherits from Observable to make a change of its fields observable. It also inherits from YAMLObject,
@@ -13,6 +14,8 @@ class StateElement(Observable, YAMLObject):
     """
 
     _parent = None
+
+    yaml_tag = u'!StateElement'
 
     def __init__(self, parent=None):
         Observable.__init__(self)
@@ -60,13 +63,28 @@ class StateElement(Observable, YAMLObject):
                 raise ValueError("{0} invalid within state {1} (id {2}): {3}".format(class_name, parent.name,
                                                                                      parent.state_id, message))
 
+    def to_dict(self):
+        return self.state_element_to_dict(self)
+
     @classmethod
-    def to_yaml(cls, dumper, data):
-        raise NotImplementedError
+    def from_dict(cls, dictionary):
+        raise NotImplementedError()
+
+    @staticmethod
+    def state_element_to_dict(state_element):
+        raise NotImplementedError()
+
+    @classmethod
+    def to_yaml(cls, dumper, state_element):
+        dict_representation = cls.state_element_to_dict(state_element)
+        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
+        return node
 
     @classmethod
     def from_yaml(cls, loader, node):
-        raise NotImplementedError
+        dict_representation = loader.construct_mapping(node, deep=True)
+        state_element = cls.from_dict(dict_representation)
+        return state_element
 
     def _change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
@@ -74,7 +92,7 @@ class StateElement(Observable, YAMLObject):
         :param str property_name: The name of the property to be changed, e.g. '_data_flow_id'
         :param value: The new desired value for this property
         """
-        assert isinstance(property_name, str)
+        assert isinstance(property_name, basestring)
         old_value = getattr(self, property_name)
         setattr(self, property_name, value)
 

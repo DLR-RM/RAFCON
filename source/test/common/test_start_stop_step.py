@@ -37,8 +37,8 @@ def test_start_stop_pause_step(caplog):
     rafcon.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
 
     s = StateMachineStorage(test_utils.get_test_sm_path("stored_statemachine"))
-    s.save_statemachine_as_yaml(sm, test_utils.get_test_sm_path("stored_statemachine"))
-    sm_loaded, version, creation_time = s.load_statemachine_from_yaml()
+    s.save_statemachine_to_path(sm, test_utils.get_test_sm_path("stored_statemachine"))
+    sm_loaded, version, creation_time = s.load_statemachine_from_path()
 
     test_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm_loaded)

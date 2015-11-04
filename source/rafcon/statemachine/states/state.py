@@ -6,11 +6,12 @@ import copy
 from weakref import ref
 
 from gtkmvc import Observable
-import yaml
+from yaml import YAMLObject
 
+from rafcon.utils.json_utils import JSONObject
+from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
 from rafcon.statemachine.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
@@ -21,7 +22,7 @@ from rafcon.statemachine.id_generator import *
 PATH_SEPARATOR = '/'
 
 
-class State(Observable, yaml.YAMLObject):
+class State(Observable, YAMLObject, JSONObject):
 
     """A class for representing a state in the state machine
 
@@ -88,6 +89,41 @@ class State(Observable, yaml.YAMLObject):
         self.backward_execution = False
 
         logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))
+
+    # ---------------------------------------------------------------------------------------------
+    # ----------------------------------- generic methods -----------------------------------------
+    # ---------------------------------------------------------------------------------------------
+
+    def to_dict(self):
+        return self.state_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        raise NotImplementedError()
+
+    @staticmethod
+    def state_to_dict(state):
+        dict_representation = {
+            'name': state.name,
+            'state_id': state.state_id,
+            'description': state.description,
+            'input_data_ports': state.input_data_ports,
+            'output_data_ports': state.output_data_ports,
+            'outcomes': state.outcomes
+        }
+        return dict_representation
+
+    @classmethod
+    def to_yaml(cls, dumper, state):
+        dict_representation = cls.state_to_dict(state)
+        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        dict_representation = loader.construct_mapping(node, deep=True)
+        state = cls.from_dict(dict_representation)
+        return state
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------
@@ -171,7 +207,7 @@ class State(Observable, yaml.YAMLObject):
                 default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
-            if isinstance(default, str) and len(default) > 0 and default[0] == '$':
+            if isinstance(default, basestring) and len(default) > 0 and default[0] == '$':
                 from rafcon.statemachine.singleton import global_variable_manager as gvm
                 var_name = default[1:]
                 if not gvm.variable_exist(var_name):
@@ -622,7 +658,7 @@ class State(Observable, yaml.YAMLObject):
     @Observable.observed
     def name(self, name):
         if name is not None:
-            if not isinstance(name, str):
+            if not isinstance(name, basestring):
                 raise TypeError("Name must be of type str")
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
@@ -832,12 +868,9 @@ class State(Observable, yaml.YAMLObject):
             self._description = None
             return
 
-        if not isinstance(description, str):
+        if not isinstance(description, (str, unicode)):
             if not isinstance(description, unicode):
                 raise TypeError("Description must be of type str or unicode")
-        # if len(description) < 1:
-        #     raise ValueError("Description must have at least one character")
-
 
         self._description = description
 

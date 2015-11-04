@@ -1,13 +1,15 @@
-import yaml
+from yaml import YAMLObject
+from rafcon.utils.json_utils import JSONObject
 
 
-class Vividict(yaml.YAMLObject, dict):
+class Vividict(dict, YAMLObject, JSONObject):
     """
     A class which inherits from dict and can store an element for an arbitrary nested key. The single elements of the
     key do not have to exist beforehand.
     """
-    def __init__(self):
-        pass
+    def __init__(self, dictionary=None):
+        if dictionary:
+            self.set_dict(dictionary)
 
     def __missing__(self, key):
         """
@@ -19,20 +21,31 @@ class Vividict(yaml.YAMLObject, dict):
         return value
 
     def set_dict(self, new_dict):
-        """
-        Sets the dictionary of the Vividict.
+        """Sets the dictionary of the Vividict
+
+        The method is able to handle nested dictionaries, by calling the method recursively.
+
         :param new_dict: The dict that will be added to the own dict
-        :return:
         """
         for key, value in new_dict.iteritems():
-            self[key] = value
+            if isinstance(value, dict):
+                self[str(key)] = Vividict(value)
+            else:
+                self[str(key)] = value
 
     yaml_tag = u'!Vividict'
 
+    def to_dict(self):
+        return self.vividict_to_dict(self)
+
     @classmethod
-    def to_yaml(cls, dumper, data):
+    def from_dict(cls, dictionary):
+        return cls(dictionary)
+
+    @staticmethod
+    def vividict_to_dict(vividict):
         from numpy import ndarray
-        dict_to_save = {}
+        dictionary = {}
 
         def np_to_native(np_val):
             """Recursively convert numpy values to native Python values
@@ -56,27 +69,23 @@ class Vividict(yaml.YAMLObject, dict):
                 return np_val
             return np_val.item()  # Get the gloat/int etc value
 
-        for key, value in data.iteritems():
-            # Remove old entries from meta data
-            # TODO: remove this sometime in the future
-            if key not in ['from_pos_x', 'from_pos_y', 'to_pos_x', 'to_pos_y', 'id', 'width', 'height',
-                           'connector_pos', 'connector_radius', 'inner_pos', 'rect_height', 'rect_width',
-                           'outcome_radius', 'pos_x', 'pos_y', 'width)', 'resize_length']:
-                # Convert numpy values to native Python values
-                value = np_to_native(value)
-                dict_to_save[key] = value
-        node = dumper.represent_mapping(cls.yaml_tag, dict_to_save)
+        for key, value in vividict.iteritems():
+            # Convert numpy values to native Python values
+            value = np_to_native(value)
+            if isinstance(value, Vividict):
+                value = Vividict.vividict_to_dict(value)
+            dictionary[key] = value
+
+        return dictionary
+
+    @classmethod
+    def to_yaml(cls, dumper, vividict):
+        dictionary = cls.vividict_to_dict(vividict)
+        node = dumper.represent_mapping(cls.yaml_tag, dictionary)
         return node
 
     @classmethod
     def from_yaml(cls, loader, node):
         dict_representation = loader.construct_mapping(node, deep=True)
-
-        # Keep this check only for backwards compatability, initial_dict = dict_representation is sufficient
-        if 'vivid_dict_content' in dict_representation:
-            initial_dict = dict_representation['vivid_dict_content']
-        else:
-            initial_dict = dict_representation
-        result_vivid_dict = Vividict()
-        result_vivid_dict.set_dict(initial_dict)
-        return result_vivid_dict
+        vividict = cls.from_dict(dict_representation)
+        return vividict

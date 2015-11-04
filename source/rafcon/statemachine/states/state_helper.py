@@ -35,7 +35,7 @@ class StateHelper(object):
         if not os.path.exists(local_storage.base_path):
             os.makedirs(local_storage.base_path)
         local_storage.save_state_recursively(source_state, "", True)
-        state_copy = local_storage.load_state_from_yaml(os.path.join(local_storage.base_path, source_state.state_id))
+        state_copy = local_storage.load_state_from_path(os.path.join(local_storage.base_path, source_state.state_id))
         from rafcon.statemachine.states.execution_state import ExecutionState
         if isinstance(state_copy, ExecutionState):
             state_copy.script.script = source_state.script.script
