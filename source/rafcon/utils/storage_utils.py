@@ -12,6 +12,7 @@ import os
 import shutil
 import json
 import yaml
+from rafcon.utils.json_utils import JSONObjectDecoder, JSONObjectEncoder
 
 
 def write_dict_to_yaml(dictionary, path, **kwargs):
@@ -46,7 +47,10 @@ def write_dict_to_json(dictionary, path, **kwargs):
     :param kwargs: optional additional parameters for dumper
     """
     f = open(path, 'w')
-    json.dump(dictionary, f, indent=4)
+    # We cannot write directly to the file, as otherwise the 'encode' method wouldn't be called
+    result_string = json.dumps(dictionary, cls=JSONObjectEncoder, indent=4, check_circular=False, sort_keys=True,
+                                                                                                            **kwargs)
+    f.write(result_string)
     f.close()
 
 
@@ -57,7 +61,7 @@ def load_dict_from_json(path):
     :return: The dictionary specified in the json file
     """
     f = file(path, 'r')
-    result = json.load(f)
+    result = json.load(f, cls=JSONObjectDecoder)
     f.close()
     return result
 
