@@ -1,0 +1,53 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.hierarchy_state.HierarchyState", 
+    "data_flows": {}, 
+    "description": null, 
+    "input_data_ports": {}, 
+    "name": "h2", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {}, 
+    "state_id": "ZDWBKU", 
+    "transitions": {
+        "5": {
+            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "from_outcome": null, 
+            "from_state": null, 
+            "to_outcome": null, 
+            "to_state": "UTRSAA", 
+            "transition_id": 5
+        }, 
+        "6": {
+            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "UTRSAA", 
+            "to_outcome": null, 
+            "to_state": "HADSLI", 
+            "transition_id": 6
+        }, 
+        "7": {
+            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "HADSLI", 
+            "to_outcome": 0, 
+            "to_state": "ZDWBKU", 
+            "transition_id": 7
+        }
+    }
+}

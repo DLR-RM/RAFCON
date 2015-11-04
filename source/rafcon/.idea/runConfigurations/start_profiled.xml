@@ -10,7 +10,7 @@
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="RAFCON" />
+    <module name="rafcon" />
     <option name="SCRIPT_NAME" value="profiling" />
     <option name="PARAMETERS" value="profile --dump=${AWESOME_TOOL_PROJECT_PATH}/profile.prf ${AWESOME_TOOL_PROJECT_PATH}/mvc/start.py" />
     <option name="SHOW_COMMAND_LINE" value="false" />
