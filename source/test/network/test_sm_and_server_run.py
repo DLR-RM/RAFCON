@@ -177,7 +177,7 @@ def start_rafcon_server(name, q, execution_signal_queue):
     rafcon.statemachine.singleton.library_manager.initialize()
 
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.global_storage.\
-        load_statemachine_from_yaml(setup_config['sm_path'])
+        load_statemachine_from_path(setup_config['sm_path'])
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 
     logger.debug("The following statemachine was loaded: {0}".

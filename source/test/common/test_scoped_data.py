@@ -55,8 +55,8 @@ def test_scoped_data(caplog):
 
     sm = create_statemachine()
 
-    s.save_statemachine_as_yaml(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
-    [sm_loaded, version, creation_time] = s.load_statemachine_from_yaml()
+    s.save_statemachine_to_path(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    [sm_loaded, version, creation_time] = s.load_statemachine_from_path()
 
     state_machine = StateMachine(sm_loaded.root_state)
 

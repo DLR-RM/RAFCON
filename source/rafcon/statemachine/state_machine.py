@@ -168,6 +168,6 @@ class StateMachine(ModelMT, Observable):
     @file_system_path.setter
     @Observable.observed
     def file_system_path(self, file_system_path):
-        if not isinstance(file_system_path, str):
+        if not isinstance(file_system_path, basestring):
             raise AttributeError("file_system_path has to be of type str")
         self._file_system_path = file_system_path

@@ -51,7 +51,7 @@ def on_save_activate(state_machine_m, logger):
         return
 
     logger.debug("Saving state machine to {0}".format(save_path))
-    rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+    rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
         state_machine_m.state_machine,
         state_machine_m.state_machine.file_system_path, delete_old_state_machine=True)
 
@@ -379,7 +379,7 @@ def test_add_remove_history(caplog):
     save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
 
     def store_state_machine(sm_model, path):
-        rafcon.statemachine.singleton.global_storage.save_statemachine_as_yaml(
+        rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
             sm_model.state_machine,
             path,
             delete_old_state_machine=True)
