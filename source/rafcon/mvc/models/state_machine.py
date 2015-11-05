@@ -6,6 +6,7 @@ from rafcon.mvc.selection import Selection
 
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.container_state import ContainerState
+from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.utils.vividict import Vividict
@@ -64,6 +65,7 @@ class StateMachineModel(ModelMT):
             self.meta = Vividict()
         self.meta_signal = Signal()
         self.state_meta_signal = Signal()
+        self.suppress_new_root_state_model_one_time = False
 
         self.temp = Vividict()
 
@@ -157,6 +159,22 @@ class StateMachineModel(ModelMT):
                 assert False
         return current_state_model
 
+    @ModelMT.observe("state_machine", after=True)
+    def root_state_assign(self, model, prop_name, info):
+        if info.method_name != 'root_state':
+            return
+        if self.suppress_new_root_state_model_one_time:
+            self.suppress_new_root_state_model_one_time = False
+            return
+        # print "ASSIGN ROOT_STATE", model, prop_name, info
+        self.root_state.unregister_observer(self)
+        if isinstance(self.state_machine.root_state, ContainerState): # could not be a LibraryState
+            self.root_state = ContainerStateModel(self.state_machine.root_state)
+        else:
+            assert not isinstance(self.state_machine.root_state, LibraryState)
+            self.root_state = StateModel(self.state_machine.root_state)
+        self.root_state.register_observer(self)
+
     @ModelMT.observe("state_machine", after=True, before=True)
     def change_root_state_type(self, model, prop_name, info):
         if info.method_name != 'change_root_state_type':
@@ -176,6 +194,7 @@ class StateMachineModel(ModelMT):
             # Extract child models of state, as they have to be applied to the new state model
             child_models = statemachine_helper.extract_child_models_of_of_state(state_m, new_state_class)
             self.change_root_state_type.__func__.child_models = child_models  # static variable of class method
+            self.suppress_new_root_state_model_one_time = True
 
         # After the state has been changed in the core, we create a new model for it with all information extracted
         # from the old state model
