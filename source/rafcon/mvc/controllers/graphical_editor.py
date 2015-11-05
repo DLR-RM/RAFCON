@@ -156,19 +156,19 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("up", partial(self._move_in_direction, Direction.top))
         shortcut_manager.add_callback_for_action("down", partial(self._move_in_direction, Direction.bottom))
 
-    @ExtendedController.observe("state_machine", before=True)
-    def state_machine_before_change(self, model, prop_name, info):
-        if 'method_name' in info and info['method_name'] == 'root_state_before_change':
-            if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
-                self.suspend_drawing = True
-
     @property
-    def suspend_drawing(self, value):
+    def suspend_drawing(self):
         return self._suspend_drawing
 
     @suspend_drawing.setter
     def suspend_drawing(self, value):
         self._suspend_drawing = value
+
+    @ExtendedController.observe("state_machine", before=True)
+    def state_machine_before_change(self, model, prop_name, info):
+        if 'method_name' in info and info['method_name'] == 'root_state_before_change':
+            if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
+                self.suspend_drawing = True
 
     @ExtendedController.observe("state_machine", after=True)
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
