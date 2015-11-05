@@ -71,8 +71,20 @@ def point_in_triangle(p, v1, v2, v3):
 
 
 def deg2rad(degree):
+    """Converts angle given in degrees into radian
+
+    :param float degree: Angle to be converted
+    :return: Angle in radian
+    :rtype: float
+    """
     return degree / 180. * pi
 
 
 def rad2deg(radians):
+    """Converts angle given in radian into degrees
+
+    :param float radians: Angle to be converted
+    :return: Angle in degree
+    :rtype: float
+    """
     return radians / pi * 180.

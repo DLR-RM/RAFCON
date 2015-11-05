@@ -16,7 +16,7 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.utils.dialog import RAFCONDialog
-from rafcon.utils import helper
+from rafcon.utils import gui_helper
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -499,7 +499,7 @@ class MenuBarController(ExtendedController):
     ######################################################
     def on_about_activate(self, widget, data=None):
         about = MyAboutDialog()
-        helper.set_button_children_size_request(about)
+        gui_helper.set_button_children_size_request(about)
         response = about.run()
         if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
             about.destroy()

@@ -13,7 +13,7 @@ from rafcon.statemachine.library_manager import LibraryManager
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine_manager import StateMachineManager
-from rafcon.utils import helper
+from rafcon.utils import gui_helper
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 import sys
@@ -44,4 +44,4 @@ state_machine_execution_engine = StatemachineExecutionEngine(state_machine_manag
 global_storage = StateMachineStorage("")
 
 # This variable holds the colors used in the GtkRC-Theme
-global_color_pool = helper.global_color_pool()
+global_color_pool = gui_helper.global_color_pool()
