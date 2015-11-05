@@ -3,10 +3,15 @@ from rafcon.utils.json_utils import JSONObject
 
 
 class Vividict(dict, YAMLObject, JSONObject):
-    """
+    """Extended dictionary for arbitrary nested access
+
     A class which inherits from dict and can store an element for an arbitrary nested key. The single elements of the
     key do not have to exist beforehand.
     """
+
+    #: Unique tag used for conversion to and from YAML objects
+    yaml_tag = u'!Vividict'
+
     def __init__(self, dictionary=None):
         if dictionary:
             self.set_dict(dictionary)
@@ -33,17 +38,32 @@ class Vividict(dict, YAMLObject, JSONObject):
             else:
                 self[str(key)] = value
 
-    yaml_tag = u'!Vividict'
-
     def to_dict(self):
+        """Converts the Vividict to a common Python dict
+
+        :return: A Python dict with all key-values pairs from this Vividict
+        :rtype: dict
+        """
         return self.vividict_to_dict(self)
 
     @classmethod
     def from_dict(cls, dictionary):
+        """Creates a Vividict from a (possibly nested) python dict
+
+        :param dict dictionary: Python dict to be converted to a Vividict
+        :return: A Vividict with all key-values pairs from the given dict
+        :rtype: Vividict
+        """
         return cls(dictionary)
 
     @staticmethod
     def vividict_to_dict(vividict):
+        """Helper method to create Python dicts from arbitrary Vividict objects
+
+        :param Vividict vividict: A Vividict to be converted
+        :return: A Python dict
+        :rtype: dict
+        """
         from numpy import ndarray
         dictionary = {}
 
@@ -80,12 +100,16 @@ class Vividict(dict, YAMLObject, JSONObject):
 
     @classmethod
     def to_yaml(cls, dumper, vividict):
+        """Implementation for the abstract method of the base class YAMLObject
+        """
         dictionary = cls.vividict_to_dict(vividict)
         node = dumper.represent_mapping(cls.yaml_tag, dictionary)
         return node
 
     @classmethod
     def from_yaml(cls, loader, node):
+        """Implementation for the abstract method of the base class YAMLObject
+        """
         dict_representation = loader.construct_mapping(node, deep=True)
         vividict = cls.from_dict(dict_representation)
         return vividict
