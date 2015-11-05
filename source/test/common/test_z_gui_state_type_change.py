@@ -615,7 +615,7 @@ def trigger_state_type_change_tests(*args):
 
     # General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
-
+    check_elements_ignores.append("internal_transitions")
     # first storage
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
@@ -738,6 +738,7 @@ def trigger_state_type_change_tests(*args):
     check_state_elements(check_list_root_ES, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
     # simple type change of root_state -> still could be extended
+    check_elements_ignores.remove("internal_transitions")
 
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -798,4 +799,4 @@ def test_state_type_change_test(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    pytest.main(['-s',__file__])
