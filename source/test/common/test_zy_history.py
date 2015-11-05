@@ -33,7 +33,7 @@ from test_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
     check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
     check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
-    get_state_editor_ctrl_and_store_id_dict
+    get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
 from test_z_gui_states_editor_widget import check_state_editor_models
 import pytest
 
@@ -1405,6 +1405,8 @@ def trigger_state_type_change_tests(*args):
     sleep_time_short = 3
     sleep_time_max = 5  # 0.5
 
+    check_elements_ignores.append("internal_transitions")
+
     if with_gui:
         time.sleep(sleep_time_short)
 
@@ -1864,6 +1866,7 @@ def trigger_state_type_change_tests(*args):
         sm_model.history.undo()
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
+    # print "path: ", state_dict[state_of_type_change].get_path(), " state ", state_dict[state_of_type_change]
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
@@ -1885,8 +1888,11 @@ def trigger_state_type_change_tests(*args):
 
     save_and_quit(sm_model, TEST_PATH + '_state_type_change', menubar_ctrl, with_gui)
 
+    check_elements_ignores.remove("internal_transitions")
+    print check_elements_ignores
+
 
 if __name__ == '__main__':
-    # test_state_machine_changes_with_gui(True, None)
     # test_type_changes_without_gui(None)
+    # test_state_machine_changes_with_gui(True, None)
     pytest.main([__file__])

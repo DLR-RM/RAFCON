@@ -32,6 +32,8 @@ def remove_all_libraries():
 
 
 def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0):
+    if caplog is None:
+        return
     import logging
     counted_warnings = 0
     counted_errors = 0
