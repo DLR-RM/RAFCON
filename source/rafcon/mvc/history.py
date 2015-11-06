@@ -22,6 +22,9 @@ from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveCo
 from rafcon.mvc.models.container_state import ContainerState
 import rafcon.mvc.statemachine_helper
 
+import rafcon.mvc.singleton as mvc_singleton
+
+
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 logger = log.get_logger(__name__)
 
@@ -369,11 +372,25 @@ class Action:
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         assert storage_version_of_state
+
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
+        mw_ctrl = mvc_singleton.main_window_controller
+        g_sm_editor = None
+        if mvc_singleton.main_window_controller:
+            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                    self.state_machine.state_machine_id],
+                                                         with_print=False)
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = True
+
         self.update_state(state, storage_version_of_state)
+
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = False
+            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
 
     def update_state(self, state, stored_state):
 
@@ -383,6 +400,7 @@ class Action:
 
         if isinstance(state, ContainerState):
 
+            # print state.data_flows.keys()
             for data_flow_id in state.data_flows.keys():
                 state.remove_data_flow(data_flow_id)
 
@@ -395,7 +413,7 @@ class Action:
                 try:
                     state.remove_state(old_state_id, force=True)
                 except Exception as e:
-                    print old_state_id, UNIQUE_DECIDER_STATE_ID, state
+                    print "ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state
                     raise e
 
         if is_root:
@@ -521,6 +539,8 @@ class StateMachineAction(Action):
         self.after_info = None
         self.after_storage = None  # tuple of state and states-list of storage tuple
 
+        self.with_print = False
+
     def set_after(self, model, prop_name, info):
         self.after_model = model
         self.after_prop_name = prop_name
@@ -528,22 +548,22 @@ class StateMachineAction(Action):
         self.after_storage = self.get_storage(self.after_model)  # tuple of state and states-list of storage tuple
 
     def get_storage(self, model):
-
+        # print "storage ", self.state_machine.root_state.data_flows.keys(), self.state_machine.root_state.state_id
         state_tuple = get_state_tuple(self.state_machine.root_state)
         state_tuple[3].update(get_state_element_meta(model))
         return state_tuple
 
     def set_root_state_to_version(self, state, storage_version):
         import rafcon.mvc.statemachine_helper as statemachine_helper
-        # print self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/'))
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s  || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state))
         # self.state_machine.root_state = get_state_from_state_tuple(storage_version)
         root_state_version_fom_storage = get_state_from_state_tuple(storage_version)
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s || %s || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state, root_state_version_fom_storage))
         # actual_state_model = self.state_machine_model.get_state_model_by_path(state.get_path())
 
-        # print "\n#H# TRY STATE_HELPER ", type(root_state_version_fom_storage), \
-        #     isinstance(root_state_version_fom_storage, statemachine_helper.HierarchyState), "\n"
+        if self.with_print:
+            print "\n#H# TRY STATE_HELPER ", type(root_state_version_fom_storage), \
+                isinstance(root_state_version_fom_storage, statemachine_helper.HierarchyState), "\n"
         if isinstance(root_state_version_fom_storage, statemachine_helper.HierarchyState):
             new_state_class = statemachine_helper.HierarchyState
         elif isinstance(root_state_version_fom_storage, statemachine_helper.BarrierConcurrencyState):
@@ -551,9 +571,21 @@ class StateMachineAction(Action):
         elif isinstance(root_state_version_fom_storage, statemachine_helper.PreemptiveConcurrencyState):
             new_state_class = statemachine_helper.PreemptiveConcurrencyState
         else:
+            if self.with_print:
+                logger.info("SM set_root_state_to_version: with NO type change")
             new_state_class = statemachine_helper.ExecutionState
         # logger.debug("DO root version change")
         new_state = statemachine_helper.create_new_state_from_state_with_type(state, new_state_class)
+
+        mw_ctrl = mvc_singleton.main_window_controller
+        g_sm_editor = None
+        if mvc_singleton.main_window_controller:
+            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                    self.state_machine.state_machine_id],
+                                                         with_print=False)
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = True
+
         self.update_state(new_state, root_state_version_fom_storage)
 
         # if isinstance(root_state_version_fom_storage, ContainerState):
@@ -564,10 +596,18 @@ class StateMachineAction(Action):
         # insert_state_meta_data(meta_dict=storage_version[3], state_model=new_state_model)
         # self.state_machine_model.root_state = new_state_model
         # self.state_machine.root_state = new_state  # root_state_version_fom_storage
-
+        if self.with_print:
+            logger.info("SM set_root_state_to_version: insert new root state")
         self.state_machine.root_state = new_state  # root_state_version_fom_storage
         self.state_machine.root_state.script = storage_version[2]
+        if self.with_print:
+            logger.info("SM set_root_state_to_version: insert old meta data")
         insert_state_meta_data(meta_dict=storage_version[3], state_model=self.state_machine_model.root_state)
+        if self.with_print:
+            logger.info("SM set_root_state_to_version: FINISHED")
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = False
+            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
 
     def redo(self):
         # print "#H# STATE_MACHINE_REDO STARTED"
@@ -746,7 +786,6 @@ class History(ModelMT):
                     undo_redo_list = []
                     break
                 undo_redo_list.append((actual_version_pointer, 'redo'))
-
 
         # logger.info("found steps to perform %s to reach version_id %s" % (undo_redo_list, pointer_on_version_to_recover))
         for elem in undo_redo_list:
@@ -983,10 +1022,12 @@ class History(ModelMT):
 
     @ModelMT.observe("state_machine", before=True)
     def assign_notification_change_type_root_state_before(self, model, prop_name, info):
-        # print model, prop_name, info
+        if info.method_name != "root_state_before_change":
+            return
         if self.busy:  # if doing undo and redos
             return
-        if info.method_name == "change_root_state_type":
+        # print model, prop_name, info
+        if info['kwargs']['method_name'] == "change_root_state_type":
             if self.with_prints:
                 print "ROOT_STATE is NEW", model, prop_name, info
             self.actual_action = StateMachineAction("change_root_state_type", model.state_machine.root_state.get_path(),  # instance path of parent
@@ -999,7 +1040,8 @@ class History(ModelMT):
 
     @ModelMT.observe("state_machine", after=True)
     def assign_notification_change_type_root_state_after(self, model, prop_name, info):
-        # print model, prop_name, info
+        if info.method_name != "root_state_after_change":
+            return
         if info.result == "CRASH in FUNCTION":
             if self.with_prints:
                 logger.warning("function crash detected sm_after")
@@ -1007,8 +1049,8 @@ class History(ModelMT):
 
         if self.busy:  # if doing undo and redos
             return
-
-        if info.method_name == "change_root_state_type":
+        # print model, prop_name, info
+        if info['kwargs']['method_name'] == "change_root_state_type":
             # logger.debug("History state_machine_AFTER")
             if self.with_prints:
                 print "ROOT_STATE is NEW", model, prop_name, info

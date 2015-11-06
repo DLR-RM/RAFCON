@@ -1,31 +1,43 @@
 Utils
 =====
 
+config
+------
+.. automodule:: rafcon.utils.config
+
+constants
+---------
+.. automodule:: rafcon.utils.constants
+
+dialog
+------
+.. automodule:: rafcon.utils.dialog
+
 geometry
 --------
 .. automodule:: rafcon.utils.geometry
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+gui_helper
+----------
+.. automodule:: rafcon.utils.gui_helper
+
+json_utils
+----------
+.. automodule:: rafcon.utils.json_utils
 
 log
 ---
 .. automodule:: rafcon.utils.log
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 storage_utils
 -------------
 .. automodule:: rafcon.utils.storage_utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+type_helpers
+------------
+.. automodule:: rafcon.utils.type_helpers
 
 vividict
 --------
 .. automodule:: rafcon.utils.vividict
-    :members:
-    :undoc-members:
-    :show-inheritance:
 

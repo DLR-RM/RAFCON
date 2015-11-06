@@ -11,7 +11,7 @@ from rafcon.mvc.models.state_machine import StateMachineModel, StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 import rafcon.statemachine.singleton
-from rafcon.utils import constants, helper
+from rafcon.utils import constants, gui_helper
 from rafcon.mvc.config import global_gui_config
 from rafcon.network.network_config import global_net_config
 

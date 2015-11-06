@@ -81,7 +81,7 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _change_state_type = False
+    _suspend_drawing = False
 
     def __init__(self, model, view):
         """Constructor
@@ -156,11 +156,19 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("up", partial(self._move_in_direction, Direction.top))
         shortcut_manager.add_callback_for_action("down", partial(self._move_in_direction, Direction.bottom))
 
+    @property
+    def suspend_drawing(self):
+        return self._suspend_drawing
+
+    @suspend_drawing.setter
+    def suspend_drawing(self, value):
+        self._suspend_drawing = value
+
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_before_change(self, model, prop_name, info):
         if 'method_name' in info and info['method_name'] == 'root_state_before_change':
             if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
-                self._change_state_type = True
+                self.suspend_drawing = True
 
     @ExtendedController.observe("state_machine", after=True)
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
@@ -176,10 +184,10 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         if 'method_name' in info:
-            if self._change_state_type:
+            if self.suspend_drawing:
                 if info['method_name'] == 'root_state_after_change':
                     if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
-                        self._change_state_type = False
+                        self.suspend_drawing = False
                         self._redraw()
             if info['method_name'] == 'root_state_after_change':
                 self._redraw()
@@ -230,7 +238,7 @@ class GraphicalEditorController(ExtendedController):
 
         :param args: console arguments, not used
         """
-        if self._change_state_type:
+        if self.suspend_drawing:
             return
         # Prepare the drawing process
         self.view.editor.expose_init(args)
@@ -255,7 +263,7 @@ class GraphicalEditorController(ExtendedController):
 
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
                 self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id \
-                and not self._change_state_type:
+                and not self.suspend_drawing:
             # Remove any existing timer id
             self.timer_id = None
             self.view.editor.emit("configure_event", None)

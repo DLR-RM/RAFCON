@@ -37,6 +37,20 @@ class ExtendedController(Controller):
             return True
         return False
 
+    def get_controller_by_path(self, ctrl_path, with_print=False):
+        tmp_ctrl = None
+        actual_ctrl = self
+        for child_ctrl_identifier in ctrl_path:
+            tmp_ctrl = actual_ctrl.get_controller(child_ctrl_identifier)
+            if tmp_ctrl:
+                actual_ctrl = tmp_ctrl
+            else:
+                if with_print:
+                    logger.warning("{0} could not find cild_ctrl_identifier '{1}' ".format(actual_ctrl, child_ctrl_identifier))
+                return None
+
+        return actual_ctrl
+
     def get_controller(self, key):
         if key in self.__child_controllers:
             return self.__child_controllers[key]
