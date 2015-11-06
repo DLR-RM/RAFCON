@@ -67,12 +67,11 @@ if __name__ == '__main__':
 
     # initialize the logging view
     debug_view = DebugView()
-    log.debug_filter.set_logging_test_view(debug_view)
-    log.error_filter.set_logging_test_view(debug_view)
+    log.register_logging_view("rafcon_server", debug_view)
 
     library_manager.initialize()
 
-    [state_machine, version, creation_time] = global_storage.load_statemachine_from_yaml(setup_config['sm_path'])
+    [state_machine, version, creation_time] = global_storage.load_statemachine_from_path(setup_config['sm_path'])
     state_machine_manager.add_state_machine(state_machine)
 
     logger.debug("The following statemachine was loaded: {0}".

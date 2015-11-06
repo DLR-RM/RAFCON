@@ -26,6 +26,7 @@ import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config
 from rafcon.network.network_config import global_net_config
+from rafcon.network.singleton import network_connections
 
 from rafcon.utils import constants
 from rafcon.utils import log
@@ -125,19 +126,6 @@ class MainWindowController(ExtendedController):
         view["tree_notebook_1"].insert_page(state_machine_notebook_widget, state_machine_tab_label, page_num)
 
         ######################################################
-        # network controller
-        ######################################################
-        network_connections_ctrl = None
-        if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
-            network_connections_ctrl = NetworkController(state_machine_manager_model,
-                                                         view.network_connections_view)
-            self.add_controller('network_connections_ctrl', network_connections_ctrl)
-        else:
-            network_tab = view['network_tab']
-            page_num = view["tree_notebook_2"].page_num(network_tab)
-            view["tree_notebook_2"].remove_page(page_num)
-
-        ######################################################
         # state editor
         ######################################################
         states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
@@ -159,8 +147,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
                                                                    view.state_machines_editor,
-                                                                   states_editor_ctrl,
-                                                                   network_connections_ctrl)
+                                                                   states_editor_ctrl)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
         graphical_editor_label = view['graphical_editor_label']
@@ -211,17 +198,29 @@ class MainWindowController(ExtendedController):
         # view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
 
         ######################################################
-        # network controller tab
+        # network controller
         ######################################################
-        network_tab = view['network_placeholder']
-        page_num = view['tree_notebook_2'].page_num(network_tab)
-        view['tree_notebook_2'].remove_page(page_num)
+        if global_net_config.get_config_value('NETWORK_CONNECTIONS', False):
+            network_connections_ctrl = NetworkController(state_machine_manager_model,
+                                                         view.network_connections_view)
+            network_connections.initialize()
+            self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
-        network_label = gtk.Label('Network')
-        network_notebook_widget = self.create_notebook_widget("NETWORK", view.network_connections_view.get_top_widget(),
-                                                              use_scroller=False,
-                                                              border=constants.BORDER_WIDTH_TEXTVIEW)
-        view['tree_notebook_2'].insert_page(network_notebook_widget, network_label, page_num)
+            # remove placehold in tab
+            network_tab = view['network_placeholder']
+            page_num = view['tree_notebook_2'].page_num(network_tab)
+            view['tree_notebook_2'].remove_page(page_num)
+
+            network_label = gtk.Label('Network')
+            network_notebook_widget = self.create_notebook_widget("NETWORK",
+                                                                  view.network_connections_view.get_top_widget(),
+                                                                  use_scroller=False,
+                                                                  border=constants.BORDER_WIDTH_TEXTVIEW)
+            view['tree_notebook_2'].insert_page(network_notebook_widget, network_label, page_num)
+        else:
+            network_tab = view['network_tab']
+            page_num = view["tree_notebook_2"].page_num(network_tab)
+            view["tree_notebook_2"].remove_page(page_num)
 
         ######################################################
         # state machine execution history

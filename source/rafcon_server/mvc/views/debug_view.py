@@ -1,6 +1,7 @@
 from gtkmvc import View
 import gtk
 import glib
+import threading
 
 
 class DebugView(View):
@@ -9,6 +10,8 @@ class DebugView(View):
 
     def __init__(self):
         View.__init__(self)
+
+        self._lock = threading.Lock()
 
         liststore = gtk.ListStore(str, str, int)
         combobox = gtk.ComboBox(liststore)
@@ -54,3 +57,16 @@ class DebugView(View):
 
         if not self.quit_flag:
             self.textview.scroll_mark_onscreen(self.textview.get_buffer().get_insert())
+
+    def print_message(self, message, log_level, new=True):
+        self._lock.acquire()
+        # Store all new log entries
+        if log_level <= 10:
+            self.print_debug(message)
+        elif 10 < log_level <= 20:
+            self.print_info(message)
+        elif 20 < log_level <= 30:
+            self.print_warning(message)
+        elif 30 < log_level:
+            self.print_error(message)
+        self._lock.release()
