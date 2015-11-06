@@ -333,6 +333,7 @@ class ContainerState(State):
             for state_id, state in self.states.iteritems():
                 if state.get_path() in state_machine_execution_engine.start_state_paths:
                     logger.debug("Forward execution to state " + state.name)
+                    state_machine_execution_engine.start_state_paths.remove(self.get_path())
                     return state
 
         if self.start_state_id is None:
