@@ -30,9 +30,6 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.network.network_config import global_net_config
 
-if global_net_config.get_config_value("NETWORK_CONNECTIONS"):
-    from rafcon.network.singleton import network_connections
-
 
 def setup_logger():
     import sys
@@ -127,6 +124,7 @@ if __name__ == '__main__':
     global_runtime_config.load(path=setup_config['gui_config_path'])
 
     if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
+        from rafcon.network.singleton import network_connections
         network_connections.initialize()
 
     # Make mvc directory the working directory
