@@ -26,7 +26,6 @@ import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config
 from rafcon.network.network_config import global_net_config
-from rafcon.network.singleton import network_connections
 
 from rafcon.utils import constants
 from rafcon.utils import log
@@ -36,6 +35,7 @@ try:
     # run if not defined or variable True
     if global_net_config.get_config_value("NETWORK_CONNECTIONS") is None or global_net_config.get_config_value("NETWORK_CONNECTIONS"):
         from rafcon.mvc.controllers.network_connections import NetworkController
+        from rafcon.network.singleton import network_connections
 except ImportError as e:
     logger.warn("{1} Only local use of RAFCON will be possible due to missing network communication libraries -> {0}".format(e.message, global_net_config.get_config_value("NETWORK_CONNECTIONS")  is None))
     # logger.error("%s, %s" % (e.message, traceback.format_exc()))
@@ -201,6 +201,8 @@ class MainWindowController(ExtendedController):
         # network controller
         ######################################################
         if global_net_config.get_config_value('NETWORK_CONNECTIONS', False):
+            from rafcon.mvc.controllers.network_connections import NetworkController
+            from rafcon.network.singleton import network_connections
             network_connections_ctrl = NetworkController(state_machine_manager_model,
                                                          view.network_connections_view)
             network_connections.initialize()
