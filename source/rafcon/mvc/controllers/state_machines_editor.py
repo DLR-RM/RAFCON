@@ -86,13 +86,11 @@ def add_state_machine(widget, event=None):
 
 class StateMachinesEditorController(ExtendedController):
 
-    def __init__(self, sm_manager_model, view, states_editor_ctrl, network_connections_ctrl):
+    def __init__(self, sm_manager_model, view, states_editor_ctrl):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
-        if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
-            self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
         self.tabs = {}
         self.last_opened_state_machines = collections.deque(maxlen=10)

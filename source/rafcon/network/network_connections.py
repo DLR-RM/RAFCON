@@ -90,6 +90,7 @@ class NetworkConnections(Observer, gobject.GObject):
 
     def register_udp(self):
         if not self.udp_registered:
+            print "self.udp_port: " + str(self.udp_port)
             udp_connection = self._udp_net_controller.start(self.udp_port, ConnectionMode.CLIENT)
             self.connect_udp_connection(udp_connection)
         else:
