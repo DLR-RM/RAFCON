@@ -26,8 +26,6 @@ class CustomColorHandlePainter(HandlePainter):
 
         get_connection = view.canvas.get_connection
         for h in item.handles():
-            if isinstance(item, StateView) and h in item.aborted_preempted_handles and not item.show_aborted_preempted:
-                continue
             if not h.visible or isinstance(item, ConnectionView) and h in item.perp_waypoint_handles():
                 continue
             if isinstance(item, ScopedVariableDataFlowView) and h not in item.end_handles():

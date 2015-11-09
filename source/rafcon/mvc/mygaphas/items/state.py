@@ -57,7 +57,6 @@ class StateView(Element):
         self.selected = False
         self._moving = False
         self._transparent = False
-        self._show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
 
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
@@ -161,10 +160,6 @@ class StateView(Element):
     @position.setter
     def position(self, pos):
         self.matrix = Matrix(x0=pos[0], y0=pos[1])
-
-    @property
-    def show_aborted_preempted(self):
-        return global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
 
     @property
     def show_data_port_label(self):
@@ -335,8 +330,6 @@ class StateView(Element):
         self._income.draw(context, self)
 
         for outcome in self._outcomes:
-            if not self.show_aborted_preempted and (outcome.outcome_id == -1 or outcome.outcome_id == -2):
-                continue
             outcome.port_side_size = self.port_side_size
             outcome.draw(context, self)
 

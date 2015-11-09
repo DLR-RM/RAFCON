@@ -1,9 +1,8 @@
 from weakref import ref
-from math import pi
 from pango import SCALE, FontDescription
 
 from gaphas.state import observed
-from gaphas.connector import PointPort, Handle
+from gaphas.connector import Handle
 import cairo
 from gtk.gdk import Color
 
@@ -529,6 +528,8 @@ class OutcomeView(LogicPortView):
 
         draw_label = True
         if self.has_outgoing_connection():
+            draw_label = False
+        if not global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
             draw_label = False
 
         self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
