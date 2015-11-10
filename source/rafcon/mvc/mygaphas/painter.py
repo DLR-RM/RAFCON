@@ -1,10 +1,14 @@
 from cairo import ANTIALIAS_NONE, Matrix
+from gtk.gdk import Color
 
 from gaphas.aspect import PaintFocused, ItemPaintFocused
 from gaphas.painter import HandlePainter
 
 from rafcon.mvc.mygaphas.items.connection import ConnectionView, ScopedVariableDataFlowView, DataFlowView
 from rafcon.mvc.mygaphas.items.state import StateView
+from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
+
+from rafcon.utils import constants
 
 
 class StateCornerHandlePainter(HandlePainter):
@@ -15,44 +19,31 @@ class StateCornerHandlePainter(HandlePainter):
     def __init__(self, view=None):
         super(HandlePainter, self).__init__(view)
 
-    def _draw_handles(self, item, cairo, opacity=None, inner=False):
+    def _draw_handles(self, state_v, cairo, opacity=None):
         view = self.view
         cairo.save()
-        i2v = view.get_matrix_i2v(item)
+        i2v = view.get_matrix_i2v(state_v)
         if not opacity:
-            opacity = (item is view.focused_item) and .7 or .4
+            opacity = 1
 
-        cairo.set_line_width(1)
+        fill_color = Color(constants.STATE_RESIZE_HANDLE_FILL_COLOR)
+        border_color = Color(constants.STATE_RESIZE_HANDLE_BORDER_COLOR)
+        side_length = state_v.port_side_size * self.view.get_zoom_factor() / 1.5
 
-        get_connection = view.canvas.get_connection
-        for h in item.corner_handles:
-            if not h.visible:
-                continue
-            # connected and not being moved, see HandleTool.on_button_press
-            if get_connection(h):
-                r, g, b = 1, 0, 0
-            # connected but being moved, see HandleTool.on_button_press
-            elif get_connection(h):
-                r, g, b = 1, 0.6, 0
-            elif h.movable:
-                r, g, b = 46./256., 154./256., 1
-            else:
-                r, g, b = 0, 0, 1
+        cairo.set_line_width(self.view.get_zoom_factor() / 4.)
 
+        for h in state_v.corner_handles:
+            # Reset the current transformation
             cairo.identity_matrix()
             cairo.set_antialias(ANTIALIAS_NONE)
+            # Move to center of handle
             cairo.translate(*i2v.transform_point(*h.pos))
-            cairo.rectangle(-4, -4, 8, 8)
-            if inner:
-                cairo.rectangle(-3, -3, 6, 6)
-            cairo.set_source_rgba(r, g, b, opacity)
+            cairo.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
+            # Fill
+            cairo.set_source_rgba(*get_col_rgba(fill_color, alpha=opacity))
             cairo.fill_preserve()
-            if h.connectable:
-                cairo.move_to(-2, -2)
-                cairo.line_to(2, 3)
-                cairo.move_to(2, -2)
-                cairo.line_to(-2, 3)
-            cairo.set_source_rgba(r/4., g/4., b/4., opacity*1.3)
+            # Border
+            cairo.set_source_rgba(*get_col_rgba(border_color, alpha=opacity))
             cairo.stroke()
         cairo.restore()
 
