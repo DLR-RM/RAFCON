@@ -7,7 +7,7 @@ from rafcon.mvc.mygaphas.items.connection import ConnectionView, ScopedVariableD
 from rafcon.mvc.mygaphas.items.state import StateView
 
 
-class CustomColorHandlePainter(HandlePainter):
+class StateCornerHandlePainter(HandlePainter):
     """
     This class overwrites the default HandlePainter Class in order to be able to adjust the color of the handles.
     """
@@ -25,10 +25,8 @@ class CustomColorHandlePainter(HandlePainter):
         cairo.set_line_width(1)
 
         get_connection = view.canvas.get_connection
-        for h in item.handles():
-            if not h.visible or isinstance(item, ConnectionView) and h in item.perp_waypoint_handles():
-                continue
-            if isinstance(item, ScopedVariableDataFlowView) and h not in item.end_handles():
+        for h in item.corner_handles:
+            if not h.visible:
                 continue
             # connected and not being moved, see HandleTool.on_button_press
             if get_connection(h):
@@ -44,11 +42,6 @@ class CustomColorHandlePainter(HandlePainter):
             cairo.identity_matrix()
             cairo.set_antialias(ANTIALIAS_NONE)
             cairo.translate(*i2v.transform_point(*h.pos))
-            # if isinstance(item, StateView) and h in item.corner_handles:
-            #     size = item.port_side_size * 2
-            #     size_half = size / 2.
-            #     cairo.rectangle(-size_half, -size_half, size, size)
-            # else:
             cairo.rectangle(-4, -4, 8, 8)
             if inner:
                 cairo.rectangle(-3, -3, 6, 6)
@@ -62,6 +55,22 @@ class CustomColorHandlePainter(HandlePainter):
             cairo.set_source_rgba(r/4., g/4., b/4., opacity*1.3)
             cairo.stroke()
         cairo.restore()
+
+    def paint(self, context):
+        view = self.view
+        canvas = view.canvas
+        cairo = context.cairo
+        # Order matters here:
+        for item in canvas.sort(view.selected_items):
+            if isinstance(item, StateView):
+                self._draw_handles(item, cairo)
+        # Draw nice opaque handles when hovering an item:
+        item = view.hovered_item
+        if item and item not in view.selected_items and isinstance(item, StateView):
+            self._draw_handles(item, cairo, opacity=.25)
+        item = view.dropzone_item
+        if item and item not in view.selected_items and isinstance(item, StateView):
+            self._draw_handles(item, cairo, opacity=.25, inner=True)
 
 
 @PaintFocused.when_type(ConnectionView)
