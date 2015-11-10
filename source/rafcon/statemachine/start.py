@@ -70,7 +70,7 @@ def start_state_machine(setup_config):
 def check_for_sm_finished(sm):
     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
         try:
-            sm.root_state.concurrency_queue.get(timeout=1.0)
+            sm.root_state.concurrency_queue.get(timeout=10.0)
         except Empty, e:
             pass
         # no logger output here to make it easier for the parser

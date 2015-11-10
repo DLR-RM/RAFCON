@@ -86,17 +86,6 @@ def start_rafcon(name, q):
     logger = log.get_logger("start-no-gui")
     logger.info("initialize RAFCON ... ")
 
-    # rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    # variables_for_pytest.test_multithrading_lock.acquire()
-    #
-    # sm = StatemachineExecutionEngine.execute_state_machine_from_path(
-    #     "../../test_scripts/test_libraries/99_bottles_of_beer_no_wait")
-    # # rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
-    #
-    # variables_for_pytest.test_multithrading_lock.release()
-
-    # signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-
     global_config.load(path=setup_config['config_path'])
     global_net_config.load(path=setup_config['net_config_path'])
 
@@ -241,9 +230,6 @@ def test_sm_and_server():
         # print test_sequence[i]
         # print data
         assert data == test_sequence[i]
-
-    # data = q.get()
-    # assert data == "something"
 
     rafcon_process.join()
     execution_signal_queue.put("stop")

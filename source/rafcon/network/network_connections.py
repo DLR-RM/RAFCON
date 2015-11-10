@@ -52,6 +52,11 @@ class NetworkConnections(Observer, gobject.GObject):
         self.observe_model(self.state_machine_manager)
         self.state_machine_manager.register_observer(self)
 
+        # add all existing state machines
+        for sm_id, sm in self.state_machine_manager.state_machines.iteritems():
+            self.observe_model(sm)
+            sm.register_observer(self)
+
         self.previous_execution_message = ""
 
         if global_net_config.get_config_value("AUTOCONNECT_UDP_TO_SERVER"):
