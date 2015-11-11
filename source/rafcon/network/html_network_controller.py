@@ -49,7 +49,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
                    "\"msg\": \"%s\", " \
                    "\"sm_name\": \"%s\", " \
                    "\"ip\": \"%s\", " \
-                   "\"port\": \"%d\"}\n\n" % (data, sm_name, ip, port)
+                   "\"port\": \"%d\"}\n\n" % (data, str(sm_name), ip, port)
 
         request.write(json_pkg)
 
@@ -67,10 +67,10 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
                    "\"width\": \"%f\"," \
                    "\"height\": \"%f\"," \
                    "\"hierarchy_level\": \"%d\"," \
-                   "\"outcomes\": [" % (sm_name,
-                                        parent_id,
-                                        state_id,
-                                        state_name,
+                   "\"outcomes\": [" % (str(sm_name),
+                                        str(parent_id),
+                                        str(state_id),
+                                        str(state_name),
                                         pos_x,
                                         pos_y,
                                         width,
@@ -79,7 +79,7 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
 
         for outcome_id, outcome in outcomes.iteritems():
             if outcome_id >= 0:
-                json_pkg += "\"%s\"," % outcome.name
+                json_pkg += "\"%s\"," % str(outcome.name)
 
         if len(outcomes) > 2:
             json_pkg = "]}\n\n".join(json_pkg.rsplit(",", 1))
@@ -99,12 +99,12 @@ class HtmlNetworkController(resource.Resource, gobject.GObject):
                    "\"from_state\": \"%s\"," \
                    "\"to_outcome\": \"%s\"," \
                    "\"to_state\": \"%s\"," \
-                   "\"waypoints\": [" % (sm_name,
-                                         container_state_id,
-                                         from_outcome,
-                                         from_state,
-                                         to_outcome,
-                                         to_state)
+                   "\"waypoints\": [" % (str(sm_name),
+                                         str(container_state_id),
+                                         str(from_outcome),
+                                         str(from_state),
+                                         str(to_outcome),
+                                         str(to_state))
 
         if waypoints:
             for point in waypoints:

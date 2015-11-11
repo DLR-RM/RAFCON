@@ -1,0 +1,36 @@
+{
+    "gui": {
+        "editor_opengl": {
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    264.36842105263156, 
+                    121.74605263157895
+                ]
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {}
+    }, 
+    "outcome-2": {
+        "gui": {}
+    }, 
+    "outcome0": {
+        "gui": {}
+    }, 
+    "transition1": {
+        "gui": {
+            "editor_opengl": {
+                "waypoints": []
+            }
+        }
+    }, 
+    "transition2": {
+        "gui": {
+            "editor_opengl": {
+                "waypoints": []
+            }
+        }
+    }
+}
