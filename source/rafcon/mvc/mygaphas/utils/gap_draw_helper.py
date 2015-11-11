@@ -48,6 +48,17 @@ def get_col_rgba(col, transparent=False, alpha=None):
     return r, g, b, a
 
 
+def get_side_length_of_resize_handle(view, state_v):
+    """Calculate the side length of a resize handle
+
+    :param rafcon.mvc.mygaphas.view.ExtendedGtkView view: View
+    :param rafcon.mvc.mygaphas.items.state.StateView state_v: StateView
+    :return: side length
+    :rtype: float
+    """
+    return state_v.port_side_size * view.get_zoom_factor() / 1.5
+
+
 def draw_data_value_rect(cairo_context, color, value_size, name_size, pos, port_side):
     """
     This method draws the containing rect for the data port value, depending on the side and size of the label.

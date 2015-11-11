@@ -2,14 +2,17 @@ from cairo import ANTIALIAS_NONE, Matrix
 from gtk.gdk import Color
 
 from gaphas.aspect import PaintFocused, ItemPaintFocused
-from gaphas.painter import HandlePainter
+from gaphas.painter import HandlePainter, BoundingBoxPainter, CairoBoundingBoxContext
 
-from rafcon.mvc.mygaphas.items.connection import ConnectionView, ScopedVariableDataFlowView, DataFlowView
-from rafcon.mvc.mygaphas.items.state import StateView
-from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
+from rafcon.mvc.mygaphas.items.connection import ConnectionView, DataFlowView
+from rafcon.mvc.mygaphas.items.state import StateView, NameView
+from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_length_of_resize_handle
 
 from rafcon.utils import constants
 
+# Use this to verify the calculated bounding boxes
+# from gaphas import painter
+# painter.DEBUG_DRAW_BOUNDING_BOX = True
 
 class StateCornerHandlePainter(HandlePainter):
     """
@@ -28,7 +31,7 @@ class StateCornerHandlePainter(HandlePainter):
 
         fill_color = Color(constants.STATE_RESIZE_HANDLE_FILL_COLOR)
         border_color = Color(constants.STATE_RESIZE_HANDLE_BORDER_COLOR)
-        side_length = state_v.port_side_size * self.view.get_zoom_factor() / 1.5
+        side_length = get_side_length_of_resize_handle(self.view, state_v)
 
         cairo.set_line_width(self.view.get_zoom_factor() / 4.)
 
@@ -59,9 +62,6 @@ class StateCornerHandlePainter(HandlePainter):
         item = view.hovered_item
         if item and item not in view.selected_items and isinstance(item, StateView):
             self._draw_handles(item, cairo, opacity=.25)
-        item = view.dropzone_item
-        if item and item not in view.selected_items and isinstance(item, StateView):
-            self._draw_handles(item, cairo, opacity=.25, inner=True)
 
 
 @PaintFocused.when_type(ConnectionView)
@@ -100,3 +100,33 @@ class LineSegmentPainter(ItemPaintFocused):
                 cr.set_line_width(1)
                 cr.stroke()
                 cr.restore()
+
+
+class RAFCONBoundingBoxPainter(BoundingBoxPainter):
+    """
+    This specific case of an ItemPainter is used to calculate the bounding
+    boxes (in canvas coordinates) for the items.
+    """
+
+    draw_all = True
+
+    def _draw_item(self, item, cairo, area=None):
+        cairo = CairoBoundingBoxContext(cairo)
+        super(BoundingBoxPainter, self)._draw_item(item, cairo)
+        bounds = cairo.get_bounds()
+
+        view = self.view
+        if isinstance(item, StateView):
+            i2v = view.get_matrix_i2v(item).transform_point
+            for h in item.corner_handles:
+                side_length = get_side_length_of_resize_handle(view, item)
+                cx, cy = i2v(*h.pos)
+                bounds += (cx - side_length / 2, cy - side_length / 2, side_length, side_length)
+        elif isinstance(item, NameView):
+            i2v = view.get_matrix_i2v(item).transform_point
+            for h in item.handles():
+                cx, cy = i2v(*h.pos)
+                bounds += (cx, cy, 1, 1)
+
+        bounds.expand(1)
+        view.set_item_bounding_box(item, bounds)

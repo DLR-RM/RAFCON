@@ -245,7 +245,7 @@ class PortView(object):
                                                                            self._last_label_size[1],
                                                                            current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
-        if from_cache:
+        if from_cache and not context.draw_all:
             # print "draw port name from cache"
             self._label_image_cache.copy_image_to_context(c, upper_left_corner)
 
@@ -259,7 +259,7 @@ class PortView(object):
                                                       False, label_position, side_length, self._draw_connection_to_port,
                                                       show_additional_value, value, only_extent_calculations=True)
             from rafcon.mvc.mygaphas.utils.gap_helper import extend_extents
-            extents = extend_extents(extents, factor=1.1)
+            extents = extend_extents(extents, factor=1.02)
             label_pos = extents[0], extents[1]
             relative_pos = label_pos[0] - self.pos[0], label_pos[1] - self.pos[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]
@@ -278,6 +278,16 @@ class PortView(object):
             # Copy image surface to current cairo context
             upper_left_corner = (self.pos[0] + relative_pos[0], self.pos[1] + relative_pos[1])
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
+
+            # draw_all means, the bounding box of the state is calculated
+            # As we are using drawing operation, not supported by Gaphas, we manually need to update the bounding box
+            if context.draw_all:
+                from gaphas.geometry import Rectangle
+                view = self._parent.canvas.get_first_view()
+                abs_pos = view.get_matrix_i2v(self._parent).transform_point(*label_pos)
+                abs_pos1 = view.get_matrix_i2v(self._parent).transform_point(extents[2], extents[3])
+                bounds = Rectangle(abs_pos[0], abs_pos[1], x1=abs_pos1[0], y1=abs_pos1[1])
+                context.cairo._update_bounds(bounds)
 
     def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
         """Draw the port of a simple state (ExecutionState, LibraryState)
@@ -749,7 +759,7 @@ class DataPortView(PortView):
         return self.port_m.data_port.name
 
     def draw(self, context, state):
-        draw_label = state.selected or state.show_data_port_label
+        draw_label = state.selected or state.show_data_port_label or context.draw_all
         self.draw_port(context, constants.DATA_PORT_COLOR, state.transparent, draw_label, self._value)
 
 
