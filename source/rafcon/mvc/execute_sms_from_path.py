@@ -17,6 +17,9 @@ from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.mvc.models import GlobalVariableManagerModel
 import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
+from rafcon.mvc.config import global_gui_config
+from rafcon.network.network_config import global_net_config
+from rafcon.statemachine.config import global_config
 
 
 def create_models():
@@ -42,6 +45,11 @@ def create_models():
 def run_sm():
     gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+
+    home_path = os.path.join(os.path.expanduser('~'), '.config/rafcon')
+    global_config.load(path=home_path)
+    global_gui_config.load(path=home_path)
+    global_net_config.load()
 
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'unit_test_state_machines')
@@ -75,8 +83,11 @@ def run_sm():
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
 
+    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
+
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
+        global_storage.load_statemachine_from_path("../../test_scripts/tutorials/99_bottles_of_beer_in_library")
 
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView()

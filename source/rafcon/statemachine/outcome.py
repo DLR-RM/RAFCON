@@ -32,7 +32,7 @@ class Outcome(StateElement):
         # Checks for validity
         self.parent = parent
 
-        logger.debug("Outcome with name %s and id %s initialized" % (self.name, self.outcome_id))
+        # logger.debug("Outcome with name %s and id %s initialized" % (self.name, self.outcome_id))
 
     def __str__(self):
         return "Outcome '{0}' [{1}]".format(self.name, self.outcome_id)
