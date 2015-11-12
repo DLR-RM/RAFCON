@@ -161,8 +161,9 @@ class HoverItemTool(HoverTool):
         # Reset cursor
         self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
 
-        if isinstance(view.hovered_item, StateView) and view.hovered_item in view.selected_items:
+        if isinstance(view.hovered_item, StateView):
             state_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
+
             # Hover over port => show hover state of port and different cursor
             if hovered_handle and hovered_handle not in state_v.corner_handles:
                 view.hovered_handle = hovered_handle
@@ -170,6 +171,9 @@ class HoverItemTool(HoverTool):
                 view.queue_draw_area(*port_v.get_port_area(view))
                 if event.state & gtk.gdk.CONTROL_MASK:
                     self.view.window.set_cursor(gtk.gdk.Cursor(MOVE_CURSOR))
+                else:
+                    self.view.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.CROSS))
+
             # Hover over corner/resize handles => show with cursor
             elif hovered_handle and hovered_handle in state_v.corner_handles:
                 cursors = ElementHandleSelection.CURSORS
