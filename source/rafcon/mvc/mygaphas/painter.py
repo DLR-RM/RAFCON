@@ -14,6 +14,7 @@ from rafcon.utils import constants
 # from gaphas import painter
 # painter.DEBUG_DRAW_BOUNDING_BOX = True
 
+
 class StateCornerHandlePainter(HandlePainter):
     """
     This class overwrites the default HandlePainter Class in order to be able to adjust the color of the handles.

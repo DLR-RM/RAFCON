@@ -142,14 +142,54 @@ class HoverItemTool(HoverTool):
         super(HoverItemTool, self).__init__(view)
         self._prev_hovered_item = None
 
+    def _get_handle_area(self, state_v, handle):
+        """Calculates the area affected by the hover state of a port
+        """
+        port = state_v.get_port_for_handle(handle)
+        center = handle.pos
+        margin = port.port_side_size / 4.
+        upper_left = center[0] - port.port_size[0] - margin, center[1] - port.port_size[1] - margin
+        lower_right = center[0] + port.port_size[0] + margin, center[1] + port.port_size[1] + margin
+        port_upper_left = self.view.get_matrix_i2v(state_v).transform_point(*upper_left)
+        port_lower_right = self.view.get_matrix_i2v(state_v).transform_point(*lower_right)
+        size = port_lower_right[0] - port_upper_left[0], port_lower_right[1] - port_upper_left[1]
+        return port_upper_left[0], port_upper_left[1], size[0], size[1]
+
     def on_motion_notify(self, event):
         super(HoverItemTool, self).on_motion_notify(event)
+        from gaphas.tool import HandleFinder
+        from gaphas.view import DEFAULT_CURSOR
+        from gaphas.aspect import ElementHandleSelection
+
+        view = self.view
+        if view.hovered_handle:
+            handle = view.hovered_handle
+            view.hovered_handle = None
+            view.queue_draw_area(*self._get_handle_area(self._prev_hovered_item, handle))
+        pos = event.x, event.y
+
+        # Reset cursor
+        self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
+
+        if isinstance(view.hovered_item, StateView) and view.hovered_item in view.selected_items:
+            state_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
+            # Hover over port => show hover state of port and different cursor
+            if hovered_handle and hovered_handle not in state_v.corner_handles:
+                view.hovered_handle = hovered_handle
+                view.queue_draw_area(*self._get_handle_area(state_v, hovered_handle))
+                if event.state & gtk.gdk.CONTROL_MASK:
+                    self.view.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.FLEUR))
+            # Hover over corner/resize handles => show with cursor
+            elif hovered_handle and hovered_handle in state_v.corner_handles:
+                cursors = ElementHandleSelection.CURSORS
+                index = state_v.handles().index(hovered_handle)
+                self.view.window.set_cursor(cursors[index])
 
         # NameView should only be hovered, if its state is selected
-        if isinstance(self.view.hovered_item, NameView):
-            state_v = self.view.canvas.get_parent(self.view.hovered_item)
+        if isinstance(view.hovered_item, NameView):
+            state_v = self.view.canvas.get_parent(view.hovered_item)
             if state_v not in self.view.selected_items:
-                self.view.hovered_item = state_v
+                view.hovered_item = state_v
 
         if self._prev_hovered_item and self.view.hovered_item is not self._prev_hovered_item:
             self._prev_hovered_item.hovered = False

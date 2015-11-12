@@ -5,6 +5,8 @@ from rafcon.mvc.mygaphas.painter import RAFCONBoundingBoxPainter
 
 class ExtendedGtkView(GtkView):
 
+    hovered_handle = None
+
     def __init__(self, *args):
         super(ExtendedGtkView, self).__init__(*args)
         self._bounding_box_painter = RAFCONBoundingBoxPainter(self)
