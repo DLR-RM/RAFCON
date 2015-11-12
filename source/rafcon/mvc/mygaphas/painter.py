@@ -128,6 +128,12 @@ class RAFCONBoundingBoxPainter(BoundingBoxPainter):
             for h in item.handles():
                 cx, cy = i2v(*h.pos)
                 bounds += (cx, cy, 1, 1)
+        elif isinstance(item, ConnectionView):
+            i2v = view.get_matrix_i2v(item).transform_point
+            for h in item.handles():
+                cx, cy = i2v(*h.pos)
+                bounds += (cx, cy, 1, 1)
+
 
         bounds.expand(1)
         view.set_item_bounding_box(item, bounds)

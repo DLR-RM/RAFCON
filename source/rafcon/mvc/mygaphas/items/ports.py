@@ -163,6 +163,19 @@ class PortView(object):
                 return True
         return False
 
+    def get_port_area(self, view):
+        """Calculates the drawing area affected by the (hovered) port
+        """
+        state_v = self.parent
+        center = self.handle.pos
+        margin = self.port_side_size / 4.
+        upper_left = center[0] - self.port_size[0] - margin, center[1] - self.port_size[1] - margin
+        lower_right = center[0] + self.port_size[0] + margin, center[1] + self.port_size[1] + margin
+        port_upper_left = view.get_matrix_i2v(state_v).transform_point(*upper_left)
+        port_lower_right = view.get_matrix_i2v(state_v).transform_point(*lower_right)
+        size = port_lower_right[0] - port_upper_left[0], port_lower_right[1] - port_upper_left[1]
+        return port_upper_left[0], port_upper_left[1], size[0], size[1]
+
     def draw(self, context, state):
         raise NotImplementedError
 

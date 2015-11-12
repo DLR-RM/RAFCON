@@ -5,6 +5,7 @@ from simplegeneric import generic
 from gaphas.aspect import ConnectionSink, Connector, HandleFinder, ItemHandleFinder, HandleSelection, \
     ItemHandleSelection
 from rafcon.mvc.mygaphas.items.connection import ConnectionView
+from rafcon.mvc.mygaphas.items.state import StateView
 
 
 class ItemHandleInMotion(object):
@@ -80,6 +81,20 @@ class ItemHandleInMotion(object):
         return None
 
 HandleInMotion = generic(ItemHandleInMotion)
+
+
+HandleFinder = generic(ItemHandleFinder)
+
+
+@HandleFinder.when_type(StateView)
+class StateHandleFinder(ItemHandleFinder):
+    """Find handles in state
+    """
+
+    def get_handle_at_point(self, pos, distance=None):
+        if distance:
+            return self.view.get_handle_at_point(pos, distance)
+        return self.view.get_handle_at_point(pos)
 
 
 @HandleFinder.when_type(ConnectionView)
