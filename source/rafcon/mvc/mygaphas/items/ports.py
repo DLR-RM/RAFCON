@@ -96,6 +96,10 @@ class PortView(object):
     def port_pos(self):
         return self.port.point
 
+    @property
+    def port_size(self):
+        return self.port_side_size / 1.5, self.port_side_size
+
     def has_outgoing_connection(self):
         return len(self._outgoing_handles) > 0
 
@@ -164,6 +168,7 @@ class PortView(object):
 
     def draw_port(self, context, fill_color, transparent, draw_label=True, value=None):
         c = context.cairo
+        view = self._parent.canvas.get_first_view()
         self.update_port_side_size()
         side_length = self.port_side_size
 
@@ -187,7 +192,7 @@ class PortView(object):
         }
 
         upper_left_corner = (self.pos.x.value - side_length / 2., self.pos.y.value - side_length / 2.)
-        current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
+        current_zoom = view.get_zoom_factor()
         from_cache, image, zoom = self._port_image_cache.get_cached_image(side_length, side_length,
                                                                           current_zoom, parameters)
 
@@ -203,15 +208,19 @@ class PortView(object):
 
             c.move_to(0, 0)
             if isinstance(self._parent.model.state, ContainerState):
-                self._draw_container_state_port(c, direction, side_length, fill_color, transparent)
+                self._draw_container_state_port(c, direction, fill_color, transparent)
             else:
-                self._draw_simple_state_port(c, direction, side_length, fill_color, transparent)
+                self._draw_simple_state_port(c, direction, fill_color, transparent)
 
             # Copy image surface to current cairo context
             self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
         if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
             self.draw_name(context, transparent, value)
+
+        if self.handle is view.hovered_handle or context.draw_all:
+            context.cairo.move_to(*self.pos)
+            self._draw_hover_effect(context.cairo, direction, fill_color, transparent)
 
     def draw_name(self, context, transparency, value):
         if self.is_connected_to_scoped_variable():
@@ -289,7 +298,7 @@ class PortView(object):
                 bounds = Rectangle(abs_pos[0], abs_pos[1], x1=abs_pos1[0], y1=abs_pos1[1])
                 context.cairo._update_bounds(bounds)
 
-    def _draw_simple_state_port(self, context, direction, border_width, color, transparency):
+    def _draw_simple_state_port(self, context, direction, color, transparency):
         """Draw the port of a simple state (ExecutionState, LibraryState)
 
         Connector for execution states can only be connected to the outside. Thus the connector fills the whole
@@ -297,20 +306,19 @@ class PortView(object):
 
         :param context: Cairo context
         :param direction: The direction the port is pointing to
-        :param border_width: The width of the border the port is drawn on
         :param color: Desired color of the port
         :param transparency: The level of transparency
         """
         c = context
 
-        port_size = border_width
-        c.set_line_width(border_width * 0.03 * self._port_image_cache.multiplicator)
+        width, height = self.port_size
+        c.set_line_width(self.port_side_size * 0.03 * self._port_image_cache.multiplicator)
 
         # Save/restore context, as we move and rotate the connector to the desired pose
         c.save()
-        c.rel_move_to(port_size / 2., port_size / 2.)
+        c.rel_move_to(self.port_side_size / 2., self.port_side_size / 2.)
         PortView._rotate_context(c, direction)
-        PortView._draw_single_connector(c, port_size)
+        PortView._draw_single_connector(c, width, height)
         c.restore()
 
         # Colorize the generated connector path
@@ -322,28 +330,27 @@ class PortView(object):
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         c.stroke()
 
-    def _draw_container_state_port(self, context, direction, border_width, color, transparency):
+    def _draw_container_state_port(self, context, direction, color, transparency):
         """Draw the port of a container state
 
         Connector for container states are split in an inner connector and an outer connector.
 
         :param context: Cairo context
         :param direction: The direction the port is pointing to
-        :param border_width: The width of the border the port is drawn on
         :param color: Desired color of the port
         :param transparency: The level of transparency
         """
         c = context
 
-        port_size = border_width
-        c.set_line_width(border_width * 0.03 * self._port_image_cache.multiplicator)
+        width, height = self.port_size
+        c.set_line_width(self.port_side_size * 0.03 * self._port_image_cache.multiplicator)
 
         # Save/restore context, as we move and rotate the connector to the desired pose
         cur_point = c.get_current_point()
         c.save()
-        c.rel_move_to(port_size / 2., port_size / 2.)
+        c.rel_move_to(self.port_side_size / 2., self.port_side_size / 2.)
         PortView._rotate_context(c, direction)
-        PortView._draw_inner_connector(c, port_size)
+        PortView._draw_inner_connector(c, width, height)
         c.restore()
 
         if self.connected_incoming:
@@ -356,9 +363,9 @@ class PortView(object):
 
         c.move_to(*cur_point)
         c.save()
-        c.rel_move_to(port_size / 2., port_size / 2.)
+        c.rel_move_to(self.port_side_size / 2., self.port_side_size / 2.)
         PortView._rotate_context(c, direction)
-        PortView._draw_outer_connector(c, port_size)
+        PortView._draw_outer_connector(c, width, height)
         c.restore()
 
         if self.connected_outgoing:
@@ -369,8 +376,26 @@ class PortView(object):
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         c.stroke()
 
+    def _draw_hover_effect(self, context, direction, color, transparency):
+        c = context
+
+        width, height = self.port_size
+        c.set_line_width(self.port_side_size * 0.03 * self._port_image_cache.multiplicator)
+        margin = self.port_side_size / 4.
+
+        # Save/restore context, as we move and rotate the connector to the desired pose
+        c.save()
+        # c.rel_move_to(port_size / 2., port_size / 2.)
+        PortView._rotate_context(c, direction)
+        PortView._draw_rectangle(c, width + margin, height + margin)
+        c.restore()
+
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        c.stroke()
+
+
     @staticmethod
-    def _draw_single_connector(context, port_size):
+    def _draw_single_connector(context, width, height):
         """Draw the connector for execution states
 
         Connector for execution states can only be connected to the outside. Thus the connector fills the whole
@@ -383,8 +408,6 @@ class PortView(object):
         # Current pos is center
         # Arrow is drawn upright
 
-        height = port_size
-        width = port_size / 1.5
         arrow_height = height / 6.
 
         # First move to bottom left corner
@@ -401,7 +424,7 @@ class PortView(object):
         c.close_path()
 
     @staticmethod
-    def _draw_inner_connector(context, port_size):
+    def _draw_inner_connector(context, width, height):
         """Draw the connector for container states
 
         Connector for container states can be connected from the inside and the outside. Thus the connector is split
@@ -414,8 +437,6 @@ class PortView(object):
         # Current pos is center
         # Arrow is drawn upright
 
-        height = port_size
-        width = port_size / 1.5
         gap = height / 6.
         connector_height = (height - gap) / 2.
 
@@ -429,7 +450,7 @@ class PortView(object):
         c.close_path()
 
     @staticmethod
-    def _draw_outer_connector(context, port_size):
+    def _draw_outer_connector(context, width, height):
         """Draw the outer connector for container states
 
         Connector for container states can be connected from the inside and the outside. Thus the connector is split
@@ -442,8 +463,6 @@ class PortView(object):
         # Current pos is center
         # Arrow is drawn upright
 
-        height = port_size
-        width = port_size / 1.5
         arrow_height = height / 6.
         gap = height / 6.
         connector_height = (height - gap) / 2.
@@ -460,6 +479,25 @@ class PortView(object):
         # Draw line to upper left corner
         c.rel_line_to(-width/2., arrow_height)
         # Draw line back to the origin (lower left corner)
+        c.close_path()
+
+    @staticmethod
+    def _draw_rectangle(context, width, height):
+        """Draw a rectangle
+
+        Assertion: The current point is the center point of the rectangle
+
+        :param context: Cairo context
+        :param width: Width of the rectangle
+        :param height: Height of the rectangle
+        """
+        c = context
+        # First move to upper left corner
+        c.rel_move_to(-width/2., -height/2.)
+        # Draw closed rectangle
+        c.rel_line_to(width, 0)
+        c.rel_line_to(0, height)
+        c.rel_line_to(-width, 0)
         c.close_path()
 
     @staticmethod
