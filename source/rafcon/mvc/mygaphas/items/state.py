@@ -33,6 +33,8 @@ class StateView(Element):
      SW +---+ SE
     """
 
+    _map_handles_port_v = {}
+
     def __init__(self, state_m, size, hierarchy_level):
         super(StateView, self).__init__(size[0], size[1])
         assert isinstance(state_m, AbstractStateModel)
@@ -460,6 +462,11 @@ class StateView(Element):
     def scoped_variable(self, scoped_variable_id):
         return self._data_port(self._scoped_variables_ports, scoped_variable_id)
 
+    def get_port_for_handle(self, handle):
+        if handle in self._map_handles_port_v:
+            return self._map_handles_port_v[handle]
+        return None
+
     def _data_port(self, port_list, port_id):
         for port in port_list:
             if port.port_id == port_id:
@@ -470,6 +477,7 @@ class StateView(Element):
         income_v = IncomeView(self, self.port_side_size)
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
+        self._map_handles_port_v[income_v.handle] = income_v
 
         port_meta = self.model.meta['gui']['editor_gaphas']['income']
         if not isinstance(port_meta['rel_pos'], tuple):
@@ -487,6 +495,7 @@ class StateView(Element):
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
+        self._map_handles_port_v[outcome_v.handle] = outcome_v
 
         port_meta = outcome_m.meta['gui']['editor_gaphas']
         if not isinstance(port_meta['rel_pos'], tuple):
@@ -506,6 +515,7 @@ class StateView(Element):
         self.add_rect_constraint_for_port(outcome_v)
 
     def remove_outcome(self, outcome_v):
+        del self._map_handles_port_v[outcome_v.handle]
         self._outcomes.remove(outcome_v)
         self._ports.remove(outcome_v.port)
         self._handles.remove(outcome_v.handle)
@@ -518,6 +528,7 @@ class StateView(Element):
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
+        self._map_handles_port_v[input_port_v.handle] = input_port_v
 
         port_meta = port_m.meta['gui']['editor_gaphas']
         if not isinstance(port_meta['rel_pos'], tuple):
@@ -531,6 +542,7 @@ class StateView(Element):
         self.add_rect_constraint_for_port(input_port_v)
 
     def remove_input_port(self, input_port_v):
+        del self._map_handles_port_v[input_port_v.handle]
         self._inputs.remove(input_port_v)
         self._ports.remove(input_port_v.port)
         self._handles.remove(input_port_v.handle)
@@ -543,6 +555,7 @@ class StateView(Element):
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
+        self._map_handles_port_v[output_port_v.handle] = output_port_v
 
         port_meta = port_m.meta['gui']['editor_gaphas']
         if not isinstance(port_meta['rel_pos'], tuple):
@@ -556,6 +569,7 @@ class StateView(Element):
         self.add_rect_constraint_for_port(output_port_v)
 
     def remove_output_port(self, output_port_v):
+        del self._map_handles_port_v[output_port_v.handle]
         self._outputs.remove(output_port_v)
         self._ports.remove(output_port_v.port)
         self._handles.remove(output_port_v.handle)
@@ -568,6 +582,7 @@ class StateView(Element):
         self._scoped_variables_ports.append(scoped_variable_port_v)
         self._ports.append(scoped_variable_port_v.port)
         self._handles.append(scoped_variable_port_v.handle)
+        self._map_handles_port_v[scoped_variable_port_v.handle] = scoped_variable_port_v
 
         scoped_variable_port_v.handle.pos = self.width * (0.1 * len(self._scoped_variables_ports)), 0
 
@@ -585,6 +600,7 @@ class StateView(Element):
         self.add_rect_constraint_for_port(scoped_variable_port_v)
 
     def remove_scoped_variable(self, scoped_variable_port_v):
+        del self._map_handles_port_v[scoped_variable_port_v.handle]
         self._scoped_variables_ports.remove(scoped_variable_port_v)
         self._ports.remove(scoped_variable_port_v.port)
         self._handles.remove(scoped_variable_port_v.handle)
