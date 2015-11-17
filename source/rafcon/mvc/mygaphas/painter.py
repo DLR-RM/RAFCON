@@ -15,39 +15,45 @@ from rafcon.utils import constants
 # painter.DEBUG_DRAW_BOUNDING_BOX = True
 
 
-class StateCornerHandlePainter(HandlePainter):
-    """
-    This class overwrites the default HandlePainter Class in order to be able to adjust the color of the handles.
+class CornerHandlePainter(HandlePainter):
+    """Base class for drawing corner handle for resize operations
     """
 
-    def __init__(self, view=None):
+    fill_color = Color(constants.STATE_RESIZE_HANDLE_FILL_COLOR)
+    border_color = Color(constants.STATE_RESIZE_HANDLE_BORDER_COLOR)
+
+    def __init__(self, view=None, item_type=type(None)):
         super(HandlePainter, self).__init__(view)
+        self._item_type = item_type
 
-    def _draw_handles(self, state_v, cairo, opacity=None):
+    def _get_handle_side_length(self, item):
+        return get_side_length_of_resize_handle(self.view, item)
+
+    def _draw_handles(self, item, cairo, opacity=None):
         view = self.view
         cairo.save()
-        i2v = view.get_matrix_i2v(state_v)
+        i2v = view.get_matrix_i2v(item)
         if not opacity:
             opacity = 1
 
-        fill_color = Color(constants.STATE_RESIZE_HANDLE_FILL_COLOR)
-        border_color = Color(constants.STATE_RESIZE_HANDLE_BORDER_COLOR)
-        side_length = get_side_length_of_resize_handle(self.view, state_v)
+        side_length = self._get_handle_side_length(item)
 
         cairo.set_line_width(self.view.get_zoom_factor() / 4.)
 
-        for h in state_v.corner_handles:
+        for index, handle in enumerate(item.handles()):
+            if index >= 4:
+                break
             # Reset the current transformation
             cairo.identity_matrix()
             cairo.set_antialias(ANTIALIAS_NONE)
             # Move to center of handle
-            cairo.translate(*i2v.transform_point(*h.pos))
+            cairo.translate(*i2v.transform_point(*handle.pos))
             cairo.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
             # Fill
-            cairo.set_source_rgba(*get_col_rgba(fill_color, alpha=opacity))
+            cairo.set_source_rgba(*get_col_rgba(self.fill_color, alpha=opacity))
             cairo.fill_preserve()
             # Border
-            cairo.set_source_rgba(*get_col_rgba(border_color, alpha=opacity))
+            cairo.set_source_rgba(*get_col_rgba(self.border_color, alpha=opacity))
             cairo.stroke()
         cairo.restore()
 
@@ -57,12 +63,34 @@ class StateCornerHandlePainter(HandlePainter):
         cairo = context.cairo
         # Order matters here:
         for item in canvas.sort(view.selected_items):
-            if isinstance(item, StateView):
+            if isinstance(item, self._item_type):
                 self._draw_handles(item, cairo)
         # Draw nice opaque handles when hovering an item:
         item = view.hovered_item
-        if item and item not in view.selected_items and isinstance(item, StateView):
+        if item and item not in view.selected_items and isinstance(item, self._item_type):
             self._draw_handles(item, cairo, opacity=.25)
+
+
+class StateCornerHandlePainter(CornerHandlePainter):
+    """Draw corner handles of StateViews
+    """
+
+    fill_color = Color(constants.STATE_RESIZE_HANDLE_FILL_COLOR)
+    border_color = Color(constants.STATE_RESIZE_HANDLE_BORDER_COLOR)
+
+    def __init__(self, view=None):
+        super(StateCornerHandlePainter, self).__init__(view, StateView)
+
+
+class NameCornerHandlePainter(CornerHandlePainter):
+    """Draw corner handles of NameViews
+    """
+
+    fill_color = Color(constants.NAME_RESIZE_HANDLE_FILL_COLOR)
+    border_color = Color(constants.NAME_RESIZE_HANDLE_BORDER_COLOR)
+
+    def __init__(self, view=None):
+        super(NameCornerHandlePainter, self).__init__(view, NameView)
 
 
 @PaintFocused.when_type(ConnectionView)
@@ -117,23 +145,19 @@ class RAFCONBoundingBoxPainter(BoundingBoxPainter):
         bounds = cairo.get_bounds()
 
         view = self.view
-        if isinstance(item, StateView):
+        if isinstance(item, (StateView, NameView)):
             i2v = view.get_matrix_i2v(item).transform_point
-            for h in item.corner_handles:
+            for index, handle in enumerate(item.handles()):
+                if index >= 4:
+                    break
                 side_length = get_side_length_of_resize_handle(view, item)
-                cx, cy = i2v(*h.pos)
+                cx, cy = i2v(*handle.pos)
                 bounds += (cx - side_length / 2, cy - side_length / 2, side_length, side_length)
-        elif isinstance(item, NameView):
-            i2v = view.get_matrix_i2v(item).transform_point
-            for h in item.handles():
-                cx, cy = i2v(*h.pos)
-                bounds += (cx, cy, 1, 1)
         elif isinstance(item, ConnectionView):
             i2v = view.get_matrix_i2v(item).transform_point
             for h in item.handles():
                 cx, cy = i2v(*h.pos)
                 bounds += (cx, cy, 1, 1)
-
 
         bounds.expand(1)
         view.set_item_bounding_box(item, bounds)
