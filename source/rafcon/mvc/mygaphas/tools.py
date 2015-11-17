@@ -183,8 +183,15 @@ class HoverItemTool(HoverTool):
         # NameView should only be hovered, if its state is selected
         elif isinstance(view.hovered_item, NameView):
             state_v = self.view.canvas.get_parent(view.hovered_item)
-            if state_v not in self.view.selected_items:
+            if state_v not in self.view.selected_items and view.hovered_item not in self.view.selected_items:
                 view.hovered_item = state_v
+            else:
+                name_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
+                # Hover over corner/resize handles => show with cursor
+                if hovered_handle:
+                    index = name_v.handles().index(hovered_handle)
+                    cursors = ElementHandleSelection.CURSORS
+                    self.view.window.set_cursor(cursors[index])
 
         # Change mouse cursor to indicate option to move connection
         elif isinstance(view.hovered_item, ConnectionView):
