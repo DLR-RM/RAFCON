@@ -112,7 +112,7 @@ class LineSegmentPainter(ItemPaintFocused):
         if item and item is view.focused_item:
             cr = context.cairo
             h = item.handles()
-            for h1, h2 in zip(h[:-1], h[1:]):
+            for h1, h2 in zip(h[1:-2], h[2:-1]):
                 p1, p2 = h1.pos, h2.pos
                 cx = (p1.x + p2.x) / 2
                 cy = (p1.y + p2.y) / 2
