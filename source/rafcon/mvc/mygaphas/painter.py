@@ -104,6 +104,9 @@ class LineSegmentPainter(ItemPaintFocused):
     interaction required for this feature.
     """
 
+    fill_color = Color(constants.TRANSITION_HANDLE_FILL_COLOR)
+    border_color = Color(constants.TRANSITION_HANDLE_BORDER_COLOR)
+
     def paint(self, context):
         view = self.view
         item = view.hovered_item
@@ -112,20 +115,22 @@ class LineSegmentPainter(ItemPaintFocused):
         if item and item is view.focused_item:
             cr = context.cairo
             h = item.handles()
+            side_length = get_side_length_of_resize_handle(self.view, item.parent) / 1.5
             for h1, h2 in zip(h[1:-2], h[2:-1]):
                 p1, p2 = h1.pos, h2.pos
                 cx = (p1.x + p2.x) / 2
                 cy = (p1.y + p2.y) / 2
                 cr.save()
+                cr.set_line_width(self.view.get_zoom_factor() / 4.)
                 cr.identity_matrix()
                 m = Matrix(*view.get_matrix_i2v(item))
 
                 cr.set_antialias(ANTIALIAS_NONE)
                 cr.translate(*m.transform_point(cx, cy))
-                cr.rectangle(-3, -3, 6, 6)
-                cr.set_source_rgba(0, 0, 0.5, .4)
+                cr.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
+                cr.set_source_rgba(*get_col_rgba(self.fill_color))
                 cr.fill_preserve()
-                cr.set_source_rgba(.25, .25, .25, .6)
+                cr.set_source_rgba(*get_col_rgba(self.border_color))
                 cr.set_line_width(1)
                 cr.stroke()
                 cr.restore()
