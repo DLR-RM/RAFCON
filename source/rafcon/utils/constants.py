@@ -1,3 +1,5 @@
+import gtk.gdk
+
 FONT_NAMES = ["DIN Next LT Pro", "FontAwesome"]
 STYLE_NAMES = ["awesome_style.xml"]
 FONT_STYLE_PATHS = {"DIN Next LT Pro":    "themes/black/fonts/DIN Next LT Pro",
@@ -53,6 +55,13 @@ STATE_RESIZE_HANDLE_BORDER_COLOR = '#373c47'
 
 NAME_RESIZE_HANDLE_FILL_COLOR = '#ddd'
 NAME_RESIZE_HANDLE_BORDER_COLOR = '#333'
+
+
+# Cursors
+MOVE_CURSOR = gtk.gdk.FLEUR
+SELECT_CURSOR = gtk.gdk.HAND1
+CREATION_CURSOR = gtk.gdk.CROSS
+
 
 MAX_VALUE_LABEL_TEXT_LENGTH = 7
 ROOT_WIDTH = 5.
