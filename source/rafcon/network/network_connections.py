@@ -52,6 +52,10 @@ class NetworkConnections(Observer, gobject.GObject):
         self.observe_model(self.state_machine_manager)
         self.state_machine_manager.register_observer(self)
 
+        for sm_id, sm in self.state_machine_manager.state_machines.iteritems():
+            self.observe_model(sm)
+            sm.register_observer(self)
+
         self.previous_execution_message = ""
 
         if global_net_config.get_config_value("AUTOCONNECT_UDP_TO_SERVER"):
@@ -90,7 +94,6 @@ class NetworkConnections(Observer, gobject.GObject):
 
     def register_udp(self):
         if not self.udp_registered:
-            print "self.udp_port: " + str(self.udp_port)
             udp_connection = self._udp_net_controller.start(self.udp_port, ConnectionMode.CLIENT)
             self.connect_udp_connection(udp_connection)
         else:

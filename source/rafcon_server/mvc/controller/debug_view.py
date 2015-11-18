@@ -178,10 +178,10 @@ class DebugViewController(ExtendedController):
             logger.error('Error while trying to open state-machine: {0}'.format(e))
 
     def send_statemachine_to_browser(self, sm_name, state_id, state, hierarchy_level):
-        meta_path = os.path.join(state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
+        meta_path = os.path.join(state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_YAML)
         tmp_meta = None
         if os.path.exists(meta_path):
-            tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
+            tmp_meta = storage_utils.load_dict_from_yaml(meta_path)
 
         if not tmp_meta:
             raise AttributeError("Meta data could not be loaded from %s" % meta_path)
@@ -216,7 +216,7 @@ class DebugViewController(ExtendedController):
             meta_path = os.path.join(state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE)
             tmp_meta = None
             if os.path.exists(meta_path):
-                tmp_meta = global_storage.storage_utils.load_dict_from_yaml(meta_path)
+                tmp_meta = storage_utils.load_dict_from_yaml(meta_path)
 
             if not tmp_meta:
                 raise AttributeError("Meta data could not be loaded from %s" % meta_path)
@@ -257,6 +257,7 @@ class DebugViewController(ExtendedController):
     @ExtendedController.observe("_udp_messages_received", after=True)
     def handle_udp_message_received(self, mode, prop_name, info):
         msg = info["args"][1]
+
         if msg.flag == "REG":
             message = "registered"
         else:

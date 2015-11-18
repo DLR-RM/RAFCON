@@ -45,14 +45,15 @@ class Message(gobject.GObject):
             else:
                 self._proto_msg.flag = flag
 
-            if isinstance(sm_name, str):
+            if isinstance(sm_name, basestring):
                 self._proto_msg.sm_name = sm_name
 
-            if isinstance(root_id, str):
+            if isinstance(root_id, basestring):
                 self._proto_msg.root_id = root_id
 
-            if not isinstance(message, str):
-                logger.warning("Message has to be specified, Default 'Empty Message' is used.")
+            if not isinstance(message, basestring):
+                logger.error("Message has to be specified, Default 'Empty Message' is used.")
+
                 self._proto_msg.message = "Empty Message"
             else:
                 self._proto_msg.message = message

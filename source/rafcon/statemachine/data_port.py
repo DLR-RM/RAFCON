@@ -41,7 +41,7 @@ class DataPort(StateElement):
         # Checks for validity
         self.parent = parent
 
-        logger.debug("DataPort with name %s initialized" % self.name)
+        # logger.debug("DataPort with name %s initialized" % self.name)
 
     def __str__(self):
         return "DataPort '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type, self.default_value)

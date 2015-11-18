@@ -58,7 +58,6 @@ class StateMachineManager(ModelMT, Observable):
     def get_sm_id_for_root_state_id(self, root_state_id):
         for sm_id, sm in self.state_machines.iteritems():
             if sm.root_state.state_id == root_state_id:
-
                 return sm_id
 
         logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
