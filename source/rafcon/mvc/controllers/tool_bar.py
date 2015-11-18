@@ -1,5 +1,6 @@
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -7,6 +8,7 @@ class ToolBarController(ExtendedController):
     """
     The class to trigger all the action, available in the tool bar.
     """
+
     def __init__(self, state_machine_manager_model, view, menu_bar_ctrl):
         ExtendedController.__init__(self, state_machine_manager_model, view)
         self.menu_bar_ctrl = menu_bar_ctrl

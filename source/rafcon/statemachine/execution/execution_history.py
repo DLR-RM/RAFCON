@@ -15,7 +15,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class ExecutionHistory():
+class ExecutionHistory:
 
     """A class for the history of a state machine execution
 
@@ -102,7 +102,7 @@ class ExecutionHistory():
             return None
 
 
-class HistoryItem():
+class HistoryItem:
 
     """An abstract class that servers a data structure to hold all important information of a certain point in time
     during the execution of a state machine. A history item is a element in doubly linked history item list.

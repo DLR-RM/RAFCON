@@ -14,8 +14,9 @@ storage = StateMachineStorage("../test_scripts/test_libraries")
 #################################################################
 
 def omnirob_move_base_rel():
-    lib_node = ExecutionState("move_base_rel", state_id="OMNIROB_MOVE_BASE_REL", path="../../test_scripts/demo_libraries/omnirob",
-                                   filename="move_base_abs.py")
+    lib_node = ExecutionState("move_base_rel", state_id="OMNIROB_MOVE_BASE_REL",
+                              path="../../test_scripts/demo_libraries/omnirob",
+                              filename="move_base_abs.py")
     lib_node.add_outcome("success", 0)
 
     storage.save_statemachine_to_path(StateMachine(lib_node),
@@ -25,8 +26,9 @@ def omnirob_move_base_rel():
 
 
 def omnirob_move_base_abs():
-    lib_node = ExecutionState("move_base_abs", state_id="OMNIROB_MOVE_BASE_ABS", path="../../test_scripts/demo_libraries/omnirob",
-                                   filename="move_base_rel.py")
+    lib_node = ExecutionState("move_base_abs", state_id="OMNIROB_MOVE_BASE_ABS",
+                              path="../../test_scripts/demo_libraries/omnirob",
+                              filename="move_base_rel.py")
     lib_node.add_outcome("success", 0)
 
     storage.save_statemachine_to_path(StateMachine(lib_node),
@@ -36,14 +38,16 @@ def omnirob_move_base_abs():
 
 
 def omnirob_move_pan_tilt():
-    lib_node = ExecutionState("move_pan_tilt", state_id="OMNIROB_MOVE_BASE_ABS", path="../../test_scripts/demo_libraries/omnirob",
-                                   filename="move_pan_tilt.py")
+    lib_node = ExecutionState("move_pan_tilt", state_id="OMNIROB_MOVE_BASE_ABS",
+                              path="../../test_scripts/demo_libraries/omnirob",
+                              filename="move_pan_tilt.py")
     lib_node.add_outcome("success", 0)
 
     storage.save_statemachine_to_path(StateMachine(lib_node),
                                       "../../test_scripts/omnirob_libs/move_pan_tilt",
                                       "0.1",
                                       delete_old_state_machine=True)
+
 
 #################################################################
 # lwr
@@ -112,6 +116,8 @@ def lwr_move_to_cartesian_pose_position_controlled():
                                       "../../test_scripts/lwr_libs/move_to_cartesian_pose_position_controlled",
                                       "0.1",
                                       delete_old_state_machine=True)
+
+
 #################################################################
 # lru
 #################################################################

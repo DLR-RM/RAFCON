@@ -10,6 +10,7 @@
 
 from rafcon.utils.config import DefaultConfig
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 CONFIG_FILE = "runtime_config.yaml"
@@ -39,6 +40,7 @@ class RuntimeConfig(DefaultConfig):
         self.set_config_value('WINDOW_SIZE', size)
         self.set_config_value('WINDOW_POS', position)
         super(RuntimeConfig, self).save_configuration()
+
 
 # This variable holds the global configuration parameters for the runtime parameters
 global_runtime_config = RuntimeConfig()

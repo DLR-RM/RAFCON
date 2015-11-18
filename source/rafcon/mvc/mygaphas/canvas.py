@@ -2,7 +2,6 @@ from gaphas.canvas import Canvas
 
 
 class MyCanvas(Canvas):
-
     def update_root_items(self):
         for root_item in self.get_root_items():
             self.request_update(root_item)

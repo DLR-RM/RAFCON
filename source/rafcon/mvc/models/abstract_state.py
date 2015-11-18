@@ -14,6 +14,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import storage_utils
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -34,6 +35,7 @@ def state_to_state_model(state):
         return StateModel
     else:
         return None
+
 
 MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_children', 'notification'])
 MetaSignalMsg.__new__.__defaults__ = (False, None)  # Make last two parameters optional
@@ -61,7 +63,6 @@ class AbstractStateModel(ModelMT):
     output_data_ports = []
     meta_signal = Signal()
     state_type_changed_signal = Signal()
-
 
     __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal",
                        "state_type_changed_signal")

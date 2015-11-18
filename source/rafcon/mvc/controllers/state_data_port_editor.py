@@ -4,6 +4,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.io_data_port_list import DataPortListController
 from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -11,7 +12,7 @@ class StateDataPortEditorController(ExtendedController):
     """
     Important Note: This class is only used for debugging purposes. For the GUI look at the StateEditor
     """
-    #model will be a container state model
+    # model will be a container state model
     def __init__(self, model, view):
         """Constructor
         """
@@ -40,4 +41,3 @@ class StateDataPortEditorController(ExtendedController):
 
     def register_view(self, view):
         view['state_dataport_editor'].connect('destroy', gtk.main_quit)
-

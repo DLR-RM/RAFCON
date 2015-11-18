@@ -86,7 +86,8 @@ class LoggingView(View):
         if not self.quit_flag:
             self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
 
-    def split_text(self, text_to_split):
+    @staticmethod
+    def split_text(text_to_split):
         """Split text
 
         Splits the debug text into its different parts: 'Time', 'LogLevel + Module Name', 'Debug message'

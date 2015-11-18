@@ -1,6 +1,4 @@
-import gtk
 import gobject
-import yaml
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel
@@ -25,8 +23,8 @@ logger = log.get_logger(__name__)
 # TODO Comment
 import gtk
 
-class StateMachineHistoryController(ExtendedController):
 
+class StateMachineHistoryController(ExtendedController):
     def __init__(self, model, view):
         """Constructor
         :param model StateMachineModel should be exchangeable
@@ -40,7 +38,7 @@ class StateMachineHistoryController(ExtendedController):
         self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
         if view is not None:
             view['history_tree'].set_model(self.list_store)
-        #view.set_hover_expand(True)
+        # view.set_hover_expand(True)
 
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
@@ -117,7 +115,8 @@ class StateMachineHistoryController(ExtendedController):
         (model, row) = self.view['history_tree'].get_selection().get_selected()
         self.no_cursor_observation = True
         if not self.doing_update:
-            logger.debug("The view jumps to the selected history element that would be situated on a right click menu in future")
+            logger.debug(
+                "The view jumps to the selected history element that would be situated on a right click menu in future")
 
             version_id = model[row][1]
 
@@ -152,7 +151,7 @@ class StateMachineHistoryController(ExtendedController):
     def update(self, model, prop_name, info):
         # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))
         if self._selected_sm_model.history.fake or \
-                info is not None and not info.method_name in ["insert_action", "undo", "redo", "reset"]:
+                                info is not None and not info.method_name in ["insert_action", "undo", "redo", "reset"]:
             return
         self.doing_update = True
         self.list_store.clear()

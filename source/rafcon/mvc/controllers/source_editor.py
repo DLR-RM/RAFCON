@@ -8,6 +8,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -93,7 +94,7 @@ class SourceEditorController(ExtendedController):
 
         if isinstance(self.model.state, LibraryState):
             logger.warn("It is not allowed to modify libraries.")
-            self.view.set_text(self.model.state.script.script)
+            self.view.set_text("")
             return
 
         logger.debug("Apply button pressed!")
@@ -188,8 +189,10 @@ class SourceEditorController(ExtendedController):
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):
 
         if hasattr(info, "method_name") and "set_script_text" == info.method_name:
-            # logger.debug('after_notification_of_script_text_was_changed' + str(info) + "\n" + self.model.state.script.script)
+            # logger.debug('after_notification_of_script_text_was_changed' + str(info) + "\n" +
+            # self.model.state.script.script)
             self.view.set_text(self.model.state.script.script)
         if hasattr(info, "method_name") and "script" == info.method_name:
-            # logger.debug('after_notification_of_script_was_exchanged' + str(info) + "\n" + self.model.state.script.script)
+            # logger.debug('after_notification_of_script_was_exchanged' + str(info) + "\n" +
+            # self.model.state.script.script)
             self.view.set_text(self.model.state.script.script)

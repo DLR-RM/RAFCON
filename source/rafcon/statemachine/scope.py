@@ -19,6 +19,7 @@ from rafcon.statemachine.data_port import DataPort
 
 from rafcon.utils import type_helpers
 
+
 def generate_time_stamp():
     """
     Generate a time stamp for the current time.
@@ -37,7 +38,6 @@ def get_human_readable_time(timestamp):
 
 
 class ScopedVariable(DataPort):
-
     """A class for representing a scoped variable in a container state
 
     It inherits from the DataPort class as it needs exactly the same class fields.
@@ -85,7 +85,6 @@ class ScopedVariable(DataPort):
 
 
 class ScopedData(Observable):
-
     """A class for representing scoped data of a container state
 
     It inherits from Observable to make a change of its fields observable.
@@ -123,12 +122,12 @@ class ScopedData(Observable):
         self._primary_key = None
 
     def __str__(self):
-        return "ScopedData: \n name: %s \n data_type: %s \n value: %s \n from_state %s" %\
+        return "ScopedData: \n name: %s \n data_type: %s \n value: %s \n from_state %s" % \
                (self.name, self.value_type, self.value, self.from_state)
 
-#########################################################################
-# Properties for all class field that must be observed by the gtkmvc
-#########################################################################
+    #########################################################################
+    # Properties for all class field that must be observed by the gtkmvc
+    #########################################################################
 
     @property
     def name(self):
@@ -143,8 +142,8 @@ class ScopedData(Observable):
         if not isinstance(name, basestring):
             raise TypeError("key_name must be of type str")
         self._name = name
-        #update key
-        self._primary_key = self._name+self.from_state
+        # update key
+        self._primary_key = self._name + self.from_state
 
     @property
     def value(self):
@@ -156,7 +155,7 @@ class ScopedData(Observable):
     @value.setter
     @Observable.observed
     def value(self, value):
-        #check for primitive data types
+        # check for primitive data types
         if value is not None and not type_helpers.type_inherits_of_type(type(value), self.value_type):
             raise TypeError("Result must by of type '{0}'. Given: '{1}' with type '{2}'".format(
                 self.value_type, value, type(value)
@@ -194,9 +193,9 @@ class ScopedData(Observable):
         if not from_state is None:
             if not isinstance(from_state, basestring):
                 raise TypeError("from_state must be of type str")
-            if not self.name is None:  #this will just happen in __init__ when key_name is not yet initialized
-                #update key
-                self._primary_key = self.name+self._from_state
+            if not self.name is None:  # this will just happen in __init__ when key_name is not yet initialized
+                # update key
+                self._primary_key = self.name + self._from_state
         self._from_state = from_state
 
     @property

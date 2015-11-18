@@ -5,6 +5,7 @@ from rafcon.mvc.models.state_element import StateElementModel
 from rafcon.statemachine.scope import ScopedVariable
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 

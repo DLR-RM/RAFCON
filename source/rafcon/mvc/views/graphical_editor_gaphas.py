@@ -1,4 +1,5 @@
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 import gtk
@@ -10,7 +11,7 @@ from gaphas import painter
 from rafcon.mvc.mygaphas.view import ExtendedGtkView
 from rafcon.mvc.mygaphas.tools import ConnectHandleMoveTool, HoverItemTool, RemoveItemTool, MoveItemTool, \
     MultiselectionTool
-from rafcon.mvc.mygaphas.painter import CustomColorHandlePainter
+from rafcon.mvc.mygaphas.painter import StateCornerHandlePainter, NameCornerHandlePainter
 
 
 class GraphicalEditorView(View, gobject.GObject):
@@ -29,17 +30,18 @@ class GraphicalEditorView(View, gobject.GObject):
         self.scroller = gtk.ScrolledWindow()
         self.editor = ExtendedGtkView()
         self.editor.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#272c36'))
-        self.editor.tool = tool.ToolChain(self.editor).\
-            append(HoverItemTool()).\
-            append(ConnectHandleMoveTool(self)).\
-            append(tool.PanTool()).\
-            append(tool.ZoomTool()).\
-            append(MoveItemTool(self)).\
-            append(MultiselectionTool(self)).\
+        self.editor.tool = tool.ToolChain(self.editor). \
+            append(HoverItemTool()). \
+            append(ConnectHandleMoveTool(self)). \
+            append(tool.PanTool()). \
+            append(tool.ZoomTool()). \
+            append(MoveItemTool(self)). \
+            append(MultiselectionTool(self)). \
             append(RemoveItemTool(self))
         self.editor.painter = painter.PainterChain(). \
             append(painter.ItemPainter()). \
-            append(CustomColorHandlePainter()). \
+            append(StateCornerHandlePainter()). \
+            append(NameCornerHandlePainter()). \
             append(painter.FocusedItemPainter()). \
             append(painter.ToolPainter())
         self.scroller.add(self.editor)
@@ -52,12 +54,13 @@ class GraphicalEditorView(View, gobject.GObject):
         self.editor.zoom(zoom)
         self.editor.set_size_request(500, 500)
 
+
 gobject.type_register(GraphicalEditorView)
 gobject.signal_new('new_state_selection', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
-                   (gobject.TYPE_PYOBJECT, ))
+                   (gobject.TYPE_PYOBJECT,))
 gobject.signal_new('deselect_states', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
                    ())
 gobject.signal_new('remove_state_from_state_machine', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
                    ())
 gobject.signal_new('meta_data_changed', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
-                   (gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, ))
+                   (gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN,))

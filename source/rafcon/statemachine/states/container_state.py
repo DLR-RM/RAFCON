@@ -791,7 +791,7 @@ class ContainerState(State):
         State.change_state_id(self, state_id)
         while self.state_id == old_state_id:
             old_state_id = self.state_id
-            State.change_state_id()
+            self.change_state_id()
 
         # change id in all transitions
         for trans_id, transition in self.transitions.iteritems():

@@ -32,7 +32,7 @@ class MainWindowView(View):
 
         self.state_machine_history = StateMachineHistoryView()
         self.state_machine_history.show()
-        
+
         self.execution_history_view = ExecutionHistoryView()
         self.execution_history_view.show()
 
@@ -43,7 +43,7 @@ class MainWindowView(View):
         # self.graphical_editor_window.add(graphical_editor_view.get_top_widget())
         # self.graphical_editor_window.show_all()
 
-        #self.graphical_editor_window = SingleWidgetWindowView(GraphicalEditorView, title="Graphical-Editor", pos=1)
+        # self.graphical_editor_window = SingleWidgetWindowView(GraphicalEditorView, title="Graphical-Editor", pos=1)
 
         ##################################################
         # insert one graphical-statemachine-editor
@@ -90,16 +90,16 @@ class MainWindowView(View):
         self["top_level_vbox"].reorder_child(self.tool_bar.get_top_widget(), 1)
 
         # insert global-variable-manager
-        #self['global_variable_manager_vbox'].add(self.global_variable_manager.get_top_widget())
+        # self['global_variable_manager_vbox'].add(self.global_variable_manager.get_top_widget())
 
         # insert history-overview
-        #self['history_vbox'].add(self['history'].get_top_widget())
+        # self['history_vbox'].add(self['history'].get_top_widget())
 
         # insert logger-console
-        #self['console_scroller'].add(self['logger_console'].get_top_widget())
+        # self['console_scroller'].add(self['logger_console'].get_top_widget())
 
         # insert status-bar
-        #self['vbox1'].reparent(self['lower_statusbar'])
+        # self['vbox1'].reparent(self['lower_statusbar'])
 
         # --------------------------------------------------------------------------
         # Network Connections View
@@ -155,7 +155,8 @@ class MainWindowView(View):
 
         self.logging_view.update_filtered_buffer()
 
-    def create_button_label(self, icon):
+    @staticmethod
+    def create_button_label(icon):
         label = gtk.Label()
         label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
                                                                     constants.FONT_SIZE_NORMAL,

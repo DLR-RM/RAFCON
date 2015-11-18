@@ -11,6 +11,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.mvc.config import global_gui_config
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -53,10 +54,10 @@ class StateMachineModel(ModelMT):
         self.selection = Selection()
 
         from rafcon.mvc.history import History
-        HISTORY_ENABLED = global_gui_config.get_config_value('HISTORY_ENABLED')
-        logger.info("is history enabled: %s" % HISTORY_ENABLED)
+        history_enabled = global_gui_config.get_config_value('history_enabled')
+        logger.info("is history enabled: %s" % history_enabled)
         self.history = History(self)
-        if not HISTORY_ENABLED:
+        if not history_enabled:
             self.history.fake = True
 
         if isinstance(meta, Vividict):
@@ -85,7 +86,6 @@ class StateMachineModel(ModelMT):
             else:
                 self.sm_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
 
-
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
@@ -99,7 +99,6 @@ class StateMachineModel(ModelMT):
             return
         if not self._list_modified(prop_name, info):
             self.__send_root_state_notification(model, prop_name, info)
-
 
     @ModelMT.observe("state", after=True)
     @ModelMT.observe("outcomes", after=True)
@@ -168,7 +167,7 @@ class StateMachineModel(ModelMT):
             return
         # print "ASSIGN ROOT_STATE", model, prop_name, info
         self.root_state.unregister_observer(self)
-        if isinstance(self.state_machine.root_state, ContainerState): # could not be a LibraryState
+        if isinstance(self.state_machine.root_state, ContainerState):  # could not be a LibraryState
             self.root_state = ContainerStateModel(self.state_machine.root_state)
         else:
             assert not isinstance(self.state_machine.root_state, LibraryState)
@@ -215,9 +214,9 @@ class StateMachineModel(ModelMT):
     def __send_root_state_notification(self, model, prop_name, info):
         if hasattr(info, 'before') and info.before:
             self.state_machine.root_state_before_change(model=info['model'], prop_name=info['prop_name'],
-                                                       instance=info['instance'],
-                                                       method_name=info['method_name'],
-                                                       args=info['args'], info=info['kwargs'])
+                                                        instance=info['instance'],
+                                                        method_name=info['method_name'],
+                                                        args=info['args'], info=info['kwargs'])
         elif hasattr(info, 'after') and info.after:
             self.state_machine.root_state_after_change(model=info['model'], prop_name=info['prop_name'],
                                                        instance=info['instance'],

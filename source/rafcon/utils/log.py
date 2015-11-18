@@ -30,6 +30,7 @@ class LoggingViewHandler(logging.Handler):
         super(LoggingViewHandler, self).__init__()
 
         try:
+            # noinspection PyStatementEffect
             unicode
             self._unicode = True
         except NameError:

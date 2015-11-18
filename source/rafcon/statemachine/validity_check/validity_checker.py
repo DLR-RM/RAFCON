@@ -11,13 +11,13 @@
 from gtkmvc import Observable
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 import vc_strategy
 import vc_implementations
 
 
 class ValidityChecker(Observable):
-
     """A strategy pattern class for checking the validity of a container state
 
     It inherits from Observable to make a change of its fields observable.
@@ -50,7 +50,7 @@ class ValidityChecker(Observable):
         :return: True if the check was successfull
 
         """
-        #TODO: deferred import: can this be somehow solved otherwise???
+        # TODO: deferred import: can this be somehow solved otherwise???
         import rafcon.statemachine.states.container_state as smcs
 
         if not isinstance(c_state, smcs.ContainerState):

@@ -121,8 +121,8 @@ def add_state(container_state_m, state_type):
     """Add a state to a container state
 
     Adds a state of type state_type to the given container_state
-    :param rafcon.mvc.models.container_state.ContainerState container_state: A model of a container state to add the new
-    state to
+    :param rafcon.mvc.models.container_state.ContainerState container_state_m: A model of a container state to add
+      the new state to
     :param rafcon.statemachine.enums.StateType state_type: The type of state that should be added
     :return: True if successful, False else
     """

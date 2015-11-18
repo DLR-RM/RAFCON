@@ -7,13 +7,15 @@ from rafcon.mvc.models.state_machine import StateMachineModel
 
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
 class StateMachineManagerModel(ModelMT, Observable):
     """This model class manages a StateMachineManager
 
-    The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine manager).
+    The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine
+    manager).
     Additional to the data of the StateMachineManager its model and the models of state machines hold by those
     these model stores and made observable the selected state machine of the view which have not to be the same
     as the active running one.
@@ -111,4 +113,3 @@ class StateMachineManagerModel(ModelMT, Observable):
             if not isinstance(selected_state_machine_id, int):
                 raise TypeError("selected_state_machine_id must be of type int")
         self._selected_state_machine_id = selected_state_machine_id
-

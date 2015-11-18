@@ -25,8 +25,8 @@ class TopToolBarView(View):
 
         label = gtk.Label()
         label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-                                                                      constants.FONT_SIZE_BIG,
-                                                                      constants.BUTTON_EXP))  # expand button sign
+                                                                    constants.FONT_SIZE_BIG,
+                                                                    constants.BUTTON_EXP))  # expand button sign
         maxb.set_label_widget(label)
 
         minb.set_label("_")

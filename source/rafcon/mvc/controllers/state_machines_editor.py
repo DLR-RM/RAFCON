@@ -1,5 +1,4 @@
 import gtk
-import traceback
 import copy
 import collections
 
@@ -11,11 +10,11 @@ from rafcon.mvc.models.state_machine import StateMachineModel, StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 import rafcon.statemachine.singleton
-from rafcon.utils import constants, gui_helper
+from rafcon.utils import constants
 from rafcon.mvc.config import global_gui_config
-from rafcon.network.network_config import global_net_config
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 GAPHAS_AVAILABLE = True
@@ -30,6 +29,7 @@ except ImportError as e:
 
 STATE_MACHINE_ACTIVE_COLOR = "#39af57"
 STATE_MACHINE_NOT_ACTIVE_COLOR = "#fefefe"
+
 
 def create_tab_close_button(callback, *additional_parameters):
     close_button = gtk.Button()
@@ -85,7 +85,6 @@ def add_state_machine(widget, event=None):
 
 
 class StateMachinesEditorController(ExtendedController):
-
     def __init__(self, sm_manager_model, view, states_editor_ctrl):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
@@ -311,7 +310,6 @@ class StateMachinesEditorController(ExtendedController):
             self.model.selected_state_machine_id = sm_id
         else:
             self.model.selected_state_machine_id = None
-
 
     def close_all_pages(self):
         """Closes all tabs of the state machines editor

@@ -227,6 +227,8 @@ def add_transition_to_state(from_port, to_port):
         elif isinstance(to_port, OutcomeView):
             responsible_parent_m = to_state_m
             to_outcome_id = to_port.outcome_id
+    else:
+        raise ValueError("Invalid port type")
 
     from rafcon.mvc.models.container_state import ContainerStateModel
     if not responsible_parent_m:

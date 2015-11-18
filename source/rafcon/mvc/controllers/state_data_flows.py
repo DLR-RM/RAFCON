@@ -1,4 +1,3 @@
-
 import gobject
 from gtk import ListStore, TreeStore
 from rafcon.mvc.models.container_state import ContainerStateModel
@@ -7,6 +6,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.utils import type_helpers
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -24,6 +24,11 @@ class StateDataFlowsListController(ExtendedController):
 
     # TODO - widget should update if parent of state has changed (e.g. because of state-type-change of parent)
 
+    free_to_port_internal = None
+    free_to_port_external = None
+    from_port_internal = None
+    from_port_external = None
+
     def __init__(self, model, view):
         """Constructor
         """
@@ -37,10 +42,10 @@ class StateDataFlowsListController(ExtendedController):
 
         view.get_top_widget().set_model(self.tree_store)
 
-        self.tree_dict_combos = {'internal':    {},
-                                 'external':    {}}
-        self.data_flow_dict = {'internal':    {},
-                               'external':    {}}
+        self.tree_dict_combos = {'internal': {},
+                                 'external': {}}
+        self.data_flow_dict = {'internal': {},
+                               'external': {}}
 
         # register other model and fill tree_store the model of the view
         if not model.state.is_root_state:
@@ -87,7 +92,7 @@ class StateDataFlowsListController(ExtendedController):
         view['from_key_combo'].connect("edited", self.on_combo_changed_from_key)
         view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
         view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
-        #view['external_toggle'].connect("edited", self.on_external_toggled)
+        # view['external_toggle'].connect("edited", self.on_external_toggled)
         view.tree_view.connect("grab-focus", self.on_focus)
 
     def register_adapters(self):
@@ -162,11 +167,11 @@ class StateDataFlowsListController(ExtendedController):
             data_flow_id = self.model.parent.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
             # print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
         else:
-                logger.warning("NO OPTION TO ADD DATA FLOW")
+            logger.warning("NO OPTION TO ADD DATA FLOW")
 
         # set focus on this new element
         # - at the moment every new element is the last -> easy work around :(
-        self.view.tree_view.set_cursor(len(self.tree_store)-1)
+        self.view.tree_view.set_cursor(len(self.tree_store) - 1)
 
     def on_remove(self, button, info=None):
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
@@ -182,7 +187,7 @@ class StateDataFlowsListController(ExtendedController):
         # selection to next element
         row_number = path[0][0]
         if len(self.tree_store) > 0:
-            self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
+            self.view.tree_view.set_cursor(min(row_number, len(self.tree_store) - 1))
 
     def on_combo_changed_from_state(self, widget, path, text):
         if text is None:
@@ -268,7 +273,8 @@ class StateDataFlowsListController(ExtendedController):
             logger.error("Could not change to outcome: {0}".format(e))
 
     def update_internal_data_base(self):
-        [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict, self.tree_dict_combos)
+        [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict,
+                                                                          self.tree_dict_combos)
         self.free_to_port_internal = free_to_int
         self.free_to_port_external = free_to_ext
         self.from_port_internal = from_int
@@ -297,7 +303,7 @@ class StateDataFlowsListController(ExtendedController):
 
         if self.view_dict['data_flows_external'] and not self.model.state.is_root_state:
             for data_flow in self.model.parent.state.data_flows.values():
-                #data_flow = row[0]
+                # data_flow = row[0]
                 if data_flow.data_flow_id in self.data_flow_dict['external'].keys():
                     df_dict = self.data_flow_dict['external'][data_flow.data_flow_id]
                     # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
@@ -339,20 +345,23 @@ class StateDataFlowsListController(ExtendedController):
             from_state = model.state.state_id
 
         if prop_name == 'data_flows':
-            logger.debug("%s gets notified by data_flows from %s %s" % (self.model.state.state_id, relative_str, from_state))
+            logger.debug(
+                "%s gets notified by data_flows from %s %s" % (self.model.state.state_id, relative_str, from_state))
         elif prop_name == 'input_data_ports':
-            logger.debug("%s gets notified by input_data_ports from %s %s" % (self.model.state.state_id, relative_str, from_state))
+            logger.debug("%s gets notified by input_data_ports from %s %s" % (
+            self.model.state.state_id, relative_str, from_state))
         elif prop_name == 'output_data_ports':
-            logger.debug("%s gets notified by output_data_ports from %s %s" % (self.model.state.state_id, relative_str, from_state))
+            logger.debug("%s gets notified by output_data_ports from %s %s" % (
+            self.model.state.state_id, relative_str, from_state))
         elif prop_name == 'scoped_variables':
-            logger.debug("%s gets notified by scoped_variables from %s %s" % (self.model.state.state_id, relative_str, from_state))
+            logger.debug("%s gets notified by scoped_variables from %s %s" % (
+            self.model.state.state_id, relative_str, from_state))
         else:
             logger.debug("IP OP SV or DF !!! FAILURE !!! %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
                          (self.model.state.state_id, prop_name, info.instance, info.method_name, info.result))
 
 
 def get_key_combos(ports, keys_store, port_type, not_key=None):
-
     if (port_type == "input_port" or port_type == "output_port") and not type(ports) is list:
         for key in ports.keys():
             port = ports[key]
@@ -453,10 +462,10 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     from_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
                 for state_model in model.states.itervalues():
                     if state_model.state.state_id in free_to_port_internal or \
-                            state_model.state.state_id == data_flow.to_state:
+                                    state_model.state.state_id == data_flow.to_state:
                         to_states_store.append([state_model.state.name + '.' + state_model.state.state_id])
                     if state_model.state.state_id in from_ports_internal or \
-                            state_model.state.state_id == data_flow.from_state:
+                                    state_model.state.state_id == data_flow.from_state:
                         from_states_store.append([state_model.state.name + '.' + state_model.state.state_id])
 
             from_keys_store = ListStore(str)
@@ -552,7 +561,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                         from_states_store.append(['self.' + state_model.state.name + '.' + state_model.state.state_id])
                     else:
                         from_states_store.append([state_model.state.name + '.' + state_model.state.state_id])
-                    #from_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
+                        # from_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
 
                 # only outports of self
                 from_keys_store = ListStore(str)
@@ -566,7 +575,8 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                     get_key_combos(model.parent.states[data_flow.from_state].state.output_data_ports,
                                    from_keys_store, 'output_port', data_flow.to_key)
                 else:
-                    logger.error("---------------- FAILURE %s ------------- external from_state PARENT or STATES" % model.state.state_id)
+                    logger.error(
+                        "---------------- FAILURE %s ------------- external from_state PARENT or STATES" % model.state.state_id)
 
                 # all states and parent-state
                 to_states_store = ListStore(str)
@@ -655,8 +665,10 @@ def find_free_keys(model):
 
                 # print "found free prots: ", port_keys
                 if port_keys:
-                    free_to_ports[state_model.state.state_id] = [state_model.state.input_data_ports[i] for i in port_keys]
-                    nfree_to_ports[state_model.state.name] = [state_model.state.input_data_ports[i].name for i in port_keys]
+                    free_to_ports[state_model.state.state_id] = [state_model.state.input_data_ports[i] for i in
+                                                                 port_keys]
+                    nfree_to_ports[state_model.state.name] = [state_model.state.input_data_ports[i].name for i in
+                                                              port_keys]
 
     # print "\nFOUND FREE PORTS: \n", nfree_to_ports, "\n", free_to_ports, "\n",  from_ports
 
@@ -664,7 +676,6 @@ def find_free_keys(model):
 
 
 class StateDataFlowsEditorController(ExtendedController):
-
     def __init__(self, model, view):
         """Constructor
         """
@@ -704,7 +715,7 @@ class StateDataFlowsEditorController(ExtendedController):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-        #self.adapt(self.__state_property_adapter("name", "input_name"))
+        # self.adapt(self.__state_property_adapter("name", "input_name"))
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions

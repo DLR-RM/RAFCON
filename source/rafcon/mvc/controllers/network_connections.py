@@ -9,7 +9,6 @@ logger = log.get_logger(__name__)
 
 
 class NetworkController(ExtendedController):
-
     def __init__(self, model, view):
         assert isinstance(model, StateMachineManagerModel)
         assert isinstance(view, NetworkConnectionsView)

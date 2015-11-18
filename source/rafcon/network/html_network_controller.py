@@ -15,13 +15,12 @@ logger = log.get_logger(__name__)
 class HtmlNetworkController(resource.Resource, gobject.GObject):
 
     def __init__(self, udp_net_controller):
+        super(HtmlNetworkController, self).__init__()
         self.__gobject_init__()
         self.isLeaf = True
         self.sse_conns = weakref.WeakSet()
-
         self.path_to_static_files = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                  "html_files")
-
         self.udp_net_controller = udp_net_controller
 
     def render_GET(self, request):

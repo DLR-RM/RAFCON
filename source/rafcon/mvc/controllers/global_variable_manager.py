@@ -1,4 +1,5 @@
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 import gobject
@@ -7,11 +8,11 @@ import gtk
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 
-#TODO: comment
+
+# TODO: comment
 
 
 class GlobalVariableManagerController(ExtendedController):
-
     def __init__(self, model, view):
         """Constructor
         """
@@ -23,13 +24,13 @@ class GlobalVariableManagerController(ExtendedController):
         self.global_variables_list_store = ListStore(gobject.TYPE_PYOBJECT)
         self.update_global_variables_list_store()
 
-    #new buttons
+    # new buttons
     def on_new_global_variable_button_clicked(self, widget, data=None):
         new_global_variable = "new_global_%s" % self.new_gv_counter
         self.new_gv_counter += 1
         self.model.global_variable_manager.set_variable(new_global_variable, "value")
 
-    #delete buttons
+    # delete buttons
     def on_delete_global_variable_button_clicked(self, widget, data=None):
         tree_view = self.view["global_variable_tree_view"]
         path = tree_view.get_cursor()[0]

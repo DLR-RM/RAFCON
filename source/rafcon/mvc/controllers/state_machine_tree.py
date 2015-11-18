@@ -6,13 +6,14 @@ from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.history import parent_state_of_notification_source
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
+
 
 # TODO Comment
 
 
 class StateMachineTreeController(ExtendedController):
-
     def __init__(self, model, view):
         """Constructor
         :param model StateMachineModel should be exchangeable
@@ -24,7 +25,7 @@ class StateMachineTreeController(ExtendedController):
         self.view_is_registered = False
         self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
         view.set_model(self.tree_store)
-        #view.set_hover_expand(True)
+        # view.set_hover_expand(True)
         self.state_row_iter_dict_by_state_path = {}
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
@@ -75,23 +76,23 @@ class StateMachineTreeController(ExtendedController):
         overview = parent_state_of_notification_source(model, info.prop_name, info, "after", False)
 
         if overview['prop_name'][-1] == 'state' and \
-                overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
+                        overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
             # print "do update", model.state.name
             # self.update(model)
             self.update_tree_store_row(overview['model'][-1])
         elif overview['prop_name'][-1] == 'state' and \
-                overview['method_name'][-1] in ["add_state", "remove_state"]:
+                        overview['method_name'][-1] in ["add_state", "remove_state"]:
             # print "do update", model.state.name, overview['method_name'][-1]
             self.update(model)
             # self.update_tree_store_row(overview['model'][-1])
         else:
             if overview['prop_name'][-1] == 'state' and \
-                    overview['method_name'][-1] in ["add_input_data_port", "remove_input_data_port",
-                                                    "add_output_data_port", "remove_output_data_port",
-                                                    "add_scoped_variable", "remove_scoped_variable",
-                                                    "add_outcome", "remove_outcome",
-                                                    "add_data_flow", "remove_data_flow",
-                                                    "add_transition", "remove_transition"]:
+                            overview['method_name'][-1] in ["add_input_data_port", "remove_input_data_port",
+                                                            "add_output_data_port", "remove_output_data_port",
+                                                            "add_scoped_variable", "remove_scoped_variable",
+                                                            "add_outcome", "remove_outcome",
+                                                            "add_data_flow", "remove_data_flow",
+                                                            "add_transition", "remove_transition"]:
                 return
             self.store_expansion_state()
             self.update()  # TODO finally the state-machine tree has to be stable without this
@@ -142,7 +143,8 @@ class StateMachineTreeController(ExtendedController):
                             self.view.expand_to_path(state_row_path)
                             # print state_path
             except (TypeError, KeyError):
-                logger.debug("expansion state of state machine {0} could not be re-done".format(self.__my_selected_sm_id))
+                logger.debug(
+                    "expansion state of state machine {0} could not be re-done".format(self.__my_selected_sm_id))
 
     def update(self, changed_state_model=None, with_expand=False):
         """
@@ -216,7 +218,8 @@ class StateMachineTreeController(ExtendedController):
         for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
             child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
             # check if there are left over rows of old states (switch from HS or CS to S and so on)
-            if not type(state_model) is ContainerStateModel or not self.tree_store.get_value(child_iter, 1) in state_model.states:
+            if not type(state_model) is ContainerStateModel or not self.tree_store.get_value(child_iter,
+                                                                                             1) in state_model.states:
                 del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, 4)]
                 self.tree_store.remove(child_iter)
 
@@ -241,7 +244,8 @@ class StateMachineTreeController(ExtendedController):
             #     self.update(self._selected_sm_model.root_state)
 
             (model, actual_iter) = self.view.get_selection().get_selected()
-            selected_iter = self.state_row_iter_dict_by_state_path[self._selected_sm_model.selection.get_selected_state().state.get_path()]
+            selected_iter = self.state_row_iter_dict_by_state_path[
+                self._selected_sm_model.selection.get_selected_state().state.get_path()]
             # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_iter, selected_iter))
             # print "\n\n####### 3 ########\n\n"
             selected_path = self.tree_store.get_path(selected_iter)
@@ -254,7 +258,7 @@ class StateMachineTreeController(ExtendedController):
             if not selected_path == actual_path:
                 # logger.debug("reselect state machine tree-selection")
                 # if single selection-mode is set no un-select is needed
-                #self.view.get_selection().unselect_path(actual_path)
+                # self.view.get_selection().unselect_path(actual_path)
                 # self.no_cursor_selection = True
                 self.view.expand_to_path(selected_path)
                 self.view.get_selection().select_iter(selected_iter)

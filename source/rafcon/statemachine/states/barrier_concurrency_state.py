@@ -126,7 +126,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
                     # do not write the output of the entry script
                     self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                    logger.debug("Backward leave the barrier concurrency state with name %s" % (self.name))
+                    logger.debug("Backward leave the barrier concurrency state with name %s" % self.name)
                     return self.finalize()
                 else:
                     self.backward_execution = False
@@ -249,27 +249,6 @@ class BarrierConcurrencyState(ConcurrencyState):
             for o_id, o in state.outcomes.iteritems():
                 if not o_id == -1 and not o_id == -2:
                     self.add_transition(state.state_id, o_id, self.states[UNIQUE_DECIDER_STATE_ID].state_id, None)
-
-    @ContainerState.states.setter
-    @Observable.observed
-    def states(self, states):
-        # First safely remove all existing states (recursively!), as they will be replaced
-        state_ids = self.states.keys()
-        for state_id in state_ids:
-            # Do not remove decider state, if teh new list of states doesn't contain an alternative one
-            if state_id == UNIQUE_DECIDER_STATE_ID and UNIQUE_DECIDER_STATE_ID not in states:
-                continue
-            self.remove_state(state_id)
-        if states is not None:
-            if not isinstance(states, dict):
-                raise TypeError("states must be of type dict")
-            # Ensure that the decider state is added first, as transition to this states will automatically be
-            # created when adding further states
-            decider_state = states.pop(UNIQUE_DECIDER_STATE_ID, None)
-            if decider_state is not None:
-                self.add_state(decider_state)
-            for state in states.itervalues():
-                self.add_state(state)
 
     @ContainerState.states.setter
     @Observable.observed

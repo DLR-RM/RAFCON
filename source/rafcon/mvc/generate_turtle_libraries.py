@@ -47,8 +47,10 @@ def ros_goal_request_library():
                                       "0.1",
                                       delete_old_state_machine=True)
 
+
 def spawn_turtle_library():
-    spawn_turtle = ExecutionState("spawn_turtle", state_id="SPAWN_TURTLE", path="../../test_scripts/turtle_libraries", filename="spawn_turtle.py")
+    spawn_turtle = ExecutionState("spawn_turtle", state_id="SPAWN_TURTLE", path="../../test_scripts/turtle_libraries",
+                                  filename="spawn_turtle.py")
     spawn_turtle.add_outcome("success", 0)
     name_input = spawn_turtle.add_input_data_port("turtle_name", "str", "new_turtle")
     x_pos_input = spawn_turtle.add_input_data_port("x_pos", "float", 5.0)
@@ -62,7 +64,8 @@ def spawn_turtle_library():
 
 
 def teleport_turtle_library():
-    teleport_turtle = ExecutionState("teleport_turtle", state_id="TELEPORT_TURTLE", path="../../test_scripts/turtle_libraries", filename="teleport_turtle.py")
+    teleport_turtle = ExecutionState("teleport_turtle", state_id="TELEPORT_TURTLE",
+                                     path="../../test_scripts/turtle_libraries", filename="teleport_turtle.py")
     teleport_turtle.add_outcome("success", 0)
     name_input = teleport_turtle.add_input_data_port("turtle_name", "str", "new_turtle")
     x_pos_input = teleport_turtle.add_input_data_port("x_pos", "float", 1.0)
@@ -76,7 +79,8 @@ def teleport_turtle_library():
 
 
 def clear_field_library():
-    clear_field = ExecutionState("clear_field", state_id="CLEAR_FIELD", path="../../test_scripts/turtle_libraries", filename="clear_field.py")
+    clear_field = ExecutionState("clear_field", state_id="CLEAR_FIELD", path="../../test_scripts/turtle_libraries",
+                                 filename="clear_field.py")
     clear_field.add_outcome("success", 0)
 
     storage.save_statemachine_to_path(StateMachine(clear_field),
@@ -86,7 +90,8 @@ def clear_field_library():
 
 
 def set_velocity_for_turtle_library():
-    set_velocity = ExecutionState("move_turtle", state_id="SET_VELOCITY", path="../../test_scripts/turtle_libraries", filename="set_velocity.py")
+    set_velocity = ExecutionState("move_turtle", state_id="SET_VELOCITY", path="../../test_scripts/turtle_libraries",
+                                  filename="set_velocity.py")
     set_velocity.add_outcome("success", 0)
     name_input = set_velocity.add_input_data_port("turtle_name", "str", "new_turtle")
     x_vel_input = set_velocity.add_input_data_port("x_vel", "float", 1.0)
@@ -99,7 +104,8 @@ def set_velocity_for_turtle_library():
 
 
 def kill_turtle_library():
-    kill_turtle = ExecutionState("kill_turtle", state_id="KILL_TURTLE", path="../../test_scripts/turtle_libraries", filename="kill_turtle.py")
+    kill_turtle = ExecutionState("kill_turtle", state_id="KILL_TURTLE", path="../../test_scripts/turtle_libraries",
+                                 filename="kill_turtle.py")
     kill_turtle.add_outcome("success", 0)
     name_input = kill_turtle.add_input_data_port("turtle_name", "str", "new_turtle")
 
@@ -117,7 +123,8 @@ def turtle_position_subscriber_library():
     turtle_position_subscriber.add_outcome("success", 0)
     name_input = turtle_position_subscriber.add_input_data_port("turtle_name", "str", "new_turtle")
     frequency_input = turtle_position_subscriber.add_input_data_port("frequency", "float", "1.0")
-    global_storage_id_input = turtle_position_subscriber.add_input_data_port("global_storage_id_of_turtle_pos", "str", "new_turtle")
+    global_storage_id_input = turtle_position_subscriber.add_input_data_port("global_storage_id_of_turtle_pos", "str",
+                                                                             "new_turtle")
 
     x_pos_output = turtle_position_subscriber.add_output_data_port("x_pos", "float")
     y_pos_output = turtle_position_subscriber.add_output_data_port("y_pos", "float")

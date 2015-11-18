@@ -30,7 +30,7 @@ class HistoryTreeView(View, gtk.TreeView):
 
         cell = gtk.CellRendererText()
         tvcolumn = gtk.TreeViewColumn('Details', cell, text=4, foreground=foreground)
-        #tvcolumn.set_min_width(150)
+        # tvcolumn.set_min_width(150)
         self.append_column(tvcolumn)
 
         self['history_treeview'] = self
@@ -45,7 +45,6 @@ class StateMachineHistoryView(View, gtk.ScrolledWindow):
 
         history_tree = HistoryTreeView()
         history_tree.show()
-
 
         button_hbox = gtk.HBox()
         undo_button = gtk.Button("Undo")

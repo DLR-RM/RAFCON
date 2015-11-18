@@ -28,7 +28,7 @@ def open_folder(query):
                                    None,
                                    gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
                                    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                   gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+                                    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
     dialog.set_current_folder(last_path)
     response = dialog.run()
 
@@ -41,6 +41,7 @@ def open_folder(query):
 
     global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
     return path
+
 
 interface.open_folder_func = open_folder
 
@@ -69,6 +70,7 @@ def create_folder(query):
     global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
     return path
 
+
 interface.create_folder_func = create_folder
 
 
@@ -80,6 +82,7 @@ def show_notice(query):
     set_button_children_size_request(dialog)
     dialog.run()
     dialog.destroy()
+
 
 interface.show_notice_func = show_notice
 

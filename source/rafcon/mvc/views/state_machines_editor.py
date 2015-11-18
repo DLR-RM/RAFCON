@@ -16,12 +16,12 @@ class StateMachinesEditorView(View):
         self['notebook'] = self.notebook
 
 
-gobject.signal_new("add_state_machine", gtk.VBox, gobject.SIGNAL_RUN_FIRST, None, (gtk.VBox, ))
-gobject.signal_new("switch-page", gtk.VBox, gobject.SIGNAL_RUN_LAST, None, (gtk.Notebook, gobject.GPointer, gobject.TYPE_UINT))
+gobject.signal_new("add_state_machine", gtk.VBox, gobject.SIGNAL_RUN_FIRST, None, (gtk.VBox,))
+gobject.signal_new("switch-page", gtk.VBox, gobject.SIGNAL_RUN_LAST, None,
+                   (gtk.Notebook, gobject.GPointer, gobject.TYPE_UINT))
 
 
-class PlusAddNotebook2 (gtk.VBox):
-
+class PlusAddNotebook2(gtk.VBox):
     def __init__(self):
         gtk.VBox.__init__(self)
 
@@ -118,11 +118,10 @@ class PlusAddNotebook2 (gtk.VBox):
 
 
 gobject.signal_new("add_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, ())
-gobject.signal_new("close_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int, ))
+gobject.signal_new("close_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int,))
 
 
-class PlusAddNotebook (gtk.Notebook):
-
+class PlusAddNotebook(gtk.Notebook):
     pixbuf_data = [
         "13 13 2 1",
         "  c None",
@@ -160,7 +159,7 @@ class PlusAddNotebook (gtk.Notebook):
         pb_width = self.pixbuf.get_width()
         pb_height = self.pixbuf.get_height()
 
-        if event.x >= pb_x and event.x <= pb_x + pb_width and event.y >= pb_y and event.y <= pb_y + pb_height\
+        if pb_x <= event.x <= pb_x + pb_width and pb_y <= event.y <= pb_y + pb_height \
                 and self.add_visible and event.state & gtk.gdk.BUTTON1_MASK:
             self.emit("add_state_machine")
             return
@@ -170,8 +169,8 @@ class PlusAddNotebook (gtk.Notebook):
             widget_position = widget.get_allocation()
             mouse_x = widget_position.x + x
             mouse_y = widget_position.y + y
-            if mouse_x > alloc.x and mouse_x < alloc.x + alloc.width and mouse_y > alloc.y\
-                    and mouse_y < alloc.y + alloc.height and event.state & gtk.gdk.BUTTON2_MASK:
+            if alloc.x < mouse_x < alloc.x + alloc.width and alloc.y < mouse_y < alloc.y + alloc.height and \
+                            event.state & gtk.gdk.BUTTON2_MASK:
                 self.emit("close_state_machine", i)
                 return
 

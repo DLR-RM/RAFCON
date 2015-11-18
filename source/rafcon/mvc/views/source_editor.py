@@ -2,6 +2,7 @@ import gtk
 from gtkmvc import View
 from rafcon.mvc.config import global_gui_config
 from rafcon.utils import constants
+
 try:
     import gtksourceview2
 except ImportError:
@@ -37,8 +38,8 @@ class SourceEditorView(View):
         vbox.pack_start(source_box, False, True, 0)
         vbox.pack_start(editor_frame, expand=True, fill=True)
         vbox.pack_start(hbox, expand=False, fill=True)
-        #l = gtk.Label()
-        #vbox.pack_start(l, expand=False, fill=False)
+        # l = gtk.Label()
+        # vbox.pack_start(l, expand=False, fill=False)
 
         # create textview
         self.textview = None
@@ -62,7 +63,8 @@ class SourceEditorView(View):
                 self.textview.set_auto_indent(True)
                 self.textview.set_highlight_current_line(True)
                 self.textview.set_mark_category_pixbuf('INSTRUCTION',
-                                                       editor_frame.render_icon(gtk.STOCK_GO_FORWARD, gtk.ICON_SIZE_MENU))
+                                                       editor_frame.render_icon(gtk.STOCK_GO_FORWARD,
+                                                                                gtk.ICON_SIZE_MENU))
                 self.using_source_view = True
             else:
                 self.textview = gtk.TextView()

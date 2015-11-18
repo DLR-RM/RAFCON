@@ -9,7 +9,7 @@ from rafcon.mvc.config import global_gui_config
 from functools import partial
 
 
-class ShortcutManager():
+class ShortcutManager:
     """Handles shortcuts
 
     Holds a mapping between shortcuts and action. Actions can be subscribed to. When a listed shortcut is triggered,

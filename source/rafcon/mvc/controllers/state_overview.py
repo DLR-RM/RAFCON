@@ -14,6 +14,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models.abstract_state import MetaSignalMsg
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -102,7 +103,7 @@ class StateOverviewController(ExtendedController, Model):
         # Prepare "is start state check button"
         has_no_start_state_state_types = [BarrierConcurrencyState, PreemptiveConcurrencyState]
         if isinstance(self.model.state, DeciderState) or self.model.state.is_root_state or \
-                type(self.model.parent.state) in has_no_start_state_state_types:  # \
+                        type(self.model.parent.state) in has_no_start_state_state_types:  # \
             # for now the checkbutton is NOT HIDE as long as the checkbutton does not stay hidden all time
             view['is_start_state_checkbutton'].destroy()  # DeciderState is removed if parent change type
         else:
@@ -118,7 +119,7 @@ class StateOverviewController(ExtendedController, Model):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-        #self.adapt(self.__state_property_adapter("name", "input_name"))
+        # self.adapt(self.__state_property_adapter("name", "input_name"))
         pass
 
     def rename(self):

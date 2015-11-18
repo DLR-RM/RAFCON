@@ -1,6 +1,5 @@
 import gtk
 import threading
-import traceback
 
 from rafcon.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, \
     StateMachineHistoryController, LibraryTreeController
@@ -33,24 +32,26 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 try:
     # run if not defined or variable True
-    if global_net_config.get_config_value("NETWORK_CONNECTIONS") is None or global_net_config.get_config_value("NETWORK_CONNECTIONS"):
+    if global_net_config.get_config_value("NETWORK_CONNECTIONS") is None or global_net_config.get_config_value(
+            "NETWORK_CONNECTIONS"):
         from rafcon.mvc.controllers.network_connections import NetworkController
         from rafcon.network.singleton import network_connections
 except ImportError as e:
-    logger.warn("{1} Only local use of RAFCON will be possible due to missing network communication libraries -> {0}".format(e.message, global_net_config.get_config_value("NETWORK_CONNECTIONS")  is None))
+    logger.warn(
+        "{1} Only local use of RAFCON will be possible due to missing network communication libraries -> {0}".format(
+            e.message, global_net_config.get_config_value("NETWORK_CONNECTIONS") is None))
     # logger.error("%s, %s" % (e.message, traceback.format_exc()))
     global_net_config.set_config_value('NETWORK_CONNECTIONS', False)
 
 
 class MainWindowController(ExtendedController):
-
     icons = {
-        "Libraries":            constants.SIGN_LIB,
-        "State Tree":           constants.ICON_TREE,
-        "Global Variables":     constants.ICON_GLOB,
-        "History":              constants.ICON_HIST,
-        "Execution History":    constants.ICON_EHIST,
-        "Network":              constants.ICON_NET
+        "Libraries": constants.SIGN_LIB,
+        "State Tree": constants.ICON_TREE,
+        "Global Variables": constants.ICON_GLOB,
+        "History": constants.ICON_HIST,
+        "Execution History": constants.ICON_EHIST,
+        "Network": constants.ICON_NET
     }
 
     def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
@@ -86,11 +87,12 @@ class MainWindowController(ExtendedController):
         # library tree
         ######################################################
         library_manager_model = LibraryManagerModel(rafcon.statemachine.singleton.library_manager)
-        library_controller = LibraryTreeController(library_manager_model, view.library_tree, state_machine_manager_model)
+        library_controller = LibraryTreeController(library_manager_model, view.library_tree,
+                                                   state_machine_manager_model)
         self.add_controller('library_controller', library_controller)
-        #view['library_vbox'].remove(view['library_tree_placeholder'])
+        # view['library_vbox'].remove(view['library_tree_placeholder'])
 
-        #view['library_vbox'].pack_start(view.library_tree, True, True, 0)
+        # view['library_vbox'].pack_start(view.library_tree, True, True, 0)
 
         library_tree_tab = view['library_vbox']
         page_num = view["tree_notebook_1"].page_num(library_tree_tab)
@@ -104,8 +106,9 @@ class MainWindowController(ExtendedController):
         view['add_link_menu_entry'].connect("activate", library_controller.insert_button_clicked, None, False)
         view['add_template_menu_entry'].connect("activate", library_controller.insert_button_clicked, None, True)
 
-        view['main_window'].add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
-                               gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
+        view['main_window'].add_events(
+            gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
+            gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
 
         ######################################################
         # statemachine tree
@@ -115,8 +118,8 @@ class MainWindowController(ExtendedController):
         state_machine_tree_tab = view['state_machine_tree_placeholder']
         page_num = view["tree_notebook_1"].page_num(state_machine_tree_tab)
         view["tree_notebook_1"].remove_page(page_num)
-        #append new tab
-        #TODO: this is not always the active state machine
+        # append new tab
+        # TODO: this is not always the active state machine
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 
@@ -129,8 +132,8 @@ class MainWindowController(ExtendedController):
         # state editor
         ######################################################
         states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
-                                                         view.states_editor,
-                                                         editor_type)
+                                                    view.states_editor,
+                                                    editor_type)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         state_editor_label = view['state_editor_label']
@@ -161,11 +164,11 @@ class MainWindowController(ExtendedController):
         ######################################################
         # global variable editor
         ######################################################
-        #remove placeholder tab
+        # remove placeholder tab
         global_variables_tab = view['global_variables_placeholder']
         page_num = view["tree_notebook_1"].page_num(global_variables_tab)
         view["tree_notebook_1"].remove_page(page_num)
-        #append new tab
+        # append new tab
         global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
 
@@ -180,11 +183,11 @@ class MainWindowController(ExtendedController):
         ######################################################
         # state machine edition history
         ######################################################
-        #remove placeholder tab
+        # remove placeholder tab
         history_tab = view['history_vbox_placeholder']
         page_num = view["tree_notebook_2"].page_num(history_tab)
         view["tree_notebook_2"].remove_page(page_num)
-        #append new tab
+        # append new tab
         state_machine_history_controller = StateMachineHistoryController(state_machine_manager_model,
                                                                          view.state_machine_history)
         self.add_controller('state_machine_history_controller', state_machine_history_controller)
@@ -227,11 +230,11 @@ class MainWindowController(ExtendedController):
         ######################################################
         # state machine execution history
         ######################################################
-        #remove placeholder tab
+        # remove placeholder tab
         execution_history_tab = view['execution_history_placeholder']
         page_num = view["tree_notebook_2"].page_num(execution_history_tab)
         view["tree_notebook_2"].remove_page(page_num)
-        #append new tab
+        # append new tab
 
         execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model,
                                                                 view.execution_history_view,
@@ -289,17 +292,17 @@ class MainWindowController(ExtendedController):
         # tool bar
         ######################################################
         tool_bar_controller = ToolBarController(state_machine_manager_model,
-                                                     view.tool_bar,
-                                                     menu_bar_controller)
+                                                view.tool_bar,
+                                                menu_bar_controller)
         self.add_controller("tool_bar_controller", tool_bar_controller)
 
         ######################################################
         # top tool bar
         ######################################################
         top_tool_bar_controller = TopToolBarController(state_machine_manager_model,
-                                                     view.top_tool_bar,
-                                                     view["main_window"],
-                                                     menu_bar_controller)
+                                                       view.top_tool_bar,
+                                                       view["main_window"],
+                                                       menu_bar_controller)
         self.add_controller("top_tool_bar_controller", top_tool_bar_controller)
 
         ######################################################
@@ -369,26 +372,30 @@ class MainWindowController(ExtendedController):
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
             self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
             self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
-            self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+            self.set_button_active(False, self.view['button_step_mode_shortcut'],
+                                   self.on_button_step_mode_shortcut_toggled)
             self.highlight_execution_of_current_sm(True)
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
             self.set_button_active(True, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
             self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
             self.delay(100, self.get_controller('execution_history_ctrl').update)
-            self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+            self.set_button_active(False, self.view['button_step_mode_shortcut'],
+                                   self.on_button_step_mode_shortcut_toggled)
             self.highlight_execution_of_current_sm(True)
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
             self.on_button_stop_shortcut_clicked(None)
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(False)
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STEP:
-            self.set_button_active(True, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+            self.set_button_active(True, self.view['button_step_mode_shortcut'],
+                                   self.on_button_step_mode_shortcut_toggled)
             self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
             self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(True)
 
-    def create_arrow_label(self, icon):
+    @staticmethod
+    def create_arrow_label(icon):
         label = gtk.Label()
         label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
                                                                     constants.FONT_SIZE_BIG,
@@ -463,7 +470,8 @@ class MainWindowController(ExtendedController):
             self.get_controller("menu_bar_controller").on_start_activate(None)
 
             self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
-            self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+            self.set_button_active(False, self.view['button_step_mode_shortcut'],
+                                   self.on_button_step_mode_shortcut_toggled)
         else:
             logger.info("Statemachine running")
             self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
@@ -476,7 +484,8 @@ class MainWindowController(ExtendedController):
             self.get_controller("menu_bar_controller").on_pause_activate(None)
 
             self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
-            self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+            self.set_button_active(False, self.view['button_step_mode_shortcut'],
+                                   self.on_button_step_mode_shortcut_toggled)
         else:
             logger.info("Statemachine paused")
             self.set_button_active(True, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
@@ -503,7 +512,8 @@ class MainWindowController(ExtendedController):
             self.set_button_active(False, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
         else:
             logger.info("Statemachine stepping")
-            self.set_button_active(True, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
+            self.set_button_active(True, self.view['button_step_mode_shortcut'],
+                                   self.on_button_step_mode_shortcut_toggled)
 
         self.view['button_step_shortcut'].show()
         self.view['button_step_backward_shortcut'].show()
@@ -541,6 +551,7 @@ class MainWindowController(ExtendedController):
         # global_gui_config.save_configuration()
         self.view.logging_view.update_filtered_buffer()
 
-    def delay(self, milliseconds, func):
+    @staticmethod
+    def delay(milliseconds, func):
         thread = threading.Timer(milliseconds / 1000.0, func)
         thread.start()

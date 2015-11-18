@@ -1,12 +1,11 @@
 import gtk
 from gtkmvc import View
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
-
 class SingleWidgetWindowView(View):
-
     def __init__(self, view_class, width=500, height=500, title=None, pos=None):
         View.__init__(self)
 

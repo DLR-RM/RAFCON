@@ -34,6 +34,12 @@ class Direction(Enum):
 
 
 class Color:
+
+    _r = 0
+    _g = 0
+    _b = 0
+    _a = 0
+
     def __init__(self, r, g, b, a=1):
         self.r = r
         self.g = g
@@ -142,7 +148,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     border_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
     border_selected_color = Color.from_hex(0x3aaf59)  # Color(0, 0.8, 0.8, 1)
     border_active_color = Color.from_hex(0x0b0b17)  # Color(0, 0.8, 0.8, 1)
-    port_color = Color.from_hex(0xD1DDF4, 0.8)  # Color(0.7, 0.7, 0.7, 0.8)
+    port_color = Color.from_hex(0xD1DDF4, 200)  # Color(0.7, 0.7, 0.7, 0.8)
     port_name_color = state_name_color  # Color(0.1, 0.1, 0.1, 1)
     port_connector_fill_color = state_selected_color  # Color(0.2, 0.2, 0.2, 0.5)
     transition_color = Color.from_hex(0xabce6d)  # Color(0.4, 0.4, 0.4, 0.8)
@@ -153,8 +159,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     outcome_aborted_color = Color.from_hex(0x792b40)  # Color(0.6, 0, 0, 0.8)
     outcome_preempted_color = Color.from_hex(0x4769bd)  # Color(0.1, 0.1, 0.7, 0.8)
     income_color = outcome_plain_color  # Color(0.4, 0.4, 0.4, 0.8)
-    frame_fill_color = Color.from_hex(0xd7e0ec, 0.5)
-    frame_border_color = Color.from_hex(0x0b0b17, 0.3)
+    frame_fill_color = Color.from_hex(0xd7e0ec, 125)
+    frame_border_color = Color.from_hex(0x0b0b17, 100)
 
     def __init__(self, glconfig):
         """The graphical editor manages the OpenGL functions.
@@ -314,8 +320,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
                         border_color=self.frame_border_color)
 
 
-    def draw_state(self, name, pos, size, outcomes=0, input_ports_m=[], output_ports_m=[],
-                   selected=False, active=False, depth=0):
+    def draw_state(self, name, pos, size, outcomes=None, input_ports_m=None, output_ports_m=None, selected=False,
+                   active=False, depth=0):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified (container) state.
@@ -331,6 +337,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param depth: The z layer
         :return: The OpenGL id and the positions of teh outcomes (as dictionary with outcome id as key)
         """
+        if not outcomes:
+            outcomes = []
+        if not input_ports_m:
+            input_ports_m = []
+        if not output_ports_m:
+            output_ports_m = []
         # "Generate" unique ID for each object
         opengl_id = self.name_counter
         self.name_counter += 1
@@ -534,7 +546,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         elif arrow_position == Direction.top:
             actual_width = right - left
             actual_height = abs(arrow_pos[1] - pos[1])
-        elif arrow_position == Direction.bottom:
+        else:  # arrow_position == Direction.bottom:
             actual_width = right - left
             actual_height = abs(arrow_pos[1] - pos[1])
 
@@ -545,22 +557,22 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return id
 
-    def draw_transition(self, from_pos, to_pos, width, waypoints=[], selected=False,
-                        depth=0):
+    def draw_transition(self, from_pos, to_pos, width, waypoints=None, selected=False, depth=0):
         """Draw a state with the given properties
 
         This method is called by the controller to draw the specified transition.
 
-        :param from_pos_x: Starting x position
-        :param from_pos_y: Starting y position
-        :param to_pos_x: Ending x position
-        :param to_pos_y: Ending y position
-        :param width: A measure for the width of a transition line
-        :param waypoints: A list of optional waypoints to connect in between
-        :param selected: Whether the transition shell be shown as active/selected
-        :param depth: The Z layer
+        :param tuple from_pos: Starting position
+        :param tuple to_pos: Ending position
+        :param float width: A measure for the width of a transition line
+        :param list waypoints: A list of optional waypoints to connect in between
+        :param bool selected: Whether the transition shell be shown as active/selected
+        :param float depth: The Z layer
         :return: The OpenGL id of the transition
+        :rtype: int
         """
+        if not waypoints:
+            waypoints = []
         # "Generate" unique ID for each object
         id = self.name_counter
         self.name_counter += 1
@@ -597,21 +609,21 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return id
 
-    def draw_data_flow(self, from_pos, to_pos, width, waypoints=[], selected=False, depth=0):
+    def draw_data_flow(self, from_pos, to_pos, width, waypoints=None, selected=False, depth=0):
         """Draw a data flow connection between two ports
 
         The ports can be input, output or scoped ports and are only specified by their position. Optional waypoints
         allow non-direct connection.
 
-        :param from_pos_x: Starting x position
-        :param from_pos_y: Starting y position
-        :param to_pos_x: Ending x position
-        :param to_pos_y: Ending y position
-        :param width: A measure for the width of a transition line
-        :param waypoints: A list of optional waypoints to connect in between
-        :param selected: Whether the transition shell be shown as active/selected
-        :param depth: The Z layer
+        :param tuple from_pos: Starting position
+        :param tuple to_pos: Ending position
+        :param float width: A measure for the width of a transition line
+        :param list waypoints: A list of optional waypoints to connect in between
+        :param bool selected: Whether the transition shell be shown as active/selected
+        :param in tdepth: The Z layer
         """
+        if not waypoints:
+            waypoints = []
         # "Generate" unique ID for each object
         id = self.name_counter
         self.name_counter += 1
@@ -649,7 +661,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return id
 
-    def _write_string(self, string, pos_x, pos_y, height, color, bold=False, align_right=False, depth=0):
+    def _write_string(self, string, pos_x, pos_y, height, color, bold=False, align_right=False, depth=0.):
         """Write a string
 
         Writes a string with a simple OpenGL method in the given size at the given position.
@@ -668,7 +680,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self._set_closest_stroke_width(stroke_width)
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
-        pos_y = pos_y - height
+        pos_y -= height
         if not align_right:
             glTranslatef(pos_x, pos_y, depth)
         else:
@@ -739,10 +751,12 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return hits
 
-    def transition_stroke_width(self, parent_state_m):
+    @staticmethod
+    def transition_stroke_width(parent_state_m):
         return min(parent_state_m.meta['gui']['editor_opengl']['size']) / 25.0
 
-    def data_flow_stroke_width(self, parent_state_m):
+    @staticmethod
+    def data_flow_stroke_width(parent_state_m):
         return min(parent_state_m.meta['gui']['editor_opengl']['size']) / 25.0
 
     def _set_closest_stroke_width(self, width):
@@ -785,7 +799,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         p3 = (m_x - dx, m_y - dy)
         return (m_x, m_y), p2, p3
 
-    def _draw_polygon(self, points, depth, border_width=1, fill_color=None, border_color=None):
+    def _draw_polygon(self, points, depth, border_width=1., fill_color=None, border_color=None):
         # TODO: Think of method to check for visibility
         # visible = False
         # for p in points:
@@ -814,10 +828,10 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             glEnd()
         return True
 
-    def _draw_triangle(self, p1, p2, p3, depth, border_width=1, fill_color=None, border_color=None):
+    def _draw_triangle(self, p1, p2, p3, depth, border_width=1., fill_color=None, border_color=None):
         self._draw_polygon([p1, p2, p3], depth, border_width, fill_color, border_color)
 
-    def _draw_rect(self, left_x, right_x, bottom_y, top_y, depth, border_width=1, fill_color=None, border_color=None):
+    def _draw_rect(self, left_x, right_x, bottom_y, top_y, depth, border_width=1., fill_color=None, border_color=None):
         p1 = (left_x, bottom_y)
         p2 = (right_x, bottom_y)
         p3 = (right_x, top_y)
@@ -826,7 +840,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         return self._draw_polygon([p1, p2, p3, p4], depth, border_width, fill_color, border_color)
 
     def _draw_rect_arrow(self, left_x, right_x, bottom_y, top_y, arrow_pos, depth,
-                         border_width=1, fill_color=None, border_color=None):
+                         border_width=1., fill_color=None, border_color=None):
         visible = self._draw_rect(left_x, right_x, bottom_y, top_y, depth, border_width, fill_color, border_color)
 
         width = right_x - left_x
@@ -858,16 +872,16 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         return c, visible
 
-    def _draw_circle(self, pos_x, pos_y, radius, depth, stroke_width=1, fill_color=None, border_color=None,
-                     from_angle=0, to_angle=2 * pi):
+    def _draw_circle(self, pos_x, pos_y, radius, depth, stroke_width=1., fill_color=None, border_color=None,
+                     from_angle=0., to_angle=2 * pi):
         """Draws a circle
 
         Draws a circle with a line segment a desired position with desired size.
 
-        :param pos_x: Center x position
-        :param pos_y: Center y position
-        :param depth: The Z layer
-        :param radius: Radius of the circle
+        :param float pos_x: Center x position
+        :param float pos_y: Center y position
+        :param float depth: The Z layer
+        :param float radius: Radius of the circle
         """
 
         visible = False

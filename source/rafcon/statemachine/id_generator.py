@@ -11,8 +11,6 @@
 import string
 import random
 
-import rafcon.statemachine.config
-
 STATE_ID_LENGTH = 6
 
 state_machine_id_counter = 0

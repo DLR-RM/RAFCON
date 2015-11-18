@@ -5,6 +5,7 @@ from simplegeneric import generic
 from gaphas.aspect import ConnectionSink, Connector, HandleFinder, ItemHandleFinder, HandleSelection, \
     ItemHandleSelection
 from rafcon.mvc.mygaphas.items.connection import ConnectionView
+from rafcon.mvc.mygaphas.items.state import StateView
 
 
 class ItemHandleInMotion(object):
@@ -62,7 +63,7 @@ class ItemHandleInMotion(object):
             return None
 
         connectable, port, glue_pos = \
-                view.get_port_at_point(pos, distance=distance, exclude=(item,))
+            view.get_port_at_point(pos, distance=distance, exclude=(item,))
 
         # check if item and found item can be connected on closest port
         if port is not None:
@@ -79,7 +80,19 @@ class ItemHandleInMotion(object):
                 return sink
         return None
 
+
 HandleInMotion = generic(ItemHandleInMotion)
+
+
+@HandleFinder.when_type(StateView)
+class StateHandleFinder(ItemHandleFinder):
+    """Find handles in state
+    """
+
+    def get_handle_at_point(self, pos, distance=None):
+        if distance:
+            return self.view.get_handle_at_point(pos, distance)
+        return self.view.get_handle_at_point(pos)
 
 
 @HandleFinder.when_type(ConnectionView)
@@ -130,8 +143,8 @@ class SegmentHandleSelection(ItemHandleSelection):
 
         # cannot merge starting from last segment
         if segment == len(item.ports()) - 1:
-            segment =- 1
-        assert segment >= 0 and segment < len(item.ports()) - 1
+            segment = - 1
+        assert 0 <= segment < len(item.ports()) - 1
 
         before = handles[handle_index - 1]
         after = handles[handle_index + 1]

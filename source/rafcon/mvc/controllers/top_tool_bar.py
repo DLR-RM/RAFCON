@@ -1,6 +1,7 @@
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.utils import log
 import gtk
+
 logger = log.get_logger(__name__)
 
 
@@ -8,6 +9,7 @@ class TopToolBarController(ExtendedController):
     """
     The class to trigger all the action, available in the tool bar.
     """
+
     def __init__(self, state_machine_manager_model, view, top_level_window, menu_bar_controller):
         ExtendedController.__init__(self, state_machine_manager_model, view)
         self.shortcut_manager = None
@@ -18,7 +20,6 @@ class TopToolBarController(ExtendedController):
 
         view.get_top_widget().connect("motion_notify_event", self.motion_detected)
         view.get_top_widget().connect("button_press_event", self.button_pressed_event)
-
 
     def register_view(self, view):
         """Called when the View was registered

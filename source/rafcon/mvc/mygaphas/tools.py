@@ -6,23 +6,24 @@ from math import pow
 from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc import statemachine_helper
 
-from rafcon.utils import log
-logger = log.get_logger(__name__)
-
 from rafcon.mvc.config import global_gui_config
 
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.item import NW
 from gaphas.aspect import HandleFinder, ItemConnectionSink
 
-from rafcon.mvc.mygaphas.aspect import HandleInMotion, Connector
-from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView,\
+from rafcon.mvc.mygaphas.aspect import HandleInMotion, Connector, StateHandleFinder
+from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, \
     DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.utils import gap_helper
 
+from rafcon.utils import constants
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
 
 PortMoved = Enum('PORT', 'FROM TO')
 
@@ -70,8 +71,8 @@ class MoveItemTool(ItemTool):
             self._item = item
 
         if (isinstance(self.view.focused_item, NameView) and not
-                state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
-                    self.view.focused_item.parent.model)):
+        state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
+            self.view.focused_item.parent.model)):
             self.view.focused_item = self.view.focused_item.parent
             self._item = self.view.focused_item
 
@@ -137,19 +138,71 @@ class MoveItemTool(ItemTool):
 
 
 class HoverItemTool(HoverTool):
-
     def __init__(self, view=None):
         super(HoverItemTool, self).__init__(view)
         self._prev_hovered_item = None
 
     def on_motion_notify(self, event):
         super(HoverItemTool, self).on_motion_notify(event)
+        from gaphas.tool import HandleFinder
+        from gaphas.view import DEFAULT_CURSOR
+        from gaphas.aspect import ElementHandleSelection
+
+        view = self.view
+        if view.hovered_handle:
+            handle = view.hovered_handle
+            view.hovered_handle = None
+            port_v = self._prev_hovered_item.get_port_for_handle(handle)
+            view.queue_draw_area(*port_v.get_port_area(view))
+        pos = event.x, event.y
+
+        # Reset cursor
+        self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
+
+        if isinstance(view.hovered_item, StateView):
+            state_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
+
+            # Hover over port => show hover state of port and different cursor
+            if hovered_handle and hovered_handle not in state_v.corner_handles:
+                view.hovered_handle = hovered_handle
+                port_v = state_v.get_port_for_handle(hovered_handle)
+                view.queue_draw_area(*port_v.get_port_area(view))
+                if event.state & gtk.gdk.CONTROL_MASK:
+                    self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+                else:
+                    self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
+
+            # Hover over corner/resize handles => show with cursor
+            elif hovered_handle and hovered_handle in state_v.corner_handles:
+                cursors = ElementHandleSelection.CURSORS
+                index = state_v.handles().index(hovered_handle)
+                self.view.window.set_cursor(cursors[index])
 
         # NameView should only be hovered, if its state is selected
-        if isinstance(self.view.hovered_item, NameView):
-            state_v = self.view.canvas.get_parent(self.view.hovered_item)
-            if state_v not in self.view.selected_items:
-                self.view.hovered_item = state_v
+        elif isinstance(view.hovered_item, NameView):
+            state_v = self.view.canvas.get_parent(view.hovered_item)
+            if state_v not in self.view.selected_items and view.hovered_item not in self.view.selected_items:
+                view.hovered_item = state_v
+            else:
+                name_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
+                # Hover over corner/resize handles => show with cursor
+                if hovered_handle:
+                    index = name_v.handles().index(hovered_handle)
+                    cursors = ElementHandleSelection.CURSORS
+                    self.view.window.set_cursor(cursors[index])
+
+        # Change mouse cursor to indicate option to move connection
+        elif isinstance(view.hovered_item, ConnectionView):
+            state_v = view.get_item_at_point_exclude(pos, selected=False, exclude=[view.hovered_item])
+            if isinstance(state_v, StateView):
+                distance = state_v.port_side_size / 2. * view.get_zoom_factor()
+                connection_v, hovered_handle = StateHandleFinder(state_v, view).get_handle_at_point(pos, distance)
+            else:
+                connection_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
+            if hovered_handle:
+                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+            else:
+                self.view.window.set_cursor(gtk.gdk.Cursor(constants.SELECT_CURSOR))
 
         if self._prev_hovered_item and self.view.hovered_item is not self._prev_hovered_item:
             self._prev_hovered_item.hovered = False
@@ -159,7 +212,6 @@ class HoverItemTool(HoverTool):
 
 
 class MultiselectionTool(RubberbandTool):
-
     def __init__(self, graphical_editor_view, view=None):
         super(MultiselectionTool, self).__init__(view)
 
@@ -172,7 +224,7 @@ class MultiselectionTool(RubberbandTool):
 
     def on_motion_notify(self, event):
         if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.CONTROL_MASK and \
-                event.state & gtk.gdk.SHIFT_MASK:
+                        event.state & gtk.gdk.SHIFT_MASK:
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -203,7 +255,6 @@ class MultiselectionTool(RubberbandTool):
 
 
 class HandleMoveTool(HandleTool):
-
     def __init__(self, graphical_editor_view, view=None):
         super(HandleMoveTool, self).__init__(view)
 
@@ -281,7 +332,7 @@ class HandleMoveTool(HandleTool):
                 self._handle_data_flow_view_change(connection_v, handle)
         # if connection has been put back to original position or is released on empty space, reset the connection
         elif (not self._last_active_port or
-              self._last_active_port is self._start_port and connection_v) and not handle_is_waypoint:
+                          self._last_active_port is self._start_port and connection_v) and not handle_is_waypoint:
             if isinstance(connection_v, TransitionView):
                 self._reset_transition(connection_v, handle, self._start_port.parent)
             elif isinstance(connection_v, DataFlowView):
@@ -341,8 +392,8 @@ class HandleMoveTool(HandleTool):
 
             # If the start state has a parent continue (ensure no transition is created from top level state)
             if (start_port and (isinstance(start_state_parent, StateView) or
-                                (start_state_parent is None and isinstance(start_port, (IncomeView, InputPortView,
-                                                                                        ScopedVariablePortView))))):
+                                    (start_state_parent is None and isinstance(start_port, (IncomeView, InputPortView,
+                                                                                            ScopedVariablePortView))))):
 
                 # Go up one hierarchy_level to match the transitions line width
                 transition_placeholder = isinstance(start_port, IncomeView) or isinstance(start_port, OutcomeView)
@@ -596,7 +647,8 @@ class HandleMoveTool(HandleTool):
                         if self.set_matching_port(state.outputs, item.port, handle, connection):
                             return
                 elif (isinstance(connection, DataFlowView) or
-                        (isinstance(connection, ConnectionPlaceholderView) and not connection.transition_placeholder)):
+                          (isinstance(connection,
+                                      ConnectionPlaceholderView) and not connection.transition_placeholder)):
                     if self.set_matching_port(state.get_data_ports(), item.port, handle, connection):
                         return
         self.disconnect_last_active_port(handle, connection)
@@ -628,20 +680,22 @@ class HandleMoveTool(HandleTool):
         :param handle: Handle to connect to matching_port
         :param connection: ConnectionView to be connected, holding the handle
         """
-        port_to_handle = None
+        port_for_handle = None
 
         for port in port_list:
             if port.port is matching_port:
-                port_to_handle = port
+                port_for_handle = port
                 break
 
-        if port_to_handle:
-            if self._last_active_port is not port_to_handle:
+        if port_for_handle:
+            if self._last_active_port is not port_for_handle:
                 self.disconnect_last_active_port(handle, connection)
-            port_to_handle.add_connected_handle(handle, connection, moving=True)
-            port_to_handle.tmp_connect(handle, connection)
-            connection.set_port_for_handle(port_to_handle, handle)
-            self._last_active_port = port_to_handle
+            port_for_handle.add_connected_handle(handle, connection, moving=True)
+            port_for_handle.tmp_connect(handle, connection)
+            connection.set_port_for_handle(port_for_handle, handle)
+            self._last_active_port = port_for_handle
+            # Redraw state of port to make hover state visible
+            self.view.queue_draw_area(*port_for_handle.get_port_area(self.view))
             return True
 
         return False

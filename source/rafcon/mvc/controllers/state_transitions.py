@@ -1,5 +1,3 @@
-
-from gtkmvc import Observer
 import gtk
 import gobject
 
@@ -8,6 +6,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -87,7 +86,7 @@ class StateTransitionsListController(ExtendedController):
         view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
         view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
 
-        #view['external_toggle'].set_radio(True)
+        # view['external_toggle'].set_radio(True)
         view['external_toggle'].connect("toggled", self.on_external_toggled)
         view.tree_view.connect("grab-focus", self.on_focus)
 
@@ -120,7 +119,7 @@ class StateTransitionsListController(ExtendedController):
             responsible_parent = self.model.state
 
         elif self.view_dict['transitions_external'] and self.combo['free_ext_from_outcomes_dict'] and \
-                self.model.state.state_id in self.combo['free_ext_from_outcomes_dict']:
+                        self.model.state.state_id in self.combo['free_ext_from_outcomes_dict']:
             from_state_id = self.model.state.state_id
             free_outcomes = self.combo['free_ext_from_outcomes_dict'][from_state_id]
             responsible_parent = self.model.parent.state
@@ -165,7 +164,7 @@ class StateTransitionsListController(ExtendedController):
 
             # selection to next element
             if len(self.tree_store) > 0:
-                self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
+                self.view.tree_view.set_cursor(min(row_number, len(self.tree_store) - 1))
         else:
             logger.warning("Please select the data flow to be deleted")
             return
@@ -297,8 +296,8 @@ class StateTransitionsListController(ExtendedController):
             for transition in trans_dict.values():
                 # print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
                 from_o_combo = filter(lambda o: not (o.outcome_id == transition.from_outcome and
-                                                transition.from_state == state_model.state.state_id), from_o_combo)
-                #print [o.outcome_id for o in from_o_combo]
+                                                     transition.from_state == state_model.state.state_id), from_o_combo)
+                # print [o.outcome_id for o in from_o_combo]
 
             if len(from_o_combo) > 0:
                 free_from_outcomes_dict[state_model.state.state_id] = from_o_combo
@@ -319,7 +318,8 @@ class StateTransitionsListController(ExtendedController):
 
         # for from-state-combo us all states with free outcomes and from_state
         # print "model.states: ", model.states, free_from_outcomes_dict
-        free_from_state_models = filter(lambda smodel: smodel.state.state_id in free_from_outcomes_dict.keys(), model.states.values())
+        free_from_state_models = filter(lambda smodel: smodel.state.state_id in free_from_outcomes_dict.keys(),
+                                        model.states.values())
         if trans is None:
             return None, None, None, None, free_from_state_models, free_from_outcomes_dict
         if from_state is not None and from_state.state_id not in free_from_outcomes_dict.keys():
@@ -539,13 +539,13 @@ class StateTransitionsListController(ExtendedController):
         try:
             self.update()
         except:
-            #logger.warning("update of transition widget fails while detecting list change state %s %s" %
+            # logger.warning("update of transition widget fails while detecting list change state %s %s" %
             #               (self.model.state.name, self.model.state.state_id))
             pass
 
     def notification_logs(self, model, prop_name, info):
-        #logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-                         # (self.model.state.state_id, prop_name, info.instance, info.method_name, info))
+        # logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
+        # (self.model.state.state_id, prop_name, info.instance, info.method_name, info))
 
         if model.state.state_id == self.model.state.state_id:
             relative_str = "SELF"
@@ -558,18 +558,20 @@ class StateTransitionsListController(ExtendedController):
             from_state = model.state.state_id
 
         if prop_name == 'states':
-            logger.debug("%s gets notified by states from %s %s" % (self.model.state.state_id, relative_str, from_state))
+            logger.debug(
+                "%s gets notified by states from %s %s" % (self.model.state.state_id, relative_str, from_state))
         elif prop_name == 'transitions':
-            logger.debug("%s gets notified by transitions from %s %s" % (self.model.state.state_id, relative_str, from_state))
+            logger.debug(
+                "%s gets notified by transitions from %s %s" % (self.model.state.state_id, relative_str, from_state))
         elif prop_name == 'outcomes':
-            logger.debug("%s gets notified by outcomes from %s %s" % (self.model.state.state_id, relative_str, from_state))
+            logger.debug(
+                "%s gets notified by outcomes from %s %s" % (self.model.state.state_id, relative_str, from_state))
         else:
             logger.debug("IP OP SV or DF !!! FAILURE !!! %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
                          (self.model.state.state_id, prop_name, info.instance, info.method_name, info.result))
 
 
 class StateTransitionsEditorController(ExtendedController):
-
     def __init__(self, model, view):
         ExtendedController.__init__(self, model, view)
         self.trans_list_ctrl = StateTransitionsListController(model, view.transitions_listView)
@@ -606,7 +608,7 @@ class StateTransitionsEditorController(ExtendedController):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-        #self.adapt(self.__state_property_adapter("name", "input_name"))
+        # self.adapt(self.__state_property_adapter("name", "input_name"))
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions

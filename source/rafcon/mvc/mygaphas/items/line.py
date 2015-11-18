@@ -14,7 +14,6 @@ from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
 
 class PerpLine(Line):
-
     def __init__(self, hierarchy_level):
         super(PerpLine, self).__init__()
         self._from_handle = self.handles()[0]
@@ -284,10 +283,14 @@ class PerpLine(Line):
 
         tail_pos = None
 
-        to_port_left_side = (self._handles[-1].pos.x.value - self.to_port.port_side_size / 2., self._handles[-1].pos.y.value)
-        to_port_right_side = (self._handles[-1].pos.x.value + self.to_port.port_side_size / 2., self._handles[-1].pos.y.value)
-        to_port_top_side = (self._handles[-1].pos.x.value, self._handles[-1].pos.y.value - self.to_port.port_side_size / 2.)
-        to_port_bottom_side = (self._handles[-1].pos.x.value, self._handles[-1].pos.y.value + self.to_port.port_side_size / 2.)
+        to_port_left_side = (
+        self._handles[-1].pos.x.value - self.to_port.port_side_size / 2., self._handles[-1].pos.y.value)
+        to_port_right_side = (
+        self._handles[-1].pos.x.value + self.to_port.port_side_size / 2., self._handles[-1].pos.y.value)
+        to_port_top_side = (
+        self._handles[-1].pos.x.value, self._handles[-1].pos.y.value - self.to_port.port_side_size / 2.)
+        to_port_bottom_side = (
+        self._handles[-1].pos.x.value, self._handles[-1].pos.y.value + self.to_port.port_side_size / 2.)
 
         if self.to_port.side is SnappedSide.RIGHT:
             tail_pos = to_port_left_side if self.is_out_port(self.to_port) else to_port_right_side
