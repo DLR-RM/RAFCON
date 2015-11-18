@@ -27,7 +27,8 @@ class ToolBarView(View):
 
         self.get_top_widget().set_border_width(constants.BORDER_WIDTH)
 
-    def get_label_widget(self, icon, text):
+    @staticmethod
+    def get_label_widget(icon, text):
         hbox = gtk.HBox()
 
         icon_label = gtk.Label()

@@ -9,11 +9,11 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.singleton import library_manager
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
 class LibraryTreeController(ExtendedController):
-
     def __init__(self, model=None, view=None, state_machine_manager_model=None):
         ExtendedController.__init__(self, model, view)
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
@@ -35,12 +35,14 @@ class LibraryTreeController(ExtendedController):
         self.view.connect('button_press_event', self.mouse_click)
 
     def mouse_click(self, widget, event=None):
-        # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}".format(event.button, gtk.gdk.BUTTON_PRESS, event.type == gtk.gdk._2BUTTON_PRESS, event.type == gtk.gdk.BUTTON_PRESS, event.button == 1))
+        # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}".format(event.button, gtk.gdk.BUTTON_PRESS,
+        # event.type == gtk.gdk._2BUTTON_PRESS, event.type == gtk.gdk.BUTTON_PRESS, event.button == 1))
         if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 return False
-            logger.info("left double click event detected -> open library: {0}/{1}".format(model[row][2], model[row][0]))
+            logger.info(
+                "left double click event detected -> open library: {0}/{1}".format(model[row][2], model[row][0]))
             self.open_button_clicked(None)
             return True
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
@@ -124,7 +126,7 @@ class LibraryTreeController(ExtendedController):
         self.redo_expansion_state()
 
     def insert_rec(self, parent, library_key, library_item, library_path):
-        #logger.debug("Add new library to tree store: %s" % library_key)
+        # logger.debug("Add new library to tree store: %s" % library_key)
         tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
         if library_path == "":
             library_path = library_key
@@ -132,7 +134,7 @@ class LibraryTreeController(ExtendedController):
             library_path = library_path + "/" + library_key
         self.library_row_iter_dict_by_library_path[library_path] = tree_item
         if isinstance(library_item, dict):
-            #logger.debug("Found library container: %s" % library_key)
+            # logger.debug("Found library container: %s" % library_key)
             for child_key, child_item in library_item.iteritems():
                 self.insert_rec(tree_item, child_key, child_item, library_path)
 
@@ -208,6 +210,3 @@ class LibraryTreeController(ExtendedController):
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
         return state_machine
-
-
-

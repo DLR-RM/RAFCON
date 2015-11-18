@@ -1,4 +1,5 @@
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 from enum import Enum
@@ -14,6 +15,7 @@ class Clipboard(Observable):
     """
     A class to hold a selection for later usage e.g. triggered by copy, or cut. Later usage is e.g. paste.
     """
+
     def __init__(self):
         Observable.__init__(self)
         self._selection = None
@@ -36,8 +38,8 @@ class Clipboard(Observable):
 
     def __str__(self):
         return "Clipboard:\nselection: %s\nstate_machine_id: %s\nclipboard_type: %s" % (str(self.selection),
-                                                                                     str(self.state_machine_id),
-                                                                                     str(self.clipboard_type))
+                                                                                        str(self.state_machine_id),
+                                                                                        str(self.clipboard_type))
 
     def set_selection(self, selection):
         self.selection.set(selection)
@@ -205,8 +207,9 @@ class Clipboard(Observable):
             state_model_copy = state_m_class(state_copy)
             state_model_copy.copy_meta_data_from_state_m(state_model)
             self.state_model_copies.append(state_model_copy)
-        # TODO: create transition copies, only relevant in multi-selection scenario
-        # TODO: create data flow copies, only relevant in multi-selection scenario
+            # TODO: create transition copies, only relevant in multi-selection scenario
+            # TODO: create data flow copies, only relevant in multi-selection scenario
+
 
 # To enable copy, cut and paste between state machines a global clipboard is used
 global_clipboard = Clipboard()

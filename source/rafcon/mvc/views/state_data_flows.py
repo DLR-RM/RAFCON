@@ -4,12 +4,12 @@ from rafcon.utils import constants
 
 class StateDataFlowsListView(View):
     builder = './glade/data_flow_list_widget.glade'
-    #top = 'data_flow_list_view'
+    # top = 'data_flow_list_view'
     top = 'tree_view'
 
     def __init__(self):
         View.__init__(self)
-        #self.tree_view = self.get_top_widget()
+        # self.tree_view = self.get_top_widget()
         self.tree_view = self['tree_view']
 
         # self.tree_view = gtk.TreeView()
@@ -25,7 +25,8 @@ class StateDataFlowsListView(View):
         # self['from_state_combo'] = self.from_state_cell
         # #self.from_state_cell.set_property("width", 30)
         # self.from_state_cell.set_property("text-column", 0)
-        # self['from_state_col'] = gtk.TreeViewColumn('From-State', self.from_state_cell, text=1, editable=10)  #, background=6)
+        # self['from_state_col'] = gtk.TreeViewColumn('From-State', self.from_state_cell, text=1, editable=10)  #,
+        # background=6)
         # self.tree_view.append_column(self['from_state_col'])
         #
         # # Variable from-key
@@ -33,7 +34,8 @@ class StateDataFlowsListView(View):
         # self['from_key_combo'] = self.from_key_cell
         # #self.from_key_cell.set_property("width", 30)
         # self.from_key_cell.set_property("text-column", 0)
-        # self['from_key_col'] = gtk.TreeViewColumn('From-Key', self.from_key_cell, text=2, editable=10) # , background=6)
+        # self['from_key_col'] = gtk.TreeViewColumn('From-Key', self.from_key_cell, text=2, editable=10) # ,
+        # background=6)
         # self.tree_view.append_column(self['from_key_col'])
         #
         # # Variable to-state
@@ -41,7 +43,8 @@ class StateDataFlowsListView(View):
         # self['to_state_combo'] = self.to_state_cell
         # self.to_state_cell.set_property("text-column", 0)
         # #self.to_state_cell.set_property("width", 30)
-        # self['to_state_col'] = gtk.TreeViewColumn('To-State', self.to_state_cell, text=3, editable=10) # , background=7)
+        # self['to_state_col'] = gtk.TreeViewColumn('To-State', self.to_state_cell, text=3, editable=10) # ,
+        # background=7)
         # self.tree_view.append_column(self['to_state_col'])
         #
         # # Variable to-key

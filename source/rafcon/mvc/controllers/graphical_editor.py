@@ -262,7 +262,8 @@ class GraphicalEditorController(ExtendedController):
         # and whether the last redraw was more than redraw_after ago
 
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
-                self.model.sm_manager_model.selected_state_machine_id == self.model.state_machine.state_machine_id \
+                        self.model.sm_manager_model.selected_state_machine_id == \
+                        self.model.state_machine.state_machine_id \
                 and not self.suspend_drawing:
             # Remove any existing timer id
             self.timer_id = None
@@ -640,7 +641,8 @@ class GraphicalEditorController(ExtendedController):
     def _check_for_waypoint_selection(self, selected_model, coords):
         """Check whether a waypoint was clicked on
 
-        Checks whether the current selected_model is a transition or data flow and if so looks for a waypoint at the given
+        Checks whether the current selected_model is a transition or data flow and if so looks for a waypoint at the
+        given
         coordinates. If a waypoint is found, it is stored together with its current position.
 
         :param gtkmvc.Model selected_model: The model that was clicked on
@@ -663,7 +665,8 @@ class GraphicalEditorController(ExtendedController):
     def _check_for_outcome_selection(selected_model, coords):
         """Check whether a port was clicked on
 
-        Checks whether the current selected_model is a state and if so looks for an outcome at the given coordinates. If an
+        Checks whether the current selected_model is a state and if so looks for an outcome at the given coordinates.
+        If an
         outcome is found, it is stored.
 
         :param gtkmvc.Model selected_model: The model that was clicked on
@@ -792,8 +795,9 @@ class GraphicalEditorController(ExtendedController):
         data flow). If so, the waypoint is removed.
 
         :param tuple coords: Coordinates to check for a waypoint
-        :param gtkmvc.Model connection_m: Model of a transition or data flow
+        :param rafcon.mvc.models.state_element.StateElementModel connection_m: Model of a transition or data flow
         :return: True, if a waypoint was removed, False else
+        :rtype: bool
         """
         close_threshold = min(connection_m.parent.meta['gui']['editor_opengl']['size']) / 70.
         # Check distance between all waypoints of the connection to the given coordinates
@@ -821,7 +825,8 @@ class GraphicalEditorController(ExtendedController):
         The methods adds a waypoint at the given coordinates to the given connection (transition or data flow). If
         the connection also has waypoints, it puts the new one between the correct existing ones.
 
-        :param gtkmvc.Model connection_m: The model of the connection to add a waypoint to
+        :param rafcon.mvc.models.state_element.StateElementModel connection_m: The model of the connection to add a
+          waypoint to
         :param tuple coords: The coordinates of the new waypoint
         """
 
@@ -1272,13 +1277,13 @@ class GraphicalEditorController(ExtendedController):
                                                   state_m.scoped_variables):
                         old_rel_pos = port_m.meta['gui']['editor_opengl']['inner_rel_pos']
                         port_m.meta['gui']['editor_opengl']['inner_rel_pos'] = calc_new_rel_pos(old_rel_pos, old_size,
-                                                                                         new_size)
+                                                                                                new_size)
 
                     # Resize all child states
                     for child_state_m in state_m.states.itervalues():
                         old_rel_pos = child_state_m.meta['gui']['editor_opengl']['rel_pos']
                         child_state_m.meta['gui']['editor_opengl']['rel_pos'] = calc_new_rel_pos(old_rel_pos, old_size,
-                                                                                          new_size)
+                                                                                                 new_size)
 
                         old_size = child_state_m.meta['gui']['editor_opengl']['size']
                         new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
@@ -1301,7 +1306,7 @@ class GraphicalEditorController(ExtendedController):
         The whole view/scene is moved, causing the state machine to move within the viewport.
 
         :param tuple rel_motion: Distance to move (x, y)
-        :param tuple opengl_coords: Whether to specified relative coordinates are in OpenGl coordinate system
+        :param bool opengl_coords: Whether to specified relative coordinates are in OpenGl coordinate system
         """
         if not opengl_coords:
             conversion = self.view.editor.pixel_to_size_ratio()
@@ -1637,7 +1642,8 @@ class GraphicalEditorController(ExtendedController):
             else:
                 from_state = parent_state_m.states[from_state_id]
 
-                assert isinstance(from_state, AbstractStateModel), "Transition from unknown state with ID {id:s}".format(
+                assert isinstance(from_state,
+                                  AbstractStateModel), "Transition from unknown state with ID {id:s}".format(
                     id=from_state_id)
 
                 try:

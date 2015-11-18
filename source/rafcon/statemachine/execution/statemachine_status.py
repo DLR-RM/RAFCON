@@ -9,16 +9,16 @@
 """
 
 from gtkmvc import Observable
-from enum import Enum
 from threading import Condition
 
+from rafcon.statemachine.enums import StateMachineExecutionStatus
 from execution_history import ExecutionHistory
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
-from rafcon.statemachine.enums import StateMachineExecutionStatus
+
 
 class StateMachineStatus(Observable):
-
     """A class for representing the state machine status
 
     It inherits from Observable to make a change of its fields observable.
@@ -63,10 +63,9 @@ class StateMachineStatus(Observable):
         """
         self.execution_mode = execution_mode
 
-
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    #########################################################################
+    # Properties for all class fields that must be observed by gtkmvc
+    #########################################################################
 
     @property
     def dependency_tree(self):

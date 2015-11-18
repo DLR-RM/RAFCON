@@ -5,6 +5,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -13,6 +14,7 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
     """
 
     """
+
     def __init__(self, model=None, view=None, state_machine_manager=None):
         ExtendedController.__init__(self, model, view)
         self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT)

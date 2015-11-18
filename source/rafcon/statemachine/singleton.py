@@ -28,6 +28,7 @@ def signal_handler(signal, frame):
         state_machine_execution_engine.state_machine_manager.state_machines[active_state_machine_id].root_state.join()
     sys.exit(0)
 
+
 # This variable holds the global variable manager singleton
 global_variable_manager = GlobalVariableManager()
 

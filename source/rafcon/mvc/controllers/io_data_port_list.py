@@ -1,15 +1,14 @@
 import gtk
 from gtk import ListStore
-from gtk import TreeViewColumn, CellRendererText, CellRendererToggle
+from gtk import TreeViewColumn, CellRendererToggle
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
-from rafcon.utils.type_helpers import convert_string_value_to_type_value
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.models.state import StateModel
 
 
 def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
@@ -28,7 +27,6 @@ def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
 
 
 class DataPortListController(ExtendedController):
-
     def __init__(self, model, view, io_type):
         """Constructor
         """
@@ -102,7 +100,6 @@ class DataPortListController(ExtendedController):
         view['data_type_text'].connect("edited", self.on_data_type_changed)
 
         if isinstance(self.model.state, LibraryState):
-
             view['use_runtime_value_toggle'] = CellRendererToggle()
             view['use_runtime_value_col'] = TreeViewColumn("Use Runtime Value")
             view.get_top_widget().append_column(view['use_runtime_value_col'])
@@ -211,7 +208,7 @@ class DataPortListController(ExtendedController):
             else:
                 self.model.state.remove_output_data_port(data_port_id)
             if len(self.data_port_list_store) > 0:
-                self.view[self.view.top].set_cursor(min(path, len(self.data_port_list_store)-1))
+                self.view[self.view.top].set_cursor(min(path, len(self.data_port_list_store) - 1))
 
     def get_data_port_id_from_selection(self):
         """Returns the data_port_id of the currently selected port entry"""
@@ -326,10 +323,12 @@ class DataPortListController(ExtendedController):
                 tmp.append([idp_model.data_port.name, data_type_name, default_value, idp_model.data_port.data_port_id])
             else:
                 if self.type == "input":
-                    use_runtime_value = self.model.state.use_runtime_value_input_data_ports[idp_model.data_port.data_port_id]
+                    use_runtime_value = self.model.state.use_runtime_value_input_data_ports[
+                        idp_model.data_port.data_port_id]
                     runtime_value = self.model.state.input_data_port_runtime_values[idp_model.data_port.data_port_id]
                 else:
-                    use_runtime_value = self.model.state.use_runtime_value_output_data_ports[idp_model.data_port.data_port_id]
+                    use_runtime_value = self.model.state.use_runtime_value_output_data_ports[
+                        idp_model.data_port.data_port_id]
                     runtime_value = self.model.state.output_data_port_runtime_values[idp_model.data_port.data_port_id]
                 tmp.append([idp_model.data_port.name,
                             data_type_name,

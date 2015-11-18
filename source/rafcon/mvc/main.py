@@ -1,4 +1,5 @@
 from twisted.internet import gtk2reactor
+
 gtk2reactor.install()
 
 from twisted.internet import reactor
@@ -29,7 +30,7 @@ def check_requirements():
 def create_models(*args, **kargs):
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
-    #logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
+    # logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
     stdout = logging.StreamHandler(sys.stdout)
@@ -91,7 +92,7 @@ def create_models(*args, **kargs):
 
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     # this is not allowed as the output port is already connected
-    #ctr_state.add_data_flow(ctr_state.state_id, scoped_variable2_ctr_state, ctr_state.state_id, output_ctr_state)
+    # ctr_state.add_data_flow(ctr_state.state_id, scoped_variable2_ctr_state, ctr_state.state_id, output_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
     global_var_manager_model = rafcon.mvc.singleton.global_variable_manager_model
@@ -121,13 +122,14 @@ if __name__ == '__main__':
     # StateDataPortEditorController(ctr_model, sdev)
 
     # a view, whose buttons can trigger arbitrary function that are needed for testing purposes
-    #test_buttons_view = TestButtonsView(ctr_model)
+    # test_buttons_view = TestButtonsView(ctr_model)
 
-    #state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine Tree')
-    #state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
+    # state_machine_tree = SingleWidgetWindowView(StateMachineTreeView, width=500, height=200, title='State Machine
+    # Tree')
+    # state_machine_model = SingleWidgetWindowController(ctr_model, state_machine_tree, StateMachineTreeController)
 
-    #library_tree = SingleWidgetWindowView(LibraryTreeView, width=300, height=200, title='Library Tree')
-    #library_controller = SingleWidgetWindowController(None, library_tree, LibraryTreeController)
+    # library_tree = SingleWidgetWindowView(LibraryTreeView, width=300, height=200, title='Library Tree')
+    # library_controller = SingleWidgetWindowController(None, library_tree, LibraryTreeController)
 
     # src_view = SingleWidgetWindowView(SourceEditorView, width=550, height=500, title='Source Editor')
     # src_ctrl = SingleWidgetWindowController(ctr_model, src_view, SourceEditorController)
@@ -142,8 +144,8 @@ if __name__ == '__main__':
     # oc_editor_ctrl = SingleWidgetWindowController(ctr_model, oc_editor_view, StateOutcomesEditorController)
     # #oc_editor_ctrl = SingleWidgetWindowController(this_model, oc_editor_view, StateOutcomesEditorController)
 
-    #state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='State Editor View')
-    #state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
+    # state_editor_view = SingleWidgetWindowView(StateEditorView, width=550, height=500, title='State Editor View')
+    # state_editor_ctrl = SingleWidgetWindowController(ctr_model, state_editor_view, StateEditorController)
     # #state_editor_ctrl = SingleWidgetWindowController(this_model, state_editor_view, StateEditorController)
 
     # state_editor_view = SingleWidgetWindowView(StateEditorEggView, width=550, height=500, title='State Editor Egg View')

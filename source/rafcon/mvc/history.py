@@ -16,7 +16,6 @@ from rafcon.statemachine.states.state import State
 from rafcon.statemachine.data_port import DataPort
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
 from rafcon.mvc.models.container_state import ContainerState
@@ -24,8 +23,8 @@ import rafcon.mvc.statemachine_helper
 
 import rafcon.mvc.singleton as mvc_singleton
 
-
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+
 logger = log.get_logger(__name__)
 
 
@@ -82,7 +81,6 @@ def get_state_tuple(state, state_m=None):
 
 
 def get_state_from_state_tuple(state_tuple):
-
     # print "++++ new state", state_tuple
 
     # Transitions and data flows are not added, as also states are not added
@@ -112,7 +110,7 @@ def get_state_from_state_tuple(state_tuple):
 
     state.script = state_tuple[2]
     state.script.script = state_tuple[5]
-    #print "------------- ", state
+    # print "------------- ", state
     for child_state_id, child_state_tuple in state_tuple[1].iteritems():
         child_state = get_state_from_state_tuple(child_state_tuple)
         # do_storage_test(child_state)
@@ -123,15 +121,16 @@ def get_state_from_state_tuple(state_tuple):
                 state.add_state(child_state)
             except Exception as e:
                 logger.debug(str(e))
-                logger.error("try to add state %s to state %s with states %s" % (child_state, state, state.states.keys()))
+                logger.error(
+                    "try to add state %s to state %s with states %s" % (child_state, state, state.states.keys()))
 
         def print_states(state):
             if hasattr(state, "states"):
                 for state_id, child_state in state.states.iteritems():
                     print child_state.get_path()
                     print_states(child_state)
-        # print "got from tuple:"
-        # print_states(state)
+                    # print "got from tuple:"
+                    # print_states(state)
 
     # Child states were added, now we can add transitions and data flows
     if isinstance(state_info, tuple):
@@ -141,10 +140,9 @@ def get_state_from_state_tuple(state_tuple):
     return state
 
 
-
 def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=False):
     meta_dict = {'state': copy.deepcopy(state_model.meta), 'is_start': False, 'data_flows': {}, 'transitions': {},
-                 'outcomes': {}, 'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}, 'states':  {},
+                 'outcomes': {}, 'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}, 'states': {},
                  'related_parent_transitions': {}, 'related_parent_data_flows': {}}
     if with_parent_linkage:
         with_parent_linkage = False
@@ -169,35 +167,40 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
     for elem in state_model.input_data_ports:
         meta_dict['input_data_ports'][elem.data_port.data_port_id] = copy.deepcopy(elem.meta)
         if with_prints:
-            print "input: ", elem.data_port.data_port_id, elem.parent.state.input_data_ports.keys(), meta_dict['input_data_ports'].keys()
+            print "input: ", elem.data_port.data_port_id, elem.parent.state.input_data_ports.keys(), meta_dict[
+                'input_data_ports'].keys()
     for elem in state_model.output_data_ports:
         meta_dict['output_data_ports'][elem.data_port.data_port_id] = copy.deepcopy(elem.meta)
         if with_prints:
-            print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), meta_dict['output_data_ports'].keys()
+            print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), meta_dict[
+                'output_data_ports'].keys()
 
     meta_dict['state'] = copy.deepcopy(state_model.meta)
     if hasattr(state_model, 'states'):
         for state_id, state_m in state_model.states.iteritems():
             meta_dict['states'][state_m.state.state_id] = get_state_element_meta(state_m, with_parent_linkage)
             if with_prints:
-                print "FINISHED STORE META for STATE: ", state_id, meta_dict['states'].keys(), state_model.state.state_id
+                print "FINISHED STORE META for STATE: ", state_id, meta_dict[
+                    'states'].keys(), state_model.state.state_id
         for elem in state_model.transitions:
             meta_dict['transitions'][elem.transition.transition_id] = copy.deepcopy(elem.meta)
             if with_prints:
-                print "transition: ", elem.transition.transition_id, elem.parent.state.transitions.keys(), meta_dict['transitions'].keys(), elem.parent.state.state_id
+                print "transition: ", elem.transition.transition_id, elem.parent.state.transitions.keys(), meta_dict[
+                    'transitions'].keys(), elem.parent.state.state_id
         for elem in state_model.data_flows:
             meta_dict['data_flows'][elem.data_flow.data_flow_id] = copy.deepcopy(elem.meta)
             if with_prints:
-                print "data_flow: ", elem.data_flow.data_flow_id, elem.parent.state.data_flows.keys(), meta_dict['data_flows'].keys()
+                print "data_flow: ", elem.data_flow.data_flow_id, elem.parent.state.data_flows.keys(), meta_dict[
+                    'data_flows'].keys()
         for elem in state_model.scoped_variables:
             meta_dict['scoped_variables'][elem.scoped_variable.data_port_id] = copy.deepcopy(elem.meta)
             if with_prints:
-                print "scoped_variable: ", elem.scoped_variable.data_port_id, elem.parent.state.scoped_variables.keys(), meta_dict['scoped_variables'].keys()
+                print "scoped_variable: ", elem.scoped_variable.data_port_id, elem.parent.state.scoped_variables.keys(), \
+                meta_dict['scoped_variables'].keys()
     return meta_dict
 
 
 def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, with_prints=False):
-
     # meta_dict = {'state': state_model.meta, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
     #              'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}}
 
@@ -243,7 +246,8 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
                 print "FINISHED META for STATE: ", state_m.state.state_id
         for elem in state_model.transitions:
             if with_prints:
-                print "transition: ", elem.transition.transition_id, meta_dict['transitions'].keys(), elem.parent.state.transitions.keys(), elem.parent.state.state_id
+                print "transition: ", elem.transition.transition_id, meta_dict[
+                    'transitions'].keys(), elem.parent.state.transitions.keys(), elem.parent.state.state_id
             # assert elem.transition.transition_id in meta_dict['transitions']
             if elem.transition.transition_id in meta_dict['transitions']:
                 elem.meta = copy.deepcopy(meta_dict['transitions'][elem.transition.transition_id])
@@ -263,7 +267,7 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
     state_model.is_start = copy.deepcopy(meta_dict['is_start'])
     if state_model.is_start and not state_model.state.is_root_state:  # TODO not nice that model stuff does things in core
         if not (isinstance(state_model.parent.state, BarrierConcurrencyState) or
-                isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
+                    isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
             # logger.debug("set start_state_id %s" % state_model.parent.state)
             state_model.parent.state.start_state_id = state_model.state.state_id
         else:
@@ -285,7 +289,6 @@ class ActionDummy:
 
 
 class Action:
-
     def __init__(self, action_type, parent_path, model, prop_name, info, state_machine_model):
 
         self.type = action_type
@@ -488,20 +491,21 @@ class Action:
                     if hasattr(new_state, 'states'):
                         def unmark_state(state_, sm_id_):
                             spath = state_.get_file_system_path()
-                            rafcon.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id_, spath)
+                            rafcon.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id_,
+                                                                                                           spath)
                             # print "unmark from removal: ", spath
                             if hasattr(state_, 'states'):
                                 for child_state in state_.states.values():
                                     unmark_state(child_state, sm_id_)
-                            # do_storage_test(state_)
+                                    # do_storage_test(state_)
 
                         unmark_state(new_state, sm_id)
-                    # check if tmp folder otherwise everthing is Ok
+                        # check if tmp folder otherwise everthing is Ok
 
-                    # if is -> do check if exists and write the script if not!!!! TODO
+                        # if is -> do check if exists and write the script if not!!!! TODO
 
             if not (isinstance(state, BarrierConcurrencyState) or
-                    isinstance(state, PreemptiveConcurrencyState)):
+                        isinstance(state, PreemptiveConcurrencyState)):
                 for t_id, t in stored_state.transitions.iteritems():
                     # print "\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ "
                     # print "### transitions to delete ", [t.from_state, t.to_state], t
@@ -516,11 +520,10 @@ class Action:
             for df_id, df in stored_state.data_flows.iteritems():
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
 
-        # self.before_model.transitions._notify_method_after(state, 'data_flow_change', None, (self.before_model,), {})
+                # self.before_model.transitions._notify_method_after(state, 'data_flow_change', None, (self.before_model,), {})
 
 
 class StateMachineAction(Action):
-
     def __init__(self, action_type, parent_path, model, prop_name, info, state_machine_model):
         Action.__init__(self, action_type, parent_path, model, prop_name, info, state_machine_model)
 
@@ -683,7 +686,6 @@ class UnGroup(Action):
 
 
 class HistoryTreeElement:
-
     def __init__(self, prev_id, action, next_id, old_next_ids):
         self.prev_id = None
         if prev_id is not None:
@@ -697,11 +699,10 @@ class HistoryTreeElement:
 
 
 class History(ModelMT):
-
     state_machine_model = None
     changes = None
 
-    __observables__ = ("changes", )
+    __observables__ = ("changes",)
 
     def __init__(self, state_machine_model):
         ModelMT.__init__(self)
@@ -748,9 +749,10 @@ class History(ModelMT):
         # logger.debug("actual version_id %s and goal version_id %s" %
         #              (self.changes.all_time_history[actual_version_pointer].action.version_id, pointer_on_version_to_recover))
         undo_redo_list = []
-        #backward
+        # backward
         # logger.debug("actual version id %s " % self.changes.trail_history[self.changes.trail_pointer].version_id)
-        while not self.changes.trail_pointer == -1 and not int(pointer_on_version_to_recover) == int(actual_version_pointer):
+        while not self.changes.trail_pointer == -1 and not int(pointer_on_version_to_recover) == int(
+                actual_version_pointer):
             undo_redo_list.append((actual_version_pointer, 'undo'))
             # logger.info("%s" % self.changes.all_time_history[actual_version_pointer])
             # logger.info(str(self.changes.all_time_history[actual_version_pointer].prev_id))
@@ -795,7 +797,7 @@ class History(ModelMT):
             else:
                 # do redo
                 self._redo(elem[0])
-                #self.changes.all_time_history[elem[0]].action.redo()
+                # self.changes.all_time_history[elem[0]].action.redo()
 
     def _undo(self, version_id):
         self.busy = True
@@ -803,7 +805,7 @@ class History(ModelMT):
         self.changes.trail_pointer -= 1
         self.changes.all_time_pointer -= 1
         self.busy = False
-        if isinstance(self.changes.trail_history[self.changes.trail_pointer+1], StateMachineAction):
+        if isinstance(self.changes.trail_history[self.changes.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
 
@@ -817,7 +819,7 @@ class History(ModelMT):
         self.busy = True
         self.changes.undo()
         self.busy = False
-        if isinstance(self.changes.trail_history[self.changes.trail_pointer+1], StateMachineAction):
+        if isinstance(self.changes.trail_history[self.changes.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
 
@@ -834,7 +836,8 @@ class History(ModelMT):
             self._re_initiate_observation()
 
     def redo(self):
-        if not self.changes.trail_history or self.changes.trail_history and not self.changes.trail_pointer+1 < len(self.changes.trail_history):
+        if not self.changes.trail_history or self.changes.trail_history and not self.changes.trail_pointer + 1 < len(
+                self.changes.trail_history):
             logger.debug("There is no more TrailHistory element to Redo")
             return
         # else:
@@ -901,10 +904,12 @@ class History(ModelMT):
                                         state_machine_model=self.state_machine_model)
 
         elif overview['model'][-1].parent and (isinstance(overview['instance'][-1], DataPort) or
-                isinstance(overview['instance'][-1], Outcome) or
-                overview['method_name'][-1] in ['add_outcome', 'remove_outcome',
-                                                'add_output_data_port', 'remove_output_data_port',
-                                                'add_input_data_port', 'remove_input_data_port']):
+                                                   isinstance(overview['instance'][-1], Outcome) or
+                                                       overview['method_name'][-1] in ['add_outcome', 'remove_outcome',
+                                                                                       'add_output_data_port',
+                                                                                       'remove_output_data_port',
+                                                                                       'add_input_data_port',
+                                                                                       'remove_input_data_port']):
             if self.with_prints:
                 print "SnAprint1", overview['model']
                 print "SnAprint1", overview['prop_name']
@@ -922,7 +927,8 @@ class History(ModelMT):
                     #                                                        overview['model'][-1].state.get_path()))
                     # self.actual_action = Action(info.method_name, model.state.get_path(),
                     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                    self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+                    self.actual_action = Action(cause, overview['model'][-1].state.get_path(),
+                                                # instance path of parent
                                                 overview['model'][0], overview['prop_name'][0], overview['info'][-1],
                                                 state_machine_model=self.state_machine_model)
                 elif not isinstance(overview['model'][-1].parent.state.parent, State):  # is root_state
@@ -933,25 +939,29 @@ class History(ModelMT):
                     #                                                        overview['model'][-1].parent.state.get_path()))
                     # self.actual_action = Action(info.method_name, model.state.get_path(),
                     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                    self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),  # instance path of parent
+                    self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),
+                                                # instance path of parent
                                                 overview['model'][0], overview['prop_name'][0], overview['info'][-1],
                                                 state_machine_model=self.state_machine_model)
                 else:
                     if self.with_prints:
                         print "new .. state Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
                             overview['model'][-1].parent.state.get_path()
-                    assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.parent.state.get_path().split('/')[0]
+                    assert overview['model'][-2].state.get_path() == \
+                           overview['model'][-1].parent.parent.state.get_path().split('/')[0]
                     overview['model'][-1].parent.state.get_path()
                     if self.with_prints:
                         print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
                             overview['model'][-1].parent.state.get_path()
-                    assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.parent.state.get_path().split('/')[0]
+                    assert overview['model'][-2].state.get_path() == \
+                           overview['model'][-1].parent.parent.state.get_path().split('/')[0]
                     # the model should be StateModel or ContainerStateModel and "info" from those model notification
                     # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
                     #                                                        overview['model'][-1].parent.state.get_path()))
                     # self.actual_action = Action(info.method_name, model.state.get_path(),
                     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                    self.actual_action = Action(cause, overview['model'][-1].parent.parent.state.get_path(),  # instance path of parent
+                    self.actual_action = Action(cause, overview['model'][-1].parent.parent.state.get_path(),
+                                                # instance path of parent
                                                 overview['model'][0], overview['prop_name'][0], overview['info'][-1],
                                                 state_machine_model=self.state_machine_model)
                     # exit(1)
@@ -971,7 +981,7 @@ class History(ModelMT):
             #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
             logger.warn("History may need update, tried to start observation of new action that is not classifiable "
                         "\n%s \n%s \n%s \n%s",
-                         overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
+                        overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
             return False
 
         return result
@@ -1011,14 +1021,14 @@ class History(ModelMT):
                              (changed_model.state.state_id, changed_model.state.name))
                 # -> in case of undo/redo overwrite Model.meta-dict
 
-            # self.actual_action = Action('meta_data_changed', changed_parent_model.state.get_path(),  # instance path of parent
-            #                             changed_model, 'meta_data_changed', {},
-            #                             state_machine_model=self.state_machine_model)
-            # b_tuple = self.actual_action.before_storage
-            # meta_dict = self.get_state_element_meta_from_tmp_storage(changed_model.state.get_path())
-            # mod_tuple = (b_tuple[0], b_tuple[1], b_tuple[2], meta_dict, b_tuple[4], b_tuple[5])
-            # self.actual_action.before_storage = mod_tuple
-            # self.finish_new_action(changed_model, 'meta_data_changed', {})
+                # self.actual_action = Action('meta_data_changed', changed_parent_model.state.get_path(),  # instance path of parent
+                #                             changed_model, 'meta_data_changed', {},
+                #                             state_machine_model=self.state_machine_model)
+                # b_tuple = self.actual_action.before_storage
+                # meta_dict = self.get_state_element_meta_from_tmp_storage(changed_model.state.get_path())
+                # mod_tuple = (b_tuple[0], b_tuple[1], b_tuple[2], meta_dict, b_tuple[4], b_tuple[5])
+                # self.actual_action.before_storage = mod_tuple
+                # self.finish_new_action(changed_model, 'meta_data_changed', {})
 
     @ModelMT.observe("state_machine", before=True)
     def assign_notification_change_type_root_state_before(self, model, prop_name, info):
@@ -1030,7 +1040,8 @@ class History(ModelMT):
         if info['kwargs']['method_name'] == "change_root_state_type":
             if self.with_prints:
                 print "ROOT_STATE is NEW", model, prop_name, info
-            self.actual_action = StateMachineAction("change_root_state_type", model.state_machine.root_state.get_path(),  # instance path of parent
+            self.actual_action = StateMachineAction("change_root_state_type", model.state_machine.root_state.get_path(),
+                                                    # instance path of parent
                                                     model.root_state, prop_name, info,
                                                     state_machine_model=self.state_machine_model)
             self.count_before += 1
@@ -1084,11 +1095,12 @@ class History(ModelMT):
         else:
             # logger.debug("History states_BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before', with_prints=self.with_prints)
+            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before',
+                                                           with_prints=self.with_prints)
 
             # skipped state changes
             if overview['method_name'][0] == 'state_change' and \
-                    overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status']:
+                            overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status']:
                 # print overview['method_name']
                 return
 
@@ -1135,9 +1147,10 @@ class History(ModelMT):
         else:
             # logger.debug("History states_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = parent_state_of_notification_source(model, prop_name, info, before_after='after', with_prints=self.with_prints)
+            overview = parent_state_of_notification_source(model, prop_name, info, before_after='after',
+                                                           with_prints=self.with_prints)
             if overview['method_name'][0] == 'state_change' and \
-                    overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status']:
+                            overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status']:
                 if self.with_prints:
                     print overview['method_name']
                 return
@@ -1192,7 +1205,7 @@ class History(ModelMT):
             root_cause_is_state = parent_model.state.is_root_state
 
             # print "IN HISTORY", info
-            #print "states changed ", info.prop_name, info.method_name
+            # print "states changed ", info.prop_name, info.method_name
             if self.locked:
                 self.count_before += 1
                 if self.with_prints:
@@ -1241,7 +1254,8 @@ class History(ModelMT):
         else:
             # logger.debug("History state_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before', with_prints=self.with_prints)
+            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before',
+                                                           with_prints=self.with_prints)
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
@@ -1335,7 +1349,8 @@ def parent_state_of_notification_source(model, prop_name, info, before_after, wi
                 if with_prints:
                     print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
                         overview['model'][-1].parent.state.get_path()
-                assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
+                assert overview['model'][-2].state.get_path() == \
+                       overview['model'][-1].parent.state.get_path().split('/')[0]
     return overview
 
 
@@ -1405,7 +1420,7 @@ class ChangeHistory(Observable):
     def redo(self):
         # logger.debug("try redo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
         if self.trail_history is not None and self.trail_pointer + 1 < len(self.trail_history):
-            self.trail_history[self.trail_pointer+1].redo()
+            self.trail_history[self.trail_pointer + 1].redo()
             self.trail_pointer += 1
             self.all_time_pointer += 1
         elif self.trail_history is not None:
@@ -1422,7 +1437,7 @@ class ChangeHistory(Observable):
             return self.trail_history  # [:self.trail_pointer + 1]
 
     def is_end(self):
-        return len(self.trail_history)-1 == self.trail_pointer
+        return len(self.trail_history) - 1 == self.trail_pointer
 
     @Observable.observed
     def reset(self):

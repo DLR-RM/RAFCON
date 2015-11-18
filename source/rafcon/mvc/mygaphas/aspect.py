@@ -63,7 +63,7 @@ class ItemHandleInMotion(object):
             return None
 
         connectable, port, glue_pos = \
-                view.get_port_at_point(pos, distance=distance, exclude=(item,))
+            view.get_port_at_point(pos, distance=distance, exclude=(item,))
 
         # check if item and found item can be connected on closest port
         if port is not None:
@@ -80,10 +80,8 @@ class ItemHandleInMotion(object):
                 return sink
         return None
 
+
 HandleInMotion = generic(ItemHandleInMotion)
-
-
-HandleFinder = generic(ItemHandleFinder)
 
 
 @HandleFinder.when_type(StateView)
@@ -145,8 +143,8 @@ class SegmentHandleSelection(ItemHandleSelection):
 
         # cannot merge starting from last segment
         if segment == len(item.ports()) - 1:
-            segment =- 1
-        assert segment >= 0 and segment < len(item.ports()) - 1
+            segment = - 1
+        assert 0 <= segment < len(item.ports()) - 1
 
         before = handles[handle_index - 1]
         after = handles[handle_index + 1]

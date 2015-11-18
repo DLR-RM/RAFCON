@@ -1,4 +1,5 @@
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 from gtkmvc import Controller
@@ -6,7 +7,6 @@ from rafcon.mvc.shortcut_manager import ShortcutManager
 
 
 class ExtendedController(Controller):
-
     def __init__(self, model, view, spurious=False):
         Controller.__init__(self, model, view, spurious=spurious)
         self.__child_controllers = dict()
@@ -46,7 +46,8 @@ class ExtendedController(Controller):
                 actual_ctrl = tmp_ctrl
             else:
                 if with_print:
-                    logger.warning("{0} could not find cild_ctrl_identifier '{1}' ".format(actual_ctrl, child_ctrl_identifier))
+                    logger.warning(
+                        "{0} could not find cild_ctrl_identifier '{1}' ".format(actual_ctrl, child_ctrl_identifier))
                 return None
 
         return actual_ctrl

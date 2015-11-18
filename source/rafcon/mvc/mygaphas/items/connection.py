@@ -22,7 +22,6 @@ from rafcon.mvc.mygaphas.utils import gap_draw_helper
 
 
 class ConnectionView(PerpLine):
-
     def set_port_for_handle(self, port, handle):
         if handle is self.from_handle():
             self.from_port = port
@@ -51,7 +50,6 @@ class ConnectionView(PerpLine):
 
 
 class ConnectionPlaceholderView(ConnectionView):
-
     def __init__(self, hierarchy_level, transition_placeholder):
         super(ConnectionPlaceholderView, self).__init__(hierarchy_level)
         self.line_width = .5 / hierarchy_level
@@ -67,7 +65,6 @@ class ConnectionPlaceholderView(ConnectionView):
 
 
 class TransitionView(ConnectionView):
-
     def __init__(self, transition_m, hierarchy_level):
         super(TransitionView, self).__init__(hierarchy_level)
         self._transition_m = None
@@ -95,7 +92,6 @@ class TransitionView(ConnectionView):
 
 
 class DataFlowView(ConnectionView):
-
     def __init__(self, data_flow_m, hierarchy_level):
         super(DataFlowView, self).__init__(hierarchy_level)
         assert isinstance(data_flow_m, DataFlowModel)
@@ -138,7 +134,6 @@ class DataFlowView(ConnectionView):
 
 
 class ScopedVariableDataFlowView(DataFlowView):
-
     def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
         super(ScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level)
 
@@ -190,7 +185,7 @@ class ScopedVariableDataFlowView(DataFlowView):
     @property
     def name(self):
         return self._scoped_variable.name
-        
+
     @property
     def connected(self):
         raise NotImplementedError
@@ -337,7 +332,6 @@ class ScopedVariableDataFlowView(DataFlowView):
 
 
 class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
-
     def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
         super(FromScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level, scoped_variable)
         observers.add(self._to_port_changed_side)
@@ -435,7 +429,6 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
 
 
 class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
-
     def __init__(self, data_flow_m, hierarchy_level, scoped_variable):
         super(ToScopedVariableDataFlowView, self).__init__(data_flow_m, hierarchy_level, scoped_variable)
         observers.add(self._from_port_changed_side)
@@ -456,14 +449,16 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
             if not self._to_waypoint:
                 self._to_waypoint = self.add_perp_waypoint(begin=False)
                 self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos,
-                                                                      port, 2 * self._to_head_length, self.is_in_port(port))
+                                                                      port, 2 * self._to_head_length,
+                                                                      self.is_in_port(port))
                 self.canvas.solver.add_constraint(self._to_port_constraint)
             if self.from_port:
                 self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
 
             if len(self.handles()) == 4:
                 self._update_label_selection_waypoint(True)
-                # self.add_waypoint((self.from_handle().x + 2 * self._head_length + self._name_width, self.from_handle().y))
+                # self.add_waypoint((self.from_handle().x + 2 * self._head_length + self._name_width,
+                # self.from_handle().y))
 
     def _from_port_changed_side(self, event):
         func_name = event[0].__name__

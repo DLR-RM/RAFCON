@@ -19,7 +19,6 @@ logger = log.get_logger(__name__)
 
 
 class LibraryState(State):
-
     """A class to represent a hierarchy state for the state machine
 
     Only the variables are listed that are not already contained in the container state base class
@@ -96,7 +95,6 @@ class LibraryState(State):
                 self.output_data_port_runtime_values[key] = idp.default_value
                 self.use_runtime_value_output_data_ports[key] = True
 
-
         logger.debug("Initialized library state with name %s" % name)
         self.initialized = True
 
@@ -152,7 +150,7 @@ class LibraryState(State):
         else:
             return State.add_output_data_port(self, name, data_type, default_value, data_port_id)
 
-    def add_input_data_port(self, name, data_type, default_value=None, data_port_id=None):
+    def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
         """Overwrites the add_input_data_port method of the State class. Prevents user from adding a
         output data port to the library state.
 
@@ -165,7 +163,8 @@ class LibraryState(State):
             return State.add_input_data_port(self, name, data_type, default_value, data_port_id)
 
     def add_state(self, state):
-        """Overwrites the add_state method of the ContainerState class. Prevents user from adding a state to the library state.
+        """Overwrites the add_state method of the ContainerState class. Prevents user from adding a state to the
+        library state.
 
         For further documentation, look at the ContainerState class.
 
@@ -280,9 +279,9 @@ class LibraryState(State):
         }
         return dict_representation
 
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    #########################################################################
+    # Properties for all class fields that must be observed by gtkmvc
+    #########################################################################
 
     @property
     def library_path(self):

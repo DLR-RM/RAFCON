@@ -1,6 +1,3 @@
-
-import gtk
-
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers import StateOverviewController, SourceEditorController, \
     DataPortListController, ScopedVariableListController, StateOutcomesEditorController, LinkageOverviewController
@@ -13,6 +10,7 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import constants
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -23,11 +21,11 @@ class StateEditorController(ExtendedController):
     """
 
     icons = {
-        "Source":           constants.ICON_SOURCE,
-        "Data Linkage":     constants.ICON_DLINK,
-        "Logical Linkage":  constants.ICON_LLINK,
+        "Source": constants.ICON_SOURCE,
+        "Data Linkage": constants.ICON_DLINK,
+        "Logical Linkage": constants.ICON_LLINK,
         "Linkage Overview": constants.ICON_OVERV,
-        "Description":      constants.ICON_DESC
+        "Description": constants.ICON_DESC
     }
 
     def __init__(self, model, view):
@@ -103,18 +101,20 @@ class StateEditorController(ExtendedController):
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         view['new_input_port_button'].connect('clicked',
-            self.get_controller('inputs_ctrl').on_new_port_button_clicked)
+                                              self.get_controller('inputs_ctrl').on_new_port_button_clicked)
         view['new_output_port_button'].connect('clicked',
-            self.get_controller('outputs_ctrl').on_new_port_button_clicked)
+                                               self.get_controller('outputs_ctrl').on_new_port_button_clicked)
         view['new_scoped_variable_button'].connect('clicked',
-            self.get_controller('scoped_ctrl').on_new_scoped_variable_button_clicked)
+                                                   self.get_controller(
+                                                       'scoped_ctrl').on_new_scoped_variable_button_clicked)
 
         view['delete_input_port_button'].connect('clicked',
-            self.get_controller('inputs_ctrl').on_delete_port_button_clicked)
+                                                 self.get_controller('inputs_ctrl').on_delete_port_button_clicked)
         view['delete_output_port_button'].connect('clicked',
-            self.get_controller('outputs_ctrl').on_delete_port_button_clicked)
+                                                  self.get_controller('outputs_ctrl').on_delete_port_button_clicked)
         view['delete_scoped_variable_button'].connect('clicked',
-            self.get_controller('scoped_ctrl').on_delete_scoped_variable_button_clicked)
+                                                      self.get_controller(
+                                                          'scoped_ctrl').on_delete_scoped_variable_button_clicked)
 
         if isinstance(self.model.state, LibraryState):
             view['new_input_port_button'].set_sensitive(False)
@@ -137,7 +137,7 @@ class StateEditorController(ExtendedController):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-        #self.adapt(self.__state_property_adapter("name", "input_name"))
+        # self.adapt(self.__state_property_adapter("name", "input_name"))
 
     def scroll_to_bottom(self, widget, data=None):
         scroller = self.view['description_scroller']
@@ -171,4 +171,3 @@ class StateEditorController(ExtendedController):
         new_state_m = msg.new_state_m
         states_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl')
         states_editor_ctrl.recreate_state_editor(self.model, new_state_m)
-

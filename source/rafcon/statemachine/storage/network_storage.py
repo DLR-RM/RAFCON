@@ -1,11 +1,11 @@
 import os
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
 class NetworkStorageReader:
-
     def __init__(self, base_path):
         self._base_path = None
         self.base_path = os.path.abspath(base_path)

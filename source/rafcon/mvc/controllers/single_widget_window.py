@@ -2,6 +2,7 @@ import gtk
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.shortcut_manager import ShortcutManager
 
+
 class SingleWidgetWindowController(ExtendedController):
     """Controller handling the view of properties/attributes of ...
     """
@@ -22,7 +23,7 @@ class SingleWidgetWindowController(ExtendedController):
         self.register_actions(self.shortcut_manager)
 
         view['main_window'].connect('destroy', gtk.main_quit)
-        #view.get_top_widget().connect('destroy', gtk.main_quit)
+        # view.get_top_widget().connect('destroy', gtk.main_quit)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -30,5 +31,6 @@ class SingleWidgetWindowController(ExtendedController):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-        #self.adapt(self.__state_property_adapter("name", "input_name"))
+        # self.adapt(self.__state_property_adapter("name", "input_name"))
+
     pass  # class end

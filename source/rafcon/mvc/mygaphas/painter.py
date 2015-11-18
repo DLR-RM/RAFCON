@@ -29,7 +29,7 @@ class CornerHandlePainter(HandlePainter):
     def _get_handle_side_length(self, item):
         return get_side_length_of_resize_handle(self.view, item)
 
-    def _draw_handles(self, item, cairo, opacity=None):
+    def _draw_handles(self, item, cairo, opacity=None, inner=False):
         view = self.view
         cairo.save()
         i2v = view.get_matrix_i2v(item)

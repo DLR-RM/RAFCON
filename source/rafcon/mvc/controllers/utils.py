@@ -1,5 +1,5 @@
 from gtk import TreeView
-from gtk.keysyms import Tab as KEY_TAB, ISO_Left_Tab
+from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 
 class MoveAndEditWithTabKeyListFeatureController:
@@ -8,7 +8,8 @@ class MoveAndEditWithTabKeyListFeatureController:
      Additional, the TreeView is assumed to be used as a list not as a tree.
      With the "tab"-key the cell on the right site of the actual focused cell is started to be edit. Changes in the
      gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
-     with the first cell of the next row. With the "shift-tab"-key the inverse functionality of the "tab"-key is provided.
+     with the first cell of the next row. With the "shift-tab"-key the inverse functionality of the "tab"-key is
+     provided.
      The Controller over steps not editable cells.
     """
 
@@ -40,7 +41,7 @@ class MoveAndEditWithTabKeyListFeatureController:
     def tree_view_keypress_callback(self, widget, event):
         # logger.info("key_value: " + str(event.keyval))
 
-        if event.keyval == KEY_TAB or event.keyval == ISO_Left_Tab:
+        if event.keyval == Key_Tab or event.keyval == ISO_Left_Tab:
             [path, focus_column] = self.view.get_cursor()
             # finish active edit process
             if self.last_entry_widget is not None and path:
@@ -53,7 +54,7 @@ class MoveAndEditWithTabKeyListFeatureController:
             if not path:
                 return False
 
-            if event.keyval == KEY_TAB:
+            if event.keyval == Key_Tab:
                 # logger.info("move right")
                 direction = +1
             else:
@@ -63,7 +64,7 @@ class MoveAndEditWithTabKeyListFeatureController:
             # get next row_id for focus
             if direction < 0 and focus_column is self.widget_columns[0] \
                     or direction > 0 and focus_column is self.widget_columns[-1]:
-                if direction < 0 and path[0] > 0 or direction > 0 and not path[0] + 1 > len(self.view.get_model()):
+                if direction < 0 < path[0] or direction > 0 and not path[0] + 1 > len(self.view.get_model()):
                     next_row = path[0] + direction
                 else:
                     return False
@@ -75,7 +76,7 @@ class MoveAndEditWithTabKeyListFeatureController:
             if focus_column_id is not None:
                 # search all columns for next editable cell renderer
                 for index in range(len(self.widget_columns)):
-                    test_id = focus_column_id + direction*index + direction
+                    test_id = focus_column_id + direction * index + direction
                     next_focus_column_id = test_id % len(self.widget_columns)
                     if test_id > len(self.widget_columns) or test_id < 0:
                         next_row = path[0] + direction

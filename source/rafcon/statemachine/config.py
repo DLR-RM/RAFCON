@@ -11,8 +11,8 @@ from os import path
 
 from rafcon.utils.config import DefaultConfig, ConfigError, read_file
 from rafcon.utils import log
-logger = log.get_logger(__name__)
 
+logger = log.get_logger(__name__)
 
 CONFIG_FILE = "config.yaml"
 
@@ -35,6 +35,7 @@ class Config(DefaultConfig):
         if config_file is None:
             config_file = CONFIG_FILE
         super(Config, self).load(config_file, path)
+
 
 # This variable holds the global configuration parameters for the statemachine
 global_config = Config()

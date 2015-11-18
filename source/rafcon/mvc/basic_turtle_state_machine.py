@@ -1,4 +1,5 @@
 from twisted.internet import gtk2reactor
+
 gtk2reactor.install()
 
 from twisted.internet import reactor
@@ -40,9 +41,7 @@ def setup_logger():
 
 
 def create_turtle_statemachine():
-
-    basic_turtle_demo_state = HierarchyState("BasicTurtleDemo", path="../../test_scripts/tutorials/basic_turtle_demo",
-                                             filename="root_state.py")
+    basic_turtle_demo_state = HierarchyState("BasicTurtleDemo")
     basic_turtle_demo_state.add_outcome("Success", 0)
 
     init_ros_node = LibraryState("ros_libraries", "init_ros_node", "0.1", "init ros node")
@@ -54,9 +53,7 @@ def create_turtle_statemachine():
     # Turtle Concurrency State
     ########################################################
 
-    preemptive_concurrency_state = PreemptiveConcurrencyState("Turtle Concurrency State",
-                                                        path="../../test_scripts/tutorials/basic_turtle_demo",
-                                                        filename="root_state.py")
+    preemptive_concurrency_state = PreemptiveConcurrencyState("Turtle Concurrency State")
     preemptive_concurrency_state.add_outcome("Success", 0)
     basic_turtle_demo_state.add_state(preemptive_concurrency_state)
     basic_turtle_demo_state.add_transition(init_ros_node.state_id, 0, preemptive_concurrency_state.state_id, None)
@@ -66,9 +63,7 @@ def create_turtle_statemachine():
     # Subscribe to turtle position concurrency State
     ########################################################
 
-    subscribe_to_turtle_position_hierarchy_state = HierarchyState("Turtle Position Subscriber Hierarchy State",
-                                                     path="../../test_scripts/tutorials/basic_turtle_demo",
-                                                     filename="root_state.py")
+    subscribe_to_turtle_position_hierarchy_state = HierarchyState("Turtle Position Subscriber Hierarchy State")
 
     preemptive_concurrency_state.add_state(subscribe_to_turtle_position_hierarchy_state)
 
@@ -80,9 +75,7 @@ def create_turtle_statemachine():
     ########################################################
     # Move Turtle Hierarchy State
     ########################################################
-    move_turtle_hierarchy_state = HierarchyState("Move Turtle Hierarchy State",
-                                                 path="../../test_scripts/tutorials/basic_turtle_demo",
-                                                 filename="root_state.py")
+    move_turtle_hierarchy_state = HierarchyState("Move Turtle Hierarchy State")
     move_turtle_hierarchy_state.add_outcome("Success", 0)
     preemptive_concurrency_state.add_state(move_turtle_hierarchy_state)
     preemptive_concurrency_state.add_transition(move_turtle_hierarchy_state.state_id, 0, None, 0)
@@ -164,7 +157,7 @@ def run_turtle_demo():
     rafcon.statemachine.singleton.global_storage.base_path = "../../test_scripts/tutorials/basic_turtle_demo_sm"
 
     # load the state machine
-    [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    [state_machine, version, creation_time] = rafcon.statemachine.singleton. \
         global_storage.load_statemachine_from_path("../../test_scripts/tutorials/basic_turtle_demo_sm")
 
     rafcon.statemachine.singleton.library_manager.initialize()
@@ -173,7 +166,7 @@ def run_turtle_demo():
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
-    #main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
+    # main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
     reactor.run()
     gtk.main()

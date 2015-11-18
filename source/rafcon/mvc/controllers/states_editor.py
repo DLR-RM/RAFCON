@@ -1,4 +1,3 @@
-
 import gtk
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -10,6 +9,7 @@ from rafcon.mvc.selection import Selection
 from rafcon.mvc.config import global_gui_config
 from rafcon.utils import constants
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -211,7 +211,8 @@ class StatesEditorController(ExtendedController):
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
             self.add_controller(state_identifier, state_editor_ctrl)
             if state_editor_ctrl.get_controller('source_ctrl'):
-                handler_id = state_editor_view['source_view'].get_buffer().connect('changed', self.script_text_changed, state_m)
+                handler_id = state_editor_view['source_view'].get_buffer().connect('changed', self.script_text_changed,
+                                                                                   state_m)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -276,7 +277,8 @@ class StatesEditorController(ExtendedController):
         """
         # logger.info("destroy page %s" % tab_dict['controller'].model.state.get_path())
         if tab_dict['source_code_changed_handler_id'] is not None:
-            tab_dict['controller'].view['source_view'].get_buffer().disconnect(tab_dict['source_code_changed_handler_id'])
+            tab_dict['controller'].view['source_view'].get_buffer().disconnect(
+                tab_dict['source_code_changed_handler_id'])
         self.remove_controller(tab_dict['controller'])
         # tab_dict['controller'].view.get_top_widget().destroy()
 
@@ -416,7 +418,6 @@ class StatesEditorController(ExtendedController):
         for state_identifier in states_to_be_closed:
             self.close_page(state_identifier, delete=False)
 
-
     @ExtendedController.observe("selection", after=True)
     def selection_notification(self, model, property, info):
         """If a single state is selected, open the corresponding tab
@@ -438,6 +439,7 @@ class StatesEditorController(ExtendedController):
         the parent state model. Therefore, we use the helper method close_state_of_parent, which looks at all open
         tabs as well as closed tabs and the ids of their states.
         """
+
         def close_state_of_parent(parent_state_m, state_id):
 
             # logger.debug("tabs before are:")
@@ -458,9 +460,10 @@ class StatesEditorController(ExtendedController):
             for tab_info in self.closed_tabs.itervalues():
                 state_m = tab_info['controller'].model
                 # The state id is only unique within the parent
-                # logger.debug("closed_tabs: %s %s %s %s" % (state_m.state.state_id, state_id, state_m.parent, parent_state_m))
+                # logger.debug("closed_tabs: %s %s %s %s" % (state_m.state.state_id, state_id, state_m.parent,
+                # parent_state_m))
                 if state_m.state.state_id == state_id and state_m.parent is parent_state_m:
-                        # state_identifier in self.closed_tabs or state_identifier in self.tabs:
+                    # state_identifier in self.closed_tabs or state_identifier in self.tabs:
                     state_identifier = self.get_state_identifier(state_m)
                     self.close_page(state_identifier, delete=True)
                     return True

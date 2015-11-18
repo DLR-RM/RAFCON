@@ -1,4 +1,5 @@
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 from rafcon.statemachine.enums import StateType
@@ -14,14 +15,14 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
-from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView, FromScopedVariableDataFlowView,\
-    ToScopedVariableDataFlowView
+from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
 
 from rafcon.mvc.config import global_gui_config
 
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 
 from functools import partial
+
 
 class GraphicalEditorController(ExtendedController):
     """Controller handling the graphical editor
@@ -420,7 +421,6 @@ class GraphicalEditorController(ExtendedController):
             logger.debug("The root state was exchanged")
             self.root_state_m = model.root_state
 
-
     @ExtendedController.observe("selection", after=True)
     def selection_change(self, model, prop_name, info):
         """Called when the selection was changed externally
@@ -617,7 +617,7 @@ class GraphicalEditorController(ExtendedController):
         child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
 
         return self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
-                         hierarchy_level=new_state_hierarchy_level)
+                                hierarchy_level=new_state_hierarchy_level)
 
     def _remove_state_view(self, view):
         selection = self.model.selection.get_all()
@@ -727,7 +727,6 @@ class GraphicalEditorController(ExtendedController):
         parent_state_v = parent_state_m.temp['gui']['editor']['view']
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
-
             transition_v = TransitionView(transition_m, hierarchy_level)
             self.canvas.add(transition_v, parent_state_v)
 
@@ -764,7 +763,8 @@ class GraphicalEditorController(ExtendedController):
                 from_state_v = from_state_m.temp['gui']['editor']['view']
                 from_outcome_id = transition_m.transition.from_outcome
                 from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
-                # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v, transition_v.from_handle(), False)
+                # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v,
+                # transition_v.from_handle(), False)
 
             to_state_id = transition_m.transition.to_state
 
@@ -797,7 +797,6 @@ class GraphicalEditorController(ExtendedController):
         parent_state_v = parent_state_m.temp['gui']['editor']['view']
         assert isinstance(parent_state_v, StateView)
         for data_flow_m in parent_state_m.data_flows:
-
             from_state_id = data_flow_m.data_flow.from_state
             from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
                 from_state_id]

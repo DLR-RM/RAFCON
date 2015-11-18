@@ -13,6 +13,7 @@ class Vividict(dict, YAMLObject, JSONObject):
     yaml_tag = u'!Vividict'
 
     def __init__(self, dictionary=None):
+        super(Vividict, self).__init__()
         if dictionary:
             self.set_dict(dictionary)
 

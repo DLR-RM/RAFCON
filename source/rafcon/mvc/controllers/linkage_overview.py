@@ -1,16 +1,15 @@
-import gtk
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 
 from rafcon.mvc.controllers import DataPortListController, ScopedVariableListController, \
     StateOutcomesEditorController
 
+
 # from rafcon.utils import log
 # logger = log.get_logger(__name__)
 
 
 class LinkageOverviewController(ExtendedController, Model):
-
     def __init__(self, model, view):
         ExtendedController.__init__(self, model, view)
 

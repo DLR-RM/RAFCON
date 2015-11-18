@@ -79,7 +79,7 @@ class Script(Observable, yaml.YAMLObject):
         if filename:
             self._filename = filename
 
-    def execute(self, state, inputs={}, outputs={}, backward_execution=False):
+    def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """
         Execute the custom "execute" function specified in the script.
         :param state: the state to which runs the execute function
@@ -87,6 +87,10 @@ class Script(Observable, yaml.YAMLObject):
         :param outputs: the output data of the script
         :return:
         """
+        if not outputs:
+            outputs = {}
+        if not inputs:
+            inputs = {}
         if backward_execution:
             if hasattr(self._compiled_module, "backward_execute"):
                 return self._compiled_module.backward_execute(

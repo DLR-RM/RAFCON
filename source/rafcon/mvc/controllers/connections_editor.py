@@ -1,5 +1,5 @@
-
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -8,7 +8,6 @@ from rafcon.mvc.controllers.state_data_flows import StateDataFlowsEditorControll
 
 
 class StateConnectionsEditorController(ExtendedController):
-
     """Controller handling the view of properties/attributes of the ContainerStateModel and StateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -70,7 +69,7 @@ class StateConnectionsEditorController(ExtendedController):
         Each property of the state should have its own adapter, connecting a label in the View with the attribute of
         the State.
         """
-        #self.adapt(self.__state_property_adapter("name", "input_name"))
+        # self.adapt(self.__state_property_adapter("name", "input_name"))
 
     def toggled_button(self, button, name=None):
         pass
@@ -121,9 +120,8 @@ class StateConnectionsEditorController(ExtendedController):
         #                            value_error=value_error)
         # adapter.connect_widget(view[label])
         # return adapter
-    
+
     @staticmethod
     def _value_error(adapt, prop_name, value):
         logger.warning("Invalid value '{val:s}' for key '{prop:s}'.".format(val=value, prop=prop_name))
         adapt.update_widget()  # Update widget values with values from model
-

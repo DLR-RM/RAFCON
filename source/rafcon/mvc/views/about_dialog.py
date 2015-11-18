@@ -2,7 +2,6 @@ import gtk
 
 
 class MyAboutDialog(gtk.AboutDialog):
-
     def __init__(self):
         gtk.AboutDialog.__init__(self)
 

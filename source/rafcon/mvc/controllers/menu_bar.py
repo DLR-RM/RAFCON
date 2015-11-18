@@ -18,6 +18,7 @@ from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.utils.dialog import RAFCONDialog
 from rafcon.utils import gui_helper
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -73,11 +74,14 @@ class MenuBarController(ExtendedController):
         shortcut_manager.add_callback_for_action('start', partial(self.call_action_callback, "on_start_activate"))
         shortcut_manager.add_callback_for_action('stop', partial(self.call_action_callback, "on_stop_activate"))
         shortcut_manager.add_callback_for_action('pause', partial(self.call_action_callback, "on_pause_activate"))
-        shortcut_manager.add_callback_for_action('step_mode', partial(self.call_action_callback, "on_step_mode_activate"))
+        shortcut_manager.add_callback_for_action('step_mode',
+                                                 partial(self.call_action_callback, "on_step_mode_activate"))
         shortcut_manager.add_callback_for_action('step', partial(self.call_action_callback, "on_step_activate"))
-        shortcut_manager.add_callback_for_action('backward_step', partial(self.call_action_callback, "on_backward_step_activate"))
+        shortcut_manager.add_callback_for_action('backward_step',
+                                                 partial(self.call_action_callback, "on_backward_step_activate"))
 
-        shortcut_manager.add_callback_for_action('reload', partial(self.call_action_callback, "on_refresh_all_activate"))
+        shortcut_manager.add_callback_for_action('reload',
+                                                 partial(self.call_action_callback, "on_refresh_all_activate"))
 
         shortcut_manager.add_callback_for_action('show_data_flows', self.show_all_data_flows_toggled_shortcut)
         shortcut_manager.add_callback_for_action('show_data_values', self.show_show_data_flow_values_toggled_shortcut)
@@ -114,9 +118,9 @@ class MenuBarController(ExtendedController):
         def grab_focus():
             editor_controller = self.state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
             editor_controller.view.editor.grab_focus()
+
         # The editor parameter of view is created belated, thus we have to use idle_add again
         glib.idle_add(grab_focus)
-
 
     def on_open_activate(self, widget=None, data=None, path=None):
         if path is None:
@@ -150,8 +154,11 @@ class MenuBarController(ExtendedController):
 
         all_tabs = self.states_editor_ctrl.tabs.values()
         all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
-        dirty_source_editors = [tab_dict['controller'] for tab_dict in all_tabs if tab_dict['source_code_view_is_dirty'] is True
-                                and tab_dict['state_m'].state.get_sm_for_state().state_machine_id == state_machine_m.state_machine.state_machine_id]
+        dirty_source_editors = [tab_dict['controller'] for tab_dict in all_tabs if
+                                tab_dict['source_code_view_is_dirty'] is True
+                                and tab_dict[
+                                    'state_m'].state.get_sm_for_state().state_machine_id ==
+                                state_machine_m.state_machine.state_machine_id]
 
         for dirty_source_editor in dirty_source_editors:
             def on_message_dialog_response_signal(widget, response_id):
@@ -165,7 +172,8 @@ class MenuBarController(ExtendedController):
                     widget.destroy()
 
             dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
-            message_string = "Are you sure you want to store the state machine without storing source Code in editing?\n\n" \
+            message_string = "Are you sure you want to store the state machine without storing source Code in " \
+                             "editing?\n\n" \
                              "The changes of state: %s name: %s have to be stored or ignored while saving. " % \
                              (dirty_source_editor.model.state.get_path(), dirty_source_editor.model.state.name)
             dialog.set_markup(message_string)
@@ -218,7 +226,8 @@ class MenuBarController(ExtendedController):
         else:
             all_tabs = self.states_editor_ctrl.tabs.values()
             all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
-            dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if tab_dict['source_code_view_is_dirty'] is True]
+            dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
+                                   tab_dict['source_code_view_is_dirty'] is True]
             if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
 
                 def on_message_dialog_response_signal(widget, response_id):
@@ -230,13 +239,16 @@ class MenuBarController(ExtendedController):
 
                 dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
                 message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
-                                 "The following elements have been modified and not saved. "\
+                                 "The following elements have been modified and not saved. " \
                                  "These changes will get lost:"
                 for sm_id, sm in state_machine_manager.state_machines.iteritems():
                     if sm.marked_dirty:
-                        message_string = "%s\nstate machine: #%s: %s " % (message_string, str(sm_id), sm.root_state.name)
+                        message_string = "%s\nstate machine: #%s: %s " % (
+                            message_string, str(sm_id), sm.root_state.name)
                 for ctrl in dirty_source_editor:
-                    message_string = "%s\nstate source: %s: %s of sm_id: #%s" % (message_string, ctrl.model.state.get_path(), ctrl.model.state.name, str(ctrl.model.state.get_sm_for_state().state_machine_id))
+                    message_string = "%s\nstate source: %s: %s of sm_id: #%s" % (
+                        message_string, ctrl.model.state.get_path(), ctrl.model.state.name,
+                        str(ctrl.model.state.get_sm_for_state().state_machine_id))
                 dialog.set_markup(message_string)
                 dialog.add_button("Reload anyway", 42)
                 dialog.add_button("Cancel", 43)
@@ -266,7 +278,7 @@ class MenuBarController(ExtendedController):
                 new_path = path_items[0]
                 for i in range(len(path_items) - 2):
                     new_path = "%s/%s" % (new_path, path_items[i + 1])
-                #print new_path
+                # print new_path
                 state_machine_id_to_path[sm_id] = new_path
                 sm_keys.append(sm_id)
 
@@ -312,7 +324,7 @@ class MenuBarController(ExtendedController):
 
             dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
-                             "The following state machines have been modified and not saved. "\
+                             "The following state machines have been modified and not saved. " \
                              "These changes will get lost:"
             for sm_id, sm in state_machine_manager.state_machines.iteritems():
                 if sm.marked_dirty:

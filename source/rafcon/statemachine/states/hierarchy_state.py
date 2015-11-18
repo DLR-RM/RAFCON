@@ -133,7 +133,7 @@ class HierarchyState(ContainerState):
                     assert isinstance(last_history_item, CallItem)
                     # copy the scoped_data of the history from the point before the child_state was executed
                     self.scoped_data = last_history_item.scoped_data
-                    logger.debug("Finished backward executing the child state with name %s!" % (child_state.name))
+                    logger.debug("Finished backward executing the child state with name %s!" % child_state.name)
 
                     # this is a look-ahead step to directly leave this hierarchy-state if the last child_state
                     # was executed; this leads to the backward and forward execution of a hierarchy child_state having the

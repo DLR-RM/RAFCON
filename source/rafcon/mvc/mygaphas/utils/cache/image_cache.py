@@ -1,4 +1,3 @@
-
 from cairo import ImageSurface, FORMAT_ARGB32, Context
 from gtk.gdk import CairoContext
 
@@ -8,7 +7,6 @@ from rafcon.mvc.config import global_gui_config
 
 
 class ImageCache(object):
-
     def __init__(self, multiplicator=2):
         """The ImageCache class can be used for caching ImageSurfaces
 
@@ -28,7 +26,7 @@ class ImageCache(object):
         self.__zoom_multiplicator = multiplicator
         self.__limiting_multiplicator = 1
 
-    def get_cached_image(self, width, height, zoom, parameters={}, clear=False):
+    def get_cached_image(self, width, height, zoom, parameters=None, clear=False):
         """Get ImageSurface object, if possible, cached
 
         The method checks whether the image was already rendered. This is done by comparing the passed size and
@@ -43,6 +41,9 @@ class ImageCache(object):
           surface or a blank one with the desired size; The zoom parameter when the image was stored
         :rtype: bool, ImageSurface, float
         """
+        if not parameters:
+            parameters = {}
+
         if self.__compare_parameters(width, height, zoom, parameters) and not clear:
             return True, self.__image, self.__zoom
 
@@ -54,7 +55,7 @@ class ImageCache(object):
             self.__limiting_multiplicator = max_allowed_size_length / max_side_length
 
         image = ImageSurface(self.__format, int(ceil(width * zoom * self.multiplicator)),
-                                            int(ceil(height * zoom * self.multiplicator)))
+                             int(ceil(height * zoom * self.multiplicator)))
 
         self.__set_cached_image(image, width, height, zoom, parameters)
         return False, self.__image, zoom
@@ -93,7 +94,7 @@ class ImageCache(object):
         c.scale(zoom * self.multiplicator, zoom * self.multiplicator)
         return c
 
-    def __set_cached_image(self, image, width, height, zoom, parameters={}):
+    def __set_cached_image(self, image, width, height, zoom, parameters):
         self.__image = image
         self.__width = width
         self.__height = height

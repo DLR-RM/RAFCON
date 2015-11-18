@@ -34,7 +34,8 @@ class GuiConfig(DefaultConfig):
             config_file = CONFIG_FILE
         super(GuiConfig, self).load(config_file, path)
 
-    def configure_gtk(self):
+    @staticmethod
+    def configure_gtk():
         import gtk
         file_path = os.path.dirname(os.path.realpath(__file__))
         gtkrc_path = os.path.join(file_path, 'themes', 'black', 'gtk-2.0', 'gtkrc')

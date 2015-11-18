@@ -1,4 +1,5 @@
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 from gaphas.constraint import Constraint
@@ -84,7 +85,6 @@ class KeepPointWithinConstraint(KeepRectangleWithinConstraint):
 
 
 class KeepRelativePositionConstraint(Constraint):
-
     def __init__(self, anchor, point):
         super(KeepRelativePositionConstraint, self).__init__(anchor[0], anchor[1], point[0], point[1])
 
@@ -100,7 +100,6 @@ class KeepRelativePositionConstraint(Constraint):
 
 
 class KeepPortDistanceConstraint(Constraint):
-
     def __init__(self, anchor, point, port, port_side_size, incoming):
         super(KeepPortDistanceConstraint, self).__init__(anchor[0], anchor[1], point[0], point[1])
         assert isinstance(port, PortView)
@@ -116,15 +115,19 @@ class KeepPortDistanceConstraint(Constraint):
         distance = self.distance
         if self.port.side is SnappedSide.TOP:
             _update(self.point[0], self.anchor[0])
-            _update(self.point[1], self.anchor[1].value - distance if self.incoming else self.anchor[1].value + distance)
+            _update(self.point[1],
+                    self.anchor[1].value - distance if self.incoming else self.anchor[1].value + distance)
         elif self.port.side is SnappedSide.BOTTOM:
             _update(self.point[0], self.anchor[0])
-            _update(self.point[1], self.anchor[1].value + distance if self.incoming else self.anchor[1].value - distance)
+            _update(self.point[1],
+                    self.anchor[1].value + distance if self.incoming else self.anchor[1].value - distance)
         elif self.port.side is SnappedSide.LEFT:
-            _update(self.point[0], self.anchor[0].value - distance if self.incoming else self.anchor[0].value + distance)
+            _update(self.point[0],
+                    self.anchor[0].value - distance if self.incoming else self.anchor[0].value + distance)
             _update(self.point[1], self.anchor[1])
         elif self.port.side is SnappedSide.RIGHT:
-            _update(self.point[0], self.anchor[0].value + distance if self.incoming else self.anchor[0].value - distance)
+            _update(self.point[0],
+                    self.anchor[0].value + distance if self.incoming else self.anchor[0].value - distance)
             _update(self.point[1], self.anchor[1])
 
 

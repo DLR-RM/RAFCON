@@ -12,6 +12,7 @@ from rafcon.mvc.models.abstract_state import state_to_state_model
 from rafcon.statemachine.singleton import library_manager
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 

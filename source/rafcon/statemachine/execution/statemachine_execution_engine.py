@@ -11,15 +11,14 @@ import Queue
 
 from gtkmvc import Observable
 from gtkmvc import ModelMT
-from rafcon.statemachine.execution.execution_history import ExecutionHistory
 from rafcon.statemachine.execution.statemachine_status import StateMachineStatus
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 
 class StatemachineExecutionEngine(ModelMT, Observable):
-
     """A class that cares for the execution of the statemachine
 
     :ivar state_machine_manager: holds the state machine manager of all states that can be executed
@@ -47,7 +46,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._forward_step = True
         self.start_state_paths = []
 
-    #TODO: pause all external modules
+    # TODO: pause all external modules
     @Observable.observed
     def pause(self):
         """Set the execution mode to paused
@@ -89,7 +88,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
             self._execution_started = True
 
-    #TODO: stop all external modules
+    # TODO: stop all external modules
     @Observable.observed
     def stop(self):
         """Set the execution mode to stopped
@@ -202,7 +201,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
         import rafcon.statemachine.singleton
         rafcon.statemachine.singleton.library_manager.initialize()
-        [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+        [state_machine, version, creation_time] = rafcon.statemachine.singleton. \
             global_storage.load_statemachine_from_path(path)
         rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
         rafcon.statemachine.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
@@ -216,9 +215,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             rafcon.statemachine.singleton.state_machine_execution_engine.stop()
         return sm
 
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    #########################################################################
+    # Properties for all class fields that must be observed by gtkmvc
+    #########################################################################
 
     @property
     def status(self):

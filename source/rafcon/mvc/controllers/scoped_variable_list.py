@@ -1,8 +1,5 @@
 import gtk
 from gtk import ListStore
-import gobject
-from gtk.keysyms import Tab as KEY_TAB, ISO_Left_Tab
-import traceback
 
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import log

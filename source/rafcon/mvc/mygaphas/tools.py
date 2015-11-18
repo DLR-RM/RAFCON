@@ -3,7 +3,6 @@ from gtk.gdk import CONTROL_MASK
 from enum import Enum
 from math import pow
 
-
 from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc import statemachine_helper
 
@@ -14,7 +13,7 @@ from gaphas.item import NW
 from gaphas.aspect import HandleFinder, ItemConnectionSink
 
 from rafcon.mvc.mygaphas.aspect import HandleInMotion, Connector, StateHandleFinder
-from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView,\
+from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, \
     DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
@@ -23,8 +22,8 @@ from rafcon.mvc.mygaphas.utils import gap_helper
 
 from rafcon.utils import constants
 from rafcon.utils import log
-logger = log.get_logger(__name__)
 
+logger = log.get_logger(__name__)
 
 PortMoved = Enum('PORT', 'FROM TO')
 
@@ -72,8 +71,8 @@ class MoveItemTool(ItemTool):
             self._item = item
 
         if (isinstance(self.view.focused_item, NameView) and not
-                state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
-                    self.view.focused_item.parent.model)):
+        state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
+            self.view.focused_item.parent.model)):
             self.view.focused_item = self.view.focused_item.parent
             self._item = self.view.focused_item
 
@@ -139,7 +138,6 @@ class MoveItemTool(ItemTool):
 
 
 class HoverItemTool(HoverTool):
-
     def __init__(self, view=None):
         super(HoverItemTool, self).__init__(view)
         self._prev_hovered_item = None
@@ -214,7 +212,6 @@ class HoverItemTool(HoverTool):
 
 
 class MultiselectionTool(RubberbandTool):
-
     def __init__(self, graphical_editor_view, view=None):
         super(MultiselectionTool, self).__init__(view)
 
@@ -227,7 +224,7 @@ class MultiselectionTool(RubberbandTool):
 
     def on_motion_notify(self, event):
         if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.CONTROL_MASK and \
-                event.state & gtk.gdk.SHIFT_MASK:
+                        event.state & gtk.gdk.SHIFT_MASK:
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -258,7 +255,6 @@ class MultiselectionTool(RubberbandTool):
 
 
 class HandleMoveTool(HandleTool):
-
     def __init__(self, graphical_editor_view, view=None):
         super(HandleMoveTool, self).__init__(view)
 
@@ -336,7 +332,7 @@ class HandleMoveTool(HandleTool):
                 self._handle_data_flow_view_change(connection_v, handle)
         # if connection has been put back to original position or is released on empty space, reset the connection
         elif (not self._last_active_port or
-              self._last_active_port is self._start_port and connection_v) and not handle_is_waypoint:
+                          self._last_active_port is self._start_port and connection_v) and not handle_is_waypoint:
             if isinstance(connection_v, TransitionView):
                 self._reset_transition(connection_v, handle, self._start_port.parent)
             elif isinstance(connection_v, DataFlowView):
@@ -396,8 +392,8 @@ class HandleMoveTool(HandleTool):
 
             # If the start state has a parent continue (ensure no transition is created from top level state)
             if (start_port and (isinstance(start_state_parent, StateView) or
-                                (start_state_parent is None and isinstance(start_port, (IncomeView, InputPortView,
-                                                                                        ScopedVariablePortView))))):
+                                    (start_state_parent is None and isinstance(start_port, (IncomeView, InputPortView,
+                                                                                            ScopedVariablePortView))))):
 
                 # Go up one hierarchy_level to match the transitions line width
                 transition_placeholder = isinstance(start_port, IncomeView) or isinstance(start_port, OutcomeView)
@@ -651,7 +647,8 @@ class HandleMoveTool(HandleTool):
                         if self.set_matching_port(state.outputs, item.port, handle, connection):
                             return
                 elif (isinstance(connection, DataFlowView) or
-                        (isinstance(connection, ConnectionPlaceholderView) and not connection.transition_placeholder)):
+                          (isinstance(connection,
+                                      ConnectionPlaceholderView) and not connection.transition_placeholder)):
                     if self.set_matching_port(state.get_data_ports(), item.port, handle, connection):
                         return
         self.disconnect_last_active_port(handle, connection)

@@ -10,15 +10,14 @@
 
 from enum import Enum
 
-
 Strategy = Enum('ValidityChecker', 'DEFAULT NONE LIGHT AGGRESSIVE')
 
 
-class VCStrategy():
-
+class VCStrategy:
     """A base class for collecting useful functionality, that is needed by all validity check implementations
 
     """
+
     def __init__(self):
         pass
 

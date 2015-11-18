@@ -23,7 +23,6 @@ from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
 
 class PortView(object):
-
     def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
         self.handle = Handle(connectable=True)
         self.port = RectanglePointPort(self.handle.pos, port_side_size, port_side_size)
@@ -406,7 +405,6 @@ class PortView(object):
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
         c.stroke()
 
-
     @staticmethod
     def _draw_single_connector(context, width, height):
         """Draw the connector for execution states
@@ -424,15 +422,15 @@ class PortView(object):
         arrow_height = height / 6.
 
         # First move to bottom left corner
-        c.rel_move_to(-width/2., height/2.)
+        c.rel_move_to(-width / 2., height / 2.)
         # Draw line to bottom right corner
         c.rel_line_to(width, 0)
         # Draw line to upper right corner
         c.rel_line_to(0, -(height - arrow_height))
         # Draw line to center top (arrow)
-        c.rel_line_to(-width/2., -arrow_height)
+        c.rel_line_to(-width / 2., -arrow_height)
         # Draw line to upper left corner
-        c.rel_line_to(-width/2., arrow_height)
+        c.rel_line_to(-width / 2., arrow_height)
         # Draw line back to the origin (lower left corner)
         c.close_path()
 
@@ -454,7 +452,7 @@ class PortView(object):
         connector_height = (height - gap) / 2.
 
         # First move to bottom left corner
-        c.rel_move_to(-width/2., height/2.)
+        c.rel_move_to(-width / 2., height / 2.)
 
         # Draw inner connector (rectangle)
         c.rel_line_to(width, 0)
@@ -481,16 +479,16 @@ class PortView(object):
         connector_height = (height - gap) / 2.
 
         # Move to bottom left corner of outer connector
-        c.rel_move_to(-width/2., -gap/2.)
+        c.rel_move_to(-width / 2., -gap / 2.)
 
         # Draw line to bottom right corner
         c.rel_line_to(width, 0)
         # Draw line to upper right corner
         c.rel_line_to(0, -(connector_height - arrow_height))
         # Draw line to center top (arrow)
-        c.rel_line_to(-width/2., -arrow_height)
+        c.rel_line_to(-width / 2., -arrow_height)
         # Draw line to upper left corner
-        c.rel_line_to(-width/2., arrow_height)
+        c.rel_line_to(-width / 2., arrow_height)
         # Draw line back to the origin (lower left corner)
         c.close_path()
 
@@ -506,7 +504,7 @@ class PortView(object):
         """
         c = context
         # First move to upper left corner
-        c.rel_move_to(-width/2., -height/2.)
+        c.rel_move_to(-width / 2., -height / 2.)
         # Draw closed rectangle
         c.rel_line_to(width, 0)
         c.rel_line_to(0, height)
@@ -548,7 +546,6 @@ class LogicPortView(PortView):
 
 
 class IncomeView(LogicPortView):
-
     def __init__(self, parent, port_side_size):
         super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent,
                                          side=SnappedSide.LEFT)
@@ -558,7 +555,6 @@ class IncomeView(LogicPortView):
 
 
 class OutcomeView(LogicPortView):
-
     def __init__(self, outcome_m, parent, port_side_size):
         super(OutcomeView, self).__init__(in_port=False, port_side_size=port_side_size, name=outcome_m.outcome.name,
                                           parent=parent)
@@ -597,7 +593,6 @@ class OutcomeView(LogicPortView):
 
 
 class ScopedVariablePortView(PortView):
-
     def __init__(self, parent, port_side_size, scoped_variable_m):
         super(ScopedVariablePortView, self).__init__(False, port_side_size, parent=parent, side=SnappedSide.TOP)
 
@@ -783,7 +778,6 @@ class ScopedVariablePortView(PortView):
 
 
 class DataPortView(PortView):
-
     def __init__(self, in_port, parent, port_m, side, port_side_size):
         assert isinstance(port_m, DataPortModel)
         super(DataPortView, self).__init__(in_port=in_port, port_side_size=port_side_size, name=port_m.data_port.name,
@@ -815,7 +809,6 @@ class DataPortView(PortView):
 
 
 class InputPortView(DataPortView):
-
     def __init__(self, parent, port_m, port_side_size):
         super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size)
         self.label_print_inside = False
@@ -828,7 +821,6 @@ class InputPortView(DataPortView):
 
 
 class OutputPortView(DataPortView):
-
     def __init__(self, parent, port_m, port_side_size):
         super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT, port_side_size)
         self.label_print_inside = True

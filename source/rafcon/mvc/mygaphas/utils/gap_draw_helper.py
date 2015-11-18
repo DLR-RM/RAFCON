@@ -265,7 +265,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     elif label_position is SnappedSide.LEFT:
         label_angle = deg2rad(90)
         text_angle = 0
-    elif label_position is SnappedSide.TOP:
+    else:  # label_position is SnappedSide.TOP:
         label_angle = deg2rad(180)
         text_angle = deg2rad(90)
 

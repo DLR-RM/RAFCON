@@ -3,8 +3,7 @@ import gobject
 from gtkmvc import View
 from rafcon.utils import constants
 
-
-gobject.signal_new("tab_close_event", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int, ))
+gobject.signal_new("tab_close_event", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int,))
 
 
 class StatesEditorView(View):
