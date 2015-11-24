@@ -3,7 +3,7 @@ from rafcon_server.mvc.models.connection_manager import ConnectionManagerModel
 from rafcon.network.protobuf import yaml_transmission_pb2
 from rafcon.network.network_config import global_net_config
 
-import rafcon.utils.storage_utils as storage_utils
+from rafcon.utils import filesystem
 from rafcon.utils import constants
 
 from rafcon.statemachine.states.container_state import ContainerState
@@ -52,7 +52,7 @@ class DebugViewController(ExtendedController):
         self.last_active_state_message = ""
 
         if not os.path.exists(TEMP_FOLDER):
-            storage_utils.create_path(TEMP_FOLDER)
+            filesystem.create_path(TEMP_FOLDER)
         self.multiprocessing_queue = multiprocessing_queue
 
     @property
@@ -111,7 +111,7 @@ class DebugViewController(ExtendedController):
         self.send_message_to_selected_connection(self.view["entry"].get_text(), True)
 
     def on_window_destroy(self, widget, event=None):
-        storage_utils.remove_path(TEMP_FOLDER)
+        filesystem.remove_path(TEMP_FOLDER)
         reactor.stop()
         gtk.main_quit()
 
@@ -276,7 +276,7 @@ class DebugViewController(ExtendedController):
         for f in files:
             dirname = os.path.dirname(TEMP_FOLDER + f.file_path)
             if not os.path.exists(dirname):
-                storage_utils.create_path(dirname)
+                filesystem.create_path(dirname)
             if not os.path.exists(TEMP_FOLDER + f.file_path):
                 new_file = open(TEMP_FOLDER + f.file_path, 'wb')
                 new_file.write(f.file_content)

@@ -2,17 +2,14 @@ import gtk.gdk
 
 FONT_NAMES = ["DIN Next LT Pro", "FontAwesome"]
 STYLE_NAMES = ["awesome_style.xml"]
-FONT_STYLE_PATHS = {"DIN Next LT Pro":    "themes/black/fonts/DIN Next LT Pro",
-                    "FontAwesome":        "themes/black/fonts/FontAwesome.otf",
-                    "awesome_style.xml":  "themes/black/gtksw-styles/awesome_style.xml"}
+FONT_STYLE_PATHS = {"DIN Next LT Pro":    "themes/dark/fonts/DIN Next LT Pro",
+                    "FontAwesome":        "themes/dark/fonts/FontAwesome.otf",
+                    "awesome_style.xml":  "themes/dark/gtksw-styles/awesome_style.xml"}
 
 ICON_FONT = FONT_NAMES[1]
 FONT_SIZE_SMALL = "10"
 FONT_SIZE_NORMAL = "12"
 FONT_SIZE_BIG = "14"
-
-TEXT_COLOR = "#fefefe"
-TEXT_COLOR_DARK = "#8f9195"
 
 LETTER_SPACING_NONE = "0"
 LETTER_SPACING_05PT = "512"
@@ -20,42 +17,6 @@ LETTER_SPACING_075PT = "756"
 LETTER_SPACING_1PT = "1024"
 LETTER_SPACING_2PT = "2048"
 LETTER_SPACING_3PT = "3072"
-
-BLACK_COLOR = '#000'
-
-LABEL_COLOR = '#fff'
-
-ABORTED_COLOR = '#f21000'
-PREEMPTED_COLOR = '#359dff'
-
-STATE_NAME_COLOR = '#ededee'
-
-TRANSITION_LINE_COLOR = '#81848b'
-TRANSITION_LINE_COLOR_SELECTED = '#c9ced8'
-TRANSITION_HANDLE_FILL_COLOR = '#c9ced8'
-TRANSITION_HANDLE_BORDER_COLOR = '#333'
-
-DATA_PORT_COLOR = '#ffd24d'
-
-DATA_LINE_COLOR = '#6c5e3c'
-DATA_LINE_COLOR_SELECTED = '#dec17c'
-
-DATA_VALUE_BACKGROUND_COLOR = '#ced3dc'
-
-SCOPED_VARIABLE_TEXT_COLOR = '#121921'
-
-STATE_BACKGROUND_COLOR = '#383d47'
-STATE_BORDER_COLOR = '#50555f'
-STATE_SELECTED_COLOR = '#466e97'
-STATE_SELECTED_OUTER_BOUNDARY_COLOR = '#2e9aff'
-STATE_ACTIVE_COLOR = '#5b8d4f'
-STATE_ACTIVE_BORDER_COLOR = '#94e480'
-STATE_RESIZE_HANDLE_FILL_COLOR = '#2896ff'
-STATE_RESIZE_HANDLE_BORDER_COLOR = '#373c47'
-
-NAME_RESIZE_HANDLE_FILL_COLOR = '#ddd'
-NAME_RESIZE_HANDLE_BORDER_COLOR = '#333'
-
 
 # Cursors
 MOVE_CURSOR = gtk.gdk.FLEUR
@@ -68,9 +29,6 @@ MAX_VALUE_LABEL_TEXT_LENGTH = 7
 BORDER_WIDTH_ROOT_STATE = 5.
 BORDER_WIDTH_HIERARCHY_SCALE_FACTOR = 2.
 
-MAX_TITLE_LENGTH_PER_LINE = 20
-
-INITIAL_DISTANCE_BETWEEN_PORTS_MULTIPLIER = 2  # * border_width (just for reference)
 
 MAIN_WINDOW_BORDER_WIDTH = 3
 BORDER_WIDTH = 5
@@ -134,8 +92,6 @@ ICON_EHIST = "f1b3"
 ICON_NET = "f0ec"
 
 ICON_STICKY = "f08d"
-
-GRAPHICAL_EDITOR_COLOR_BACKGROUND = 0x272c36
 
 # MAXIMUM_MESSAGE_LENGTH = 460    # in characters
 CHECKSUM_LENGTH = 39

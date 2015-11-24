@@ -1,9 +1,11 @@
-import gtk
 import os
 import sys
 import shutil
+import re
+import gtk
+from gtk.gdk import color_parse
 
-from rafcon.utils.config import DefaultConfig, ConfigError, read_file
+from rafcon.utils.config import DefaultConfig, ConfigError
 from rafcon.utils import filesystem
 from rafcon.utils import constants
 from rafcon.utils import log
@@ -11,13 +13,15 @@ logger = log.get_logger(__name__)
 
 CONFIG_FILE = "gui_config.yaml"
 
-DEFAULT_CONFIG = read_file(os.path.dirname(__file__), CONFIG_FILE)
+DEFAULT_CONFIG = filesystem.read_file(os.path.dirname(__file__), CONFIG_FILE)
 
 
 class GuiConfig(DefaultConfig):
     """
     Class to hold and load the global GUI configurations.
     """
+
+    colors = {}
 
     def __init__(self):
         super(GuiConfig, self).__init__(DEFAULT_CONFIG)
@@ -29,6 +33,7 @@ class GuiConfig(DefaultConfig):
         self.configure_gtk()
         self.configure_fonts()
         self.configure_source_view_styles()
+        self.configure_colors()
 
     def load(self, config_file=None, path=None):
         if config_file is None:
@@ -39,7 +44,7 @@ class GuiConfig(DefaultConfig):
     def configure_gtk():
         import gtk
         file_path = os.path.dirname(os.path.realpath(__file__))
-        gtkrc_path = os.path.join(file_path, 'themes', 'black', 'gtk-2.0', 'gtkrc')
+        gtkrc_path = os.path.join(file_path, 'themes', 'dark', 'gtk-2.0', 'gtkrc')
         gtk.rc_parse(gtkrc_path)
 
     def configure_fonts(self):
@@ -89,5 +94,32 @@ class GuiConfig(DefaultConfig):
                 # Copy current version
                 logger.debug("Copy code style '{0}' to '{1}'".format(style, code_style_target_path))
                 shutil.copy(code_style_origin_path, code_style_path)
+
+    def configure_colors(self):
+        theme = self.get_config_value('THEME', 'dark')
+
+        # Get colors from GTKrc file
+        gtkrc_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'gtk-2.0', 'gtkrc')
+        if not os.path.exists(gtkrc_file_path):
+            raise ValueError("GTK theme '{0}' does not exist".format(theme))
+
+        with open(gtkrc_file_path) as f:
+            lines = f.readlines()
+
+        color_dict = {}
+        for line in lines:
+            if re.match("\s*color", line):
+                color = re.findall(r'"(.*?)"', line)
+                color_dict[color[0]] = color_parse(color[1])
+        self.colors = color_dict
+
+        # Get colors from editor
+        try:
+            import importlib
+            editor_colors = importlib.import_module("rafcon.mvc.themes.{0}.editor_colors".format(theme))
+        except ImportError:
+            raise ValueError("Editor theme '{0}' does not exist".format(theme))
+
+        self.colors.update(editor_colors.colors)
 
 global_gui_config = GuiConfig()

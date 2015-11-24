@@ -27,9 +27,6 @@ except ImportError as e:
     # logger.error("%s, %s" % (e.message, traceback.format_exc()))
     GAPHAS_AVAILABLE = False
 
-STATE_MACHINE_ACTIVE_COLOR = "#39af57"
-STATE_MACHINE_NOT_ACTIVE_COLOR = "#fefefe"
-
 
 def create_tab_close_button(callback, *additional_parameters):
     close_button = gtk.Button()

@@ -9,6 +9,7 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager, global_storage, \
     library_manager
 
+from rafcon.mvc import gui_helper
 from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.views.about_dialog import MyAboutDialog
@@ -16,7 +17,6 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.utils.dialog import RAFCONDialog
-from rafcon.utils import gui_helper
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

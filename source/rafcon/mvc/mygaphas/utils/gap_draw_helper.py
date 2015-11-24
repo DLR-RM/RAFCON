@@ -4,6 +4,7 @@ from gtk.gdk import Color
 from pango import SCALE, FontDescription
 from cairo import ANTIALIAS_SUBPIXEL
 
+from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.utils import constants
 from rafcon.utils.geometry import deg2rad
@@ -107,7 +108,7 @@ def draw_data_value_rect(cairo_context, color, value_size, name_size, pos, port_
 
     c.set_source_rgba(*color)
     c.fill_preserve()
-    c.set_source_color(Color(constants.BLACK_COLOR))
+    c.set_source_color(Color(gui_config.colors['BLACK']))
     c.stroke()
 
     return rot_angle, move_x, move_y
@@ -330,9 +331,9 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
             c.new_path()
         else:
             # Draw filled outline
-            c.set_source_rgba(*get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR)))
+            c.set_source_rgba(*get_col_rgba(Color(gui_config.colors['DATA_VALUE_BACKGROUND'])))
             c.fill_preserve()
-            c.set_source_color(Color(constants.BLACK_COLOR))
+            c.set_source_color(Color(gui_config.colors['BLACK']))
             c.stroke()
 
             # Move to the upper left corner of the desired text position
@@ -348,7 +349,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
             # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
             if label_position is SnappedSide.RIGHT:
                 c.rel_move_to(-value_text_size[0], -text_size[1])
-            c.set_source_rgba(*get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
+            c.set_source_rgba(*get_col_rgba(Color(gui_config.colors['SCOPED_VARIABLE_TEXT'])))
             c.update_layout(value_layout)
             c.show_layout(value_layout)
             c.restore()

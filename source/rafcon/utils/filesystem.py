@@ -1,3 +1,5 @@
+import os
+
 
 def create_path(path):
     """Creates a absolute path in the file system.
@@ -34,3 +36,15 @@ def get_md5_file_hash(filename):
             hasher.update(buf)
             buf = afile.read(BLOCKSIZE)
     return hasher.hexdigest()
+
+
+def read_file(path, filename):
+    file_path = os.path.join(os.path.realpath(path), filename)
+
+    file_content = ""
+    if os.path.isfile(file_path):
+        file_pointer = open(file_path, 'r')
+        file_content = file_pointer.read()
+        file_pointer.close()
+
+    return file_content

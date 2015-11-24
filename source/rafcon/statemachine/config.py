@@ -9,14 +9,15 @@
 """
 from os import path
 
-from rafcon.utils.config import DefaultConfig, ConfigError, read_file
+from rafcon.utils.config import DefaultConfig, ConfigError
+from rafcon.utils import filesystem
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 CONFIG_FILE = "config.yaml"
 
-DEFAULT_CONFIG = read_file(path.dirname(__file__), CONFIG_FILE)
+DEFAULT_CONFIG = filesystem.read_file(path.dirname(__file__), CONFIG_FILE)
 
 
 class Config(DefaultConfig):

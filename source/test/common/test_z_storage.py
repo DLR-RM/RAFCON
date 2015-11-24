@@ -233,7 +233,7 @@ def _test_storage_with_gui(caplog):
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(rafcon.__path__[0] + "/mvc/")
-    gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
+    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()

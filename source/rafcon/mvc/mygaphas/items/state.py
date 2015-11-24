@@ -5,7 +5,7 @@ from copy import copy
 
 from rafcon.utils import constants, log
 
-from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 
 import cairo
@@ -22,7 +22,6 @@ from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
-
 
 logger = log.get_logger(__name__)
 
@@ -165,7 +164,7 @@ class StateView(Element):
 
     @property
     def show_data_port_label(self):
-        return global_gui_config.get_config_value("SHOW_DATA_FLOWS")
+        return gui_config.get_config_value("SHOW_DATA_FLOWS")
 
     @property
     def moving(self):
@@ -301,28 +300,28 @@ class StateView(Element):
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
             if self.model.state.active:
-                c.set_source_color(Color(constants.STATE_ACTIVE_COLOR))
+                c.set_source_color(Color(gui_config.colors['STATE_ACTIVE']))
             elif self.selected:
-                c.set_source_color(Color(constants.STATE_SELECTED_COLOR))
+                c.set_source_color(Color(gui_config.colors['STATE_SELECTED']))
             else:
-                c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
+                c.set_source_rgba(*get_col_rgba(Color(gui_config.colors['STATE_BORDER']), self._transparent))
             c.fill_preserve()
             if self.model.state.active:
-                c.set_source_color(Color(constants.STATE_ACTIVE_BORDER_COLOR))
+                c.set_source_color(Color(gui_config.colors['STATE_ACTIVE_BORDER']))
                 c.set_line_width(.25 / self.hierarchy_level * multiplicator)
             elif self.selected:
-                c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
+                c.set_source_color(Color(gui_config.colors['STATE_SELECTED_OUTER_BOUNDARY']))
                 c.set_line_width(.25 / self.hierarchy_level * multiplicator)
             else:
-                c.set_source_color(Color(constants.BLACK_COLOR))
+                c.set_source_color(Color(gui_config.colors['BLACK']))
             c.stroke()
 
             inner_nw, inner_se = self.get_state_drawing_area(self)
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR)))
+            c.set_source_rgba(*get_col_rgba(Color(gui_config.colors['STATE_BACKGROUND'])))
             c.fill_preserve()
             c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
-            c.set_source_color(Color(constants.BLACK_COLOR))
+            c.set_source_color(Color(gui_config.colors['BLACK']))
             c.stroke()
 
             # Copy image surface to current cairo context
@@ -399,7 +398,7 @@ class StateView(Element):
         elif is_library_state:
             alpha = 0.25
 
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), is_library_state,
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(gui_config.colors['STATE_NAME']), is_library_state,
                                                          alpha=alpha))
         c.update_layout(layout)
         c.show_layout(layout)
@@ -778,7 +777,7 @@ class NameView(Element):
 
             if context.selected:
                 c.rectangle(0, 0, self.width, self.height)
-                c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), alpha=.1))
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(gui_config.colors['LABEL']), alpha=.1))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
@@ -805,7 +804,7 @@ class NameView(Element):
                 set_font_description()
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
+            c.set_source_rgba(*get_col_rgba(Color(gui_config.colors['STATE_NAME']), self.parent.transparent))
             c.update_layout(layout)
             c.show_layout(layout)
 
