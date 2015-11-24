@@ -58,9 +58,9 @@ def get_side_length_of_resize_handle(view, item):
     """
     from rafcon.mvc.mygaphas.items.state import StateView, NameView
     if isinstance(item, StateView):
-        return item.port_side_size * view.get_zoom_factor() / 1.5
+        return item.border_width * view.get_zoom_factor() / 1.5
     elif isinstance(item, NameView):
-        return item.parent.port_side_size * view.get_zoom_factor() / 2.5
+        return item.parent.border_width * view.get_zoom_factor() / 2.5
     return 0
 
 

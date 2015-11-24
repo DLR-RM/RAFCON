@@ -17,7 +17,7 @@ class TransitionSegment(LineSegment):
             return
         handles = item.handles()
         x, y = self.view.get_matrix_v2i(item).transform_point(*pos)
-        max_dist = item.parent.port_side_size / 3
+        max_dist = item.parent.border_width / 3
         for h1, h2 in zip(handles, handles[1:]):
             if (h1 in item.end_handles() or h2 in item.end_handles()) and len(handles) > 2:
                 continue

@@ -126,7 +126,7 @@ class StateView(Element):
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
-        port_side_size = parent.port_side_size
+        port_side_size = parent.border_width
 
         child_nw_abs = canvas.project(child, child.handles()[NW].pos)
         child_se_abs = canvas.project(child, child.handles()[SE].pos)
@@ -180,9 +180,9 @@ class StateView(Element):
                 child.moving = moving
 
     @property
-    def port_side_size(self):
-        # dynamic_width = min(self.width, self.height) / 20.
-        return constants.ROOT_WIDTH / pow(constants.WIDTH_HIERARCHY_FACTOR, self.hierarchy_level - 1)
+    def border_width(self):
+        return constants.BORDER_WIDTH_ROOT_STATE / pow(constants.BORDER_WIDTH_HIERARCHY_SCALE_FACTOR,
+                                                       self.hierarchy_level - 1)
 
     @property
     def parent(self):
@@ -243,13 +243,13 @@ class StateView(Element):
     @staticmethod
     def get_state_drawing_area(state):
         assert isinstance(state, StateView)
-        port_side_size = state.port_side_size
+        border_width = state.border_width
 
-        state_nw_pos_x = state.handles()[NW].pos.x + port_side_size
-        state_nw_pos_y = state.handles()[NW].pos.y + port_side_size
+        state_nw_pos_x = state.handles()[NW].pos.x + border_width
+        state_nw_pos_y = state.handles()[NW].pos.y + border_width
         state_nw_pos = Position((state_nw_pos_x, state_nw_pos_y))
-        state_se_pos_x = state.handles()[SE].pos.x - port_side_size
-        state_se_pos_y = state.handles()[SE].pos.y - port_side_size
+        state_se_pos_x = state.handles()[SE].pos.x - border_width
+        state_se_pos_y = state.handles()[SE].pos.y - border_width
         state_se_pos = Position((state_se_pos_x, state_se_pos_y))
 
         return state_nw_pos, state_se_pos
@@ -279,7 +279,7 @@ class StateView(Element):
             'active':  self.model.state.active,
             'selected': self.selected,
             'moving': self.moving,
-            'port_side_size': self.port_side_size
+            'border_width': self.border_width
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -328,23 +328,23 @@ class StateView(Element):
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
-        self._income.port_side_size = self.port_side_size
+        self._income.port_side_size = self.border_width
         self._income.draw(context, self)
 
         for outcome in self._outcomes:
-            outcome.port_side_size = self.port_side_size
+            outcome.port_side_size = self.border_width
             outcome.draw(context, self)
 
         for input in self._inputs:
-            input.port_side_size = self.port_side_size
+            input.port_side_size = self.border_width
             input.draw(context, self)
 
         for output in self._outputs:
-            output.port_side_size = self.port_side_size
+            output.port_side_size = self.border_width
             output.draw(context, self)
 
         for scoped_variable in self._scoped_variables_ports:
-            scoped_variable.port_side_size = self.port_side_size
+            scoped_variable.port_side_size = self.border_width
             scoped_variable.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
@@ -353,8 +353,8 @@ class StateView(Element):
             self._draw_symbol(context, constants.SIGN_LIB, True, (max_width, max_height))
 
         if self.moving:
-            max_width = self.width - 2 * self.port_side_size
-            max_height = self.height - 2 * self.port_side_size
+            max_width = self.width - 2 * self.border_width
+            max_height = self.height - 2 * self.border_width
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
 
 
@@ -474,7 +474,7 @@ class StateView(Element):
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
     def add_income(self):
-        income_v = IncomeView(self, self.port_side_size)
+        income_v = IncomeView(self, self.border_width)
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
         self._map_handles_port_v[income_v.handle] = income_v
@@ -491,7 +491,7 @@ class StateView(Element):
         return income_v
 
     def add_outcome(self, outcome_m):
-        outcome_v = OutcomeView(outcome_m, self, self.port_side_size)
+        outcome_v = OutcomeView(outcome_m, self, self.border_width)
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
@@ -524,7 +524,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
 
     def add_input_port(self, port_m):
-        input_port_v = InputPortView(self, port_m, self.port_side_size)
+        input_port_v = InputPortView(self, port_m, self.border_width)
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
@@ -551,7 +551,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
 
     def add_output_port(self, port_m):
-        output_port_v = OutputPortView(self, port_m, self.port_side_size)
+        output_port_v = OutputPortView(self, port_m, self.border_width)
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
@@ -578,7 +578,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
     def add_scoped_variable(self, scoped_variable_m):
-        scoped_variable_port_v = ScopedVariablePortView(self, self.port_side_size, scoped_variable_m)
+        scoped_variable_port_v = ScopedVariablePortView(self, self.border_width, scoped_variable_m)
         self._scoped_variables_ports.append(scoped_variable_port_v)
         self._ports.append(scoped_variable_port_v.port)
         self._handles.append(scoped_variable_port_v.handle)
@@ -592,7 +592,7 @@ class StateView(Element):
             scoped_variable_port_v.side = SnappedSide.TOP
             num_scoped_vars = len(self._scoped_variables_ports)
             pos_x = self._calculate_port_pos_on_line(num_scoped_vars, self.width,
-                                                     port_width=self.port_side_size * 4)
+                                                     port_width=self.border_width * 4)
             pos_y = 0
             port_meta['rel_pos'] = pos_x, pos_y
         scoped_variable_port_v.handle.pos = port_meta['rel_pos']
@@ -626,8 +626,8 @@ class StateView(Element):
         :rtype: float
         """
         if port_width is None:
-            port_width = 2 * self.port_side_size
-        border_size = self.port_side_size
+            port_width = 2 * self.border_width
+        border_size = self.border_width
         pos = 0.5 * border_size + port_num * port_width
         outermost_pos = max(side_length / 2., side_length - 0.5 * border_size - port_width)
         pos = min(pos, outermost_pos)
