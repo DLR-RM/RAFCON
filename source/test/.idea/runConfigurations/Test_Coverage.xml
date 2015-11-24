@@ -8,9 +8,9 @@
       <env name="PYTHONIOENCODING" value="UTF-8" />
       <env name="PYCHARM_HOSTED" value="1" />
     </envs>
-    <option name="SDK_HOME" value="/opt/python/python2.7/bin/python2.7" />
+    <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/common/" />
-    <option name="IS_MODULE_SDK" value="false" />
+    <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="test" />
