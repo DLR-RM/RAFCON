@@ -2,8 +2,8 @@ import gtk.gdk
 
 FONT_NAMES = ["DIN Next LT Pro", "FontAwesome"]
 STYLE_NAMES = ["awesome_style.xml"]
-FONT_STYLE_PATHS = {"DIN Next LT Pro":    "themes/dark/fonts/DIN Next LT Pro",
-                    "FontAwesome":        "themes/dark/fonts/FontAwesome.otf",
+FONT_STYLE_PATHS = {"DIN Next LT Pro":    "themes/fonts/DIN Next LT Pro",
+                    "FontAwesome":        "themes/fonts/FontAwesome.otf",
                     "awesome_style.xml":  "themes/dark/gtksw-styles/awesome_style.xml"}
 
 ICON_FONT = FONT_NAMES[1]
