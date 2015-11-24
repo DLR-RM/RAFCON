@@ -8,10 +8,10 @@
 
 """
 
-import os
-import shutil
 import json
+
 import yaml
+
 from rafcon.utils.json_utils import JSONObjectDecoder, JSONObjectEncoder
 
 
@@ -64,23 +64,3 @@ def load_dict_from_json(path):
     result = json.load(f, cls=JSONObjectDecoder)
     f.close()
     return result
-
-
-def create_path(path):
-    """Creates a absolute path in the file system.
-
-    :param path: The path to be created
-    :return:
-    """
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-
-def remove_path(path):
-    """Removes an absolute path in the file system
-
-    :param path: The path to be removed
-    :return:
-    """
-    shutil.rmtree(path)
-
