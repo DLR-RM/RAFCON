@@ -729,7 +729,7 @@ class NameView(Element):
 
     @name.setter
     def name(self, name):
-        assert isinstance(name, str)
+        assert isinstance(name, basestring)
         self._name = name
 
     @property
