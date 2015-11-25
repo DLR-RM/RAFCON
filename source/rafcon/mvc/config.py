@@ -54,32 +54,32 @@ class GuiConfig(DefaultConfig):
         existing_fonts = context.list_families()
         existing_font_names = [font.get_name() for font in existing_fonts]
 
-        font_path = os.path.join(os.path.expanduser('~'), '.fonts')
+        font_user_folder = os.path.join(os.path.expanduser('~'), '.fonts')
 
         font_copied = False
 
-        for font_name in constants.FONT_NAMES:
+        for font_name in constants.FONTS:
             if font_name in existing_font_names:
                 logger.debug("Font '{0}' found".format(font_name))
-                break
+                continue
 
-            logger.debug("Copy font '{0}' to '{1}'".format(font_name, font_path))
-            if not os.path.isdir(font_path):
-                os.makedirs(font_path)
-            font_origin = os.path.join(self.path_to_tool, constants.FONT_STYLE_PATHS[font_name])
+            logger.debug("Copy font '{0}' to '{1}'".format(font_name, font_user_folder))
+            if not os.path.isdir(font_user_folder):
+                os.makedirs(font_user_folder)
+            font_origin = os.path.join(self.path_to_tool, 'themes', 'fonts', font_name)
 
-            if os.path.isdir(font_origin):
-                font_names = os.listdir(font_origin)
-                for font_filename in font_names:
-                    shutil.copy(os.path.join(font_origin, font_filename), font_path)
-            else:
-                shutil.copy(font_origin, font_path)
+            # A font is a folder one or more font faces
+            font_faces = os.listdir(font_origin)
+            for font_face in font_faces:
+                target_font_file = os.path.join(font_user_folder, font_face)
+                source_font_file = os.path.join(font_origin, font_face)
+                filesystem.copy_file_if_update_required(source_font_file, target_font_file)
             font_copied = True
 
         if font_copied:
             logger.info("Restart application to apply new fonts")
             python = sys.executable
-            os.execl(python, python, * sys.argv)
+            os.execl(python, python, *sys.argv)
 
     def configure_source_view_styles(self):
         source_view_style_user_folder = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0',

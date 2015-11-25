@@ -1,12 +1,10 @@
 import gtk.gdk
 
-FONT_NAMES = ["DIN Next LT Pro", "FontAwesome"]
-STYLE_NAMES = ["awesome_style.xml"]
-FONT_STYLE_PATHS = {"DIN Next LT Pro":    "themes/fonts/DIN Next LT Pro",
-                    "FontAwesome":        "themes/fonts/FontAwesome.otf",
-                    "awesome_style.xml":  "themes/dark/gtksw-styles/awesome_style.xml"}
+FONTS = ["DIN Next LT Pro", "FontAwesome"]
 
-ICON_FONT = FONT_NAMES[1]
+INTERFACE_FONT = FONTS[0]
+ICON_FONT = FONTS[1]
+
 FONT_SIZE_SMALL = "10"
 FONT_SIZE_NORMAL = "12"
 FONT_SIZE_BIG = "14"
