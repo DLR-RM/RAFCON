@@ -40,12 +40,13 @@ class GuiConfig(DefaultConfig):
             config_file = CONFIG_FILE
         super(GuiConfig, self).load(config_file, path)
 
-    @staticmethod
-    def configure_gtk():
+    def configure_gtk(self):
         import gtk
-        file_path = os.path.dirname(os.path.realpath(__file__))
-        gtkrc_path = os.path.join(file_path, 'themes', 'dark', 'gtk-2.0', 'gtkrc')
-        gtk.rc_parse(gtkrc_path)
+        theme = self.get_config_value('THEME', 'dark')
+        gtkrc_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'gtk-2.0', 'gtkrc')
+        if not os.path.exists(gtkrc_file_path):
+            raise ValueError("GTK theme '{0}' does not exist".format(theme))
+        gtk.rc_parse(gtkrc_file_path)
 
     def configure_fonts(self):
         tv = gtk.TextView()
