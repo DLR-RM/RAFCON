@@ -1,4 +1,5 @@
 import os
+import shutil
 
 
 def create_path(path):
@@ -36,6 +37,29 @@ def get_md5_file_hash(filename):
             hasher.update(buf)
             buf = afile.read(BLOCKSIZE)
     return hasher.hexdigest()
+
+
+def file_needs_update(target_file, source_file):
+    """Checks if target_file is not existing or differing from source_file
+
+    :param target_file: File target for a copy action
+    :param source_file: File to be copied
+    :return: True, if target_file not existing or differing from source_file, else False
+    :rtype: False
+    """
+    if not os.path.isfile(target_file) or get_md5_file_hash(target_file) != get_md5_file_hash(source_file):
+        return True
+    return False
+
+
+def copy_file_if_update_required(source_file, target_file):
+    """Copies source_file to target_file if latter one in not existing or outdated
+
+    :param source_file: Source file of the copy operation
+    :param target_file: Target file of the copy operation
+    """
+    if file_needs_update(target_file, source_file):
+        shutil.copy(source_file, target_file)
 
 
 def read_file(path, filename):
