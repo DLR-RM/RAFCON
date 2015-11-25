@@ -2,7 +2,6 @@ from weakref import ref
 from pango import FontDescription, SCALE
 
 import cairo
-from gtk.gdk import Color
 from gaphas.state import observers
 
 from rafcon.utils import constants
@@ -57,11 +56,11 @@ class ConnectionPlaceholderView(ConnectionView):
         self.transition_placeholder = transition_placeholder
 
         if transition_placeholder:
-            self._line_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['TRANSITION_LINE']))
-            self._arrow_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['LABEL']))
+            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'])
+            self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'])
         else:
-            self._line_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['DATA_LINE']))
-            self._arrow_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['DATA_PORT']))
+            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
+            self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
 
 
 class TransitionView(ConnectionView):
@@ -82,12 +81,12 @@ class TransitionView(ConnectionView):
 
     def draw(self, context):
         if context.selected:
-            self._line_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['TRANSITION_LINE_SELECTED']),
+            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'],
                                                             self.parent.transparent)
         else:
-            self._line_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['TRANSITION_LINE']),
+            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'],
                                                             self.parent.transparent)
-        self._arrow_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['LABEL']), self.parent.transparent)
+        self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparent)
         super(TransitionView, self).draw(context)
 
 
@@ -101,8 +100,8 @@ class DataFlowView(ConnectionView):
 
         self._show = gui_config.get_config_value("SHOW_DATA_FLOWS", False)
 
-        self._line_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['DATA_LINE']))
-        self._arrow_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['DATA_PORT']))
+        self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
+        self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
 
     @property
     def model(self):
@@ -127,9 +126,9 @@ class DataFlowView(ConnectionView):
         if not self.show_connection:
             return
         if context.selected:
-            self._line_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['DATA_LINE_SELECTED']))
+            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE_SELECTED'])
         else:
-            self._line_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['DATA_LINE']))
+            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
         super(DataFlowView, self).draw(context)
 
 
@@ -217,7 +216,7 @@ class ScopedVariableDataFlowView(DataFlowView):
             handle_pos = self.from_handle().pos
             port_side_size = self._head_length
 
-        c.set_source_color(Color(gui_config.colors['DATA_PORT']))
+        c.set_source_color(gui_config.gtk_colors['DATA_PORT'])
         c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
         scoped_layout = c.create_layout()
@@ -238,7 +237,7 @@ class ScopedVariableDataFlowView(DataFlowView):
             raise NotImplementedError("Scoped variable cannot draw label when not connected")
         scoped_layout.set_text(" " + self.name + " ")
 
-        font_name = constants.FONT_NAMES[0]
+        font_name = constants.INTERFACE_FONT
         font_size = 20
 
         def set_font_description(layout):
@@ -273,15 +272,15 @@ class ScopedVariableDataFlowView(DataFlowView):
             raise NotImplementedError("Scoped variable cannot draw label when not connected")
 
         rot_angle, move_x, move_y = gap_draw_helper.draw_connected_scoped_label(context,
-                                                                                gui_config.colors['DATA_PORT'],
+                                                                                gui_config.gtk_colors['DATA_PORT'],
                                                                                 name_size, handle_pos,
                                                                                 self._print_side, port_side_size)
 
         c.move_to(move_x, move_y)
         if has_connected_port:
-            c.set_source_color(Color(gui_config.colors['SCOPED_VARIABLE_TEXT']))
+            c.set_source_color(gui_config.gtk_colors['SCOPED_VARIABLE_TEXT'])
         else:
-            c.set_source_color(Color(gui_config.colors['DATA_PORT']))
+            c.set_source_color(gui_config.gtk_colors['DATA_PORT'])
 
         c.update_layout(scoped_layout)
         c.rotate(rot_angle)
@@ -295,7 +294,7 @@ class ScopedVariableDataFlowView(DataFlowView):
                 c.move_to(move_x - scoped_name_size[1], move_y)
             elif self._print_side is SnappedSide.TOP:
                 c.move_to(move_x + scoped_name_size[1], move_y)
-            c.set_source_color(Color(gui_config.colors['DATA_PORT']))
+            c.set_source_color(gui_config.gtk_colors['DATA_PORT'])
 
             c.update_layout(port_layout)
             c.rotate(rot_angle)
@@ -317,14 +316,14 @@ class ScopedVariableDataFlowView(DataFlowView):
 
                 value_text_size = value_layout.get_size()[0] / float(SCALE), name_size[1]
 
-                fill_color = gap_draw_helper.get_col_rgba(Color(gui_config.colors['DATA_VALUE_BACKGROUND']))
+                fill_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_VALUE_BACKGROUND'])
                 rot_angle, move_x, move_y = gap_draw_helper.draw_data_value_rect(context, fill_color, value_text_size,
                                                                                  name_size, (move_x, move_y),
                                                                                  self._print_side)
 
                 c.move_to(move_x, move_y)
 
-                c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(gui_config.colors['SCOPED_VARIABLE_TEXT'])))
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['SCOPED_VARIABLE_TEXT']))
 
                 c.update_layout(value_layout)
                 c.rotate(rot_angle)

@@ -41,7 +41,7 @@ class ToolBarView(View):
 
         text_label = gtk.Label()
         text_label.set_markup('<span font_desc="%s %s" letter_spacing="%s">%s</span>' %
-                              (constants.FONT_NAMES[0], constants.FONT_SIZE_NORMAL,
+                              (constants.INTERFACE_FONT, constants.FONT_SIZE_NORMAL,
                                constants.LETTER_SPACING_075PT, text))
         text_label.show()
         hbox.pack_start(text_label, True, True, 2)

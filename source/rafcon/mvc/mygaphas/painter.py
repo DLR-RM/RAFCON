@@ -1,5 +1,4 @@
 from cairo import ANTIALIAS_NONE, Matrix
-from gtk.gdk import Color
 
 from rafcon.mvc.config import global_gui_config as gui_config
 
@@ -20,8 +19,8 @@ class CornerHandlePainter(HandlePainter):
     """Base class for drawing corner handle for resize operations
     """
 
-    fill_color = Color(gui_config.colors['STATE_RESIZE_HANDLE_FILL'])
-    border_color = Color(gui_config.colors['STATE_RESIZE_HANDLE_BORDER'])
+    fill_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_FILL']
+    border_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_BORDER']
 
     def __init__(self, view=None, item_type=type(None)):
         super(HandlePainter, self).__init__(view)
@@ -76,8 +75,8 @@ class StateCornerHandlePainter(CornerHandlePainter):
     """Draw corner handles of StateViews
     """
 
-    fill_color = Color(gui_config.colors['STATE_RESIZE_HANDLE_FILL'])
-    border_color = Color(gui_config.colors['STATE_RESIZE_HANDLE_BORDER'])
+    fill_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_FILL']
+    border_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_BORDER']
 
     def __init__(self, view=None):
         super(StateCornerHandlePainter, self).__init__(view, StateView)
@@ -87,8 +86,8 @@ class NameCornerHandlePainter(CornerHandlePainter):
     """Draw corner handles of NameViews
     """
 
-    fill_color = Color(gui_config.colors['NAME_RESIZE_HANDLE_FILL'])
-    border_color = Color(gui_config.colors['NAME_RESIZE_HANDLE_BORDER'])
+    fill_color = gui_config.gtk_colors['NAME_RESIZE_HANDLE_FILL']
+    border_color = gui_config.gtk_colors['NAME_RESIZE_HANDLE_BORDER']
 
     def __init__(self, view=None):
         super(NameCornerHandlePainter, self).__init__(view, NameView)
@@ -105,8 +104,8 @@ class LineSegmentPainter(ItemPaintFocused):
     interaction required for this feature.
     """
 
-    fill_color = Color(gui_config.colors['TRANSITION_HANDLE_FILL'])
-    border_color = Color(gui_config.colors['TRANSITION_HANDLE_BORDER'])
+    fill_color = gui_config.gtk_colors['TRANSITION_HANDLE_FILL']
+    border_color = gui_config.gtk_colors['TRANSITION_HANDLE_BORDER']
 
     def paint(self, context):
         view = self.view

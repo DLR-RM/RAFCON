@@ -1,14 +1,14 @@
 import os
 import sys
-import shutil
 import re
 import gtk
-from gtk.gdk import color_parse
 
 from rafcon.utils.config import DefaultConfig, ConfigError
 from rafcon.utils import filesystem
+from rafcon.utils import storage_utils
 from rafcon.utils import constants
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 CONFIG_FILE = "gui_config.yaml"
@@ -22,6 +22,7 @@ class GuiConfig(DefaultConfig):
     """
 
     colors = {}
+    gtk_colors = {}
 
     def __init__(self):
         super(GuiConfig, self).__init__(DEFAULT_CONFIG)
@@ -108,20 +109,24 @@ class GuiConfig(DefaultConfig):
         with open(gtkrc_file_path) as f:
             lines = f.readlines()
 
-        color_dict = {}
         for line in lines:
             if re.match("\s*color", line):
                 color = re.findall(r'"(.*?)"', line)
-                color_dict[color[0]] = color_parse(color[1])
-        self.colors = color_dict
+                self.colors[color[0].upper()] = color[1]
+                self.gtk_colors[color[0].upper()] = gtk.gdk.Color(color[1])
 
-        # Get colors from editor
+        # Get color definitions
+        color_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'colors.json')
         try:
-            import importlib
-            editor_colors = importlib.import_module("rafcon.mvc.themes.{0}.editor_colors".format(theme))
-        except ImportError:
-            raise ValueError("Editor theme '{0}' does not exist".format(theme))
+            colors = storage_utils.load_dict_from_json(color_file_path)
+        except IOError:
+            raise ValueError("No color definitions for theme '{0}' found".format(theme))
 
-        self.colors.update(editor_colors.colors)
+        # replace unicode strings with str strings
+        colors = {str(key): str(value) for key, value in colors.iteritems()}
+        gtk_colors = {str(key): gtk.gdk.Color(str(value)) for key, value in colors.iteritems()}
+        self.gtk_colors.update(gtk_colors)
+        self.colors.update(colors)
+
 
 global_gui_config = GuiConfig()

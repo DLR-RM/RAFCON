@@ -9,7 +9,6 @@ from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 
 import cairo
-from gtk.gdk import Color
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
@@ -300,28 +299,28 @@ class StateView(Element):
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
             if self.model.state.active:
-                c.set_source_color(Color(gui_config.colors['STATE_ACTIVE']))
+                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE'])
             elif self.selected:
-                c.set_source_color(Color(gui_config.colors['STATE_SELECTED']))
+                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED'])
             else:
-                c.set_source_rgba(*get_col_rgba(Color(gui_config.colors['STATE_BORDER']), self._transparent))
+                c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BORDER'], self._transparent))
             c.fill_preserve()
             if self.model.state.active:
-                c.set_source_color(Color(gui_config.colors['STATE_ACTIVE_BORDER']))
+                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE_BORDER'])
                 c.set_line_width(.25 / self.hierarchy_level * multiplicator)
             elif self.selected:
-                c.set_source_color(Color(gui_config.colors['STATE_SELECTED_OUTER_BOUNDARY']))
+                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED_OUTER_BOUNDARY'])
                 c.set_line_width(.25 / self.hierarchy_level * multiplicator)
             else:
-                c.set_source_color(Color(gui_config.colors['BLACK']))
+                c.set_source_color(gui_config.gtk_colors['BLACK'])
             c.stroke()
 
             inner_nw, inner_se = self.get_state_drawing_area(self)
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-            c.set_source_rgba(*get_col_rgba(Color(gui_config.colors['STATE_BACKGROUND'])))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BACKGROUND']))
             c.fill_preserve()
             c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
-            c.set_source_color(Color(gui_config.colors['BLACK']))
+            c.set_source_color(gui_config.gtk_colors['BLACK'])
             c.stroke()
 
             # Copy image surface to current cairo context
@@ -364,7 +363,7 @@ class StateView(Element):
 
         layout = c.create_layout()
 
-        font_name = constants.FONT_NAMES[1]
+        font_name = constants.ICON_FONT
 
         def set_font_description():
             layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
@@ -398,7 +397,7 @@ class StateView(Element):
         elif is_library_state:
             alpha = 0.25
 
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(gui_config.colors['STATE_NAME']), is_library_state,
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['STATE_NAME'], is_library_state,
                                                          alpha=alpha))
         c.update_layout(layout)
         c.show_layout(layout)
@@ -777,7 +776,7 @@ class NameView(Element):
 
             if context.selected:
                 c.rectangle(0, 0, self.width, self.height)
-                c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(gui_config.colors['LABEL']), alpha=.1))
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], alpha=.1))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
@@ -793,7 +792,7 @@ class NameView(Element):
                 font = FontDescription(font_name + " " + str(font_size))
                 layout.set_font_description(font)
 
-            font_name = constants.FONT_NAMES[0]
+            font_name = constants.INTERFACE_FONT
 
             font_size = self.height * 0.8
 
@@ -804,7 +803,7 @@ class NameView(Element):
                 set_font_description()
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(Color(gui_config.colors['STATE_NAME']), self.parent.transparent))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.parent.transparent))
             c.update_layout(layout)
             c.show_layout(layout)
 
