@@ -1,6 +1,6 @@
 TYPE: GUI_CONFIG
 
-SOURCE_EDITOR_STYLE: awesome-style
+SOURCE_EDITOR_STYLE: rafcon-dark
 
 GAPHAS_EDITOR: False
 ENABLE_CACHING: True    # Affects only Gaphas editor

@@ -82,19 +82,20 @@ class GuiConfig(DefaultConfig):
             os.execl(python, python, * sys.argv)
 
     def configure_source_view_styles(self):
-        code_style_path = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0', 'styles')
+        source_view_style_user_folder = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0',
+                                                     'styles')
+        filesystem.create_path(source_view_style_user_folder)
+        theme = self.get_config_value('THEME', 'dark')
+        source_view_style_theme_folder = os.path.join(self.path_to_tool, 'themes', theme, 'gtksw-styles')
 
-        filesystem.create_path(code_style_path)
+        # Copy all .xml source view style files from theme to local user styles folder
+        for style in os.listdir(source_view_style_theme_folder):
+            source_view_style_theme_path = os.path.join(source_view_style_theme_folder, style)
+            if not os.path.isfile(source_view_style_theme_path) or not style.endswith(".xml"):
+                continue
 
-        for style in constants.STYLE_NAMES:
-            code_style_origin_path = os.path.join(self.path_to_tool, constants.FONT_STYLE_PATHS[style])
-            code_style_target_path = os.path.join(code_style_path, style)
-
-            if not os.path.isfile(code_style_target_path) or filesystem.get_md5_file_hash(code_style_origin_path) != \
-                    filesystem.get_md5_file_hash(code_style_target_path):
-                # Copy current version
-                logger.debug("Copy code style '{0}' to '{1}'".format(style, code_style_target_path))
-                shutil.copy(code_style_origin_path, code_style_path)
+            source_view_style_user_path = os.path.join(source_view_style_user_folder, style)
+            filesystem.copy_file_if_update_required(source_view_style_theme_path, source_view_style_user_path)
 
     def configure_colors(self):
         theme = self.get_config_value('THEME', 'dark')
