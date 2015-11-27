@@ -1,17 +1,17 @@
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
-
 from gtkmvc import Controller
+
 from rafcon.mvc.shortcut_manager import ShortcutManager
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class ExtendedController(Controller):
     def __init__(self, model, view, spurious=False):
+        self.__registered_models = set()
         Controller.__init__(self, model, view, spurious=spurious)
+        self.__action_registered_controllers = []
         self.__child_controllers = dict()
         self.__shortcut_manager = None
-        self.__action_registered_controllers = []
 
     def add_controller(self, key, controller):
         """Add child controller
@@ -68,11 +68,22 @@ class ExtendedController(Controller):
         return actual_ctrl
 
     def get_controller(self, key):
+        """Return the child controller registered with the name key
+
+        :param key: The name of the controller
+        :return: The controller
+        :rtype: ExtendedController
+        """
         if key in self.__child_controllers:
             return self.__child_controllers[key]
         return None
 
     def get_child_controllers(self):
+        """Returns a list with all registered child controllers
+
+        :return: List of child controllers
+        :rtype: list
+        """
         return self.__child_controllers.values()
 
     def register_actions(self, shortcut_manager):
@@ -95,9 +106,6 @@ class ExtendedController(Controller):
             if hasattr(register_function, '__call__'):
                 register_function(self.__shortcut_manager)
 
-    def register_view(self, view):
-        pass
-
     def destroy(self):
         """Recursively destroy all Controllers
 
@@ -110,10 +118,31 @@ class ExtendedController(Controller):
         self.relieve_all_models()
         self.view.get_top_widget().destroy()
 
+    def observe_model(self, model):
+        """Make this model observable within the controller
+
+        The method also keeps track of all observed models, in order to be able to relieve them later on.
+
+        :param gtkmvc.Model model: The model to be observed
+        """
+        self.__registered_models.add(model)
+        return super(ExtendedController, self).observe_model(model)
+
+    def relieve_model(self, model):
+        """Do no longer observe the model
+
+        The model is also removed from the internal list of tracked models.
+
+        :param gtkmvc.Model model: The model to be relieved
+        """
+        self.__registered_models.remove(model)
+        return super(ExtendedController, self).relieve_model(model)
+
     def relieve_all_models(self):
         """Relieve all registered models
 
-        By the default, only self.model is relieved. However, inheriting controllers can overwrite this method,
-        if they have more registered models.
+        The method uses the list of registered models to relieve them.
         """
-        self.relieve_model(self.model)
+        models = [model for model in self.__registered_models]
+        map(self.relieve_model, models)
+        self.__registered_models.clear()
