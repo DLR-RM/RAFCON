@@ -9,6 +9,8 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager, global_storage, \
     library_manager
 
+import rafcon.statemachine.singleton as core_singletons
+import rafcon.mvc.singleton as gui_singletons
 from rafcon.mvc import gui_helper
 from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -377,6 +379,11 @@ class MenuBarController(ExtendedController):
         # We decided on not saving the configuration when exiting
         # glib.idle_add(rafcon.statemachine.config.global_config.save_configuration)
         # glib.idle_add(rafcon.mvc.config.global_gui_config.save_configuration)
+
+        # Should close all tabs
+        core_singletons.state_machine_manager.delete_all_state_machines()
+        # Recursively destroys the main window
+        gui_singletons.main_window_controller.destroy()
         self.logging_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')
         if reactor.running:
