@@ -343,7 +343,7 @@ class MainWindowController(ExtendedController):
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
-        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").destroy)
+        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").on_destroy)
         # hide not usable buttons
         self.view['button_step_shortcut'].hide()
         self.view['button_step_backward_shortcut'].hide()
