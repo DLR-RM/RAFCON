@@ -14,6 +14,14 @@ class ExtendedController(Controller):
         self.__action_registered_controllers = []
 
     def add_controller(self, key, controller):
+        """Add child controller
+
+        The passed controller is registered as child of self. The register_actions method of the child controller is
+        called, allowing the child controller to register shortcut callbacks.
+
+        :param key: Name of the controller (unique within self), to latter access it again
+        :param ExtendedController controller: Controller to be added as child
+        """
         assert isinstance(controller, ExtendedController)
         self.__child_controllers[key] = controller
         if self.__shortcut_manager is not None and controller not in self.__action_registered_controllers:
@@ -21,24 +29,31 @@ class ExtendedController(Controller):
             self.__action_registered_controllers.append(controller)
 
     def remove_controller(self, controller):
-        # remove controller if controller is ExtendedController
+        """Remove child controller and destroy it
+
+        Removes all references to the child controller and calls destroy() on the controller.
+
+        :param str | ExtendedController controller: Either the child controller object itself or its registered name
+        :return: Whether the controller was existing
+        :rtype: bool
+        """
+        # Get name of controller
         if isinstance(controller, ExtendedController):
-            if controller in self.__child_controllers.keys():
-                self.__action_registered_controllers.remove(self.__child_controllers[controller])
             for key, child_controller in self.__child_controllers.iteritems():
                 if controller is child_controller:
-                    del self.__child_controllers[key]
-                    return True
-        # remove controller if controller is a string
-        key = controller
+                    break
+            else:
+                return False
+        else:
+            key = controller
         if key in self.__child_controllers:
-            self.__action_registered_controllers.remove(self.__child_controllers[controller])
+            self.__action_registered_controllers.remove(self.__child_controllers[key])
+            self.__child_controllers[key].destroy()
             del self.__child_controllers[key]
             return True
         return False
 
     def get_controller_by_path(self, ctrl_path, with_print=False):
-        tmp_ctrl = None
         actual_ctrl = self
         for child_ctrl_identifier in ctrl_path:
             tmp_ctrl = actual_ctrl.get_controller(child_ctrl_identifier)
@@ -82,3 +97,23 @@ class ExtendedController(Controller):
 
     def register_view(self, view):
         pass
+
+    def destroy(self):
+        """Recursively destroy all Controllers
+
+        The method remove all controllers, which calls the destroy method of the child controllers. Then,
+        all registered models are relieved and the widget is destroyed.
+        """
+        controller_names = [key for key in self.__child_controllers]
+        for controller_name in controller_names:
+            self.remove_controller(controller_name)
+        self.relieve_all_models()
+        self.view.get_top_widget().destroy()
+
+    def relieve_all_models(self):
+        """Relieve all registered models
+
+        By the default, only self.model is relieved. However, inheriting controllers can overwrite this method,
+        if they have more registered models.
+        """
+        self.relieve_model(self.model)
