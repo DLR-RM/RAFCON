@@ -291,7 +291,7 @@ class MenuBarController(ExtendedController):
     def on_quit_activate(self, widget, data=None):
         avoid_shutdown = self.on_delete_event(self, widget, None)
         if not avoid_shutdown:
-            self.destroy(None)
+            self.on_destroy(None)
 
     def on_delete_event(self, widget, event, data=None):
         logger.debug("Delete event received")
@@ -317,7 +317,7 @@ class MenuBarController(ExtendedController):
                         self.check_sm_running()
                     else:
                         self._prepare_destruction()
-                        self.destroy(None)
+                        self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("Close main window canceled")
                     widget.destroy()
@@ -345,7 +345,7 @@ class MenuBarController(ExtendedController):
                     logger.debug("State machine is shut down now!")
                     widget.destroy()
                     self._prepare_destruction()
-                    self.destroy(None)
+                    self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("State machine will stay running!")
                     widget.destroy()
@@ -363,7 +363,7 @@ class MenuBarController(ExtendedController):
             return True
         return False
 
-    def destroy(self, widget, data=None):
+    def on_destroy(self, widget, data=None):
         import glib
         logger.debug("Closing main window!")
         self.main_window_view.hide()
