@@ -29,6 +29,6 @@ class TransitionSegment(LineSegment):
                 return handles and handles[0]
 
     def split_segment(self, segment, count=2):
-        return super(TransitionSegment, self).split_segment(segment, count)
+        return super(TransitionSegment, self).split_segment(segment, 2)
 
 
