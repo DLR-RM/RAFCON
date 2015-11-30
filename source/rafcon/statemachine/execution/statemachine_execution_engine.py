@@ -160,7 +160,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._status.execution_condition_variable.release()
         self.run_to_states = []
 
-
     # depending on the execution state wait for the execution condition variable to be notified
     # list all execution modes to keep the overview
     def handle_execution_mode(self, state):
@@ -222,8 +221,15 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 # very state will execute its next state; only then we will wait on the condition variable
                 self.run_to_states.append(state.get_path())
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
-                parent_path = state.parent.get_path()
-                self.run_to_states.append(parent_path)
+                from rafcon.statemachine.states.state import State
+                if isinstance(state.parent, State):
+                    parent_path = state.parent.get_path()
+                    self.run_to_states.append(parent_path)
+                else:
+                    # this is the case if step_out is called from the highest level
+                    # this is handled in the same way as the FORWARD_OVER
+                    self.run_to_states.append(state.get_path())
+
 
 
 
