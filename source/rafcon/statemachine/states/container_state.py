@@ -134,6 +134,10 @@ class ContainerState(State):
         """ Preempt the state and all of it child states.
         """
         self.preempted = True
+        # notify the transition condition variable to let the state instantaneously stop
+        self._transitions_cv.acquire()
+        self._transitions_cv.notify_all()
+        self._transitions_cv.release()
         for state_id, state in self.states.iteritems():
             state.recursively_preempt_states()
 
@@ -208,11 +212,12 @@ class ContainerState(State):
         The method waits, until a transition is created. It then checks again for an existing start state and waits
         again, if this is not the case.
         """
-        while self.get_start_state(set_final_outcome=True) is None:
+        start_state = self.get_start_state(set_final_outcome=True)
+        if start_state is None:
             self._transitions_cv.acquire()
             self._transitions_cv.wait(3.0)
             self._transitions_cv.release()
-        return self.get_start_state()
+        return start_state
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- state functions --------------------------------------
@@ -837,7 +842,7 @@ class ContainerState(State):
                                 copy.deepcopy(self.scoped_data[scoped_data_key].value)
                         else:
                             if not self.backward_execution:
-                                logger.error("Output data with name %s was not found in the scoped data. "
+                                logger.warn("Output data with name %s was not found in the scoped data. "
                                              "This normally means a statemachine design error", output_name)
 
     # ---------------------------------------------------------------------------------------------

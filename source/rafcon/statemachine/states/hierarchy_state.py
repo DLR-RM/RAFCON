@@ -66,8 +66,11 @@ class HierarchyState(ContainerState):
                 logger.debug("Executing hierarchy child_state with id %s and name %s" % (self._state_id, self.name))
                 self.execution_history.add_call_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
                 child_state = self.get_start_state(set_final_outcome=True)
-                if child_state is None:
+                while child_state is None:
                     child_state = self.handle_no_start_state()
+                    if self.preempted:
+                        logger.debug("Hierarchy state was preempted during waiting to get a start state.")
+                        break
 
             ########################################################
             # children execution loop start
@@ -81,7 +84,6 @@ class HierarchyState(ContainerState):
 
                 self.backward_execution = False
                 if self.preempted:
-                    logger.debug("Preempted flag: True")
                     if last_transition and last_transition.from_outcome == -2:
                         # normally execute the next state
                         logger.debug("Execute the preemption handling state for state %s" % str(last_state.name))
