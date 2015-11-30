@@ -7,6 +7,8 @@
 
 
 """
+import copy
+
 import Queue
 
 from gtkmvc import Observable
@@ -43,8 +45,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._validity_checker = None
         logger.debug("Statemachine execution engine initialized")
         self._execution_started = False
-        self._forward_step = True
         self.start_state_paths = []
+
+        self.run_to_states = []
 
     # TODO: pause all external modules
     @Observable.observed
@@ -67,6 +70,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             self._status.execution_condition_variable.acquire()
             self._status.execution_condition_variable.notify_all()
             self._status.execution_condition_variable.release()
+            self.run_to_states = []
         else:
             logger.debug("Start the state machine")
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
@@ -101,6 +105,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
+        self.run_to_states = []
 
     @Observable.observed
     def step_mode(self):
@@ -108,55 +113,72 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """
         logger.debug("Activate step mode")
         if self._execution_started:
-            self._status.execution_mode = StateMachineExecutionStatus.STEP
+            self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
         else:
-            self._status.execution_mode = StateMachineExecutionStatus.STEP
+            self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
             self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
             self._execution_started = True
+        self.run_to_states = []
 
     def backward_step(self):
         """Take a backward step for all active states in the state machine
         """
         logger.debug("Notify all threads waiting for the the execution condition variable")
-        self._forward_step = False
+        self._status.execution_mode = StateMachineExecutionStatus.BACKWARD
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
+        self.run_to_states = []
 
-    def step(self):
-        """Take a forward step for all active states in the state machine
+    def step_into(self):
+        """Take a forward step (into) for all active states in the state machine
         """
-        logger.debug("Triggered step ...")
-        self._forward_step = True
+        logger.debug("Triggered step into ...")
+        self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
+        self.run_to_states = []
+
+    def step_over(self):
+        """Take a forward step (over) for all active states in the state machine
+        """
+        logger.debug("Triggered step over ...")
+        self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OVER
+        self._status.execution_condition_variable.acquire()
+        self._status.execution_condition_variable.notify_all()
+        self._status.execution_condition_variable.release()
+        self.run_to_states = []
+
+    def step_out(self):
+        """Take a forward step (out) for all active states in the state machine
+        """
+        logger.debug("Triggered step out ...")
+        self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OUT
+        self._status.execution_condition_variable.acquire()
+        self._status.execution_condition_variable.notify_all()
+        self._status.execution_condition_variable.release()
+        self.run_to_states = []
+
 
     # depending on the execution state wait for the execution condition variable to be notified
     # list all execution modes to keep the overview
     def handle_execution_mode(self, state):
-        """Checks the current execution status and returns stop in the case. If the execution mode is "STEPPING",
-        a condition variable stops the current execution, until it gets notified by the step() or backward_step()
-        function.
+        """Checks the current execution status and returns it. If the execution mode is some kind of stepping,
+        a condition variable stops the current execution, until it gets notified by the step*() or backward_step()
+        functions. This function is called by the hierarchy states.
 
         :param state: the state that as for the execution mode is only passed for debugging reasons
 
-        :return: "stop" if the state machine must stop the execution, else "run"
+        :return: the current state machine execution status
 
-        This functions is called by the hierarchy states.
         """
-        return_value = StateMachineExecutionStatus.STARTED
+
         if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
-            return_value = StateMachineExecutionStatus.STARTED
+            logger.debug("Execution engine started!")
 
         elif self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
-            # try:
-            #     self._status.execution_condition_variable.acquire()
-            #     self._status.execution_condition_variable.wait()
-            # finally:
-            #     self._status.execution_condition_variable.release()
             logger.debug("Execution engine stopped. State %s is going to quit!", state.name)
-            return_value = StateMachineExecutionStatus.STOPPED
 
         elif self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
             try:
@@ -165,29 +187,50 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             finally:
                 self._status.execution_condition_variable.release()
 
-            if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
-                return_value = StateMachineExecutionStatus.STARTED
-            elif self._forward_step:
-                return_value = StateMachineExecutionStatus.STEP
-            else:
-                return_value = StateMachineExecutionStatus.BACKWARD_STEP
+        else:  # all other step modes
+            logger.debug("Stepping mode: wait for next step!")
 
-        elif self._status.execution_mode is StateMachineExecutionStatus.STEP:
-            logger.debug("Stepping mode: wait for next step")
-            try:
-                self._status.execution_condition_variable.acquire()
-                self._status.execution_condition_variable.wait()
-            finally:
-                self._status.execution_condition_variable.release()
+            wait = True
+            for state_path in copy.deepcopy(self.run_to_states):
+                if state_path in state.get_path():
+                    if state_path is state.get_path():
+                        # the execution did a whole step_over for the hierarchy state "state" thus we delete its
+                        # state path from self.run_to_states and wait for another step (of maybe different kind)
+                        wait = True
+                        self.run_to_states.remove(state_path)
+                        break
+                    else:
+                        # the state_path is the path of an ancestor of "state", thus we must not wait
+                        # as a step_over was triggered for the ancestor
+                        wait = False
+                        break
 
-            if self._forward_step:
-                return_value = StateMachineExecutionStatus.STEP
-            else:
-                return_value = StateMachineExecutionStatus.BACKWARD_STEP
+            if wait:
+                try:
+                    self._status.execution_condition_variable.acquire()
+                    self._status.execution_condition_variable.wait()
+                finally:
+                    self._status.execution_condition_variable.release()
 
-        # this is the case when the stop method wakes up the paused or step mode
-        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
-            return StateMachineExecutionStatus.STOPPED
+            # calculate states to which should be run
+            if self._status.execution_mode is StateMachineExecutionStatus.BACKWARD:
+                pass
+            elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_INTO:
+                pass
+            elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OVER:
+                # the state that called this method is a hierarchy state => thus we save this state and wait until this
+                # very state will execute its next state; only then we will wait on the condition variable
+                self.run_to_states.append(state.get_path())
+            elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
+                parent_path = state.parent.get_path()
+                self.run_to_states.append(parent_path)
+
+
+
+        # in the case when the stop method wakes up the paused or step mode StateMachineExecutionStatus.STOPPED
+        # will be returned
+        return_value = self._status.execution_mode
+
         return return_value
 
     @staticmethod

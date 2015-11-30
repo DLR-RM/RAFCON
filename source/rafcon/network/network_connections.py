@@ -148,7 +148,7 @@ class NetworkConnections(Observer, gobject.GObject):
             rafcon.statemachine.singleton.state_machine_execution_engine.step_mode()
         elif new_mode == 'step_forward':
             logger.debug("Execution step ...")
-            rafcon.statemachine.singleton.state_machine_execution_engine.step()
+            rafcon.statemachine.singleton.state_machine_execution_engine.step_into()
         elif new_mode == 'step_backward':
             logger.debug("Executing backward step ...")
             rafcon.statemachine.singleton.state_machine_execution_engine.backward_step()

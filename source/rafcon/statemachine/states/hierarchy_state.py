@@ -77,7 +77,7 @@ class HierarchyState(ContainerState):
 
                 # depending on the execution mode pause execution
                 logger.debug("Handling execution mode")
-                execution_signal = singleton.state_machine_execution_engine.handle_execution_mode(self)
+                execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self)
 
                 self.backward_execution = False
                 if self.preempted:
@@ -88,10 +88,10 @@ class HierarchyState(ContainerState):
                     else:
                         break
 
-                if execution_signal is StateMachineExecutionStatus.STOPPED:
+                if execution_mode is StateMachineExecutionStatus.STOPPED:
                     # this will be caught at the end of the run method
                     raise RuntimeError("child_state stopped")
-                elif execution_signal == StateMachineExecutionStatus.BACKWARD_STEP:
+                elif execution_mode == StateMachineExecutionStatus.BACKWARD:
                     self.backward_execution = True
                     last_history_item = self.execution_history.pop_last_item()
                     if last_history_item.state_reference is self:

@@ -1,27 +1,28 @@
 !HierarchyState
 data_flows:
-    1: !DataFlow {data_flow_id: 1, from_key: 3, from_state: OUWQUJ, to_key: 8, to_state: SMCOIB}
-    15: !DataFlow {data_flow_id: 15, from_key: 2, from_state: SMCOIB, to_key: 1, to_state: YSBJGK}
-    16: !DataFlow {data_flow_id: 16, from_key: 2, from_state: SMCOIB, to_key: 2, to_state: OUWQUJ}
+    1: !DataFlow {data_flow_id: 1, from_key: 3, from_state: !!python/unicode 'OUWQUJ',
+        to_key: 8, to_state: !!python/unicode 'SMCOIB'}
+    15: !DataFlow {data_flow_id: 15, from_key: 2, from_state: !!python/unicode 'SMCOIB',
+        to_key: 1, to_state: !!python/unicode 'YSBJGK'}
+    16: !DataFlow {data_flow_id: 16, from_key: 2, from_state: !!python/unicode 'SMCOIB',
+        to_key: 2, to_state: !!python/unicode 'OUWQUJ'}
 description: null
-filename: script.py
 input_data_ports:
-    2: !DataPort {data_port_id: 2, data_type: int, default_value: null, name: in}
-name: 99 bottles of beer
+    2: !InputDataPort {data_port_id: 2, data_type: &id001 !!python/name:__builtin__.int '',
+        default_value: null, name: !!python/unicode 'in'}
+name: !!python/unicode '99 bottles of beer'
 outcomes:
-    -2: !Outcome {name: preempted, outcome_id: -2}
-    -1: !Outcome {name: aborted, outcome_id: -1}
-    0: !Outcome {name: success, outcome_id: 0}
+    -2: !Outcome {name: !!python/unicode 'preempted', outcome_id: -2}
+    -1: !Outcome {name: !!python/unicode 'aborted', outcome_id: -1}
+    0: !Outcome {name: !!python/unicode 'success', outcome_id: 0}
 output_data_ports:
-    8: !DataPort {data_port_id: 8, data_type: int, default_value: null, name: out}
-path: ../../test_scripts/backward_step_hierarchy_test/GLSUJY/SMCOIB
-scoped_variables:
-    5: !ScopedVariable {data_type: int, default_value: 100, name: bottles, scoped_variable_id: 5}
-state_id: SMCOIB
+    8: !OutputDataPort {data_port_id: 8, data_type: *id001, default_value: null, name: !!python/unicode 'out'}
+scoped_variables: {}
+state_id: !!python/unicode 'SMCOIB'
 transitions:
-    1: !Transition {from_outcome: 0, from_state: YSBJGK, to_outcome: null, to_state: OUWQUJ,
-        transition_id: 1}
-    3: !Transition {from_outcome: 0, from_state: OUWQUJ, to_outcome: 0, to_state: null,
-        transition_id: 3}
-    4: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: YSBJGK,
+    1: !Transition {from_outcome: 0, from_state: !!python/unicode 'YSBJGK', to_outcome: null,
+        to_state: !!python/unicode 'OUWQUJ', transition_id: 1}
+    3: !Transition {from_outcome: 0, from_state: !!python/unicode 'OUWQUJ', to_outcome: 0,
+        to_state: !!python/unicode 'SMCOIB', transition_id: 3}
+    4: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: !!python/unicode 'YSBJGK',
         transition_id: 4}

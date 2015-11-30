@@ -411,12 +411,12 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="step">
+              <object class="GtkImageMenuItem" id="step_into">
                 <property name="label" translatable="yes">step</property>
                 <property name="visible">True</property>
                 <property name="image">image6</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_step_activate"/>
+                <signal name="activate" handler="on_step_into_activate"/>
               </object>
             </child>
             <child>

@@ -76,7 +76,7 @@ class MenuBarController(ExtendedController):
         shortcut_manager.add_callback_for_action('pause', partial(self.call_action_callback, "on_pause_activate"))
         shortcut_manager.add_callback_for_action('step_mode',
                                                  partial(self.call_action_callback, "on_step_mode_activate"))
-        shortcut_manager.add_callback_for_action('step', partial(self.call_action_callback, "on_step_activate"))
+        shortcut_manager.add_callback_for_action('step', partial(self.call_action_callback, "on_step_into_activate"))
         shortcut_manager.add_callback_for_action('backward_step',
                                                  partial(self.call_action_callback, "on_backward_step_activate"))
 
@@ -498,9 +498,17 @@ class MenuBarController(ExtendedController):
         logger.debug("Activate execution engine step mode ...")
         state_machine_execution_engine.step_mode()
 
-    def on_step_activate(self, widget, data=None):
-        logger.debug("Execution step ...")
-        state_machine_execution_engine.step()
+    def on_step_into_activate(self, widget, data=None):
+        logger.debug("Execution step into ...")
+        state_machine_execution_engine.step_into()
+
+    def on_step_over_activate(self, widget, data=None):
+        logger.debug("Execution step over ...")
+        state_machine_execution_engine.step_over()
+
+    def on_step_out_activate(self, widget, data=None):
+        logger.debug("Execution step out ...")
+        state_machine_execution_engine.step_out()
 
     def on_backward_step_activate(self, widget, data=None):
         logger.debug("Executing backward step ...")
