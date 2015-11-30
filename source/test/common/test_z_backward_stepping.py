@@ -55,7 +55,7 @@ def trigger_gui_signals(*args):
     sleep_time = 0.02
     time.sleep(sleep_time)
     for i in range(number_of_steps):
-        call_gui_callback(menubar_ctrl.on_step_activate, None, None)
+        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         time.sleep(sleep_time)
 
     for i in range(number_of_steps):
@@ -122,4 +122,5 @@ def test_backward_stepping(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_backward_stepping(None)
+    # pytest.main([__file__])
