@@ -98,13 +98,20 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """Set the execution mode to stopped
         """
         logger.debug("Stop execution ...")
-        self._status.execution_mode = StateMachineExecutionStatus.STOPPED
+        self.set_execution_mode_to_stopped()
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
-        self._execution_started = False
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
+
+    def set_execution_mode_to_stopped(self):
+        """
+        Sets the execution mode of the state machine execution status to STOPPED and resets all per-execution variables
+        :return:
+        """
+        self._status.execution_mode = StateMachineExecutionStatus.STOPPED
+        self._execution_started = False
         self.run_to_states = []
 
     @Observable.observed
