@@ -9,6 +9,9 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager, global_storage, \
     library_manager
 
+import rafcon.statemachine.singleton as core_singletons
+import rafcon.mvc.singleton as gui_singletons
+from rafcon.mvc import gui_helper
 from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.views.about_dialog import MyAboutDialog
@@ -16,7 +19,6 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.utils.dialog import RAFCONDialog
-from rafcon.utils import gui_helper
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -291,7 +293,7 @@ class MenuBarController(ExtendedController):
     def on_quit_activate(self, widget, data=None):
         avoid_shutdown = self.on_delete_event(self, widget, None)
         if not avoid_shutdown:
-            self.destroy(None)
+            self.on_destroy(None)
 
     def on_delete_event(self, widget, event, data=None):
         logger.debug("Delete event received")
@@ -317,7 +319,7 @@ class MenuBarController(ExtendedController):
                         self.check_sm_running()
                     else:
                         self._prepare_destruction()
-                        self.destroy(None)
+                        self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("Close main window canceled")
                     widget.destroy()
@@ -345,7 +347,7 @@ class MenuBarController(ExtendedController):
                     logger.debug("State machine is shut down now!")
                     widget.destroy()
                     self._prepare_destruction()
-                    self.destroy(None)
+                    self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("State machine will stay running!")
                     widget.destroy()
@@ -363,7 +365,7 @@ class MenuBarController(ExtendedController):
             return True
         return False
 
-    def destroy(self, widget, data=None):
+    def on_destroy(self, widget, data=None):
         import glib
         logger.debug("Closing main window!")
         self.main_window_view.hide()
@@ -377,6 +379,11 @@ class MenuBarController(ExtendedController):
         # We decided on not saving the configuration when exiting
         # glib.idle_add(rafcon.statemachine.config.global_config.save_configuration)
         # glib.idle_add(rafcon.mvc.config.global_gui_config.save_configuration)
+
+        # Should close all tabs
+        core_singletons.state_machine_manager.delete_all_state_machines()
+        # Recursively destroys the main window
+        gui_singletons.main_window_controller.destroy()
         self.logging_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')
         if reactor.running:

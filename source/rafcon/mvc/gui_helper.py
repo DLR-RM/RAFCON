@@ -1,4 +1,5 @@
 import gtk
+from gtk import Container, Button
 from rafcon.utils import constants
 
 
@@ -17,12 +18,22 @@ def create_tab_header_label(tab_name, icons):
     return tooltip_event_box
 
 
-def create_label_with_text_and_spacing(text, font=constants.FONT_NAMES[0], font_size=constants.FONT_SIZE_NORMAL,
+def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
                                        letter_spacing=constants.LETTER_SPACING_NONE):
     label = gtk.Label()
-    label.set_markup('<span font_desc="%s %s" letter_spacing="%s">%s</span>' % (font,
-                                                                                font_size,
-                                                                                letter_spacing,
-                                                                                text))
+    label.set_markup('<span font_desc="%s %s" letter_spacing="%s">%s</span>' % (font, font_size, letter_spacing, text))
     label.show()
     return label
+
+
+def set_button_children_size_request(widget):
+    try:
+        if not isinstance(widget, Container):
+            return
+        for child in widget.get_children():
+            if isinstance(child, Button):
+                child.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+            else:
+                set_button_children_size_request(child)
+    except AttributeError:
+        return

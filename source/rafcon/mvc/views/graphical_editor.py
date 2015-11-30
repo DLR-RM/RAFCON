@@ -1,22 +1,9 @@
-from rafcon.utils import log
-from rafcon.utils.geometry import dist
-
-logger = log.get_logger(__name__)
 
 from math import sin, cos, pi, atan2
-
 from enum import Enum
-
-from rafcon.utils import constants as const
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
-# Activate the following line in the production code th increase speed
-# http://pyopengl.sourceforge.net/documentation/opengl_diffs.html:
-# OpenGL.ERROR_CHECKING = False
-OpenGL.FULL_LOGGING = True
-# Also in productive code, set the previous statement to false and activate the next one
-# OpenGL.ERROR_LOGGING = False
 from OpenGL.GLUT import *
 
 # from gdk import eve
@@ -24,6 +11,19 @@ import gtk
 import gtk.gtkgl
 import gtk.gdkgl
 from gtkmvc import View
+
+from rafcon.mvc.config import global_gui_config as gui_config
+from rafcon.utils.geometry import dist
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
+
+# Activate the following line in the production code th increase speed
+# http://pyopengl.sourceforge.net/documentation/opengl_diffs.html:
+# OpenGL.ERROR_CHECKING = False
+OpenGL.FULL_LOGGING = True
+# Also in productive code, set the previous statement to false and activate the next one
+# OpenGL.ERROR_LOGGING = False
 
 
 class Direction(Enum):
@@ -45,6 +45,19 @@ class Color:
         self.g = g
         self.b = b
         self.a = a
+
+    @staticmethod
+    def from_hex_string(hex_string):
+        hex_string = hex_string[1:]
+        if len(hex_string) > 3:
+            r = int(hex_string[0:2], 16)
+            g = int(hex_string[2:4], 16)
+            b = int(hex_string[4:6], 16)
+        else:
+            r = int(hex_string[0:1] + hex_string[0:1], 16)
+            g = int(hex_string[1:2] + hex_string[1:2], 16)
+            b = int(hex_string[2:3] + hex_string[2:3], 16)
+        return Color.from_dec(r, g, b)
 
     @staticmethod
     def from_hex(rgb, a=0xFF):
@@ -139,7 +152,7 @@ class GraphicalEditorView(View):
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     # background_color = Color.from_hex(0x17242f)
-    background_color = Color.from_hex(const.GRAPHICAL_EDITOR_COLOR_BACKGROUND)
+    background_color = Color.from_hex_string(gui_config.colors['GLOBAL_BACKGROUND'])
     state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)
     state_selected_color = Color.from_hex(0xd7e0ec)  # Color(0.7, 0, 0, 0.8)
     state_active_color = Color.from_hex(0xb7d9b0)  # Color(0.7, 0, 0, 0.8)

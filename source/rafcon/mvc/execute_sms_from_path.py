@@ -40,7 +40,7 @@ def create_models():
 
 
 def run_sm():
-    gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
+    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
 
     home_path = os.path.join(os.path.expanduser('~'), '.config/rafcon')

@@ -4,14 +4,13 @@ from pango import SCALE, FontDescription
 from gaphas.state import observed
 from gaphas.connector import Handle
 import cairo
-from gtk.gdk import Color
 
 from rafcon.utils import constants
 from rafcon.utils.geometry import deg2rad
 
 from rafcon.statemachine.states.container_state import ContainerState
 
-from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.models.outcome import OutcomeModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
@@ -32,8 +31,8 @@ class PortView(object):
 
         self._draw_connection_to_port = False
 
-        self.text_color = constants.LABEL_COLOR
-        self.fill_color = constants.LABEL_COLOR
+        self.text_color = gui_config.gtk_colors['LABEL']
+        self.fill_color = gui_config.gtk_colors['LABEL']
 
         self._incoming_handles = []
         self._outgoing_handles = []
@@ -241,10 +240,10 @@ class PortView(object):
         c = context.cairo
         side_length = self.port_side_size
         label_position = self.side if not self.label_print_inside else self.side.opposite()
-        fill_color = gap_draw_helper.get_col_rgba(Color(self.fill_color), transparency)
+        fill_color = gap_draw_helper.get_col_rgba(self.fill_color, transparency)
 
         show_additional_value = False
-        if global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value is not None:
+        if gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value is not None:
             show_additional_value = True
 
         parameters = {
@@ -335,11 +334,11 @@ class PortView(object):
 
         # Colorize the generated connector path
         if self.connected_incoming or self.connected_outgoing:
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(Color(constants.BLACK_COLOR))
+            c.set_source_color(gui_config.gtk_colors['BLACK'])
         c.fill_preserve()
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
 
     def _draw_container_state_port(self, context, direction, color, transparency):
@@ -366,11 +365,11 @@ class PortView(object):
         c.restore()
 
         if self.connected_incoming:
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(Color(constants.BLACK_COLOR))
+            c.set_source_color(gui_config.gtk_colors['BLACK'])
         c.fill_preserve()
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
 
         c.move_to(*cur_point)
@@ -381,11 +380,11 @@ class PortView(object):
         c.restore()
 
         if self.connected_outgoing:
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(Color(constants.BLACK_COLOR))
+            c.set_source_color(gui_config.gtk_colors['BLACK'])
         c.fill_preserve()
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
 
     def _draw_hover_effect(self, context, direction, color, transparency):
@@ -402,7 +401,7 @@ class PortView(object):
         PortView._draw_rectangle(c, width + margin, height + margin)
         c.restore()
 
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(color), transparency))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
 
     @staticmethod
@@ -551,7 +550,7 @@ class IncomeView(LogicPortView):
                                          side=SnappedSide.LEFT)
 
     def draw(self, context, state):
-        self.draw_port(context, constants.LABEL_COLOR, state.transparent)
+        self.draw_port(context, gui_config.gtk_colors['LABEL'], state.transparent)
 
 
 class OutcomeView(LogicPortView):
@@ -577,16 +576,16 @@ class OutcomeView(LogicPortView):
 
     def draw(self, context, state):
         if self.outcome_id == -2:
-            fill_color = constants.PREEMPTED_COLOR
+            fill_color = gui_config.gtk_colors['PREEMPTED']
         elif self.outcome_id == -1:
-            fill_color = constants.ABORTED_COLOR
+            fill_color = gui_config.gtk_colors['ABORTED']
         else:
-            fill_color = constants.LABEL_COLOR
+            fill_color = gui_config.gtk_colors['LABEL']
 
         draw_label = True
         if self.has_outgoing_connection():
             draw_label = False
-        if not global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
+        if not gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
             draw_label = False
 
         self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
@@ -667,7 +666,7 @@ class ScopedVariablePortView(PortView):
             c.move_to(port_size[0] / 2., port_size[1] / 2.)
             self._draw_rectangle_path(c, name_size[0], side_length)
             c.set_line_width(self.port_side_size / 50. * self._port_image_cache.multiplicator)
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.DATA_PORT_COLOR), state.transparent))
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'], state.transparent))
             c.fill_preserve()
             c.stroke()
 
@@ -698,7 +697,7 @@ class ScopedVariablePortView(PortView):
         side_length = self.port_side_size
 
         layout = c.create_layout()
-        font_name = constants.FONT_NAMES[0]
+        font_name = constants.INTERFACE_FONT
         font_size = side_length * .6
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
@@ -718,7 +717,7 @@ class ScopedVariablePortView(PortView):
             c.rotate(deg2rad(-90))
         c.rel_move_to(-real_name_size[0] / 2., -real_name_size[1] / 2.)
 
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR), transparency))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['SCOPED_VARIABLE_TEXT'], transparency))
         c.update_layout(layout)
         c.show_layout(layout)
         c.restore()
@@ -788,8 +787,8 @@ class DataPortView(PortView):
 
         self._value = None
 
-        self.text_color = constants.DATA_PORT_COLOR
-        self.fill_color = constants.DATA_PORT_COLOR
+        self.text_color = gui_config.gtk_colors['DATA_PORT']
+        self.fill_color = gui_config.gtk_colors['DATA_PORT']
 
     @property
     def port_m(self):
@@ -805,7 +804,7 @@ class DataPortView(PortView):
 
     def draw(self, context, state):
         draw_label = state.selected or state.show_data_port_label or context.draw_all
-        self.draw_port(context, constants.DATA_PORT_COLOR, state.transparent, draw_label, self._value)
+        self.draw_port(context, gui_config.gtk_colors['DATA_PORT'], state.transparent, draw_label, self._value)
 
 
 class InputPortView(DataPortView):

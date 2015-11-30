@@ -8,7 +8,7 @@ PTVERSION           = 2
 NAME                = rafcon 
 MAINTAINER          = Sebastian Brunner <sebastian.brunner@dlr.de>, Rico Belder <rico.belder@dlr.de>, Franz Steinmetz <franz.steinmetz@dlr.de>
 DESCRIPTION         = RMC awesome flow control -- This is a package to program and visualize complex robot tasks.
-VERSION             = 0.5.8
+VERSION             = 0.6.0
 DOCUMENTATION       = https://rmintra01.robotic.dlr.de/wiki/RAFCON
 MANTIS_PROJECT      = DLR Flow-Control
 SUPPORTED_LANGUAGES = python
@@ -28,6 +28,4 @@ source/rafcon/documentation => docs
 bin/ | !rafcon_start | !rafcon_start_gui => bin # Symlinks are recreated in post_install step
 
 [post-install]
-cd ${RMPM_INSTALL_DIR}/bin
-ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start
-ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui
+cd ${RMPM_INSTALL_DIR}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui

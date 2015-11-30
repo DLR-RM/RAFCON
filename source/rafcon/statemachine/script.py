@@ -16,7 +16,7 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.id_generator import *
 import rafcon.statemachine.singleton
-from rafcon.utils.config import read_file
+from rafcon.utils import filesystem
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
@@ -24,7 +24,7 @@ from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
 
 DEFAULT_SCRIPT_FILE = "default_script.py"
 
-DEFAULT_SCRIPT = read_file(os.path.dirname(__file__), DEFAULT_SCRIPT_FILE)
+DEFAULT_SCRIPT = filesystem.read_file(os.path.dirname(__file__), DEFAULT_SCRIPT_FILE)
 
 
 class Script(Observable, yaml.YAMLObject):

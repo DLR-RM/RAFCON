@@ -27,9 +27,6 @@ except ImportError as e:
     # logger.error("%s, %s" % (e.message, traceback.format_exc()))
     GAPHAS_AVAILABLE = False
 
-STATE_MACHINE_ACTIVE_COLOR = "#39af57"
-STATE_MACHINE_NOT_ACTIVE_COLOR = "#fefefe"
-
 
 def create_tab_close_button(callback, *additional_parameters):
     close_button = gtk.Button()
@@ -85,11 +82,10 @@ def add_state_machine(widget, event=None):
 
 
 class StateMachinesEditorController(ExtendedController):
-    def __init__(self, sm_manager_model, view, states_editor_ctrl):
+    def __init__(self, sm_manager_model, view):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
-        self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         self.tabs = {}
         self.last_opened_state_machines = collections.deque(maxlen=10)

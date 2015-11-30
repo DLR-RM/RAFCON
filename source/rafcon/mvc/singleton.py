@@ -76,9 +76,9 @@ interface.create_folder_func = create_folder
 
 def show_notice(query):
     import gtk
+    from rafcon.mvc.gui_helper import set_button_children_size_request
     dialog = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
     dialog.set_markup(query)
-    from rafcon.utils.gui_helper import set_button_children_size_request
     set_button_children_size_request(dialog)
     dialog.run()
     dialog.destroy()

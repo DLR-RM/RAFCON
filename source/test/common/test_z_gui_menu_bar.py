@@ -301,7 +301,7 @@ def test_gui(caplog):
     # delete all old state machines
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(test_utils.RAFCON_PATH + "/mvc/")
-    gtk.rc_parse("./themes/black/gtk-2.0/gtkrc")
+    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 

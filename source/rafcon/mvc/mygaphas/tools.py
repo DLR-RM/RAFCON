@@ -195,7 +195,7 @@ class HoverItemTool(HoverTool):
         elif isinstance(view.hovered_item, ConnectionView):
             state_v = view.get_item_at_point_exclude(pos, selected=False, exclude=[view.hovered_item])
             if isinstance(state_v, StateView):
-                distance = state_v.port_side_size / 2. * view.get_zoom_factor()
+                distance = state_v.border_width / 2. * view.get_zoom_factor()
                 connection_v, hovered_handle = StateHandleFinder(state_v, view).get_handle_at_point(pos, distance)
             else:
                 connection_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)

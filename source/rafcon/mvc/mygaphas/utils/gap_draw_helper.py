@@ -1,9 +1,9 @@
 from math import pi
 
-from gtk.gdk import Color
 from pango import SCALE, FontDescription
 from cairo import ANTIALIAS_SUBPIXEL
 
+from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.utils import constants
 from rafcon.utils.geometry import deg2rad
@@ -27,14 +27,14 @@ def limit_value_string_length(value):
     return final_string
 
 
-def get_col_rgba(col, transparent=False, alpha=None):
+def get_col_rgba(color, transparent=False, alpha=None):
     """
     This class converts a gtk.gdk.Color into its r, g, b parts and adds an alpha according to needs
-    :param col: Color to extract r, g and b from
+    :param gtk.gdk.Color color: Color to extract r, g and b from
     :param transparent: Whether the color shoud be tranparent or not (used for selection in "data-flow-mode"
     :return: Red, Green, Blue and Alpha value (all betwenn 0.0 - 1.0)
     """
-    r, g, b = col.red, col.green, col.blue
+    r, g, b = color.red, color.green, color.blue
     r /= 65535.
     g /= 65535.
     b /= 65535.
@@ -58,9 +58,9 @@ def get_side_length_of_resize_handle(view, item):
     """
     from rafcon.mvc.mygaphas.items.state import StateView, NameView
     if isinstance(item, StateView):
-        return item.port_side_size * view.get_zoom_factor() / 1.5
+        return item.border_width * view.get_zoom_factor() / 1.5
     elif isinstance(item, NameView):
-        return item.parent.port_side_size * view.get_zoom_factor() / 2.5
+        return item.parent.border_width * view.get_zoom_factor() / 2.5
     return 0
 
 
@@ -107,7 +107,7 @@ def draw_data_value_rect(cairo_context, color, value_size, name_size, pos, port_
 
     c.set_source_rgba(*color)
     c.fill_preserve()
-    c.set_source_color(Color(constants.BLACK_COLOR))
+    c.set_source_color(gui_config.gtk_colors['BLACK'])
     c.stroke()
 
     return rot_angle, move_x, move_y
@@ -119,7 +119,7 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     This method draws the label of a scoped variable connected to a data port. This is represented by drawing a bigger
     label where the top part is filled and the bottom part isn't.
     :param context: Draw Context
-    :param color: Color to draw the label in (border and background fill color)
+    :param gtk.gdk.Color color: Color to draw the label in (border and background fill color)
     :param name_size: Size of the name labels (scoped variable and port name) combined
     :param handle_pos: Position of port which label is connected to
     :param port_side: Side on which the label should be drawn
@@ -131,7 +131,7 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     c = context.cairo
     c.set_line_width(port_side_size * .03)
 
-    c.set_source_color(Color(color))
+    c.set_source_color(color)
 
     rot_angle = .0
     move_x = 0.
@@ -223,8 +223,8 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     Draws a normal label indicating the port name.
     :param context: Draw Context
     :param text: Text to display
-    :param label_color: Color of the label (border and background if fill is set to True)
-    :param text_color: Color of the text
+    :param gtk.gdk.Color label_color: Color of the label (border and background if fill is set to True)
+    :param gtk.gdk.Color text_color: Color of the text
     :param transparency: Transparency of the text
     :param fill: Whether the label should be filled or not
     :param label_position: Side on which the label should be drawn
@@ -242,7 +242,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     layout = c.create_layout()
     layout.set_text(text)
 
-    font_name = constants.FONT_NAMES[0]
+    font_name = constants.INTERFACE_FONT
     font_size = port_side_length
     font = FontDescription(font_name + " " + str(font_size))
     layout.set_font_description(font)
@@ -300,7 +300,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
         # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
         if label_position is SnappedSide.RIGHT:
             c.rel_move_to(-text_size[0], -text_size[1])
-        c.set_source_rgba(*get_col_rgba(Color(text_color), transparency))
+        c.set_source_rgba(*get_col_rgba(text_color, transparency))
         c.update_layout(layout)
         c.show_layout(layout)
         c.restore()
@@ -330,9 +330,9 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
             c.new_path()
         else:
             # Draw filled outline
-            c.set_source_rgba(*get_col_rgba(Color(constants.DATA_VALUE_BACKGROUND_COLOR)))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['DATA_VALUE_BACKGROUND']))
             c.fill_preserve()
-            c.set_source_color(Color(constants.BLACK_COLOR))
+            c.set_source_color(gui_config.gtk_colors['BLACK'])
             c.stroke()
 
             # Move to the upper left corner of the desired text position
@@ -348,7 +348,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
             # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
             if label_position is SnappedSide.RIGHT:
                 c.rel_move_to(-value_text_size[0], -text_size[1])
-            c.set_source_rgba(*get_col_rgba(Color(constants.SCOPED_VARIABLE_TEXT_COLOR)))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['SCOPED_VARIABLE_TEXT']))
             c.update_layout(value_layout)
             c.show_layout(value_layout)
             c.restore()
@@ -397,7 +397,7 @@ def get_text_layout(cairo_context, text, size):
     layout = c.create_layout()
     layout.set_text(text)
 
-    font_name = constants.FONT_NAMES[0]
+    font_name = constants.INTERFACE_FONT
 
     font = FontDescription(font_name + " " + str(size))
     layout.set_font_description(font)

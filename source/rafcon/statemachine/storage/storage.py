@@ -22,8 +22,8 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.config import global_config
 
 from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
-from rafcon.utils.config import read_file
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -106,15 +106,15 @@ class StateMachineStorage(Observable):
             if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
                 for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
                     if os.path.exists(path):
-                        storage_utils.remove_path(path)
+                        filesystem.remove_path(path)
 
         root_state = statemachine.root_state
         # clean old path first
         if os.path.exists(self.base_path):
             if delete_old_state_machine:
-                storage_utils.remove_path(self.base_path)
+                filesystem.remove_path(self.base_path)
         if not os.path.exists(self.base_path):
-            storage_utils.create_path(self.base_path)
+            filesystem.create_path(self.base_path)
         f = open(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'w')
         last_update = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         creation_time = last_update
@@ -183,7 +183,7 @@ class StateMachineStorage(Observable):
         from rafcon.statemachine.states.container_state import ContainerState
         state_path = os.path.join(parent_path, str(state.state_id))
         state_path_full = os.path.join(self.base_path, state_path)
-        storage_utils.create_path(state_path_full)
+        filesystem.create_path(state_path_full)
         if isinstance(state, ExecutionState):
             self.save_script_file_for_state_and_source_path(state, state_path)
 
@@ -309,7 +309,7 @@ class StateMachineStorage(Observable):
     def load_script_file(state):
         from rafcon.statemachine.states.execution_state import ExecutionState
         if isinstance(state, ExecutionState):
-            script = read_file(state.get_file_system_path(), state.script.filename)
+            script = filesystem.read_file(state.get_file_system_path(), state.script.filename)
             state.script.script = script
 
     #########################################################################

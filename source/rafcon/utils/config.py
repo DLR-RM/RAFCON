@@ -1,23 +1,12 @@
-import yaml
 import os
-import argparse
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
+from os.path import expanduser, expandvars, isdir
 
+import yaml
+import argparse
 from rafcon.utils import storage_utils
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
-
-
-def read_file(path, filename):
-    file_path = os.path.join(os.path.realpath(path), filename)
-
-    file_content = ""
-    if os.path.isfile(file_path):
-        file_pointer = open(file_path, 'r')
-        file_content = file_pointer.read()
-        file_pointer.close()
-
-    return file_content
 
 
 def config_path(path):

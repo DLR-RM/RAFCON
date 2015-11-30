@@ -2,6 +2,7 @@ import gtk
 import gobject
 from gtkmvc import View
 from rafcon.utils import constants
+from rafcon.mvc.config import global_gui_config as gui_config
 
 
 class StateMachinesEditorView(View):
@@ -125,7 +126,7 @@ class PlusAddNotebook(gtk.Notebook):
     pixbuf_data = [
         "13 13 2 1",
         "  c None",
-        "x c %s" % constants.TEXT_COLOR_DARK,
+        "x c %s" % gui_config.colors['TEXT_DARK'],
         "     xxx     ",
         "     xxx     ",
         "     xxx     ",

@@ -10,8 +10,7 @@ from rafcon.mvc.shortcut_manager import ShortcutManager
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.states_editor import StatesEditorController
-from rafcon.mvc.controllers.state_machines_editor import StateMachinesEditorController, STATE_MACHINE_ACTIVE_COLOR, \
-    STATE_MACHINE_NOT_ACTIVE_COLOR
+from rafcon.mvc.controllers.state_machines_editor import StateMachinesEditorController
 from rafcon.mvc.controllers.menu_bar import MenuBarController
 from rafcon.mvc.controllers.tool_bar import ToolBarController
 from rafcon.mvc.controllers.top_tool_bar import TopToolBarController
@@ -23,7 +22,7 @@ from rafcon.mvc import gui_helper
 from rafcon.mvc.singleton import global_variable_manager_model as gvm_model
 import rafcon.statemachine.singleton
 import rafcon.statemachine.config
-from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.network.network_config import global_net_config
 
 from rafcon.utils import constants
@@ -149,8 +148,7 @@ class MainWindowController(ExtendedController):
         # state machines editor
         ######################################################
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
-                                                                   view.state_machines_editor,
-                                                                   states_editor_ctrl)
+                                                                   view.state_machines_editor)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
         graphical_editor_label = view['graphical_editor_label']
@@ -255,7 +253,7 @@ class MainWindowController(ExtendedController):
         for i in range(view["tree_notebook_1"].get_n_pages()):
             child = view["tree_notebook_1"].get_nth_page(i)
             tab_label = view["tree_notebook_1"].get_tab_label(child)
-            if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+            if gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
                 tab_label_text = tab_label.get_text()
                 view["tree_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
                                                                                                 self.icons))
@@ -267,7 +265,7 @@ class MainWindowController(ExtendedController):
         for i in range(view["tree_notebook_2"].get_n_pages()):
             child = view["tree_notebook_2"].get_nth_page(i)
             tab_label = view["tree_notebook_2"].get_tab_label(child)
-            if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+            if gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
                 tab_label_text = tab_label.get_text()
                 view["tree_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
                                                                                                 self.icons))
@@ -345,7 +343,7 @@ class MainWindowController(ExtendedController):
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
-        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").destroy)
+        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").on_destroy)
         # hide not usable buttons
         self.view['step_buttons'].hide()
 
@@ -356,11 +354,11 @@ class MainWindowController(ExtendedController):
         label = notebook.get_tab_label(page).get_children()[0]
         # print rc_style.fg[gtk.STATE_NORMAL]
         if active:
-            label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(STATE_MACHINE_ACTIVE_COLOR))
-            label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(STATE_MACHINE_ACTIVE_COLOR))
+            label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))
+            label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))
         else:
-            label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(STATE_MACHINE_NOT_ACTIVE_COLOR))
-            label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(STATE_MACHINE_NOT_ACTIVE_COLOR))
+            label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
+            label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
@@ -539,22 +537,22 @@ class MainWindowController(ExtendedController):
 
     def on_debug_content_change(self, widget, data=None):
         if self.view['button_show_info'].get_active():
-            global_gui_config.set_config_value('LOGGING_SHOW_INFO', True)
+            gui_config.set_config_value('LOGGING_SHOW_INFO', True)
         else:
-            global_gui_config.set_config_value('LOGGING_SHOW_INFO', False)
+            gui_config.set_config_value('LOGGING_SHOW_INFO', False)
         if self.view['button_show_debug'].get_active():
-            global_gui_config.set_config_value('LOGGING_SHOW_DEBUG', True)
+            gui_config.set_config_value('LOGGING_SHOW_DEBUG', True)
         else:
-            global_gui_config.set_config_value('LOGGING_SHOW_DEBUG', False)
+            gui_config.set_config_value('LOGGING_SHOW_DEBUG', False)
         if self.view['button_show_warning'].get_active():
-            global_gui_config.set_config_value('LOGGING_SHOW_WARNING', True)
+            gui_config.set_config_value('LOGGING_SHOW_WARNING', True)
         else:
-            global_gui_config.set_config_value('LOGGING_SHOW_WARNING', False)
+            gui_config.set_config_value('LOGGING_SHOW_WARNING', False)
         if self.view['button_show_error'].get_active():
-            global_gui_config.set_config_value('LOGGING_SHOW_ERROR', True)
+            gui_config.set_config_value('LOGGING_SHOW_ERROR', True)
         else:
-            global_gui_config.set_config_value('LOGGING_SHOW_ERROR', False)
-        # global_gui_config.save_configuration()
+            gui_config.set_config_value('LOGGING_SHOW_ERROR', False)
+        # gui_config.save_configuration()
         self.view.logging_view.update_filtered_buffer()
 
     @staticmethod

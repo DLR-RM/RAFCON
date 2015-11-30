@@ -5,11 +5,10 @@ from copy import copy
 
 from rafcon.utils import constants, log
 
-from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 
 import cairo
-from gtk.gdk import Color
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
@@ -22,7 +21,6 @@ from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
-
 
 logger = log.get_logger(__name__)
 
@@ -126,7 +124,7 @@ class StateView(Element):
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
-        port_side_size = parent.port_side_size
+        port_side_size = parent.border_width
 
         child_nw_abs = canvas.project(child, child.handles()[NW].pos)
         child_se_abs = canvas.project(child, child.handles()[SE].pos)
@@ -165,7 +163,7 @@ class StateView(Element):
 
     @property
     def show_data_port_label(self):
-        return global_gui_config.get_config_value("SHOW_DATA_FLOWS")
+        return gui_config.get_config_value("SHOW_DATA_FLOWS")
 
     @property
     def moving(self):
@@ -180,9 +178,9 @@ class StateView(Element):
                 child.moving = moving
 
     @property
-    def port_side_size(self):
-        # dynamic_width = min(self.width, self.height) / 20.
-        return constants.ROOT_WIDTH / pow(constants.WIDTH_HIERARCHY_FACTOR, self.hierarchy_level - 1)
+    def border_width(self):
+        return constants.BORDER_WIDTH_ROOT_STATE / pow(constants.BORDER_WIDTH_HIERARCHY_SCALE_FACTOR,
+                                                       self.hierarchy_level - 1)
 
     @property
     def parent(self):
@@ -243,13 +241,13 @@ class StateView(Element):
     @staticmethod
     def get_state_drawing_area(state):
         assert isinstance(state, StateView)
-        port_side_size = state.port_side_size
+        border_width = state.border_width
 
-        state_nw_pos_x = state.handles()[NW].pos.x + port_side_size
-        state_nw_pos_y = state.handles()[NW].pos.y + port_side_size
+        state_nw_pos_x = state.handles()[NW].pos.x + border_width
+        state_nw_pos_y = state.handles()[NW].pos.y + border_width
         state_nw_pos = Position((state_nw_pos_x, state_nw_pos_y))
-        state_se_pos_x = state.handles()[SE].pos.x - port_side_size
-        state_se_pos_y = state.handles()[SE].pos.y - port_side_size
+        state_se_pos_x = state.handles()[SE].pos.x - border_width
+        state_se_pos_y = state.handles()[SE].pos.y - border_width
         state_se_pos = Position((state_se_pos_x, state_se_pos_y))
 
         return state_nw_pos, state_se_pos
@@ -279,7 +277,7 @@ class StateView(Element):
             'active':  self.model.state.active,
             'selected': self.selected,
             'moving': self.moving,
-            'port_side_size': self.port_side_size
+            'border_width': self.border_width
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -301,50 +299,50 @@ class StateView(Element):
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
             if self.model.state.active:
-                c.set_source_color(Color(constants.STATE_ACTIVE_COLOR))
+                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE'])
             elif self.selected:
-                c.set_source_color(Color(constants.STATE_SELECTED_COLOR))
+                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED'])
             else:
-                c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BORDER_COLOR), self._transparent))
+                c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BORDER'], self._transparent))
             c.fill_preserve()
             if self.model.state.active:
-                c.set_source_color(Color(constants.STATE_ACTIVE_BORDER_COLOR))
+                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE_BORDER'])
                 c.set_line_width(.25 / self.hierarchy_level * multiplicator)
             elif self.selected:
-                c.set_source_color(Color(constants.STATE_SELECTED_OUTER_BOUNDARY_COLOR))
+                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED_OUTER_BOUNDARY'])
                 c.set_line_width(.25 / self.hierarchy_level * multiplicator)
             else:
-                c.set_source_color(Color(constants.BLACK_COLOR))
+                c.set_source_color(gui_config.gtk_colors['BLACK'])
             c.stroke()
 
             inner_nw, inner_se = self.get_state_drawing_area(self)
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_BACKGROUND_COLOR)))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BACKGROUND']))
             c.fill_preserve()
             c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
-            c.set_source_color(Color(constants.BLACK_COLOR))
+            c.set_source_color(gui_config.gtk_colors['BLACK'])
             c.stroke()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
-        self._income.port_side_size = self.port_side_size
+        self._income.port_side_size = self.border_width
         self._income.draw(context, self)
 
         for outcome in self._outcomes:
-            outcome.port_side_size = self.port_side_size
+            outcome.port_side_size = self.border_width
             outcome.draw(context, self)
 
         for input in self._inputs:
-            input.port_side_size = self.port_side_size
+            input.port_side_size = self.border_width
             input.draw(context, self)
 
         for output in self._outputs:
-            output.port_side_size = self.port_side_size
+            output.port_side_size = self.border_width
             output.draw(context, self)
 
         for scoped_variable in self._scoped_variables_ports:
-            scoped_variable.port_side_size = self.port_side_size
+            scoped_variable.port_side_size = self.border_width
             scoped_variable.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
@@ -353,8 +351,8 @@ class StateView(Element):
             self._draw_symbol(context, constants.SIGN_LIB, True, (max_width, max_height))
 
         if self.moving:
-            max_width = self.width - 2 * self.port_side_size
-            max_height = self.height - 2 * self.port_side_size
+            max_width = self.width - 2 * self.border_width
+            max_height = self.height - 2 * self.border_width
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
 
 
@@ -365,7 +363,7 @@ class StateView(Element):
 
         layout = c.create_layout()
 
-        font_name = constants.FONT_NAMES[1]
+        font_name = constants.ICON_FONT
 
         def set_font_description():
             layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
@@ -399,7 +397,7 @@ class StateView(Element):
         elif is_library_state:
             alpha = 0.25
 
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.STATE_NAME_COLOR), is_library_state,
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['STATE_NAME'], is_library_state,
                                                          alpha=alpha))
         c.update_layout(layout)
         c.show_layout(layout)
@@ -474,7 +472,7 @@ class StateView(Element):
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
     def add_income(self):
-        income_v = IncomeView(self, self.port_side_size)
+        income_v = IncomeView(self, self.border_width)
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
         self._map_handles_port_v[income_v.handle] = income_v
@@ -491,7 +489,7 @@ class StateView(Element):
         return income_v
 
     def add_outcome(self, outcome_m):
-        outcome_v = OutcomeView(outcome_m, self, self.port_side_size)
+        outcome_v = OutcomeView(outcome_m, self, self.border_width)
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
@@ -524,7 +522,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
 
     def add_input_port(self, port_m):
-        input_port_v = InputPortView(self, port_m, self.port_side_size)
+        input_port_v = InputPortView(self, port_m, self.border_width)
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
@@ -551,7 +549,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
 
     def add_output_port(self, port_m):
-        output_port_v = OutputPortView(self, port_m, self.port_side_size)
+        output_port_v = OutputPortView(self, port_m, self.border_width)
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
@@ -578,7 +576,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
     def add_scoped_variable(self, scoped_variable_m):
-        scoped_variable_port_v = ScopedVariablePortView(self, self.port_side_size, scoped_variable_m)
+        scoped_variable_port_v = ScopedVariablePortView(self, self.border_width, scoped_variable_m)
         self._scoped_variables_ports.append(scoped_variable_port_v)
         self._ports.append(scoped_variable_port_v.port)
         self._handles.append(scoped_variable_port_v.handle)
@@ -592,7 +590,7 @@ class StateView(Element):
             scoped_variable_port_v.side = SnappedSide.TOP
             num_scoped_vars = len(self._scoped_variables_ports)
             pos_x = self._calculate_port_pos_on_line(num_scoped_vars, self.width,
-                                                     port_width=self.port_side_size * 4)
+                                                     port_width=self.border_width * 4)
             pos_y = 0
             port_meta['rel_pos'] = pos_x, pos_y
         scoped_variable_port_v.handle.pos = port_meta['rel_pos']
@@ -626,8 +624,8 @@ class StateView(Element):
         :rtype: float
         """
         if port_width is None:
-            port_width = 2 * self.port_side_size
-        border_size = self.port_side_size
+            port_width = 2 * self.border_width
+        border_size = self.border_width
         pos = 0.5 * border_size + port_num * port_width
         outermost_pos = max(side_length / 2., side_length - 0.5 * border_size - port_width)
         pos = min(pos, outermost_pos)
@@ -729,7 +727,7 @@ class NameView(Element):
 
     @name.setter
     def name(self, name):
-        assert isinstance(name, str)
+        assert isinstance(name, basestring)
         self._name = name
 
     @property
@@ -778,7 +776,7 @@ class NameView(Element):
 
             if context.selected:
                 c.rectangle(0, 0, self.width, self.height)
-                c.set_source_rgba(*gap_draw_helper.get_col_rgba(Color(constants.LABEL_COLOR), alpha=.1))
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], alpha=.1))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
@@ -794,7 +792,7 @@ class NameView(Element):
                 font = FontDescription(font_name + " " + str(font_size))
                 layout.set_font_description(font)
 
-            font_name = constants.FONT_NAMES[0]
+            font_name = constants.INTERFACE_FONT
 
             font_size = self.height * 0.8
 
@@ -805,7 +803,7 @@ class NameView(Element):
                 set_font_description()
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(Color(constants.STATE_NAME_COLOR), self.parent.transparent))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.parent.transparent))
             c.update_layout(layout)
             c.show_layout(layout)
 

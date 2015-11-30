@@ -1,22 +1,28 @@
-import gtk
 import os
 import sys
-import shutil
+import re
+import gtk
 
-from rafcon.utils.config import DefaultConfig, ConfigError, read_file
+from rafcon.utils.config import DefaultConfig, ConfigError
+from rafcon.utils import filesystem
+from rafcon.utils import storage_utils
 from rafcon.utils import constants
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 CONFIG_FILE = "gui_config.yaml"
 
-DEFAULT_CONFIG = read_file(os.path.dirname(__file__), CONFIG_FILE)
+DEFAULT_CONFIG = filesystem.read_file(os.path.dirname(__file__), CONFIG_FILE)
 
 
 class GuiConfig(DefaultConfig):
     """
     Class to hold and load the global GUI configurations.
     """
+
+    colors = {}
+    gtk_colors = {}
 
     def __init__(self):
         super(GuiConfig, self).__init__(DEFAULT_CONFIG)
@@ -28,69 +34,99 @@ class GuiConfig(DefaultConfig):
         self.configure_gtk()
         self.configure_fonts()
         self.configure_source_view_styles()
+        self.configure_colors()
 
     def load(self, config_file=None, path=None):
         if config_file is None:
             config_file = CONFIG_FILE
         super(GuiConfig, self).load(config_file, path)
 
-    @staticmethod
-    def configure_gtk():
+    def configure_gtk(self):
         import gtk
-        file_path = os.path.dirname(os.path.realpath(__file__))
-        gtkrc_path = os.path.join(file_path, 'themes', 'black', 'gtk-2.0', 'gtkrc')
-        gtk.rc_parse(gtkrc_path)
+        theme = self.get_config_value('THEME', 'dark')
+        gtkrc_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'gtk-2.0', 'gtkrc')
+        if not os.path.exists(gtkrc_file_path):
+            raise ValueError("GTK theme '{0}' does not exist".format(theme))
+        gtk.rc_parse(gtkrc_file_path)
 
     def configure_fonts(self):
         tv = gtk.TextView()
         context = tv.get_pango_context()
-        fonts = context.list_families()
+        existing_fonts = context.list_families()
+        existing_font_names = [font.get_name() for font in existing_fonts]
 
-        font_path = os.path.join(os.path.expanduser('~'), '.fonts')
+        font_user_folder = os.path.join(os.path.expanduser('~'), '.fonts')
 
         font_copied = False
 
-        for font_name in constants.FONT_NAMES:
-            found = False
-            for font in fonts:
-                if font.get_name() == font_name:
-                    logger.debug("Font '{0}' found".format(font_name))
-                    found = True
-            if not found:
-                logger.debug("Copy font '{0}' to '{1}'".format(font_name, font_path))
-                if not os.path.isdir(font_path):
-                    os.makedirs(font_path)
-                font_origin = os.path.join(self.path_to_tool, constants.FONT_STYLE_PATHS[font_name])
+        for font_name in constants.FONTS:
+            if font_name in existing_font_names:
+                logger.debug("Font '{0}' found".format(font_name))
+                continue
 
-                if os.path.isdir(font_origin):
-                    font_names = os.listdir(font_origin)
-                    for font_filename in font_names:
-                        shutil.copy(os.path.join(font_origin, font_filename), font_path)
-                else:
-                    shutil.copy(font_origin, font_path)
-                font_copied = True
+            logger.debug("Copy font '{0}' to '{1}'".format(font_name, font_user_folder))
+            if not os.path.isdir(font_user_folder):
+                os.makedirs(font_user_folder)
+            font_origin = os.path.join(self.path_to_tool, 'themes', 'fonts', font_name)
+
+            # A font is a folder one or more font faces
+            font_faces = os.listdir(font_origin)
+            for font_face in font_faces:
+                target_font_file = os.path.join(font_user_folder, font_face)
+                source_font_file = os.path.join(font_origin, font_face)
+                filesystem.copy_file_if_update_required(source_font_file, target_font_file)
+            font_copied = True
 
         if font_copied:
             logger.info("Restart application to apply new fonts")
             python = sys.executable
-            os.execl(python, python, * sys.argv)
+            os.execl(python, python, *sys.argv)
 
     def configure_source_view_styles(self):
-        path = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0', 'styles')
+        source_view_style_user_folder = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0',
+                                                     'styles')
+        filesystem.create_path(source_view_style_user_folder)
+        theme = self.get_config_value('THEME', 'dark')
+        source_view_style_theme_folder = os.path.join(self.path_to_tool, 'themes', theme, 'gtksw-styles')
 
-        if not os.path.isdir(path):
-            os.makedirs(path)
+        # Copy all .xml source view style files from theme to local user styles folder
+        for style in os.listdir(source_view_style_theme_folder):
+            source_view_style_theme_path = os.path.join(source_view_style_theme_folder, style)
+            if not os.path.isfile(source_view_style_theme_path) or not style.endswith(".xml"):
+                continue
 
-        for style in constants.STYLE_NAMES:
-            font_style_origin = os.path.join(self.path_to_tool, constants.FONT_STYLE_PATHS[style])
-            font_style_target = os.path.join(path, style)
+            source_view_style_user_path = os.path.join(source_view_style_user_folder, style)
+            filesystem.copy_file_if_update_required(source_view_style_theme_path, source_view_style_user_path)
 
-            # thes
-            # # Remove old versions
-            # if os.path.isfile(font_style_target):
-            #     os.remove(os.path.join(path, style))
+    def configure_colors(self):
+        theme = self.get_config_value('THEME', 'dark')
 
-            # Copy current version
-            shutil.copy(font_style_origin, path)
+        # Get colors from GTKrc file
+        gtkrc_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'gtk-2.0', 'gtkrc')
+        if not os.path.exists(gtkrc_file_path):
+            raise ValueError("GTK theme '{0}' does not exist".format(theme))
+
+        with open(gtkrc_file_path) as f:
+            lines = f.readlines()
+
+        for line in lines:
+            if re.match("\s*color", line):
+                color = re.findall(r'"(.*?)"', line)
+                self.colors[color[0].upper()] = color[1]
+                self.gtk_colors[color[0].upper()] = gtk.gdk.Color(color[1])
+
+        # Get color definitions
+        color_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'colors.json')
+        try:
+            colors = storage_utils.load_dict_from_json(color_file_path)
+        except IOError:
+            raise ValueError("No color definitions for theme '{0}' found".format(theme))
+
+        # replace unicode strings with str strings
+        colors = {str(key): str(value) for key, value in colors.iteritems()}
+        gtk_colors = {str(key): gtk.gdk.Color(str(value)) for key, value in colors.iteritems()}
+        self.gtk_colors.update(gtk_colors)
+        self.colors.update(colors)
+
 
 global_gui_config = GuiConfig()
