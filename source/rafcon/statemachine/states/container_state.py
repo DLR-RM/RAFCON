@@ -643,7 +643,7 @@ class ContainerState(State):
     def get_data_port(self, state_id, port_id):
         """Searches for a data port
 
-        The data port specified the the state id and data port id is searched in the state itself and in its children.
+        The data port specified by the state id and data port id is searched in the state itself and in its children.
 
         :param str state_id: The id of the state the port is in
         :param int port_id:  The id of the port
@@ -987,6 +987,12 @@ class ContainerState(State):
         if not to_data_port:
             return False, "Data flow target not existing"
 
+        # Data_ports without parents are not allowed to be connected twice
+        if not to_data_port.parent:
+            return False, "to_data_port does not have a parent"
+        if not from_data_port.parent:
+            return False, "from_data_port does not have a parent"
+
         # Check, whether the origin of the data flow is valid
         if from_state_id == self.state_id:  # data_flow originates in container state
             if from_data_port_id not in self.input_data_ports and from_data_port_id not in self.scoped_variables:
@@ -1006,16 +1012,22 @@ class ContainerState(State):
             if to_data_port_id not in to_data_port.parent.input_data_ports:
                 return False, "Data flow target port must be an input port, when the data flow goes to a child state"
 
-        # Check, whether origin and target are within the same child state
+        # Check, whether origin and target are the same child state (which would be not allowed)
         if from_state_id == to_state_id and from_state_id != self.state_id:
             return False, "Data flow target state cannot be the origin state"
 
         # Check, whether the target port is already connected
         for existing_data_flow in self.data_flows.itervalues():
-            to_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
+            to_data_port_existing = self.get_data_port(existing_data_flow.to_state, existing_data_flow.to_key)
+            from_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
             if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
+                if from_data_port is from_data_port_existing:
+                    return False, "Exactly the same data flow is already existing"
                 # Scoped variables are an exception, they can be connected several times
-                if not to_data_port.parent or to_data_port_id not in to_data_port.parent.scoped_variables:
+                if to_data_port.parent is self:
+                    if to_data_port_id not in to_data_port.parent.scoped_variables:
+                        return False, "Data flow target is already connected to another data flow"
+                else:
                     return False, "Data flow target is already connected to another data flow"
 
         return True, "valid"
