@@ -727,7 +727,7 @@ class ContainerState(State):
                     # forward the data to scoped variables
                     for data_flow_key, data_flow in self.data_flows.iteritems():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
-                            if data_flow.to_state == self.state_id:
+                            if data_flow.to_state == self.state_id and data_flow.to_key in self.scoped_variables:
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
                                 self.scoped_data[str(data_flow.to_key)+self.state_id] = \
                                     ScopedData(current_scoped_variable.name, value, type(value), self.state_id,
@@ -837,7 +837,7 @@ class ContainerState(State):
                 if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
                         scoped_data_key = str(data_flow.from_key)+data_flow.from_state
-                        if scoped_data_key in self.scoped_data.iterkeys():
+                        if scoped_data_key in self.scoped_data:
                             self.output_data[output_name] = \
                                 copy.deepcopy(self.scoped_data[scoped_data_key].value)
                         else:
