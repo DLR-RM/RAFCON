@@ -44,7 +44,7 @@ class MenuBarController(ExtendedController):
         data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 
-        show_all_data_flows = global_gui_config.get_config_value("SHOW_DATA_FLOWS", True)
+        show_all_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
         view["show_all_data_flows"].set_active(show_all_data_flows)
 
         show_data_flow_values = global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
@@ -458,9 +458,9 @@ class MenuBarController(ExtendedController):
 
     def on_show_all_data_flows_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_DATA_FLOWS", True)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOWS", True)
         else:
-            global_gui_config.set_config_value("SHOW_DATA_FLOWS", False)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOWS", False)
 
     def on_show_data_flow_values_toggled(self, widget, data=None):
         if widget.get_active():
