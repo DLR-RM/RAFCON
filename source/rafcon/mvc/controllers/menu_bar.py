@@ -50,7 +50,7 @@ class MenuBarController(ExtendedController):
         show_data_flow_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         view["show_data_flow_values"].set_active(show_data_flow_values)
 
-        show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
+        show_aborted_preempted = global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
         view["show_aborted_preempted"].set_active(show_aborted_preempted)
 
         if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
@@ -470,9 +470,9 @@ class MenuBarController(ExtendedController):
 
     def on_show_aborted_preempted_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_ABORTED_PREEMPTED", True)
+            global_runtime_config.set_config_value("SHOW_ABORTED_PREEMPTED", True)
         else:
-            global_gui_config.set_config_value("SHOW_ABORTED_PREEMPTED", False)
+            global_runtime_config.set_config_value("SHOW_ABORTED_PREEMPTED", False)
 
     def on_expert_view_activate(self, widget, data=None):
         pass

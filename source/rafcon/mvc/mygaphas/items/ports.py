@@ -586,7 +586,7 @@ class OutcomeView(LogicPortView):
         draw_label = True
         if self.has_outgoing_connection():
             draw_label = False
-        if not gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
+        if not global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
             draw_label = False
 
         self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
