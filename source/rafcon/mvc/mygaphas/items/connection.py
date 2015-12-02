@@ -303,7 +303,7 @@ class ScopedVariableDataFlowView(DataFlowView):
             c.rotate(-rot_angle)
 
         parent_state = self.parent.model.state
-        if (gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and port_layout and
+        if (global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True) and port_layout and
                 isinstance(parent_state, HierarchyState)):
             scoped_data_id = str(self._scoped_variable.data_port_id) + parent_state.state_id
             if scoped_data_id in parent_state.scoped_data.iterkeys():

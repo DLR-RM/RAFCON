@@ -47,7 +47,7 @@ class MenuBarController(ExtendedController):
         show_all_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
         view["show_all_data_flows"].set_active(show_all_data_flows)
 
-        show_data_flow_values = global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+        show_data_flow_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         view["show_data_flow_values"].set_active(show_data_flow_values)
 
         show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
@@ -464,9 +464,9 @@ class MenuBarController(ExtendedController):
 
     def on_show_data_flow_values_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         else:
-            global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
 
     def on_show_aborted_preempted_toggled(self, widget, data=None):
         if widget.get_active():
