@@ -64,9 +64,7 @@ class StateMachineManagerModel(ModelMT, Observable):
             exit(1)
 
     def delete_state_machine_models(self):
-        sm_keys = self.state_machines.keys()
-        for key in sm_keys:
-            del self.state_machines[key]
+        self.state_machines.clear()
 
     @ModelMT.observe("state_machine_manager", after=True)
     def model_changed(self, model, prop_name, info):
