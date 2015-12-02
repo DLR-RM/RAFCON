@@ -18,6 +18,7 @@ from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
 
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 
@@ -441,7 +442,7 @@ class GraphicalEditorController(ExtendedController):
             state_v = self.canvas.get_view_for_model(state_m)
             state_v.selected = True
             self.view.editor.select_item(state_v)
-            if global_gui_config.get_config_value("DATA_FLOW_MODE"):
+            if global_runtime_config.get_config_value("DATA_FLOW_MODE"):
                 for data_flow in self.get_connected_data_flows(state_v):
                     data_flow.show()
                 self.set_non_active_states_transparent(True, state_v)

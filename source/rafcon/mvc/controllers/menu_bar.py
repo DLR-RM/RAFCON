@@ -41,7 +41,7 @@ class MenuBarController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered
         """
-        data_flow_mode = global_gui_config.get_config_value("DATA_FLOW_MODE", True)
+        data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 
         show_all_data_flows = global_gui_config.get_config_value("SHOW_DATA_FLOWS", True)
@@ -452,9 +452,9 @@ class MenuBarController(ExtendedController):
 
     def on_data_flow_mode_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("DATA_FLOW_MODE", True)
+            global_runtime_config.set_config_value("DATA_FLOW_MODE", True)
         else:
-            global_gui_config.set_config_value("DATA_FLOW_MODE", False)
+            global_runtime_config.set_config_value("DATA_FLOW_MODE", False)
 
     def on_show_all_data_flows_toggled(self, widget, data=None):
         if widget.get_active():
