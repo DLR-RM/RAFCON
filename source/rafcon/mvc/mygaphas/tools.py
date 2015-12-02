@@ -309,8 +309,22 @@ class HandleMoveTool(HandleTool):
             self._start_width = item.width
             self._start_height = item.height
 
-        # Select handle
-        return super(HandleMoveTool, self).on_button_press(event)
+        # Code copied from HandleTool, preventing the call to get_handle_at_point twice
+        if handle:
+            # Deselect all items unless CTRL or SHIFT is pressed
+            # or the item is already selected.
+            if not (event.state & (gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK) or view.hovered_item in
+                    view.selected_items):
+                del view.selected_items
+
+            view.hovered_item = item
+            view.focused_item = item
+
+            self.motion_handle = None
+
+            self.grab_handle(item, handle)
+
+            return True
 
     def on_button_release(self, event):
 
