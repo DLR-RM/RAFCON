@@ -283,110 +283,121 @@ class HandleMoveTool(HandleTool):
         self._waypoint_list = None
 
     def on_button_press(self, event):
-        view = self.view
-        item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+        try:
+            view = self.view
+            item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
 
-        if isinstance(item, ConnectionView):
-            # If moved handles item is a connection save all necessary information (where did the handle start,
-            # what is the connections other end)
-            if handle is item.handles()[1] or handle is item.handles()[len(item.handles()) - 2]:
-                return False
-            self._active_connection_v = item
-            self._active_connection_view_handle = handle
-            if handle is item.from_handle():
-                self._start_port = item.from_port
-                self._check_port = item.to_port
-            elif handle is item.to_handle():
-                self._start_port = item.to_port
-                self._check_port = item.from_port
+            if isinstance(item, ConnectionView):
+                # If moved handles item is a connection save all necessary information (where did the handle start,
+                # what is the connections other end)
+                if handle is item.handles()[1] or handle is item.handles()[len(item.handles()) - 2]:
+                    return False
+                self._active_connection_v = item
+                self._active_connection_view_handle = handle
+                if handle is item.from_handle():
+                    self._start_port = item.from_port
+                    self._check_port = item.to_port
+                elif handle is item.to_handle():
+                    self._start_port = item.to_port
+                    self._check_port = item.from_port
 
-        if isinstance(item, TransitionView):
-            self._waypoint_list = item.model.meta['gui']['editor_gaphas']['waypoints']
+            if isinstance(item, TransitionView):
+                self._waypoint_list = item.model.meta['gui']['editor_gaphas']['waypoints']
 
-        # Set start state
-        if isinstance(item, StateView):
-            self._start_state = item
-            self._start_width = item.width
-            self._start_height = item.height
+            # Set start state
+            if isinstance(item, StateView):
+                self._start_state = item
+                self._start_width = item.width
+                self._start_height = item.height
 
-        # Code copied from HandleTool, preventing the call to get_handle_at_point twice
-        if handle:
-            # Deselect all items unless CTRL or SHIFT is pressed
-            # or the item is already selected.
-            if not (event.state & (gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK) or view.hovered_item in
-                    view.selected_items):
-                del view.selected_items
-
-            view.hovered_item = item
-            view.focused_item = item
-
-            self.motion_handle = None
-
-            self.grab_handle(item, handle)
-
-            return True
+        except Exception as e:
+            # Keep this except clause for further investigation, to see if it solves the "connection bug" (issue #5)
+            logger.error("An unexpected exception occurred while creating a connection: {0} ({1})".format(e,
+                                                                                                    type(e).__name__))
+        finally:
+            # Code copied from HandleTool, preventing the call to get_handle_at_point twice
+            if handle:
+                # Deselect all items unless CTRL or SHIFT is pressed
+                # or the item is already selected.
+                if not (event.state & (gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK) or view.hovered_item in
+                        view.selected_items):
+                    del view.selected_items
+    
+                view.hovered_item = item
+                view.focused_item = item
+    
+                self.motion_handle = None
+    
+                self.grab_handle(item, handle)
+    
+                return True
 
     def on_button_release(self, event):
+        try:
+            handle = self._active_connection_view_handle
+            connection_v = self._active_connection_v
+            handle_is_waypoint = connection_v and handle not in connection_v.end_handles()
 
-        handle = self._active_connection_view_handle
-        connection_v = self._active_connection_v
-        handle_is_waypoint = connection_v and handle not in connection_v.end_handles()
+            # Create new transition if pull beginning at port occurred
+            if self._new_connection:
+                # drop_item = self._get_drop_item((event.x, event.y))
+                gap_helper.create_new_connection(self._new_connection.from_port,
+                                                 self._new_connection.to_port)
 
-        # Create new transition if pull beginning at port occurred
-        if self._new_connection:
-            # drop_item = self._get_drop_item((event.x, event.y))
-            gap_helper.create_new_connection(self._new_connection.from_port,
-                                             self._new_connection.to_port)
+                # remove placeholder from canvas
+                self._new_connection.remove_connection_from_ports()
+                self.view.canvas.remove(self._new_connection)
 
-            # remove placeholder from canvas
-            self._new_connection.remove_connection_from_ports()
-            self.view.canvas.remove(self._new_connection)
+            # if connection has been pulled to another port, update port
+            elif self._last_active_port and self._last_active_port is not self._start_port and not handle_is_waypoint:
+                if isinstance(connection_v, TransitionView):
+                    self._handle_transition_view_change(connection_v, handle)
+                elif isinstance(connection_v, DataFlowView):
+                    self._handle_data_flow_view_change(connection_v, handle)
+            # if connection has been put back to original position or is released on empty space, reset the connection
+            elif (not self._last_active_port or self._last_active_port is self._start_port and connection_v) and not \
+                    handle_is_waypoint:
+                if isinstance(connection_v, TransitionView):
+                    self._reset_transition(connection_v, handle, self._start_port.parent)
+                elif isinstance(connection_v, DataFlowView):
+                    self._reset_data_flow(connection_v, handle, self._start_port.parent)
 
-        # if connection has been pulled to another port, update port
-        elif self._last_active_port and self._last_active_port is not self._start_port and not handle_is_waypoint:
+            # Check, whether a transition waypoint was moved
             if isinstance(connection_v, TransitionView):
-                self._handle_transition_view_change(connection_v, handle)
-            elif isinstance(connection_v, DataFlowView):
-                self._handle_data_flow_view_change(connection_v, handle)
-        # if connection has been put back to original position or is released on empty space, reset the connection
-        elif (not self._last_active_port or
-                          self._last_active_port is self._start_port and connection_v) and not handle_is_waypoint:
-            if isinstance(connection_v, TransitionView):
-                self._reset_transition(connection_v, handle, self._start_port.parent)
-            elif isinstance(connection_v, DataFlowView):
-                self._reset_data_flow(connection_v, handle, self._start_port.parent)
+                gap_helper.update_meta_data_for_transition_waypoints(self._graphical_editor_view, connection_v,
+                                                                     self._waypoint_list)
 
-        # Check, whether a transition waypoint was moved
-        if isinstance(connection_v, TransitionView):
-            gap_helper.update_meta_data_for_transition_waypoints(self._graphical_editor_view, connection_v,
-                                                                 self._waypoint_list)
+            if isinstance(self.grabbed_item, NameView):
+                gap_helper.update_meta_data_for_name_view(self._graphical_editor_view, self.grabbed_item)
 
-        if isinstance(self.grabbed_item, NameView):
-            gap_helper.update_meta_data_for_name_view(self._graphical_editor_view, self.grabbed_item)
+            elif isinstance(self.grabbed_item, StateView):
+                only_ports = self.grabbed_handle not in self.grabbed_item.corner_handles
+                if only_ports:
+                    gap_helper.update_meta_data_for_port(self._graphical_editor_view, self.grabbed_item,
+                                                         self.grabbed_handle)
+                else:
+                    gap_helper.update_meta_data_for_state_view(self._graphical_editor_view, self.grabbed_item,
+                                                               self._child_resize)
 
-        elif isinstance(self.grabbed_item, StateView):
-            only_ports = self.grabbed_handle not in self.grabbed_item.corner_handles
-            if only_ports:
-                gap_helper.update_meta_data_for_port(self._graphical_editor_view, self.grabbed_item,
-                                                     self.grabbed_handle)
-            else:
-                gap_helper.update_meta_data_for_state_view(self._graphical_editor_view, self.grabbed_item,
-                                                           self._child_resize)
+            # reset temp variables
+            self._last_active_port = None
+            self._check_port = None
+            self._new_connection = None
+            self._start_state = None
+            self._start_width = None
+            self._start_height = None
+            self._active_connection_v = None
+            self._active_connection_view_handle = None
+            self._waypoint_list = None
+            self._last_hovered_state = None
+            self._child_resize = False
 
-        # reset temp variables
-        self._last_active_port = None
-        self._check_port = None
-        self._new_connection = None
-        self._start_state = None
-        self._start_width = None
-        self._start_height = None
-        self._active_connection_v = None
-        self._active_connection_view_handle = None
-        self._waypoint_list = None
-        self._last_hovered_state = None
-        self._child_resize = False
-
-        super(HandleMoveTool, self).on_button_release(event)
+        except Exception as e:
+            # Keep this except clause for further investigation, to see if it solves the "connection bug" (issue #5)
+            logger.error("An unexpected exception occurred while finalizing a connection: {0} ({1})".format(e,
+                                                                                                     type(e).__name__))
+        finally:
+            super(HandleMoveTool, self).on_button_release(event)
 
     def on_motion_notify(self, event):
         """Handle motion events
