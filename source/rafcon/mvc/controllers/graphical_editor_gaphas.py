@@ -1,6 +1,4 @@
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
+from functools import partial
 
 from rafcon.statemachine.enums import StateType
 
@@ -16,13 +14,15 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
+from rafcon.mvc.mygaphas import guide
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 
-from functools import partial
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class GraphicalEditorController(ExtendedController):
