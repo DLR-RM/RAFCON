@@ -10,9 +10,9 @@ from rafcon.mvc.config import global_gui_config
 
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.item import NW
-from gaphas.aspect import HandleFinder, ItemConnectionSink
+from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector
 
-from rafcon.mvc.mygaphas.aspect import HandleInMotion, Connector, StateHandleFinder
+from rafcon.mvc.mygaphas.aspect import HandleInMotion, StateHandleFinder
 from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, \
     DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
