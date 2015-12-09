@@ -64,7 +64,7 @@ class State(Observable, YAMLObject, JSONObject):
         self._state_execution_status = None
 
         # before adding a state to a parent state or a sm the get_filesystem_path cannot return the file system path
-        # there fore this variable caches the path until the state gets a parent
+        # therefore this variable caches the path until the state gets a parent
         self._file_system_path = None
 
         self.thread = None
