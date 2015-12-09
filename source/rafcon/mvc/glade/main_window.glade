@@ -381,7 +381,6 @@
                                 <property name="receives_default">True</property>
                                 <property name="border_width">5</property>
                                 <property name="focus_on_click">False</property>
-                                <signal name="clicked" handler="on_left_bar_return_button_clicked"/>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -458,7 +457,6 @@
                                                         <property name="visible">True</property>
                                                         <property name="label" translatable="yes">s</property>
                                                         <property name="use_underline">True</property>
-                                                        <signal name="toggled" handler="on_button_start_shortcut_toggled"/>
                                                       </object>
                                                       <packing>
                                                         <property name="expand">False</property>
@@ -480,7 +478,6 @@
                                                         <property name="visible">True</property>
                                                         <property name="label" translatable="yes">s</property>
                                                         <property name="use_underline">True</property>
-                                                        <signal name="clicked" handler="on_button_stop_shortcut_clicked"/>
                                                       </object>
                                                       <packing>
                                                         <property name="expand">False</property>
@@ -502,7 +499,6 @@
                                                         <property name="visible">True</property>
                                                         <property name="label" translatable="yes">p</property>
                                                         <property name="use_underline">True</property>
-                                                        <signal name="toggled" handler="on_button_pause_shortcut_toggled"/>
                                                       </object>
                                                       <packing>
                                                         <property name="expand">False</property>
@@ -544,7 +540,6 @@
                                                         <property name="visible">True</property>
                                                         <property name="label" translatable="yes">s</property>
                                                         <property name="use_underline">True</property>
-                                                        <signal name="toggled" handler="on_button_step_mode_shortcut_toggled"/>
                                                       </object>
                                                       <packing>
                                                         <property name="expand">False</property>
@@ -566,7 +561,6 @@
                                                         <property name="visible">True</property>
                                                         <property name="label" translatable="yes">s</property>
                                                         <property name="use_underline">True</property>
-                                                        <signal name="clicked" handler="on_button_step_shortcut_clicked"/>
                                                       </object>
                                                       <packing>
                                                         <property name="expand">False</property>
@@ -588,7 +582,6 @@
                                                         <property name="visible">True</property>
                                                         <property name="label" translatable="yes">b</property>
                                                         <property name="use_underline">True</property>
-                                                        <signal name="clicked" handler="on_button_step_backward_shortcut_clicked"/>
                                                       </object>
                                                       <packing>
                                                         <property name="expand">False</property>
@@ -681,7 +674,6 @@
                                                     <property name="focus_on_click">False</property>
                                                     <property name="active">True</property>
                                                     <property name="draw_indicator">True</property>
-                                                    <signal name="toggled" handler="on_debug_content_change"/>
                                                   </object>
                                                   <packing>
                                                     <property name="expand">False</property>
@@ -700,7 +692,6 @@
                                                     <property name="focus_on_click">False</property>
                                                     <property name="active">True</property>
                                                     <property name="draw_indicator">True</property>
-                                                    <signal name="toggled" handler="on_debug_content_change"/>
                                                   </object>
                                                   <packing>
                                                     <property name="expand">False</property>
@@ -720,7 +711,6 @@
                                                     <property name="focus_on_click">False</property>
                                                     <property name="active">True</property>
                                                     <property name="draw_indicator">True</property>
-                                                    <signal name="toggled" handler="on_debug_content_change"/>
                                                   </object>
                                                   <packing>
                                                     <property name="expand">False</property>
@@ -740,7 +730,6 @@
                                                     <property name="yalign">0.54000002145767212</property>
                                                     <property name="active">True</property>
                                                     <property name="draw_indicator">True</property>
-                                                    <signal name="toggled" handler="on_debug_content_change"/>
                                                   </object>
                                                   <packing>
                                                     <property name="expand">False</property>
@@ -808,7 +797,6 @@
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                                 <property name="focus_on_click">False</property>
-                                <signal name="clicked" handler="on_right_bar_return_button_clicked"/>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -827,7 +815,6 @@
                             <property name="receives_default">True</property>
                             <property name="border_width">5</property>
                             <property name="focus_on_click">False</property>
-                            <signal name="clicked" handler="on_console_return_button_clicked"/>
                           </object>
                           <packing>
                             <property name="expand">False</property>
