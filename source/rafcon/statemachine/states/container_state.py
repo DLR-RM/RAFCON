@@ -478,7 +478,7 @@ class ContainerState(State):
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
-        if result_transition is None and outcome.outcome_id >= 0:
+        if result_transition is None:
             logger.warn("No transition found for state with name %s!" % self.name)
         return result_transition
 

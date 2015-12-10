@@ -76,6 +76,7 @@ class HierarchyState(ContainerState):
             # children execution loop start
             ########################################################
 
+            # TODO: while True would fit here as well as all exit conditions break explicitly from this loop
             while child_state is not self:
 
                 # depending on the execution mode pause execution
@@ -147,7 +148,6 @@ class HierarchyState(ContainerState):
                         assert isinstance(last_history_item, CallItem)
                         self.scoped_data = last_history_item.scoped_data
                         break
-
                 else:
                     self.add_state_execution_output_to_scoped_data(child_state.output_data, child_state)
                     self.update_scoped_variables_with_output_dictionary(child_state.output_data, child_state)
@@ -157,8 +157,8 @@ class HierarchyState(ContainerState):
 
                     if transition is None:
                         transition = self.handle_no_transition(child_state)
-                    # it the transition is still None, then the child_state was preempted or aborted, in this case return
                     child_state.state_execution_status = StateExecutionState.INACTIVE
+                    # it the transition is still None, then the child_state was preempted or aborted, in this case return
                     if transition is None:
                         break
 
