@@ -275,7 +275,7 @@ class DataPortListController(ExtendedController):
         # logger.info("on_data_type_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
         try:
             data_port_id = self.get_data_port_id_from_selection()
-            self.state_data_port_dict[data_port_id].change_data_type(text, None)
+            self.state_data_port_dict[data_port_id].change_data_type(text)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))
 
