@@ -24,9 +24,7 @@ class TopToolBarController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered
         """
-        view['minimize_button'].connect('clicked', self.on_minimize_button_clicked)
-        view['maximize_button'].connect('clicked', self.on_maximize_button_clicked)
-        view['close_button'].connect('clicked', self.on_close_button_clicked)
+        pass
 
     def register_adapters(self):
         """Adapters should be registered in this method call
