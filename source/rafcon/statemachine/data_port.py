@@ -163,8 +163,8 @@ class DataPort(StateElement):
     def check_default_value(self, default_value, data_type=None):
         """Checks the default value
 
-        Check whether the passed default value suits to the passed data type. If no data type is passed, the data type
-        of the data port is used. If the default value does not fit, an exception is thrown. If the default value is of
+        Check whether the passed default value suits to to passed data type. If no data type is passed, the data type of
+        the data port is used. If thh default value does not fit, an exception is thrown. If the default value is of
         type string, it is tried to convert that value to the data type.
         :param default_value: The default value to check
         :param data_type: The data type to use

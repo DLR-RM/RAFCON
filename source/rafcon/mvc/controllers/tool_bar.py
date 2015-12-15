@@ -17,11 +17,7 @@ class ToolBarController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered
         """
-        self.view['button_new'].connect('clicked', self.on_button_new_clicked)
-        self.view['button_refresh'].connect('clicked', self.on_button_refresh_clicked)
-        self.view['button_open'].connect('clicked', self.on_button_open_clicked)
-        self.view['button_save'].connect('clicked', self.on_button_save_clicked)
-        self.view['button_refresh_libs'].connect('clicked', self.on_button_refresh_libs_clicked)
+        pass
 
     def register_adapters(self):
         """Adapters should be registered in this method call

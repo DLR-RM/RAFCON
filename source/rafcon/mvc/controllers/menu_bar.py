@@ -55,42 +55,6 @@ class MenuBarController(ExtendedController):
             view["data_flow_mode"].hide()
             view["show_data_flow_values"].hide()
 
-        self.view['new'].connect('activate', self.on_new_activate)
-        self.view['open'].connect('activate', self.on_open_activate)
-        self.view['save'].connect('activate', self.on_save_activate)
-        self.view['save_as'].connect('activate', self.on_save_as_activate)
-        self.view['menu_properties'].connect('activate', self.on_menu_properties_activate)
-        self.view['refresh_all'].connect('activate', self.on_refresh_all_activate)
-        self.view['refresh_libraries'].connect('activate', self.on_refresh_libraries_activate)
-        self.view['quit'].connect('activate', self.on_quit_activate)
-
-        self.view['cut_selection'].connect('activate', self.on_cut_selection_activate)
-        self.view['copy_selection'].connect('activate', self.on_copy_selection_activate)
-        self.view['paste_clipboard'].connect('activate', self.on_paste_clipboard_activate)
-        self.view['delete'].connect('activate', self.on_delete_activate)
-        self.view['add_state'].connect('activate', self.on_add_state_activate)
-        self.view['group_states'].connect('activate', self.on_group_states_activate)
-        self.view['ungroup_states'].connect('activate', self.on_ungroup_states_activate)
-        self.view['undo'].connect('activate', self.on_undo_activate)
-        self.view['redo'].connect('activate', self.on_redo_activate)
-        self.view['grid'].connect('activate', self.on_grid_toggled)
-
-        self.view['data_flow_mode'].connect('toggled', self.on_data_flow_mode_toggled)
-        self.view['show_all_data_flows'].connect('toggled', self.on_show_all_data_flows_toggled)
-        self.view['show_data_flow_values'].connect('toggled', self.on_show_data_flow_values_toggled)
-        self.view['show_aborted_preempted'].connect('toggled', self.on_show_aborted_preempted_toggled)
-        self.view['expert_view'].connect('activate', self.on_expert_view_activate)
-
-        self.view['start'].connect('activate', self.on_start_activate)
-        self.view['start_from_selected_state'].connect('activate', self.on_start_from_selected_state_activate)
-        self.view['pause'].connect('activate', self.on_pause_activate)
-        self.view['stop'].connect('activate', self.on_stop_activate)
-        self.view['step_mode'].connect('activate', self.on_step_mode_activate)
-        self.view['step'].connect('activate', self.on_step_activate)
-        self.view['backward_step'].connect('activate', self.on_backward_step_activate)
-
-        self.view['about'].connect('activate', self.on_about_activate)
-
     def register_adapters(self):
         """Adapters should be registered in this method call
         """

@@ -345,26 +345,6 @@ class MainWindowController(ExtendedController):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
         view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").destroy)
-
-        # Connect left and right bar return buttons' signals to their corresponding methods
-        view['left_bar_return_button'].connect('clicked', self.on_left_bar_return_button_clicked)
-        view['right_bar_return_button'].connect('clicked', self.on_right_bar_return_button_clicked)
-
-        # Connect Shortcut buttons' signals to their corresponding methods
-        view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
-        view['button_stop_shortcut'].connect('clicked', self.on_button_stop_shortcut_clicked)
-        view['button_pause_shortcut'].connect('toggled', self.on_button_pause_shortcut_toggled)
-        view['button_step_mode_shortcut'].connect('toggled', self.on_button_step_mode_shortcut_toggled)
-        view['button_step_shortcut'].connect('clicked', self.on_button_step_shortcut_clicked)
-        view['button_step_backward_shortcut'].connect('clicked', self.on_button_step_backward_shortcut_clicked)
-
-        # Connect Debug console buttons' signals to their corresponding methods
-        view['button_show_debug'].connect('toggled', self.on_debug_content_change)
-        view['button_show_info'].connect('toggled', self.on_debug_content_change)
-        view['button_show_warning'].connect('toggled', self.on_debug_content_change)
-        view['button_show_error'].connect('toggled', self.on_debug_content_change)
-        view['console_return_button'].connect('clicked', self.on_console_return_button_clicked)
-
         # hide not usable buttons
         self.view['button_step_shortcut'].hide()
         self.view['button_step_backward_shortcut'].hide()

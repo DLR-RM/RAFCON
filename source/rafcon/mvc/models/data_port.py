@@ -12,7 +12,7 @@ logger = log.get_logger(__name__)
 class DataPortModel(StateElementModel):
     """This model class manages a DataPort
 
-    :param rafcon.statemachine.data_port.DataPort data_port: The input/output data port to be wrapped
+    :param rafcon.statemachine.dat_port.DataPort data_port: The input/output data port to be wrapped
     :param rafcon.mvc.models.abstract_state.AbstractStateModel parent: The state model of the state element
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
      """
