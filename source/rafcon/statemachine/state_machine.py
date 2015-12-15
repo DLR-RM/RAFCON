@@ -76,7 +76,7 @@ class StateMachine(ModelMT, Observable):
         logger.debug("The final outcome of the state was %s" % (str(state.final_outcome)))
         # deferred import to avoid cyclic import at the beginning of the script
         from rafcon.statemachine.singleton import state_machine_execution_engine
-        state_machine_execution_engine.stop()
+        state_machine_execution_engine.set_execution_mode_to_stopped()
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

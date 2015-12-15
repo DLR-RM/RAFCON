@@ -9,6 +9,8 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager, global_storage, \
     library_manager
 
+import rafcon.statemachine.singleton as core_singletons
+import rafcon.mvc.singleton as gui_singletons
 from rafcon.mvc import gui_helper
 from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -39,16 +41,16 @@ class MenuBarController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered
         """
-        data_flow_mode = global_gui_config.get_config_value("DATA_FLOW_MODE", True)
+        data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 
-        show_all_data_flows = global_gui_config.get_config_value("SHOW_DATA_FLOWS", True)
+        show_all_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
         view["show_all_data_flows"].set_active(show_all_data_flows)
 
-        show_data_flow_values = global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+        show_data_flow_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         view["show_data_flow_values"].set_active(show_data_flow_values)
 
-        show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
+        show_aborted_preempted = global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
         view["show_aborted_preempted"].set_active(show_aborted_preempted)
 
         if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
@@ -86,7 +88,9 @@ class MenuBarController(ExtendedController):
         self.view['pause'].connect('activate', self.on_pause_activate)
         self.view['stop'].connect('activate', self.on_stop_activate)
         self.view['step_mode'].connect('activate', self.on_step_mode_activate)
-        self.view['step'].connect('activate', self.on_step_activate)
+        self.view['step_into'].connect('activate', self.on_step_into_activate)
+        self.view['step_over'].connect('activate', self.on_step_over_activate)
+        self.view['step_out'].connect('activate', self.on_step_out_activate)
         self.view['backward_step'].connect('activate', self.on_backward_step_activate)
 
         self.view['about'].connect('activate', self.on_about_activate)
@@ -112,7 +116,7 @@ class MenuBarController(ExtendedController):
         shortcut_manager.add_callback_for_action('pause', partial(self.call_action_callback, "on_pause_activate"))
         shortcut_manager.add_callback_for_action('step_mode',
                                                  partial(self.call_action_callback, "on_step_mode_activate"))
-        shortcut_manager.add_callback_for_action('step', partial(self.call_action_callback, "on_step_activate"))
+        shortcut_manager.add_callback_for_action('step', partial(self.call_action_callback, "on_step_into_activate"))
         shortcut_manager.add_callback_for_action('backward_step',
                                                  partial(self.call_action_callback, "on_backward_step_activate"))
 
@@ -327,7 +331,7 @@ class MenuBarController(ExtendedController):
     def on_quit_activate(self, widget, data=None):
         avoid_shutdown = self.on_delete_event(self, widget, None)
         if not avoid_shutdown:
-            self.destroy(None)
+            self.on_destroy(None)
 
     def on_delete_event(self, widget, event, data=None):
         logger.debug("Delete event received")
@@ -353,7 +357,7 @@ class MenuBarController(ExtendedController):
                         self.check_sm_running()
                     else:
                         self._prepare_destruction()
-                        self.destroy(None)
+                        self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("Close main window canceled")
                     widget.destroy()
@@ -381,7 +385,7 @@ class MenuBarController(ExtendedController):
                     logger.debug("State machine is shut down now!")
                     widget.destroy()
                     self._prepare_destruction()
-                    self.destroy(None)
+                    self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("State machine will stay running!")
                     widget.destroy()
@@ -399,7 +403,7 @@ class MenuBarController(ExtendedController):
             return True
         return False
 
-    def destroy(self, widget, data=None):
+    def on_destroy(self, widget, data=None):
         import glib
         logger.debug("Closing main window!")
         self.main_window_view.hide()
@@ -413,6 +417,11 @@ class MenuBarController(ExtendedController):
         # We decided on not saving the configuration when exiting
         # glib.idle_add(rafcon.statemachine.config.global_config.save_configuration)
         # glib.idle_add(rafcon.mvc.config.global_gui_config.save_configuration)
+
+        # Should close all tabs
+        core_singletons.state_machine_manager.delete_all_state_machines()
+        # Recursively destroys the main window
+        gui_singletons.main_window_controller.destroy()
         self.logging_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')
         if reactor.running:
@@ -481,27 +490,27 @@ class MenuBarController(ExtendedController):
 
     def on_data_flow_mode_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("DATA_FLOW_MODE", True)
+            global_runtime_config.set_config_value("DATA_FLOW_MODE", True)
         else:
-            global_gui_config.set_config_value("DATA_FLOW_MODE", False)
+            global_runtime_config.set_config_value("DATA_FLOW_MODE", False)
 
     def on_show_all_data_flows_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_DATA_FLOWS", True)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOWS", True)
         else:
-            global_gui_config.set_config_value("SHOW_DATA_FLOWS", False)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOWS", False)
 
     def on_show_data_flow_values_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         else:
-            global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
 
     def on_show_aborted_preempted_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_ABORTED_PREEMPTED", True)
+            global_runtime_config.set_config_value("SHOW_ABORTED_PREEMPTED", True)
         else:
-            global_gui_config.set_config_value("SHOW_ABORTED_PREEMPTED", False)
+            global_runtime_config.set_config_value("SHOW_ABORTED_PREEMPTED", False)
 
     def on_expert_view_activate(self, widget, data=None):
         pass
@@ -534,9 +543,17 @@ class MenuBarController(ExtendedController):
         logger.debug("Activate execution engine step mode ...")
         state_machine_execution_engine.step_mode()
 
-    def on_step_activate(self, widget, data=None):
-        logger.debug("Execution step ...")
-        state_machine_execution_engine.step()
+    def on_step_into_activate(self, widget, data=None):
+        logger.debug("Execution step into ...")
+        state_machine_execution_engine.step_into()
+
+    def on_step_over_activate(self, widget, data=None):
+        logger.debug("Execution step over ...")
+        state_machine_execution_engine.step_over()
+
+    def on_step_out_activate(self, widget, data=None):
+        logger.debug("Execution step out ...")
+        state_machine_execution_engine.step_out()
 
     def on_backward_step_activate(self, widget, data=None):
         logger.debug("Executing backward step ...")

@@ -36,26 +36,22 @@ def test_start_stop_pause_step(caplog):
     sm = return_loop_state_machine()
     rafcon.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
 
-    s = StateMachineStorage(test_utils.get_test_sm_path("stored_statemachine"))
-    s.save_statemachine_to_path(sm, test_utils.get_test_sm_path("stored_statemachine"))
-    sm_loaded, version, creation_time = s.load_statemachine_from_path()
-
     test_utils.test_multithrading_lock.acquire()
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm_loaded)
-    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = sm_loaded.state_machine_id
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.step_mode()
 
     for i in range(5):
         time.sleep(0.2)
-        rafcon.statemachine.singleton.state_machine_execution_engine.step()
+        rafcon.statemachine.singleton.state_machine_execution_engine.step_into()
 
     # give the state machine time to execute
     time.sleep(0.2)
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-    sm_loaded.root_state.join()
+    sm.root_state.join()
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
-    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_loaded.state_machine_id)
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
 

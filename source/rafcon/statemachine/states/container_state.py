@@ -134,6 +134,10 @@ class ContainerState(State):
         """ Preempt the state and all of it child states.
         """
         self.preempted = True
+        # notify the transition condition variable to let the state instantaneously stop
+        self._transitions_cv.acquire()
+        self._transitions_cv.notify_all()
+        self._transitions_cv.release()
         for state_id, state in self.states.iteritems():
             state.recursively_preempt_states()
 
@@ -208,11 +212,12 @@ class ContainerState(State):
         The method waits, until a transition is created. It then checks again for an existing start state and waits
         again, if this is not the case.
         """
-        while self.get_start_state(set_final_outcome=True) is None:
+        start_state = self.get_start_state(set_final_outcome=True)
+        if start_state is None:
             self._transitions_cv.acquire()
             self._transitions_cv.wait(3.0)
             self._transitions_cv.release()
-        return self.get_start_state()
+        return start_state
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- state functions --------------------------------------
@@ -473,7 +478,7 @@ class ContainerState(State):
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
-        if result_transition is None and outcome.outcome_id >= 0:
+        if result_transition is None:
             logger.warn("No transition found for state with name %s!" % self.name)
         return result_transition
 
@@ -638,7 +643,7 @@ class ContainerState(State):
     def get_data_port(self, state_id, port_id):
         """Searches for a data port
 
-        The data port specified the the state id and data port id is searched in the state itself and in its children.
+        The data port specified by the state id and data port id is searched in the state itself and in its children.
 
         :param str state_id: The id of the state the port is in
         :param int port_id:  The id of the port
@@ -722,7 +727,7 @@ class ContainerState(State):
                     # forward the data to scoped variables
                     for data_flow_key, data_flow in self.data_flows.iteritems():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
-                            if data_flow.to_state == self.state_id:
+                            if data_flow.to_state == self.state_id and data_flow.to_key in self.scoped_variables:
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
                                 self.scoped_data[str(data_flow.to_key)+self.state_id] = \
                                     ScopedData(current_scoped_variable.name, value, type(value), self.state_id,
@@ -832,12 +837,12 @@ class ContainerState(State):
                 if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
                         scoped_data_key = str(data_flow.from_key)+data_flow.from_state
-                        if scoped_data_key in self.scoped_data.iterkeys():
+                        if scoped_data_key in self.scoped_data:
                             self.output_data[output_name] = \
                                 copy.deepcopy(self.scoped_data[scoped_data_key].value)
                         else:
                             if not self.backward_execution:
-                                logger.error("Output data with name %s was not found in the scoped data. "
+                                logger.warn("Output data with name %s was not found in the scoped data. "
                                              "This normally means a statemachine design error", output_name)
 
     # ---------------------------------------------------------------------------------------------
@@ -982,6 +987,12 @@ class ContainerState(State):
         if not to_data_port:
             return False, "Data flow target not existing"
 
+        # Data_ports without parents are not allowed to be connected twice
+        if not to_data_port.parent:
+            return False, "to_data_port does not have a parent"
+        if not from_data_port.parent:
+            return False, "from_data_port does not have a parent"
+
         # Check, whether the origin of the data flow is valid
         if from_state_id == self.state_id:  # data_flow originates in container state
             if from_data_port_id not in self.input_data_ports and from_data_port_id not in self.scoped_variables:
@@ -1001,16 +1012,22 @@ class ContainerState(State):
             if to_data_port_id not in to_data_port.parent.input_data_ports:
                 return False, "Data flow target port must be an input port, when the data flow goes to a child state"
 
-        # Check, whether origin and target are within the same child state
+        # Check, whether origin and target are the same child state (which would be not allowed)
         if from_state_id == to_state_id and from_state_id != self.state_id:
             return False, "Data flow target state cannot be the origin state"
 
         # Check, whether the target port is already connected
         for existing_data_flow in self.data_flows.itervalues():
-            to_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
+            to_data_port_existing = self.get_data_port(existing_data_flow.to_state, existing_data_flow.to_key)
+            from_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
             if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
+                if from_data_port is from_data_port_existing:
+                    return False, "Exactly the same data flow is already existing"
                 # Scoped variables are an exception, they can be connected several times
-                if not to_data_port.parent or to_data_port_id not in to_data_port.parent.scoped_variables:
+                if to_data_port.parent is self:
+                    if to_data_port_id not in to_data_port.parent.scoped_variables:
+                        return False, "Data flow target is already connected to another data flow"
+                else:
                     return False, "Data flow target is already connected to another data flow"
 
         return True, "valid"

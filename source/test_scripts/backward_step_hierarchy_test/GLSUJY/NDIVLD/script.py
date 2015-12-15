@@ -1,4 +1,4 @@
-
+import time
 
 def execute(self, inputs, outputs, gvm):
     import time
@@ -10,3 +10,4 @@ def execute(self, inputs, outputs, gvm):
 
 def backward_execute(self, inputs, outputs, gvm):
     print "Backward execute ", self.name
+    time.sleep(0.2)

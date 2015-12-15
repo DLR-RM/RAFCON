@@ -6,6 +6,7 @@ from copy import copy
 from rafcon.utils import constants, log
 
 from rafcon.mvc.config import global_gui_config as gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 
 import cairo
@@ -163,7 +164,7 @@ class StateView(Element):
 
     @property
     def show_data_port_label(self):
-        return gui_config.get_config_value("SHOW_DATA_FLOWS")
+        return global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
 
     @property
     def moving(self):

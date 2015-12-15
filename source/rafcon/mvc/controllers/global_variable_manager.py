@@ -46,8 +46,6 @@ class GlobalVariableManagerController(ExtendedController):
         """Called when the View was registered
         """
 
-        view.get_top_widget().connect('destroy', gtk.main_quit)
-
         def cell_text(column, cell_renderer, model, iter, gvm_model):
             col = column.get_name()
             global_variable = model.get_value(iter, 0)

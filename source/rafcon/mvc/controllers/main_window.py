@@ -148,8 +148,7 @@ class MainWindowController(ExtendedController):
         # state machines editor
         ######################################################
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
-                                                                   view.state_machines_editor,
-                                                                   states_editor_ctrl)
+                                                                   view.state_machines_editor)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
         graphical_editor_label = view['graphical_editor_label']
@@ -344,7 +343,7 @@ class MainWindowController(ExtendedController):
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
-        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").destroy)
+        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").on_destroy)
 
         # Connect left and right bar return buttons' signals to their corresponding methods
         view['left_bar_return_button'].connect('clicked', self.on_left_bar_return_button_clicked)
@@ -355,7 +354,9 @@ class MainWindowController(ExtendedController):
         view['button_stop_shortcut'].connect('clicked', self.on_button_stop_shortcut_clicked)
         view['button_pause_shortcut'].connect('toggled', self.on_button_pause_shortcut_toggled)
         view['button_step_mode_shortcut'].connect('toggled', self.on_button_step_mode_shortcut_toggled)
-        view['button_step_shortcut'].connect('clicked', self.on_button_step_shortcut_clicked)
+        view['button_step_in_shortcut'].connect('clicked', self.on_button_step_in_shortcut_clicked)
+        view['button_step_over_shortcut'].connect('clicked', self.on_button_step_over_shortcut_clicked)
+        view['button_step_out_shortcut'].connect('clicked', self.on_button_step_out_shortcut_clicked)
         view['button_step_backward_shortcut'].connect('clicked', self.on_button_step_backward_shortcut_clicked)
 
         # Connect Debug console buttons' signals to their corresponding methods
@@ -366,8 +367,7 @@ class MainWindowController(ExtendedController):
         view['console_return_button'].connect('clicked', self.on_console_return_button_clicked)
 
         # hide not usable buttons
-        self.view['button_step_shortcut'].hide()
-        self.view['button_step_backward_shortcut'].hide()
+        self.view['step_buttons'].hide()
 
     def highlight_execution_of_current_sm(self, active):
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
@@ -405,7 +405,7 @@ class MainWindowController(ExtendedController):
             self.on_button_stop_shortcut_clicked(None)
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(False)
-        elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STEP:
+        else:  # all step modes
             self.set_button_active(True, self.view['button_step_mode_shortcut'],
                                    self.on_button_step_mode_shortcut_toggled)
             self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
@@ -495,8 +495,7 @@ class MainWindowController(ExtendedController):
             logger.info("Statemachine running")
             self.set_button_active(True, self.view['button_start_shortcut'], self.on_button_start_shortcut_toggled)
 
-        self.view['button_step_shortcut'].hide()
-        self.view['button_step_backward_shortcut'].hide()
+        self.view['step_buttons'].hide()
 
     def on_button_pause_shortcut_toggled(self, widget, event=None):
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.PAUSED:
@@ -509,8 +508,7 @@ class MainWindowController(ExtendedController):
             logger.info("Statemachine paused")
             self.set_button_active(True, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
 
-        self.view['button_step_shortcut'].hide()
-        self.view['button_step_backward_shortcut'].hide()
+        self.view['step_buttons'].hide()
 
     def on_button_stop_shortcut_clicked(self, widget, event=None):
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
@@ -520,11 +518,13 @@ class MainWindowController(ExtendedController):
         self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
         self.set_button_active(False, self.view['button_step_mode_shortcut'], self.on_button_step_mode_shortcut_toggled)
 
-        self.view['button_step_shortcut'].hide()
-        self.view['button_step_backward_shortcut'].hide()
+        self.view['step_buttons'].hide()
 
     def on_button_step_mode_shortcut_toggled(self, widget, event=None):
-        if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STEP:
+        em = rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode
+        if em is StateMachineExecutionStatus.STARTED or\
+            em is StateMachineExecutionStatus.STOPPED or\
+            em is StateMachineExecutionStatus.PAUSED:
             self.get_controller("menu_bar_controller").on_step_mode_activate(None)
 
             self.set_button_active(False, self.view['button_pause_shortcut'], self.on_button_pause_shortcut_toggled)
@@ -534,11 +534,18 @@ class MainWindowController(ExtendedController):
             self.set_button_active(True, self.view['button_step_mode_shortcut'],
                                    self.on_button_step_mode_shortcut_toggled)
 
-        self.view['button_step_shortcut'].show()
-        self.view['button_step_backward_shortcut'].show()
+        self.view['step_buttons'].show()
 
-    def on_button_step_shortcut_clicked(self, widget, event=None):
-        self.get_controller("menu_bar_controller").on_step_activate(None)
+    def on_button_step_in_shortcut_clicked(self, widget, event=None):
+        self.get_controller("menu_bar_controller").on_step_into_activate(None)
+        self.delay(100, self.get_controller('execution_history_ctrl').update)
+
+    def on_button_step_over_shortcut_clicked(self, widget, event=None):
+        self.get_controller("menu_bar_controller").on_step_over_activate(None)
+        self.delay(100, self.get_controller('execution_history_ctrl').update)
+
+    def on_button_step_out_shortcut_clicked(self, widget, event=None):
+        self.get_controller("menu_bar_controller").on_step_out_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):

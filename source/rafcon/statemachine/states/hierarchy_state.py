@@ -66,32 +66,35 @@ class HierarchyState(ContainerState):
                 logger.debug("Executing hierarchy child_state with id %s and name %s" % (self._state_id, self.name))
                 self.execution_history.add_call_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
                 child_state = self.get_start_state(set_final_outcome=True)
-                if child_state is None:
+                while child_state is None:
                     child_state = self.handle_no_start_state()
+                    if self.preempted:
+                        logger.debug("Hierarchy state was preempted during waiting to get a start state.")
+                        break
 
             ########################################################
             # children execution loop start
             ########################################################
 
+            # TODO: while True would fit here as well as all exit conditions break explicitly from this loop
             while child_state is not self:
 
                 # depending on the execution mode pause execution
                 logger.debug("Handling execution mode")
-                execution_signal = singleton.state_machine_execution_engine.handle_execution_mode(self)
+                execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self)
 
                 self.backward_execution = False
                 if self.preempted:
-                    logger.debug("Preempted flag: True")
                     if last_transition and last_transition.from_outcome == -2:
                         # normally execute the next state
                         logger.debug("Execute the preemption handling state for state %s" % str(last_state.name))
                     else:
                         break
 
-                if execution_signal is StateMachineExecutionStatus.STOPPED:
+                if execution_mode is StateMachineExecutionStatus.STOPPED:
                     # this will be caught at the end of the run method
                     raise RuntimeError("child_state stopped")
-                elif execution_signal == StateMachineExecutionStatus.BACKWARD_STEP:
+                elif execution_mode == StateMachineExecutionStatus.BACKWARD:
                     self.backward_execution = True
                     last_history_item = self.execution_history.pop_last_item()
                     if last_history_item.state_reference is self:
@@ -145,7 +148,6 @@ class HierarchyState(ContainerState):
                         assert isinstance(last_history_item, CallItem)
                         self.scoped_data = last_history_item.scoped_data
                         break
-
                 else:
                     self.add_state_execution_output_to_scoped_data(child_state.output_data, child_state)
                     self.update_scoped_variables_with_output_dictionary(child_state.output_data, child_state)
@@ -155,8 +157,8 @@ class HierarchyState(ContainerState):
 
                     if transition is None:
                         transition = self.handle_no_transition(child_state)
-                    # it the transition is still None, then the child_state was preempted or aborted, in this case return
                     child_state.state_execution_status = StateExecutionState.INACTIVE
+                    # it the transition is still None, then the child_state was preempted or aborted, in this case return
                     if transition is None:
                         break
 

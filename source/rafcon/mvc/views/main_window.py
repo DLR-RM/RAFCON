@@ -117,14 +117,18 @@ class MainWindowView(View):
         button_pause_shortcut = self['button_pause_shortcut']
         button_stop_shortcut = self['button_stop_shortcut']
         button_step_mode_shortcut = self['button_step_mode_shortcut']
-        button_step_shortcut = self['button_step_shortcut']
+        button_step_in_shortcut = self['button_step_in_shortcut']
+        button_step_over_shortcut = self['button_step_over_shortcut']
+        button_step_out_shortcut = self['button_step_out_shortcut']
         button_step_backward_shortcut = self['button_step_backward_shortcut']
 
         button_start_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_START))
         button_pause_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_PAUSE))
         button_stop_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STOP))
         button_step_mode_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEPM))
-        button_step_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEP))
+        button_step_in_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEP_INTO))
+        button_step_over_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEP_OVER))
+        button_step_out_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEP_OUT))
         button_step_backward_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_BACKW))
 
         # --------------------------------------------------------------------------

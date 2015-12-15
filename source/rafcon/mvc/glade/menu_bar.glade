@@ -383,10 +383,26 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="step">
-                <property name="label" translatable="yes">step</property>
+              <object class="GtkImageMenuItem" id="step_into">
+                <property name="label" translatable="yes">step_into</property>
                 <property name="visible">True</property>
                 <property name="image">image6</property>
+                <property name="use_stock">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="step_over">
+                <property name="label" translatable="yes">step_over</property>
+                <property name="visible">True</property>
+                <property name="image">image18</property>
+                <property name="use_stock">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="step_out">
+                <property name="label" translatable="yes">step_out</property>
+                <property name="visible">True</property>
+                <property name="image">image19</property>
                 <property name="use_stock">False</property>
               </object>
             </child>
@@ -421,5 +437,13 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image18">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image19">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
   </object>
 </interface>

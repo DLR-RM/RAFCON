@@ -19,7 +19,8 @@ def test_custom_entry_point(caplog):
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(
-        rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/test_custom_entry_point", start_state_id)
+        test_utils.get_test_sm_path("unit_test_state_machines/test_custom_entry_point"),
+        start_state_id)
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert not rafcon.statemachine.singleton.global_variable_manager.variable_exist("start_id21")
 

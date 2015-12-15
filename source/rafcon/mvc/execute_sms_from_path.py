@@ -36,9 +36,6 @@ def create_models():
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
     global_var_manager_model = GlobalVariableManagerModel()
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
-
     return logger, global_var_manager_model
 
 
@@ -57,7 +54,10 @@ def run_sm():
     rafcon.statemachine.singleton.library_manager.initialize()
 
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_path("../../test_scripts/error_propagation_test")
+    #     global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/error_propagation_test")
+
+    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_path("../../test_scripts/return_none_test_sm")
 
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_path("../../test_scripts/decider_test_statemachine")
@@ -69,9 +69,6 @@ def run_sm():
     #     global_storage.load_statemachine_from_path("../../test_scripts/backward_step_barrier_test")
 
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_path("../../test_scripts/return_none_test_sm")
-
-    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_path("../../test_scripts/backward_step_preemption_test")
 
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
@@ -80,14 +77,14 @@ def run_sm():
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_path("../../test_scripts/backward_step_library_test")
 
-    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
-
-    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-    #     global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
-
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_path("../../test_scripts/tutorials/99_bottles_of_beer_in_library")
+        global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/stepping_test")
+
+    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_path("../../test_scripts/unit_test_state_machines/library_runtime_value_test")
+
+    # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    #     global_storage.load_statemachine_from_path("../../test_scripts/tutorials/99_bottles_of_beer_in_library")
 
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView()
