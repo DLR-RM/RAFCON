@@ -8,6 +8,8 @@ import time
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
+from gtk.gdk import ACTION_COPY
+from gtk import DEST_DEFAULT_ALL
 import gobject
 import itertools
 from copy import copy
@@ -123,6 +125,10 @@ class GraphicalEditorController(ExtendedController):
         view.editor.connect('scroll-event', self._on_scroll)
         view.editor.connect('key-press-event', self._on_key_press)
         view.editor.connect('key-release-event', self._on_key_release)
+
+        view.editor.drag_dest_set(DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
+        view.editor.connect("drag-data-received", self.on_drag_data_received)
+        view.editor.connect("drag-motion", self.on_drag_motion)
 
         self.last_time = time.time()
 
@@ -260,7 +266,6 @@ class GraphicalEditorController(ExtendedController):
         redraw_after = 1 / 50.  # sec
         # Check if initialized
         # and whether the last redraw was more than redraw_after ago
-
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
                         self.model.sm_manager_model.selected_state_machine_id == \
                         self.model.state_machine.state_machine_id \
@@ -621,6 +626,19 @@ class GraphicalEditorController(ExtendedController):
         """
         self._handle_zooming((event.x, event.y), event.direction)
 
+    def on_drag_data_received(self, widget, context, x, y, data, info, time):
+        self.view.editor.emit("expose_event", None)
+        rel_pos = self.view.editor.screen_to_opengl_coordinates((x, y))
+        self._move_state(self.model.selection.get_selected_state().states[data.get_text()], rel_pos)
+
+    def on_drag_motion(self, widget, context, x, y, time):
+        selection = self._find_selection(x, y, find_states=True, find_data_flows=False,
+                                         find_data_ports=False, find_transitions=False)
+        if selection is not None and self.single_selection != selection:
+            # not necessary, but without the following line occurs error code 139 (segmentation)
+            self.single_selection = selection
+            self.model.selection.set(selection)
+
     @staticmethod
     def _limit_position_to_state(state_m, pos, child_size=(0, 0)):
         pos_x, pos_y = pos
@@ -951,7 +969,6 @@ class GraphicalEditorController(ExtendedController):
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
         """
-
         if state_m.state.is_root_state:
             return
 
