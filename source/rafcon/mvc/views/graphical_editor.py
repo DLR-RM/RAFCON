@@ -747,6 +747,9 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         self._apply_orthogonal_view()
 
+        # prevents artefacts of the drag & drop icon
+        self.expose_finish()
+
     @staticmethod
     def find_selection():
         """Finds the selected ids
