@@ -81,7 +81,7 @@ class HierarchyState(ContainerState):
 
                 # depending on the execution mode pause execution
                 logger.debug("Handling execution mode")
-                execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self)
+                execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, child_state)
 
                 self.backward_execution = False
                 if self.preempted:
@@ -167,6 +167,9 @@ class HierarchyState(ContainerState):
                     child_state = self.get_state_for_transition(transition)
                     if transition is not None and child_state is self:
                         self.final_outcome = self.outcomes[transition.to_outcome]
+
+                    if child_state is self:
+                        singleton.state_machine_execution_engine.notify_run_to_states(self)
 
             ########################################################
             # children execution loop end

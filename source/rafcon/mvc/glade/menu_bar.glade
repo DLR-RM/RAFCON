@@ -379,6 +379,15 @@
               </object>
             </child>
             <child>
+              <object class="GtkImageMenuItem" id="run_to_selected_state">
+                <property name="label" translatable="yes">run_to_selected_state</property>
+                <property name="visible">True</property>
+                <property name="image">image20</property>
+                <property name="use_stock">False</property>
+                <signal name="activate" handler="on_run_to_selected_state_activate"/>
+              </object>
+            </child>
+            <child>
               <object class="GtkImageMenuItem" id="pause">
                 <property name="label" translatable="yes">pause</property>
                 <property name="visible">True</property>
@@ -476,6 +485,10 @@
     <property name="stock">gtk-missing-image</property>
   </object>
   <object class="GtkImage" id="image19">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image20">
     <property name="visible">True</property>
     <property name="stock">gtk-missing-image</property>
   </object>
