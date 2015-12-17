@@ -46,7 +46,6 @@ class StateMachineTreeController(ExtendedController):
         pass
 
     def register(self):
-
         """
         Change the state machine that is observed for new selected states to the selected state machine.
         :return:
