@@ -559,6 +559,15 @@ class MenuBarController(ExtendedController):
         logger.debug("Executing backward step ...")
         state_machine_execution_engine.backward_step()
 
+    def on_run_to_selected_state_activate(self, widget, data=None):
+        logger.debug("Run to selected state ...")
+        sel = state_machine_manager_model.get_selected_state_machine_model().selection
+        state_list = sel.get_states()
+        if len(state_list) is not 1:
+            logger.error("Exactly one state must be selected!")
+        else:
+            state_machine_execution_engine.run_to_selected_state(state_list[0].state.get_path())
+
     ######################################################
     # menu bar functionality - Help
     ######################################################

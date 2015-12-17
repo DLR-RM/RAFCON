@@ -1,3 +1,5 @@
+import pytest
+
 # core elements
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -7,9 +9,8 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.singleton import state_machine_manager
 
 # test environment elements
+import rafcon.mvc.singleton
 import test_utils
-import pytest
-
 
 def test_error_propagation(caplog):
     test_utils.remove_all_libraries()
@@ -23,7 +24,7 @@ def test_error_propagation(caplog):
     assert sm.root_state.output_data["error_check"] == "successfull"
 
     test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog, 0, 2)
+    test_utils.assert_logger_warnings_and_errors(caplog, 1, 2)
     test_utils.test_multithrading_lock.release()
 
 
