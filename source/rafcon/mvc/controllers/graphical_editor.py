@@ -174,7 +174,7 @@ class GraphicalEditorController(ExtendedController):
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
     @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of any state within state machine changed
     def state_machine_change(self, model, prop_name, info):
-        """Called on any change within th state machine
+        """Called on any change within the state machine
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
         then typically requires a redraw of the graphical editor, to display these changes immediately.
@@ -415,7 +415,7 @@ class GraphicalEditorController(ExtendedController):
         """Triggered when a mouse button is being released
 
         :param widget: The widget beneath the mouse when the release was done
-        :param event: Information about the event, e. g. x and y coordinate
+        :param event: Information about the event, e.g. x and y coordinate
         Not used so far
         """
         self.last_button_pressed = None
@@ -829,7 +829,6 @@ class GraphicalEditorController(ExtendedController):
           waypoint to
         :param tuple coords: The coordinates of the new waypoint
         """
-
         connection_temp = connection_m.temp['gui']['editor']
         parent_state_m = connection_m.parent
         # The waypoints should exist as dictionary. If not (for any reason), we have to convert it to one
@@ -951,7 +950,6 @@ class GraphicalEditorController(ExtendedController):
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
         """
-
         if state_m.state.is_root_state:
             return
 
@@ -982,7 +980,6 @@ class GraphicalEditorController(ExtendedController):
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
         """
-
         left, right, bottom, top = self.get_boundaries(port_m)
         size = (right - left, top - bottom)
 
@@ -1015,7 +1012,6 @@ class GraphicalEditorController(ExtendedController):
         :param key: Pressed key
         :param modifier: Pressed modifier key
         """
-
         def move_pos(pos, parent_size):
             scale_dist = 0.025
             if modifier & SHIFT_MASK:
@@ -1364,7 +1360,6 @@ class GraphicalEditorController(ExtendedController):
         This method draws all other components, not directly belonging to a certain state. For a starter, this is the
         selection frame the user draws for a multi selection.
         """
-
         # Draw the multi selection frame
         frame = self.model.temp['gui']['editor']['selection_frame']
         if isinstance(frame, list):
@@ -1894,7 +1889,6 @@ class GraphicalEditorController(ExtendedController):
         :param float selection_depth: The depth of the currently found object
         :return: The selected object and its depth
         """
-
         def update_selection(selection, model):
             if all:
                 if selection is None:

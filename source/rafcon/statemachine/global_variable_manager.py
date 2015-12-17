@@ -18,14 +18,13 @@ import copy
 
 
 class GlobalVariableManager(Observable):
-
     """A class for organizing all global variables of the state machine
 
     :ivar __global_variable_dictionary: the dictionary, where all global variables are stored
     :ivar __variable_locks: a dictionary that holds one mutex for each global variable
     :ivar __dictionary_lock: a mutex to prevent that the dictionary is written by two threads simultaneously
     :ivar __access_keys: a dictionary that holds an access key to each locked global variable
-
+    :ivar __variable_references: a dictionary that stores whether a variable can be returned by reference or not
     """
 
     def __init__(self):
@@ -42,7 +41,6 @@ class GlobalVariableManager(Observable):
 
         :param key: the key of the global variable to be set
         :param value: the new value of the global variable
-
         """
         self.__dictionary_lock.acquire()
         unlock = True
@@ -115,7 +113,7 @@ class GlobalVariableManager(Observable):
         """Checks whether the value of the variable can be returned by reference
 
         :param str key: Name of the variable
-        :return: True if value of variable can bbe returned by reference, False else
+        :return: True if value of variable can be returned by reference, False else
         """
         return key in self.__variable_references and self.__variable_references[key]
 
@@ -124,7 +122,6 @@ class GlobalVariableManager(Observable):
         """Deletes a global variable
 
         :param key: the key of the global variable to be deleted
-
         """
         self.__dictionary_lock.acquire()
         if key in self.__global_variable_dictionary:
@@ -143,7 +140,6 @@ class GlobalVariableManager(Observable):
         """Locks a global variable
 
         :param key: the key of the global variable to be locked
-
         """
         if key in self.__variable_locks:
             self.__variable_locks[key].acquire()
@@ -157,7 +153,6 @@ class GlobalVariableManager(Observable):
 
         :param key: the key of the global variable to be unlocked
         :param access_key: the access key to be able to unlock the global variable
-
         """
         if self.__access_keys[key] == access_key:
             if key in self.__variable_locks:
@@ -174,7 +169,6 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be set
         :param access_key: the access key to the already locked global variable
         :param value: the new value of the global variable
-
         """
         return self.set_variable(key, value, per_reference=False, access_key=access_key)
 
@@ -183,7 +177,6 @@ class GlobalVariableManager(Observable):
 
         :param key: the key of the global variable
         :param access_key: the access_key to the global variable that is already locked
-
         """
         return self.get_variable(key, per_reference=False, access_key=access_key)
 
@@ -191,15 +184,14 @@ class GlobalVariableManager(Observable):
         """Checks if a global variable exist
 
         :param key: the name of the global variable
-
         """
         return key in self.__global_variable_dictionary
 
     variable_exists = variable_exist
 
-    def locked_status_for_variable(self, key):
-        """
-        Returns the status of the lock of a global variable
+    def is_locked(self, key):
+        """Returns the status of the lock of a global variable
+
         :param key: the unique key of the global variable
         :return:
         """
@@ -213,9 +205,7 @@ class GlobalVariableManager(Observable):
 
     @property
     def global_variable_dictionary(self):
-        """Property for the _global_variable_dictionary field
-
-        """
+        """Property for the _global_variable_dictionary field"""
         dict_copy = {}
         for key, value in self.__global_variable_dictionary:
             if key in self.__variable_references and self.__variable_references[key]:
@@ -232,16 +222,7 @@ class GlobalVariableManager(Observable):
         """
         return self.__global_variable_dictionary.keys()
 
-
     def get_representation(self, key):
         if not self.variable_exist(key):
             return ''
         return str(self.__global_variable_dictionary[key])
-
-    def is_locked(self, key):
-        """Check whether a variable is currently locked
-
-        :param str key: The name of the variable
-        :return: True if locked, False else
-        """
-        return self.locked_status_for_variable(key)

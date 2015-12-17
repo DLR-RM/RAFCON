@@ -27,6 +27,9 @@ def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
 
 
 class DataPortListController(ExtendedController):
+    """Controller handling the input and output Data Port List
+
+    """
     def __init__(self, model, view, io_type):
         """Constructor
         """
