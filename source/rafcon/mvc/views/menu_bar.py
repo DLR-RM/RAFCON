@@ -45,8 +45,9 @@ class MenuBarView(View):
         'step_mode':            constants.BUTTON_STEPM,
         'step_into':            constants.BUTTON_STEP_INTO,
         'step_over':            constants.BUTTON_STEP_OVER,
-        'step_out':            constants.BUTTON_STEP_OUT,
+        'step_out':             constants.BUTTON_STEP_OUT,
         'backward_step':        constants.BUTTON_BACKW,
+        'run_to_selected_state': constants.BUTTON_RUN_TO_SELECTED_STATE,
         # -----------------------------------------------
         # Help
         # -----------------------------------------------

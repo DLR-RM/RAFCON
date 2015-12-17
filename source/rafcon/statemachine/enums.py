@@ -17,7 +17,8 @@ StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTI
 MethodName = Enum('METHOD_NAME', 'EXECUTE CALL_CONTAINER_STATE')
 StateExecutionState = Enum('STATE_EXECUTION_STATE', 'INACTIVE ACTIVE EXECUTE_CHILDREN WAIT_FOR_NEXT_STATE')
 StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED '
-                                                                     'FORWARD_INTO FORWARD_OVER FORWARD_OUT BACKWARD')
+                                                                     'FORWARD_INTO FORWARD_OVER FORWARD_OUT '
+                                                                     'BACKWARD RUN_TO_SELECTED_STATE')
 
 # Constants
 UNIQUE_DECIDER_STATE_ID = "unique_decider_state_id"
