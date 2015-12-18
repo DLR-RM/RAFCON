@@ -82,9 +82,10 @@ def add_state_machine(widget, event=None):
 
 
 class StateMachinesEditorController(ExtendedController):
-    def __init__(self, sm_manager_model, view):
+    def __init__(self, sm_manager_model, view, smt_ctrl):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
+        self.smt_ctrl = smt_ctrl
         assert isinstance(sm_manager_model, StateMachineManagerModel)
 
         self.tabs = {}
@@ -163,7 +164,7 @@ class StateMachinesEditorController(ExtendedController):
             graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_m, graphical_editor_view)
         else:
             graphical_editor_view = GraphicalEditorView()
-            graphical_editor_ctrl = GraphicalEditorController(state_machine_m, graphical_editor_view)
+            graphical_editor_ctrl = GraphicalEditorController(state_machine_m, graphical_editor_view, self.smt_ctrl)
 
         self.add_controller(sm_id, graphical_editor_ctrl)
 

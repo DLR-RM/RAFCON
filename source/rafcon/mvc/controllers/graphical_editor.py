@@ -84,11 +84,13 @@ class GraphicalEditorController(ExtendedController):
 
     _suspend_drawing = False
 
-    def __init__(self, model, view):
+    def __init__(self, model, view, smt_ctrl):
         """Constructor
         """
         assert isinstance(model, StateMachineModel)
         ExtendedController.__init__(self, model, view)
+
+        self.smt_ctrl = smt_ctrl
         self.root_state_m = model.root_state
 
         self.timer_id = None
@@ -2019,7 +2021,8 @@ class GraphicalEditorController(ExtendedController):
                 self.model.selection.clear()
 
     def _add_new_state(self, *args, **kwargs):
-        if not self.view.editor.has_focus():  # or singleton.global_focus is self:
+        if not self.view.editor.has_focus() and \
+                not self.smt_ctrl.view['state_machine_tree_view'].has_focus():
             return
 
         if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
