@@ -11,7 +11,7 @@ flow control tool, based on existing ones. The target of this software is to com
 flow control tools like Bubbles or SMACH without inheriting their drawbacks.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :numbered:
    :caption: Table of Contents
 

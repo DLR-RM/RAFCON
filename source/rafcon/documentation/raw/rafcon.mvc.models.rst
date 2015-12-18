@@ -8,6 +8,9 @@ is observable. For example, the StateModel holds a reference to a State class ob
 element changes, the model recognizes these changes and forwards the notification to the controllers, if they observe
 the changed model property.
 
+.. contents::
+    :backlinks: top
+
 StateModel (in state)
 ---------------------
 
