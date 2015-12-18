@@ -1,6 +1,8 @@
 MVC Views (in rafcon.mvc.views)
 =====================================
 
+.. contents::
+    :backlinks: top
 
 GraphicalEditor (in graphical_editor)
 -------------------------------------

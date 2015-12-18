@@ -85,6 +85,7 @@ class MenuBarController(ExtendedController):
 
         self.view['start'].connect('activate', self.on_start_activate)
         self.view['start_from_selected_state'].connect('activate', self.on_start_from_selected_state_activate)
+        self.view['run_to_selected_state'].connect('activate', self.on_run_to_selected_state_activate)
         self.view['pause'].connect('activate', self.on_pause_activate)
         self.view['stop'].connect('activate', self.on_stop_activate)
         self.view['step_mode'].connect('activate', self.on_step_mode_activate)
@@ -112,6 +113,8 @@ class MenuBarController(ExtendedController):
         shortcut_manager.add_callback_for_action('quit', partial(self.call_action_callback, "on_quit_activate"))
 
         shortcut_manager.add_callback_for_action('start', partial(self.call_action_callback, "on_start_activate"))
+        shortcut_manager.add_callback_for_action('start_from_selected', partial(self.call_action_callback,
+                                                                                "on_start_from_selected_state_activate"))
         shortcut_manager.add_callback_for_action('stop', partial(self.call_action_callback, "on_stop_activate"))
         shortcut_manager.add_callback_for_action('pause', partial(self.call_action_callback, "on_pause_activate"))
         shortcut_manager.add_callback_for_action('step_mode',
@@ -561,6 +564,11 @@ class MenuBarController(ExtendedController):
 
     def on_run_to_selected_state_activate(self, widget, data=None):
         logger.debug("Run to selected state ...")
+        # is state machine is not already started or pause, start it
+        if state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED \
+                or state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
+            state_machine_execution_engine.start(self.model.selected_state_machine_id)
+
         sel = state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:

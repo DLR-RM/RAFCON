@@ -8,6 +8,14 @@ is observable. For example, the StateModel holds a reference to a State class ob
 element changes, the model recognizes these changes and forwards the notification to the controllers, if they observe
 the changed model property.
 
+.. contents::
+    :backlinks: top
+
+AbstractStateModel (in abstract_state)
+--------------------------------------
+
+.. automodule:: rafcon.mvc.models.abstract_state
+
 StateModel (in state)
 ---------------------
 
@@ -18,6 +26,12 @@ ContainerStateModel (in container_state)
 ----------------------------------------
 
 .. automodule:: rafcon.mvc.models.container_state
+
+
+StateElementModel (in state_element)
+------------------------------------
+
+.. automodule:: rafcon.mvc.models.state_element
 
 
 TransitionModel (in transition)
@@ -69,6 +83,6 @@ GlobalVariableManagerModel (in global_variable_manager)
 
 
 LibraryManagerModel (in library_manager)
--------------------------------------------------------
+----------------------------------------
 
 .. automodule:: rafcon.mvc.models.library_manager
