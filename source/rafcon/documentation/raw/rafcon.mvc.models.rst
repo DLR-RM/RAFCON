@@ -11,6 +11,11 @@ the changed model property.
 .. contents::
     :backlinks: top
 
+AbstractStateModel (in abstract_state)
+--------------------------------------
+
+.. automodule:: rafcon.mvc.models.abstract_state
+
 StateModel (in state)
 ---------------------
 
@@ -21,6 +26,12 @@ ContainerStateModel (in container_state)
 ----------------------------------------
 
 .. automodule:: rafcon.mvc.models.container_state
+
+
+StateElementModel (in state_element)
+------------------------------------
+
+.. automodule:: rafcon.mvc.models.state_element
 
 
 TransitionModel (in transition)
@@ -72,6 +83,6 @@ GlobalVariableManagerModel (in global_variable_manager)
 
 
 LibraryManagerModel (in library_manager)
--------------------------------------------------------
+----------------------------------------
 
 .. automodule:: rafcon.mvc.models.library_manager
