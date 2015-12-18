@@ -355,11 +355,10 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="run_to_selected_state">
-                <property name="label" translatable="yes">run_to_selected_state</property>
+                <property name="label" translatable="yes">run to selected state</property>
                 <property name="visible">True</property>
                 <property name="image">image20</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_run_to_selected_state_activate"/>
               </object>
             </child>
             <child>
