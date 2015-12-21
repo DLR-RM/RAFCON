@@ -1,10 +1,7 @@
-from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
-
 import sys
 import time
+
+from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
@@ -29,6 +26,11 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+
+from rafcon.mvc import singleton as mvc_singleton
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 def check_pos(pos):
@@ -86,13 +88,12 @@ class GraphicalEditorController(ExtendedController):
 
     _suspend_drawing = False
 
-    def __init__(self, model, view, state_machine_tree_controller):
+    def __init__(self, model, view):
         """Constructor
         """
         assert isinstance(model, StateMachineModel)
         ExtendedController.__init__(self, model, view)
 
-        self.state_machine_tree_controller = state_machine_tree_controller
         self.root_state_m = model.root_state
 
         self.timer_id = None
@@ -1015,6 +1016,7 @@ class GraphicalEditorController(ExtendedController):
         :param key: Pressed key
         :param modifier: Pressed modifier key
         """
+
         def move_pos(pos, parent_size):
             scale_dist = 0.025
             if modifier & SHIFT_MASK:
@@ -1892,6 +1894,7 @@ class GraphicalEditorController(ExtendedController):
         :param float selection_depth: The depth of the currently found object
         :return: The selected object and its depth
         """
+
         def update_selection(selection, model):
             if all:
                 if selection is None:
@@ -2026,8 +2029,8 @@ class GraphicalEditorController(ExtendedController):
         Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
         the state machine tree are in focus.
         """
-        if not self.view.editor.has_focus() and \
-                not self.state_machine_tree_controller.view['state_machine_tree_view'].has_focus():
+        state_machine_tree_ctrl = mvc_singleton.main_window_controller.get_controller('state_machine_tree_controller')
+        if not self.view.editor.has_focus() and not state_machine_tree_ctrl.view['state_machine_tree_view'].has_focus():
             return
 
         if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
@@ -2049,7 +2052,7 @@ class GraphicalEditorController(ExtendedController):
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.has_focus():
             global_runtime_config.set_config_value('SHOW_DATA_FLOWS',
-                                               not global_runtime_config.get_config_value("SHOW_DATA_FLOWS"))
+                                                   not global_runtime_config.get_config_value("SHOW_DATA_FLOWS"))
             self._redraw()
 
     def _abort(self, *args):

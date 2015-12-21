@@ -148,8 +148,7 @@ class MainWindowController(ExtendedController):
         # state machines editor
         ######################################################
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
-                                                                   view.state_machines_editor,
-                                                                   state_machine_tree_controller)
+                                                                   view.state_machines_editor)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
         graphical_editor_label = view['graphical_editor_label']
