@@ -100,7 +100,6 @@ class StateMachineManagerModel(ModelMT, Observable):
     @property
     def selected_state_machine_id(self):
         """Property for the _selected_state_machine_id field
-
         """
         return self._selected_state_machine_id
 

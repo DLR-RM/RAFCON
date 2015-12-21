@@ -1,10 +1,7 @@
-from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
-
 import sys
 import time
+
+from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
@@ -29,6 +26,11 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+
+from rafcon.mvc import singleton as mvc_singleton
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 def check_pos(pos):
@@ -80,6 +82,8 @@ class GraphicalEditorController(ExtendedController):
         state and the current selection
     :param rafcon.mvc.views.graphical_editor.GraphicalEditorView view: The GTK view having an OpenGL rendering
         element
+    :param rafcon.mvc.controller.state_machine_tree.StateMachineTreeController state_machine_tree_controller: The state
+        machine tree controller.
     """
 
     _suspend_drawing = False
@@ -89,6 +93,7 @@ class GraphicalEditorController(ExtendedController):
         """
         assert isinstance(model, StateMachineModel)
         ExtendedController.__init__(self, model, view)
+
         self.root_state_m = model.root_state
 
         self.timer_id = None
@@ -128,13 +133,11 @@ class GraphicalEditorController(ExtendedController):
         self.last_time = time.time()
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         pass
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
         pass
 
     def register_actions(self, shortcut_manager):
@@ -175,7 +178,7 @@ class GraphicalEditorController(ExtendedController):
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
     @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of any state within state machine changed
     def state_machine_change(self, model, prop_name, info):
-        """Called on any change within th state machine
+        """Called on any change within the state machine
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
         then typically requires a redraw of the graphical editor, to display these changes immediately.
@@ -416,7 +419,7 @@ class GraphicalEditorController(ExtendedController):
         """Triggered when a mouse button is being released
 
         :param widget: The widget beneath the mouse when the release was done
-        :param event: Information about the event, e. g. x and y coordinate
+        :param event: Information about the event, e.g. x and y coordinate
         Not used so far
         """
         self.last_button_pressed = None
@@ -830,7 +833,6 @@ class GraphicalEditorController(ExtendedController):
           waypoint to
         :param tuple coords: The coordinates of the new waypoint
         """
-
         connection_temp = connection_m.temp['gui']['editor']
         parent_state_m = connection_m.parent
         # The waypoints should exist as dictionary. If not (for any reason), we have to convert it to one
@@ -952,7 +954,6 @@ class GraphicalEditorController(ExtendedController):
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
         """
-
         if state_m.state.is_root_state:
             return
 
@@ -983,7 +984,6 @@ class GraphicalEditorController(ExtendedController):
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
         """
-
         left, right, bottom, top = self.get_boundaries(port_m)
         size = (right - left, top - bottom)
 
@@ -1365,7 +1365,6 @@ class GraphicalEditorController(ExtendedController):
         This method draws all other components, not directly belonging to a certain state. For a starter, this is the
         selection frame the user draws for a multi selection.
         """
-
         # Draw the multi selection frame
         frame = self.model.temp['gui']['editor']['selection_frame']
         if isinstance(frame, list):
@@ -2025,7 +2024,13 @@ class GraphicalEditorController(ExtendedController):
                 self.model.selection.clear()
 
     def _add_new_state(self, *args, **kwargs):
-        if not self.view.editor.has_focus():  # or singleton.global_focus is self:
+        """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
+
+        Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
+        the state machine tree are in focus.
+        """
+        state_machine_tree_ctrl = mvc_singleton.main_window_controller.get_controller('state_machine_tree_controller')
+        if not self.view.editor.has_focus() and not state_machine_tree_ctrl.view['state_machine_tree_view'].has_focus():
             return
 
         if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
@@ -2047,7 +2052,7 @@ class GraphicalEditorController(ExtendedController):
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.has_focus():
             global_runtime_config.set_config_value('SHOW_DATA_FLOWS',
-                                               not global_runtime_config.get_config_value("SHOW_DATA_FLOWS"))
+                                                   not global_runtime_config.get_config_value("SHOW_DATA_FLOWS"))
             self._redraw()
 
     def _abort(self, *args):

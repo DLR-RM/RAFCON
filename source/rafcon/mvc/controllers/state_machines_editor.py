@@ -100,6 +100,10 @@ class StateMachinesEditorController(ExtendedController):
             self.add_graphical_state_machine_editor(state_machine)
 
     def register_actions(self, shortcut_manager):
+        """Register callback methods fot triggered actions.
+
+        :param shortcut_manager:
+        """
         shortcut_manager.add_callback_for_action('close', self.on_close_shortcut)
 
         # Call register_action of parent in order to register actions for child controllers
