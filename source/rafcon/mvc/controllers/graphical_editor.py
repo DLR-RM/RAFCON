@@ -635,7 +635,7 @@ class GraphicalEditorController(ExtendedController):
         selection = self._find_selection(x, y, find_states=True, find_data_flows=False,
                                          find_data_ports=False, find_transitions=False)
         if selection is not None and self.single_selection != selection:
-            # not necessary, but without the following line occurs error code 139 (segmentation)
+            # the following line avoids _redraw(), which leads to an error
             self.single_selection = selection
             self.model.selection.set(selection)
 

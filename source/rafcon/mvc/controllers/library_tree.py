@@ -19,7 +19,7 @@ class LibraryTreeController(ExtendedController):
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         view.set_model(self.library_tree_store)
 
-        view.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)],
+        view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)],
                                       gtk.gdk.ACTION_COPY)
 
         self.state_machine_manager_model = state_machine_manager_model
@@ -38,6 +38,7 @@ class LibraryTreeController(ExtendedController):
         self.view.connect('button_press_event', self.mouse_click)
 
         self.view.connect("drag-data-get", self.on_drag_data_get)
+        self.view.connect("drag-begin", self.on_drag_begin)
 
     def mouse_click(self, widget, event=None):
         # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}".format(event.button, gtk.gdk.BUTTON_PRESS,
@@ -151,6 +152,22 @@ class LibraryTreeController(ExtendedController):
         library_state = self._get_selected_library_state()
         if self._insert_state(library_state, False):
             data.set_text(library_state.state_id)
+
+    def on_drag_begin(self, widget, context):
+        smm_m = self.state_machine_manager_model
+        selected_state = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()[0]
+        selection_size = selected_state.meta['gui']['editor_opengl']['size']
+        size = int(round(min(selection_size[0]/5., selection_size[1]/5.)*4, 0))
+
+        # draws a rectangle as drag icon
+        pixmap = gtk.gdk.Pixmap(None, size, size, depth=24)
+        cr = pixmap.cairo_create()
+        cr.rectangle(0, 0, size, size)
+        cr.fill()
+        cr.close_path()
+        pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, size, size)
+        pixbuf.get_from_drawable(pixmap, gtk.gdk.colormap_get_system(), 0, 0, 0, 0, size, size)
+        self.view.drag_source_set_icon_pixbuf(pixbuf)
 
     def insert_button_clicked(self, widget, as_template=False):
         self._insert_state(self._get_selected_library_state(), as_template)
