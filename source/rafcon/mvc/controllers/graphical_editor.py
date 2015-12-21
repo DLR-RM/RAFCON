@@ -872,7 +872,8 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.mvc.models.abstract_state.AbstractStateModel to_state_m: The to state model of the new transition
         :param int to_outcome_id: The id of the to outcome or None if the transition does not go to the parent state
         """
-        from_state_id = self.selected_outcome[0].state.state_id
+        from_state_m = self.selected_outcome[0]
+        from_state_id = from_state_m.state.state_id
         from_outcome_id = self.selected_outcome[1]
         to_state_id = to_state_m.state.state_id
         # Prevent accidental creation of transitions with double click on one outcome
@@ -884,10 +885,10 @@ class GraphicalEditorController(ExtendedController):
         if from_outcome_id is None:
             from_state_id = None
 
-        if to_outcome_id is None:
-            responsible_parent_m = to_state_m.parent
+        if from_outcome_id is None:  # Origin is income
+            responsible_parent_m = from_state_m
         else:
-            responsible_parent_m = to_state_m
+            responsible_parent_m = from_state_m.parent
 
         try:
             if not isinstance(responsible_parent_m, ContainerStateModel):
