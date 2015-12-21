@@ -30,6 +30,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc import singleton as mvc_singleton
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -350,10 +351,24 @@ class GraphicalEditorController(ExtendedController):
 
             # Check, whether an outcome was clicked on
             outcome_state, outcome_key = self._check_for_outcome_selection(new_selection, self.mouse_move_start_coords)
+
+            # Check, whether a port (input, output, scope) was clicked on
+            if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
+                # Check, whether port (connector) was clicked on
+                port_model, port_type, is_connector = self._check_for_port_selection(new_selection,
+                                                                                     self.mouse_move_start_coords)
+            else:
+                port_model = None
+
             if outcome_state is not None:
+                # Abort connection creation, as the user requested a connection from a data port to a logical port
+                if self.selected_port_connector:
+                    logger.error("Creation of connections between data and logic ports not allowed")
+                    self._abort()
+
                 # Store the selected outcome if no outcome was selected before, this is the start of a drag and drop
                 # operation to create a new transition
-                if self.selected_outcome is None:
+                elif not self.selected_outcome:
                     if outcome_state is not self.root_state_m or outcome_key is None:
                         self.selected_outcome = outcome_state, outcome_key
                         self.mouse_move_redraw = True
@@ -363,24 +378,25 @@ class GraphicalEditorController(ExtendedController):
                     self._create_new_transition(outcome_state, outcome_key)
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
-            elif self.selected_outcome is not None and isinstance(new_selection, AbstractStateModel) and \
-                    ((new_selection.parent is self.selected_outcome[0].parent and
-                              self.selected_outcome[1] is not None) or
-                         (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
+            elif self.selected_outcome and isinstance(new_selection, AbstractStateModel) and \
+                    ((new_selection.parent is self.selected_outcome[0].parent and self.selected_outcome[1]) or
+                         (new_selection.parent is self.selected_outcome[0] and not self.selected_outcome[1])):
                 self._create_new_transition(new_selection)
             # Allow the user to create waypoints while creating a new transition
-            elif self.selected_outcome is not None:
+            elif self.selected_outcome:
                 self._handle_new_waypoint()
 
             # Check, whether a port (input, output, scope) was clicked on
             if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
-                # Check, whether port (connector) was clicked on
-                port_model, port_type, is_connector = self._check_for_port_selection(new_selection,
-                                                                                     self.mouse_move_start_coords)
                 if port_model is not None:
+                    # Abort connection creation, as the user requested a connection from a logical port to a data port
+                    if self.selected_outcome:
+                        logger.error("Creation of connections between data and logic ports not allowed")
+                        self._abort()
+
                     # Store the selected port if no port was selected before, this is the start of a drag and drop
                     # operation to create a new data flow
-                    if not self.selected_port_connector and is_connector:
+                    elif not self.selected_port_connector and is_connector:
                         self.model.selection.set(port_model)
                         self.selected_port_type = port_type
                         self.selected_port_connector = True
