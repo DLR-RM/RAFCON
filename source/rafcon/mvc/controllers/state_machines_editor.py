@@ -82,10 +82,10 @@ def add_state_machine(widget, event=None):
 
 
 class StateMachinesEditorController(ExtendedController):
-    def __init__(self, sm_manager_model, view, smt_ctrl):
+    def __init__(self, sm_manager_model, view, state_machine_tree_controller):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
-        self.smt_ctrl = smt_ctrl
+        self.state_machine_tree_controller = state_machine_tree_controller
         assert isinstance(sm_manager_model, StateMachineManagerModel)
 
         self.tabs = {}
@@ -101,6 +101,10 @@ class StateMachinesEditorController(ExtendedController):
             self.add_graphical_state_machine_editor(state_machine)
 
     def register_actions(self, shortcut_manager):
+        """Register callback methods fot triggered actions.
+
+        :param shortcut_manager:
+        """
         shortcut_manager.add_callback_for_action('close', self.on_close_shortcut)
 
         # Call register_action of parent in order to register actions for child controllers
@@ -164,7 +168,8 @@ class StateMachinesEditorController(ExtendedController):
             graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_m, graphical_editor_view)
         else:
             graphical_editor_view = GraphicalEditorView()
-            graphical_editor_ctrl = GraphicalEditorController(state_machine_m, graphical_editor_view, self.smt_ctrl)
+            graphical_editor_ctrl = GraphicalEditorController(state_machine_m, graphical_editor_view,
+                                                              self.state_machine_tree_controller)
 
         self.add_controller(sm_id, graphical_editor_ctrl)
 

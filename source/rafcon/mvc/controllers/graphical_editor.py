@@ -80,17 +80,19 @@ class GraphicalEditorController(ExtendedController):
         state and the current selection
     :param rafcon.mvc.views.graphical_editor.GraphicalEditorView view: The GTK view having an OpenGL rendering
         element
+    :param rafcon.mvc.controller.state_machine_tree.StateMachineTreeController state_machine_tree_controller: The state
+        machine tree controller.
     """
 
     _suspend_drawing = False
 
-    def __init__(self, model, view, smt_ctrl):
+    def __init__(self, model, view, state_machine_tree_controller):
         """Constructor
         """
         assert isinstance(model, StateMachineModel)
         ExtendedController.__init__(self, model, view)
 
-        self.smt_ctrl = smt_ctrl
+        self.state_machine_tree_controller = state_machine_tree_controller
         self.root_state_m = model.root_state
 
         self.timer_id = None
@@ -130,13 +132,11 @@ class GraphicalEditorController(ExtendedController):
         self.last_time = time.time()
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         pass
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
         pass
 
     def register_actions(self, shortcut_manager):
@@ -2021,8 +2021,13 @@ class GraphicalEditorController(ExtendedController):
                 self.model.selection.clear()
 
     def _add_new_state(self, *args, **kwargs):
+        """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
+
+        Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
+        the state machine tree are in focus.
+        """
         if not self.view.editor.has_focus() and \
-                not self.smt_ctrl.view['state_machine_tree_view'].has_focus():
+                not self.state_machine_tree_controller.view['state_machine_tree_view'].has_focus():
             return
 
         if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
