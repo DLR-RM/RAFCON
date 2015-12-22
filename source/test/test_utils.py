@@ -2,6 +2,7 @@ import rafcon
 from os.path import join, dirname
 import getpass
 from threading import Lock, Condition
+from rafcon.utils import log
 
 test_multithrading_lock = Lock()
 
@@ -58,6 +59,7 @@ def call_gui_callback(callback, *args):
     import glib
     condition = Condition()
 
+    @log.log_exceptions()
     def fun():
         """Call callback and notify condition variable
         """

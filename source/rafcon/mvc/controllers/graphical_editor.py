@@ -30,6 +30,7 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc import singleton as mvc_singleton
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -232,6 +233,7 @@ class GraphicalEditorController(ExtendedController):
             self.single_selection = selection
             self._redraw()
 
+    @log.log_exceptions(logger)
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
 
@@ -348,10 +350,24 @@ class GraphicalEditorController(ExtendedController):
 
             # Check, whether an outcome was clicked on
             outcome_state, outcome_key = self._check_for_outcome_selection(new_selection, self.mouse_move_start_coords)
+
+            # Check, whether a port (input, output, scope) was clicked on
+            if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
+                # Check, whether port (connector) was clicked on
+                port_model, port_type, is_connector = self._check_for_port_selection(new_selection,
+                                                                                     self.mouse_move_start_coords)
+            else:
+                port_model = None
+
             if outcome_state is not None:
+                # Abort connection creation, as the user requested a connection from a data port to a logical port
+                if self.selected_port_connector:
+                    logger.error("Creation of connections between data and logic ports not allowed")
+                    self._abort()
+
                 # Store the selected outcome if no outcome was selected before, this is the start of a drag and drop
                 # operation to create a new transition
-                if self.selected_outcome is None:
+                elif not self.selected_outcome:
                     if outcome_state is not self.root_state_m or outcome_key is None:
                         self.selected_outcome = outcome_state, outcome_key
                         self.mouse_move_redraw = True
@@ -361,24 +377,25 @@ class GraphicalEditorController(ExtendedController):
                     self._create_new_transition(outcome_state, outcome_key)
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
-            elif self.selected_outcome is not None and isinstance(new_selection, AbstractStateModel) and \
-                    ((new_selection.parent is self.selected_outcome[0].parent and
-                              self.selected_outcome[1] is not None) or
-                         (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
+            elif self.selected_outcome and isinstance(new_selection, AbstractStateModel) and \
+                    ((new_selection.parent is self.selected_outcome[0].parent and self.selected_outcome[1]) or
+                         (new_selection.parent is self.selected_outcome[0] and not self.selected_outcome[1])):
                 self._create_new_transition(new_selection)
             # Allow the user to create waypoints while creating a new transition
-            elif self.selected_outcome is not None:
+            elif self.selected_outcome:
                 self._handle_new_waypoint()
 
             # Check, whether a port (input, output, scope) was clicked on
             if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
-                # Check, whether port (connector) was clicked on
-                port_model, port_type, is_connector = self._check_for_port_selection(new_selection,
-                                                                                     self.mouse_move_start_coords)
                 if port_model is not None:
+                    # Abort connection creation, as the user requested a connection from a logical port to a data port
+                    if self.selected_outcome:
+                        logger.error("Creation of connections between data and logic ports not allowed")
+                        self._abort()
+
                     # Store the selected port if no port was selected before, this is the start of a drag and drop
                     # operation to create a new data flow
-                    if not self.selected_port_connector and is_connector:
+                    elif not self.selected_port_connector and is_connector:
                         self.model.selection.set(port_model)
                         self.selected_port_type = port_type
                         self.selected_port_connector = True
@@ -870,7 +887,8 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.mvc.models.abstract_state.AbstractStateModel to_state_m: The to state model of the new transition
         :param int to_outcome_id: The id of the to outcome or None if the transition does not go to the parent state
         """
-        from_state_id = self.selected_outcome[0].state.state_id
+        from_state_m = self.selected_outcome[0]
+        from_state_id = from_state_m.state.state_id
         from_outcome_id = self.selected_outcome[1]
         to_state_id = to_state_m.state.state_id
         # Prevent accidental creation of transitions with double click on one outcome
@@ -882,10 +900,10 @@ class GraphicalEditorController(ExtendedController):
         if from_outcome_id is None:
             from_state_id = None
 
-        if to_outcome_id is None:
-            responsible_parent_m = to_state_m.parent
+        if from_outcome_id is None:  # Origin is income
+            responsible_parent_m = from_state_m
         else:
-            responsible_parent_m = to_state_m
+            responsible_parent_m = from_state_m.parent
 
         try:
             if not isinstance(responsible_parent_m, ContainerStateModel):
@@ -897,7 +915,6 @@ class GraphicalEditorController(ExtendedController):
                 transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
         except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
-            raise
             # import traceback
             # logger.debug("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
         except Exception as e:
