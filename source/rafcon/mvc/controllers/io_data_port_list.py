@@ -6,24 +6,10 @@ from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
+from rafcon.utils.comparison import compare_variables
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-
-
-def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
-    path1 = treemodel.get_path(iter1)[0]
-    path2 = treemodel.get_path(iter2)[0]
-    name1 = treemodel[path1][0]
-    name2 = treemodel[path2][0]
-    name1_as_bits = ' '.join(format(ord(x), 'b') for x in name1)
-    name2_as_bits = ' '.join(format(ord(x), 'b') for x in name2)
-    if name1_as_bits == name2_as_bits:
-        return 0
-    elif name1_as_bits > name2_as_bits:
-        return 1
-    else:
-        return -1
 
 
 class DataPortListController(ExtendedController):
@@ -298,8 +284,7 @@ class DataPortListController(ExtendedController):
             logger.error("Error while changing default value: {0}".format(e))
 
     def reload_data_port_list_store(self):
-        """Reloads the input data port list store from the data port models
-        """
+        """Reloads the input data port list store from the data port models"""
         if not isinstance(self.model.state, LibraryState):
             tmp = ListStore(str, str, str, int)
         else:
@@ -338,7 +323,7 @@ class DataPortListController(ExtendedController):
                             ])
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, dataport_compare_method)
+        tms.set_sort_func(0, compare_variables)
         tms.sort_column_changed()
         tmp = tms
         self.data_port_list_store.clear()

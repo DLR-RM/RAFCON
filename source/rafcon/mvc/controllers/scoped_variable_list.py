@@ -2,11 +2,13 @@ import gtk
 from gtk import ListStore
 
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.utils import log
-logger = log.get_logger(__name__)
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.io_data_port_list import dataport_compare_method
+
+from rafcon.utils.comparison import compare_variables
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class ScopedVariableListController(ExtendedController):
@@ -130,8 +132,7 @@ class ScopedVariableListController(ExtendedController):
             ctr += 1
 
     def reload_scoped_variables_list_store(self):
-        """Reloads the scoped variable list store from the data port models
-        """
+        """Reloads the scoped variable list store from the data port models"""
         if hasattr(self.model, 'scoped_variables'):
             tmp = ListStore(str, str, str, int)
             for sv_model in self.model.scoped_variables:
@@ -147,7 +148,7 @@ class ScopedVariableListController(ExtendedController):
                             sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
             tms = gtk.TreeModelSort(tmp)
             tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-            tms.set_sort_func(0, dataport_compare_method)
+            tms.set_sort_func(0, compare_variables)
             tms.sort_column_changed()
             tmp = tms
             self.scoped_variables_list_store.clear()
