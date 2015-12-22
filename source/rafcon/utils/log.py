@@ -155,7 +155,7 @@ class log_exceptions(object):
         def wrapper(*args, **kwargs):
             """Catch all exceptions and log them as error message"""
             try:
-                function(*args, **kwargs)
+                return function(*args, **kwargs)
             except Exception as e:
                 import traceback
                 # Only create custom logger if no logger was passed and an exception occured
