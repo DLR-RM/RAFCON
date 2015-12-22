@@ -88,6 +88,13 @@ def generate_tab_label(title):
 
 
 class StatesEditorController(ExtendedController):
+    """Controller handling the states editor
+
+    :param rafcon.mvc.controllers.state_machine_manager.StateMachineManagerModel model:
+    :param rafcon.mvc.views.states_editor.StatesEditorView view:
+    :param editor_type:
+    """
+
     def __init__(self, model, view, editor_type):
 
         assert isinstance(model, StateMachineManagerModel)
@@ -117,8 +124,7 @@ class StatesEditorController(ExtendedController):
         return tab_name
 
     def get_current_state_m(self):
-        """Returns the state model of the currently open tab
-        """
+        """Returns the state model of the currently open tab"""
         page_id = self.view.notebook.get_current_page()
         if page_id == -1:
             return None
@@ -185,6 +191,7 @@ class StatesEditorController(ExtendedController):
                 self.close_page(state_identifier, delete=True)
 
     def register_view(self, view):
+        """Called when the View was registered"""
         self.view.notebook.connect('switch-page', self.on_switch_page)
         if self.current_state_machine_m:
             self.add_state_editor(self.current_state_machine_m.root_state, self.editor_type)
@@ -192,7 +199,8 @@ class StatesEditorController(ExtendedController):
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
         super(StatesEditorController, self).register_actions(shortcut_manager)
@@ -272,7 +280,9 @@ class StatesEditorController(ExtendedController):
 
     def destroy_page(self, tab_dict):
         """ Destroys desired page
+
         Disconnects the page from signals and removes interconnection to parent-controller or observables.
+
         :param tab_dict: Tab-dictionary that holds all necessary information of a page and state-editor.
         """
         # logger.info("destroy page %s" % tab_dict['controller'].model.state.get_path())
@@ -287,6 +297,7 @@ class StatesEditorController(ExtendedController):
 
         The page belonging to the state with the specified state_identifier is closed. If the deletion flag is set to
         False, the controller of the page is stored for later usage.
+
         :param state_identifier: Identifier of the page's state
         :param delete: Whether to delete the controller (deletion is necessary if teh state is deleted)
         """
@@ -322,6 +333,12 @@ class StatesEditorController(ExtendedController):
         return None, None
 
     def on_tab_close_clicked(self, event, state_m):
+        """Triggered when the states-editor close button is clicked
+
+        Closes the tab.
+
+        :param state_m: The desired state model (the selected state)
+        """
         [page, state_identifier] = self.find_page_of_state_m(state_m)
         if page:
             self.close_page(state_identifier, delete=False)
@@ -336,8 +353,7 @@ class StatesEditorController(ExtendedController):
         page.sticky_button.set_active(self.tabs[state_identifier]['is_sticky'])
 
     def close_all_pages(self):
-        """Closes all tabs of the states editor
-        """
+        """Closes all tabs of the states editor"""
         states_to_be_closed = []
         for state_identifier in self.tabs:
             states_to_be_closed.append(state_identifier)
@@ -366,6 +382,7 @@ class StatesEditorController(ExtendedController):
         """Opens the tab for the specified state model
 
         The tab with the given state model is opened or set to foreground.
+
         :param state_m: The desired state model (the selected state)
         """
 
@@ -389,8 +406,7 @@ class StatesEditorController(ExtendedController):
         self.keep_only_sticked_and_selected_tabs()
 
     def keep_only_sticked_and_selected_tabs(self):
-        """Close all tabs, except the currently active one and all sticked ones
-        """
+        """Close all tabs, except the currently active one and all sticked ones"""
         # Only if the user didn't deactivate this behaviour
         if not global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
             return
@@ -542,6 +558,7 @@ class StatesEditorController(ExtendedController):
 
         Searches for a single selected state model and open the according page. Page is created if it is not
         existing. Then the rename method of the state controller is called.
+
         :param key_value:
         :param modifier_mask:
         """

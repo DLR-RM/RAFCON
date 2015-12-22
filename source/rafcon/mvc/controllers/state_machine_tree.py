@@ -151,6 +151,7 @@ class StateMachineTreeController(ExtendedController):
     def update(self, changed_state_model=None, with_expand=False):
         """
         Function checks if all states are in tree and if tree has states which were deleted
+
         :param changed_state_model:
         """
         if not self.view_is_registered:

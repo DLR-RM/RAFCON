@@ -132,6 +132,10 @@ class GlobalVariableManagerController(ExtendedController):
         """Triggered upon updating the list of global variables
 
         Helper method to sort global variables alphabetically.
+
+        :param treemodel: Tree model implementing the gtk.TreeSortable interface.
+        :param iter1: Points at a row.
+        :param iter2: Points at a row.
         """
         path1 = treemodel.get_path(iter1)[0]
         path2 = treemodel.get_path(iter2)[0]

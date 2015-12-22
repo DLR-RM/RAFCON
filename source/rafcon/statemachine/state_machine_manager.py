@@ -17,7 +17,6 @@ from rafcon.network.network_config import global_net_config
 
 
 class StateMachineManager(ModelMT, Observable):
-
     """A class to organize all main components of a state machine
 
     It inherits from Observable to make a change of its fields observable.

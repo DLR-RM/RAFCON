@@ -102,7 +102,8 @@ class StateMachinesEditorController(ExtendedController):
     def register_actions(self, shortcut_manager):
         """Register callback methods fot triggered actions.
 
-        :param shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action('close', self.on_close_shortcut)
 
@@ -120,8 +121,7 @@ class StateMachinesEditorController(ExtendedController):
                 return
 
     def on_close_shortcut(self, *args):
-        """Close active state machine (triggered by shortcut)
-        """
+        """Close active state machine (triggered by shortcut)"""
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:
             return
@@ -247,8 +247,7 @@ class StateMachinesEditorController(ExtendedController):
             label.set_label(tab_title)
 
     def on_close_clicked(self, event, state_machine_m, result, force=False):
-        """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
-
+        """Callback for the "close-clicked" emitted by custom TabLabel widget."""
         if force:
             self.remove_state_machine(state_machine_m)
         elif state_machine_m.state_machine.marked_dirty:
@@ -312,8 +311,7 @@ class StateMachinesEditorController(ExtendedController):
             self.model.selected_state_machine_id = None
 
     def close_all_pages(self):
-        """Closes all tabs of the state machines editor
-        """
+        """Closes all tabs of the state machines editor."""
         state_machine_m_list = []
         for tab in self.tabs.itervalues():
             state_machine_m_list.append(tab['state_machine_m'])

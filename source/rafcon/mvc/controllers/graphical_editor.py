@@ -82,15 +82,12 @@ class GraphicalEditorController(ExtendedController):
         state and the current selection
     :param rafcon.mvc.views.graphical_editor.GraphicalEditorView view: The GTK view having an OpenGL rendering
         element
-    :param rafcon.mvc.controller.state_machine_tree.StateMachineTreeController state_machine_tree_controller: The state
-        machine tree controller.
     """
 
     _suspend_drawing = False
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         assert isinstance(model, StateMachineModel)
         ExtendedController.__init__(self, model, view)
 
@@ -143,7 +140,8 @@ class GraphicalEditorController(ExtendedController):
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))

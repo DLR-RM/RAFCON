@@ -2,13 +2,13 @@ import gtk
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
 
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
@@ -29,10 +29,11 @@ def dataport_compare_method(treemodel, iter1, iter2, user_data=None):
 class DataPortListController(ExtendedController):
     """Controller handling the input and output Data Port List
 
+    :param rafcon.mvc.models.
     """
+
     def __init__(self, model, view, io_type):
-        """Constructor
-        """
+        """Constructor"""
         ExtendedController.__init__(self, model, view)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
         self.type = io_type
@@ -61,7 +62,6 @@ class DataPortListController(ExtendedController):
         :param cell: the current CellRenderer
         :param model: the ListStore or TreeStore that is the model for TreeView
         :param iter: an iterator over the rows of the TreeStore/ListStore Model
-        :return:
         """
         if isinstance(self.model.state, LibraryState):
             use_runtime_value = model.get_value(iter, 4)
@@ -77,8 +77,7 @@ class DataPortListController(ExtendedController):
         return
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         # top widget is a tree view => set the model of the tree view to be a list store
         view.get_top_widget().set_model(self.data_port_list_store)
         view.get_top_widget().set_cursor(0)
@@ -122,13 +121,14 @@ class DataPortListController(ExtendedController):
         self.tab_edit_controller.register_view()
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
+        pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("delete", self.remove_port)
         shortcut_manager.add_callback_for_action("add", self.add_port)
@@ -147,8 +147,7 @@ class DataPortListController(ExtendedController):
 
     @ExtendedController.observe("input_data_ports", after=True)
     def input_data_ports_changed(self, model, prop_name, info):
-        """Reload list store and reminds selection when the model was changed
-        """
+        """Reload list store and reminds selection when the model was changed"""
         if self.type == "input":
             # store port selection
             path_list = None
@@ -164,8 +163,7 @@ class DataPortListController(ExtendedController):
 
     @ExtendedController.observe("output_data_ports", after=True)
     def output_data_ports_changed(self, model, prop_name, info):
-        """Reload list store when the model was changed
-        """
+        """Reload list store when the model was changed"""
         if self.type == "output":
             # store port selection
             path_list = None
@@ -190,8 +188,7 @@ class DataPortListController(ExtendedController):
                 self.output_data_ports_changed(model, prop_name, info)
 
     def on_new_port_button_clicked(self, widget, data=None):
-        """Add a new port with default values and select it
-        """
+        """Add a new port with default values and select it"""
         new_port_name = self.type + "_{0}".format(self.new_port_counter)
         self.new_port_counter += 1
         if self.type == "input":
@@ -201,8 +198,7 @@ class DataPortListController(ExtendedController):
         self.select_entry(data_port_id)
 
     def on_delete_port_button_clicked(self, widget, data=None):
-        """Delete the selected port and select the next one
-        """
+        """Delete the selected port and select the next one"""
         path = self.get_path()
         data_port_id = self.get_data_port_id_from_selection()
         if data_port_id is not None:
