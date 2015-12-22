@@ -235,6 +235,7 @@ class GraphicalEditorController(ExtendedController):
             self.single_selection = selection
             self._redraw()
 
+    @log.log_exceptions(logger)
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
 
