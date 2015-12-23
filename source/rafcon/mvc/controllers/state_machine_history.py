@@ -95,7 +95,6 @@ class StateMachineHistoryController(ExtendedController):
 
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        logger.info("register actions")
         shortcut_manager.add_callback_for_action("undo", self.undo)
         shortcut_manager.add_callback_for_action("redo", self.redo)
 

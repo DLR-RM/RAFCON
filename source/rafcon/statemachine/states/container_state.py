@@ -64,7 +64,6 @@ class ContainerState(State):
         self.data_flows = data_flows
         if start_state_id is not None:
             self.start_state_id = start_state_id
-        logger.debug("Container state with id %s and name %s initialized" % (self._state_id, self.name))
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -162,34 +161,19 @@ class ContainerState(State):
         transition = None
         while not transition:
 
-            # aborted case for child state
-            if state.final_outcome.outcome_id == -1:
+            # (child) state preempted or aborted
+            if self.preempted or state.final_outcome.outcome_id in [-2, -1]:
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
-                self.final_outcome = Outcome(-1, "aborted")
                 self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                logger.debug("Exit hierarchy state %s with outcome aborted, as the child state returned "
-                             "aborted and no transition was added to the aborted outcome!" % self.name)
-                return None
 
-            # preempted case for child state
-            elif state.final_outcome.outcome_id == -2:
-                if self.concurrency_queue:
-                    self.concurrency_queue.put(self.state_id)
-                self.final_outcome = Outcome(-2, "preempted")
-                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                logger.debug("Exit hierarchy state %s with outcome preempted, as the child state returned "
-                             "preempted and no transition was added to the preempted outcome!" % self.name)
-                return None
+                if state.final_outcome.outcome_id == -1:
+                    self.final_outcome = Outcome(-1, "aborted")
+                else:
+                    self.final_outcome = Outcome(-2, "preempted")
 
-            # preempted case
-            if self.preempted:
-                if self.concurrency_queue:
-                    self.concurrency_queue.put(self.state_id)
-                self.final_outcome = Outcome(-2, "preempted")
-                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                logger.debug("Exit hierarchy state %s with outcome preempted, as the state itself "
-                             "was preempted!" % self.name)
+                logger.debug("{0} of {1} not connected, using default transition to parental {2}".format(
+                    state.final_outcome, state, self.final_outcome))
                 return None
 
             # depending on the execution mode pause execution
@@ -199,9 +183,11 @@ class ContainerState(State):
                 raise RuntimeError("state stopped")
 
             # wait until the user connects the outcome of the state with a transition
+            logger.warn("Waiting for new transition at {1} of {0} ".format(state, state.final_outcome))
             self._transitions_cv.acquire()
             self._transitions_cv.wait(3.0)
             self._transitions_cv.release()
+
             transition = self.get_transition_for_outcome(state, state.final_outcome)
 
         return transition
@@ -337,7 +323,6 @@ class ContainerState(State):
         if self.get_path() in state_machine_execution_engine.start_state_paths:
             for state_id, state in self.states.iteritems():
                 if state.get_path() in state_machine_execution_engine.start_state_paths:
-                    logger.debug("Forward execution to state " + state.name)
                     state_machine_execution_engine.start_state_paths.remove(self.get_path())
                     return state
 
@@ -473,13 +458,10 @@ class ContainerState(State):
             raise TypeError("state must be of type State")
         if not isinstance(outcome, Outcome):
             raise TypeError("outcome must be of type Outcome")
-        logger.debug("Return transition for state %s and outcome %s" % (state.name, outcome))
         result_transition = None
         for key, transition in self.transitions.iteritems():
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
-        if result_transition is None:
-            logger.warn("No transition found for state with name %s!" % self.name)
         return result_transition
 
     @Observable.observed

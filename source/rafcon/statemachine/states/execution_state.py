@@ -77,7 +77,7 @@ class ExecutionState(State):
             if outcome.name == outcome_item:
                 return self.outcomes[outcome_id]
 
-        logger.error("Returned outcome for execution state '{0}' not existing: {1}".format(self.name, outcome_item))
+        logger.error("Returned outcome of {0} not existing: {1}".format(self, outcome_item))
         return Outcome(-1, "aborted")
 
     def run(self):
@@ -85,6 +85,7 @@ class ExecutionState(State):
 
         :return:
         """
+        logger.debug("Running {0}{1}".format(self, " (backwards)" if self.backward_execution else ""))
         if self.backward_execution:
             self.setup_backward_run()
         else:
@@ -92,15 +93,12 @@ class ExecutionState(State):
         try:
 
             if self.backward_execution:
-                logger.debug("Backward executing state with id %s and name %s" % (self._state_id, self.name))
                 self._execute(self.input_data, self.output_data, backward_execution=True)
                 # outcome handling is not required as we are in backward mode and the execution order is fixed
                 self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                logger.debug("Finished backward executing state with id %s and name %s" % (self._state_id, self.name))
                 return self.finalize()
 
             else:
-                logger.debug("Executing state with id %s and name %s" % (self._state_id, self.name))
                 outcome = self._execute(self.input_data, self.output_data)
 
                 self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
@@ -110,8 +108,7 @@ class ExecutionState(State):
                 return self.finalize(outcome)
 
         except Exception, e:
-            logger.error("State {0} had an internal error: {1}\n{2}".format(self.name,
-                                                                            str(e), str(traceback.format_exc())))
+            logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             # write error to the output_data of the state
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
