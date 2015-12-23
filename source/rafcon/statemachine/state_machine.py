@@ -73,7 +73,6 @@ class StateMachine(ModelMT, Observable):
         """
         state.join()
         state.state_execution_status = StateExecutionState.INACTIVE
-        logger.debug("The final outcome of the state was %s" % (str(state.final_outcome)))
         # deferred import to avoid cyclic import at the beginning of the script
         from rafcon.statemachine.singleton import state_machine_execution_engine
         state_machine_execution_engine.set_execution_mode_to_stopped()

@@ -42,6 +42,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
         :return:
         """
+        logger.debug("Starting execution of {0}{1}".format(self, " (backwards)" if self.backward_execution else ""))
         self.setup_run()
 
         try:
@@ -50,14 +51,11 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             #######################################################
 
             if self.backward_execution:
-                logger.debug("Backward executing preemptive concurrency state with id %s and name %s" % (self._state_id, self.name))
-
                 history_item = self.execution_history.get_last_history_item()
                 assert isinstance(history_item, ConcurrencyItem)
                 # history_item.state_reference must be "self" in this case
 
             else:  # forward_execution
-                logger.debug("Executing preemptive concurrency state with id %s" % self._state_id)
                 history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
 
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
@@ -92,7 +90,6 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
                 # backward_execution needs to be True to signal the parent container state the backward execution
                 self.backward_execution = True
-                logger.debug("Backward-executing entry script of preemption concurrency state %s" % self.name)
                 # pop the ConcurrencyItem as we are leaving the barrier concurrency state
                 last_history_item = self.execution_history.pop_last_item()
                 assert isinstance(last_history_item, ConcurrencyItem)
@@ -140,7 +137,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             return self.finalize(outcome)
 
         except Exception, e:
-            logger.error("Runtime error: {0}\n{1}".format(e, str(traceback.format_exc())))
+            logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))

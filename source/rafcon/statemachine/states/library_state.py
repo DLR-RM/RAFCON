@@ -95,7 +95,6 @@ class LibraryState(State):
                 self.output_data_port_runtime_values[key] = idp.default_value
                 self.use_runtime_value_output_data_ports[key] = True
 
-        logger.debug("Initialized library state with name %s" % name)
         self.initialized = True
 
     def __str__(self):
