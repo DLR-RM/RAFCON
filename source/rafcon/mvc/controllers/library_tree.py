@@ -10,6 +10,8 @@ from rafcon.statemachine.singleton import library_manager
 
 from rafcon.utils import log
 
+from rafcon.mvc.config import global_gui_config
+
 logger = log.get_logger(__name__)
 
 
@@ -156,7 +158,10 @@ class LibraryTreeController(ExtendedController):
     def on_drag_begin(self, widget, context):
         smm_m = self.state_machine_manager_model
         selected_state = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()[0]
-        selection_size = selected_state.meta['gui']['editor_opengl']['size']
+        if global_gui_config.get_config_value('GAPHAS_EDITOR', False):
+            selection_size = selected_state.meta['gui']['editor_gaphas']['size']
+        else:
+            selection_size = selected_state.meta['gui']['editor_opengl']['size']
         size = int(round(min(selection_size[0]/5., selection_size[1]/5.)*4, 0))
 
         # draws a rectangle as drag icon
