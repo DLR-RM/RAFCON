@@ -151,11 +151,24 @@ class LibraryTreeController(ExtendedController):
         return
 
     def on_drag_data_get(self, widget, context, data, info, time):
+        """dragged state is inserted and its state_id sent to the receiver
+
+        :param widget:
+        :param context:
+        :param data: SelectionData: contains state_id
+        :param info:
+        :param time:
+        """
         library_state = self._get_selected_library_state()
         if self._insert_state(library_state, False):
             data.set_text(library_state.state_id)
 
     def on_drag_begin(self, widget, context):
+        """drag icon is replaced with a square
+
+        :param widget:
+        :param context:
+        """
         smm_m = self.state_machine_manager_model
         selected_state = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()[0]
         if global_gui_config.get_config_value('GAPHAS_EDITOR', False):
@@ -201,6 +214,10 @@ class LibraryTreeController(ExtendedController):
         return state_machine
 
     def _get_selected_library_state(self):
+        """Returns the LibraryState which was selected in the LibraryTree
+
+        :return: LibraryState: selected state in TreeView
+        """
         (model, row) = self.view.get_selection().get_selected()
         library_key = model[row][0]
         library = model[row][1]
@@ -215,6 +232,12 @@ class LibraryTreeController(ExtendedController):
         return LibraryState(library_path, library_key, "0.1", library_key)
 
     def _insert_state(self, library_state, as_template=False):
+        """Adds a LibraryState to the selected state
+
+        :param library_state: the state which is inserted
+        :param as_template:
+        :return: boolean: success of the insertion
+        """
         smm_m = self.state_machine_manager_model
 
         if library_state is None:

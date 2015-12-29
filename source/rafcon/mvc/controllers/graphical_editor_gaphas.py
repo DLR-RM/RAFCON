@@ -92,6 +92,16 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action('show_aborted_preempted', self.update_view)
 
     def on_drag_data_received(self, widget, context, x, y, data, info, time):
+        """Receives state_id from LibraryTree and moves the state to the position of the mouse
+
+        :param widget:
+        :param context:
+        :param x: Integer: x-position of mouse
+        :param y: Integer: y-position of mouse
+        :param data: SelectionData: contains state_id
+        :param info:
+        :param time:
+        """
         item = self.canvas.get_view_for_model(self.model.selection.get_selected_state().states[data.get_text()])
         pos_start = item.model.meta['gui']['editor_gaphas']['rel_pos']
         motion = InMotion(item, self.view.editor)
@@ -99,6 +109,14 @@ class GraphicalEditorController(ExtendedController):
         motion.move((x,y))
 
     def on_drag_motion(self, widget, context, x, y, time):
+        """Changes the selection on mouse over during drag motion
+
+        :param widget:
+        :param context:
+        :param x: Integer: x-position of mouse
+        :param y: Integer: y-position of mouse
+        :param time:
+        """
         selected = self.view.editor.focused_item
         hovered = ItemFinder(self.view.editor).get_item_at_point((x,y))
         if isinstance(hovered, NameView):

@@ -127,8 +127,8 @@ class GraphicalEditorController(ExtendedController):
         view.editor.connect('key-release-event', self._on_key_release)
 
         view.editor.drag_dest_set(DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
-        view.editor.connect("drag-data-received", self.on_drag_data_received)
-        view.editor.connect("drag-motion", self.on_drag_motion)
+        view.editor.connect("drag-data-received", self._on_drag_data_received)
+        view.editor.connect("drag-motion", self._on_drag_motion)
 
         self.last_time = time.time()
 
@@ -626,12 +626,30 @@ class GraphicalEditorController(ExtendedController):
         """
         self._handle_zooming((event.x, event.y), event.direction)
 
-    def on_drag_data_received(self, widget, context, x, y, data, info, time):
+    def _on_drag_data_received(self, widget, context, x, y, data, info, time):
+        """Receives state_id from LibraryTree and moves the state to the position of the mouse
+
+        :param widget:
+        :param context:
+        :param x: Integer: x-position of mouse
+        :param y: Integer: y-position of mouse
+        :param data: SelectionData: contains state_id
+        :param info:
+        :param time:
+        """
         self.view.editor.emit("expose_event", None)
         rel_pos = self.view.editor.screen_to_opengl_coordinates((x, y))
         self._move_state(self.model.selection.get_selected_state().states[data.get_text()], rel_pos)
 
-    def on_drag_motion(self, widget, context, x, y, time):
+    def _on_drag_motion(self, widget, context, x, y, time):
+        """Changes the selection on mouse over during drag motion
+
+        :param widget:
+        :param context:
+        :param x: Integer: x-position of mouse
+        :param y: Integer: y-position of mouse
+        :param time:
+        """
         selection = self._find_selection(x, y, find_states=True, find_data_flows=False,
                                          find_data_ports=False, find_transitions=False)
         if selection is not None and self.single_selection != selection:
