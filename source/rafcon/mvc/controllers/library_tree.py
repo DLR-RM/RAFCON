@@ -170,22 +170,23 @@ class LibraryTreeController(ExtendedController):
         :param context:
         """
         smm_m = self.state_machine_manager_model
-        selected_state = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()[0]
-        if global_gui_config.get_config_value('GAPHAS_EDITOR', False):
-            selection_size = selected_state.meta['gui']['editor_gaphas']['size']
-        else:
-            selection_size = selected_state.meta['gui']['editor_opengl']['size']
-        size = int(round(min(selection_size[0]/5., selection_size[1]/5.)*4, 0))
+        if smm_m.selected_state_machine_id is not None:
+            selected_state = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()[0]
+            if global_gui_config.get_config_value('GAPHAS_EDITOR', False):
+                selection_size = selected_state.meta['gui']['editor_gaphas']['size']
+            else:
+                selection_size = selected_state.meta['gui']['editor_opengl']['size']
+            size = int(round(min(selection_size[0]/5., selection_size[1]/5.)*4, 0))
 
-        # draws a rectangle as drag icon
-        pixmap = gtk.gdk.Pixmap(None, size, size, depth=24)
-        cr = pixmap.cairo_create()
-        cr.rectangle(0, 0, size, size)
-        cr.fill()
-        cr.close_path()
-        pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, size, size)
-        pixbuf.get_from_drawable(pixmap, gtk.gdk.colormap_get_system(), 0, 0, 0, 0, size, size)
-        self.view.drag_source_set_icon_pixbuf(pixbuf)
+            # draws a rectangle as drag icon
+            pixmap = gtk.gdk.Pixmap(None, size, size, depth=24)
+            cr = pixmap.cairo_create()
+            cr.rectangle(0, 0, size, size)
+            cr.fill()
+            cr.close_path()
+            pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, size, size)
+            pixbuf.get_from_drawable(pixmap, gtk.gdk.colormap_get_system(), 0, 0, 0, 0, size, size)
+            self.view.drag_source_set_icon_pixbuf(pixbuf)
 
     def insert_button_clicked(self, widget, as_template=False):
         self._insert_state(self._get_selected_library_state(), as_template)
