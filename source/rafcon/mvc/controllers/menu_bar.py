@@ -522,11 +522,9 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - Execution
     ######################################################
     def on_start_activate(self, widget, data=None):
-        logger.debug("Start execution engine ...")
         state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
-        logger.debug("Start from selected state ...")
         sel = state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:
@@ -535,31 +533,24 @@ class MenuBarController(ExtendedController):
             state_machine_execution_engine.start(self.model.selected_state_machine_id, state_list[0].state.get_path())
 
     def on_pause_activate(self, widget, data=None):
-        logger.debug("Pause execution engine ...")
         state_machine_execution_engine.pause()
 
     def on_stop_activate(self, widget, data=None):
-        logger.debug("Stop execution engine ...")
         state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
-        logger.debug("Activate execution engine step mode ...")
         state_machine_execution_engine.step_mode()
 
     def on_step_into_activate(self, widget, data=None):
-        logger.debug("Execution step into ...")
         state_machine_execution_engine.step_into()
 
     def on_step_over_activate(self, widget, data=None):
-        logger.debug("Execution step over ...")
         state_machine_execution_engine.step_over()
 
     def on_step_out_activate(self, widget, data=None):
-        logger.debug("Execution step out ...")
         state_machine_execution_engine.step_out()
 
     def on_backward_step_activate(self, widget, data=None):
-        logger.debug("Executing backward step ...")
         state_machine_execution_engine.backward_step()
 
     def on_run_to_selected_state_activate(self, widget, data=None):

@@ -824,7 +824,6 @@ class GraphicalEditorController(ExtendedController):
             waypoint_pos = self._get_absolute_position(connection_m.parent, waypoint)
             if dist(waypoint_pos, coords) < close_threshold:
                 connection_m.meta['gui']['editor_opengl']['waypoints'].remove(waypoint)
-                logger.debug('Connection waypoint removed')
                 self._publish_changes(connection_m, "waypoint_remove", False)
                 self._redraw()
                 return True

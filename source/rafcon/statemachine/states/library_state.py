@@ -19,17 +19,26 @@ logger = log.get_logger(__name__)
 
 
 class LibraryState(State):
-    """A class to represent a hierarchy state for the state machine
+    """A class to represent a library state for the state machine
 
-    Only the variables are listed that are not already contained in the container state base class
+    Only the variables are listed that are not already contained in the state base class
 
     :ivar library_path: the path of the library relative to a certain library path (e.g. lwr/gripper/)
     :ivar library_name: the name of the library between all child states: (e.g. open, or close)
     :ivar version: the version of the needed library
-
     """
 
     yaml_tag = u'!LibraryState'
+
+    _library_path = None
+    _library_name = None
+    _version = None
+    _state_copy = None
+
+    _input_data_port_runtime_values = {}
+    _use_runtime_value_input_data_ports = {}
+    _output_data_port_runtime_values = {}
+    _use_runtime_value_output_data_ports = {}
 
     def __init__(self, library_path=None, library_name=None, version=None,  # library state specific attributes
                  # the following are the container state specific attributes
@@ -42,14 +51,9 @@ class LibraryState(State):
         self.initialized = False
         State.__init__(self, name, state_id, None, None, outcomes)
 
-        self._library_path = None
         self.library_path = library_path
-        self._library_name = None
         self.library_name = library_name
-        self._version = None
         self.version = version
-
-        self._state_copy = None
 
         lib_os_path, new_library_path, new_library_name = \
             library_manager.get_os_path_to_library(library_path, library_name)
@@ -74,9 +78,6 @@ class LibraryState(State):
 
         # handle runtime values
         # input runtime values
-        self._input_data_port_runtime_values = {}
-        self._use_runtime_value_input_data_ports = {}
-
         self.input_data_port_runtime_values = input_data_port_runtime_values
         self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
         for key, idp in self.input_data_ports.iteritems():  # check if all input data ports have a runtime value
@@ -85,9 +86,6 @@ class LibraryState(State):
                 self.use_runtime_value_input_data_ports[key] = True
 
         # output runtime values
-        self._output_data_port_runtime_values = {}
-        self._use_runtime_value_output_data_ports = {}
-
         self.output_data_port_runtime_values = output_data_port_runtime_values
         self.use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
         for key, idp in self.output_data_ports.iteritems():  # check if all output data ports have a runtime value
@@ -95,12 +93,7 @@ class LibraryState(State):
                 self.output_data_port_runtime_values[key] = idp.default_value
                 self.use_runtime_value_output_data_ports[key] = True
 
-        logger.debug("Initialized library state with name %s" % name)
         self.initialized = True
-
-    def __str__(self):
-        return str(self.state_copy) + "library_path: %s, library_name: %s, version: %s, state_id: %s" % \
-                                      (self.library_path, self.library_name, self.version, self.state_id)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the library state is executed
