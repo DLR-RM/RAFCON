@@ -10,7 +10,6 @@ doc_dir: 'docs'
 env_script:
   - OWNER_NAME=$(git remote -v | grep -e "^origin\s" | sed "s/.*[:\/]\(.*\)\/.*/\1/g" | head -1)
   - REPO_NAME=$(git remote -v | grep -e "^origin\s" | sed "s/.*[:\/]\(.*\).git.*/\1/g" | head -1)
-  - OWNER_NAME=common
   - pkgtool --env --env-format embed_sh sw.${OWNER_NAME}.${REPO_NAME} > rmpm_env.sh
   - source rmpm_env.sh
   - 'free_display=$(python -c "import os;  print '':'' + str(max(map(lambda d: int(d[1]), os.listdir(''/tmp/.X11-unix''))+[-1])+1)")'
