@@ -1,4 +1,4 @@
-[![BuildBot Status](http://rmc-chimaere:8010/badge.png?builder=common/rafcon&branch=master)][![BuildBot Status](http://rmc-chimaere:8010/badge.png?builder=common/rafcon&branch=develop)]
+[![BuildBot Status](http://rmc-chimaere:8010/badge.png?builder=common/rafcon&branch=master)] [![BuildBot Status](http://rmc-chimaere:8010/badge.png?builder=common/rafcon&branch=develop)]
 
 # RAFCON
 
