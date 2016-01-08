@@ -276,10 +276,13 @@ def create_state_model_for_state(new_state, state_element_models):
         new_state_m.states[UNIQUE_DECIDER_STATE_ID] = decider_state_m
 
     # Some states create transition on creation (e.g. Barrier Concurrency States), which have to be modelled
+    # TODO as long as this should be observed and handled by the models it should be aimed to remove the next lines
     if isinstance(new_state, ContainerState):
+        transitions_of_existing_transition_models = [t_m.transition for t_m in new_state_m.transitions]
         for transition in new_state.transitions.itervalues():
-            transition_m = TransitionModel(transition, new_state_m)
-            new_state_m.transitions.append(transition_m)
+            if transition not in transitions_of_existing_transition_models:
+                transition_m = TransitionModel(transition, new_state_m)
+                new_state_m.transitions.append(transition_m)
 
     return new_state_m
 
