@@ -1,3 +1,17 @@
+"""
+The module provides classes to document, undo or redo state machine edit steps.
+
+The History-Class provides the observation functionalities to register and identify all core or mvc (graphical) edit
+actions that are a actual change to the state machine. Those changes are stored as Action-Objects in the HistoryChanges-Class.
+
+The HistoryChanges-Class provides the functionalities to organize and access all actions of the edit process.
+Hereby the branching of the edit process is stored and should be accessible, too.
+
+The Action-Class provides the a general redo or undo functionality for any action
+as long as the the class object was initialized with consistent arguments.
+This general Action (one procedure for all possible edition) procedure is expansive and complex dues it is aimed
+to define specific Action-*-Classes for simple/specific edit actions.
+"""
 import copy
 import sys
 import traceback
@@ -500,21 +514,27 @@ class Action:
                                     # do_storage_test(state_)
 
                         unmark_state(new_state, sm_id)
-                        # check if tmp folder otherwise everthing is Ok
+                        # check if tmp folder otherwise everything is Ok
 
                         # if is -> do check if exists and write the script if not!!!! TODO
+            # for t in state.transitions.values():
+            #     # logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
+            #     if (UNIQUE_DECIDER_STATE_ID == t.from_state or UNIQUE_DECIDER_STATE_ID == t.to_state) and \
+            #             UNIQUE_DECIDER_STATE_ID not in state.states:
+            #         logger.error("found DECIDER_STATE_TRANSITION_WITHOUT_DECIDER_STATE")
+            #         state.remove_transition(t.transition_id)
 
-            if not (isinstance(state, BarrierConcurrencyState) or
-                        isinstance(state, PreemptiveConcurrencyState)):
+            if not isinstance(state, BarrierConcurrencyState):
                 for t_id, t in stored_state.transitions.iteritems():
                     # print "\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ "
                     # print "### transitions to delete ", [t.from_state, t.to_state], t
-                    if not UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
+                    if UNIQUE_DECIDER_STATE_ID not in [t.from_state, t.to_state]:
                         state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
             # logger.debug("CHECK TRANSITIONS %s" % state.transitions.keys())
             for t in state.transitions.values():
                 # logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
                 if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
+                    # logger.error("found DECIDER_STATE_SELF_TRANSITION")
                     state.remove_transition(t.transition_id)
 
             for df_id, df in stored_state.data_flows.iteritems():
@@ -560,18 +580,18 @@ class StateMachineAction(Action):
         import rafcon.mvc.statemachine_helper as statemachine_helper
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s  || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state))
         # self.state_machine.root_state = get_state_from_state_tuple(storage_version)
-        root_state_version_fom_storage = get_state_from_state_tuple(storage_version)
+        root_state_version_from_storage = get_state_from_state_tuple(storage_version)
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s || %s || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state, root_state_version_fom_storage))
         # actual_state_model = self.state_machine_model.get_state_model_by_path(state.get_path())
 
         if self.with_print:
-            print "\n#H# TRY STATE_HELPER ", type(root_state_version_fom_storage), \
-                isinstance(root_state_version_fom_storage, statemachine_helper.HierarchyState), "\n"
-        if isinstance(root_state_version_fom_storage, statemachine_helper.HierarchyState):
+            print "\n#H# TRY STATE_HELPER ", type(root_state_version_from_storage), \
+                isinstance(root_state_version_from_storage, statemachine_helper.HierarchyState), "\n"
+        if isinstance(root_state_version_from_storage, statemachine_helper.HierarchyState):
             new_state_class = statemachine_helper.HierarchyState
-        elif isinstance(root_state_version_fom_storage, statemachine_helper.BarrierConcurrencyState):
+        elif isinstance(root_state_version_from_storage, statemachine_helper.BarrierConcurrencyState):
             new_state_class = statemachine_helper.BarrierConcurrencyState
-        elif isinstance(root_state_version_fom_storage, statemachine_helper.PreemptiveConcurrencyState):
+        elif isinstance(root_state_version_from_storage, statemachine_helper.PreemptiveConcurrencyState):
             new_state_class = statemachine_helper.PreemptiveConcurrencyState
         else:
             if self.with_print:
@@ -589,7 +609,7 @@ class StateMachineAction(Action):
         if g_sm_editor:
             g_sm_editor.suspend_drawing = True
 
-        self.update_state(new_state, root_state_version_fom_storage)
+        self.update_state(new_state, root_state_version_from_storage)
 
         # if isinstance(root_state_version_fom_storage, ContainerState):
         #     new_state_model = ContainerStateModel(new_state)
@@ -1034,7 +1054,7 @@ class History(ModelMT):
     def assign_notification_change_type_root_state_before(self, model, prop_name, info):
         if info.method_name != "root_state_before_change":
             return
-        if self.busy:  # if doing undo and redos
+        if self.busy:  # if proceeding undo or redo
             return
         # print model, prop_name, info
         if info['kwargs']['method_name'] == "change_root_state_type":
@@ -1058,7 +1078,7 @@ class History(ModelMT):
                 logger.warning("function crash detected sm_after")
             return self._interrupt_actual_action()
 
-        if self.busy:  # if doing undo and redos
+        if self.busy:  # if proceeding undo or redo
             return
         # print model, prop_name, info
         if info['kwargs']['method_name'] == "change_root_state_type":
@@ -1090,7 +1110,7 @@ class History(ModelMT):
     def assign_notification_states_before(self, model, prop_name, info):
         if self.with_prints:
             print "states_before: ", model, prop_name, info
-        if self.busy:  # if doing undo and redo's
+        if self.busy:  # if proceeding undo or redo
             return
         else:
             # logger.debug("History states_BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
