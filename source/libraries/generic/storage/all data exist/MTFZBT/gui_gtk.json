@@ -1,0 +1,29 @@
+{
+    "gui": {
+        "editor_opengl": {
+            "rel_pos": {}, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    100, 
+                    100
+                ]
+            }
+        }
+    }, 
+    "input_data_port1": {
+        "gui": {}
+    }, 
+    "outcome-1": {
+        "gui": {}
+    }, 
+    "outcome-2": {
+        "gui": {}
+    }, 
+    "outcome0": {
+        "gui": {}
+    }, 
+    "outcome1": {
+        "gui": {}
+    }
+}
