@@ -383,6 +383,10 @@ class Action:
             g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
                                                                     self.state_machine.state_machine_id],
                                                          with_print=False)
+
+        # We are only interested in OpenGL editors, not Gaphas ones
+        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
+            g_sm_editor = False
         if g_sm_editor:
             g_sm_editor.suspend_drawing = True
 
