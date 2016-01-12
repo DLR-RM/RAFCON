@@ -15,7 +15,7 @@ from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel, ContainerStateModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements

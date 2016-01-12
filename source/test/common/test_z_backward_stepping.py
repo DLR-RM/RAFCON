@@ -11,7 +11,7 @@ from rafcon.utils import log
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
