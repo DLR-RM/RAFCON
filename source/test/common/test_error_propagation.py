@@ -24,7 +24,7 @@ def test_error_propagation(caplog):
     assert sm.root_state.output_data["error_check"] == "successfull"
 
     test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog, 1, 2)
+    test_utils.assert_logger_warnings_and_errors(caplog, 0, 2)
     test_utils.test_multithrading_lock.release()
 
 

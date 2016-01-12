@@ -43,7 +43,7 @@ class HierarchyState(ContainerState):
         to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
         :return:
         """
-
+        logger.debug("Starting execution of {0}{1}".format(self, " (backwards)" if self.backward_execution else ""))
         if self.backward_execution:
             self.setup_backward_run()
         else:  # forward_execution
@@ -57,19 +57,16 @@ class HierarchyState(ContainerState):
             last_transition = None
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             if self.backward_execution:
-                logger.debug("Backward executing hierarchy child_state with id %s and name %s" % (self._state_id, self.name))
                 last_history_item = self.execution_history.pop_last_item()
                 assert isinstance(last_history_item, ReturnItem)
                 self.scoped_data = last_history_item.scoped_data
 
             else:  # forward_execution
-                logger.debug("Executing hierarchy child_state with id %s and name %s" % (self._state_id, self.name))
                 self.execution_history.add_call_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
                 child_state = self.get_start_state(set_final_outcome=True)
                 while child_state is None:
                     child_state = self.handle_no_start_state()
                     if self.preempted:
-                        logger.debug("Hierarchy state was preempted during waiting to get a start state.")
                         break
 
             ########################################################
@@ -80,14 +77,13 @@ class HierarchyState(ContainerState):
             while child_state is not self:
 
                 # depending on the execution mode pause execution
-                logger.debug("Handling execution mode")
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, child_state)
 
                 self.backward_execution = False
                 if self.preempted:
                     if last_transition and last_transition.from_outcome == -2:
                         # normally execute the next state
-                        logger.debug("Execute the preemption handling state for state %s" % str(last_state.name))
+                        logger.debug("Execute preemption handling for '{0}'".format(last_state))
                     else:
                         break
 
@@ -111,13 +107,13 @@ class HierarchyState(ContainerState):
                 if not self.backward_execution:  # only add history item if it is not a backward execution
                     self.execution_history.add_call_history_item(child_state, MethodName.EXECUTE, self)
 
+                logger.debug("Preparing next child state: {0}{1}".format(child_state, " (backwards)" if
+                             self.backward_execution else ""))
                 child_state.input_data = self.get_inputs_for_state(child_state)
                 child_state.output_data = self.create_output_dictionary_for_state(child_state)
                 if last_error is not None:
                     child_state.input_data['error'] = last_error
                 last_error = None
-                logger.debug("Executing next child_state '{0}' (id {1}, type {2}, backwards: {3}".format(
-                    child_state.name, child_state.state_id, type(child_state), self.backward_execution))
                 child_state.start(self.execution_history, backward_execution=self.backward_execution)
                 child_state.join()
 
@@ -136,14 +132,12 @@ class HierarchyState(ContainerState):
                     assert isinstance(last_history_item, CallItem)
                     # copy the scoped_data of the history from the point before the child_state was executed
                     self.scoped_data = last_history_item.scoped_data
-                    logger.debug("Finished backward executing the child state with name %s!" % child_state.name)
 
                     # this is a look-ahead step to directly leave this hierarchy-state if the last child_state
                     # was executed; this leads to the backward and forward execution of a hierarchy child_state having the
                     # exact same number of steps
                     last_history_item = self.execution_history.get_last_history_item()
                     if last_history_item.state_reference is self:
-                        logger.debug("Leaving hierarchy child_state as the last child state was backward executed!")
                         last_history_item = self.execution_history.pop_last_item()
                         assert isinstance(last_history_item, CallItem)
                         self.scoped_data = last_history_item.scoped_data
@@ -158,7 +152,8 @@ class HierarchyState(ContainerState):
                     if transition is None:
                         transition = self.handle_no_transition(child_state)
                     child_state.state_execution_status = StateExecutionState.INACTIVE
-                    # it the transition is still None, then the child_state was preempted or aborted, in this case return
+                    # if the transition is still None, then the child_state was preempted or aborted, in this case
+                    # return
                     if transition is None:
                         break
 
@@ -188,15 +183,13 @@ class HierarchyState(ContainerState):
             if self.preempted:
                 self.final_outcome = Outcome(-2, "preempted")
 
-            logger.debug("Returning from hierarchy state {0}".format(self.name))
             return self.finalize(self.final_outcome)
 
         except Exception, e:
             if str(e) == "child_state stopped" or str(e) == "state stopped":
-                logger.debug("State '{0}' was stopped!".format(self.name))
+                logger.debug("{0} was stopped!".format(self))
             else:
-                logger.error("State '{0}' had an internal error: {1}\n{2}".format(
-                    self.name, str(e), str(traceback.format_exc())))
+                logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
 
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE

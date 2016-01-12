@@ -57,6 +57,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def pause(self):
         """Set the execution mode to paused
         """
+        logger.debug("Pause execution ...")
         self._status.execution_mode = StateMachineExecutionStatus.PAUSED
 
     @Observable.observed
@@ -68,14 +69,14 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         :return:
         """
         if self._execution_started:
-            logger.debug("Resume state machine and notify all threads waiting ")
+            logger.debug("Resume execution engine ...")
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
             self.run_to_states = []
             self._status.execution_condition_variable.acquire()
             self._status.execution_condition_variable.notify_all()
             self._status.execution_condition_variable.release()
         else:
-            logger.debug("Start the state machine")
+            logger.debug("Start execution engine ...")
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
@@ -135,7 +136,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def backward_step(self):
         """Take a backward step for all active states in the state machine
         """
-        logger.debug("Notify all threads waiting for the the execution condition variable")
+        logger.debug("Executing backward step ...")
         self._status.execution_mode = StateMachineExecutionStatus.BACKWARD
         self.run_to_states = []
         self._status.execution_condition_variable.acquire()
@@ -145,7 +146,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def step_into(self):
         """Take a forward step (into) for all active states in the state machine
         """
-        logger.debug("Triggered step into ...")
+        logger.debug("Execution step into ...")
         self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
         self.run_to_states = []
         self._status.execution_condition_variable.acquire()
@@ -155,7 +156,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def step_over(self):
         """Take a forward step (over) for all active states in the state machine
         """
-        logger.debug("Triggered step over ...")
+        logger.debug("Execution step over ...")
         self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OVER
         self.run_to_states = []
         self._status.execution_condition_variable.acquire()
@@ -165,7 +166,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def step_out(self):
         """Take a forward step (out) for all active states in the state machine
         """
-        logger.debug("Triggered step out ...")
+        logger.debug("Execution step out ...")
         self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OUT
         self.run_to_states = []
         self._status.execution_condition_variable.acquire()
@@ -186,21 +187,23 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     # depending on the execution state wait for the execution condition variable to be notified
     # list all execution modes to keep the overview
     def handle_execution_mode(self, state, next_child_state_to_execute=None):
-        """Checks the current execution status and returns it. If the execution mode is some kind of stepping,
-        a condition variable stops the current execution, until it gets notified by the step*() or backward_step()
+        """Checks the current execution status and returns it
+
+        If the execution mode is some kind of stepping, a condition variable stops the current execution,
+        until it gets notified by the step_*() or backward_step()
         functions. This function is called by the hierarchy states.
 
         :param state: the state that as for the execution mode is only passed for debugging reasons
-
         :return: the current state machine execution status
-
         """
 
         if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
-            logger.debug("Execution engine started!")
+            # logger.debug("Execution engine started!")
+            pass
 
         elif self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
-            logger.debug("Execution engine stopped. State %s is going to quit!", state.name)
+            logger.debug("Execution engine stopped. State '{0}' is going to quit!".format(state.name))
+            pass
 
         elif self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
             try:
@@ -210,7 +213,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 self._status.execution_condition_variable.release()
 
         else:  # all other step modes
-            logger.debug("Stepping mode: wait for next step!")
+            logger.debug("Stepping mode: waiting for next step!")
 
             wait = True
             for state_path in copy.deepcopy(self.run_to_states):
@@ -289,8 +292,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                 if isinstance(state.parent, State):
                     parent_path = state.parent.get_path()
                     self.run_to_states.append(parent_path)
-
-
 
     @staticmethod
     def execute_state_machine_from_path(path, start_state_path=None, wait_for_execution_finished=True):

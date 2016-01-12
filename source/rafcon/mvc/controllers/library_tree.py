@@ -117,13 +117,13 @@ class LibraryTreeController(ExtendedController):
                 logger.warn("expansion state of library tree could not be re-done")
 
     def update(self):
-        logger.info("Update of library_tree controller called")
         self.store_expansion_state()
         self.library_tree_store.clear()
         self.library_row_iter_dict_by_library_path.clear()
         for library_key, library_item in library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")
         self.redo_expansion_state()
+        logger.info("Libraries have been updated")
 
     def insert_rec(self, parent, library_key, library_item, library_path):
         # logger.debug("Add new library to tree store: %s" % library_key)

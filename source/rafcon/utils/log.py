@@ -134,3 +134,33 @@ def get_logger(name):
     existing_loggers[name] = logger
 
     return logger
+
+
+# noinspection PyPep8Naming
+# as this class represents a function (decorator)
+class log_exceptions(object):
+    """Decorator to catch all exceptions and log them"""
+
+    def __init__(self, logger=None):
+        """Constructor receives decorator parameters
+
+        The decorator is intended for all asynchronous method, whose exceptions cannot be caught at the calling
+        instance, as the execution is deferred.
+
+        :param logging.Logger logger: The logger to log to
+        """
+        self.logger = logger
+
+    def __call__(self, function):
+        def wrapper(*args, **kwargs):
+            """Catch all exceptions and log them as error message"""
+            try:
+                return function(*args, **kwargs)
+            except Exception as e:
+                import traceback
+                # Only create custom logger if no logger was passed and an exception occured
+                if not self.logger:
+                    self.logger = get_logger(__name__)
+                self.logger.error("Unexpected error ({1}): {0}\n{2}".format(e, type(e).__name__,
+                                                                            traceback.format_exc()))
+        return wrapper

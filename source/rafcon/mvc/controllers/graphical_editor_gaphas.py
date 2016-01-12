@@ -21,6 +21,8 @@ from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 
+from rafcon.mvc import singleton as mvc_singleton
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -91,7 +93,14 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.update_root_items()
 
     def _add_new_state(self, *args, **kwargs):
-        if not self.view.editor.has_focus():  # or singleton.global_focus is self:
+        """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
+
+        Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
+        the state machine tree are in focus.
+        """
+        state_machine_tree_ctrl = mvc_singleton.main_window_controller.get_controller('state_machine_tree_controller')
+        if not self.view.editor.has_focus() and not state_machine_tree_ctrl.view['state_machine_tree_view'].has_focus():
+            # or singleton.global_focus is self:
             return
 
         if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
@@ -213,17 +222,6 @@ class GraphicalEditorController(ExtendedController):
                 self._change_state_type = True
                 return
 
-            if method_name == 'remove_state':
-                if self._change_state_type:
-                    return
-                state_m = model.states[arguments[1]]
-                state_v = self.canvas.get_view_for_model(state_m)
-                if state_v:
-                    parent_v = self.canvas.get_parent(state_v)
-                    state_v.remove()
-                    if parent_v:
-                        self.canvas.request_update(parent_v)
-
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
@@ -238,7 +236,15 @@ class GraphicalEditorController(ExtendedController):
                 new_state_m = model.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, model)
             elif method_name == 'remove_state':
-                pass  # Handled in root_state_before_change
+                if self._change_state_type:
+                    return
+                state_v = self.canvas.get_view_for_id(StateView, arguments[1])
+                if state_v:
+                    parent_v = self.canvas.get_parent(state_v)
+                    state_v.remove()
+                    if parent_v:
+                        self.canvas.request_update(parent_v)
+
             # ----------------------------------
             #           TRANSITIONS
             # ----------------------------------
@@ -258,6 +264,7 @@ class GraphicalEditorController(ExtendedController):
                 transition_m = model
                 transition_v = self.canvas.get_view_for_model(transition_m)
                 self.connect_transition_handle_to_state(transition_v, transition_m, transition_m.parent)
+
             # ----------------------------------
             #           DATA FLOW
             # ----------------------------------
@@ -273,6 +280,7 @@ class GraphicalEditorController(ExtendedController):
                 data_flow_m = model
                 data_flow_v = self.canvas.get_view_for_model(data_flow_m)
                 self.connect_data_flow_handle_to_state(data_flow_v, data_flow_m, data_flow_m.parent)
+
             # ----------------------------------
             #           OUTCOMES
             # ----------------------------------
@@ -290,6 +298,7 @@ class GraphicalEditorController(ExtendedController):
                     if outcome_v.outcome_id == arguments[1]:
                         state_v.remove_outcome(outcome_v)
                         self.canvas.request_update(state_v, matrix=False)
+
             # ----------------------------------
             #           DATA PORTS
             # ----------------------------------
@@ -345,7 +354,7 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.request_update(state_v, matrix=False)
 
             # ----------------------------------
-            #            STATE NAME
+            #        STATE MISCELLANEOUS
             # ----------------------------------
             elif method_name == 'name':
                 # The name of a state was changed

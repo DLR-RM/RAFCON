@@ -1,14 +1,14 @@
 !ExecutionState
 description: null
-filename: script.py
 input_data_ports:
-    1: !DataPort {data_port_id: 1, data_type: str, default_value: null, name: key}
-    2: !DataPort {data_port_id: 2, data_type: object, default_value: null, name: value}
+    1: !InputDataPort {data_port_id: 1, data_type: !!python/name:__builtin__.str '',
+        default_value: null, name: key}
+    2: !InputDataPort {data_port_id: 2, data_type: !!python/name:__builtin__.object '',
+        default_value: null, name: value}
 name: store data
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports: {}
-path: /home_local/stei_fn/taskcontrol/source/libraries/generic/libraries/store data/ZJDRRV
 state_id: ZJDRRV

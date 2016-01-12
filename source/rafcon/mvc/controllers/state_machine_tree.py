@@ -14,10 +14,15 @@ logger = log.get_logger(__name__)
 
 
 class StateMachineTreeController(ExtendedController):
+    """Controller handling the state machine tree.
+
+    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
+        holding data regarding state machines. Should be exchangeable.
+    :param rafcon.mvc.views.state_machine_tree.StateMachineTreeView view: The GTK view showing the state machine tree.
+    """
+
     def __init__(self, model, view):
-        """Constructor
-        :param model StateMachineModel should be exchangeable
-        """
+        """Constructor"""
         assert isinstance(model, StateMachineManagerModel)
 
         ExtendedController.__init__(self, model, view)
@@ -38,6 +43,7 @@ class StateMachineTreeController(ExtendedController):
         self.register()
 
     def register_view(self, view):
+        """Called when the view was registered"""
         self.view.connect('cursor-changed', self.on_cursor_changed)
         self.view_is_registered = True
         self.update(with_expand=True)
@@ -46,11 +52,7 @@ class StateMachineTreeController(ExtendedController):
         pass
 
     def register(self):
-
-        """
-        Change the state machine that is observed for new selected states to the selected state machine.
-        :return:
-        """
+        """Change the state machine that is observed for new selected states to the selected state machine."""
         # print "state_machine_tree register state_machine"
         # relieve old models
         if self.__my_selected_sm_id is not None:  # no old models available
@@ -150,7 +152,6 @@ class StateMachineTreeController(ExtendedController):
         """
         Function checks if all states are in tree and if tree has states which were deleted
         :param changed_state_model:
-        :return:
         """
         if not self.view_is_registered:
             return

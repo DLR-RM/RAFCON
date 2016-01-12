@@ -100,6 +100,10 @@ class StateMachinesEditorController(ExtendedController):
             self.add_graphical_state_machine_editor(state_machine)
 
     def register_actions(self, shortcut_manager):
+        """Register callback methods fot triggered actions.
+
+        :param shortcut_manager:
+        """
         shortcut_manager.add_callback_for_action('close', self.on_close_shortcut)
 
         # Call register_action of parent in order to register actions for child controllers
@@ -272,17 +276,16 @@ class StateMachinesEditorController(ExtendedController):
     def remove_state_machine(self, state_machine_m):
         sm_id = get_state_machine_id(state_machine_m)
 
-        self.remove_controller(sm_id)
 
         copy_of_last_opened_state_machines = copy.deepcopy(self.last_opened_state_machines)
 
-        # the following statement will switch the acitve notebook tab automaically and the history of the
+        # the following statement will switch the active notebook tab automatically and the history of the
         # last opened state machines will be destroyed
         # Close tab and remove info
         page_id = self.get_page_id(sm_id)
         self.view.notebook.remove_page(page_id)
         del self.tabs[sm_id]
-
+        self.remove_controller(sm_id)
         self.last_opened_state_machines = copy_of_last_opened_state_machines
 
         # self.model is the state_machine_manager_model
