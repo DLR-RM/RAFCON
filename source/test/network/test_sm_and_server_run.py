@@ -8,12 +8,6 @@ import time
 from Queue import Empty
 
 
-setup_config = dict()
-setup_config['sm_path'] = "../../test_scripts/unit_test_state_machines/99_bottles_of_beer_no_wait"
-setup_config['config_path'] = "./"
-setup_config['net_config_path'] = "./"
-
-
 def info(title):
     print(title)
     print('module name:', __name__)
@@ -36,7 +30,7 @@ def check_for_sm_finished(sm, reactor):
     reactor.stop()
 
 
-def start_state_machine(reactor, network_connections, global_net_config, sm_execution_engine):
+def start_state_machine(reactor, network_connections, global_net_config, sm_execution_engine, setup_config=None):
     time.sleep(1.0)
     # Note: The rafcon_server has to be started before the statemachine is launched
     if not global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
@@ -78,6 +72,13 @@ def start_rafcon(name, q):
     # rafcon.network
     from rafcon.network.network_config import global_net_config
 
+    import rafcon
+    rafcon_path, rafcon_file = os.path.split(rafcon.__file__)
+    setup_config = dict()
+    setup_config['sm_path'] = rafcon_path + "/../test_scripts/unit_test_state_machines/99_bottles_of_beer_no_wait"
+    setup_config['config_path'] = rafcon_path + "/../test/network"
+    setup_config['net_config_path'] = rafcon_path + "/../test/network"
+
     #########################################################################
     # code section for process
     #########################################################################
@@ -96,7 +97,11 @@ def start_rafcon(name, q):
     # Set base path of global storage
     rafcon.statemachine.singleton.global_storage.base_path = "/tmp"
 
-    start_state_machine(reactor, network_connections, global_net_config, rafcon.statemachine.singleton.state_machine_execution_engine)
+    start_state_machine(reactor,
+                        network_connections,
+                        global_net_config,
+                        rafcon.statemachine.singleton.state_machine_execution_engine,
+                        setup_config=setup_config)
 
     # setup network connections
     reactor.run()
@@ -147,6 +152,13 @@ def start_rafcon_server(name, q, execution_signal_queue):
     # rafcon.network
     from rafcon.network.network_config import global_net_config
 
+    import rafcon
+    rafcon_path, rafcon_file = os.path.split(rafcon.__file__)
+    setup_config = dict()
+    setup_config['sm_path'] = rafcon_path + "/../test_scripts/unit_test_state_machines/99_bottles_of_beer_no_wait"
+    setup_config['config_path'] = rafcon_path + "/../test/network"
+    setup_config['net_config_path'] = rafcon_path + "/../test/network"
+
     #########################################################################
     # code section for process
     #########################################################################
@@ -158,7 +170,9 @@ def start_rafcon_server(name, q, execution_signal_queue):
     global_net_config.load(path=setup_config['net_config_path'])
 
     # initialize the logging view
-    os.chdir("../../rafcon_server/mvc/")
+    import rafcon_server
+    rs_path, rs_file = os.path.split(rafcon_server.__file__)
+    os.chdir(rs_path + "/mvc/")
     debug_view = DebugView()
 
     rafcon.statemachine.singleton.library_manager.initialize()
@@ -184,7 +198,7 @@ def start_rafcon_server(name, q, execution_signal_queue):
     exit(0)
 
 
-def fail_test_sm_and_server():
+def test_sm_and_server():
 
     unit_test_message_queue = Queue()
     execution_signal_queue = Queue()
@@ -232,6 +246,7 @@ def fail_test_sm_and_server():
     rafcon_process.join()
     execution_signal_queue.put("stop")
     rafcon_server_process.join()
+
 
 if __name__ == '__main__':
     test_sm_and_server()

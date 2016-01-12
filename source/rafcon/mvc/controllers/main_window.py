@@ -1,8 +1,10 @@
 import gtk
 import threading
 
-from rafcon.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, \
-    StateMachineHistoryController, LibraryTreeController
+from rafcon.mvc.controllers.global_variable_manager import GlobalVariableManagerController
+from rafcon.mvc.controllers.state_machine_tree import StateMachineTreeController
+from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
+from rafcon.mvc.controllers.library_tree import LibraryTreeController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
