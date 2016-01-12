@@ -380,8 +380,8 @@ class GraphicalEditorController(ExtendedController):
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
             elif self.selected_outcome and isinstance(new_selection, AbstractStateModel) and \
-                    ((new_selection.parent is self.selected_outcome[0].parent and self.selected_outcome[1]) or
-                         (new_selection.parent is self.selected_outcome[0] and not self.selected_outcome[1])):
+                    ((new_selection.parent is self.selected_outcome[0].parent and self.selected_outcome[1] is not None)
+                     or (new_selection.parent is self.selected_outcome[0] and not self.selected_outcome[1])):
                 self._create_new_transition(new_selection)
             # Allow the user to create waypoints while creating a new transition
             elif self.selected_outcome:
@@ -437,7 +437,6 @@ class GraphicalEditorController(ExtendedController):
 
         :param widget: The widget beneath the mouse when the release was done
         :param event: Information about the event, e.g. x and y coordinate
-        Not used so far
         """
         self.last_button_pressed = None
         self.drag_origin_offset = None
@@ -687,8 +686,7 @@ class GraphicalEditorController(ExtendedController):
         """Check whether a port was clicked on
 
         Checks whether the current selected_model is a state and if so looks for an outcome at the given coordinates.
-        If an
-        outcome is found, it is stored.
+        If an outcome is found, it is stored.
 
         :param gtkmvc.Model selected_model: The model that was clicked on
         :param tuple coords: Coordinates to search for outcomes
@@ -873,7 +871,7 @@ class GraphicalEditorController(ExtendedController):
             if point_on_line(rel_coords, points[i], points[i + 1]):
                 waypoint_list.insert(i, rel_coords)
         logger.debug('Connection waypoint added at rel pos {0:.1f} | {1:.1f} (abs pos {0:.1f} | {1:.1f})'.format(
-            rel_coords[0], rel_coords[1], coords[0], coords[1]))
+                rel_coords[0], rel_coords[1], coords[0], coords[1]))
 
         self._publish_changes(connection_m, "waypoint_add", False)
         self._redraw()
@@ -1470,11 +1468,11 @@ class GraphicalEditorController(ExtendedController):
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
         (opengl_id, income_pos, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
-            state_m.state.name if not state_m.state.is_root_state_of_library else "", pos, size,
-            state_m.state.outcomes,
-            state_m.input_data_ports if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
-            state_m.output_data_ports if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
-            selected, active, depth)
+                state_m.state.name if not state_m.state.is_root_state_of_library else "", pos, size,
+                state_m.state.outcomes,
+                state_m.input_data_ports if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
+                state_m.output_data_ports if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
+                selected, active, depth)
         state_temp['id'] = opengl_id
         state_temp['income_pos'] = income_pos
         state_temp['outcome_pos'] = outcome_pos
@@ -1660,7 +1658,7 @@ class GraphicalEditorController(ExtendedController):
 
                 assert isinstance(from_state,
                                   AbstractStateModel), "Transition from unknown state with ID {id:s}".format(
-                    id=from_state_id)
+                        id=from_state_id)
 
                 try:
                     # Set the from coordinates to the outcome coordinates received earlier
@@ -2097,7 +2095,7 @@ class GraphicalEditorController(ExtendedController):
                             if waypoints:
                                 for waypoint_id, waypoint_pos in enumerate(waypoints):
                                     waypoints[waypoint_id] = model_temp['original_waypoint_{0}_rel_pos'.format(
-                                        waypoint_id)]
+                                            waypoint_id)]
                 elif isinstance(self.single_selection, AbstractStateModel):
                     self.single_selection.meta['gui']['editor_opengl']['rel_pos'] = \
                         self.single_selection.temp['gui']['editor']['original_rel_pos']
