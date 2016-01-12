@@ -109,6 +109,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
 
+    @Observable.observed
     def set_execution_mode_to_stopped(self):
         """
         Sets the execution mode of the state machine execution status to STOPPED and resets all per-execution variables

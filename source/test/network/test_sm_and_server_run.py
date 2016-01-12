@@ -8,9 +8,6 @@ import time
 from Queue import Empty
 
 
-from rafcon.statemachine.enums import StateExecutionState
-
-
 setup_config = dict()
 setup_config['sm_path'] = "../../test_scripts/unit_test_state_machines/99_bottles_of_beer_no_wait"
 setup_config['config_path'] = "./"
@@ -26,6 +23,7 @@ def info(title):
 
 
 def check_for_sm_finished(sm, reactor):
+    from rafcon.statemachine.enums import StateExecutionState
     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=1.0)
