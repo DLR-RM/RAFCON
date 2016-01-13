@@ -25,8 +25,8 @@ def test_preemption_behaviour(caplog):
     assert not global_variable_manager.variable_exist("s3")
 
     test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

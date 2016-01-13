@@ -597,6 +597,7 @@ def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controlle
 #     state_type_change_test(with_gui=True)
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     """
     Does only works with gui at the moment.
@@ -794,8 +795,8 @@ def test_state_type_change_test(caplog):
         thread.join()
 
     test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

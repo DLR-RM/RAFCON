@@ -24,8 +24,8 @@ def test_custom_entry_point(caplog):
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert not rafcon.statemachine.singleton.global_variable_manager.variable_exist("start_id21")
 
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

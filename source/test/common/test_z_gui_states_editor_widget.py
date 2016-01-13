@@ -184,6 +184,7 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
     assert state_editor_ctrl.model is parent_state_m
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     print "Wait for the gui to initialize"
     time.sleep(2.0)

@@ -84,8 +84,8 @@ def test_transition_creation(caplog):
     root_state.join()
     time.sleep(0.2)
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

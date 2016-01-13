@@ -60,8 +60,8 @@ def test_default_values_of_data_ports(caplog):
     root_state.join()
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
     print root_state.output_data
     assert root_state.output_data["output_data_port1"] == "default_value"
