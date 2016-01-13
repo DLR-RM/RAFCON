@@ -79,7 +79,6 @@ def trigger_drag_and_drop_tests(*args):
     # insert state in rootstate
     graphical_editor_controller.on_drag_motion(None, None, 200, 200, None)
     library_tree_controller.on_drag_data_get(library_tree_controller.view, None, selection_data, 0, None)
-    logger.debug(selection_data.get_text())
     graphical_editor_controller.on_drag_data_received(None, None, 200, 200, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 2
 

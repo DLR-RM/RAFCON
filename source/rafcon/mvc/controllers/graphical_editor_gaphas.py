@@ -121,7 +121,9 @@ class GraphicalEditorController(ExtendedController):
         hovered = ItemFinder(self.view.editor).get_item_at_point((x,y))
         if isinstance(hovered, NameView):
             hovered = hovered.parent
-        if isinstance(hovered, StateView) and selected != hovered:
+        if selected != hovered and hovered is None:
+            self.view.emit('deselect_states')
+        elif selected != hovered and isinstance(hovered.model, ContainerStateModel):
             self.view.emit('new_state_selection', hovered)
 
     def update_view(self, *args):
