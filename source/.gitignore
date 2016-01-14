@@ -96,6 +96,9 @@ test_scripts/basic_turtle_demo_sm
 #
 
 **/gui_gtk.yaml
+**/gui_gtk.json
+**/meta.json
+**/meta.yaml
 
 #
 # Do not commit metafiles from AptanaStudio3 (for HTML)
