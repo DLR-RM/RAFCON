@@ -68,8 +68,6 @@ class TestErrorPreemptionHandling():
 
     def run_state_machine(self):
         state_machine_execution_engine.start()
-        import time
-        time.sleep(3.0)
         self.state_machine.root_state.join()
         state_machine_execution_engine.stop()
 
