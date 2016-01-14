@@ -1,3 +1,5 @@
+import os
+
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -54,11 +56,12 @@ def create_statemachine():
 
 def test_scoped_variables(caplog):
 
-    s = StateMachineStorage(test_utils.get_test_sm_path("stored_statemachine"))
+    storage_path = test_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    s = StateMachineStorage(storage_path)
 
     sm = create_statemachine()
 
-    s.save_statemachine_to_path(sm, test_utils.get_test_sm_path("stored_statemachine"))
+    s.save_statemachine_to_path(sm, storage_path)
     [sm_loaded, version, creation_time] = s.load_statemachine_from_path()
 
     state_machine = StateMachine(sm_loaded.root_state)

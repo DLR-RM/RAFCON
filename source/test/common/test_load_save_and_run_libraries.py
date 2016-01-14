@@ -10,6 +10,7 @@ from rafcon.statemachine.state_machine import StateMachine
 
 # singleton elements
 import rafcon.statemachine.singleton
+import rafcon.mvc.singleton
 
 # test environment elements
 import test_utils

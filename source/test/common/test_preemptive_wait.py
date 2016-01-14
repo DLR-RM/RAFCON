@@ -37,8 +37,9 @@ def test_preemptive_wait_daemon(caplog):
 
     run_statemachine()
 
-    assert 0.5 < gvm.get_variable('state_1_wait_time') < 0.55
-    assert 0.5 < gvm.get_variable('state_2_wait_time') < 0.55
+    assert 0.5 < gvm.get_variable('state_1_wait_time')
+    # cannot assert this as state 2 may be launched later and will thus have a shorter execution time
+    # assert 0.5 < gvm.get_variable('state_2_wait_time')
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 

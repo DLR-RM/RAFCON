@@ -32,7 +32,6 @@ def return_loop_state_machine():
 
 
 def test_start_stop_pause_step(caplog):
-
     sm = return_loop_state_machine()
     rafcon.statemachine.singleton.global_variable_manager.set_variable("counter", 0)
 

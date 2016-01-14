@@ -10,6 +10,11 @@ TMP_TEST_PATH = "/tmp/{0}/rafcon_unit_tests".format(getpass.getuser())
 
 RAFCON_PATH = rafcon.__path__[0]
 TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
+TMP_UNIT_TEST_PATH = "/tmp/rafcon_unit_test"
+
+
+def get_tmp_unit_test_path():
+    return TMP_UNIT_TEST_PATH
 
 
 def get_test_sm_path(state_machine_name):

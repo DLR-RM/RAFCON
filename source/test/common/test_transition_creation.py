@@ -1,4 +1,5 @@
 import time
+import os
 
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -66,11 +67,12 @@ def create_statemachine():
 
 def test_transition_creation(caplog):
 
-    test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    storage_path = test_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    test_storage = StateMachineStorage(storage_path)
 
     sm = create_statemachine()
 
-    test_storage.save_statemachine_to_path(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    test_storage.save_statemachine_to_path(sm, storage_path)
     [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_path()
 
     root_state = sm_loaded.root_state
