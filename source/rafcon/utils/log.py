@@ -141,15 +141,17 @@ def get_logger(name):
 class log_exceptions(object):
     """Decorator to catch all exceptions and log them"""
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, gtk_quit=False):
         """Constructor receives decorator parameters
 
         The decorator is intended for all asynchronous method, whose exceptions cannot be caught at the calling
         instance, as the execution is deferred.
 
         :param logging.Logger logger: The logger to log to
+        :param bool gtk_quit: Flag whether to stop the GTK main loop
         """
         self.logger = logger
+        self.gtk_quit = gtk_quit
 
     def __call__(self, function):
         def wrapper(*args, **kwargs):
@@ -163,4 +165,8 @@ class log_exceptions(object):
                     self.logger = get_logger(__name__)
                 self.logger.error("Unexpected error ({1}): {0}\n{2}".format(e, type(e).__name__,
                                                                             traceback.format_exc()))
+                if self.gtk_quit:
+                    from gtk import main_quit
+                    main_quit()
+
         return wrapper

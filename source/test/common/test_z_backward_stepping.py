@@ -42,7 +42,7 @@ def create_models():
 
     return logger, global_var_manager_model
 
-
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     print "Wait for the gui to initialize"
     time.sleep(2.0)
@@ -117,8 +117,8 @@ def test_backward_stepping(caplog):
     os.chdir(test_utils.RAFCON_PATH + "/../test/common")
 
     test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

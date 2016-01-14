@@ -43,8 +43,8 @@ def test_preemptive_wait_daemon(caplog):
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def run_statemachine():
@@ -71,8 +71,8 @@ def test_preemptive_wait_timeout(caplog):
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_preemptive_wait2_timeout(caplog):
@@ -88,8 +88,8 @@ def test_preemptive_wait2_timeout(caplog):
     assert gvm.get_variable('state_1_preempted')
     assert not gvm.get_variable('state_2_preempted')
 
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
     pytest.main([__file__])

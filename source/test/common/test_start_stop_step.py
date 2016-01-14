@@ -51,8 +51,8 @@ def test_start_stop_pause_step(caplog):
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
     pytest.main([__file__])

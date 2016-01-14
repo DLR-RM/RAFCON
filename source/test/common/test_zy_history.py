@@ -1391,6 +1391,7 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
     test_utils.assert_logger_warnings_and_errors(caplog)
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     print "Wait for the gui to initialize"
     with_gui = bool(args[4])

@@ -74,8 +74,8 @@ def test_custom_entry_point(caplog):
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("bottles") == 95
 
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

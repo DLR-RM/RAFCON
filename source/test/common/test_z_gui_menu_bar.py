@@ -128,6 +128,7 @@ def wait_for_values_identical_number_state_machines(sm_manager_model, val2):
             break
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     """ The function triggers and test basic functions of the menu bar.
     At the moment those functions are tested:
@@ -319,8 +320,8 @@ def test_gui(caplog):
     gtk.main()
     logger.debug("after gtk main")
     os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

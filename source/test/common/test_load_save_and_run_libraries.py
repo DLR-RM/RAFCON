@@ -112,8 +112,8 @@ def test_execution_state_library(caplog):
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
-    # test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    # test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def create_hierarchy_state_library_state_machine():
@@ -153,8 +153,8 @@ def test_hierarchy_state_library(caplog):
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
-    # test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    # test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_save_nested_library_state(caplog):
@@ -182,8 +182,8 @@ def test_nested_library_state_machine(caplog):
     # print output_data["data_output_port1"]
     assert nested_library_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    # test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    # test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def teardown_module(module=None):
