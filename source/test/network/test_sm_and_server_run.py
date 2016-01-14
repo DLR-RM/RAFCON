@@ -230,14 +230,20 @@ def test_sm_and_server():
         "99 Bottles of Beer: STATE_MACHINE_EXECUTION_STATUS.STOPPED"
     ]
 
+    offset = 0
     for i in range(len(test_sequence)):
         data = unit_test_message_queue.get()
         # print test_sequence[i]
         # print data
         while data == "99 Bottles of Beer: ------------------------------------":
             data = unit_test_message_queue.get()
-
-        assert data == test_sequence[i]
+        # it seems like normally the first state is sent twice; under cpu load the first state is only sent once; both
+        # variants are accepted right now but
+        # TODO: check this test again
+        if i == 2:
+            if data == "99 Bottles of Beer: GLSUJY/NDIVLD":
+                offset += 1
+        assert data == test_sequence[i + offset]
 
     rafcon_process.join()
     execution_signal_queue.put("stop")
