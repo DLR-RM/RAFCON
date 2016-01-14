@@ -136,13 +136,13 @@ class DataPortListController(ExtendedController):
     def add_port(self, *_):
         """Callback method for add action
         """
-        if self.view[self.view.top].has_focus():
+        if self.view[self.view.top].is_focus():
             self.on_new_port_button_clicked(None)
 
     def remove_port(self, *_):
         """Callback method for remove action
         """
-        if self.view[self.view.top].has_focus():
+        if self.view[self.view.top].is_focus():
             self.on_delete_port_button_clicked(None)
 
     @ExtendedController.observe("input_data_ports", after=True)

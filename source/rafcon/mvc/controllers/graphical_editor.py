@@ -1059,7 +1059,7 @@ class GraphicalEditorController(ExtendedController):
             new_pos = move_pos(cur_pos, port_m.parent.meta['gui']['editor_opengl']['size'])
             self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             if self.model.selection:
                 for model in self.model.selection:
                     if isinstance(model, AbstractStateModel):
@@ -2033,7 +2033,7 @@ class GraphicalEditorController(ExtendedController):
         # logger.debug("publish changes to history")
 
     def _delete_selection(self, *args):
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             selection = self.model.selection.get_all()
             if len(selection) > 0:
                 statemachine_helper.delete_models(self.model.selection.get_all())
@@ -2046,7 +2046,7 @@ class GraphicalEditorController(ExtendedController):
         the state machine tree are in focus.
         """
         state_machine_tree_ctrl = mvc_singleton.main_window_controller.get_controller('state_machine_tree_controller')
-        if not self.view.editor.has_focus() and not state_machine_tree_ctrl.view['state_machine_tree_view'].has_focus():
+        if not self.view.editor.is_focus() and not state_machine_tree_ctrl.view['state_machine_tree_view'].is_focus():
             return
 
         if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
@@ -2066,13 +2066,13 @@ class GraphicalEditorController(ExtendedController):
             statemachine_helper.add_state(model.parent, state_type)
 
     def _toggle_data_flow_visibility(self, *args):
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             global_runtime_config.set_config_value('SHOW_DATA_FLOWS',
                                                    not global_runtime_config.get_config_value("SHOW_DATA_FLOWS"))
             self._redraw()
 
     def _abort(self, *args):
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             if self.mouse_move_redraw:
                 if self.selected_outcome is not None:
                     self.selected_outcome = None
@@ -2111,21 +2111,21 @@ class GraphicalEditorController(ExtendedController):
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
 
     def _cut_selection(self, *args):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
 
     def _paste_clipboard(self, *args):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("Paste")
 
             current_selection = self.model.selection

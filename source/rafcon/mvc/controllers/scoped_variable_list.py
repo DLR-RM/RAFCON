@@ -62,11 +62,11 @@ class ScopedVariableListController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", self.add_port)
 
     def add_port(self, *_):
-        if self.view[self.view.top].has_focus():
+        if self.view[self.view.top].is_focus():
             self.on_new_scoped_variable_button_clicked(None)
 
     def remove_port(self, *_):
-        if self.view[self.view.top].has_focus():
+        if self.view[self.view.top].is_focus():
             self.on_delete_scoped_variable_button_clicked(None)
 
     @ExtendedController.observe("scoped_variables", after=True)
