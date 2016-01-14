@@ -52,7 +52,9 @@ def trigger_gui_signals(*args):
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
     number_of_steps = 9
-    sleep_time = 0.02
+    # TODO: This time is dangerous! If the PC where this test runs is too slow the test will fail! Redesign test!
+    # Experience values: on a 64bit Intel Xeon with 1,2 GHz 8 core PC 0.03 are safe enough
+    sleep_time = 0.05
     time.sleep(sleep_time)
     for i in range(number_of_steps):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
