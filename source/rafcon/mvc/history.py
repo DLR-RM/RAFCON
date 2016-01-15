@@ -16,6 +16,8 @@ import copy
 import sys
 import traceback
 
+import datetime
+
 from gtkmvc import ModelMT, Observable
 import yaml
 
@@ -82,16 +84,170 @@ def get_state_tuple(state, state_m=None):
     return state_tuple
 
 
-# def do_storage_test(state):
-#     import os
-#     # logger.debug(state.get_file_system_path() + "         " + str(state.get_file_system_path().split('/')))
-#     #if child_state.get_file_system_path().split('/')[1] == "tmp" and not os.path.exists(state.get_file_system_path()):
-#     if not os.path.exists(state.get_file_system_path()):
-#     #     # logger.debug("is tmp")
-#     os.makedirs(state.get_file_system_path())
-#     script_file = open(os.path.join(state.get_file_system_path(), state.script.filename), "w")
-#     #     script_file.write(state.script.script)
-#     #     script_file.close()
+class NotificationOverview(dict):
+
+    def __init__(self, info, with_prints=False):
+
+        self.info = info
+        self.__type = 'before'
+        if 'after' in info:
+            self.__type = 'after'
+        self.with_prints = with_prints
+
+        s, new_overview = self.get_nice_info_dict_string(info)
+        self.__description = str(datetime.datetime.now()) + "\n" + s
+        self.new_overview = new_overview
+        self.__overview = self.parent_state_of_notification_source(info)
+        dict.__init__(self, self.__overview)
+        self.print_overview()
+
+    def __str__(self):
+        return self.__description
+
+    def __setitem__(self, key, value):
+        print "in setattr"
+        if key in ['info', 'model', 'prop_name', 'instance', 'method_name', 'level']:
+            dict.__setitem__(self, key, value)
+
+    def update(self, E=None, **F):
+        if E is not None:
+            for key in E.keys:
+                if key not in ['info', 'model', 'prop_name', 'instance', 'method_name', 'level']:
+                    E.pop(key)
+            dict.update(self, E)
+
+    def print_overview(self, overview=None):
+        if overview is None:
+            overview = self.__overview
+        info_print = ''
+        info_count = 0
+        for elem in overview['info']:
+            info_print += "\ninfo %s: %s" % (info_count, str(elem))
+            info_count += 1
+
+        print info_print
+        print "model: ", overview['model']
+        print "prop_: ", overview['prop_name']
+        print "insta: ", overview['instance']
+        print "metho: ", overview['method_name']
+        print "level: ", overview['level']
+        print "prop-: ", overview['prop_name'][-1]
+
+    def get_all(self):
+        return self.__overview
+
+    def check_overview(self):
+        overview = self.__overview
+        if overview['prop_name'][-1] == 'state':
+            # print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
+            assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
+        else:
+            if overview['model'][-1].parent:
+                if not isinstance(overview['model'][-1].parent.state, State):  # is root_state
+                    overview['model'][-1].state.get_path()
+                    if self.with_prints:
+                        print "Path_root: ", overview['model'][-1].state.get_path()
+                else:
+                    overview['model'][-1].parent.state.get_path()
+                    if self.with_prints:
+                        print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
+                            overview['model'][-1].parent.state.get_path()
+                    assert overview['model'][-2].state.get_path() == \
+                           overview['model'][-1].parent.state.get_path().split('/')[0]
+
+    def get_nice_info_dict_string(self, info, level='\t', overview=None):
+        """ Inserts all elements of a notification info-dictionary of gtkmvc into one string and indicates levels of calls definded by 'kwargs'
+        """
+        if overview is None:
+            overview = dict({'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'args': [], 'kwargs': []})
+            overview['others'] = []
+            if 'before' in info:
+                overview['type'] = 'before'
+            else:
+                overview['type'] = 'after'
+
+        if ('after' in info or 'before' in info) and 'model' in info:
+            if 'before' in info:
+                s = "{0}'before': {1}".format(level, info['before'])
+            else:
+                s = "{0}'after': {1}".format(level, info['after'])
+        else:
+            return str(info)
+
+        # model
+        s += "\n{0}'model': {1}".format(level, info['model'])
+        overview['model'].append(info['model'])
+        # prop_name
+        s += "\n{0}'prop_name': {1}".format(level, info['prop_name'])
+        overview['prop_name'].append(info['prop_name'])
+        # instance
+        s += "\n{0}'instance': {1}".format(level, info['instance'])
+        overview['instance'].append(info['instance'])
+        # method_name
+        s += "\n{0}'method_name': {1}".format(level, info['method_name'])
+        overview['method_name'].append(info['method_name'])
+        # args
+        s += "\n{0}'args': {1}".format(level, info['args'])
+        overview['args'].append(info['args'])
+        # kwargs
+        overview['kwargs'].append(info['kwargs'])
+        s += "\n{0}'kwargs': {1}".format(level, self.get_nice_info_dict_string(info['kwargs'], level + "\t"))
+        # additional elements not created by gtkmvc or common function calls
+        overview['others'].append({})
+        for key, value in info.items():
+            if key in ['before', 'after', 'model', 'prop_name', 'instance', 'method_name', 'args', 'kwargs']:
+                pass
+            else:
+                s += "\n{0}'{2}': {1}".format(level, info[key], key)
+                overview['others'][len(overview['others'])-1][key] = info[key]
+
+        return s, overview
+
+    def parent_state_of_notification_source(self, info):
+
+        if self.with_prints:
+            print "----- xxxxxxx %s \n%s\n%s\n%s\n" % (self.__type, info['model'], info['prop_name'], info)
+
+        def set_dict(info, d):
+            d['model'].append(info['model'])
+            d['prop_name'].append(info['prop_name'])
+            d['instance'].append(info['instance'])
+            d['method_name'].append(info['method_name'])
+            if self.with_prints:
+                print "set"
+
+        def find_parent(info, elem):
+            elem['info'].append(info)
+            if 'kwargs' in info and info['kwargs']:
+                if self.with_prints:
+                    print 'kwargs'
+                elem['level'].append('kwargs')
+                set_dict(info, elem)
+                if 'method_name' in info['kwargs'] and 'instance' in info['kwargs']:
+                    find_parent(info['kwargs'], elem)
+            elif 'info' in info and info['info']:
+                if self.with_prints:
+                    print 'info'
+                elem['level'].append('info')
+                set_dict(info, elem)
+                find_parent(info['info'], elem)
+                assert len(info['info']) < 2
+            elif 'info' in info:
+                set_dict(info, elem)
+            elif 'kwargs' in info:
+                set_dict(info, elem)
+            else:
+                if self.with_prints:
+                    print 'assert'
+                assert True
+            return elem
+
+        overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
+                                      'info': []})
+
+        if self.with_prints:
+            self.print_overview(overview)
+        return overview
 
 
 def get_state_from_state_tuple(state_tuple):
@@ -341,45 +497,44 @@ class Action:
 
     def get_storage(self, model):
 
-        if not self.state_machine.get_state_by_path(self.parent_path):
-            logger.warning("statemachine could not get state by path -> take root_state")
-            state_tuple = get_state_tuple(self.state_machine.root_state)
-            state_model = model  # root_state
-        else:
-            state_tuple = get_state_tuple(self.state_machine.get_state_by_path(self.parent_path))
-            state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
+        # if not self.state_machine.get_state_by_path(self.parent_path):
+        #     logger.warning("statemachine could not get state by path -> take root_state")
+        #     state_tuple = get_state_tuple(self.state_machine.root_state)
+        #     state_model = model  # root_state
+        #     exit(1)
+        # else:
+        state_tuple = get_state_tuple(self.state_machine.get_state_by_path(self.parent_path))
+        state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
         state_tuple[3].update(get_state_element_meta(state_model))
         return state_tuple
 
-    def redo(self):
-
-        if not self.state_machine.get_state_by_path(self.parent_path) or \
-                not self.state_machine.get_state_by_path(self.parent_path).parent:
-            # if self.state_machine.get_state_by_path(self.parent_path).parent is None:
-            #     logger.info("state is root_state -> take root_state for redo")
-            # else:
-            #     logger.warning("statemachine could not get state by path -> take root_state for redo")
-            state = self.state_machine.root_state
-        else:
-            state = self.state_machine.get_state_by_path(self.parent_path)
-
-        self.set_state_to_version(state, self.after_storage)
-
-    def undo(self):
-        """ General Undo, that takes all elements in the parent and
-        :return:
-        """
-
+    def get_state_changed(self):
         if not self.state_machine.get_state_by_path(self.parent_path) or \
                 not self.state_machine.get_state_by_path(self.parent_path).parent:
             # if self.state_machine.get_state_by_path(self.parent_path).parent is None:
             #     logger.info("state is root_state -> take root_state for undo")
             # else:
-            #     logger.warning("statemachine could not get state by path -> take root_state for undo")
+            if self.state_machine.get_state_by_path(self.parent_path).parent is not None:
+                logger.warning("statemachine could not get state by path -> take root_state for undo")
             state = self.state_machine.root_state
         else:
             state = self.state_machine.get_state_by_path(self.parent_path)
-        self.set_state_to_version(state, self.before_storage)
+
+        return state
+
+    def redo(self):
+        """ General Redo, that takes all elements in the parent path state stored of the before action state machine status.
+        :return:
+        """
+
+        self.set_state_to_version(self.get_state_changed(), self.after_storage)
+
+    def undo(self):
+        """ General Undo, that takes all elements in the parent path state stored of the after action state machine status.
+        :return:
+        """
+
+        self.set_state_to_version(self.get_state_changed(), self.before_storage)
 
     def set_state_to_version(self, state, storage_version):
         # print state.get_path(), '\n', storage_version[4]
@@ -542,6 +697,49 @@ class Action:
 
                 # self.before_model.transitions._notify_method_after(state, 'data_flow_change', None, (self.before_model,), {})
 
+    def add_core_object_to_state(self, state, core_obj):
+        logger.info("RUN ADD CORE OBJECT FOR {0} {1} {2}".format(state.state_id, core_obj, self.added_object_identifier))
+        if isinstance(core_obj, State):
+            state.add_state(core_obj)
+        elif isinstance(core_obj, Transition):
+            t = core_obj
+            state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
+        elif isinstance(core_obj, Outcome):
+            state.add_outcome(core_obj.name, core_obj.outcome_id)
+        elif isinstance(core_obj, DataFlow):
+            df = core_obj
+            state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
+        elif isinstance(core_obj, InputDataPort):
+            dp = core_obj
+            state.add_input_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
+        elif isinstance(core_obj, OutputDataPort):
+            dp = core_obj
+            state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
+        elif isinstance(core_obj, ScopedVariable):
+            sv = core_obj
+            state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
+        else:
+            logger.warning("Type: {0} is no valid core object that can be added.".format(type(core_obj)))
+
+    @staticmethod
+    def remove_core_object_from_state(state, core_obj):
+        if isinstance(core_obj, State):
+            state.remove_state(core_obj.state_id, force=True)
+        elif isinstance(core_obj, Transition):
+            state.remove_transition(core_obj.transition_id)
+        elif isinstance(core_obj, Outcome):
+            state.remove_outcome(core_obj.outcome_id)
+        elif isinstance(core_obj, DataFlow):
+            state.remove_data_flow(core_obj.data_flow_id)
+        elif isinstance(core_obj, InputDataPort):
+            state.remove_input_data_port(core_obj.data_port_id)
+        elif isinstance(core_obj, OutputDataPort):
+            state.remove_output_data_port(core_obj.data_port_id)
+        elif isinstance(core_obj, ScopedVariable):
+            state.remove_scoped_variable(core_obj.data_port_id)
+        else:
+            logger.warning("Type: {0} is no valid core object that can be removed.".format(type(core_obj)))
+
 
 class StateMachineAction(Action):
     def __init__(self, action_type, parent_path, model, prop_name, info, state_machine_model):
@@ -572,6 +770,7 @@ class StateMachineAction(Action):
 
     def get_storage(self, model):
         # print "storage ", self.state_machine.root_state.data_flows.keys(), self.state_machine.root_state.state_id
+        model = self.state_machine_model.get_state_model_by_path(self.parent_path)
         state_tuple = get_state_tuple(self.state_machine.root_state)
         state_tuple[3].update(get_state_element_meta(model))
         return state_tuple
@@ -650,15 +849,243 @@ class StateMachineAction(Action):
         # print "#H# STATE_MACHINE_UNDO FINISHED"
 
 
-class AddObject(Action):
-    def __init__(self, *args):
-        Action.__init__(self, *args)
+class AddObjectAction(Action):
+    """ The class handles all adding object action of 7 valid kinds
+    (of In-OutputDataPort, ScopedVariable, DataFlow, Outcome, Transition and State)
+    """
+
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, *args, **kwargs)
+        logger.info('*arg type: {0} \n\t\tvalue: {1} \n**kwargs type: {2} \n\t\tvalue: {3}'.format(type(args), args, type(kwargs), kwargs))
+        logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
+        self.valid_parents = ['state']
+        self.changed_object = None
+        if self.before_info['prop_name'] in self.valid_parents:
+            cmd_to_run = "self.changed_object = self.before_info['model']." + self.before_info['prop_name']
+            logger.info("execute: '{0}'".format(cmd_to_run))
+            exec cmd_to_run
+            logger.info("self.changed_object is {0}".format(self.changed_object))
+
+        self.parent_identifier = ''
+        self.added_object_identifier = ''
+        self.added_object_args = ''
+        if "outcome" in self.before_info['method_name'] or "data_port" in self.before_info['method_name']:
+            # logger.warning('outcome or data_port')
+            # if self
+            # else:
+            #     self.parent_identifier = self.parent_path
+            pass
+        else:
+            self.parent_identifier = self.parent_path
+
+    def set_after(self, *args, **kwargs):
+        Action.set_after(self, *args, **kwargs)
+        logger.info("add_object \n" + str(self.after_info))
+        if self.before_info['method_name'] == 'add_state':
+            logger.info("get state identifier")
+            self.added_object_identifier = CoreObjectIdentifier(self.before_info['args'][1])  # the state
+            logger.info("got state identifier " + str(self.added_object_identifier))
+        elif self.before_info['method_name'] == 'add_transition':
+            if self.after_info['kwargs'] and not self.after_info['method_name'] == self.before_info['method_name']:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['kwargs']['args'][0].transitions[self.after_info['kwargs']['result']])
+            else:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['args'][0].transitions[self.after_info['result']])
+        elif self.before_info['method_name'] == 'add_outcome':
+            if self.after_info['kwargs'] and not self.after_info['method_name'] == self.before_info['method_name']:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['kwargs']['args'][0].outcomes[self.after_info['kwargs']['result']])
+            else:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['args'][0].outcomes[self.after_info['result']])
+        elif self.before_info['method_name'] == 'add_data_flow':
+            if self.after_info['kwargs'] and not self.after_info['method_name'] == self.before_info['method_name']:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['kwargs']['args'][0].data_flows[self.after_info['kwargs']['result']])
+            else:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['args'][0].data_flows[self.after_info['result']])
+        elif self.before_info['method_name'] == 'add_input_data_port':
+            if self.after_info['kwargs'] and not self.after_info['method_name'] == self.before_info['method_name']:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['kwargs']['args'][0].input_data_ports[self.after_info['kwargs']['result']])
+            else:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['args'][0].input_data_ports[self.after_info['result']])
+        elif self.before_info['method_name'] == 'add_output_data_port':
+            if self.after_info['kwargs'] and not self.after_info['method_name'] == self.before_info['method_name']:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['kwargs']['args'][0].output_data_ports[self.after_info['kwargs']['result']])
+            else:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['args'][0].output_data_ports[self.after_info['result']])
+        elif self.before_info['method_name'] == 'add_scoped_variable':
+            if self.after_info['kwargs'] and not self.after_info['method_name'] == self.before_info['method_name']:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['kwargs']['args'][0].scoped_variables[self.after_info['kwargs']['result']])
+            else:
+                self.added_object_identifier = CoreObjectIdentifier(self.after_info['args'][0].scoped_variables[self.after_info['result']])
+        else:
+            self.added_object_identifier = CoreObjectIdentifier(self.before_info['args'][1])
+        logger.info("add_object with identifier {0}".format(self.added_object_identifier))
 
     def redo(self):
-        pass
+        """
+        :return:Redo of adding object action is simply done by adding the object again from the after_storage of the parent state.
+        """
+        logger.info("RUN REDO AddObject " + self.before_info['method_name'])
+        if 'add_' in self.before_info['method_name'] and not "add_output_data_port" == self.before_info['method_name']:  #  and not "add_outcome" == self.before_info['method_name']
+            state = self.get_state_changed()
+            storage_version = self.after_storage
+
+            assert state.get_path() == storage_version[4]
+            path_of_state = state.get_path()
+            storage_version_of_state = get_state_from_state_tuple(storage_version)
+
+            # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
+            mw_ctrl = mvc_singleton.main_window_controller
+            g_sm_editor = None
+            if mvc_singleton.main_window_controller:
+                g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                        self.state_machine.state_machine_id],
+                                                             with_print=False)
+            if g_sm_editor:
+                g_sm_editor.suspend_drawing = True
+
+            if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
+                [state, storage_version_of_state] = self.correct_reference_state(state,
+                                                                                 storage_version_of_state,
+                                                                                 storage_path=storage_version[4])
+            core_obj = self.get_added_object_of_state_version(storage_version_of_state)
+            logger.info(str(type(core_obj)) + str(core_obj))
+            self.add_core_object_to_state(state, core_obj)
+
+            # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
+            actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+            insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
+            if g_sm_editor:
+                g_sm_editor.suspend_drawing = False
+                g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+
+        else:
+            assert "add_output_data_port" == self.before_info['method_name']
+            Action.redo(self)
 
     def undo(self):
-        pass
+        # find object
+        # undo
+        if 'add_' in self.before_info['method_name'] and not "add_output_data_port" == self.before_info['method_name']:
+            state = self.get_state_changed()
+            storage_version = self.after_storage
+
+            assert state.get_path() == storage_version[4]
+            storage_version_of_state = get_state_from_state_tuple(storage_version)
+
+            if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
+                [state, storage_version_of_state] = self.correct_reference_state(state, storage_version_of_state, storage_version[4])
+
+            core_obj = self.get_added_object_of_state_version(storage_version_of_state)
+            logger.info(str(type(core_obj)) + str(core_obj))
+            self.remove_core_object_from_state(state, core_obj)
+        else:
+            assert "add_output_data_port" == self.before_info['method_name']
+            Action.undo(self)
+
+    def correct_reference_state(self, state, storage_version_of_state, storage_path):
+
+        partial_path = self.added_object_identifier._path.split('/')
+        for path_element in storage_path.split('/'):
+            logger.info("pop: " + partial_path.pop(0))
+        for path_element in partial_path:
+            storage_version_of_state = storage_version_of_state.states[path_element]
+            state = state.states[path_element]
+            logger.info("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
+
+        return state, storage_version_of_state
+
+    def get_added_object_of_state_version(self, state):
+
+        if 'State' in self.added_object_identifier._type:
+            assert self.added_object_identifier._path.split('/')[-2] == state.state_id
+        else:
+            assert self.added_object_identifier._path.split('/')[-1] == state.state_id
+
+        if 'State' in self.added_object_identifier._type:
+            return state.states[self.added_object_identifier._path.split('/')[-1]]
+        elif self.added_object_identifier._type == 'DataFlow':
+            return state.data_flows[self.added_object_identifier._id]
+        elif self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'ScopedVariable']:
+            if self.added_object_identifier._type == 'OutputDataPort':
+                logger.info("take port " + str(type(state.output_data_ports[self.added_object_identifier._id])) + str(self.added_object_identifier))
+                return state.output_data_ports[self.added_object_identifier._id]
+            logger.info("take port " + str(type(state.get_data_port_by_id(self.added_object_identifier._id))) + str(self.added_object_identifier))
+            return state.get_data_port_by_id(self.added_object_identifier._id)
+        elif self.added_object_identifier._type == 'Transition':
+            return state.transitions[self.added_object_identifier._id]
+        elif self.added_object_identifier._type == 'Outcome':
+            return state.outcomes[self.added_object_identifier._id]
+        else:
+            return None
+
+
+from rafcon.statemachine.transition import Transition
+from rafcon.statemachine.data_flow import DataFlow
+from rafcon.statemachine.outcome import Outcome
+from rafcon.statemachine.scope import ScopedData, ScopedVariable
+from rafcon.statemachine.script import Script
+from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
+from rafcon.statemachine.global_variable_manager import GlobalVariableManager
+from rafcon.statemachine.library_manager import LibraryManager
+from rafcon.statemachine.state_machine import StateMachine
+
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+
+core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort, ScopedData, ScopedVariable, Script,
+                    GlobalVariableManager, LibraryManager, StateMachine,
+                    ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
+
+
+class CoreObjectIdentifier:
+
+    def __init__(self, core_obj_cls):
+        assert type(core_obj_cls) in core_object_list or core_obj_cls in core_object_list
+        print core_obj_cls
+        self._sm_id = None
+        self._path = None
+        # type can be, object types (of type Transition e.g.) or class
+        self._type = None
+        self._id = None
+
+        if type(core_obj_cls) in core_object_list:
+            self._type = str(type(core_obj_cls)).split("'")[-2].split('.')[-1]
+        else:
+            self._type = 'class'
+
+        if not self._type == 'class':
+            if self._type in ['ExecutionState', 'HierarchyState', 'BarrierConcurrencyState', 'PreemptiveConcurrencyState']:
+                self._path = core_obj_cls.get_path()
+                self._sm_id = core_obj_cls.get_sm_for_state().state_machine_id
+            else:
+                if core_obj_cls.parent:
+                    self._path = core_obj_cls.parent.get_path()
+                    self._sm_id = core_obj_cls.parent.get_sm_for_state().state_machine_id
+                else:
+                    logger.warning("identifier of core object {0} without parent is mostly useless".format(self._type))
+
+            if self._type in ['InputDataPort', 'OutputDataPort', 'ScopedVariable']:
+                self._id = core_obj_cls.data_port_id
+            elif self._type == 'Transition':
+                print "get transition id of: " + str(core_obj_cls)
+                self._id = core_obj_cls.transition_id
+            elif self._type == 'DataFlow':
+                self._id = core_obj_cls.data_flow_id
+            elif self._type == 'Outcome':
+                self._id = core_obj_cls.outcome_id
+            elif self._type == 'StateMachine':
+                # self.__sm_id = core_obj_cls.state_machine_id
+                pass
+            elif self._type == 'GlobalVariableManager':
+                pass
+            elif self._type == 'LibraryManager':
+                pass
+            else:
+                pass
+
+    def __str__(self):
+        return "{0}:{1}:{2}:{3}".format(self._type, self._sm_id, self._path, self._id)
 
 
 class RemoveObject(Action):
@@ -671,6 +1098,29 @@ class RemoveObject(Action):
     def undo(self):
         pass
 
+class DataFlowAction(Action):
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, args, kwargs)
+
+class TransitionAction(Action):
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, args, kwargs)
+
+class ScopedVariableAction(Action):
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, args, kwargs)
+
+class OutcomeAction(Action):
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, args, kwargs)
+
+class DataPortAction(Action):
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, args, kwargs)
+
+class StateAction(Action):
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, args, kwargs)
 
 class ModifyAttribute(Action):
     def __init__(self, *args):
@@ -746,7 +1196,7 @@ class History(ModelMT):
 
         self.fake = False
 
-        self.with_prints = False
+        self.with_prints = True
 
     def get_state_element_meta_from_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
@@ -903,12 +1353,86 @@ class History(ModelMT):
         # logger.debug("History stores BEFORE")
         result = True
         cause = overview['method_name'][-1]
+        logger.info("create Action for: {0} for prop_name: {1}".format(overview['method_name'][-1], overview['prop_name'][-1]))
+
+        # if overview['instance']
+        # elem
+        #
+        # with open('/home_local/dark_room/test_file.txt', 'a+') as f:
+        #     f.write(overview['instance'][-1]) + "\n")
+        # f.closed
+
+        # if isinstance(overview['instance'][-1], DataFlow) or \
+        #         isinstance(overview['instance'][-1], Transition) or \
+        #         isinstance(overview['instance'][-1], ScopedVariable):
+        #     if isinstance(overview['instance'][-1], DataFlow):
+        #         assert overview['instance'][-1] is overview['model'][-1].data_flow
+        #         action_class = DataFlowAction
+        #     elif isinstance(overview['instance'][-1], Transition):
+        #         assert overview['instance'][-1] is overview['model'][-1].transition
+        #         action_class = TransitionAction
+        #     else:
+        #         assert overview['instance'][-1] is overview['model'][-1].scoped_variable
+        #         action_class = ScopedVariableAction  # is a DataPort too
+        #     self.actual_action = action_class(action_type=cause,
+        #                                       parent_path=overview['model'][-1].parent.state.get_path(),  # instance path of parent
+        #                                       model=overview['model'][0],
+        #                                       prop_name=overview['prop_name'][0],
+        #                                       info=overview['info'][-1],
+        #                                       state_machine_model=self.state_machine_model)
+        # elif isinstance(overview['instance'][-1], Outcome):
+        #     assert overview['instance'][-1] is overview['model'][-1].outcome
+        #     self.actual_action = OutcomeAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+        #                                        overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+        #                                        state_machine_model=self.state_machine_model)
+        #
+        # elif isinstance(overview['instance'][-1], DataPort):
+        #
+        #     if isinstance(overview['instance'][-1], InputDataPort):
+        #         # logger.error("input data port: {0} {1}".format(overview['instance'][-1], overview['model'][-1].data_port))
+        #         assert overview['instance'][-1] is overview['model'][-1].data_port
+        #     else:
+        #         # logger.error("input data port: {0} {1}".format(overview['instance'][-1], overview['model'][-1].data_port))
+        #         assert overview['instance'][-1] is overview['model'][-1].data_port
+        #     self.actual_action = DataPortAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+        #                                         overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+        #                                         state_machine_model=self.state_machine_model)
+        # elif isinstance(overview['instance'][-1], State):
+        #     assert overview['instance'][-1] is overview['model'][-1].state
+        #     if "add_" in cause:
+        #         self.actual_action = AddObjectAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+        #                                              overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+        #                                              state_machine_model=self.state_machine_model)
+        #     elif "remove_" in cause:
+        #         if
+        #         self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+        #                                     overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+        #                                     state_machine_model=self.state_machine_model)
+        #     else:
+        #         self.actual_action = StateAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+        #                                     overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+        #                                     state_machine_model=self.state_machine_model)
+        # elif isinstance(overview['instance'][-1], StateMachine):
+        #     assert overview['instance'][-1] is overview['model'][-1].state_machine
+        #     assert False  # should never happen
+        # else:  # FAILURE  # is root_state
+        #     # self.actual_action = Action(info.method_name, '/',
+        #     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
+        #     logger.warn("History may need update, tried to start observation of new action that is not classifiable "
+        #                 "\n%s \n%s \n%s \n%s",
+        #                 overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
+        #     return False
+        #
+        # # return result
+
         if isinstance(overview['instance'][-1], DataFlow) or \
                 isinstance(overview['instance'][-1], Transition) or \
-                isinstance(overview['instance'][-1], ScopedVariable):
+                isinstance(overview['instance'][-1], ScopedVariable):  # internal changes No Add or Remove Actions
 
             # print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
             #     overview['model'][-1].parent.state.get_path()
+            if self.with_prints:
+                print "CHANGE OF OBJECT", overview['info'][-1]
             assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
             overview['model'][-1].parent.state.get_path()
             # print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
@@ -923,13 +1447,13 @@ class History(ModelMT):
                                         overview['model'][0], overview['prop_name'][0], overview['info'][-1],
                                         state_machine_model=self.state_machine_model)
 
-        elif overview['model'][-1].parent and (isinstance(overview['instance'][-1], DataPort) or
-                                                   isinstance(overview['instance'][-1], Outcome) or
-                                                       overview['method_name'][-1] in ['add_outcome', 'remove_outcome',
-                                                                                       'add_output_data_port',
-                                                                                       'remove_output_data_port',
-                                                                                       'add_input_data_port',
-                                                                                       'remove_input_data_port']):
+        elif overview['model'][-1].parent and (isinstance(overview['instance'][-1], Outcome) or
+                                               isinstance(overview['instance'][-1], DataPort) or
+                                               overview['method_name'][-1] in ['add_outcome', 'remove_outcome',
+                                                                               'add_output_data_port',
+                                                                               'remove_output_data_port',
+                                                                               'add_input_data_port',
+                                                                               'remove_input_data_port']):
             if self.with_prints:
                 print "SnAprint1", overview['model']
                 print "SnAprint1", overview['prop_name']
@@ -941,28 +1465,38 @@ class History(ModelMT):
             if overview['model'][-1].parent:
                 if not isinstance(overview['model'][-1].parent.state, State):
                     if self.with_prints:
-                        print "Path_root: ", overview['model'][-1].state.get_path()
+                        print "Path_root1: ", overview['model'][-1].state.get_path()
                     # exit(1)
                     # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
                     #                                                        overview['model'][-1].state.get_path()))
                     # self.actual_action = Action(info.method_name, model.state.get_path(),
                     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                    self.actual_action = Action(cause, overview['model'][-1].state.get_path(),
-                                                # instance path of parent
-                                                overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                state_machine_model=self.state_machine_model)
-                elif not isinstance(overview['model'][-1].parent.state.parent, State):  # is root_state
+                    if 'add_' in overview['method_name'][-1]:
+                        self.actual_action = AddObjectAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+                                                             overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                             state_machine_model=self.state_machine_model)
+                    else:
+                        self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+                                                    overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                    state_machine_model=self.state_machine_model)
+                elif not isinstance(overview['model'][-1].parent.state.parent, State):  # the parent State is a root_state
                     if self.with_prints:
-                        print "Path_root: ", overview['model'][-1].parent.state.get_path()
+                        print "Path_root2: ", overview['model'][-1].parent.state.get_path()
                     # exit(1)
                     # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
                     #                                                        overview['model'][-1].parent.state.get_path()))
                     # self.actual_action = Action(info.method_name, model.state.get_path(),
                     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                    self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),
-                                                # instance path of parent
-                                                overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                state_machine_model=self.state_machine_model)
+                    if 'add_' in overview['method_name'][-1]:
+                        self.actual_action = AddObjectAction(cause, overview['model'][-1].parent.state.get_path(),
+                                                             # instance path of parent
+                                                             overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                             state_machine_model=self.state_machine_model)
+                    else:
+                        self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),
+                                                    # instance path of parent
+                                                    overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                    state_machine_model=self.state_machine_model)
                 else:
                     if self.with_prints:
                         print "new .. state Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
@@ -980,21 +1514,32 @@ class History(ModelMT):
                     #                                                        overview['model'][-1].parent.state.get_path()))
                     # self.actual_action = Action(info.method_name, model.state.get_path(),
                     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-                    self.actual_action = Action(cause, overview['model'][-1].parent.parent.state.get_path(),
-                                                # instance path of parent
-                                                overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                state_machine_model=self.state_machine_model)
-                    # exit(1)
+                    if 'add_' in overview['method_name'][-1]:
+                        self.actual_action = AddObjectAction(cause, overview['model'][-1].parent.parent.state.get_path(), # instance path of parent
+                                                        overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                        state_machine_model=self.state_machine_model)
+                    else:
+                        self.actual_action = Action(cause, overview['model'][-1].parent.parent.state.get_path(), # instance path of parent
+                                                    overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                    state_machine_model=self.state_machine_model)
+            else:
+                logger.error("WTF")
+                exit(1)
 
         elif overview['prop_name'][-1] == 'state':
-            if self.with_prints:
-                print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
-            assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
-            # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-            #                                                        overview['model'][-1].state.get_path()))
-            self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-                                        overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                        state_machine_model=self.state_machine_model)
+            if "add_" in overview['method_name'][-1]:
+                self.actual_action = AddObjectAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+                                                     overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                                     state_machine_model=self.state_machine_model)
+            else:
+                if self.with_prints:
+                    print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
+                assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
+                # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
+                #                                                        overview['model'][-1].state.get_path()))
+                self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
+                                            overview['model'][0], overview['prop_name'][0], overview['info'][-1],
+                                            state_machine_model=self.state_machine_model)
 
         else:  # FAILURE  # is root_state
             # self.actual_action = Action(info.method_name, '/',
@@ -1008,6 +1553,9 @@ class History(ModelMT):
 
     def finish_new_action(self, model, prop_name, info):
         # logger.debug("History stores AFTER")
+        with open('/home_local/dark_room/test_file.txt', 'a+') as f:
+            f.write(str(NotificationOverview(info)) + "\n")
+        f.closed
         try:
             self.actual_action.set_after(model, prop_name, info)
             self.state_machine_model.history.changes.insert_action(self.actual_action)
@@ -1115,8 +1663,7 @@ class History(ModelMT):
         else:
             # logger.debug("History states_BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before',
-                                                           with_prints=self.with_prints)
+            overview = NotificationOverview(info, with_prints=self.with_prints)
 
             # skipped state changes
             if overview['method_name'][0] == 'state_change' and \
@@ -1167,8 +1714,7 @@ class History(ModelMT):
         else:
             # logger.debug("History states_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = parent_state_of_notification_source(model, prop_name, info, before_after='after',
-                                                           with_prints=self.with_prints)
+            overview = NotificationOverview(info, with_prints=self.with_prints)
             if overview['method_name'][0] == 'state_change' and \
                             overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status']:
                 if self.with_prints:
@@ -1183,11 +1729,7 @@ class History(ModelMT):
                     self.locked = False
                     if self.with_prints:
                         print "IN HISTORY", model, prop_name, info
-                    # SEG-FAULT
-                    # if prop_name == "states" and info.kwargs.result == "CRASH in FUNCTION":
-                    #     if self.with_prints:
-                    #         print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
-                    # else:
+
                     self.finish_new_action(model, prop_name, info)
                     if self.with_prints:
                         print "HISTORY COUNT WAS OF SUCCESS"
@@ -1216,13 +1758,7 @@ class History(ModelMT):
         else:
             # logger.debug("History BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = parent_state_of_notification_source(model, prop_name, info,
-                                                           before_after='before',
-                                                           with_prints=self.with_prints)
-            cause = overview['method_name'][-1]
-            parent_info = overview['info'][0]
-            parent_model = overview['model'][0]
-            root_cause_is_state = parent_model.state.is_root_state
+            overview = NotificationOverview(info, with_prints=self.with_prints)
 
             # print "IN HISTORY", info
             # print "states changed ", info.prop_name, info.method_name
@@ -1233,9 +1769,7 @@ class History(ModelMT):
             else:
                 if self.with_prints:
                     print "NEW HISTORY ELEMENT", info
-                # if self.start_new_action(parent_info,
-                #                          info['model'], info['prop_name'], info,
-                #                          cause, root_cause_is_state):
+
                 if self.start_new_action(overview):
                     self.count_before += 1
                     if self.with_prints:
@@ -1274,8 +1808,7 @@ class History(ModelMT):
         else:
             # logger.debug("History state_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
-            overview = parent_state_of_notification_source(model, prop_name, info, before_after='before',
-                                                           with_prints=self.with_prints)
+            overview = NotificationOverview(info, with_prints=self.with_prints)
             cause = overview['method_name'][-1]
             parent_info = overview['info'][0]
             parent_model = overview['model'][0]
@@ -1300,78 +1833,6 @@ class History(ModelMT):
             else:
                 if self.with_prints:
                     print "HISTORY after not count"
-
-
-def parent_state_of_notification_source(model, prop_name, info, before_after, with_prints):
-    if with_prints:
-        print "----- xxxxxxx %s \n%s\n%s\n%s\n" % (before_after, model, prop_name, info)
-
-    def set_dict(info, d):
-        d['model'].append(info['model'])
-        d['prop_name'].append(info['prop_name'])
-        d['instance'].append(info['instance'])
-        d['method_name'].append(info['method_name'])
-        if with_prints:
-            print "set"
-
-    def find_parent(info, elem):
-        elem['info'].append(info)
-        if 'kwargs' in info and info['kwargs']:
-            if with_prints:
-                print 'kwargs'
-            elem['level'].append('kwargs')
-            set_dict(info, elem)
-            if 'method_name' in info['kwargs'] and 'instance' in info['kwargs']:
-                find_parent(info['kwargs'], elem)
-        elif 'info' in info and info['info']:
-            if with_prints:
-                print 'info'
-            elem['level'].append('info')
-            set_dict(info, elem)
-            find_parent(info['info'], elem)
-        elif 'info' in info:
-            set_dict(info, elem)
-        elif 'kwargs' in info:
-            set_dict(info, elem)
-        else:
-            if with_prints:
-                print 'assert'
-            assert True
-        return elem
-
-    overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
-                                  'info': []})
-    info_print = ''
-    info_count = 0
-    for elem in overview['info']:
-        info_print += "\ninfo %s: %s" % (info_count, str(elem))
-        info_count += 1
-    if with_prints:
-        print info_print
-        print "model: ", overview['model']
-        print "prop_: ", overview['prop_name']
-        print "insta: ", overview['instance']
-        print "metho: ", overview['method_name']
-        print "level: ", overview['level']
-        print "prop-: ", overview['prop_name'][-1]
-
-    if overview['prop_name'][-1] == 'state':
-        # print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
-        assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
-    else:
-        if overview['model'][-1].parent:
-            if not isinstance(overview['model'][-1].parent.state, State):  # is root_state
-                overview['model'][-1].state.get_path()
-                if with_prints:
-                    print "Path_root: ", overview['model'][-1].state.get_path()
-            else:
-                overview['model'][-1].parent.state.get_path()
-                if with_prints:
-                    print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                        overview['model'][-1].parent.state.get_path()
-                assert overview['model'][-2].state.get_path() == \
-                       overview['model'][-1].parent.state.get_path().split('/')[0]
-    return overview
 
 
 class ChangeHistory(Observable):
