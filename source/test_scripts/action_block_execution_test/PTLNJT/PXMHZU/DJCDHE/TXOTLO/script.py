@@ -15,6 +15,8 @@ def execute(self, inputs, outputs, gvm):
     
     if not self.preempted:
         gvm.set_variable("inner_observer_1_finish", True)
+             
+    self.logger.info("Inner Observer 1 stops, preempted: {0}".format(self.preempted))
         
     return 0
 
