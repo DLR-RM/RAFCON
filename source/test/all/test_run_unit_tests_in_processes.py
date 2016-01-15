@@ -1,10 +1,8 @@
 import os
-import imp
 import sys
-import time
 import pytest
+import traceback
 from multiprocessing import Process, Queue
-from Queue import Empty
 
 
 def run_pytest_on_module(filename, unit_test_message_queue):
@@ -12,11 +10,12 @@ def run_pytest_on_module(filename, unit_test_message_queue):
     try:
         return_value = pytest.main(" -x -v " + filename)
     except Exception as e:
-        print "Unit test " + filename + " failed and execption was caught!" + str(e)
+        sys.stderr.write("Error: Unit test {0} failed with an uncaught exception: {1}\nTraceback: {2}".format(filename,
+            e, str(traceback.format_exc())))
     print "return value of unit test " + filename + ": " + str(return_value)
     # successful processes return 0
     if return_value != 0:
-        sys.stderr.write("Error: Unit test " + filename + " failed and exception was caught!\n")
+        sys.stderr.write("Error: Unit test {0} failed\nTraceback: {1}".format(filename, str(traceback.format_exc())))
     unit_test_message_queue.put([filename, return_value])
 
 
@@ -25,45 +24,26 @@ def test_run_unit_tests_in_processes():
     This is the actual unit test
     :return:
     """
-    my_path, my_file = os.path.split(__file__)
-    test_path = os.path.abspath(os.path.join(my_path, '..'))
+    # my_path, my_file = os.path.split(__file__)
+    test_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     unit_test_message_queue = Queue()
     process_list = []
 
-    #####################################################
-    # execute all common tests
-    #####################################################
-    common_path = test_path + "/common"
-    for file in os.listdir(common_path):
-        if file == "test_all.py":
-            continue
-        if file.endswith(".pyc"):
-            continue
-        if file.startswith("."):
-            continue
-        test_process = Process(target=run_pytest_on_module, args=("common/"+file, unit_test_message_queue))
-        process_list.append(test_process)
-        test_process.start()
-        # test_process.join()
+    def run_tests_in_path(path):
+        for file_name in os.listdir(path):
+            abs_path = os.path.join(path, file_name)
+            if os.path.isfile(abs_path) and file_name.startswith("test_") and file_name.endswith(".py"):
+                # Run test in new process
+                test_process = Process(target=run_pytest_on_module, args=(abs_path, unit_test_message_queue))
+                process_list.append(test_process)
+                test_process.start()
 
-    #####################################################
-    # execute all network tests
-    #####################################################
-    network_path = test_path + "/network"
-    for file in os.listdir(network_path):
-        if file == "test_all_server.py":
-            continue
-        if file.endswith(".pyc"):
-            continue
-        if file.endswith(".yaml"):
-            continue
-        if file.startswith("."):
-            continue
-        test_process = Process(target=run_pytest_on_module, args=("network/"+file, unit_test_message_queue))
-        process_list.append(test_process)
-        test_process.start()
-        # test_process.join()
+            elif os.path.isdir(abs_path) and file_name != "all":
+                # Recursively go through all directories to search for tests
+                run_tests_in_path(abs_path)
+
+    run_tests_in_path(test_path)
 
     for process in process_list:
         return_value = unit_test_message_queue.get()
