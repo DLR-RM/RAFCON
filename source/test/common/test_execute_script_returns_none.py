@@ -27,8 +27,7 @@ def test_execute_script_returns_none(caplog):
     test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    state_machine.root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     assert state_machine.root_state.final_outcome.outcome_id == 0
 

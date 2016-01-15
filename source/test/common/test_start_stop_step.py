@@ -47,7 +47,7 @@ def test_start_stop_pause_step(caplog):
     # give the state machine time to execute
     time.sleep(0.2)
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-    sm.root_state.join()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("counter") == 5
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)

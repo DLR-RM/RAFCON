@@ -70,7 +70,7 @@ def test_custom_entry_point(caplog):
     wait_and_join(state_machine, "GLSUJY/SMCOIB")
 
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-    state_machine.root_state.join()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("bottles") == 95
 

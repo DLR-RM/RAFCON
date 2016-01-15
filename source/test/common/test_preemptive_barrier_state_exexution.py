@@ -44,8 +44,7 @@ def test_concurrency_preemption_state_execution(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    preemption_state_sm.root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
     assert preemption_state_sm.root_state.final_outcome.outcome_id == 3
@@ -68,8 +67,7 @@ def test_concurrency_preemption_save_load(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    preemption_state_sm.root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)

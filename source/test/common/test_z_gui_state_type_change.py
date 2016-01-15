@@ -783,16 +783,9 @@ def test_state_type_change_test(caplog):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-        if sm:
-            sm.root_state.join()
-            logger.debug("Joined currently executing state machine!")
-            thread.join()
-            logger.debug("Joined test triggering thread!")
-        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-    else:
-        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-        thread.join()
+
+    thread.join()
+    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
 
     test_utils.reload_config()
     test_multithrading_lock.release()

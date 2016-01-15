@@ -53,8 +53,7 @@ def run_statemachine():
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    preemption_state_sm.root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
 
 
@@ -67,7 +66,6 @@ def test_preemptive_wait_timeout(caplog):
     run_statemachine()
 
     assert 0.5 < gvm.get_variable('state_1_wait_time')
-    assert gvm.get_variable('state_1_wait_time') < gvm.get_variable('state_2_wait_time')
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
@@ -84,7 +82,6 @@ def test_preemptive_wait2_timeout(caplog):
     run_statemachine()
 
     assert 0.5 < gvm.get_variable('state_2_wait_time')
-    assert gvm.get_variable('state_2_wait_time') < gvm.get_variable('state_1_wait_time')
     assert gvm.get_variable('state_1_preempted')
     assert not gvm.get_variable('state_2_preempted')
 

@@ -40,10 +40,10 @@ class TestErrorPreemptionHandling():
 
     def setup(self):
         # This methods runs before each test method and resets the global variables
-        gvm.set_variable("wait_inner_observer_1", .2)
-        gvm.set_variable("wait_inner_observer_2", .2)
-        gvm.set_variable("wait_observer_1", .2)
-        gvm.set_variable("wait_observer_2", .2)
+        gvm.set_variable("wait_inner_observer_1", 10)
+        gvm.set_variable("wait_inner_observer_2", 10)
+        gvm.set_variable("wait_observer_1", 10)
+        gvm.set_variable("wait_observer_2", 10)
 
         gvm.set_variable("inner_error_handler", False)
         gvm.set_variable("inner_exit_handler", False)
@@ -68,8 +68,7 @@ class TestErrorPreemptionHandling():
 
     def run_state_machine(self):
         state_machine_execution_engine.start()
-        self.state_machine.root_state.join()
-        state_machine_execution_engine.stop()
+        state_machine_execution_engine.join()
 
     @staticmethod
     def assert_no_errors():
@@ -79,12 +78,16 @@ class TestErrorPreemptionHandling():
         assert_gvm("inner_error_handler", False)
 
     def test_default_run(self, caplog):
+        gvm.set_variable("wait_inner_observer_1", 1)
+        gvm.set_variable("wait_inner_observer_2", 1)
+        gvm.set_variable("wait_observer_1", 1)
+        gvm.set_variable("wait_observer_2", 1)
         self.run_state_machine()
         self.assert_no_errors()
         test_utils.assert_logger_warnings_and_errors(caplog, 0)
 
     def test_inner_observer_1_finish(self, caplog):
-        gvm.set_variable("wait_inner_observer_1", .1)
+        gvm.set_variable("wait_inner_observer_1", 0.1)
         self.run_state_machine()
         self.assert_no_errors()
         assert_gvm("inner_observer_1_finish")
@@ -96,7 +99,7 @@ class TestErrorPreemptionHandling():
         test_utils.assert_logger_warnings_and_errors(caplog)
 
     def test_inner_observer_2_finish(self, caplog):
-        gvm.set_variable("wait_inner_observer_2", .1)
+        gvm.set_variable("wait_inner_observer_2", 0.1)
         self.run_state_machine()
         self.assert_no_errors()
         assert_gvm("inner_observer_2_finish")
@@ -108,7 +111,7 @@ class TestErrorPreemptionHandling():
         test_utils.assert_logger_warnings_and_errors(caplog)
 
     def test_observer_1_finish(self, caplog):
-        gvm.set_variable("wait_observer_1", .1)
+        gvm.set_variable("wait_observer_1", 0.1)
         self.run_state_machine()
         self.assert_no_errors()
         assert_gvm("observer_1_finish")
@@ -120,7 +123,7 @@ class TestErrorPreemptionHandling():
         test_utils.assert_logger_warnings_and_errors(caplog, 0)
 
     def test_observer_2_finish(self, caplog):
-        gvm.set_variable("wait_observer_2", .1)
+        gvm.set_variable("wait_observer_2", 0.1)
         self.run_state_machine()
         self.assert_no_errors()
         assert_gvm("observer_2_finish")
@@ -132,7 +135,7 @@ class TestErrorPreemptionHandling():
         test_utils.assert_logger_warnings_and_errors(caplog, 0)
 
     def test_inner_observer_1_error(self, caplog):
-        gvm.set_variable("wait_inner_observer_1", .1)
+        gvm.set_variable("wait_inner_observer_1", 0.1)
         gvm.set_variable("inner_observer_1_abort", True)
         self.run_state_machine()
         assert_gvm("inner_error_handler", False)
@@ -143,7 +146,7 @@ class TestErrorPreemptionHandling():
         test_utils.assert_logger_warnings_and_errors(caplog, 0)
 
     def test_inner_observer_1_exception(self, caplog):
-        gvm.set_variable("wait_inner_observer_1", .1)
+        gvm.set_variable("wait_inner_observer_1", 0.1)
         gvm.set_variable("inner_observer_1_exception", True)
         self.run_state_machine()
         assert_gvm("inner_error_handler", False)
@@ -153,7 +156,7 @@ class TestErrorPreemptionHandling():
         test_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
     def test_observer_1_error(self, caplog):
-        gvm.set_variable("wait_observer_1", .1)
+        gvm.set_variable("wait_observer_1", 0.1)
         gvm.set_variable("observer_1_abort", True)
         self.run_state_machine()
         self.assert_no_errors()
@@ -162,7 +165,7 @@ class TestErrorPreemptionHandling():
         test_utils.assert_logger_warnings_and_errors(caplog, 0)
 
     def test_observer_1_exception(self, caplog):
-        gvm.set_variable("wait_observer_1", .1)
+        gvm.set_variable("wait_observer_1", 0.1)
         gvm.set_variable("observer_1_exception", True)
         self.run_state_machine()
         self.assert_no_errors()

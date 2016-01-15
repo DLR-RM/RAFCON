@@ -106,8 +106,7 @@ def test_execution_state_library(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    library_container_state_sm.root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
@@ -147,8 +146,7 @@ def test_hierarchy_state_library(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = library_container_state_sm.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    library_container_state_sm.root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
@@ -176,8 +174,7 @@ def test_nested_library_state_machine(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    nested_library_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     # print output_data["data_output_port1"]
     assert nested_library_state.output_data["data_output_port1"] == 42.0

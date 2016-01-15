@@ -5,6 +5,7 @@ from multiprocessing import Process, Queue
 import os
 import glib
 import time
+import pytest
 from Queue import Empty
 
 
@@ -18,6 +19,7 @@ def info(title):
 
 def check_for_sm_finished(sm, reactor):
     from rafcon.statemachine.enums import StateExecutionState
+    from rafcon.statemachine.singleton import state_machine_execution_engine
     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=1.0)
@@ -26,7 +28,7 @@ def check_for_sm_finished(sm, reactor):
         # no logger output here to make it easier for the parser
         print "RAFCON live signal"
 
-    sm.root_state.join()
+    state_machine_execution_engine.join()
     reactor.stop()
 
 
@@ -251,4 +253,5 @@ def test_sm_and_server():
 
 
 if __name__ == '__main__':
-    test_sm_and_server()
+    # test_sm_and_server()
+    pytest.main([__file__])

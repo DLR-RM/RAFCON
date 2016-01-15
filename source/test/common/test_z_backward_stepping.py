@@ -75,7 +75,8 @@ def trigger_gui_signals(*args):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, test_utils.get_tmp_unit_test_path() +
+                      os.path.split(__file__)[0] + os.path.split(__file__)[1])
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
@@ -110,12 +111,8 @@ def test_backward_stepping(caplog):
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
-    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-    if sm:
-        sm.root_state.join()
-        logger.debug("Joined currently executing state machine!")
-        thread.join()
-        logger.debug("Joined test triggering thread!")
+    thread.join()
+    logger.debug("Joined test triggering thread!")
     os.chdir(test_utils.RAFCON_PATH + "/../test/common")
 
     test_utils.reload_config()
