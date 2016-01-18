@@ -12,6 +12,7 @@ Subpackages
     rafcon.mvc.controllers
     rafcon.mvc.models
     rafcon.mvc.views
+    rafcon.mvc.mygaphas
 
 main
 ----

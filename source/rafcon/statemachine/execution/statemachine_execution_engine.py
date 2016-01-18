@@ -8,6 +8,7 @@
 
 """
 import copy
+import threading
 
 import Queue
 from threading import Lock
@@ -33,6 +34,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
     execution_engine = None
 
+    __wait_for_finishing_thread = None
+    __running_state_machine = None
+
     __observables__ = ("execution_engine",)
 
     def __init__(self, state_machine_manager):
@@ -45,7 +49,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         # TODO: write validity checker of the statemachine
         self._validity_checker = None
         logger.debug("Statemachine execution engine initialized")
-        self._execution_started = False
         self.start_state_paths = []
 
         self.execution_engine_lock = Lock()
@@ -68,16 +71,16 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         :param start_state_path: The path of the state in the state machine, from which the execution will start
         :return:
         """
-        if self._execution_started:
-            logger.debug("Resume execution engine ...")
+        if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
+            logger.debug("Resume execution engine ...")
             self.run_to_states = []
             self._status.execution_condition_variable.acquire()
             self._status.execution_condition_variable.notify_all()
             self._status.execution_condition_variable.release()
         else:
-            logger.debug("Start execution engine ...")
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
+            logger.debug("Start execution engine ...")
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
 
@@ -93,30 +96,29 @@ class StatemachineExecutionEngine(ModelMT, Observable):
                         cur_path = cur_path + "/" + path
                     self.start_state_paths.append(cur_path)
 
-            self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
-            self._execution_started = True
+            self._run_active_state_machine()
 
-    # TODO: stop all external modules
     @Observable.observed
     def stop(self):
         """Set the execution mode to stopped
         """
-        logger.debug("Stop execution ...")
-        self.set_execution_mode_to_stopped()
+        logger.debug("Force execution stop...")
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
-        self.run_to_states = []
+        self.set_execution_mode_to_stopped()
+
+        # Notifies states waiting in step mode or those that are paused about execution stop
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
 
+    def join(self):
+        self.__wait_for_finishing_thread.join()
+
+    @Observable.observed
     def set_execution_mode_to_stopped(self):
-        """
-        Sets the execution mode of the state machine execution status to STOPPED and resets all per-execution variables
-        :return:
-        """
+        """Stop and reset execution engine"""
         self._status.execution_mode = StateMachineExecutionStatus.STOPPED
-        self._execution_started = False
         self.run_to_states = []
 
     @Observable.observed
@@ -124,13 +126,26 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
         """
         logger.debug("Activate step mode")
-        if self._execution_started:
+        if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
         else:
             self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
-            self.state_machine_manager.state_machines[self.state_machine_manager.active_state_machine_id].start()
-            self._execution_started = True
+            self._run_active_state_machine()
         self.run_to_states = []
+
+    def _run_active_state_machine(self):
+        """Store running state machine and observe its status"""
+        self.__running_state_machine = self.state_machine_manager.state_machines[
+            self.state_machine_manager.active_state_machine_id]
+        self.__running_state_machine.start()
+
+        self.__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
+        self.__wait_for_finishing_thread.start()
+
+    def _wait_for_finishing(self):
+        """Observe running state machine and stop engine if execution has finished"""
+        self.__running_state_machine.join()
+        self.set_execution_mode_to_stopped()
 
     def backward_step(self):
         """Take a backward step for all active states in the state machine

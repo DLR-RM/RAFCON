@@ -83,7 +83,6 @@ class BarrierConcurrencyState(ConcurrencyState):
 
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             # start all threads
-            history_index = 0
             for key, state in self.states.iteritems():
                 # skip the decider state
                 if key is not decider_state.state_id:
@@ -91,8 +90,9 @@ class BarrierConcurrencyState(ConcurrencyState):
                     state_output = self.create_output_dictionary_for_state(state)
                     state.input_data = state_input
                     state.output_data = state_output
-                    state.start(history_item.execution_histories[history_index], self.backward_execution)
-                    history_index += 1
+
+            for history_index, state in enumerate(self.states.itervalues()):
+                state.start(history_item.execution_histories[history_index], self.backward_execution)
 
             #######################################################
             # wait for all child threads to finish

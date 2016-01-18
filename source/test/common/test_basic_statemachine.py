@@ -5,6 +5,7 @@ from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.state import InputDataPort
 from test_utils import assert_logger_warnings_and_errors
 
+
 def test_create_state(caplog):
     state1 = ExecutionState("MyFirstState")
 

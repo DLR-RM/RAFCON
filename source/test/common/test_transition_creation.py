@@ -1,4 +1,5 @@
 import time
+import os
 
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -66,11 +67,12 @@ def create_statemachine():
 
 def test_transition_creation(caplog):
 
-    test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    storage_path = test_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    test_storage = StateMachineStorage(storage_path)
 
     sm = create_statemachine()
 
-    test_storage.save_statemachine_to_path(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    test_storage.save_statemachine_to_path(sm, storage_path)
     [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_path()
 
     root_state = sm_loaded.root_state
@@ -80,12 +82,9 @@ def test_transition_creation(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    time.sleep(0.2)
-    root_state.join()
-    time.sleep(0.2)
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

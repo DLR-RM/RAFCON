@@ -1,8 +1,10 @@
 import gtk
 import threading
 
-from rafcon.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, \
-    StateMachineHistoryController, LibraryTreeController
+from rafcon.mvc.controllers.global_variable_manager import GlobalVariableManagerController
+from rafcon.mvc.controllers.state_machine_tree import StateMachineTreeController
+from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
+from rafcon.mvc.controllers.library_tree import LibraryTreeController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
@@ -375,7 +377,6 @@ class MainWindowController(ExtendedController):
         page_num = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_current_page()
         page = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_nth_page(page_num)
         label = notebook.get_tab_label(page).get_children()[0]
-        # print rc_style.fg[gtk.STATE_NORMAL]
         if active:
             label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))
             label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))
@@ -392,18 +393,31 @@ class MainWindowController(ExtendedController):
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].hide()
+            self._set_single_button_active('button_start_shortcut')
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].hide()
+            self._set_single_button_active('button_pause_shortcut')
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(False)
             self.view['step_buttons'].hide()
+            self._set_single_button_active('button_stop_shortcut')
         else:  # all step modes
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].show()
+            self._set_single_button_active('button_step_mode_shortcut')
+
+    def _set_single_button_active(self, active_button_name):
+        for button_name in ['button_start_shortcut', 'button_pause_shortcut', 'button_step_mode_shortcut']:
+            if active_button_name == button_name:
+                if not self.view[button_name].get_active():
+                    self.view[button_name].set_active(True)
+            else:
+                if self.view[button_name].get_active():
+                    self.view[button_name].set_active(False)
 
     @staticmethod
     def create_arrow_label(icon):
@@ -476,16 +490,30 @@ class MainWindowController(ExtendedController):
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
+<<<<<<< HEAD
         self.get_controller('menu_bar_controller').on_start_activate(None)
 
     def on_button_pause_shortcut_toggled(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_pause_activate(None)
+=======
+        if self.view['button_start_shortcut'].get_active():
+            self.get_controller("menu_bar_controller").on_start_activate(None)
+
+    def on_button_pause_shortcut_toggled(self, widget, event=None):
+        if self.view['button_pause_shortcut'].get_active():
+            self.get_controller("menu_bar_controller").on_pause_activate(None)
+>>>>>>> 186847759faa39f8684d991fa522aa2c0a568524
 
     def on_button_stop_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_stop_activate(None)
 
     def on_button_step_mode_shortcut_toggled(self, widget, event=None):
+<<<<<<< HEAD
         self.get_controller('menu_bar_controller').on_step_mode_activate(None)
+=======
+        if self.view['button_step_mode_shortcut'].get_active():
+            self.get_controller("menu_bar_controller").on_step_mode_activate(None)
+>>>>>>> 186847759faa39f8684d991fa522aa2c0a568524
 
     def on_button_step_in_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_into_activate(None)

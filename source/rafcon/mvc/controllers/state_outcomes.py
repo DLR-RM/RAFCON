@@ -332,9 +332,9 @@ class StateOutcomesEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", self.add_outcome)
 
     def add_outcome(self, *_):
-        if self.view.tree.has_focus():
+        if self.view.tree.is_focus():
             self.oc_list_ctrl.on_add(None)
 
     def remove_outcome(self, *_):
-        if self.view.tree.has_focus():
+        if self.view.tree.is_focus():
             self.oc_list_ctrl.on_remove(None)

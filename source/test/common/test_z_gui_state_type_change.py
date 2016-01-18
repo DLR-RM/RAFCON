@@ -19,7 +19,7 @@ from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
@@ -597,6 +597,7 @@ def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controlle
 #     state_type_change_test(with_gui=True)
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     """
     Does only works with gui at the moment.
@@ -782,20 +783,13 @@ def test_state_type_change_test(caplog):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-        if sm:
-            sm.root_state.join()
-            logger.debug("Joined currently executing state machine!")
-            thread.join()
-            logger.debug("Joined test triggering thread!")
-        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-    else:
-        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-        thread.join()
+
+    thread.join()
+    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
 
     test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ from rafcon.utils import log
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
@@ -42,7 +42,7 @@ def create_models():
 
     return logger, global_var_manager_model
 
-
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     print "Wait for the gui to initialize"
     time.sleep(2.0)
@@ -52,7 +52,9 @@ def trigger_gui_signals(*args):
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
     number_of_steps = 9
-    sleep_time = 0.02
+    # TODO: This time is dangerous! If the PC where this test runs is too slow the test will fail! Redesign test!
+    # Experience values: on a 64bit Intel Xeon with 1,2 GHz 8 core PC 0.03 are safe enough
+    sleep_time = 0.05
     time.sleep(sleep_time)
     for i in range(number_of_steps):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
@@ -73,7 +75,8 @@ def trigger_gui_signals(*args):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, test_utils.get_tmp_unit_test_path() +
+                      os.path.split(__file__)[0] + os.path.split(__file__)[1])
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
@@ -108,17 +111,13 @@ def test_backward_stepping(caplog):
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
-    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-    if sm:
-        sm.root_state.join()
-        logger.debug("Joined currently executing state machine!")
-        thread.join()
-        logger.debug("Joined test triggering thread!")
+    thread.join()
+    logger.debug("Joined test triggering thread!")
     os.chdir(test_utils.RAFCON_PATH + "/../test/common")
 
     test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

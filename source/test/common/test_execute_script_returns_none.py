@@ -27,14 +27,13 @@ def test_execute_script_returns_none(caplog):
     test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    state_machine.root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     assert state_machine.root_state.final_outcome.outcome_id == 0
 
     test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
 
 if __name__ == '__main__':

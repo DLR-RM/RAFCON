@@ -62,7 +62,7 @@ class GlobalVariableManagerController(ExtendedController):
     def on_new_global_variable_button_clicked(self, widget, data=None):
         """Triggered when the New button in the Global Variables tab is clicked
 
-        Creates a new global variable.
+        Creates a new global variable with default values.
         """
         new_global_variable = "new_global_%s" % self.global_variable_counter
         self.global_variable_counter += 1

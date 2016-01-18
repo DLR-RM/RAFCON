@@ -19,7 +19,7 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 
 # mvc elements
 from gtkmvc.observer import Observer
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
@@ -1375,22 +1375,16 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-        if sm:
-            # sm.root_state.join()
-            # logger.debug("Joined currently executing state machine!")
-            thread.join()
-            logger.debug("Joined test triggering thread!")
-        os.chdir(rafcon.__path__[0] + "/../test/common")
         test_multithrading_lock.release()
-    else:
-        os.chdir(rafcon.__path__[0] + "/../test/common")
-        thread.join()
+
+    os.chdir(rafcon.__path__[0] + "/../test/common")
+    thread.join()
 
     test_utils.reload_config()
     test_utils.assert_logger_warnings_and_errors(caplog)
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     print "Wait for the gui to initialize"
     with_gui = bool(args[4])

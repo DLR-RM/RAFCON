@@ -15,7 +15,7 @@ from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel, ContainerStateModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
@@ -184,6 +184,7 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
     assert state_editor_ctrl.model is parent_state_m
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     print "Wait for the gui to initialize"
     time.sleep(2.0)
@@ -345,12 +346,8 @@ def test_state_type_change_test(with_gui, caplog):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-        if sm:
-            sm.root_state.join()
-            logger.debug("Joined currently executing state machine!")
-            thread.join()
-            logger.debug("Joined test triggering thread!")
+        thread.join()
+        logger.debug("Joined test triggering thread!")
         os.chdir(test_utils.TEST_SM_PATH + "/../test/common")
         test_multithrading_lock.release()
     else:

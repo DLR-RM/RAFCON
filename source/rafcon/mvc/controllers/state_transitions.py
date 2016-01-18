@@ -619,11 +619,11 @@ class StateTransitionsEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", self.add_transition)
 
     def add_transition(self, *_):
-        if self.view.transitions_listView.tree_view.has_focus():
+        if self.view.transitions_listView.tree_view.is_focus():
             self.trans_list_ctrl.on_add(None)
 
     def remove_transition(self, *_):
-        if self.view.transitions_listView.tree_view.has_focus():
+        if self.view.transitions_listView.tree_view.is_focus():
             self.trans_list_ctrl.on_remove(None)
 
     def toggled_button(self, button, name=None):

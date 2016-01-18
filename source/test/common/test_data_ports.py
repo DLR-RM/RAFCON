@@ -1,4 +1,5 @@
 import pytest
+import os
 # test for expected exceptions
 from pytest import raises
 
@@ -43,25 +44,27 @@ def create_statemachine():
 
 def test_default_values_of_data_ports(caplog):
 
-    test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    storage_path = test_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    print storage_path
+    test_storage = StateMachineStorage(storage_path)
 
     sm = create_statemachine()
 
-    test_storage.save_statemachine_to_path(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    test_storage.save_statemachine_to_path(sm, storage_path)
     [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_path()
 
     root_state = sm_loaded.root_state
 
     state_machine = StateMachine(root_state)
     test_utils.test_multithrading_lock.acquire()
+
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    test_utils.assert_logger_warnings_and_errors(caplog)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog)
 
     print root_state.output_data
     assert root_state.output_data["output_data_port1"] == "default_value"
@@ -135,6 +138,6 @@ def test_unique_port_names(caplog):
 
 
 if __name__ == '__main__':
-    # test_default_values_of_data_ports(None)
+    test_default_values_of_data_ports(None)
     # test_unique_port_names(None)
-    pytest.main([__file__])
+    # pytest.main([__file__])

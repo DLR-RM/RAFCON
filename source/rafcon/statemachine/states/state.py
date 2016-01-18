@@ -146,6 +146,7 @@ class State(Observable, YAMLObject, JSONObject):
         """
         if self.thread:
             self.thread.join()
+            self.thread = None
         else:
             logger.debug("Cannot join {0}, as the state hasn't been started, yet".format(self))
 

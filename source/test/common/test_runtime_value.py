@@ -32,8 +32,8 @@ def test_runtime_values(caplog):
     state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert sm.root_state.output_data["data_output_port1"] == 114
 
-    test_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
     test_utils.test_multithrading_lock.release()
+    test_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
 
 
 def teardown_module(module=None):

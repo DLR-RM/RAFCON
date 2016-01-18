@@ -1,3 +1,5 @@
+import os
+
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -47,8 +49,7 @@ def test_hierarchy_state_execution(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    hierarchy_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     test_utils.test_multithrading_lock.release()
 
@@ -57,12 +58,13 @@ def test_hierarchy_state_execution(caplog):
 
 
 def test_hierarchy_save_load_test(caplog):
-    s = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    storage_path = test_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    s = StateMachineStorage(storage_path)
 
     hierarchy_state = create_hierarchy_state()
     sm = StateMachine(hierarchy_state)
 
-    s.save_statemachine_to_path(sm, rafcon.__path__[0] + "/../test_scripts/stored_statemachine")
+    s.save_statemachine_to_path(sm, storage_path)
     [sm_loaded, version, creation_time] = s.load_statemachine_from_path()
 
     state_machine = StateMachine(sm_loaded.root_state)
@@ -71,8 +73,7 @@ def test_hierarchy_save_load_test(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    sm_loaded.root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     test_utils.test_multithrading_lock.release()
 

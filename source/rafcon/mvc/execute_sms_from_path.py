@@ -12,7 +12,7 @@ import signal
 from os.path import join, dirname
 
 from rafcon.utils import log
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.mvc.models import GlobalVariableManagerModel
 import rafcon.statemachine.singleton
