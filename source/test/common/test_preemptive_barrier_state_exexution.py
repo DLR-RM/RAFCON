@@ -10,7 +10,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import test_utils
+import utils
 import pytest
 
 
@@ -40,7 +40,7 @@ def test_concurrency_preemption_state_execution(caplog):
 
     preemption_state_sm = create_preemption_statemachine()
 
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
@@ -49,14 +49,14 @@ def test_concurrency_preemption_state_execution(caplog):
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
     assert preemption_state_sm.root_state.final_outcome.outcome_id == 3
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
-    test_utils.test_multithrading_lock.release()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.test_multithrading_lock.release()
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_concurrency_preemption_save_load(caplog):
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
 
-    storage_path = test_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    storage_path = utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
     s = StateMachineStorage(storage_path)
 
     preemption_state_sm = create_preemption_statemachine()
@@ -71,8 +71,8 @@ def test_concurrency_preemption_save_load(caplog):
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
-    test_utils.test_multithrading_lock.release()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.test_multithrading_lock.release()
+    utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
     pytest.main([__file__])

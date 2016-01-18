@@ -7,25 +7,25 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton
 
 # test environment elements
-import test_utils
+import utils
 import pytest
 
 
 def test_custom_entry_point(caplog):
-    test_utils.remove_all_libraries()
+    utils.remove_all_libraries()
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(
-        test_utils.get_test_sm_path("unit_test_state_machines/test_custom_entry_point"),
+        utils.get_test_sm_path("unit_test_state_machines/test_custom_entry_point"),
         start_state_id)
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert not rafcon.statemachine.singleton.global_variable_manager.variable_exist("start_id21")
 
-    test_utils.test_multithrading_lock.release()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.test_multithrading_lock.release()
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

@@ -24,8 +24,8 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
 # test environment elements
-import test_utils
-from test_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+import utils
+from utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
 import pytest
 
@@ -311,7 +311,7 @@ def test_state_type_change_test(with_gui, caplog):
 
     test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(test_utils.RAFCON_PATH + "/mvc")
+    os.chdir(utils.RAFCON_PATH + "/mvc")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
@@ -319,27 +319,27 @@ def test_state_type_change_test(with_gui, caplog):
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
-    test_utils.remove_all_libraries()
+    utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    if test_utils.sm_manager_model is None:
-            test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if utils.sm_manager_model is None:
+            utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     main_window_controller = None
     if with_gui:
         main_window_view = MainWindowView()
 
         # load the meta data for the state machine
-        test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
+        utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
-        main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
+        main_window_controller = MainWindowController(utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
     else:
         # load the meta data for the state machine
-        test_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
+        utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[test_utils.sm_manager_model, main_window_controller,
+                              args=[utils.sm_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
     thread.start()
 
@@ -348,14 +348,14 @@ def test_state_type_change_test(with_gui, caplog):
         logger.debug("Gtk main loop exited!")
         thread.join()
         logger.debug("Joined test triggering thread!")
-        os.chdir(test_utils.TEST_SM_PATH + "/../test/common")
+        os.chdir(utils.TEST_SM_PATH + "/../test/common")
         test_multithrading_lock.release()
     else:
-        os.chdir(test_utils.TEST_SM_PATH + "/../test/common")
+        os.chdir(utils.TEST_SM_PATH + "/../test/common")
         thread.join()
 
-    test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.reload_config()
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

@@ -24,14 +24,14 @@ from rafcon.mvc.views.main_window import MainWindowView
 import rafcon.mvc.singleton
 
 # test environment elements
-import test_utils
-from test_utils import call_gui_callback
+import utils
+from utils import call_gui_callback
 import pytest
 
 
 def setup_module(module):
     # set the test_libraries path temporarily to the correct value
-    test_utils.remove_all_libraries()
+    utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: ", dirname(__file__), dirname(dirname(__file__))
 
@@ -40,7 +40,7 @@ def setup_module(module):
 
 
 def teardown_module(module):
-    test_utils.reload_config()
+    utils.reload_config()
 
 
 def create_models(*args, **kargs):
@@ -298,31 +298,31 @@ def trigger_gui_signals(*args):
 
 
 def test_gui(caplog):
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     # delete all old state machines
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(test_utils.RAFCON_PATH + "/mvc/")
+    os.chdir(utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[test_utils.sm_manager_model,
+    thread = threading.Thread(target=trigger_gui_signals, args=[utils.sm_manager_model,
                                                                 main_window_controller])
     thread.start()
 
     gtk.main()
     logger.debug("after gtk main")
     thread.join()
-    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-    test_utils.test_multithrading_lock.release()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    os.chdir(utils.RAFCON_PATH + "/../test/common")
+    utils.test_multithrading_lock.release()
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

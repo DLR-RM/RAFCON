@@ -13,25 +13,25 @@ import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
 # test environment elements
-import test_utils
+import utils
 import pytest
 
 
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
-    test_utils.remove_all_libraries()
+    utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = test_utils.get_test_sm_path("test_libraries")
+    library_paths["test_libraries"] = utils.get_test_sm_path("test_libraries")
 
 
 def test_save_libraries(caplog):
-    s = StateMachineStorage(test_utils.get_test_sm_path("test_libraries"))
+    s = StateMachineStorage(utils.get_test_sm_path("test_libraries"))
 
-    state1 = ExecutionState("library_execution_state1", path=test_utils.TEST_SM_PATH, filename="library_execution_state1.py")
+    state1 = ExecutionState("library_execution_state1", path=utils.TEST_SM_PATH, filename="library_execution_state1.py")
     input_state1 = state1.add_input_data_port("data_input_port1", "float")
     output_state1 = state1.add_output_data_port("data_output_port1", "float")
 
-    state2 = ExecutionState("library_execution_state2", path=test_utils.TEST_SM_PATH, filename="library_execution_state2.py")
+    state2 = ExecutionState("library_execution_state2", path=utils.TEST_SM_PATH, filename="library_execution_state2.py")
     input_state2 = state2.add_input_data_port("data_input_port1", "float")
     output_state2 = state2.add_output_data_port("data_output_port1", "float")
 
@@ -58,20 +58,20 @@ def test_save_libraries(caplog):
                          output_state3)
 
     # save hierarchy state as state machine
-    s.save_statemachine_to_path(StateMachine(state3), test_utils.get_test_sm_path("test_libraries/hierarchy_library"),
+    s.save_statemachine_to_path(StateMachine(state3), utils.get_test_sm_path("test_libraries/hierarchy_library"),
                                 "0.1")
 
     # save execution state as state machine
-    s.save_statemachine_to_path(StateMachine(state1), test_utils.get_test_sm_path("test_libraries/execution_library"),
+    s.save_statemachine_to_path(StateMachine(state1), utils.get_test_sm_path("test_libraries/execution_library"),
                                 "0.1")
 
     # save hierarchy state as nested state machines
     state3.name = "library_nested1"
     s.save_statemachine_to_path(StateMachine(state3),
-                                test_utils.get_test_sm_path("test_libraries/library_container/library_nested1"), "0.1")
+                                utils.get_test_sm_path("test_libraries/library_container/library_nested1"), "0.1")
     state3.name = "library_nested2"
     s.save_statemachine_to_path(StateMachine(state3),
-                                test_utils.get_test_sm_path("test_libraries/library_container/library_nested2"), "0.1")
+                                utils.get_test_sm_path("test_libraries/library_container/library_nested2"), "0.1")
     # test_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -100,7 +100,7 @@ def create_execution_state_library_state_machine():
 
 
 def test_execution_state_library(caplog):
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     library_container_state_sm = create_execution_state_library_state_machine()
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
@@ -111,7 +111,7 @@ def test_execution_state_library(caplog):
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
-    test_utils.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
     # test_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -140,7 +140,7 @@ def create_hierarchy_state_library_state_machine():
 
 
 def test_hierarchy_state_library(caplog):
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     library_container_state_sm = create_hierarchy_state_library_state_machine()
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
@@ -151,7 +151,7 @@ def test_hierarchy_state_library(caplog):
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
-    test_utils.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
     # test_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -159,12 +159,12 @@ def test_save_nested_library_state(caplog):
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
     rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
-        library_with_nested_library_sm, test_utils.get_test_sm_path("test_libraries/library_with_nested_library"), "0.1")
+        library_with_nested_library_sm, utils.get_test_sm_path("test_libraries/library_with_nested_library"), "0.1")
     # test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_nested_library_state_machine(caplog):
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     # TODO: the library_manager is initialized a second time here
     rafcon.statemachine.singleton.library_manager.initialize()
     nested_library_state = LibraryState("test_libraries", "library_with_nested_library", "0.1",
@@ -179,12 +179,12 @@ def test_nested_library_state_machine(caplog):
     # print output_data["data_output_port1"]
     assert nested_library_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    test_utils.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
     # test_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def teardown_module(module=None):
-    test_utils.reload_config()
+    utils.reload_config()
 
 
 if __name__ == '__main__':

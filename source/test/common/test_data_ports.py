@@ -13,7 +13,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import test_utils
+import utils
 
 
 def create_statemachine():
@@ -44,7 +44,7 @@ def create_statemachine():
 
 def test_default_values_of_data_ports(caplog):
 
-    storage_path = test_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    storage_path = utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
     print storage_path
     test_storage = StateMachineStorage(storage_path)
 
@@ -56,15 +56,15 @@ def test_default_values_of_data_ports(caplog):
     root_state = sm_loaded.root_state
 
     state_machine = StateMachine(root_state)
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
     rafcon.statemachine.singleton.state_machine_execution_engine.join()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    test_utils.test_multithrading_lock.release()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.test_multithrading_lock.release()
+    utils.assert_logger_warnings_and_errors(caplog)
 
     print root_state.output_data
     assert root_state.output_data["output_data_port1"] == "default_value"
@@ -134,7 +134,7 @@ def test_unique_port_names(caplog):
     assert len(state.output_data_ports) == 3
     assert len(state.scoped_variables) == 3
 
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

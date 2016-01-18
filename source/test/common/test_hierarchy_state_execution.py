@@ -11,7 +11,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import test_utils
+import utils
 import pytest
 
 
@@ -45,20 +45,20 @@ def test_hierarchy_state_execution(caplog):
 
     state_machine = StateMachine(hierarchy_state)
 
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
     rafcon.statemachine.singleton.state_machine_execution_engine.join()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    test_utils.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
     assert hierarchy_state.output_data["output1"] == 52.0
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_hierarchy_save_load_test(caplog):
-    storage_path = test_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    storage_path = utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
     s = StateMachineStorage(storage_path)
 
     hierarchy_state = create_hierarchy_state()
@@ -69,16 +69,16 @@ def test_hierarchy_save_load_test(caplog):
 
     state_machine = StateMachine(sm_loaded.root_state)
 
-    test_utils.test_multithrading_lock.acquire()
+    utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
     rafcon.statemachine.singleton.state_machine_execution_engine.join()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    test_utils.test_multithrading_lock.release()
+    utils.test_multithrading_lock.release()
 
     assert state_machine.root_state.output_data["output1"] == 52.0
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
     pytest.main([__file__])

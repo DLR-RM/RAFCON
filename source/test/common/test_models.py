@@ -13,7 +13,7 @@ import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
 import pytest
-import test_utils
+import utils
 
 with_print = False
 
@@ -1011,7 +1011,7 @@ def test_add_remove_models(caplog):
     do_check_for_state(state_dict, state_name='Container')
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_state_property_changes_history(caplog):
@@ -1184,7 +1184,7 @@ def test_state_property_changes_history(caplog):
     state_dict['Nested'].scoped_variables = None
     sm_model.history.undo()
     sm_model.history.redo()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_outcome_property_changes_history(caplog):
@@ -1233,7 +1233,7 @@ def test_outcome_property_changes_history(caplog):
 
     # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
     do_check_for_state(state_dict, state_name='Container')
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_transition_property_changes_history(caplog):
@@ -1341,7 +1341,7 @@ def test_transition_property_changes_history(caplog):
     state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
     sm_model.history.undo()
     sm_model.history.redo()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_input_port_modify_notification(caplog):
@@ -1386,7 +1386,7 @@ def test_input_port_modify_notification(caplog):
                                                                                     default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_output_port_modify_notification(caplog):
@@ -1430,7 +1430,7 @@ def test_output_port_modify_notification(caplog):
                                                                                       default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_scoped_variable_modify_notification(caplog):
@@ -1481,7 +1481,7 @@ def test_scoped_variable_modify_notification(caplog):
                                                                                    default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_data_flow_property_changes_history(caplog):
@@ -1609,7 +1609,7 @@ def test_data_flow_property_changes_history(caplog):
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
     sm_model.history.undo()
     sm_model.history.redo()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

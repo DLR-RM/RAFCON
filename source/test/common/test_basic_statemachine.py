@@ -3,7 +3,7 @@ from pytest import raises
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.state import InputDataPort
-from test_utils import assert_logger_warnings_and_errors
+from utils import assert_logger_warnings_and_errors
 
 
 def test_create_state(caplog):
