@@ -37,6 +37,8 @@ class PyTest(TestCommand):
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import pytest
+        test_path = path.join(path.dirname(path.abspath(__file__)), 'source', 'test')
+        sys.path.insert(0, test_path)
         error_number = pytest.main(self.pytest_args + ['source/test/all'])
         sys.exit(error_number)
 
