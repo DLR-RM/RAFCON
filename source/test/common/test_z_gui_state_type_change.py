@@ -19,7 +19,7 @@ from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
@@ -28,8 +28,8 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
 # test environment elements
-import test_utils
-from test_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+import testing_utils
+from testing_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 import pytest
 
 store_elements_ignores = []
@@ -597,6 +597,7 @@ def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controlle
 #     state_type_change_test(with_gui=True)
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     """
     Does only works with gui at the moment.
@@ -751,9 +752,9 @@ def trigger_state_type_change_tests(*args):
 def test_state_type_change_test(caplog):
     with_gui = True
     test_multithrading_lock.acquire()
-    test_utils.remove_all_libraries()
+    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(test_utils.RAFCON_PATH + "/mvc")
+    os.chdir(testing_utils.RAFCON_PATH + "/mvc")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
@@ -761,41 +762,34 @@ def test_state_type_change_test(caplog):
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
-    test_utils.remove_all_libraries()
+    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     main_window_controller = None
     if with_gui:
         main_window_view = MainWindowView()
 
         # load the meta data for the state machine
-        main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
+        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
 
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[test_utils.sm_manager_model, main_window_controller,
+                              args=[testing_utils.sm_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
     thread.start()
 
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-        if sm:
-            sm.root_state.join()
-            logger.debug("Joined currently executing state machine!")
-            thread.join()
-            logger.debug("Joined test triggering thread!")
-        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-    else:
-        os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-        thread.join()
 
-    test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    thread.join()
+    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
+
+    testing_utils.reload_config()
     test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

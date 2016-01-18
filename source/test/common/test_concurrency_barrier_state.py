@@ -10,7 +10,7 @@ import rafcon.statemachine.singleton
 
 # test environment elements
 import pytest
-import test_utils
+import testing_utils
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 
@@ -60,8 +60,8 @@ def test_concurrency_barrier_save_load(caplog):
     state_machine = StateMachine(concurrency_barrier_state)
     test_storage = StateMachineStorage(rafcon.__path__[0] + "/../test_scripts/decider_test_statemachine")
     # test_storage.save_statemachine_to_path(state_machine, "../test_scripts/decider_test_statemachine")
-    test_storage.save_statemachine_to_path(state_machine, test_utils.TMP_TEST_PATH + "/decider_test_statemachine")
-    sm_loaded, version, creation_time = test_storage.load_statemachine_from_path(test_utils.TMP_TEST_PATH +
+    test_storage.save_statemachine_to_path(state_machine, testing_utils.TMP_TEST_PATH + "/decider_test_statemachine")
+    sm_loaded, version, creation_time = test_storage.load_statemachine_from_path(testing_utils.TMP_TEST_PATH +
                                                                                  "/decider_test_statemachine")
 
     root_state = sm_loaded.root_state
@@ -71,20 +71,19 @@ def test_concurrency_barrier_save_load(caplog):
     root_state.output_data = output_data
 
     state_machine = StateMachine(root_state)
-    test_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    root_state.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
     assert root_state.final_outcome.outcome_id == 4
 
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    test_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    test_utils.test_multithrading_lock.release()
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
 if __name__ == '__main__':
     pytest.main([__file__])

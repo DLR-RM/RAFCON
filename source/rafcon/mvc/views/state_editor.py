@@ -1,6 +1,7 @@
 import gtk
 from gtkmvc import View
-from rafcon.mvc.views import SourceEditorView, StateOutcomesEditorView
+from rafcon.mvc.views.source_editor import SourceEditorView
+from rafcon.mvc.views.state_outcomes import StateOutcomesEditorView
 from rafcon.mvc.views.state_overview import StateOverviewView
 from rafcon.mvc.views.input_port_list import InputPortsListView
 from rafcon.mvc.views.output_port_list import OutputPortsListView

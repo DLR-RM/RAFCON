@@ -1,8 +1,9 @@
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 
-from rafcon.mvc.controllers import DataPortListController, ScopedVariableListController, \
-    StateOutcomesEditorController
+from rafcon.mvc.controllers.io_data_port_list import DataPortListController
+from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
+from rafcon.mvc.controllers.state_outcomes import StateOutcomesEditorController
 
 
 # from rafcon.utils import log

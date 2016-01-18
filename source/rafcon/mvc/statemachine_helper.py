@@ -274,13 +274,7 @@ def create_state_model_for_state(new_state, state_element_models):
     if isinstance(new_state, BarrierConcurrencyState):
         decider_state_m.parent = new_state_m
         new_state_m.states[UNIQUE_DECIDER_STATE_ID] = decider_state_m
-
-    # Some states create transition on creation (e.g. Barrier Concurrency States), which have to be modelled
-    if isinstance(new_state, ContainerState):
-        for transition in new_state.transitions.itervalues():
-            transition_m = TransitionModel(transition, new_state_m)
-            new_state_m.transitions.append(transition_m)
-
+    
     return new_state_m
 
 

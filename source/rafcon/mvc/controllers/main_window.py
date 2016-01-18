@@ -1,8 +1,10 @@
 import gtk
 import threading
 
-from rafcon.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, \
-    StateMachineHistoryController, LibraryTreeController
+from rafcon.mvc.controllers.global_variable_manager import GlobalVariableManagerController
+from rafcon.mvc.controllers.state_machine_tree import StateMachineTreeController
+from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
+from rafcon.mvc.controllers.library_tree import LibraryTreeController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
@@ -95,15 +97,15 @@ class MainWindowController(ExtendedController):
 
         library_tree_tab = view['library_vbox']
         page_num = view["tree_notebook_1"].page_num(library_tree_tab)
-        view['tree_notebook_1'].remove_page(page_num)
+        view["tree_notebook_1"].remove_page(page_num)
 
         library_tab_label = gtk.Label('Libraries')
         library_notebook_widget = self.create_notebook_widget('LIBRARIES', view.library_tree,
                                                               border=constants.BORDER_WIDTH_TEXTVIEW)
-        view['tree_notebook_1'].insert_page(library_notebook_widget, library_tab_label, page_num)
+        view["tree_notebook_1"].insert_page(library_notebook_widget, library_tab_label, page_num)
 
-        view['add_link_menu_entry'].connect('activate', library_controller.insert_button_clicked, None, False)
-        view['add_template_menu_entry'].connect('activate', library_controller.insert_button_clicked, None, True)
+        view['add_link_menu_entry'].connect("activate", library_controller.insert_button_clicked, None, False)
+        view['add_template_menu_entry'].connect("activate", library_controller.insert_button_clicked, None, True)
 
         view['main_window'].add_events(
             gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
@@ -115,8 +117,8 @@ class MainWindowController(ExtendedController):
         # remove placeholder tab
 
         state_machine_tree_tab = view['state_machine_tree_placeholder']
-        page_num = view['tree_notebook_1'].page_num(state_machine_tree_tab)
-        view['tree_notebook_1'].remove_page(page_num)
+        page_num = view["tree_notebook_1"].page_num(state_machine_tree_tab)
+        view["tree_notebook_1"].remove_page(page_num)
         # append new tab
         # TODO: this is not always the active state machine
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
@@ -125,7 +127,7 @@ class MainWindowController(ExtendedController):
         state_machine_tab_label = gtk.Label('State Tree')
         state_machine_notebook_widget = self.create_notebook_widget('STATE TREE', view.state_machine_tree,
                                                                     border=constants.BORDER_WIDTH_TEXTVIEW)
-        view['tree_notebook_1'].insert_page(state_machine_notebook_widget, state_machine_tab_label, page_num)
+        view["tree_notebook_1"].insert_page(state_machine_notebook_widget, state_machine_tab_label, page_num)
 
         ######################################################
         # state editor
@@ -164,8 +166,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         # remove placeholder tab
         global_variables_tab = view['global_variables_placeholder']
-        page_num = view['tree_notebook_1'].page_num(global_variables_tab)
-        view['tree_notebook_1'].remove_page(page_num)
+        page_num = view["tree_notebook_1"].page_num(global_variables_tab)
+        view["tree_notebook_1"].remove_page(page_num)
         # append new tab
         global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
@@ -174,25 +176,25 @@ class MainWindowController(ExtendedController):
         global_variables_notebook_widget = self.create_notebook_widget('GLOBAL VARIABLES',
                                                                        view.global_var_manager_view.get_top_widget(),
                                                                        border=constants.BORDER_WIDTH_TEXTVIEW)
-        view['tree_notebook_1'].insert_page(global_variables_notebook_widget, global_variables_tab_label, page_num)
+        view["tree_notebook_1"].insert_page(global_variables_notebook_widget, global_variables_tab_label, page_num)
 
-        view['tree_notebook_1'].set_current_page(0)
+        view["tree_notebook_1"].set_current_page(0)
 
         ######################################################
         # state machine edition history
         ######################################################
         # remove placeholder tab
         history_tab = view['history_vbox_placeholder']
-        page_num = view['tree_notebook_2'].page_num(history_tab)
-        view['tree_notebook_2'].remove_page(page_num)
+        page_num = view["tree_notebook_2"].page_num(history_tab)
+        view["tree_notebook_2"].remove_page(page_num)
         # append new tab
         state_machine_history_controller = StateMachineHistoryController(state_machine_manager_model,
                                                                          view.state_machine_history)
         self.add_controller('state_machine_history_controller', state_machine_history_controller)
         history_label = gtk.Label('History')
-        history_notebook_widget = self.create_notebook_widget('HISTORY', view.state_machine_history.get_top_widget(),
+        history_notebook_widget = self.create_notebook_widget("HISTORY", view.state_machine_history.get_top_widget(),
                                                               border=constants.BORDER_WIDTH_TEXTVIEW)
-        view['tree_notebook_2'].insert_page(history_notebook_widget, history_label, page_num)
+        view["tree_notebook_2"].insert_page(history_notebook_widget, history_label, page_num)
 
         # history_tab_label = gtk.Label('History')
         # history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
@@ -215,7 +217,7 @@ class MainWindowController(ExtendedController):
             view['tree_notebook_2'].remove_page(page_num)
 
             network_label = gtk.Label('Network')
-            network_notebook_widget = self.create_notebook_widget('NETWORK',
+            network_notebook_widget = self.create_notebook_widget("NETWORK",
                                                                   view.network_connections_view.get_top_widget(),
                                                                   use_scroller=False,
                                                                   border=constants.BORDER_WIDTH_TEXTVIEW)
@@ -223,7 +225,7 @@ class MainWindowController(ExtendedController):
         else:
             network_tab = view['network_tab']
             page_num = view["tree_notebook_2"].page_num(network_tab)
-            view['tree_notebook_2'].remove_page(page_num)
+            view["tree_notebook_2"].remove_page(page_num)
 
         ######################################################
         # state machine execution history
@@ -244,35 +246,35 @@ class MainWindowController(ExtendedController):
                                                                         view.execution_history_view.get_top_widget(),
                                                                         use_scroller=False,
                                                                         border=constants.BORDER_WIDTH_TEXTVIEW)
-        view['tree_notebook_2'].insert_page(execution_history_notebook_widget, execution_history_tab_label, page_num)
+        view["tree_notebook_2"].insert_page(execution_history_notebook_widget, execution_history_tab_label, page_num)
 
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
         ######################################################
 
-        for i in range(view['tree_notebook_1'].get_n_pages()):
-            child = view['tree_notebook_1'].get_nth_page(i)
-            tab_label = view['tree_notebook_1'].get_tab_label(child)
-            if gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
+        for i in range(view["tree_notebook_1"].get_n_pages()):
+            child = view["tree_notebook_1"].get_nth_page(i)
+            tab_label = view["tree_notebook_1"].get_tab_label(child)
+            if gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
                 tab_label_text = tab_label.get_text()
-                view['tree_notebook_1'].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
+                view["tree_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
                                                                                                 self.icons))
             else:
                 tab_label.set_angle(90)
-            view['tree_notebook_1'].set_tab_reorderable(child, True)
-            view['tree_notebook_1'].set_tab_detachable(child, True)
+            view["tree_notebook_1"].set_tab_reorderable(child, True)
+            view["tree_notebook_1"].set_tab_detachable(child, True)
 
-        for i in range(view['tree_notebook_2'].get_n_pages()):
-            child = view['tree_notebook_2'].get_nth_page(i)
-            tab_label = view['tree_notebook_2'].get_tab_label(child)
-            if gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
+        for i in range(view["tree_notebook_2"].get_n_pages()):
+            child = view["tree_notebook_2"].get_nth_page(i)
+            tab_label = view["tree_notebook_2"].get_tab_label(child)
+            if gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
                 tab_label_text = tab_label.get_text()
-                view['tree_notebook_2'].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
+                view["tree_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
                                                                                                 self.icons))
             else:
                 tab_label.set_angle(90)
-            view['tree_notebook_2'].set_tab_reorderable(child, True)
-            view['tree_notebook_2'].set_tab_detachable(child, True)
+            view["tree_notebook_2"].set_tab_reorderable(child, True)
+            view["tree_notebook_2"].set_tab_detachable(child, True)
 
         ######################################################
         # menu bar
@@ -284,7 +286,7 @@ class MainWindowController(ExtendedController):
                                                 view.logging_view,
                                                 view.get_top_widget(),
                                                 self.shortcut_manager)
-        self.add_controller('menu_bar_controller', menu_bar_controller)
+        self.add_controller("menu_bar_controller", menu_bar_controller)
 
         ######################################################
         # tool bar
@@ -292,16 +294,16 @@ class MainWindowController(ExtendedController):
         tool_bar_controller = ToolBarController(state_machine_manager_model,
                                                 view.tool_bar,
                                                 menu_bar_controller)
-        self.add_controller('tool_bar_controller', tool_bar_controller)
+        self.add_controller("tool_bar_controller", tool_bar_controller)
 
         ######################################################
         # top tool bar
         ######################################################
         top_tool_bar_controller = TopToolBarController(state_machine_manager_model,
                                                        view.top_tool_bar,
-                                                       view['main_window'],
+                                                       view["main_window"],
                                                        menu_bar_controller)
-        self.add_controller('top_tool_bar_controller', top_tool_bar_controller)
+        self.add_controller("top_tool_bar_controller", top_tool_bar_controller)
 
         ######################################################
         # setup correct sizes
@@ -341,10 +343,9 @@ class MainWindowController(ExtendedController):
         view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
 
     def register_view(self, view):
-        """Called when the view was registered"""
         self.register_actions(self.shortcut_manager)
-        view['main_window'].connect('delete_event', self.get_controller('menu_bar_controller').on_delete_event)
-        view['main_window'].connect('destroy', self.get_controller('menu_bar_controller').on_destroy)
+        view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
+        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").on_destroy)
 
         # Connect left and right bar return buttons' signals to their corresponding methods
         view['left_bar_return_button'].connect('clicked', self.on_left_bar_return_button_clicked)
@@ -375,7 +376,6 @@ class MainWindowController(ExtendedController):
         page_num = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_current_page()
         page = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_nth_page(page_num)
         label = notebook.get_tab_label(page).get_children()[0]
-        # print rc_style.fg[gtk.STATE_NORMAL]
         if active:
             label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))
             label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))
@@ -383,7 +383,7 @@ class MainWindowController(ExtendedController):
             label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
             label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
 
-    @ExtendedController.observe('execution_engine', after=True)
+    @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
         label_string = str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         label_string = label_string.replace("STATE_MACHINE_EXECUTION_STATUS.", "")
@@ -392,18 +392,31 @@ class MainWindowController(ExtendedController):
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].hide()
+            self._set_single_button_active('button_start_shortcut')
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].hide()
+            self._set_single_button_active('button_pause_shortcut')
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(False)
             self.view['step_buttons'].hide()
+            self._set_single_button_active('button_stop_shortcut')
         else:  # all step modes
             self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].show()
+            self._set_single_button_active('button_step_mode_shortcut')
+
+    def _set_single_button_active(self, active_button_name):
+        for button_name in ['button_start_shortcut', 'button_pause_shortcut', 'button_step_mode_shortcut']:
+            if active_button_name == button_name:
+                if not self.view[button_name].get_active():
+                    self.view[button_name].set_active(True)
+            else:
+                if self.view[button_name].get_active():
+                    self.view[button_name].set_active(False)
 
     @staticmethod
     def create_arrow_label(icon):
@@ -476,35 +489,38 @@ class MainWindowController(ExtendedController):
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_start_activate(None)
+        if self.view['button_start_shortcut'].get_active():
+            self.get_controller("menu_bar_controller").on_start_activate(None)
 
     def on_button_pause_shortcut_toggled(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_pause_activate(None)
+        if self.view['button_pause_shortcut'].get_active():
+            self.get_controller("menu_bar_controller").on_pause_activate(None)
 
     def on_button_stop_shortcut_clicked(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_stop_activate(None)
+        self.get_controller("menu_bar_controller").on_stop_activate(None)
 
     def on_button_step_mode_shortcut_toggled(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_step_mode_activate(None)
+        if self.view['button_step_mode_shortcut'].get_active():
+            self.get_controller("menu_bar_controller").on_step_mode_activate(None)
 
     def on_button_step_in_shortcut_clicked(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_step_into_activate(None)
+        self.get_controller("menu_bar_controller").on_step_into_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_over_shortcut_clicked(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_step_over_activate(None)
+        self.get_controller("menu_bar_controller").on_step_over_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_out_shortcut_clicked(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_step_out_activate(None)
+        self.get_controller("menu_bar_controller").on_step_out_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_out_shortcut_clicked(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_step_out_activate(None)
+        self.get_controller("menu_bar_controller").on_step_out_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
-        self.get_controller('menu_bar_controller').on_backward_step_activate(None)
+        self.get_controller("menu_bar_controller").on_backward_step_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_debug_content_change(self, widget, data=None):

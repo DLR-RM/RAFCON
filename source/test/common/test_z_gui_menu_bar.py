@@ -17,21 +17,21 @@ from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
 import rafcon.mvc.singleton
 
 # test environment elements
-import test_utils
-from test_utils import call_gui_callback
+import testing_utils
+from testing_utils import call_gui_callback
 import pytest
 
 
 def setup_module(module):
     # set the test_libraries path temporarily to the correct value
-    test_utils.remove_all_libraries()
+    testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: ", dirname(__file__), dirname(dirname(__file__))
 
@@ -40,7 +40,7 @@ def setup_module(module):
 
 
 def teardown_module(module):
-    test_utils.reload_config()
+    testing_utils.reload_config()
 
 
 def create_models(*args, **kargs):
@@ -128,6 +128,7 @@ def wait_for_values_identical_number_state_machines(sm_manager_model, val2):
             break
 
 
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     """ The function triggers and test basic functions of the menu bar.
     At the moment those functions are tested:
@@ -297,30 +298,31 @@ def trigger_gui_signals(*args):
 
 
 def test_gui(caplog):
-    test_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithrading_lock.acquire()
     # delete all old state machines
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(test_utils.RAFCON_PATH + "/mvc/")
+    os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[test_utils.sm_manager_model,
+    thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model,
                                                                 main_window_controller])
     thread.start()
 
     gtk.main()
     logger.debug("after gtk main")
-    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-    test_utils.assert_logger_warnings_and_errors(caplog)
-    test_utils.test_multithrading_lock.release()
+    thread.join()
+    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,10 @@
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers import StateOverviewController, SourceEditorController, \
-    DataPortListController, ScopedVariableListController, StateOutcomesEditorController, LinkageOverviewController
+from rafcon.mvc.controllers.state_overview import StateOverviewController
+from rafcon.mvc.controllers.source_editor import  SourceEditorController
+from rafcon.mvc.controllers.io_data_port_list import DataPortListController
+from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
+from rafcon.mvc.controllers.state_outcomes import StateOutcomesEditorController
+from rafcon.mvc.controllers.linkage_overview import LinkageOverviewController
 
 from rafcon.mvc.controllers.state_transitions import StateTransitionsEditorController
 from rafcon.mvc.controllers.state_data_flows import StateDataFlowsEditorController

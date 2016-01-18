@@ -11,15 +11,15 @@ from rafcon.utils import log
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
 import rafcon.mvc.singleton
 
 # test environment elements
-import test_utils
-from test_utils import call_gui_callback
+import testing_utils
+from testing_utils import call_gui_callback
 import pytest
 
 
@@ -42,7 +42,7 @@ def create_models():
 
     return logger, global_var_manager_model
 
-
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     print "Wait for the gui to initialize"
     time.sleep(2.0)
@@ -52,7 +52,9 @@ def trigger_gui_signals(*args):
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
     number_of_steps = 9
-    sleep_time = 0.02
+    # TODO: This time is dangerous! If the PC where this test runs is too slow the test will fail! Redesign test!
+    # Experience values: on a 64bit Intel Xeon with 1,2 GHz 8 core PC 0.03 are safe enough
+    sleep_time = 0.05
     time.sleep(sleep_time)
     for i in range(number_of_steps):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
@@ -73,7 +75,8 @@ def trigger_gui_signals(*args):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_tmp_unit_test_path() +
+                      os.path.split(__file__)[0] + os.path.split(__file__)[1])
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
@@ -81,10 +84,10 @@ def trigger_gui_signals(*args):
 
 def test_backward_stepping(caplog):
 
-    test_utils.test_multithrading_lock.acquire()
-    test_utils.remove_all_libraries()
+    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(test_utils.RAFCON_PATH + "/mvc/")
+    os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
 
@@ -93,32 +96,28 @@ def test_backward_stepping(caplog):
     rafcon.statemachine.singleton.library_manager.initialize()
 
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_path(test_utils.get_test_sm_path("backward_step_barrier_test"))
+        global_storage.load_statemachine_from_path(testing_utils.get_test_sm_path("backward_step_barrier_test"))
 
     main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    if test_utils.sm_manager_model is None:
-        test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if testing_utils.sm_manager_model is None:
+        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
-    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type="LogicDataGrouped")
     thread = threading.Thread(target=trigger_gui_signals,
-                              args=[test_utils.sm_manager_model, main_window_controller])
+                              args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
-    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-    if sm:
-        sm.root_state.join()
-        logger.debug("Joined currently executing state machine!")
-        thread.join()
-        logger.debug("Joined test triggering thread!")
-    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
+    thread.join()
+    logger.debug("Joined test triggering thread!")
+    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
 
-    test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
-    test_utils.test_multithrading_lock.release()
+    testing_utils.reload_config()
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

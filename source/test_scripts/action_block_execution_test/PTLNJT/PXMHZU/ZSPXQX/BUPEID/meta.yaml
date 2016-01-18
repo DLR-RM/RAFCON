@@ -1,10 +1,10 @@
 !ExecutionState
 description: null
 input_data_ports: {}
-name: Exit handler 2 execution
+name: !!python/unicode 'Exit handler 2 execution'
 outcomes:
-    -2: !Outcome {name: preempted, outcome_id: -2}
-    -1: !Outcome {name: aborted, outcome_id: -1}
-    0: !Outcome {name: success, outcome_id: 0}
+    -2: !Outcome {name: !!python/unicode 'preempted', outcome_id: -2}
+    -1: !Outcome {name: !!python/unicode 'aborted', outcome_id: -1}
+    0: !Outcome {name: !!python/unicode 'success', outcome_id: 0}
 output_data_ports: {}
-state_id: BUPEID
+state_id: !!python/unicode 'BUPEID'

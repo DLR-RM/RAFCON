@@ -60,19 +60,18 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
-            queue_ids = 0
-            history_index = 0
-            for key, state in self.states.iteritems():
+
+            for queue_ids, (key, state) in enumerate(self.states.iteritems()):
                 state.concurrency_queue = concurrency_queue
                 state.concurrency_queue_id = queue_ids
-                queue_ids += 1
 
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.create_output_dictionary_for_state(state)
                 state.input_data = state_input
                 state.output_data = state_output
+
+            for history_index, state in enumerate(self.states.itervalues()):
                 state.start(history_item.execution_histories[history_index], self.backward_execution)
-                history_index += 1
 
             #######################################################
             # wait for the first threads to finish
