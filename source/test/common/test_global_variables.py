@@ -9,7 +9,7 @@ import rafcon.statemachine.singleton
 import pytest
 
 # test environment elements
-import utils
+import testing_utils
 
 
 def create_state_machine():
@@ -34,7 +34,7 @@ def create_state_machine():
 
 def test_concurrency_barrier_state_execution(caplog):
 
-    utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithrading_lock.acquire()
     sm = create_state_machine()
     root_state = sm.root_state
     state_machine = StateMachine(root_state)
@@ -43,10 +43,10 @@ def test_concurrency_barrier_state_execution(caplog):
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
     rafcon.statemachine.singleton.state_machine_execution_engine.join()
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    utils.test_multithrading_lock.release()
+    testing_utils.test_multithrading_lock.release()
 
     assert root_state.output_data["output_data_port1"] == 42
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
 # test environment elements
-import utils
+import testing_utils
 import pytest
 
 
@@ -30,7 +30,7 @@ def create_preemptive_wait_statemachine():
 
 
 def test_preemptive_wait_daemon(caplog):
-    utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_1_wait', 0.5)
     gvm.set_variable('state_2_wait', None)
@@ -43,8 +43,8 @@ def test_preemptive_wait_daemon(caplog):
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    utils.test_multithrading_lock.release()
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def run_statemachine():
@@ -58,7 +58,7 @@ def run_statemachine():
 
 
 def test_preemptive_wait_timeout(caplog):
-    utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_1_wait', 0.5)
     gvm.set_variable('state_2_wait', 1.)
@@ -69,12 +69,12 @@ def test_preemptive_wait_timeout(caplog):
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    utils.test_multithrading_lock.release()
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_preemptive_wait2_timeout(caplog):
-    utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithrading_lock.acquire()
 
     gvm.set_variable('state_2_wait', 0.5)
     gvm.set_variable('state_1_wait', 1.)
@@ -85,8 +85,8 @@ def test_preemptive_wait2_timeout(caplog):
     assert gvm.get_variable('state_1_preempted')
     assert not gvm.get_variable('state_2_preempted')
 
-    utils.test_multithrading_lock.release()
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
     pytest.main([__file__])

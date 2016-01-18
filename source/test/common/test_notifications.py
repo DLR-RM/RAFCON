@@ -9,7 +9,7 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.singleton import state_machine_manager
 from rafcon.mvc.singleton import state_machine_manager_model
 
-import utils
+import testing_utils
 import pytest
 
 with_print = False
@@ -433,7 +433,7 @@ def test_outcome_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_outcome_modify_notification(caplog):
@@ -505,7 +505,7 @@ def test_outcome_modify_notification(caplog):
     for outcome_id, outcome_model_observer in outcome_models_observer_dict.iteritems():
         assert outcome_model_observer.get_number_of_notifications() == 2
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_input_port_add_remove_notification(caplog):
@@ -550,7 +550,7 @@ def test_input_port_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_input_port_modify_notification(caplog):
@@ -608,7 +608,7 @@ def test_input_port_modify_notification(caplog):
                                                                                     default_value='awesome_tool')
     check_input_notifications(input_port_observer, states_m_observer_dict, state_dict, forecast=5)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_output_port_add_remove_notification(caplog):
@@ -653,7 +653,7 @@ def test_output_port_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_output_port_modify_notification(caplog):
@@ -712,7 +712,7 @@ def test_output_port_modify_notification(caplog):
                                                                                       default_value='awesome_tool')
     check_output_notifications(output_port_observer, states_m_observer_dict, state_dict, forecast=5)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_scoped_variable_add_remove_notification(caplog):
@@ -757,7 +757,7 @@ def test_scoped_variable_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_scoped_variable_modify_notification(caplog):
@@ -816,7 +816,7 @@ def test_scoped_variable_modify_notification(caplog):
                                                                                    default_value='awesome_tool')
     check_output_notifications(scoped_variable_observer, states_m_observer_dict, state_dict, forecast=5)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 # add state
 # - change state
@@ -907,7 +907,7 @@ def test_data_flow_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_data_flow_modify_notification(caplog):
@@ -1018,7 +1018,7 @@ def test_data_flow_modify_notification(caplog):
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
     check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_transition_add_remove_notification(caplog):
@@ -1073,7 +1073,7 @@ def test_transition_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_transition_modify_notification(caplog):
@@ -1186,7 +1186,7 @@ def test_transition_modify_notification(caplog):
     state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
     check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=3)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_state_add_remove_notification(caplog):
@@ -1237,7 +1237,7 @@ def test_state_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_state_property_modify_notification(caplog):
@@ -1420,7 +1420,7 @@ def test_state_property_modify_notification(caplog):
     # forecast += 1
     # check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
     pytest.main([__file__])

@@ -1,6 +1,6 @@
 # test environment elements
-import utils
-from utils import TEST_SM_PATH
+import testing_utils
+from testing_utils import TEST_SM_PATH
 import pytest
 import rafcon
 
@@ -18,26 +18,26 @@ logger = log.get_logger(__name__)
 
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
-    utils.remove_all_libraries()
+    testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["unit_test_state_machines"] = utils.get_test_sm_path("unit_test_state_machines")
+    library_paths["unit_test_state_machines"] = testing_utils.get_test_sm_path("unit_test_state_machines")
     logger.debug(library_paths["unit_test_state_machines"])
 
 
 def test_runtime_values(caplog):
     state_machine_manager.delete_all_state_machines()
-    utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithrading_lock.acquire()
 
-    sm = StatemachineExecutionEngine.execute_state_machine_from_path(utils.get_test_sm_path("unit_test_state_machines/library_runtime_value_test"))
+    sm = StatemachineExecutionEngine.execute_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/library_runtime_value_test"))
     state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert sm.root_state.output_data["data_output_port1"] == 114
 
-    utils.test_multithrading_lock.release()
-    utils.assert_logger_warnings_and_errors(caplog, 0, 0)
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
 
 
 def teardown_module(module=None):
-    utils.reload_config(gui_config=False)
+    testing_utils.reload_config(gui_config=False)
 
 
 if __name__ == '__main__':

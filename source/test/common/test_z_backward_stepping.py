@@ -18,8 +18,8 @@ from rafcon.mvc.views.main_window import MainWindowView
 import rafcon.mvc.singleton
 
 # test environment elements
-import utils
-from utils import call_gui_callback
+import testing_utils
+from testing_utils import call_gui_callback
 import pytest
 
 
@@ -75,7 +75,7 @@ def trigger_gui_signals(*args):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, utils.get_tmp_unit_test_path() +
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_tmp_unit_test_path() +
                       os.path.split(__file__)[0] + os.path.split(__file__)[1])
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
@@ -84,10 +84,10 @@ def trigger_gui_signals(*args):
 
 def test_backward_stepping(caplog):
 
-    utils.test_multithrading_lock.acquire()
-    utils.remove_all_libraries()
+    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(utils.RAFCON_PATH + "/mvc/")
+    os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
 
@@ -96,28 +96,28 @@ def test_backward_stepping(caplog):
     rafcon.statemachine.singleton.library_manager.initialize()
 
     [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_path(utils.get_test_sm_path("backward_step_barrier_test"))
+        global_storage.load_statemachine_from_path(testing_utils.get_test_sm_path("backward_step_barrier_test"))
 
     main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    if utils.sm_manager_model is None:
-        utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if testing_utils.sm_manager_model is None:
+        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
-    main_window_controller = MainWindowController(utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type="LogicDataGrouped")
     thread = threading.Thread(target=trigger_gui_signals,
-                              args=[utils.sm_manager_model, main_window_controller])
+                              args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
     thread.join()
     logger.debug("Joined test triggering thread!")
-    os.chdir(utils.RAFCON_PATH + "/../test/common")
+    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
 
-    utils.reload_config()
-    utils.test_multithrading_lock.release()
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.reload_config()
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

@@ -28,8 +28,8 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
 # test environment elements
-import utils
-from utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+import testing_utils
+from testing_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
     check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
     check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
@@ -669,7 +669,7 @@ def test_add_remove_history(caplog):
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_state_property_changes_history(caplog):
@@ -846,7 +846,7 @@ def test_state_property_changes_history(caplog):
 
     save_state_machine(sm_model, TEST_PATH + "_state_properties", logger, with_gui=False)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_outcome_property_changes_history(caplog):
@@ -897,7 +897,7 @@ def test_outcome_property_changes_history(caplog):
     do_check_for_state(state_dict, state_name='Container')
     save_state_machine(sm_model, TEST_PATH + "_outcome_properties", logger, with_gui=False)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
@@ -1022,7 +1022,7 @@ def test_transition_property_changes_history(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_transition_properties", logger, with_gui=False)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_input_port_modify_notification(caplog):
@@ -1069,7 +1069,7 @@ def test_input_port_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_input_port_properties", logger, with_gui=False)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_output_port_modify_notification(caplog):
@@ -1115,7 +1115,7 @@ def test_output_port_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_output_port_properties", logger, with_gui=False)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_scoped_variable_modify_notification(caplog):
@@ -1167,7 +1167,7 @@ def test_scoped_variable_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_scoped_variable_properties", logger, with_gui=False)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_data_flow_property_changes_history(caplog):
@@ -1298,7 +1298,7 @@ def test_data_flow_property_changes_history(caplog):
 
     save_state_machine(sm_model, TEST_PATH + "_data_flow_properties", logger, with_gui=False)
 
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_type_changes_without_gui(caplog):
@@ -1315,7 +1315,7 @@ def test_type_changes_without_gui(caplog):
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
-    utils.remove_all_libraries()
+    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
@@ -1331,8 +1331,8 @@ def test_type_changes_without_gui(caplog):
     trigger_state_type_change_tests(sm_manager_model, None, sm_m, state_dict, with_gui, logger)
     os.chdir(rafcon.__path__[0] + "/../test")
 
-    utils.reload_config()
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.reload_config()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 @pytest.mark.parametrize("with_gui", [True])
@@ -1349,16 +1349,16 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
-    utils.remove_all_libraries()
+    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    if utils.sm_manager_model is None:
-            utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    if testing_utils.sm_manager_model is None:
+            testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
 
-    main_window_controller = MainWindowController(utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
     # thread = threading.Thread(target=test_add_remove_history,
@@ -1367,7 +1367,7 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
     # time.sleep(1)
     print "start thread"
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[utils.sm_manager_model, main_window_controller,
+                              args=[testing_utils.sm_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
 
     thread.start()
@@ -1380,8 +1380,8 @@ def test_state_machine_changes_with_gui(with_gui, caplog):
     os.chdir(rafcon.__path__[0] + "/../test/common")
     thread.join()
 
-    utils.reload_config()
-    utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.reload_config()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 @log.log_exceptions(None, gtk_quit=True)
