@@ -299,12 +299,13 @@ class StatesEditorController(ExtendedController):
         if state_identifier in self.tabs:
             page_to_close = self.tabs[state_identifier]['page']
             current_page_id = self.view.notebook.page_num(page_to_close)
-            self.view.notebook.remove_page(current_page_id)
             if not delete:
                 self.closed_tabs[state_identifier] = self.tabs[state_identifier]
             else:
                 self.destroy_page(self.tabs[state_identifier])
             del self.tabs[state_identifier]
+            # Finally remove the page, this triggers the callback handles on_switch_page
+            self.view.notebook.remove_page(current_page_id)
 
     def find_page_of_state_m(self, state_m):
         """Return the identifier and page of a given state model
