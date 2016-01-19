@@ -114,6 +114,19 @@ class StatesEditorController(ExtendedController):
         self.tabs = {}
         self.closed_tabs = {}
 
+    def register_view(self, view):
+        self.view.notebook.connect('switch-page', self.on_switch_page)
+        if self.current_state_machine_m:
+            self.add_state_editor(self.current_state_machine_m.root_state, self.editor_type)
+
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
+        super(StatesEditorController, self).register_actions(shortcut_manager)
+
     def get_state_identifier(self, state_m):
         return id(state_m)
 
@@ -190,21 +203,8 @@ class StatesEditorController(ExtendedController):
             for state_identifier in states_to_be_removed:
                 self.close_page(state_identifier, delete=True)
 
-    def register_view(self, view):
         """Called when the View was registered"""
-        self.view.notebook.connect('switch-page', self.on_switch_page)
-        if self.current_state_machine_m:
-            self.add_state_editor(self.current_state_machine_m.root_state, self.editor_type)
-
-    def register_actions(self, shortcut_manager):
-        """Register callback methods for triggered actions
-
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
             between shortcuts and actions.
-        """
-        shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
-        super(StatesEditorController, self).register_actions(shortcut_manager)
-
     def add_state_editor(self, state_m, editor_type=None):
         state_identifier = self.get_state_identifier(state_m)
 
@@ -310,12 +310,13 @@ class StatesEditorController(ExtendedController):
         if state_identifier in self.tabs:
             page_to_close = self.tabs[state_identifier]['page']
             current_page_id = self.view.notebook.page_num(page_to_close)
-            self.view.notebook.remove_page(current_page_id)
             if not delete:
                 self.closed_tabs[state_identifier] = self.tabs[state_identifier]
             else:
                 self.destroy_page(self.tabs[state_identifier])
             del self.tabs[state_identifier]
+            # Finally remove the page, this triggers the callback handles on_switch_page
+            self.view.notebook.remove_page(current_page_id)
 
     def find_page_of_state_m(self, state_m):
         """Return the identifier and page of a given state model
