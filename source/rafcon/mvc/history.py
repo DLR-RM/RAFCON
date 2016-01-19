@@ -158,7 +158,9 @@ class NotificationOverview(dict):
     def get_nice_info_dict_string(self, info, level='\t', overview=None):
         """ Inserts all elements of a notification info-dictionary of gtkmvc into one string and indicates levels of calls definded by 'kwargs'
         """
+        overview_was_none = False
         if overview is None:
+            overview_was_none = True
             overview = dict({'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'args': [], 'kwargs': []})
             overview['others'] = []
             if 'before' in info:
@@ -191,7 +193,7 @@ class NotificationOverview(dict):
         overview['args'].append(info['args'])
         # kwargs
         overview['kwargs'].append(info['kwargs'])
-        s += "\n{0}'kwargs': {1}".format(level, self.get_nice_info_dict_string(info['kwargs'], level + "\t"))
+        s += "\n{0}'kwargs': {1}".format(level, self.get_nice_info_dict_string(info['kwargs'], level + "\t", overview))
         # additional elements not created by gtkmvc or common function calls
         overview['others'].append({})
         for key, value in info.items():
@@ -201,7 +203,10 @@ class NotificationOverview(dict):
                 s += "\n{0}'{2}': {1}".format(level, info[key], key)
                 overview['others'][len(overview['others'])-1][key] = info[key]
 
-        return s, overview
+        if overview_was_none:
+            return s, overview
+        else:
+            return s
 
     def parent_state_of_notification_source(self, info):
 
@@ -459,18 +464,20 @@ class ActionDummy:
 
 
 class Action:
-    def __init__(self, action_type, parent_path, model, prop_name, info, state_machine_model):
+    def __init__(self, parent_path, state_machine_model, overview, action_type=None, model=None, prop_name=None, info=None):
 
-        self.type = action_type
+        self.type = overview['method_name'][-1]
         self.state_machine = state_machine_model.state_machine
         self.state_machine_model = state_machine_model
         self.parent_path = parent_path
 
-        self.before_model = model
-        self.before_prop_name = prop_name
-        self.before_info = info
-        self.before_storage = self.get_storage(model)  # tuple of state and states-list of storage tuple
+        self.before_overview = overview
+        self.before_model = overview['model'][0]
+        self.before_prop_name = overview['prop_name'][-1]
+        self.before_info = overview['info'][-1]
+        self.before_storage = self.get_storage()  # tuple of state and states-list of storage tuple
 
+        self.after_overview = None
         self.after_model = None
         self.after_prop_name = None
         self.after_info = None
@@ -489,20 +496,15 @@ class Action:
         else:
             logger.warning("The version_id of an action is not allowed to be modify after first assignment")
 
-    def set_after(self, model, prop_name, info):
-        self.after_model = model
-        self.after_prop_name = prop_name
-        self.after_info = info
-        self.after_storage = self.get_storage(self.after_model)  # tuple of state and states-list of storage tuple
+    def set_after(self, model, prop_name, info, overview):
+        self.after_overview = overview
+        self.after_model = overview['model'][0]
+        self.after_prop_name = overview['prop_name'][0]
+        self.after_info = overview['info'][-1]
+        self.after_storage = self.get_storage()  # tuple of state and states-list of storage tuple
 
-    def get_storage(self, model):
+    def get_storage(self):
 
-        # if not self.state_machine.get_state_by_path(self.parent_path):
-        #     logger.warning("statemachine could not get state by path -> take root_state")
-        #     state_tuple = get_state_tuple(self.state_machine.root_state)
-        #     state_model = model  # root_state
-        #     exit(1)
-        # else:
         state_tuple = get_state_tuple(self.state_machine.get_state_by_path(self.parent_path))
         state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
         state_tuple[3].update(get_state_element_meta(state_model))
@@ -742,38 +744,10 @@ class Action:
 
 
 class StateMachineAction(Action):
-    def __init__(self, action_type, parent_path, model, prop_name, info, state_machine_model):
-        Action.__init__(self, action_type, parent_path, model, prop_name, info, state_machine_model)
-
-        self.type = action_type
-        self.state_machine = state_machine_model.state_machine
-        self.state_machine_model = state_machine_model
-        self.parent_path = parent_path
-
-        self.before_model = model
-        self.before_prop_name = prop_name
-        self.before_info = info
-        self.before_storage = self.get_storage(model)  # tuple of state and states-list of storage tuple
-
-        self.after_model = None
-        self.after_prop_name = None
-        self.after_info = None
-        self.after_storage = None  # tuple of state and states-list of storage tuple
+    def __init__(self, parent_path, state_machine_model, overview):
+        Action.__init__(self, parent_path, state_machine_model, overview)
 
         self.with_print = False
-
-    def set_after(self, model, prop_name, info):
-        self.after_model = model
-        self.after_prop_name = prop_name
-        self.after_info = info
-        self.after_storage = self.get_storage(self.after_model)  # tuple of state and states-list of storage tuple
-
-    def get_storage(self, model):
-        # print "storage ", self.state_machine.root_state.data_flows.keys(), self.state_machine.root_state.state_id
-        model = self.state_machine_model.get_state_model_by_path(self.parent_path)
-        state_tuple = get_state_tuple(self.state_machine.root_state)
-        state_tuple[3].update(get_state_element_meta(model))
-        return state_tuple
 
     def set_root_state_to_version(self, state, storage_version):
         import rafcon.mvc.statemachine_helper as statemachine_helper
@@ -1089,70 +1063,53 @@ class CoreObjectIdentifier:
 
 
 class RemoveObject(Action):
-    def __init__(self, *args):
-        Action.__init__(self, *args)
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, *args, **kwargs)
 
-    def redo(self):
-        pass
-
-    def undo(self):
-        pass
 
 class DataFlowAction(Action):
     def __init__(self, *args, **kwargs):
         Action.__init__(self, args, kwargs)
 
+
 class TransitionAction(Action):
     def __init__(self, *args, **kwargs):
         Action.__init__(self, args, kwargs)
+
 
 class ScopedVariableAction(Action):
     def __init__(self, *args, **kwargs):
         Action.__init__(self, args, kwargs)
 
+
 class OutcomeAction(Action):
     def __init__(self, *args, **kwargs):
         Action.__init__(self, args, kwargs)
+
 
 class DataPortAction(Action):
     def __init__(self, *args, **kwargs):
         Action.__init__(self, args, kwargs)
 
+
 class StateAction(Action):
     def __init__(self, *args, **kwargs):
         Action.__init__(self, args, kwargs)
 
+
 class ModifyAttribute(Action):
-    def __init__(self, *args):
-        Action.__init__(self, *args)
-
-    def redo(self):
-        pass
-
-    def undo(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, *args, **kwargs)
 
 
 class Group(Action):
-    def __init__(self, *args):
-        Action.__init__(self, *args)
-
-    def redo(self):
-        pass
-
-    def undo(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, *args, **kwargs)
 
 
 class UnGroup(Action):
-    def __init__(self, *args):
-        Action.__init__(self, *args)
-
-    def redo(self):
-        pass
-
-    def undo(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        Action.__init__(self, *args, **kwargs)
 
 
 class HistoryTreeElement:
@@ -1332,6 +1289,11 @@ class History(ModelMT):
         self.observe_model(self.state_machine_model.root_state)
         self.__buffered_root_state_model = self.state_machine_model.root_state
 
+    def store_test_log_file(self, string):
+        with open('/home_local/dark_room/test_file.txt', 'a+') as f:
+            f.write(string)
+        f.closed
+
     def start_new_action(self, overview):
         """
 
@@ -1355,97 +1317,134 @@ class History(ModelMT):
         cause = overview['method_name'][-1]
         logger.info("create Action for: {0} for prop_name: {1}".format(overview['method_name'][-1], overview['prop_name'][-1]))
 
-        # if overview['instance']
-        # elem
-        #
-        # with open('/home_local/dark_room/test_file.txt', 'a+') as f:
-        #     f.write(overview['instance'][-1]) + "\n")
-        # f.closed
+        self.store_test_log_file(str(overview) + "\n")
+        if isinstance(overview['instance'][-1],State):
+            self.store_test_log_file(overview['method_name'][-1] + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].get_path() + "\n")
+        else:
+            self.store_test_log_file(overview['method_name'][-1] + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].parent.get_path() + "\n")
 
-        # if isinstance(overview['instance'][-1], DataFlow) or \
-        #         isinstance(overview['instance'][-1], Transition) or \
-        #         isinstance(overview['instance'][-1], ScopedVariable):
-        #     if isinstance(overview['instance'][-1], DataFlow):
-        #         assert overview['instance'][-1] is overview['model'][-1].data_flow
-        #         action_class = DataFlowAction
-        #     elif isinstance(overview['instance'][-1], Transition):
-        #         assert overview['instance'][-1] is overview['model'][-1].transition
-        #         action_class = TransitionAction
-        #     else:
-        #         assert overview['instance'][-1] is overview['model'][-1].scoped_variable
-        #         action_class = ScopedVariableAction  # is a DataPort too
-        #     self.actual_action = action_class(action_type=cause,
-        #                                       parent_path=overview['model'][-1].parent.state.get_path(),  # instance path of parent
-        #                                       model=overview['model'][0],
-        #                                       prop_name=overview['prop_name'][0],
-        #                                       info=overview['info'][-1],
-        #                                       state_machine_model=self.state_machine_model)
-        # elif isinstance(overview['instance'][-1], Outcome):
-        #     assert overview['instance'][-1] is overview['model'][-1].outcome
-        #     self.actual_action = OutcomeAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-        #                                        overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-        #                                        state_machine_model=self.state_machine_model)
-        #
-        # elif isinstance(overview['instance'][-1], DataPort):
-        #
-        #     if isinstance(overview['instance'][-1], InputDataPort):
-        #         # logger.error("input data port: {0} {1}".format(overview['instance'][-1], overview['model'][-1].data_port))
-        #         assert overview['instance'][-1] is overview['model'][-1].data_port
-        #     else:
-        #         # logger.error("input data port: {0} {1}".format(overview['instance'][-1], overview['model'][-1].data_port))
-        #         assert overview['instance'][-1] is overview['model'][-1].data_port
-        #     self.actual_action = DataPortAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-        #                                         overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-        #                                         state_machine_model=self.state_machine_model)
-        # elif isinstance(overview['instance'][-1], State):
-        #     assert overview['instance'][-1] is overview['model'][-1].state
-        #     if "add_" in cause:
-        #         self.actual_action = AddObjectAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-        #                                              overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-        #                                              state_machine_model=self.state_machine_model)
-        #     elif "remove_" in cause:
-        #         if
-        #         self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-        #                                     overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-        #                                     state_machine_model=self.state_machine_model)
-        #     else:
-        #         self.actual_action = StateAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-        #                                     overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-        #                                     state_machine_model=self.state_machine_model)
-        # elif isinstance(overview['instance'][-1], StateMachine):
-        #     assert overview['instance'][-1] is overview['model'][-1].state_machine
-        #     assert False  # should never happen
-        # else:  # FAILURE  # is root_state
-        #     # self.actual_action = Action(info.method_name, '/',
-        #     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-        #     logger.warn("History may need update, tried to start observation of new action that is not classifiable "
-        #                 "\n%s \n%s \n%s \n%s",
-        #                 overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
-        #     return False
-        #
-        # # return result
+        if isinstance(overview['instance'][-1], DataFlow) or \
+                isinstance(overview['instance'][-1], Transition) or \
+                isinstance(overview['instance'][-1], ScopedVariable):
+            if isinstance(overview['instance'][-1], DataFlow):
+                assert overview['instance'][-1] is overview['model'][-1].data_flow
+                action_class = DataFlowAction
+            elif isinstance(overview['instance'][-1], Transition):
+                assert overview['instance'][-1] is overview['model'][-1].transition
+                action_class = TransitionAction
+            else:
+                assert overview['instance'][-1] is overview['model'][-1].scoped_variable
+                action_class = ScopedVariableAction  # is a DataPort too
+            # self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
+            self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].parent.get_path(), overview['instance'][-1].parent.get_path()))
+            # self.store_test_log_file("#1 \n\t-1 model_parent: {0} {1}\n\tand 0 model_parent\n".format(overview['instance'][-1].parent.get_path(),
+            #                                                                                           overview['instance'][-1].parent.get_path(),
+            #                                                                                           overview['model'][0],
+            #                                                                                           overview['instance'][0].parent.get_path(),
+            #                                                                                           ))
+            # self.actual_action = action_class(action_type=cause,
+            #                                   parent_path=overview['instance'][-1].parent.get_path(),  # instance path of parent
+            #                                   model=overview['model'][0],
+            #                                   prop_name=overview['prop_name'][0],
+            #                                   info=overview['info'][-1],
+            #                                   state_machine_model=self.state_machine_model)
+            # return result
+        elif isinstance(overview['instance'][-1], Outcome):
+            assert overview['instance'][-1] is overview['model'][-1].outcome
+            # self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
+            self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].parent.get_path(), overview['instance'][-1].parent.get_path()))
+            # self.actual_action = OutcomeAction(cause,
+            #                                    overview['instance'][-1].parent.get_path(),  # instance path of parent
+            #                                    overview['model'][0],
+            #                                    overview['prop_name'][0],
+            #                                    overview['info'][-1],
+            #                                    state_machine_model=self.state_machine_model)
+            # return result
+        elif isinstance(overview['instance'][-1], DataPort):
+
+            if isinstance(overview['instance'][-1], InputDataPort):
+                # logger.error("input data port: {0} {1}".format(overview['instance'][-1], overview['model'][-1].data_port))
+                assert overview['instance'][-1] is overview['model'][-1].data_port
+            else:
+                # logger.error("input data port: {0} {1}".format(overview['instance'][-1], overview['model'][-1].data_port))
+                assert overview['instance'][-1] is overview['model'][-1].data_port
+            # self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
+            self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].parent.get_path(), overview['instance'][-1].parent.get_path()))
+            # self.actual_action = DataPortAction(cause,
+            #                                     overview['model'][-1].parent.state.get_path(),  # instance path of parent
+            #                                     overview['model'][0],
+            #                                     overview['prop_name'][0],
+            #                                     overview['info'][-1],
+            #                                     state_machine_model=self.state_machine_model)
+            # return result
+        elif isinstance(overview['instance'][-1], State):
+            assert overview['instance'][-1] is overview['model'][-1].state
+            if "add_" in cause:
+                self.store_test_log_file("#3 ADD \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                # self.actual_action = AddObjectAction(cause,
+                #                                      overview['model'][-1].state.get_path(),  # instance path of parent
+                #                                      overview['model'][0],
+                #                                      overview['prop_name'][0],
+                #                                      overview['info'][-1],
+                #                                      state_machine_model=self.state_machine_model)
+            elif "remove_" in cause:
+                assert cause in ["remove_transition", "remove_data_flow", "remove_outcome", "remove_input_data_port",
+                                 "remove_output_data_port", "remove_scoped_variable", "remove_state"]
+                if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
+                        (("data_port" in cause or "outcome" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
+                    self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                    # self.actual_action = Action(cause,
+                    #                             overview['model'][-1].state.get_path(),  # instance path of parent
+                    #                             overview['model'][0],
+                    #                             overview['prop_name'][0],
+                    #                             overview['info'][-1],
+                    #                             state_machine_model=self.state_machine_model)
+                elif "data_port" in cause or "outcome" in cause:
+                    self.store_test_log_file("#5 REMOVE2 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
+                    # self.actual_action = Action(cause,
+                    #                             overview['model'][-1].parent.state.get_path(),  # instance path of parent
+                    #                             overview['model'][0],
+                    #                             overview['prop_name'][0],
+                    #                             overview['info'][-1],
+                    #                             state_machine_model=self.state_machine_model)
+                else:
+                    logger.info("un forseen cause: {0} in remove state element".format(cause))
+                    assert False
+            else:
+                self.store_test_log_file("#6 STATE \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+            #     self.actual_action = StateAction(cause,
+            #                                      overview['model'][-1].state.get_path(),  # instance path of parent
+            #                                      overview['model'][0],
+            #                                      overview['prop_name'][0],
+            #                                      overview['info'][-1],
+            #                                      state_machine_model=self.state_machine_model)
+            # return result
+        elif isinstance(overview['instance'][-1], StateMachine):
+            assert overview['instance'][-1] is overview['model'][-1].state_machine
+            assert False  # should never happen
+        else:  # FAILURE  # is root_state
+            # self.actual_action = Action(info.method_name, '/',
+            #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
+            logger.warn("History may need update, tried to start observation of new action that is not classifiable "
+                        "\n%s \n%s \n%s \n%s",
+                        overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
+            # return False
+
+        # return result
 
         if isinstance(overview['instance'][-1], DataFlow) or \
                 isinstance(overview['instance'][-1], Transition) or \
                 isinstance(overview['instance'][-1], ScopedVariable):  # internal changes No Add or Remove Actions
-
-            # print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-            #     overview['model'][-1].parent.state.get_path()
+            self.store_test_log_file("1 DataFlow, Transition, ScopedVariable Change\n model_path: {0}{1}\nparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
             if self.with_prints:
                 print "CHANGE OF OBJECT", overview['info'][-1]
-            assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
-            overview['model'][-1].parent.state.get_path()
-            # print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-            #     overview['model'][-1].parent.state.get_path()
             assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
             # the model should be StateModel or ContainerStateModel and "info" from those model notification
             # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
             #                                                        overview['model'][-1].parent.state.get_path()))
-            # self.actual_action = Action(info.method_name, model.state.get_path(),
-            #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
-            self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),  # instance path of parent
-                                        overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                        state_machine_model=self.state_machine_model)
+            self.actual_action = Action(parent_path=overview['instance'][-1].parent.get_path(),
+                                        state_machine_model=self.state_machine_model,
+                                        overview=overview)
 
         elif overview['model'][-1].parent and (isinstance(overview['instance'][-1], Outcome) or
                                                isinstance(overview['instance'][-1], DataPort) or
@@ -1466,46 +1465,32 @@ class History(ModelMT):
                 if not isinstance(overview['model'][-1].parent.state, State):
                     if self.with_prints:
                         print "Path_root1: ", overview['model'][-1].state.get_path()
-                    # exit(1)
-                    # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                    #                                                        overview['model'][-1].state.get_path()))
-                    # self.actual_action = Action(info.method_name, model.state.get_path(),
-                    #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
                     if 'add_' in overview['method_name'][-1]:
-                        self.actual_action = AddObjectAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-                                                             overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                             state_machine_model=self.state_machine_model)
+                        self.store_test_log_file("2 add outcome, input or output\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                        self.actual_action = AddObjectAction(parent_path=overview['instance'][-1].get_path(),
+                                                             state_machine_model=self.state_machine_model,
+                                                             overview=overview)
                     else:
-                        self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-                                                    overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                    state_machine_model=self.state_machine_model)
+                        self.store_test_log_file("2 remove or modify outcome, input or output\n\tmodel_path: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                        self.actual_action = Action(parent_path=overview['instance'][-1].get_path(),
+                                                    state_machine_model=self.state_machine_model,
+                                                    overview=overview)
                 elif not isinstance(overview['model'][-1].parent.state.parent, State):  # the parent State is a root_state
                     if self.with_prints:
                         print "Path_root2: ", overview['model'][-1].parent.state.get_path()
-                    # exit(1)
-                    # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
-                    #                                                        overview['model'][-1].parent.state.get_path()))
-                    # self.actual_action = Action(info.method_name, model.state.get_path(),
-                    #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
                     if 'add_' in overview['method_name'][-1]:
-                        self.actual_action = AddObjectAction(cause, overview['model'][-1].parent.state.get_path(),
-                                                             # instance path of parent
-                                                             overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                             state_machine_model=self.state_machine_model)
+                        self.store_test_log_file("3 add outcome, input or output\n\tmodel_path: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
+                        self.actual_action = AddObjectAction(parent_path=overview['instance'][-1].parent.get_path(),
+                                                             state_machine_model=self.state_machine_model,
+                                                             overview=overview)
                     else:
-                        self.actual_action = Action(cause, overview['model'][-1].parent.state.get_path(),
-                                                    # instance path of parent
-                                                    overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                    state_machine_model=self.state_machine_model)
+                        self.store_test_log_file("3 remove or modify outcome, input or output\n\tmodel_path: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
+                        self.actual_action = Action(parent_path=overview['instance'][-1].parent.get_path(),
+                                                    state_machine_model=self.state_machine_model,
+                                                    overview=overview)
                 else:
                     if self.with_prints:
                         print "new .. state Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                            overview['model'][-1].parent.state.get_path()
-                    assert overview['model'][-2].state.get_path() == \
-                           overview['model'][-1].parent.parent.state.get_path().split('/')[0]
-                    overview['model'][-1].parent.state.get_path()
-                    if self.with_prints:
-                        print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
                             overview['model'][-1].parent.state.get_path()
                     assert overview['model'][-2].state.get_path() == \
                            overview['model'][-1].parent.parent.state.get_path().split('/')[0]
@@ -1515,31 +1500,35 @@ class History(ModelMT):
                     # self.actual_action = Action(info.method_name, model.state.get_path(),
                     #                             model, prop_name, info, state_machine=self._selected_sm_model.state_machine)
                     if 'add_' in overview['method_name'][-1]:
-                        self.actual_action = AddObjectAction(cause, overview['model'][-1].parent.parent.state.get_path(), # instance path of parent
-                                                        overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                        state_machine_model=self.state_machine_model)
+                        self.store_test_log_file("4 remove or modify outcome, input or output\n\tmodel_path: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.parent.state.get_path()))
+                        self.actual_action = AddObjectAction(parent_path=overview['instance'][-1].parent.parent.get_path(),
+                                                             state_machine_model=self.state_machine_model,
+                                                             overview=overview)
                     else:
-                        self.actual_action = Action(cause, overview['model'][-1].parent.parent.state.get_path(), # instance path of parent
-                                                    overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                    state_machine_model=self.state_machine_model)
+                        self.store_test_log_file("4 remove or modify outcome, input or output\n model_path: {0} {1}\nparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.parent.state.get_path()))
+                        self.actual_action = Action(parent_path=overview['instance'][-1].parent.parent.get_path(),
+                                                    state_machine_model=self.state_machine_model,
+                                                    overview=overview)
             else:
                 logger.error("WTF")
                 exit(1)
 
         elif overview['prop_name'][-1] == 'state':
             if "add_" in overview['method_name'][-1]:
-                self.actual_action = AddObjectAction(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-                                                     overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                                     state_machine_model=self.state_machine_model)
+                self.store_test_log_file("5 add or state, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                self.actual_action = AddObjectAction(parent_path=overview['instance'][-1].get_path(),
+                                                     state_machine_model=self.state_machine_model,
+                                                     overview=overview)
             else:
+                self.store_test_log_file("5 remove or add state, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                 if self.with_prints:
                     print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
                 assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
                 # logger.debug("State-Element changed %s in State %s" % (overview['instance'][-1],
                 #                                                        overview['model'][-1].state.get_path()))
-                self.actual_action = Action(cause, overview['model'][-1].state.get_path(),  # instance path of parent
-                                            overview['model'][0], overview['prop_name'][0], overview['info'][-1],
-                                            state_machine_model=self.state_machine_model)
+                self.actual_action = Action(parent_path=overview['instance'][-1].get_path(),
+                                            state_machine_model=self.state_machine_model,
+                                            overview=overview)
 
         else:  # FAILURE  # is root_state
             # self.actual_action = Action(info.method_name, '/',
@@ -1554,10 +1543,11 @@ class History(ModelMT):
     def finish_new_action(self, model, prop_name, info):
         # logger.debug("History stores AFTER")
         with open('/home_local/dark_room/test_file.txt', 'a+') as f:
-            f.write(str(NotificationOverview(info)) + "\n")
+            overview = NotificationOverview(info)
+            f.write(str(overview) + "\n\n\n")
         f.closed
         try:
-            self.actual_action.set_after(model, prop_name, info)
+            self.actual_action.set_after(model, prop_name, info, overview)
             self.state_machine_model.history.changes.insert_action(self.actual_action)
             # logger.debug("history is now: %s" % self.state_machine_model.history.changes.single_trail_history())
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
@@ -1608,10 +1598,12 @@ class History(ModelMT):
         if info['kwargs']['method_name'] == "change_root_state_type":
             if self.with_prints:
                 print "ROOT_STATE is NEW", model, prop_name, info
-            self.actual_action = StateMachineAction("change_root_state_type", model.state_machine.root_state.get_path(),
-                                                    # instance path of parent
-                                                    model.root_state, prop_name, info,
-                                                    state_machine_model=self.state_machine_model)
+            overview = NotificationOverview(info)
+            self.store_test_log_file(str(overview) + "\n")
+            assert overview['method_name'][-1]
+            self.actual_action = StateMachineAction(parent_path=overview['instance'][-1].root_state.get_path(),
+                                                    state_machine_model=self.state_machine_model,
+                                                    overview=overview)
             self.count_before += 1
             if self.with_prints:
                 print "LOCKED count up state_machine", self.count_before
@@ -1630,6 +1622,8 @@ class History(ModelMT):
             return
         # print model, prop_name, info
         if info['kwargs']['method_name'] == "change_root_state_type":
+            overview = NotificationOverview(info)
+            assert overview['method_name'][-1] == "change_root_state_type"
             # logger.debug("History state_machine_AFTER")
             if self.with_prints:
                 print "ROOT_STATE is NEW", model, prop_name, info
@@ -1679,9 +1673,6 @@ class History(ModelMT):
             else:
                 if self.with_prints:
                     print "NEW HISTORY ELEMENT", info
-                # if self.start_new_action(parent_info,
-                #                          info['model'], info['prop_name'], info,
-                #                          cause, root_cause_is_state):
                 if self.start_new_action(overview):
                     self.count_before += 1
                     if self.with_prints:
