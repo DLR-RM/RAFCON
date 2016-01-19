@@ -12,10 +12,15 @@ logger = log.get_logger(__name__)
 
 
 class ScopedVariableListController(ExtendedController):
+    """Controller handling thr scoped variable list
+
+    :param rafcon.mvc.models.state.StateModel model: The state model, holding state data.
+    :param rafcon.mvc.views.scoped_variables_list.ScopedVariablesListView view: The GTK view showing the list of scoped
+        variables.
+    """
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         ExtendedController.__init__(self, model, view)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
@@ -26,9 +31,7 @@ class ScopedVariableListController(ExtendedController):
         self.scoped_variables_list_store = ListStore(str, str, str, int)
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
-
+        """Called when the View was registered"""
         view.get_top_widget().set_model(self.scoped_variables_list_store)
 
         view['name_col'].add_attribute(view['name_text'], 'text', 0)
@@ -52,13 +55,13 @@ class ScopedVariableListController(ExtendedController):
             self.reload_scoped_variables_list_store()
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("delete", self.remove_port)
         shortcut_manager.add_callback_for_action("add", self.add_port)

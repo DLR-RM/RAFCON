@@ -12,7 +12,7 @@ logger = log.get_logger(__name__)
 class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
     """Controller handling the execution history
 
-    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: he state machine manager model,
+    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
         holding data regarding state machines.
     :param rafcon.mvc.views.execution_history.ExecutionHistoryTreeView view: The GTK View showing the execution history
         tree.

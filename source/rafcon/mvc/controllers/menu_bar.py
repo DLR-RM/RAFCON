@@ -25,7 +25,8 @@ logger = log.get_logger(__name__)
 
 
 class MenuBarController(ExtendedController):
-    """
+    """Controller handling the Menu Bar
+
     The class to trigger all the action, available in the menu bar.
     """
 
@@ -39,8 +40,7 @@ class MenuBarController(ExtendedController):
         self.main_window_view = view
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 
@@ -97,14 +97,14 @@ class MenuBarController(ExtendedController):
         self.view['about'].connect('activate', self.on_about_activate)
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
         pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action('save', partial(self.call_action_callback, "on_save_activate"))
         shortcut_manager.add_callback_for_action('save_as', partial(self.call_action_callback, "on_save_as_activate"))
