@@ -107,6 +107,19 @@ class StatesEditorController(ExtendedController):
         self.tabs = {}
         self.closed_tabs = {}
 
+    def register_view(self, view):
+        self.view.notebook.connect('switch-page', self.on_switch_page)
+        if self.current_state_machine_m:
+            self.add_state_editor(self.current_state_machine_m.root_state, self.editor_type)
+
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        """
+        shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
+        super(StatesEditorController, self).register_actions(shortcut_manager)
+
     def get_state_identifier(self, state_m):
         return id(state_m)
 
@@ -183,19 +196,6 @@ class StatesEditorController(ExtendedController):
 
             for state_identifier in states_to_be_removed:
                 self.close_page(state_identifier, delete=True)
-
-    def register_view(self, view):
-        self.view.notebook.connect('switch-page', self.on_switch_page)
-        if self.current_state_machine_m:
-            self.add_state_editor(self.current_state_machine_m.root_state, self.editor_type)
-
-    def register_actions(self, shortcut_manager):
-        """Register callback methods for triggered actions
-
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
-        """
-        shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
-        super(StatesEditorController, self).register_actions(shortcut_manager)
 
     def add_state_editor(self, state_m, editor_type=None):
         state_identifier = self.get_state_identifier(state_m)
