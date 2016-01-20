@@ -1159,6 +1159,7 @@ class TransitionAction(Action):
         else:
             assert False
 
+
 class DataPortAction(Action):
 
     def __init__(self, parent_path, state_machine_model, overview):
@@ -1213,18 +1214,56 @@ class ScopedVariableAction(DataPortAction):
 
 
 class OutcomeAction(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
+
+    def __init__(self, parent_path, state_machine_model, overview):
+        # Action.__init__(self, parent_path, state_machine_model, overview)
+        self.parent_path = parent_path
+        self.action_type = overview['method_name'][-1]
+        self.before_overview = overview
+        self.state_machine = state_machine_model.state_machine
+
+        self.possible_method_names = ['name', 'outcome_id']
+        self.possible_args = ['name', 'outcome_id']
+        assert self.action_type in self.possible_method_names
+        assert isinstance(self.before_overview['instance'][-1], Outcome)
+        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        assert self.parent_path == self.object_identifier._path
+        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.after_arguments = None
+
+    def get_set_of_arguments(self, oc):
+        return {'name': oc.name, 'outcome_id': oc.outcome_id}
+
+    def set_after(self, overview):
+        self.after_overview = overview
+        assert isinstance(self.after_overview['instance'][-1], Outcome)
+        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+
+    def undo(self):
+        # if the outcome_id would be changed and this considered in the core parent element self.after_argument here would be used
+        oc = self.state_machine.get_state_by_path(self.parent_path).outcomes[self.before_arguments['outcome_id']]
+        self.set_data_port_version(oc, self.before_arguments)
+
+    def redo(self):
+        oc = self.state_machine.get_state_by_path(self.parent_path).outcomes[self.before_arguments['outcome_id']]
+        self.set_data_port_version(oc, self.after_arguments)
+
+    def set_data_port_version(self, oc, arguments):
+        if self.action_type in self.possible_args:
+            exec "oc.{0} = arguments['{0}']".format(self.action_type)
+        else:
+            assert False
 
 
 class StateAction(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
 
-
-class ModifyAttribute(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
+    def __init__(self, parent_path, state_machine_model, overview):
+        Action.__init__(self, parent_path, state_machine_model, overview)
+        
+#
+# class ModifyAttribute(Action):
+#     def __init__(self, *args, **kwargs):
+#         Action.__init__(self, *args, **kwargs)
 
 
 class Group(Action):
@@ -1462,14 +1501,14 @@ class History(ModelMT):
                 assert overview['instance'][-1] is overview['model'][-1].outcome
                 # self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
                 self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].parent.get_path(), overview['instance'][-1].parent.get_path()))
-                if isinstance(overview['instance'][-1].parent.parent, State):
-                    self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.parent.get_path(),
-                                                       state_machine_model=self.state_machine_model,
-                                                       overview=overview)
-                else:
-                    self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.get_path(),
-                                                       state_machine_model=self.state_machine_model,
-                                                       overview=overview)
+                # if isinstance(overview['instance'][-1].parent.parent, State):
+                #     self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.parent.get_path(),
+                #                                        state_machine_model=self.state_machine_model,
+                #                                        overview=overview)
+                # else:
+                self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.get_path(),
+                                                   state_machine_model=self.state_machine_model,
+                                                   overview=overview)
             elif isinstance(overview['instance'][-1], DataPort):
                 if isinstance(overview['instance'][-1], InputDataPort):
                     # logger.error("input data port: {0} {1}".format(overview['instance'][-1], overview['model'][-1].data_port))
@@ -1607,10 +1646,9 @@ class History(ModelMT):
 
     def finish_new_action(self, model, prop_name, info):
         # logger.debug("History stores AFTER")
-        with open('/tmp/test_file.txt', 'a+') as f:
-            overview = NotificationOverview(info)
-            f.write(str(overview) + "\n\n\n")
-        f.closed
+        overview = NotificationOverview(info)
+        self.store_test_log_file(str(overview))
+
         try:
             self.actual_action.set_after(overview)
             self.state_machine_model.history.changes.insert_action(self.actual_action)
