@@ -721,6 +721,7 @@ def test_state_property_changes_history(caplog):
     input_number_state2 = state2.add_input_data_port("number", "int", 5)
     output_res_state2 = state2.add_output_data_port("res", "int")
 
+    nested_state_path = state_dict['Nested'].get_path()
     state_dict['Nested'].add_state(state1)
     assert len(sm_model.history.changes.single_trail_history()) == 1
     state_dict['Nested'].add_state(state2)
@@ -807,6 +808,7 @@ def test_state_property_changes_history(caplog):
 
     # TODO May SOLVED - check where all this shit comes from may a observed capsuled set_start_state function in ContainerState will help
     # set_start_state(self, state) State or state_id
+    state_dict['Nested'] = sm_model.state_machine.get_state_by_path(nested_state_path)
     state1_m = sm_model.get_state_model_by_path(state1.get_path())
     state_dict['Nested'].set_start_state(state1_m.state.state_id)
     sm_model.history.undo()

@@ -464,7 +464,7 @@ class ActionDummy:
 
 
 class Action:
-    def __init__(self, parent_path, state_machine_model, overview, action_type=None, model=None, prop_name=None, info=None):
+    def __init__(self, parent_path, state_machine_model, overview):
 
         self.type = overview['method_name'][-1]
         self.state_machine = state_machine_model.state_machine
@@ -830,7 +830,6 @@ class AddObjectAction(Action):
 
     def __init__(self, *args, **kwargs):
         Action.__init__(self, *args, **kwargs)
-        logger.info('*arg type: {0} \n\t\tvalue: {1} \n**kwargs type: {2} \n\t\tvalue: {3}'.format(type(args), args, type(kwargs), kwargs))
         logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
         self.valid_parents = ['state']
         self.changed_object = None
@@ -1068,6 +1067,11 @@ class RemoveObjectAction(Action):
 
 
 class DataFlowAction(Action):
+
+    possible_method_names = ['modify_origin', 'from_state', 'from_key',
+                             'modify_target', 'to_state', 'to_key', 'data_flow_id']
+    possible_args = ['from_state', 'from_key', 'to_state', 'to_key', 'data_flow_id']
+
     def __init__(self, parent_path, state_machine_model, overview):
         # Action.__init__(self, parent_path, state_machine_model, overview)
         self.parent_path = parent_path
@@ -1075,9 +1079,6 @@ class DataFlowAction(Action):
         self.before_overview = overview
         self.state_machine = state_machine_model.state_machine
 
-        self.possible_method_names = ['modify_origin', 'from_state', 'from_key',
-                                      'modify_target', 'to_state', 'to_key', 'data_flow_id']
-        self.possible_args = ['from_state', 'from_key', 'to_state', 'to_key', 'data_flow_id']
         assert self.action_type in self.possible_method_names
         assert isinstance(self.before_overview['instance'][-1], DataFlow)
         self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
@@ -1115,6 +1116,10 @@ class DataFlowAction(Action):
 
 class TransitionAction(Action):
 
+    possible_method_names = ['modify_origin', 'from_state', 'from_outcome',
+                             'modify_target', 'to_state', 'to_outcome', 'transition_id']
+    possible_args = ['from_state', 'from_outcome', 'to_state', 'to_key', 'transition_id']
+
     def __init__(self, parent_path, state_machine_model, overview):
         # Action.__init__(self, parent_path, state_machine_model, overview)
         self.parent_path = parent_path
@@ -1122,9 +1127,6 @@ class TransitionAction(Action):
         self.before_overview = overview
         self.state_machine = state_machine_model.state_machine
 
-        self.possible_method_names = ['modify_origin', 'from_state', 'from_outcome',
-                                      'modify_target', 'to_state', 'to_outcome', 'transition_id']
-        self.possible_args = ['from_state', 'from_outcome', 'to_state', 'to_key', 'transition_id']
         assert self.action_type in self.possible_method_names
         assert isinstance(self.before_overview['instance'][-1], Transition)
         self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
@@ -1162,6 +1164,9 @@ class TransitionAction(Action):
 
 class DataPortAction(Action):
 
+    possible_method_names = ['name', 'data_type', 'default_value', 'change_data_type']
+    possible_args = ['name', 'default_value']
+
     def __init__(self, parent_path, state_machine_model, overview):
         # Action.__init__(self, parent_path, state_machine_model, overview)
         self.parent_path = parent_path
@@ -1169,8 +1174,6 @@ class DataPortAction(Action):
         self.before_overview = overview
         self.state_machine = state_machine_model.state_machine
 
-        self.possible_method_names = ['name', 'data_type', 'default_value', 'change_data_type']
-        self.possible_args = ['name', 'default_value']
         assert self.action_type in self.possible_method_names
         assert isinstance(self.before_overview['instance'][-1], DataPort)
         self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
@@ -1215,6 +1218,9 @@ class ScopedVariableAction(DataPortAction):
 
 class OutcomeAction(Action):
 
+    possible_method_names = ['name', 'outcome_id']
+    possible_args = ['name', 'outcome_id']
+
     def __init__(self, parent_path, state_machine_model, overview):
         # Action.__init__(self, parent_path, state_machine_model, overview)
         self.parent_path = parent_path
@@ -1222,8 +1228,6 @@ class OutcomeAction(Action):
         self.before_overview = overview
         self.state_machine = state_machine_model.state_machine
 
-        self.possible_method_names = ['name', 'outcome_id']
-        self.possible_args = ['name', 'outcome_id']
         assert self.action_type in self.possible_method_names
         assert isinstance(self.before_overview['instance'][-1], Outcome)
         self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
@@ -1257,9 +1261,79 @@ class OutcomeAction(Action):
 
 class StateAction(Action):
 
+    not_possible_method_names = ['state_execution_status',  # observed but should be ignored
+                                 'input_data', 'output_data', 'concurrency_queue','state_id',  # any not observed
+                                 'final_outcome', 'preempted', 'active', 'is_root_state',  # any not observed
+                                 'scoped_data', 'v_checker']
+    possible_method_names = ['parent',  # will be ignored
+                             'name', 'description',  # State
+                             'outcomes', 'input_data_ports', 'output_data_ports',  # State
+                             'states', 'scoped_variables', 'data_flows', 'transitions', 'start_state_id', # ContainerState
+                             'change_state_type']
+    possible_args = ['name', 'description',
+                     'start_state_id']  # ContainerState
+
     def __init__(self, parent_path, state_machine_model, overview):
+        """ method_name: 'parent' is ignored
+        """
+        if overview['method_name'][-1] in ['outcomes', 'input_data_ports', 'output_data_ports']:  # need State's parent
+            if isinstance(overview['instance'][-1].parent, State):
+                parent_path = overview['instance'][-1].parent.get_path()
         Action.__init__(self, parent_path, state_machine_model, overview)
-        
+        self.parent_path = parent_path
+        self.action_type = overview['method_name'][-1]
+        self.before_overview = overview
+        self.state_machine = state_machine_model.state_machine
+
+        assert self.action_type in self.possible_method_names
+        assert isinstance(self.before_overview['instance'][-1], State)
+        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        if overview['method_name'][-1] in ['outcomes', 'input_data_ports', 'output_data_ports']:
+            assert self.parent_path == CoreObjectIdentifier(self.before_overview['instance'][-1].parent)._path
+        else:
+            assert self.parent_path == self.object_identifier._path
+        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.after_arguments = None
+
+    def get_set_of_arguments(self, s):
+        if isinstance(s, ContainerState):
+            return {'name': s.name, 'description': s.description, 'state_id': s.state_id, 'start_state_id': s.start_state_id}
+        else:
+            return {'name': s.name, 'description': s.description, 'state_id': s.state_id}
+
+    def set_after(self, overview):
+        Action.set_after(self, overview)
+        self.after_overview = overview
+        assert isinstance(self.after_overview['instance'][-1], State)
+        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+
+    def undo(self):
+        if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports']:
+            Action.undo(self)
+        elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type']:
+            Action.undo(self)
+        elif self.action_type in self.possible_args:
+            s = self.state_machine.get_state_by_path(self.parent_path)
+            self.set_data_port_version(s, self.before_arguments)
+        else:
+            assert False
+
+    def redo(self):
+        if self.action_type in ['outcomes', 'input_data_ports', 'output_data_ports']:
+            Action.redo(self)
+        elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type']:
+            Action.redo(self)
+        elif self.action_type in self.possible_args:
+            s = self.state_machine.get_state_by_path(self.parent_path)
+            self.set_data_port_version(s, self.after_arguments)
+        else:
+            assert False
+
+    def set_data_port_version(self, s, arguments):
+        if self.action_type in self.possible_args:
+            exec "s.{0} = arguments['{0}']".format(self.action_type)
+        else:
+            assert False
 #
 # class ModifyAttribute(Action):
 #     def __init__(self, *args, **kwargs):
@@ -1493,14 +1567,14 @@ class History(ModelMT):
                     assert overview['instance'][-1] is overview['model'][-1].scoped_variable
                     action_class = ScopedVariableAction  # is a DataPort too
                 # self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
-                self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].parent.get_path(), overview['instance'][-1].parent.get_path()))
+                self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
                 self.actual_action = action_class(parent_path=overview['instance'][-1].parent.get_path(),
                                                   state_machine_model=self.state_machine_model,
                                                   overview=overview)
             elif isinstance(overview['instance'][-1], Outcome):
                 assert overview['instance'][-1] is overview['model'][-1].outcome
                 # self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
-                self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].parent.get_path(), overview['instance'][-1].parent.get_path()))
+                self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
                 # if isinstance(overview['instance'][-1].parent.parent, State):
                 #     self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.parent.get_path(),
                 #                                        state_machine_model=self.state_machine_model,
@@ -1517,7 +1591,7 @@ class History(ModelMT):
                     # logger.error("input data port: {0} {1}".format(overview['instance'][-1], overview['model'][-1].data_port))
                     assert overview['instance'][-1] is overview['model'][-1].data_port
                 # self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
-                self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].parent.get_path(), overview['instance'][-1].parent.get_path()))
+                self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
                 # # TODO if only the attributes of the dataPort are changed the general parent of the instance is enough
                 # if isinstance(overview['instance'][-1].parent.parent, State):
                 #     self.actual_action = DataPortAction(parent_path=overview['instance'][-1].parent.parent.get_path(),
