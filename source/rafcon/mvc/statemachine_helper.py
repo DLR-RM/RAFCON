@@ -14,6 +14,7 @@ from rafcon.statemachine.enums import StateType
 from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
+from rafcon.statemachine.singleton import library_manager
 import rafcon.mvc.singleton
 
 
@@ -348,3 +349,51 @@ def get_state_machine_model_for_state(state):
     state_machine_id = state.get_sm_for_state().state_machine_id
     state_machine_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[state_machine_id]
     return state_machine_m
+
+
+def insert_state(state, as_template=False):
+    """Adds a State to the selected state
+
+    :param state: the state which is inserted
+    :param as_template:
+    :return: boolean: success of the insertion
+    """
+    smm_m = rafcon.mvc.singleton.state_machine_manager_model
+
+    if state is None:
+        logger.error("Please select a library state")
+        return False
+
+    if not smm_m.selected_state_machine_id:
+        logger.error("Please select a container state within a state machine first")
+        return False
+
+    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
+    if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
+        logger.error("Please select exactly one state for the insertion of a library")
+        return False
+
+    current_state_m = current_selection.get_states()[0]
+    current_state = current_state_m.state
+    if not isinstance(current_state, ContainerState):
+        logger.error("Libraries can only be inserted in container states")
+        return False
+
+    if not as_template:
+        current_state.add_state(state)
+        return True
+    # If inserted as template, we have to extract the state_copy and load the meta data manually
+    else:
+        template = state.state_copy
+        orig_state_id = template.state_id
+        template.change_state_id()
+        current_state.add_state(template)
+
+        from os.path import join
+        lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
+        root_state_path = join(lib_os_path, orig_state_id)
+        template_m = current_state_m.states[template.state_id]
+        template_m.load_meta_data(root_state_path)
+        # Causes the template to be resized
+        template_m.temp['gui']['editor']['template'] = True
+        return True

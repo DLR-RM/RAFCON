@@ -4,13 +4,12 @@ from functools import partial
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 
-from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.singleton import library_manager
 
-from rafcon.utils import log
+import rafcon.mvc.statemachine_helper as statemachine_helper
 
-from rafcon.mvc.config import global_gui_config
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -21,8 +20,7 @@ class LibraryTreeController(ExtendedController):
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         view.set_model(self.library_tree_store)
 
-        view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)],
-                                      gtk.gdk.ACTION_COPY)
+        view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
 
         self.state_machine_manager_model = state_machine_manager_model
 
@@ -160,36 +158,19 @@ class LibraryTreeController(ExtendedController):
         :param time:
         """
         library_state = self._get_selected_library_state()
-        if self._insert_state(library_state, False):
+        if statemachine_helper.insert_state(library_state, False):
             data.set_text(library_state.state_id)
 
     def on_drag_begin(self, widget, context):
-        """drag icon is replaced with a square
+        """replace drag icon
 
         :param widget:
         :param context:
         """
-        smm_m = self.state_machine_manager_model
-        if smm_m.selected_state_machine_id is not None:
-            selected_state = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()[0]
-            if global_gui_config.get_config_value('GAPHAS_EDITOR', False):
-                selection_size = selected_state.meta['gui']['editor_gaphas']['size']
-            else:
-                selection_size = selected_state.meta['gui']['editor_opengl']['size']
-            size = int(round(min(selection_size[0]/5., selection_size[1]/5.)*4, 0))
-
-            # draws a rectangle as drag icon
-            pixmap = gtk.gdk.Pixmap(None, size, size, depth=24)
-            cr = pixmap.cairo_create()
-            cr.rectangle(0, 0, size, size)
-            cr.fill()
-            cr.close_path()
-            pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, size, size)
-            pixbuf.get_from_drawable(pixmap, gtk.gdk.colormap_get_system(), 0, 0, 0, 0, size, size)
-            self.view.drag_source_set_icon_pixbuf(pixbuf)
+        self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
 
     def insert_button_clicked(self, widget, as_template=False):
-        self._insert_state(self._get_selected_library_state(), as_template)
+        statemachine_helper.insert_state(self._get_selected_library_state(), as_template)
 
     def open_button_clicked(self, widget):
         try:
@@ -231,52 +212,3 @@ class LibraryTreeController(ExtendedController):
                      (str(library_key), str(library), str(library_path)))
 
         return LibraryState(library_path, library_key, "0.1", library_key)
-
-    def _insert_state(self, library_state, as_template=False):
-        """Adds a LibraryState to the selected state
-
-        :param library_state: the state which is inserted
-        :param as_template:
-        :return: boolean: success of the insertion
-        """
-        smm_m = self.state_machine_manager_model
-
-        if library_state is None:
-            logger.error("Please select a library state")
-            return False
-
-        if not smm_m.selected_state_machine_id:
-            logger.error("Please select a container state within a state machine first")
-            return False
-
-        current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-        if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
-            logger.error("Please select exactly one state for the insertion of a library")
-            return False
-
-        current_state_m = current_selection.get_states()[0]
-        current_state = current_state_m.state
-        if not isinstance(current_state, ContainerState):
-            logger.error("Libraries can only be inserted in container states")
-            return False
-
-        # If inserted as library, we can just insert the library state
-        if not as_template:
-            current_state.add_state(library_state)
-            return True
-        # If inserted as template, we have to extract the state_copy and load the meta data manually
-        else:
-            template = library_state.state_copy
-            orig_state_id = template.state_id
-            template.change_state_id()
-            current_state.add_state(template)
-
-            from os.path import join
-            lib_os_path, _, _ = library_manager.get_os_path_to_library(library_state.library_path,
-                                                                       library_state.library_name)
-            root_state_path = join(lib_os_path, orig_state_id)
-            template_m = current_state_m.states[template.state_id]
-            template_m.load_meta_data(root_state_path)
-            # Causes the template to be resized
-            template_m.temp['gui']['editor']['template'] = True
-            return True
