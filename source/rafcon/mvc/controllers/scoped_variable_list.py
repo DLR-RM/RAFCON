@@ -12,7 +12,7 @@ logger = log.get_logger(__name__)
 
 
 class ScopedVariableListController(ExtendedController):
-    """Controller handling thr scoped variable list
+    """Controller handling the scoped variable list
 
     :param rafcon.mvc.models.state.StateModel model: The state model, holding state data.
     :param rafcon.mvc.views.scoped_variables_list.ScopedVariablesListView view: The GTK view showing the list of scoped
@@ -56,6 +56,7 @@ class ScopedVariableListController(ExtendedController):
 
     def register_adapters(self):
         """Adapters should be registered in this method call"""
+        pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -89,12 +90,20 @@ class ScopedVariableListController(ExtendedController):
             self.select_entry(selected_data_port_id)
 
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
+        """Triggered when the New button in the Scoped Variables tab is clicked.
+
+        Create a new scoped variable with default values.
+        """
         new_sv_name = "scoped_%s" % str(self.new_sv_counter)
         if hasattr(self.model, 'states'):
             self.new_sv_counter += 1
             self.model.state.add_scoped_variable(new_sv_name, "int", 0)
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
+        """Triggered when the Delete button in the Scoped Variables tab is clicked.
+
+        Deletes the selected scoped variable.
+        """
         tree_view = self.view["scoped_variables_tree_view"]
         if hasattr(self.model, 'states'):
             path = tree_view.get_cursor()[0][0]
@@ -104,6 +113,13 @@ class ScopedVariableListController(ExtendedController):
                 self.model.state.remove_scoped_variable(scoped_variable_key)
 
     def on_name_changed(self, widget, path, text):
+        """Triggered when a scoped variable's name is edited
+
+        Changes the scoped variable's name.
+
+        :param path: The path identifying the edited variable
+        :param text: New variable's name
+        """
         scoped_variable_id = self.scoped_variables_list_store[int(path)][3]
         try:
             self.model.state.scoped_variables[scoped_variable_id].name = text
@@ -111,6 +127,13 @@ class ScopedVariableListController(ExtendedController):
             logger.error("Error while changing port name: {0}".format(e))
 
     def on_data_type_changed(self, widget, path, text):
+        """Triggered when a scoped variable's data type is edited.
+
+        Changes the scoped variable's data type.
+
+        :param path: The path identifying the edited variable
+        :param text: New variable's data type
+        """
         data_port_id = self.scoped_variables_list_store[int(path)][3]
         try:
             self.model.state.scoped_variables[data_port_id].change_data_type(text, None)
@@ -118,6 +141,13 @@ class ScopedVariableListController(ExtendedController):
             logger.error("Error while changing data type: {0}".format(e))
 
     def on_default_value_changed(self, widget, path, text):
+        """Triggered when a scoped variable's value is edited.
+
+        Changes the scoped variable's value.
+
+        :param path: The path identifying the edited variable
+        :param text: New variable's value
+        """
         data_port_id = self.scoped_variables_list_store[int(path)][3]
         try:
             self.model.state.scoped_variables[data_port_id].default_value = text

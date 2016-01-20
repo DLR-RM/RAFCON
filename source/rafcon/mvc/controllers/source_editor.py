@@ -13,6 +13,11 @@ logger = log.get_logger(__name__)
 
 
 class SourceEditorController(ExtendedController):
+    """Controller handling the source editor in Execution States.
+
+    :param
+    :param rafcon.mvc.views.source_editor.SourceEditorView view: The GTK view showing the source editor.
+    """
     # TODO Missing functions
     # - Code function-expander
     # - Code completion
@@ -20,8 +25,7 @@ class SourceEditorController(ExtendedController):
     tmp_file = os.path.join(GLOBAL_STORAGE_BASE_PATH, 'file_to_get_pylinted.py')
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         ExtendedController.__init__(self, model, view)
         self.not_pylint_compatible_modules = ["links_and_nodes"]
         # self.is_dirty = False
@@ -45,7 +49,8 @@ class SourceEditorController(ExtendedController):
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("copy", self._copy)
         shortcut_manager.add_callback_for_action("paste", self._paste)
@@ -91,7 +96,9 @@ class SourceEditorController(ExtendedController):
         self.view.apply_tag('default')
 
     def apply_clicked(self, button):
+        """Triggered when the Apply button in the source editor is clicked.
 
+        """
         if isinstance(self.model.state, LibraryState):
             logger.warn("It is not allowed to modify libraries.")
             self.view.set_text("")
@@ -163,9 +170,9 @@ class SourceEditorController(ExtendedController):
             logger.warning("Source script is not stored to memory: {0}".format(e))
 
     def filter_out_not_compatible_modules(self, pylint_msg):
-        """
-        This method filters out every pylint message that addresses an error of a module that is explicitly ignored
-        and added to  self.not_pylint_compatible_modules
+        """This method filters out every pylint message that addresses an error of a module that is explicitly ignored
+        and added to  self.not_pylint_compatible_modules.
+
         :param pylint_msg: the pylint message to be filtered
         :return:
         """
@@ -183,6 +190,10 @@ class SourceEditorController(ExtendedController):
         return "Line " + line + ": " + error
 
     def cancel_clicked(self, button):
+        """Triggered when the Cancel button in the source editor is clicked
+
+        Resets the code in the editor to the last-saved code.
+        """
         self.view.set_text(self.model.state.script.script)
 
     @ExtendedController.observe("state", after=True)

@@ -1,15 +1,18 @@
 import gtk
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.views.state_editor import StateEditorView
 from rafcon.mvc.controllers.state_editor import StateEditorController
+
+from rafcon.mvc.views.state_editor import StateEditorView
+
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.container_state import StateModel, ContainerStateModel
+
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.config import global_gui_config
+
 from rafcon.utils import constants
 from rafcon.utils import log
-
 logger = log.get_logger(__name__)
 
 
@@ -175,6 +178,8 @@ class StatesEditorController(ExtendedController):
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
+        """Triggered whenever a new state machine is created, or an existing state machine is selected.
+        """
         if self.current_state_machine_m is not None:
             selection = self.current_state_machine_m.selection
             if selection.get_num_states() > 0:
@@ -207,6 +212,10 @@ class StatesEditorController(ExtendedController):
                 self.close_page(state_identifier, delete=True)
 
     def add_state_editor(self, state_m, editor_type=None):
+        """Triggered whenever a state is selected.
+
+        :param state_m: The selected state model.
+        """
         """Triggered whenever a state is selected.
 
         :param state_m: The selected state model.
@@ -441,8 +450,7 @@ class StatesEditorController(ExtendedController):
 
     @ExtendedController.observe("selection", after=True)
     def selection_notification(self, model, property, info):
-        """If a single state is selected, open the corresponding tab
-        """
+        """If a single state is selected, open the corresponding tab"""
         if model != self.current_state_machine_m:
             return
         selection = info.instance
