@@ -1143,34 +1143,76 @@ class TransitionAction(Action):
     def undo(self):
         # if the transition_id would be changed and this considered in the core parent element self.after_argument here would be used
         t = self.state_machine.get_state_by_path(self.parent_path).transitions[self.before_arguments['transition_id']]
-        self.set_data_flow_version(t, self.before_arguments)
+        self.set_transition_version(t, self.before_arguments)
 
     def redo(self):
         t = self.state_machine.get_state_by_path(self.parent_path).transitions[self.before_arguments['transition_id']]
-        self.set_data_flow_version(t, self.after_arguments)
+        self.set_transition_version(t, self.after_arguments)
 
-    def set_data_flow_version(self, df, arguments):
+    def set_transition_version(self, t, arguments):
         if self.action_type in self.possible_args:
-            exec "df.{0} = arguments['{0}']".format(self.action_type)
+            exec "t.{0} = arguments['{0}']".format(self.action_type)
         elif self.action_type == 'modify_origin':
-            df.modify_origin(from_state=arguments['from_state'], from_outcome=arguments['from_outcome'])
+            t.modify_origin(from_state=arguments['from_state'], from_outcome=arguments['from_outcome'])
         elif self.action_type == 'modify_target':
-            df.modify_target(to_state=arguments['to_state'], to_outcome=arguments['to_outcome'])
+            t.modify_target(to_state=arguments['to_state'], to_outcome=arguments['to_outcome'])
+        else:
+            assert False
+
+class DataPortAction(Action):
+
+    def __init__(self, parent_path, state_machine_model, overview):
+        # Action.__init__(self, parent_path, state_machine_model, overview)
+        self.parent_path = parent_path
+        self.action_type = overview['method_name'][-1]
+        self.before_overview = overview
+        self.state_machine = state_machine_model.state_machine
+
+        self.possible_method_names = ['name', 'data_type', 'default_value', 'change_data_type']
+        self.possible_args = ['name', 'default_value']
+        assert self.action_type in self.possible_method_names
+        assert isinstance(self.before_overview['instance'][-1], DataPort)
+        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        assert self.parent_path == self.object_identifier._path
+        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.after_arguments = None
+
+    def get_set_of_arguments(self, dp):
+        return {'name': dp.name, 'data_type': dp.data_type, 'default_value': dp.default_value,
+                'data_port_id': dp.data_port_id}
+
+    def set_after(self, overview):
+        self.after_overview = overview
+        assert isinstance(self.after_overview['instance'][-1], DataPort)
+        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+
+    def undo(self):
+        dp = self.state_machine.get_state_by_path(self.parent_path).get_data_port_by_id(self.before_arguments['data_port_id'])
+        self.set_data_port_version(dp, self.before_arguments)
+
+    def redo(self):
+        dp = self.state_machine.get_state_by_path(self.parent_path).get_data_port_by_id(self.before_arguments['data_port_id'])
+        self.set_data_port_version(dp, self.after_arguments)
+
+    def set_data_port_version(self, dp, arguments):
+        if self.action_type in self.possible_args:
+            exec "dp.{0} = arguments['{0}']".format(self.action_type)
+        elif self.action_type == 'data_type':
+            dp.data_type = arguments['data_type']
+            dp.default_value = arguments['default_value']
+        elif self.action_type == 'change_data_type':
+            dp.change_data_type(data_type=arguments['data_type'], default_value=arguments['default_value'])
         else:
             assert False
 
 
-class ScopedVariableAction(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
+class ScopedVariableAction(DataPortAction):
+
+    def __init__(self, parent_path, state_machine_model, overview):
+        DataPortAction.__init__(self, parent_path, state_machine_model, overview)
 
 
 class OutcomeAction(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
-
-
-class DataPortAction(Action):
     def __init__(self, *args, **kwargs):
         Action.__init__(self, *args, **kwargs)
 
@@ -1437,15 +1479,15 @@ class History(ModelMT):
                     assert overview['instance'][-1] is overview['model'][-1].data_port
                 # self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
                 self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].parent.get_path(), overview['instance'][-1].parent.get_path()))
-                # TODO if only the attributes of the dataPort are changed the general parent of the instance is enough
-                if isinstance(overview['instance'][-1].parent.parent, State):
-                    self.actual_action = DataPortAction(parent_path=overview['instance'][-1].parent.parent.get_path(),
-                                                        state_machine_model=self.state_machine_model,
-                                                        overview=overview)
-                else:
-                    self.actual_action = DataPortAction(parent_path=overview['instance'][-1].parent.get_path(),
-                                                        state_machine_model=self.state_machine_model,
-                                                        overview=overview)
+                # # TODO if only the attributes of the dataPort are changed the general parent of the instance is enough
+                # if isinstance(overview['instance'][-1].parent.parent, State):
+                #     self.actual_action = DataPortAction(parent_path=overview['instance'][-1].parent.parent.get_path(),
+                #                                         state_machine_model=self.state_machine_model,
+                #                                         overview=overview)
+                # else:
+                self.actual_action = DataPortAction(parent_path=overview['instance'][-1].parent.get_path(),
+                                                    state_machine_model=self.state_machine_model,
+                                                    overview=overview)
             elif isinstance(overview['instance'][-1], State):
                 assert overview['instance'][-1] is overview['model'][-1].state
                 if "add_" in cause:
