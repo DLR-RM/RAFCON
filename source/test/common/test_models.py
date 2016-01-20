@@ -1228,8 +1228,7 @@ def test_outcome_property_changes_history(caplog):
         state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
         state_dict['Nested'].outcomes.values()[0].outcome_id += 10
         sm_model.history.undo()
-        # TODO
-        # sm_model.history.redo()
+        sm_model.history.redo()
 
     # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
     do_check_for_state(state_dict, state_name='Container')
