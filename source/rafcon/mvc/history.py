@@ -1068,13 +1068,96 @@ class RemoveObjectAction(Action):
 
 
 class DataFlowAction(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
+    def __init__(self, parent_path, state_machine_model, overview):
+        # Action.__init__(self, parent_path, state_machine_model, overview)
+        self.parent_path = parent_path
+        self.action_type = overview['method_name'][-1]
+        self.before_overview = overview
+        self.state_machine = state_machine_model.state_machine
+
+        self.possible_method_names = ['modify_origin', 'from_state', 'from_key',
+                                      'modify_target', 'to_state', 'to_key', 'data_flow_id']
+        self.possible_args = ['from_state', 'from_key', 'to_state', 'to_key', 'data_flow_id']
+        assert self.action_type in self.possible_method_names
+        assert isinstance(self.before_overview['instance'][-1], DataFlow)
+        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        assert self.parent_path == self.object_identifier._path
+        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.after_arguments = None
+
+    def get_set_of_arguments(self, df):
+        return {'from_state': df.from_state, 'from_key': df.from_key, 'to_state': df.to_state, 'to_key': df.to_key,
+                'data_flow_id': df.data_flow_id}
+
+    def set_after(self, overview):
+        self.after_overview = overview
+        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+
+    def undo(self):
+        # if the data_flow_id would be changed and this considered in the core parent element self.after_argument here would be used
+        df = self.state_machine.get_state_by_path(self.parent_path).data_flows[self.before_arguments['data_flow_id']]
+        self.set_data_flow_version(df, self.before_arguments)
+
+    def redo(self):
+        df = self.state_machine.get_state_by_path(self.parent_path).data_flows[self.before_arguments['data_flow_id']]
+        self.set_data_flow_version(df, self.after_arguments)
+
+    def set_data_flow_version(self, df, arguments):
+        if self.action_type in self.possible_args:
+            exec "df.{0} = arguments['{0}']".format(self.action_type)
+        elif self.action_type == 'modify_origin':
+            df.modify_origin(from_state=arguments['from_state'], from_key=arguments['from_key'])
+        elif self.action_type == 'modify_target':
+            df.modify_target(to_state=arguments['to_state'], to_key=arguments['to_key'])
+        else:
+            assert False
 
 
 class TransitionAction(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
+
+    def __init__(self, parent_path, state_machine_model, overview):
+        # Action.__init__(self, parent_path, state_machine_model, overview)
+        self.parent_path = parent_path
+        self.action_type = overview['method_name'][-1]
+        self.before_overview = overview
+        self.state_machine = state_machine_model.state_machine
+
+        self.possible_method_names = ['modify_origin', 'from_state', 'from_outcome',
+                                      'modify_target', 'to_state', 'to_outcome', 'transition_id']
+        self.possible_args = ['from_state', 'from_outcome', 'to_state', 'to_key', 'transition_id']
+        assert self.action_type in self.possible_method_names
+        assert isinstance(self.before_overview['instance'][-1], Transition)
+        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        assert self.parent_path == self.object_identifier._path
+        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.after_arguments = None
+
+    def get_set_of_arguments(self, t):
+        return {'from_state': t.from_state, 'from_outcome': t.from_outcome, 'to_state': t.to_state, 'to_outcome': t.to_outcome,
+                'transition_id': t.transition_id}
+
+    def set_after(self, overview):
+        self.after_overview = overview
+        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+
+    def undo(self):
+        # if the transition_id would be changed and this considered in the core parent element self.after_argument here would be used
+        t = self.state_machine.get_state_by_path(self.parent_path).transitions[self.before_arguments['transition_id']]
+        self.set_data_flow_version(t, self.before_arguments)
+
+    def redo(self):
+        t = self.state_machine.get_state_by_path(self.parent_path).transitions[self.before_arguments['transition_id']]
+        self.set_data_flow_version(t, self.after_arguments)
+
+    def set_data_flow_version(self, df, arguments):
+        if self.action_type in self.possible_args:
+            exec "df.{0} = arguments['{0}']".format(self.action_type)
+        elif self.action_type == 'modify_origin':
+            df.modify_origin(from_state=arguments['from_state'], from_outcome=arguments['from_outcome'])
+        elif self.action_type == 'modify_target':
+            df.modify_target(to_state=arguments['to_state'], to_outcome=arguments['to_outcome'])
+        else:
+            assert False
 
 
 class ScopedVariableAction(Action):
