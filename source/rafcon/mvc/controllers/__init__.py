@@ -18,3 +18,4 @@ from library_tree import LibraryTreeController
 from state_machine_tree import StateMachineTreeController
 from state_machine_history import StateMachineHistoryController
 from main_window import MainWindowController
+from state_icons import StateIconController

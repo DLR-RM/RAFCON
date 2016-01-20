@@ -1,7 +1,7 @@
 import gtk
 from gtkmvc import View
 from rafcon.mvc.views import GlobalVariableEditorView, StateMachineTreeView, LibraryTreeView, MenuBarView, \
-    ToolBarView, StateMachineHistoryView, TopToolBarView, ExecutionHistoryView, LoggingView
+    ToolBarView, StateMachineHistoryView, TopToolBarView, ExecutionHistoryView, LoggingView, StateIconView
 from rafcon.mvc.views.states_editor import StatesEditorView
 from rafcon.mvc.views.state_machines_editor import StateMachinesEditorView
 from rafcon.mvc.views.network_connections import NetworkConnectionsView
@@ -35,6 +35,10 @@ class MainWindowView(View):
 
         self.execution_history_view = ExecutionHistoryView()
         self.execution_history_view.show()
+
+        self.state_icons = StateIconView()
+        self.state_icons.show()
+        self["state_icons_box"].pack_start(self.state_icons.get_top_widget())
 
         # self.graphical_editor_window = gtk.Window()
         # self.graphical_editor_window.set_title("Graphical Editor")
