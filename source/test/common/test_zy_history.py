@@ -890,7 +890,6 @@ def test_outcome_property_changes_history(caplog):
         state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
         state_dict['Nested'].outcomes.values()[0].outcome_id += 10
         sm_model.history.undo()
-        # TODO MAY DONE
         sm_model.history.redo()
 
     # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
@@ -1893,6 +1892,17 @@ def trigger_state_type_change_tests(*args):
 
 
 if __name__ == '__main__':
+    # test_add_remove_history(None)
+    # test_state_property_changes_history(None)
+    #
+    # test_outcome_property_changes_history(None)
+    # test_input_port_modify_notification(None)
+    # test_output_port_modify_notification(None)
+    #
+    # test_transition_property_changes_history(None)
+    # test_scoped_variable_modify_notification(None)
+    # test_data_flow_property_changes_history(None)
+    #
     # test_type_changes_without_gui(None)
     # test_state_machine_changes_with_gui(True, None)
     pytest.main([__file__])
