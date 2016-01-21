@@ -87,16 +87,16 @@
                             <property name="tab_vborder">6</property>
                             <property name="group_id">1</property>
                             <child>
-                              <object class="GtkLabel" id="library_placeholder">
+                              <object class="GtkLabel" id="libraries_placeholder">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">library_placeholder
+                                <property name="label" translatable="yes">libraries_placeholder
 </property>
                               </object>
                             </child>
                             <child type="tab">
                               <object class="GtkLabel" id="library_tree_tab">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">Libraries</property>
+                                <property name="label" translatable="yes">libraries</property>
                                 <property name="angle">90</property>
                               </object>
                               <packing>
@@ -104,7 +104,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel" id="state_machine_tree_placeholder">
+                              <object class="GtkLabel" id="state_tree_placeholder">
                                 <property name="visible">True</property>
                                 <property name="label" translatable="yes">state_machine_tree_placeholder</property>
                               </object>
@@ -115,7 +115,7 @@
                             <child type="tab">
                               <object class="GtkLabel" id="state_machine_tree_tab">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">State Tree</property>
+                                <property name="label" translatable="yes">state_tree</property>
                                 <property name="angle">90</property>
                               </object>
                               <packing>
@@ -135,7 +135,7 @@
                             <child type="tab">
                               <object class="GtkLabel" id="global_variables_tab">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">Global Variables</property>
+                                <property name="label" translatable="yes">global_variables</property>
                                 <property name="angle">90</property>
                               </object>
                               <packing>
@@ -165,7 +165,7 @@
                             <child type="tab">
                               <object class="GtkLabel" id="history_tab">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">History</property>
+                                <property name="label" translatable="yes">history</property>
                                 <property name="angle">90</property>
                               </object>
                               <packing>
@@ -184,7 +184,7 @@
                             <child type="tab">
                               <object class="GtkLabel" id="execution_history_tab">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">Execution History</property>
+                                <property name="label" translatable="yes">execution_history</property>
                                 <property name="angle">90</property>
                               </object>
                               <packing>
@@ -204,7 +204,7 @@
                             <child type="tab">
                               <object class="GtkLabel" id="network_tab">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">Network</property>
+                                <property name="label" translatable="yes">network</property>
                                 <property name="angle">90</property>
                               </object>
                               <packing>

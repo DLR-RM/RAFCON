@@ -46,14 +46,6 @@ except ImportError as e:
 
 
 class MainWindowController(ExtendedController):
-    icons = {
-        "Libraries": constants.SIGN_LIB,
-        "State Tree": constants.ICON_TREE,
-        "Global Variables": constants.ICON_GLOB,
-        "History": constants.ICON_HIST,
-        "Execution History": constants.ICON_EHIST,
-        "Network": constants.ICON_NET
-    }
 
     def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
         ExtendedController.__init__(self, state_machine_manager_model, view)
@@ -71,134 +63,41 @@ class MainWindowController(ExtendedController):
         self.observe_model(self.state_machine_execution_engine)
         self.state_machine_execution_engine.register_observer(self)
 
-        ######################################################
         # shortcut manager
-        ######################################################
         self.shortcut_manager = ShortcutManager(view['main_window'])
 
-        ######################################################
-        # logging view
-        ######################################################
-        self.console_scroller = view['console_scroller']
-        view['debug_console_vbox'].remove(self.console_scroller)
-        view.logging_view.get_top_widget().show()
-        view['debug_console_vbox'].pack_start(view.logging_view.get_top_widget(), True, True, 0)
-
-        ######################################################
         # library tree
-        ######################################################
         library_manager_model = LibraryManagerModel(rafcon.statemachine.singleton.library_manager)
         library_controller = LibraryTreeController(library_manager_model, view.library_tree,
                                                    state_machine_manager_model)
         self.add_controller('library_controller', library_controller)
-        # view['library_vbox'].remove(view['library_tree_placeholder'])
+        # view['main_window'].add_events(
+        #    gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
+        #    gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
 
-        # view['library_vbox'].pack_start(view.library_tree, True, True, 0)
-
-        library_tree_tab = view['library_vbox']
-        page_num = view["tree_notebook_1"].page_num(library_tree_tab)
-        view["tree_notebook_1"].remove_page(page_num)
-
-        library_tab_label = gtk.Label('Libraries')
-        library_notebook_widget = self.create_notebook_widget('LIBRARIES', view.library_tree,
-                                                              border=constants.BORDER_WIDTH_TEXTVIEW)
-        view["tree_notebook_1"].insert_page(library_notebook_widget, library_tab_label, page_num)
-
-        view['add_link_menu_entry'].connect("activate", library_controller.insert_button_clicked, None, False)
-        view['add_template_menu_entry'].connect("activate", library_controller.insert_button_clicked, None, True)
-
-        view['main_window'].add_events(
-            gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
-            gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
-
-        ######################################################
-        # statemachine tree
-        ######################################################
-        # remove placeholder tab
-
-        state_machine_tree_tab = view['state_machine_tree_placeholder']
-        page_num = view["tree_notebook_1"].page_num(state_machine_tree_tab)
-        view["tree_notebook_1"].remove_page(page_num)
-        # append new tab
-        # TODO: this is not always the active state machine
+        # state tree
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 
-        state_machine_tab_label = gtk.Label('State Tree')
-        state_machine_notebook_widget = self.create_notebook_widget('STATE TREE', view.state_machine_tree,
-                                                                    border=constants.BORDER_WIDTH_TEXTVIEW)
-        view["tree_notebook_1"].insert_page(state_machine_notebook_widget, state_machine_tab_label, page_num)
-
-        ######################################################
         # state editor
-        ######################################################
-        states_editor_ctrl = StatesEditorController(state_machine_manager_model,  # or self.model,
-                                                    view.states_editor,
-                                                    editor_type)
+        states_editor_ctrl = StatesEditorController(state_machine_manager_model, view.states_editor, editor_type)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
-        state_editor_label = view['state_editor_label']
-        view['state_editor_label_hbox'].remove(state_editor_label)
-        new_label = gui_helper.create_label_with_text_and_spacing(state_editor_label.get_text(),
-                                                                  font_size=constants.FONT_SIZE_BIG,
-                                                                  letter_spacing=constants.LETTER_SPACING_1PT)
-        new_label.set_alignment(0., .5)
-        view['state_editor_label_hbox'].pack_start(new_label, True, True, 0)
-        view['state_editor_label_hbox'].reorder_child(new_label, 0)
-
-        ######################################################
         # state machines editor
-        ######################################################
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
                                                                    view.state_machines_editor)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
-        graphical_editor_label = view['graphical_editor_label']
-        view['graphical_editor_label_event_box'].remove(graphical_editor_label)
-        new_label = gui_helper.create_label_with_text_and_spacing(graphical_editor_label.get_text(),
-                                                                  font_size=constants.FONT_SIZE_BIG,
-                                                                  letter_spacing=constants.LETTER_SPACING_1PT)
-        new_label.set_alignment(0., .5)
-        view['graphical_editor_label_event_box'].add(new_label)
-
-        ######################################################
         # global variable editor
-        ######################################################
-        # remove placeholder tab
-        global_variables_tab = view['global_variables_placeholder']
-        page_num = view["tree_notebook_1"].page_num(global_variables_tab)
-        view["tree_notebook_1"].remove_page(page_num)
-        # append new tab
         global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
-
-        global_variables_tab_label = gtk.Label('Global Variables')
-        global_variables_notebook_widget = self.create_notebook_widget('GLOBAL VARIABLES',
-                                                                       view.global_var_manager_view.get_top_widget(),
-                                                                       border=constants.BORDER_WIDTH_TEXTVIEW)
-        view["tree_notebook_1"].insert_page(global_variables_notebook_widget, global_variables_tab_label, page_num)
-
-        view["tree_notebook_1"].set_current_page(0)
 
         ######################################################
         # state machine edition history
         ######################################################
-        # remove placeholder tab
-        history_tab = view['history_vbox_placeholder']
-        page_num = view["tree_notebook_2"].page_num(history_tab)
-        view["tree_notebook_2"].remove_page(page_num)
-        # append new tab
         state_machine_history_controller = StateMachineHistoryController(state_machine_manager_model,
                                                                          view.state_machine_history)
         self.add_controller('state_machine_history_controller', state_machine_history_controller)
-        history_label = gtk.Label('History')
-        history_notebook_widget = self.create_notebook_widget("HISTORY", view.state_machine_history.get_top_widget(),
-                                                              border=constants.BORDER_WIDTH_TEXTVIEW)
-        view["tree_notebook_2"].insert_page(history_notebook_widget, history_label, page_num)
-
-        # history_tab_label = gtk.Label('History')
-        # history_notebook_widget = self.create_notebook_widget('HISTORY', gtk.Label("Placeholder"))
-        # view["tree_notebook_2"].insert_page(history_notebook_widget, history_tab_label, page_num)
 
         ######################################################
         # network controller
@@ -213,68 +112,27 @@ class MainWindowController(ExtendedController):
 
             # remove placehold in tab
             network_tab = view['network_placeholder']
-            page_num = view['tree_notebook_2'].page_num(network_tab)
-            view['tree_notebook_2'].remove_page(page_num)
+            page_num = view['tree_notebook_down'].page_num(network_tab)
+            view['tree_notebook_down'].remove_page(page_num)
 
             network_label = gtk.Label('Network')
             network_notebook_widget = self.create_notebook_widget("NETWORK",
                                                                   view.network_connections_view.get_top_widget(),
                                                                   use_scroller=False,
                                                                   border=constants.BORDER_WIDTH_TEXTVIEW)
-            view['tree_notebook_2'].insert_page(network_notebook_widget, network_label, page_num)
+            view['tree_notebook_down'].insert_page(network_notebook_widget, network_label, page_num)
         else:
             network_tab = view['network_tab']
-            page_num = view["tree_notebook_2"].page_num(network_tab)
-            view["tree_notebook_2"].remove_page(page_num)
+            page_num = view["tree_notebook_down"].page_num(network_tab)
+            view["tree_notebook_down"].remove_page(page_num)
 
         ######################################################
         # state machine execution history
         ######################################################
-        # remove placeholder tab
-        execution_history_tab = view['execution_history_placeholder']
-        page_num = view["tree_notebook_2"].page_num(execution_history_tab)
-        view["tree_notebook_2"].remove_page(page_num)
-        # append new tab
-
         execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model,
                                                                 view.execution_history_view,
                                                                 state_machine_manager)
         self.add_controller('execution_history_ctrl', execution_history_ctrl)
-
-        execution_history_tab_label = gtk.Label('Execution History')
-        execution_history_notebook_widget = self.create_notebook_widget('EXECUTION HISTORY',
-                                                                        view.execution_history_view.get_top_widget(),
-                                                                        use_scroller=False,
-                                                                        border=constants.BORDER_WIDTH_TEXTVIEW)
-        view["tree_notebook_2"].insert_page(execution_history_notebook_widget, execution_history_tab_label, page_num)
-
-        ######################################################
-        # rotate all tab labels by 90 degrees and make detachable
-        ######################################################
-
-        for i in range(view["tree_notebook_1"].get_n_pages()):
-            child = view["tree_notebook_1"].get_nth_page(i)
-            tab_label = view["tree_notebook_1"].get_tab_label(child)
-            if gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
-                tab_label_text = tab_label.get_text()
-                view["tree_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
-                                                                                                self.icons))
-            else:
-                tab_label.set_angle(90)
-            view["tree_notebook_1"].set_tab_reorderable(child, True)
-            view["tree_notebook_1"].set_tab_detachable(child, True)
-
-        for i in range(view["tree_notebook_2"].get_n_pages()):
-            child = view["tree_notebook_2"].get_nth_page(i)
-            tab_label = view["tree_notebook_2"].get_tab_label(child)
-            if gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
-                tab_label_text = tab_label.get_text()
-                view["tree_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
-                                                                                                self.icons))
-            else:
-                tab_label.set_angle(90)
-            view["tree_notebook_2"].set_tab_reorderable(child, True)
-            view["tree_notebook_2"].set_tab_detachable(child, True)
 
         ######################################################
         # menu bar
@@ -305,23 +163,15 @@ class MainWindowController(ExtendedController):
                                                        menu_bar_controller)
         self.add_controller("top_tool_bar_controller", top_tool_bar_controller)
 
-        ######################################################
-        # setup correct sizes
-        ######################################################
-        view['top_level_h_pane'].set_position(1200)
-        view['left_h_pane'].set_position(300)
-        view['left_v_pane_1'].set_position(400)
-        view['left_v_pane_2'].set_position(600)
+        #view['right_bar_hide_button'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
+        #                                                                                   constants.FONT_SIZE_BIG,
+        #                                                                                   constants.BUTTON_RIGHTA))
+        #view['hide_right_bar_eventbox'].connect('button_release_event', self.right_bar_hide_clicked)
 
-        view['hide_right_bar_label'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-                                                                                           constants.FONT_SIZE_BIG,
-                                                                                           constants.BUTTON_RIGHTA))
-        view['hide_right_bar_eventbox'].connect('button_release_event', self.right_bar_hide_clicked)
-
-        view['console_hide_label'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-                                                                                         constants.FONT_SIZE_BIG,
-                                                                                         constants.BUTTON_DOWNA))
-        view['console_hide_eventbox'].connect('button_release_event', self.console_hide_clicked)
+        #view['console_hide_button'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
+        #                                                                                 constants.FONT_SIZE_BIG,
+        #                                                                                 constants.BUTTON_DOWNA))
+        #view['console_hide_eventbox'].connect('button_release_event', self.console_hide_clicked)
 
         view['left_bar_return_button'].set_image(self.create_arrow_label(constants.BUTTON_RIGHTA))
         view['left_bar_return_button'].set_border_width(constants.BORDER_WIDTH)
@@ -333,9 +183,9 @@ class MainWindowController(ExtendedController):
         view['console_return_button'].set_border_width(constants.BORDER_WIDTH)
         view['console_return_button'].set_size_request(0, constants.BUTTON_MIN_HEIGHT - 10)
 
-        self.left_bar_child = view['left_h_pane'].get_child1()
+        self.left_bar_child = view['right_h_pane'].get_child1()
         self.right_bar_child = view['top_level_h_pane'].get_child2()
-        self.console_child = view['left_v_pane_2'].get_child2()
+        self.console_child = view['central_v_pane'].get_child2()
 
         view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
         view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
