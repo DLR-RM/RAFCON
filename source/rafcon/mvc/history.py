@@ -1648,11 +1648,6 @@ class History(ModelMT):
                 assert overview['instance'][-1] is overview['model'][-1].outcome
                 # self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}".format(overview['model'][0], overview['model'][0].parent.state.get_path(), overview['model'][-1].parent.state.get_path()))
                 self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
-                # if isinstance(overview['instance'][-1].parent.parent, State):
-                #     self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.parent.get_path(),
-                #                                        state_machine_model=self.state_machine_model,
-                #                                        overview=overview)
-                # else:
                 self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.get_path(),
                                                    state_machine_model=self.state_machine_model,
                                                    overview=overview)
