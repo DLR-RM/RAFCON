@@ -135,7 +135,7 @@
                             <child type="tab">
                               <object class="GtkLabel" id="global_variables_tab">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">Global Variabbles</property>
+                                <property name="label" translatable="yes">Global Variables</property>
                                 <property name="angle">90</property>
                               </object>
                               <packing>
