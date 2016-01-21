@@ -38,6 +38,7 @@ def test_run_unit_tests_in_processes():
                 test_process = Process(target=run_pytest_on_module, args=(abs_path, unit_test_message_queue))
                 process_list.append(test_process)
                 test_process.start()
+                print "Started unit test: " + abs_path
                 # as some tests are not completely runtime independent, they are executed sequentially
                 test_process.join()
 
