@@ -38,6 +38,8 @@ def test_run_unit_tests_in_processes():
                 test_process = Process(target=run_pytest_on_module, args=(abs_path, unit_test_message_queue))
                 process_list.append(test_process)
                 test_process.start()
+                # as some tests are not completely runtime independent, they are executed sequentially
+                test_process.join()
 
             elif os.path.isdir(abs_path) and file_name != "all":
                 # Recursively go through all directories to search for tests
