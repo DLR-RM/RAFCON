@@ -53,6 +53,7 @@ class StateDataFlowsListController(ExtendedController):
 
         self.update_internal_data_base()
         self.update_tree_store()
+        self.debug_log = False
 
     def register_view(self, view):
         """Called when the View was registered
@@ -329,8 +330,18 @@ class StateDataFlowsListController(ExtendedController):
             self.update_internal_data_base()
             self.update_tree_store()
         except:
+            if self.debug_log:
+                import traceback
+                from rafcon.mvc.history import NotificationOverview
+                self.store_debug_log_file(NotificationOverview(info))
+                self.store_debug_log_file(str(traceback.format_exc()))
             logger.warning("update of data_flow widget fails while detecting change in state %s %s" %
                            (self.model.state.name, self.model.state.state_id))
+
+    def store_debug_log_file(self, string):
+        with open('/tmp/data_flow_widget_debug_log_file.txt', 'a+') as f:
+            f.write(string)
+        f.closed
 
     def notification_logs(self, model, prop_name, info):
 
