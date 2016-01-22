@@ -15,7 +15,6 @@ to define specific Action-*-Classes for simple/specific edit actions.
 import copy
 import sys
 import traceback
-
 import datetime
 
 from gtkmvc import ModelMT, Observable
@@ -23,7 +22,7 @@ import yaml
 
 from rafcon.utils import log
 
-from rafcon.statemachine.scope import ScopedVariable
+from rafcon.statemachine.scope import ScopedData, ScopedVariable
 from rafcon.statemachine.outcome import Outcome
 from rafcon.statemachine.data_flow import DataFlow
 from rafcon.statemachine.transition import Transition
@@ -31,10 +30,17 @@ from rafcon.statemachine.script import Script
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.data_port import DataPort
 from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
-from rafcon.mvc.models.container_state import ContainerState
+from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
+from rafcon.statemachine.global_variable_manager import GlobalVariableManager
+from rafcon.statemachine.library_manager import LibraryManager
+from rafcon.statemachine.state_machine import StateMachine
+
+from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel
+
 import rafcon.mvc.statemachine_helper
 
 import rafcon.mvc.singleton as mvc_singleton
@@ -42,6 +48,10 @@ import rafcon.mvc.singleton as mvc_singleton
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 logger = log.get_logger(__name__)
+
+core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort, ScopedData, ScopedVariable, Script,
+                    GlobalVariableManager, LibraryManager, StateMachine,
+                    ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
 
 def get_state_tuple(state, state_m=None):
@@ -356,10 +366,10 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
         if with_prints:
             print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), meta_dict[
                 'output_data_ports'].keys()
-    print "XXXXXXXXXXXX", state_model.state.get_path(), meta_dict['output_data_ports'].keys(), state_model.state.output_data_ports.keys()
+    # print "XXXXXXXXXXXX", state_model.state.get_path(), meta_dict['output_data_ports'].keys(), state_model.state.output_data_ports.keys()
 
     meta_dict['state'] = copy.deepcopy(state_model.meta)
-    if hasattr(state_model, 'states'):
+    if isinstance(state_model, ContainerStateModel):
         for state_id, state_m in state_model.states.iteritems():
             meta_dict['states'][state_m.state.state_id] = get_state_element_meta(state_m, with_parent_linkage)
             if with_prints:
@@ -414,7 +424,7 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
             print "input: ", elem.data_port.data_port_id, meta_dict['input_data_ports'].keys()
         assert elem.data_port.data_port_id in meta_dict['input_data_ports']
         elem.meta = copy.deepcopy(meta_dict['input_data_ports'][elem.data_port.data_port_id])
-    print "OOOOOOOOOOOOOOO", state_model.state.get_path(), meta_dict['output_data_ports'].keys(), state_model.state.output_data_ports.keys()
+    # print "OOOOOOOOOOOOOOO", state_model.state.get_path(), meta_dict['output_data_ports'].keys(), state_model.state.output_data_ports.keys()
     for elem in state_model.output_data_ports:
         print elem.data_port
     for elem in state_model.output_data_ports:
@@ -716,7 +726,7 @@ class Action:
                 # self.before_model.transitions._notify_method_after(state, 'data_flow_change', None, (self.before_model,), {})
 
     def add_core_object_to_state(self, state, core_obj):
-        logger.info("RUN ADD CORE OBJECT FOR {0} {1} {2}".format(state.state_id, core_obj, self.added_object_identifier))
+        logger.info("RUN ADD CORE OBJECT FOR {0} {1}".format(state.state_id, core_obj))
         if isinstance(core_obj, State):
             state.add_state(core_obj)
         elif isinstance(core_obj, Transition):
@@ -854,12 +864,12 @@ class AddObjectAction(Action):
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
         logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
-        self.changed_object = None
 
         assert overview['method_name'][-1] in self.possible_method_names
+        assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
+
         self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
         assert self.changed_object is overview['instance'][-1]
-        assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
         logger.info("self.changed_object is {0}".format(self.changed_object))
 
         self.parent_identifier = ''
@@ -897,6 +907,9 @@ class AddObjectAction(Action):
             g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
                                                                     self.state_machine.state_machine_id],
                                                          with_print=False)
+        # We are only interested in OpenGL editors, not Gaphas ones
+        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
+            g_sm_editor = False
         if g_sm_editor:
             g_sm_editor.suspend_drawing = True
 
@@ -904,7 +917,8 @@ class AddObjectAction(Action):
             [state, storage_version_of_state] = self.correct_reference_state(state,
                                                                              storage_version_of_state,
                                                                              storage_path=storage_version[4])
-        core_obj = self.get_added_object_of_state_version(storage_version_of_state)
+        list_name = self.type.replace('add_', '') + 's'
+        core_obj = getattr(storage_version_of_state, list_name)[self.added_object_identifier._id]
         logger.info(str(type(core_obj)) + str(core_obj))
         self.add_core_object_to_state(state, core_obj)
 
@@ -922,15 +936,37 @@ class AddObjectAction(Action):
         storage_version = self.after_storage
 
         assert state.get_path() == storage_version[4]
+        path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
+
+        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
+        mw_ctrl = mvc_singleton.main_window_controller
+        g_sm_editor = None
+        if mvc_singleton.main_window_controller:
+            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                    self.state_machine.state_machine_id],
+                                                         with_print=False)
+        # We are only interested in OpenGL editors, not Gaphas ones
+        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
+            g_sm_editor = False
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = True
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state, storage_version_of_state, storage_version[4])
 
-        core_obj = self.get_added_object_of_state_version(storage_version_of_state)
+        list_name = self.type.replace('add_', '') + 's'
+        core_obj = getattr(storage_version_of_state, list_name)[self.added_object_identifier._id]
         logger.info(str(type(core_obj)) + str(core_obj))
         # undo
         self.remove_core_object_from_state(state, core_obj)
+
+        # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
+        actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = False
+            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -943,46 +979,6 @@ class AddObjectAction(Action):
             logger.info("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
 
         return state, storage_version_of_state
-
-    def get_added_object_of_state_version(self, state):
-
-        if 'State' in self.added_object_identifier._type:
-            assert self.added_object_identifier._path.split('/')[-2] == state.state_id
-        else:
-            assert self.added_object_identifier._path.split('/')[-1] == state.state_id
-
-        if 'State' in self.added_object_identifier._type:
-            return state.states[self.added_object_identifier._path.split('/')[-1]]
-        elif self.added_object_identifier._type == 'DataFlow':
-            return state.data_flows[self.added_object_identifier._id]
-        elif self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'ScopedVariable']:
-            return state.get_data_port_by_id(self.added_object_identifier._id)
-        elif self.added_object_identifier._type == 'Transition':
-            return state.transitions[self.added_object_identifier._id]
-        elif self.added_object_identifier._type == 'Outcome':
-            return state.outcomes[self.added_object_identifier._id]
-        else:
-            return None
-
-
-from rafcon.statemachine.transition import Transition
-from rafcon.statemachine.data_flow import DataFlow
-from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.scope import ScopedData, ScopedVariable
-from rafcon.statemachine.script import Script
-from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
-from rafcon.statemachine.global_variable_manager import GlobalVariableManager
-from rafcon.statemachine.library_manager import LibraryManager
-from rafcon.statemachine.state_machine import StateMachine
-
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-
-core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort, ScopedData, ScopedVariable, Script,
-                    GlobalVariableManager, LibraryManager, StateMachine,
-                    ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
 
 class CoreObjectIdentifier:
@@ -1046,16 +1042,18 @@ class CoreObjectIdentifier:
 
 
 class RemoveObjectAction(Action):
+    possible_method_names = ['remove_state', 'remove_outcome', 'remove_input_data_port', 'remove_output_data_port',
+                             'remove_transition', 'remove_data_flow', 'remove_scoped_variable']
 
     def __init__(self, parent_path, state_machine_model, overview):
-
         Action.__init__(self, parent_path, state_machine_model, overview)
         logger.info("create RemoveObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
-        self.changed_object = None
+
+        assert overview['method_name'][-1] in self.possible_method_names
         assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
-        cmd_to_run = "self.changed_object = self.before_info['model']." + self.before_info['prop_name']
-        # logger.info("execute: '{0}'".format(cmd_to_run))
-        exec cmd_to_run
+
+        self.instance_path = overview['instance'][-1].get_path()
+        self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
         logger.info("self.changed_object is {0}".format(self.changed_object))
 
         self.parent_identifier = ''
@@ -1070,12 +1068,14 @@ class RemoveObjectAction(Action):
         else:
             self.parent_identifier = self.parent_path
         self.get_object_identifier()
-        self.before_linkage = {'internal': {'transitions': {}, 'data_flows': {}},
-                               'external': {'transitions': {}, 'data_flows': {}}}
-        self.after_linkage = {'internal': {'transitions': {}, 'data_flows': {}},
-                              'external': {'transitions': {}, 'data_flows': {}}}
-        self.removed_linkage = {'internal': {'transitions': {}, 'data_flows': {}},
-                                'external': {'transitions': {}, 'data_flows': {}}}
+        self.before_linkage = {'internal': {'transitions': [], 'data_flows': []},
+                               'external': {'transitions': [], 'data_flows': []}}
+        self.after_linkage = {'internal': {'transitions': [], 'data_flows': []},
+                              'external': {'transitions': [], 'data_flows': []}}
+        self.removed_linkage = {'internal': {'transitions': [], 'data_flows': []},
+                                'external': {'transitions': [], 'data_flows': []}}
+        self.added_linkage = {'internal': {'transitions': [], 'data_flows': []},
+                                'external': {'transitions': [], 'data_flows': []}}
         self.store_related_elements(self.before_linkage)
 
     def set_after(self, overview):
@@ -1098,16 +1098,61 @@ class RemoveObjectAction(Action):
         logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))
 
     def undo(self):
-        # add removed object
+        # Action.undo(self)
+        logger.info("RUN UNDO RemoveObject " + self.before_info['method_name'])
 
-        # re-create all removed linkage
-        Action.undo(self)
+        state = self.get_state_changed()
+        storage_version = self.before_storage
 
-        if self.removed_object_identifier._type == 'OutputDataPort':
-            state = self.state_machine.get_state_by_path(self.removed_object_identifier._path)
-            remove_function = getattr(state, 'remove_' + self.removed_object_identifier._list_name[:-1])
+        assert state.get_path() == storage_version[4]
+        path_of_state = state.get_path()
+        storage_version_of_state = get_state_from_state_tuple(storage_version)
+
+        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
+        mw_ctrl = mvc_singleton.main_window_controller
+        g_sm_editor = None
+        if mvc_singleton.main_window_controller:
+            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                    self.state_machine.state_machine_id],
+                                                         with_print=False)
+        # We are only interested in OpenGL editors, not Gaphas ones
+        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
+            g_sm_editor = False
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = True
+
+        if self.removed_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
+            [state, storage_version_of_state] = self.correct_reference_state(state,
+                                                                             storage_version_of_state,
+                                                                             storage_path=storage_version[4])
+        list_name = self.type.replace('remove_', '') + 's'
+        core_obj = getattr(storage_version_of_state, list_name)[self.removed_object_identifier._id]
+        logger.info(str(type(core_obj)) + str(core_obj))
+        if self.type not in ['remove_transition', 'remove_data_flow']:
+            self.add_core_object_to_state(state, core_obj)
+
+        self.adjust_linkage()
+
+        # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
+        actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = False
+            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
 
     def redo(self):
+
+        mw_ctrl = mvc_singleton.main_window_controller
+        g_sm_editor = None
+        if mvc_singleton.main_window_controller:
+            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                    self.state_machine.state_machine_id],
+                                                         with_print=False)
+        # We are only interested in OpenGL editors, not Gaphas ones
+        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
+            g_sm_editor = False
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = True
 
         if self.type == 'remove_state':
             state = self.state_machine.get_state_by_path(self.parent_path)
@@ -1117,11 +1162,91 @@ class RemoveObjectAction(Action):
             remove_function = getattr(state, 'remove_' + self.removed_object_identifier._list_name[:-1])
             remove_function(self.removed_object_identifier._id)
 
+        state = self.get_state_changed()
+        path_of_state = state.get_path()
+        actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        insert_state_meta_data(meta_dict=self.after_storage[3], state_model=actual_state_model)
+
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = False
+            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+
+    def correct_reference_state(self, state, storage_version_of_state, storage_path):
+
+        partial_path = self.removed_object_identifier._path.split('/')
+        for path_element in storage_path.split('/'):
+            logger.info("pop: " + partial_path.pop(0))
+        for path_element in partial_path:
+            storage_version_of_state = storage_version_of_state.states[path_element]
+            state = state.states[path_element]
+            logger.info("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
+
+        return state, storage_version_of_state
+
     def store_related_elements(self, linkage_dict):
-        pass
+
+        state = self.state_machine.get_state_by_path(self.instance_path)
+        if isinstance(state, HierarchyState):
+            for t in state.transitions.itervalues():
+                t_dict = {'from_state': t.from_state, 'from_outcome': t.from_outcome,
+                          'to_state': t.to_state, 'to_outcome': t.to_outcome, 'transition_id': t.transition_id}
+                linkage_dict['internal']['transitions'].append(t_dict)
+
+            for df in state.data_flows.itervalues():
+                df_dict = {'from_state': df.from_state, 'from_key': df.from_key,
+                           'to_state': df.to_state, 'to_key': df.to_key, 'data_flow_id': df.data_flow_id}
+                linkage_dict['internal']['data_flows'].append(df_dict)
+
+        if isinstance(state.parent, State):
+            for t in state.parent.transitions.itervalues():
+                t_dict = {'from_state': t.from_state, 'from_outcome': t.from_outcome,
+                          'to_state': t.to_state, 'to_outcome': t.to_outcome, 'transition_id': t.transition_id}
+                linkage_dict['external']['transitions'].append(t_dict)
+
+            for df in state.parent.data_flows.itervalues():
+                df_dict = {'from_state': df.from_state, 'from_key': df.from_key,
+                           'to_state': df.to_state, 'to_key': df.to_key, 'data_flow_id': df.data_flow_id}
+                linkage_dict['external']['data_flows'].append(df_dict)
 
     def diff_related_elements(self):
-        pass
+
+        self.removed_linkage['internal']['transitions'] = [kwargs for kwargs in self.before_linkage['internal']['transitions']
+                                                           if kwargs not in self.after_linkage['internal']['transitions']]
+        self.removed_linkage['internal']['data_flows'] = [kwargs for kwargs in self.before_linkage['internal']['data_flows']
+                                                          if kwargs not in self.after_linkage['internal']['data_flows']]
+        self.added_linkage['internal']['transitions'] = [kwargs for kwargs in self.after_linkage['internal']['transitions']
+                                                         if kwargs not in self.before_linkage['internal']['transitions']]
+        self.added_linkage['internal']['data_flows'] = [kwargs for kwargs in self.after_linkage['internal']['data_flows']
+                                                        if kwargs not in self.before_linkage['internal']['data_flows']]
+
+        self.removed_linkage['external']['transitions'] = [kwargs for kwargs in self.before_linkage['external']['transitions']
+                                                           if kwargs not in self.after_linkage['external']['transitions']]
+        self.removed_linkage['external']['data_flows'] = [kwargs for kwargs in self.before_linkage['external']['data_flows']
+                                                          if kwargs not in self.after_linkage['external']['data_flows']]
+        self.added_linkage['external']['transitions'] = [kwargs for kwargs in self.after_linkage['external']['transitions']
+                                                         if kwargs not in self.before_linkage['external']['transitions']]
+        self.added_linkage['external']['data_flows'] = [kwargs for kwargs in self.after_linkage['external']['data_flows']
+                                                        if kwargs not in self.before_linkage['external']['data_flows']]
+
+    def adjust_linkage(self):
+        # print "before: \n", self.before_linkage
+        # print "after: \n", self.after_linkage
+        # print "REMOVED: \n", self.removed_linkage
+        # print "ADDED: \n", self.added_linkage
+        state = self.state_machine.get_state_by_path(self.instance_path)
+        for kwargs in self.removed_linkage['internal']['transitions']:
+            state.add_transition(kwargs['from_state'], kwargs['from_outcome'], kwargs['to_state'], kwargs['to_outcome'], kwargs['transition_id'])
+        for kwargs in self.removed_linkage['external']['transitions']:
+            state.parent.add_transition(kwargs['from_state'], kwargs['from_outcome'], kwargs['to_state'], kwargs['to_outcome'], kwargs['transition_id'])
+        for kwargs in self.removed_linkage['internal']['data_flows']:
+            state.add_data_flow(kwargs['from_state'], kwargs['from_key'], kwargs['to_state'], kwargs['to_key'], kwargs['data_flow_id'])
+        for kwargs in self.removed_linkage['external']['data_flows']:
+            state.parent.add_data_flow(kwargs['from_state'], kwargs['from_key'], kwargs['to_state'], kwargs['to_key'], kwargs['data_flow_id'])
+
+        assert self.added_linkage['internal']['transitions'] == []
+        assert self.added_linkage['external']['transitions'] == []
+        assert self.added_linkage['internal']['data_flows'] == []
+        assert self.added_linkage['external']['data_flows'] == []
 
 
 class DataFlowAction(Action):
@@ -1449,7 +1574,7 @@ class History(ModelMT):
 
         self.fake = False
 
-        self.refactored_history = False
+        self.refactored_history = True
         self.with_prints = True
 
     def get_state_element_meta_from_tmp_storage(self, state_path):
@@ -1656,6 +1781,8 @@ class History(ModelMT):
                     if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
                             (("data_port" in cause or "outcome" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
                         self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                        # if "transition" in cause:
+                        #     return self.start_new_action_old(overview)
                         self.actual_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                                 state_machine_model=self.state_machine_model,
                                                                 overview=overview)

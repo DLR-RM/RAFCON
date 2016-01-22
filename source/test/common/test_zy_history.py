@@ -1919,7 +1919,7 @@ def trigger_state_type_change_tests(*args):
 
 
 if __name__ == '__main__':
-    test_add_remove_history(None)
+    # test_add_remove_history(None)
     # test_state_property_changes_history(None)
     #
     # test_outcome_property_changes_history(None)
@@ -1932,4 +1932,4 @@ if __name__ == '__main__':
     #
     # test_type_changes_without_gui(None)
     # test_state_machine_changes_with_gui(True, None)
-    # pytest.main([__file__])
+    pytest.main([__file__])
