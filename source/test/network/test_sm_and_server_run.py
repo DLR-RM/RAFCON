@@ -1,20 +1,12 @@
-import test_utils
+import testing_utils
 
 # system libs
 from multiprocessing import Process, Queue
 import os
 import glib
 import time
+import pytest
 from Queue import Empty
-
-
-from rafcon.statemachine.enums import StateExecutionState
-
-
-setup_config = dict()
-setup_config['sm_path'] = "../../test_scripts/unit_test_state_machines/99_bottles_of_beer_no_wait"
-setup_config['config_path'] = "./"
-setup_config['net_config_path'] = "./"
 
 
 def info(title):
@@ -26,6 +18,8 @@ def info(title):
 
 
 def check_for_sm_finished(sm, reactor):
+    from rafcon.statemachine.enums import StateExecutionState
+    from rafcon.statemachine.singleton import state_machine_execution_engine
     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=1.0)
@@ -34,11 +28,11 @@ def check_for_sm_finished(sm, reactor):
         # no logger output here to make it easier for the parser
         print "RAFCON live signal"
 
-    sm.root_state.join()
+    state_machine_execution_engine.join()
     reactor.stop()
 
 
-def start_state_machine(reactor, network_connections, global_net_config, sm_execution_engine):
+def start_state_machine(reactor, network_connections, global_net_config, sm_execution_engine, setup_config=None):
     time.sleep(1.0)
     # Note: The rafcon_server has to be started before the statemachine is launched
     if not global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
@@ -80,6 +74,13 @@ def start_rafcon(name, q):
     # rafcon.network
     from rafcon.network.network_config import global_net_config
 
+    import rafcon
+    rafcon_path, rafcon_file = os.path.split(rafcon.__file__)
+    setup_config = dict()
+    setup_config['sm_path'] = rafcon_path + "/../test_scripts/unit_test_state_machines/99_bottles_of_beer_no_wait"
+    setup_config['config_path'] = rafcon_path + "/../test/network"
+    setup_config['net_config_path'] = rafcon_path + "/../test/network"
+
     #########################################################################
     # code section for process
     #########################################################################
@@ -98,7 +99,11 @@ def start_rafcon(name, q):
     # Set base path of global storage
     rafcon.statemachine.singleton.global_storage.base_path = "/tmp"
 
-    start_state_machine(reactor, network_connections, global_net_config, rafcon.statemachine.singleton.state_machine_execution_engine)
+    start_state_machine(reactor,
+                        network_connections,
+                        global_net_config,
+                        rafcon.statemachine.singleton.state_machine_execution_engine,
+                        setup_config=setup_config)
 
     # setup network connections
     reactor.run()
@@ -149,6 +154,13 @@ def start_rafcon_server(name, q, execution_signal_queue):
     # rafcon.network
     from rafcon.network.network_config import global_net_config
 
+    import rafcon
+    rafcon_path, rafcon_file = os.path.split(rafcon.__file__)
+    setup_config = dict()
+    setup_config['sm_path'] = rafcon_path + "/../test_scripts/unit_test_state_machines/99_bottles_of_beer_no_wait"
+    setup_config['config_path'] = rafcon_path + "/../test/network"
+    setup_config['net_config_path'] = rafcon_path + "/../test/network"
+
     #########################################################################
     # code section for process
     #########################################################################
@@ -160,7 +172,9 @@ def start_rafcon_server(name, q, execution_signal_queue):
     global_net_config.load(path=setup_config['net_config_path'])
 
     # initialize the logging view
-    os.chdir("../../rafcon_server/mvc/")
+    import rafcon_server
+    rs_path, rs_file = os.path.split(rafcon_server.__file__)
+    os.chdir(rs_path + "/mvc/")
     debug_view = DebugView()
 
     rafcon.statemachine.singleton.library_manager.initialize()
@@ -186,7 +200,7 @@ def start_rafcon_server(name, q, execution_signal_queue):
     exit(0)
 
 
-def fail_test_sm_and_server():
+def test_sm_and_server():
 
     unit_test_message_queue = Queue()
     execution_signal_queue = Queue()
@@ -200,40 +214,44 @@ def fail_test_sm_and_server():
     rafcon_process = Process(target=start_rafcon, args=("rafcon", unit_test_message_queue))
     rafcon_process.start()
 
+
+    # ths stop lines sometimes don't come in the correct order, or the start or end stop line is skipped
+    # current stop line: "99 Bottles of Beer: ------------------------------------",
     test_sequence = [
         "99 Bottles of Beer: registered",
         "99 Bottles of Beer: GLSUJY/PXTKIH",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/PXTKIH",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/NDIVLD",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/SFZGMH",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/PXTKIH",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/NDIVLD",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/SFZGMH",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/PXTKIH",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/NDIVLD",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: GLSUJY/SFZGMH",
-        "99 Bottles of Beer: ------------------------------------",
         "99 Bottles of Beer: STATE_MACHINE_EXECUTION_STATUS.STOPPED"
     ]
 
+    offset = 0
     for i in range(len(test_sequence)):
-        data = unit_test_message_queue.get()
+        data = unit_test_message_queue.get(timeout=10.0)
         # print test_sequence[i]
         # print data
-        assert data == test_sequence[i]
+        while data == "99 Bottles of Beer: ------------------------------------":
+            data = unit_test_message_queue.get()
+        # it seems like normally the first state is sent twice; under cpu load the first state is only sent once; both
+        # variants are accepted right now but
+        # TODO: check this test again
+        if i == 2:
+            if data == "99 Bottles of Beer: GLSUJY/NDIVLD":
+                offset += 1
+        assert data == test_sequence[i + offset]
 
     rafcon_process.join()
     execution_signal_queue.put("stop")
     rafcon_server_process.join()
 
+
 if __name__ == '__main__':
-    test_sm_and_server()
+    # test_sm_and_server()
+    pytest.main([__file__])

@@ -10,8 +10,8 @@ from rafcon.utils.geometry import deg2rad
 
 
 def limit_value_string_length(value):
-    """
-    This method limits the string representation of the value to MAX_VALUE_LABEL_TEXT_LENGTH + 3 characters.
+    """This method limits the string representation of the value to MAX_VALUE_LABEL_TEXT_LENGTH + 3 characters.
+
     :param value: Value to limit string representation
     :return: String holding the value with a maximum length of MAX_VALUE_LABEL_TEXT_LENGTH + 3
     """
@@ -28,8 +28,8 @@ def limit_value_string_length(value):
 
 
 def get_col_rgba(color, transparent=False, alpha=None):
-    """
-    This class converts a gtk.gdk.Color into its r, g, b parts and adds an alpha according to needs
+    """This class converts a gtk.gdk.Color into its r, g, b parts and adds an alpha according to needs
+
     :param gtk.gdk.Color color: Color to extract r, g and b from
     :param transparent: Whether the color shoud be tranparent or not (used for selection in "data-flow-mode"
     :return: Red, Green, Blue and Alpha value (all betwenn 0.0 - 1.0)
@@ -65,9 +65,9 @@ def get_side_length_of_resize_handle(view, item):
 
 
 def draw_data_value_rect(cairo_context, color, value_size, name_size, pos, port_side):
-    """
-    This method draws the containing rect for the data port value, depending on the side and size of the label.
-    :param context: Draw Context
+    """This method draws the containing rect for the data port value, depending on the side and size of the label.
+
+    :param cairo_context: Draw Context
     :param color: Background color of value part
     :param value_size: Size (width, height) of label holding the value
     :param name_size: Size (width, height) of label holding the name
@@ -115,9 +115,11 @@ def draw_data_value_rect(cairo_context, color, value_size, name_size, pos, port_
 
 def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side, port_side_size,
                                 draw_connection_to_port=False):
-    """
+    """Draw label of scoped variable
+
     This method draws the label of a scoped variable connected to a data port. This is represented by drawing a bigger
     label where the top part is filled and the bottom part isn't.
+
     :param context: Draw Context
     :param gtk.gdk.Color color: Color to draw the label in (border and background fill color)
     :param name_size: Size of the name labels (scoped variable and port name) combined
@@ -125,8 +127,8 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     :param port_side: Side on which the label should be drawn
     :param port_side_size: Size of port (to have a relative size)
     :param draw_connection_to_port: Whether there should be a line connecting the label to the port
-    :return: Rotation Angle (to rotate names accordingly), X-Position of name labels start point, Y-Position
-             of name labels start point
+    :return: Rotation Angle (to rotate names accordingly), X-Position of name labels start point, Y-Position of name
+             labels start point
     """
     c = context.cairo
     c.set_line_width(port_side_size * .03)
@@ -219,8 +221,8 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
 def draw_port_label(context, text, label_color, text_color, transparency, fill, label_position, port_side_length,
                     draw_connection_to_port=False, show_additional_value=False, additional_value=None,
                     only_extent_calculations=False):
-    """
-    Draws a normal label indicating the port name.
+    """Draws a normal label indicating the port name.
+
     :param context: Draw Context
     :param text: Text to display
     :param gtk.gdk.Color label_color: Color of the label (border and background if fill is set to True)

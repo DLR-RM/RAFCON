@@ -129,7 +129,7 @@ class StateMachineHistoryController(ExtendedController):
     def undo(self, key_value, modifier_mask):
         for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
             if tab['controller'].get_controller('source_ctrl') is not None and \
-                    tab['controller'].get_controller('source_ctrl').view.textview.has_focus():
+                    tab['controller'].get_controller('source_ctrl').view.textview.is_focus():
                 # print tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_undo(), key
                 if tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_undo():
                     return False
@@ -139,7 +139,7 @@ class StateMachineHistoryController(ExtendedController):
     def redo(self, key_value, modifier_mask):
         for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
             if tab['controller'].get_controller('source_ctrl') is not None and \
-                    tab['controller'].get_controller('source_ctrl').view.textview.has_focus():
+                    tab['controller'].get_controller('source_ctrl').view.textview.is_focus():
                 # print tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_redo(), key
                 if tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_redo():
                     return False

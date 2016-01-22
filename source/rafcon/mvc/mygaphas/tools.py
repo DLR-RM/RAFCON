@@ -48,7 +48,7 @@ class RemoveItemTool(Tool):
                 return True
             # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):
-                if self.view.has_focus():
+                if self.view.is_focus():
                     self._graphical_editor_view.emit('remove_state_from_state_machine')
                     return True
 

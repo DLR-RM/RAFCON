@@ -62,11 +62,11 @@ class ScopedVariableListController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", self.add_port)
 
     def add_port(self, *_):
-        if self.view[self.view.top].has_focus():
+        if self.view[self.view.top].is_focus():
             self.on_new_scoped_variable_button_clicked(None)
 
     def remove_port(self, *_):
-        if self.view[self.view.top].has_focus():
+        if self.view[self.view.top].is_focus():
             self.on_delete_scoped_variable_button_clicked(None)
 
     @ExtendedController.observe("scoped_variables", after=True)
@@ -84,19 +84,27 @@ class ScopedVariableListController(ExtendedController):
             self.select_entry(selected_data_port_id)
 
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
-        new_sv_name = "scoped_%s" % str(self.new_sv_counter)
         if hasattr(self.model, 'states'):
-            self.new_sv_counter += 1
-            self.model.state.add_scoped_variable(new_sv_name, "int", 0)
+            data_port_id = None
+            while data_port_id is None:
+                try:
+                    data_port_id = self.model.state.add_scoped_variable("scoped_%s" % self.new_sv_counter, "int", 0)
+                except ValueError:
+                    pass
+                self.new_sv_counter += 1
+            self.select_entry(data_port_id)
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
         tree_view = self.view["scoped_variables_tree_view"]
         if hasattr(self.model, 'states'):
-            path = tree_view.get_cursor()[0][0]
+
+            path = self.get_path()  # tree_view.get_cursor()[0][0]
             if path is not None:
                 scoped_variable_key = self.scoped_variables_list_store[int(path)][3]
                 self.scoped_variables_list_store.clear()
                 self.model.state.remove_scoped_variable(scoped_variable_key)
+            if len(self.scoped_variables_list_store) > 0:
+                self.view[self.view.top].set_cursor(min(path, len(self.scoped_variables_list_store) - 1))
 
     def on_name_changed(self, widget, path, text):
         scoped_variable_id = self.scoped_variables_list_store[int(path)][3]
@@ -128,6 +136,14 @@ class ScopedVariableListController(ExtendedController):
                 self.view[self.view.top].set_cursor(ctr)
                 break
             ctr += 1
+
+    def get_path(self):
+        """Returns the path/index to the currently selected port entry"""
+        cursor = self.view[self.view.top].get_cursor()
+        # the cursor is a tuple containing the current path and the focused column
+        if cursor[0] is None:
+            return None
+        return cursor[0][0]
 
     def reload_scoped_variables_list_store(self):
         """Reloads the scoped variable list store from the data port models

@@ -192,12 +192,18 @@ class DataPortListController(ExtendedController):
     def on_new_port_button_clicked(self, widget, data=None):
         """Add a new port with default values and select it
         """
-        new_port_name = self.type + "_{0}".format(self.new_port_counter)
-        self.new_port_counter += 1
-        if self.type == "input":
-            data_port_id = self.model.state.add_input_data_port(new_port_name, "int", "0")
-        else:
-            data_port_id = self.model.state.add_output_data_port(new_port_name, "int", "0")
+
+        data_port_id = None
+        while data_port_id is None:
+            new_port_name = self.type + "_{0}".format(self.new_port_counter)
+            try:
+                if self.type == "input":
+                    data_port_id = self.model.state.add_input_data_port(new_port_name, "int", "0")
+                else:
+                    data_port_id = self.model.state.add_output_data_port(new_port_name, "int", "0")
+            except ValueError:
+                pass
+            self.new_port_counter += 1
         self.select_entry(data_port_id)
 
     def on_delete_port_button_clicked(self, widget, data=None):

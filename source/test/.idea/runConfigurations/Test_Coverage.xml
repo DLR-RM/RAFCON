@@ -3,10 +3,10 @@
     <option name="INTERPRETER_OPTIONS" value="-m" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
+      <env name="PYTHONUNBUFFERED" value="1" />
       <env name="" value="" />
       <env name="PYTHONIOENCODING" value="UTF-8" />
       <env name="PYCHARM_HOSTED" value="1" />
-      <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/common/" />
