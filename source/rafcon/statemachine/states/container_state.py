@@ -231,6 +231,8 @@ class ContainerState(State):
                 if own_sm_id is not None:
                     global_storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.get_file_system_path())
 
+        return state.state_id
+
     @Observable.observed
     def remove_state(self, state_id, recursive_deletion=True, force=True):
         """Remove a state from the container state.
