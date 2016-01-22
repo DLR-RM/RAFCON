@@ -1673,14 +1673,17 @@ class GraphicalEditorController(ExtendedController):
 
             to_state_id = transition_m.transition.to_state
 
-            if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
-                # Set the to coordinates to the outcome coordinates received earlier
-                to_pos = parent_state_m.temp['gui']['editor']['outcome_pos'][
-                    transition_m.transition.to_outcome]
-            else:
-                # Set the to coordinates to the center of the next state
-                to_state = parent_state_m.states[to_state_id]
-                to_pos = to_state.temp['gui']['editor']['income_pos']
+            try:
+                if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
+                    # Set the to coordinates to the outcome coordinates received earlier
+                    to_pos = parent_state_m.temp['gui']['editor']['outcome_pos'][
+                        transition_m.transition.to_outcome]
+                else:
+                    # Set the to coordinates to the center of the next state
+                    to_state = parent_state_m.states[to_state_id]
+                    to_pos = to_state.temp['gui']['editor']['income_pos']
+            except KeyError:
+                return
 
             if isinstance(transition_m.meta['gui']['editor_opengl']['waypoints'], dict):
                 transition_m.meta['gui']['editor_opengl']['waypoints'] = transition_m.meta['gui']['editor']['waypoints']
