@@ -150,7 +150,7 @@ class StateMachineHistoryController(ExtendedController):
     def update(self, model, prop_name, info):
         # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))
         if self._selected_sm_model.history.fake or \
-                                info is not None and not info.method_name in ["insert_action", "undo", "redo", "reset"]:
+                info is not None and info.method_name not in ["insert_action", "undo", "redo", "reset"]:
             return
         self.doing_update = True
         self.list_store.clear()
@@ -160,18 +160,18 @@ class StateMachineHistoryController(ExtendedController):
             #     self.new_change(action.before_model, action.before_prop_name, action.before_info)
             # else:
             # self.new_change(action.before_model, action.before_prop_name, action.before_info)
-            if not 'method_name' in action.before_info:
-                logger.warning("Found no method_name in before_info %s" % action.before_info)
+            if 'method_name' not in action.before_overview['info'][-1]:
+                logger.warning("Found no method_name in before_info %s" % action.before_overview['info'][-1])
                 method_name = None
             else:
-                method_name = action.before_info['method_name']
+                method_name = action.before_overview['method_name'][-1]
 
-            if not 'instance' in action.before_info:
-                logger.warning("Found no instance in before_info %s" % action.before_info)
+            if 'instance' not in action.before_overview['info'][-1]:
+                logger.warning("Found no instance in before_info %s" % action.before_overview['info'][-1])
                 inst = None
             else:
-                inst = action.before_info['instance']
-            self.new_change(action.before_model, action.before_prop_name,
+                inst = action.before_overview['instance'][-1]
+            self.new_change(action.before_overview['model'][-1], action.before_overview['prop_name'][-1],
                             method_name, inst, info, action.version_id)
 
             # self.new_change(action.before_model, action.before_prop_name,
