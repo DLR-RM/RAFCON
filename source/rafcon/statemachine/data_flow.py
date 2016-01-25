@@ -31,9 +31,9 @@ class DataFlow(StateElement):
                 raise ValueError("data_flow_id must be of type int")
 
         if data_flow_id is None:
-            self._change_property_with_validity_check('_data_flow_id', generate_data_flow_id())
+            self._data_flow_id = generate_data_flow_id()
         else:
-            self._change_property_with_validity_check('_data_flow_id', data_flow_id)
+            self._data_flow_id = data_flow_id
 
         self.from_state = from_state
         self.from_key = from_key
