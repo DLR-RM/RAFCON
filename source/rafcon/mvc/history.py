@@ -1360,8 +1360,8 @@ class ScopedVariableAction(DataPortAction):
 
 class OutcomeAction(Action):
 
-    possible_method_names = ['name', 'outcome_id']
-    possible_args = ['name', 'outcome_id']
+    possible_method_names = ['name']
+    possible_args = ['name']
 
     def __init__(self, parent_path, state_machine_model, overview):
         # Action.__init__(self, parent_path, state_machine_model, overview)

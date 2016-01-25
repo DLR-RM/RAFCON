@@ -26,7 +26,10 @@ class Outcome(StateElement):
     def __init__(self, outcome_id=None, name=None, parent=None):
         super(Outcome, self).__init__()
 
-        self.outcome_id = outcome_id
+        if not isinstance(outcome_id, int):
+            raise TypeError("outcome_id must be of type int")
+        self._outcome_id = outcome_id
+
         self.name = name
 
         # Checks for validity
@@ -66,14 +69,6 @@ class Outcome(StateElement):
 
         """
         return self._outcome_id
-
-    @outcome_id.setter
-    @Observable.observed
-    def outcome_id(self, outcome_id):
-        if not isinstance(outcome_id, int):
-            raise TypeError("outcome_id must be of type int")
-
-        self._change_property_with_validity_check('_outcome_id', outcome_id)
 
     @property
     def name(self):

@@ -882,8 +882,6 @@ def test_outcome_property_changes_history(caplog):
 
     # change name
 
-    # change outcome_id
-
     # create testbed
     [logger, state, sm_model, state_dict] = create_models()
 
@@ -913,11 +911,11 @@ def test_outcome_property_changes_history(caplog):
             # resolve reference
             state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
-        print "\n\n\n\n\n\n\n\n\n\n\n\n"
-        state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-        state_dict['Nested'].outcomes.values()[0].outcome_id += 10
-        sm_model.history.undo()
-        sm_model.history.redo()
+        # outcome_id(self, outcome_id) -> no data_fow_id setter anymore
+        # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+        # state_dict['Nested'].outcomes.values()[0].outcome_id += 10
+        # sm_model.history.undo()
+        # sm_model.history.redo()
 
     # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
     do_check_for_state(state_dict, state_name='Container')
