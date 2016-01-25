@@ -484,7 +484,7 @@ class ContainerState(State):
         """
         for transition_id in self.transitions.keys():
             transition = self.transitions[transition_id]
-            if transition.to_outcome == outcome_id and transition.to_state is self.state_id:
+            if transition.to_outcome == outcome_id and transition.to_state == self.state_id:
                 self.remove_transition(transition_id)
 
     # ---------------------------------------------------------------------------------------------
