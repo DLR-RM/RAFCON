@@ -114,6 +114,7 @@ class NotificationOverview(dict):
         dict.__init__(self, self.__overview)
         if self.with_prints:
             self.print_overview()
+            print str(self)
 
     def __str__(self):
         return self.__description
@@ -745,8 +746,7 @@ class Action:
                 # self.before_model.transitions._notify_method_after(state, 'data_flow_change', None, (self.before_model,), {})
 
     def add_core_object_to_state(self, state, core_obj):
-        if self.with_print:
-            logger.info("RUN ADD CORE OBJECT FOR {0} {1}".format(state.state_id, core_obj))
+        # logger.info("RUN ADD CORE OBJECT FOR {0} {1}".format(state.state_id, core_obj))
         if isinstance(core_obj, State):
             state.add_state(core_obj)
         elif isinstance(core_obj, Transition):
@@ -1361,6 +1361,8 @@ class OutcomeAction(Action):
         self.before_overview = overview
         self.state_machine = state_machine_model.state_machine
 
+        if not self.action_type in self.possible_method_names:
+            logger.error("Outcome Action is not possible with with overview {0}".format(overview))
         assert self.action_type in self.possible_method_names
         assert isinstance(self.before_overview['instance'][-1], Outcome)
         self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
@@ -1976,7 +1978,6 @@ class History(ModelMT):
             # logger.debug("History states_BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
-            print overview
             # skipped state changes
             if (overview['method_name'][0] == 'state_change' and overview['method_name'][-1] in ['active',
                                                                                                  'child_execution',
@@ -2025,7 +2026,6 @@ class History(ModelMT):
             # logger.debug("History states_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
-            print overview
             if overview['method_name'][0] == 'state_change' and \
                     overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status'] or \
                     not overview['method_name'][0] == 'state_change':
@@ -2071,9 +2071,6 @@ class History(ModelMT):
             # logger.debug("History BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
-
-            # print "IN HISTORY", info
-            # print "states changed ", info.prop_name, info.method_name
             if self.locked:
                 self.count_before += 1
                 if self.with_prints:
@@ -2121,7 +2118,6 @@ class History(ModelMT):
             # logger.debug("History state_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
-
             if self.locked:
                 self.count_before -= 1
                 if self.with_prints:
