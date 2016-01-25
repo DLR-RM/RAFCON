@@ -148,7 +148,7 @@ class StateEditorController(ExtendedController):
         if isinstance(self.model.state, LibraryState):
             return
         tbuffer = textview.get_buffer()
-        entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter()) or None
 
         if not self.model.state.description == entry_text:
             logger.debug("Changed description of state {0}".format(self.model.state.name))
