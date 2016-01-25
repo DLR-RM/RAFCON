@@ -26,13 +26,11 @@ class DataFlow(StateElement):
     def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None, parent=None):
         super(DataFlow, self).__init__()
 
-        if data_flow_id is not None:
-            if not isinstance(data_flow_id, int):
-                raise ValueError("data_flow_id must be of type int")
-
         if data_flow_id is None:
             self._data_flow_id = generate_data_flow_id()
         else:
+            if not isinstance(data_flow_id, int):
+                raise ValueError("data_flow_id must be of type int")
             self._data_flow_id = data_flow_id
 
         self.from_state = from_state
