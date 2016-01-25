@@ -1182,7 +1182,12 @@ class RemoveObjectAction(Action):
         # print "after: \n", self.after_linkage
         # print "REMOVED: \n", self.removed_linkage
         # print "ADDED: \n", self.added_linkage
+
         state = self.state_machine.get_state_by_path(self.instance_path)
+        # print state.transitions.keys(), state.data_flows.keys()
+        # if isinstance(state.parent, State):
+        #     print state.parent.transitions.keys(), state.parent.data_flows.keys()
+
         for kwargs in self.removed_linkage['internal']['transitions']:
             state.add_transition(kwargs['from_state'], kwargs['from_outcome'], kwargs['to_state'], kwargs['to_outcome'], kwargs['transition_id'])
         for kwargs in self.removed_linkage['external']['transitions']:
