@@ -231,13 +231,10 @@ class StateView(Element):
     def transparent(self):
         return self._transparent
 
-    @property
-    def child_state_vs(self):
-        child_state_vs = []
+    def child_state_views(self):
         for child in self.canvas.get_children(self):
             if isinstance(child, StateView):
-                child_state_vs.append(child)
-        return child_state_vs
+                yield child
 
     @staticmethod
     def get_state_drawing_area(state):
@@ -652,8 +649,8 @@ class StateView(Element):
 
             state_abs_pos = calc_abs_pos(state, state.handles()[NW].pos)
 
-            width_factor = new_size[0] / old_size[0]
-            height_factor = new_size[1] / old_size[1]
+            width_factor = float(new_size[0]) / old_size[0]
+            height_factor = float(new_size[1]) / old_size[1]
 
             def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
                 old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
@@ -667,11 +664,6 @@ class StateView(Element):
                 port_v.handle.pos = new_rel_pos
 
             name_v = state.name_view
-            old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, name_v, name_v.handles()[NW])
-            new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
-            handle_set_rel_pos(name_v, name_v.handles()[NW].pos, new_rel_pos, state_abs_pos,
-                               (name_v.width, name_v.height))
-
             name_v.width *= width_factor
             name_v.height *= height_factor
 
@@ -682,7 +674,7 @@ class StateView(Element):
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
                         handle_set_rel_pos(transition_v, waypoint.pos, new_rel_pos, state_abs_pos)
 
-                for child_state_v in self.child_state_vs:
+                for child_state_v in state.child_state_views():
                     if not paste:
                         old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, child_state_v, child_state_v.handles()[NW])
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
