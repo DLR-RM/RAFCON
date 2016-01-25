@@ -1554,15 +1554,14 @@ def test_data_flow_property_changes_history(caplog):
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
-    # data_flow_id(self, data_flow_id)
+    # data_flow_id(self, data_flow_id)  -> no data_fow_id setter anymore
     # state_dict['Nested'].data_flows[new_df_id].data_flow_id += 1
-    # # TODO
     # sm_model.history.undo()
     # #sm_model.history.redo()
-
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-    new_df_id = state_dict['Nested'].data_flows[new_df_id].data_flow_id  # only if histroy.redo was not run
+    #
+    # # resolve reference
+    # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    # new_df_id = state_dict['Nested'].data_flows[new_df_id].data_flow_id  # only if histroy.redo was not run
 
     # reset observer and testbed
     state_dict['Nested'].remove_data_flow(new_df_id)

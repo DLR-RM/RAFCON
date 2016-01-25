@@ -1267,11 +1267,7 @@ def test_data_flow_property_changes_history(caplog):
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
-    # data_flow_id(self, data_flow_id)
-    # state_dict['Nested'].data_flows[new_df_id].data_flow_id += 1
-    # # TODO ContainerState needs a modify data_flow_id for proper handling
-    # sm_model.history.undo()
-    # #sm_model.history.redo()
+    # data_flow_id(self, data_flow_id) -> no data_fow_id setter anymore
 
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state

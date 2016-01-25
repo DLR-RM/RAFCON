@@ -977,9 +977,9 @@ def test_data_flow_modify_notification(caplog):
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
     check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
-    # data_flow_id(self, data_flow_id)
-    state_dict['Nested'].data_flows[new_df_id].data_flow_id += 1
-    check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=5)
+    # data_flow_id(self, data_flow_id) -> no data_fow_id setter anymore
+    # state_dict['Nested'].data_flows[new_df_id].data_flow_id += 1
+    # check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=5)
 
     # reset observer and testbed
     state_dict['Nested'].remove_data_flow(new_df_id)

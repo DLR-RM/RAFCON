@@ -1210,8 +1210,8 @@ class RemoveObjectAction(Action):
 class DataFlowAction(Action):
 
     possible_method_names = ['modify_origin', 'from_state', 'from_key',
-                             'modify_target', 'to_state', 'to_key', 'data_flow_id']
-    possible_args = ['from_state', 'from_key', 'to_state', 'to_key', 'data_flow_id']
+                             'modify_target', 'to_state', 'to_key']
+    possible_args = ['from_state', 'from_key', 'to_state', 'to_key']
 
     def __init__(self, parent_path, state_machine_model, overview):
         # Action.__init__(self, parent_path, state_machine_model, overview)

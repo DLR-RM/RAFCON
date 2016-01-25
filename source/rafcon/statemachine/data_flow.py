@@ -26,10 +26,14 @@ class DataFlow(StateElement):
     def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None, parent=None):
         super(DataFlow, self).__init__()
 
+        if data_flow_id is not None:
+            if not isinstance(data_flow_id, int):
+                raise ValueError("data_flow_id must be of type int")
+
         if data_flow_id is None:
-            self.data_flow_id = generate_data_flow_id()
+            self._change_property_with_validity_check('_data_flow_id', generate_data_flow_id())
         else:
-            self.data_flow_id = data_flow_id
+            self._change_property_with_validity_check('_data_flow_id', data_flow_id)
 
         self.from_state = from_state
         self.from_key = from_key
@@ -174,12 +178,3 @@ class DataFlow(StateElement):
 
         """
         return self._data_flow_id
-
-    @data_flow_id.setter
-    @Observable.observed
-    def data_flow_id(self, data_flow_id):
-        if data_flow_id is not None:
-            if not isinstance(data_flow_id, int):
-                raise ValueError("data_flow_id must be of type int")
-
-        self._change_property_with_validity_check('_data_flow_id', data_flow_id)
