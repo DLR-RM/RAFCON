@@ -53,6 +53,8 @@ core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort
                     GlobalVariableManager, LibraryManager, StateMachine,
                     ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
+HISTORY_DEBUG_LOG_FILE = '/tmp/test_file.txt'
+
 
 def get_state_tuple(state, state_m=None):
     """ Generates a tuple that holds the state as yaml-strings and its meta data in a dictionary.
@@ -547,6 +549,38 @@ class Action:
 
         return state
 
+    def stop_graphical_viewer(self):
+        """ The function avoid interference with and unnecessary drawing of the graphical edit while undo or redo
+        of an action by stopping the drawing process and returning the graphical viewer object.
+        It is a general functionality all Action*-Classes may need.
+        :return: g_sm_editor -> the actual graphical viewer for further use
+        """
+
+        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
+        mw_ctrl = mvc_singleton.main_window_controller
+        g_sm_editor = None
+        if mvc_singleton.main_window_controller:
+            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                    self.state_machine.state_machine_id],
+                                                         with_print=False)
+
+        # We are only interested in OpenGL editors, not Gaphas ones
+        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
+            g_sm_editor = False
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = True
+
+        return g_sm_editor
+
+    @staticmethod
+    def run_graphical_viewer(g_sm_editor):
+        """ Enables and re-initiate graphical viewer's drawing process.
+        :param g_sm_editor: graphical state machine editor
+        """
+        if g_sm_editor:
+            g_sm_editor.suspend_drawing = False
+            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+
     def redo(self):
         """ General Redo, that takes all elements in the parent path state stored of the before action state machine status.
         :return:
@@ -570,28 +604,15 @@ class Action:
 
         assert storage_version_of_state
 
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
-        mw_ctrl = mvc_singleton.main_window_controller
-        g_sm_editor = None
-        if mvc_singleton.main_window_controller:
-            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
-                                                                    self.state_machine.state_machine_id],
-                                                         with_print=False)
-
-        # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
-            g_sm_editor = False
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = True
+        g_sm_editor = self.stop_graphical_viewer()
 
         self.update_state(state, storage_version_of_state)
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = False
-            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+
+        self.run_graphical_viewer(g_sm_editor)
 
     def update_state(self, state, stored_state):
 
@@ -801,29 +822,10 @@ class StateMachineAction(Action):
         # logger.debug("DO root version change")
         new_state = statemachine_helper.create_new_state_from_state_with_type(state, new_state_class)
 
-        mw_ctrl = mvc_singleton.main_window_controller
-        g_sm_editor = None
-        if mvc_singleton.main_window_controller:
-            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
-                                                                    self.state_machine.state_machine_id],
-                                                         with_print=False)
-
-        # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
-            g_sm_editor = False
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = True
+        g_sm_editor = self.stop_graphical_viewer()
 
         self.update_state(new_state, root_state_version_from_storage)
 
-        # if isinstance(root_state_version_fom_storage, ContainerState):
-        #     new_state_model = ContainerStateModel(new_state)
-        # else:
-        #     new_state_model = StateModel(new_state)
-
-        # insert_state_meta_data(meta_dict=storage_version[3], state_model=new_state_model)
-        # self.state_machine_model.root_state = new_state_model
-        # self.state_machine.root_state = new_state  # root_state_version_fom_storage
         if self.with_print:
             logger.info("SM set_root_state_to_version: insert new root state")
         self.state_machine.root_state = new_state  # root_state_version_fom_storage
@@ -833,9 +835,8 @@ class StateMachineAction(Action):
         insert_state_meta_data(meta_dict=storage_version[3], state_model=self.state_machine_model.root_state)
         if self.with_print:
             logger.info("SM set_root_state_to_version: FINISHED")
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = False
-            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+
+        self.run_graphical_viewer(g_sm_editor)
 
     def redo(self):
         # print "#H# STATE_MACHINE_REDO STARTED"
@@ -864,14 +865,14 @@ class AddObjectAction(Action):
 
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
-        logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
+        # logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
         assert overview['method_name'][-1] in self.possible_method_names
         assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
 
         self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
         assert self.changed_object is overview['instance'][-1]
-        logger.info("self.changed_object is {0}".format(self.changed_object))
+        # logger.info("self.changed_object is {0}".format(self.changed_object))
 
         self.parent_identifier = ''
         self.added_object_identifier = ''
@@ -882,7 +883,7 @@ class AddObjectAction(Action):
     def set_after(self, overview):
         Action.set_after(self, overview)
         new_overview = overview.new_overview
-        logger.info("add_object \n" + str(self.after_info))
+        # logger.info("add_object \n" + str(self.after_info))
         # get new object from respective list and create identifier
         list_name = new_overview['method_name'][-1].replace('add_', '') + 's'
         new_object = getattr(new_overview['args'][-1][0], list_name)[new_overview['result'][-1]]
@@ -892,7 +893,7 @@ class AddObjectAction(Action):
         """
         :return:Redo of adding object action is simply done by adding the object again from the after_storage of the parent state.
         """
-        logger.info("RUN REDO AddObject " + self.before_info['method_name'])
+        # logger.info("RUN REDO AddObject " + self.before_info['method_name'])
 
         state = self.get_state_changed()
         storage_version = self.after_storage
@@ -901,18 +902,7 @@ class AddObjectAction(Action):
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
-        mw_ctrl = mvc_singleton.main_window_controller
-        g_sm_editor = None
-        if mvc_singleton.main_window_controller:
-            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
-                                                                    self.state_machine.state_machine_id],
-                                                         with_print=False)
-        # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
-            g_sm_editor = False
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = True
+        g_sm_editor = self.stop_graphical_viewer()
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -920,15 +910,12 @@ class AddObjectAction(Action):
                                                                              storage_path=storage_version[4])
         list_name = self.type.replace('add_', '') + 's'
         core_obj = getattr(storage_version_of_state, list_name)[self.added_object_identifier._id]
-        logger.info(str(type(core_obj)) + str(core_obj))
         self.add_core_object_to_state(state, core_obj)
 
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = False
-            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+
+        self.run_graphical_viewer(g_sm_editor)
 
     def undo(self):
 
@@ -940,18 +927,7 @@ class AddObjectAction(Action):
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
-        mw_ctrl = mvc_singleton.main_window_controller
-        g_sm_editor = None
-        if mvc_singleton.main_window_controller:
-            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
-                                                                    self.state_machine.state_machine_id],
-                                                         with_print=False)
-        # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
-            g_sm_editor = False
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = True
+        g_sm_editor = self.stop_graphical_viewer()
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state, storage_version_of_state, storage_version[4])
@@ -965,9 +941,8 @@ class AddObjectAction(Action):
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = False
-            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+
+        self.run_graphical_viewer(g_sm_editor)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -1052,23 +1027,19 @@ class RemoveObjectAction(Action):
 
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
-        logger.info("create RemoveObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
+        # logger.info("create RemoveObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
         assert overview['method_name'][-1] in self.possible_method_names
         assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
 
         self.instance_path = overview['instance'][-1].get_path()
         self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
-        logger.info("self.changed_object is {0}".format(self.changed_object))
+        # logger.info("self.changed_object is {0}".format(self.changed_object))
 
         self.parent_identifier = ''
         self.removed_object_identifier = ''
         self.removed_object_args = ''
         if "outcome" in self.before_info['method_name'] or "data_port" in self.before_info['method_name']:
-            # logger.warning('outcome or data_port')
-            # if self
-            # else:
-            #     self.parent_identifier = self.parent_path
             pass
         else:
             self.parent_identifier = self.parent_path
@@ -1080,7 +1051,7 @@ class RemoveObjectAction(Action):
         self.removed_linkage = {'internal': {'transitions': [], 'data_flows': []},
                                 'external': {'transitions': [], 'data_flows': []}}
         self.added_linkage = {'internal': {'transitions': [], 'data_flows': []},
-                                'external': {'transitions': [], 'data_flows': []}}
+                              'external': {'transitions': [], 'data_flows': []}}
         self.store_related_elements(self.before_linkage)
 
     def set_after(self, overview):
@@ -1089,7 +1060,7 @@ class RemoveObjectAction(Action):
         self.diff_related_elements()
 
     def get_object_identifier(self):
-        logger.info("remove_object \n" + str(self.before_info))
+        # logger.info("remove_object \n" + str(self.before_info))
         new_overview = self.before_overview.new_overview
         # get new object from respective list and create identifier
         object_type_name = new_overview['method_name'][-1].replace('remove_', '')
@@ -1100,11 +1071,10 @@ class RemoveObjectAction(Action):
             object_id = new_overview['args'][-1][1]
         new_object = getattr(new_overview['args'][-1][0], list_name)[object_id]
         self.removed_object_identifier = CoreObjectIdentifier(new_object)
-        logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))
+        # logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))
 
     def undo(self):
-        # Action.undo(self)
-        logger.info("RUN UNDO RemoveObject " + self.before_info['method_name'])
+        # logger.info("RUN UNDO RemoveObject " + self.before_info['method_name'])
 
         state = self.get_state_changed()
         storage_version = self.before_storage
@@ -1113,18 +1083,7 @@ class RemoveObjectAction(Action):
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
-        mw_ctrl = mvc_singleton.main_window_controller
-        g_sm_editor = None
-        if mvc_singleton.main_window_controller:
-            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
-                                                                    self.state_machine.state_machine_id],
-                                                         with_print=False)
-        # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
-            g_sm_editor = False
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = True
+        g_sm_editor = self.stop_graphical_viewer()
 
         if self.removed_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1141,23 +1100,12 @@ class RemoveObjectAction(Action):
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = False
-            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+
+        self.run_graphical_viewer(g_sm_editor)
 
     def redo(self):
 
-        mw_ctrl = mvc_singleton.main_window_controller
-        g_sm_editor = None
-        if mvc_singleton.main_window_controller:
-            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
-                                                                    self.state_machine.state_machine_id],
-                                                         with_print=False)
-        # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
-            g_sm_editor = False
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = True
+        g_sm_editor = self.stop_graphical_viewer()
 
         if self.type == 'remove_state':
             state = self.state_machine.get_state_by_path(self.parent_path)
@@ -1172,9 +1120,7 @@ class RemoveObjectAction(Action):
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=self.after_storage[3], state_model=actual_state_model)
 
-        if g_sm_editor:
-            g_sm_editor.suspend_drawing = False
-            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+        self.run_graphical_viewer(g_sm_editor)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -1274,7 +1220,8 @@ class DataFlowAction(Action):
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
         self.after_arguments = None
 
-    def get_set_of_arguments(self, df):
+    @staticmethod
+    def get_set_of_arguments(df):
         return {'from_state': df.from_state, 'from_key': df.from_key, 'to_state': df.to_state, 'to_key': df.to_key,
                 'data_flow_id': df.data_flow_id}
 
@@ -1423,7 +1370,8 @@ class OutcomeAction(Action):
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
         self.after_arguments = None
 
-    def get_set_of_arguments(self, oc):
+    @ staticmethod
+    def get_set_of_arguments(oc):
         return {'name': oc.name, 'outcome_id': oc.outcome_id}
 
     def set_after(self, overview):
@@ -1483,7 +1431,8 @@ class StateAction(Action):
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
         self.after_arguments = None
 
-    def get_set_of_arguments(self, s):
+    @staticmethod
+    def get_set_of_arguments(s):
         if isinstance(s, ContainerState):
             return {'name': s.name, 'description': s.description, 'state_id': s.state_id, 'start_state_id': s.start_state_id}
         else:
@@ -1522,10 +1471,6 @@ class StateAction(Action):
             exec "s.{0} = arguments['{0}']".format(self.action_type)
         else:
             assert False
-#
-# class ModifyAttribute(Action):
-#     def __init__(self, *args, **kwargs):
-#         Action.__init__(self, *args, **kwargs)
 
 
 class Group(Action):
@@ -1580,7 +1525,8 @@ class History(ModelMT):
         self.fake = False
 
         self.refactored_history = True
-        self.with_prints = True
+        self.with_prints = False
+        self.with_debug_logs = False
 
     def get_state_element_meta_from_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
@@ -1716,8 +1662,9 @@ class History(ModelMT):
         self.observe_model(self.state_machine_model.root_state)
         self.__buffered_root_state_model = self.state_machine_model.root_state
 
-    def store_test_log_file(self, string):
-        with open('/tmp/test_file.txt', 'a+') as f:
+    @staticmethod
+    def store_test_log_file(string):
+        with open(HISTORY_DEBUG_LOG_FILE, 'a+') as f:
             f.write(string)
         f.closed
 
@@ -1733,13 +1680,15 @@ class History(ModelMT):
 
         result = True
         cause = overview['method_name'][-1]
-        logger.info("create Action for: {0} for prop_name: {1}".format(overview['method_name'][-1], overview['prop_name'][-1]))
+        if self.with_prints:
+            logger.info("create Action for: {0} for prop_name: {1}".format(overview['method_name'][-1], overview['prop_name'][-1]))
 
-        self.store_test_log_file(str(overview) + "\n")
-        if isinstance(overview['instance'][-1], State):
-            self.store_test_log_file(overview['method_name'][-1] + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].get_path() + "\n")
-        else:
-            self.store_test_log_file(overview['method_name'][-1] + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].parent.get_path() + "\n")
+        if self.with_debug_logs:
+            self.store_test_log_file(str(overview) + "\n")
+            if isinstance(overview['instance'][-1], State):
+                self.store_test_log_file(overview['method_name'][-1] + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].get_path() + "\n")
+            else:
+                self.store_test_log_file(overview['method_name'][-1] + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].parent.get_path() + "\n")
 
         if self.refactored_history:
             if isinstance(overview['instance'][-1], DataFlow) or \
@@ -1754,13 +1703,15 @@ class History(ModelMT):
                 else:
                     assert overview['instance'][-1] is overview['model'][-1].scoped_variable
                     action_class = ScopedVariableAction  # is a DataPort too
-                self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
+                if self.with_debug_logs:
+                    self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
                 self.actual_action = action_class(parent_path=overview['instance'][-1].parent.get_path(),
                                                   state_machine_model=self.state_machine_model,
                                                   overview=overview)
             elif isinstance(overview['instance'][-1], Outcome):
                 assert overview['instance'][-1] is overview['model'][-1].outcome
-                self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
+                if self.with_debug_logs:
+                    self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
                 self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.get_path(),
                                                    state_machine_model=self.state_machine_model,
                                                    overview=overview)
@@ -1769,14 +1720,16 @@ class History(ModelMT):
                     assert overview['instance'][-1] is overview['model'][-1].data_port
                 else:
                     assert overview['instance'][-1] is overview['model'][-1].data_port
-                self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
+                if self.with_debug_logs:
+                    self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
                 self.actual_action = DataPortAction(parent_path=overview['instance'][-1].parent.get_path(),
                                                     state_machine_model=self.state_machine_model,
                                                     overview=overview)
             elif isinstance(overview['instance'][-1], State):
                 assert overview['instance'][-1] is overview['model'][-1].state
                 if "add_" in cause:
-                    self.store_test_log_file("#3 ADD \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                    if self.with_debug_logs:
+                        self.store_test_log_file("#3 ADD \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                     self.actual_action = AddObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                          state_machine_model=self.state_machine_model,
                                                          overview=overview)
@@ -1785,7 +1738,8 @@ class History(ModelMT):
                                      "remove_output_data_port", "remove_scoped_variable", "remove_state"]
                     if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
                             (("data_port" in cause or "outcome" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
-                        self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                        if self.with_debug_logs:
+                            self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                         # if "transition" in cause:
                         #     return self.start_new_action_old(overview)
                         self.actual_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
@@ -1794,12 +1748,14 @@ class History(ModelMT):
                     elif "data_port" in cause or "outcome" in cause:
 
                         if isinstance(overview['instance'][-1].parent, State):
-                            self.store_test_log_file("#5 REMOVE2 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
+                            if self.with_debug_logs:
+                                self.store_test_log_file("#5 REMOVE2 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
                             self.actual_action = RemoveObjectAction(parent_path=overview['instance'][-1].parent.get_path(),
                                                                     state_machine_model=self.state_machine_model,
                                                                     overview=overview)
                         else:
-                            self.store_test_log_file("#5 REMOVE3 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
+                            if self.with_debug_logs:
+                                self.store_test_log_file("#5 REMOVE3 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
                             self.actual_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                                     state_machine_model=self.state_machine_model,
                                                                     overview=overview)
@@ -1807,7 +1763,8 @@ class History(ModelMT):
                         logger.info("un foreseen cause: {0} in remove state element".format(cause))
                         assert False
                 else:
-                    self.store_test_log_file("#6 STATE \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                    if self.with_debug_logs:
+                        self.store_test_log_file("#6 STATE \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                     self.actual_action = StateAction(parent_path=overview['instance'][-1].get_path(),
                                                      state_machine_model=self.state_machine_model,
                                                      overview=overview)
@@ -1832,7 +1789,8 @@ class History(ModelMT):
         if isinstance(overview['instance'][-1], DataFlow) or \
                 isinstance(overview['instance'][-1], Transition) or \
                 isinstance(overview['instance'][-1], ScopedVariable):  # internal changes No Add or Remove Actions
-            self.store_test_log_file("$1 DataFlow, Transition, ScopedVariable Change\n model_path: {0}{1}\nparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
+            if self.with_debug_logs:
+                self.store_test_log_file("$1 DataFlow, Transition, ScopedVariable Change\n model_path: {0}{1}\nparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
             if self.with_prints:
                 print "CHANGE OF OBJECT", overview['info'][-1]
             # the model should be StateModel or ContainerStateModel and "info" from those model notification
@@ -1870,10 +1828,11 @@ class History(ModelMT):
                     self.actual_action = Action(parent_path=overview['instance'][-1].parent.parent.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
-                if isinstance(overview['instance'][-1], State):
-                    self.store_test_log_file("$2 '{3}' add, remove modify of outcome, input or output\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path(),level_status))
-                else:
-                    self.store_test_log_file("$2 '{3}' modify of outcome, input or output\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path(),level_status))
+                if self.with_debug_logs:
+                    if isinstance(overview['instance'][-1], State):
+                        self.store_test_log_file("$2 '{3}' add, remove modify of outcome, input or output\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path(),level_status))
+                    else:
+                        self.store_test_log_file("$2 '{3}' modify of outcome, input or output\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path(),level_status))
             else:
                 assert False
 
@@ -1881,12 +1840,14 @@ class History(ModelMT):
             if self.with_prints:
                 print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
             if "add_" in overview['method_name'][-1]:
-                self.store_test_log_file("$5 add Outcome,In-OutPut in root and State, ScopedVariable, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                if self.with_debug_logs:
+                    self.store_test_log_file("$5 add Outcome,In-OutPut in root and State, ScopedVariable, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                 self.actual_action = Action(parent_path=overview['instance'][-1].get_path(),
                                                      state_machine_model=self.state_machine_model,
                                                      overview=overview)
             else:
-                self.store_test_log_file("$5 remove Outcome,In-OutPut in root and State, ScopedVariables, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
+                if self.with_debug_logs:
+                    self.store_test_log_file("$5 remove Outcome,In-OutPut in root and State, ScopedVariables, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                 self.actual_action = Action(parent_path=overview['instance'][-1].get_path(),
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
@@ -1901,7 +1862,8 @@ class History(ModelMT):
 
     def finish_new_action(self, overview):
         # logger.debug("History stores AFTER")
-        self.store_test_log_file(str(overview) + "\n")
+        if self.with_debug_logs:
+            self.store_test_log_file(str(overview) + "\n")
 
         try:
             self.actual_action.set_after(overview)
@@ -1956,7 +1918,8 @@ class History(ModelMT):
             if self.with_prints:
                 print "ROOT_STATE is NEW", model, prop_name, info
             overview = NotificationOverview(info)
-            self.store_test_log_file(str(overview) + "\n")
+            if self.with_debug_logs:
+                self.store_test_log_file(str(overview) + "\n")
             assert overview['method_name'][-1]
             self.actual_action = StateMachineAction(parent_path=overview['instance'][-1].root_state.get_path(),
                                                     state_machine_model=self.state_machine_model,
