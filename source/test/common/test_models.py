@@ -1038,8 +1038,6 @@ def test_state_property_changes_history(caplog):
 
     # change script
 
-    # change state_type
-
     # change description
 
     # change active
@@ -1092,9 +1090,9 @@ def test_state_property_changes_history(caplog):
     sm_model.history.redo()
 
     # parent(self, parent) State
-    # state_dict['Nested'].parent = state_dict['State3']
-    # sm_model.history.undo()
-    # sm_model.history.redo()
+    state_dict['Nested'].parent = state_dict['State3']
+    sm_model.history.undo()
+    sm_model.history.redo()
 
     # input_data_ports(self, input_data_ports) None or dict
     state_dict['Nested'].input_data_ports = None

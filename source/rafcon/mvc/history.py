@@ -1407,15 +1407,15 @@ class OutcomeAction(Action):
 class StateAction(Action):
 
     not_possible_method_names = ['state_execution_status',  # observed but should be ignored
-                                 'input_data', 'output_data', 'concurrency_queue','state_id',  # any not observed
+                                 'input_data', 'output_data', 'concurrency_queue', 'state_id',  # any not observed
                                  'final_outcome', 'preempted', 'active', 'is_root_state',  # any not observed
                                  'scoped_data', 'v_checker']
     possible_method_names = ['parent',  # will be ignored
-                             'name', 'description',  # State
+                             'name', 'description', 'script_text',  # State
                              'outcomes', 'input_data_ports', 'output_data_ports',  # State
-                             'states', 'scoped_variables', 'data_flows', 'transitions', 'start_state_id', # ContainerState
+                             'states', 'scoped_variables', 'data_flows', 'transitions', 'start_state_id',  # ContainerState
                              'change_state_type']
-    possible_args = ['name', 'description',
+    possible_args = ['name', 'description', 'script_text'
                      'start_state_id']  # ContainerState
 
     def __init__(self, parent_path, state_machine_model, overview):
@@ -1445,7 +1445,7 @@ class StateAction(Action):
         if isinstance(s, ContainerState):
             return {'name': s.name, 'description': s.description, 'state_id': s.state_id, 'start_state_id': s.start_state_id}
         else:
-            return {'name': s.name, 'description': s.description, 'state_id': s.state_id}
+            return {'name': s.name, 'description': s.description, 'script_text': s.script_text, 'state_id': s.state_id}
 
     def set_after(self, overview):
         Action.set_after(self, overview)

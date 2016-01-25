@@ -721,7 +721,7 @@ def test_state_property_changes_history(caplog):
 
     # change script
 
-    # change state_type
+    # change script_text
 
     # change description
 
@@ -798,17 +798,20 @@ def test_state_property_changes_history(caplog):
     sm_model.history.undo()
     sm_model.history.redo()
 
+    script_text = '\ndef execute(self, inputs, outputs, gvm):\n\tself.logger.debug("Hello World")\n\treturn 0\n'
+    script_text1 = '\ndef execute(self, inputs, outputs, gvm):\n\tself.logger.debug("Hello NERD")\n\treturn 0\n'
+
+    # TODO proper checks!!!
     # script(self, script) Script
-    state_dict['Nested'].script = Script(state=state_dict['Nested'])
-    state_dict['Nested'].script = Script(state=state_dict['Nested'])
+    script = Script(state=state_dict['Nested'])
+    script.script = script_text
+    state_dict['Nested'].script = script
+    state_dict['Nested'].script = script
     sm_model.history.undo()
     sm_model.history.redo()
 
-    # state_type(self, state_type) StateType
-    state_dict['Nested'].state_type = StateType.PREEMPTION_CONCURRENCY
-    sm_model.history.undo()
-    sm_model.history.redo()
-    state_dict['Nested'].state_type = StateType.HIERARCHY
+    # script_text(self, script_text)
+    state_dict['Nested'].script_text = script_text1
     sm_model.history.undo()
     sm_model.history.redo()
 
