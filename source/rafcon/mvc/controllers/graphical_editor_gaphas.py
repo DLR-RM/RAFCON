@@ -226,7 +226,7 @@ class GraphicalEditorController(ExtendedController):
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
             # The method causing the change raised an exception, thus nothing was changed
-            if isinstance(result, str) and "CRASH" in result:
+            if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
             if method_name == 'add_state':

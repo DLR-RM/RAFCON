@@ -1938,7 +1938,7 @@ class History(ModelMT):
     def assign_notification_change_type_root_state_after(self, model, prop_name, info):
         if info.method_name != "root_state_after_change":
             return
-        if info.result == "CRASH in FUNCTION":
+        if info.result == "CRASH in FUNCTION" or isinstance(info.result, Exception):
             if self.with_prints:
                 logger.warning("function crash detected sm_after")
             return self._interrupt_actual_action()
@@ -1962,7 +1962,8 @@ class History(ModelMT):
                     self.locked = False
                     if self.with_prints:
                         print "IN HISTORY", model, prop_name, info
-                    if prop_name == "states" and info.kwargs.result == "CRASH in FUNCTION":
+                    if prop_name == "states" and \
+                            (info.kwargs.result == "CRASH in FUNCTION" or isinstance(info.kwargs.result, Exception)):
                         if self.with_prints:
                             print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
                         self.actual_action.undo()
@@ -2021,7 +2022,8 @@ class History(ModelMT):
         """
         if self.with_prints:
             print "states_after: ", model, prop_name, info
-        if hasattr(info, "kwargs") and info.kwargs and info.kwargs['result'] == "CRASH in FUNCTION":
+        if hasattr(info, "kwargs") and info.kwargs and \
+                (info.kwargs['result'] == "CRASH in FUNCTION" or isinstance(info.kwargs['result'], Exception)):
             if self.with_prints:
                 logger.warning("function crash detected states_after")
             return self._interrupt_actual_action()
@@ -2121,7 +2123,7 @@ class History(ModelMT):
         if self.with_prints:
             print "root_state_after: ", model, prop_name, info
 
-        if info.result == "CRASH in FUNCTION":
+        if info.result == "CRASH in FUNCTION" or isinstance(info.result, Exception):
             if self.with_prints:
                 logger.warning("function crash detected state_after")
             return self._interrupt_actual_action()
@@ -2144,7 +2146,8 @@ class History(ModelMT):
                     self.locked = False
                     if self.with_prints:
                         print "IN HISTORY", model, prop_name, info
-                    if prop_name == "states" and info.kwargs.result == "CRASH in FUNCTION":
+                    if prop_name == "states" and \
+                            (info.kwargs.result == "CRASH in FUNCTION" or isinstance(info.kwargs['result'], Exception)):
                         if self.with_prints:
                             print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
                         self.actual_action.undo()
