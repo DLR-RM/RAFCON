@@ -231,13 +231,10 @@ class StateView(Element):
     def transparent(self):
         return self._transparent
 
-    @property
-    def child_state_vs(self):
-        child_state_vs = []
+    def child_state_views(self):
         for child in self.canvas.get_children(self):
             if isinstance(child, StateView):
-                child_state_vs.append(child)
-        return child_state_vs
+                yield child
 
     @staticmethod
     def get_state_drawing_area(state):
@@ -682,7 +679,7 @@ class StateView(Element):
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
                         handle_set_rel_pos(transition_v, waypoint.pos, new_rel_pos, state_abs_pos)
 
-                for child_state_v in state.child_state_vs:
+                for child_state_v in state.child_state_views():
                     if not paste:
                         old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, child_state_v, child_state_v.handles()[NW])
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
