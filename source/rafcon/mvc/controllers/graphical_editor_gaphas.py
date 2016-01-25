@@ -676,7 +676,6 @@ class GraphicalEditorController(ExtendedController):
 
         state_v = StateView(state_m, size, hierarchy_level)
         self.canvas.add(state_v, parent)
-        state_temp['view'] = state_v
         state_v.matrix.translate(*rel_pos)
 
         for outcome_m in state_m.outcomes:
@@ -734,7 +733,7 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.mvc.models.container_state.ContainerStateModel parent_state_m: The model of the container
             state, of which the transitions shall be drawn
         """
-        parent_state_v = parent_state_m.temp['gui']['editor']['view']
+        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
             transition_v = TransitionView(transition_m, hierarchy_level)
@@ -770,7 +769,7 @@ class GraphicalEditorController(ExtendedController):
                 parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
             else:
                 from_state_m = parent_state_m.states[from_state_id]
-                from_state_v = from_state_m.temp['gui']['editor']['view']
+                from_state_v = self.canvas.get_view_for_model(from_state_m)
                 from_outcome_id = transition_m.transition.from_outcome
                 from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
                 # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v,
@@ -785,7 +784,7 @@ class GraphicalEditorController(ExtendedController):
             else:
                 # Set the to coordinates to the center of the next state
                 to_state_m = parent_state_m.states[to_state_id]
-                to_state_v = to_state_m.temp['gui']['editor']['view']
+                to_state_v = self.canvas.get_view_for_model(to_state_m)
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
 
         except AttributeError as e:
@@ -804,7 +803,7 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.mvc.models.container_state.ContainerStateModel parent_state_m: The model of the container
             state, of which the data flows shall be drawn
         """
-        parent_state_v = parent_state_m.temp['gui']['editor']['view']
+        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
         assert isinstance(parent_state_v, StateView)
         for data_flow_m in parent_state_m.data_flows:
             from_state_id = data_flow_m.data_flow.from_state
@@ -833,18 +832,17 @@ class GraphicalEditorController(ExtendedController):
 
             self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
-    @staticmethod
-    def draw_data_flow(data_flow_m, data_flow_v, parent_state_m):
+    def draw_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
         # Get id and references to the from and to state
         from_state_id = data_flow_m.data_flow.from_state
         from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
             from_state_id]
-        from_state_v = from_state_m.temp['gui']['editor']['view']
+        from_state_v = self.canvas.get_view_for_model(from_state_m)
 
         to_state_id = data_flow_m.data_flow.to_state
         to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
             to_state_id]
-        to_state_v = to_state_m.temp['gui']['editor']['view']
+        to_state_v = self.canvas.get_view_for_model(to_state_m)
 
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
