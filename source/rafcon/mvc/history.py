@@ -1943,6 +1943,8 @@ class History(ModelMT):
         # print model, prop_name, info
         if info['kwargs']['method_name'] == "change_root_state_type":
             overview = NotificationOverview(info)
+            if overview['method_name'][-1] == 'parent':
+                return
             assert overview['method_name'][-1] == "change_root_state_type"
             # logger.debug("History state_machine_AFTER")
             if self.with_prints:
@@ -1982,7 +1984,8 @@ class History(ModelMT):
             if (overview['method_name'][0] == 'state_change' and overview['method_name'][-1] in ['active',
                                                                                                  'child_execution',
                                                                                                  'state_execution_status']) or \
-                    not overview['method_name'][0] == 'state_change':
+                    not overview['method_name'][0] == 'state_change' or \
+                    overview['method_name'][-1] == 'parent':
                 return
 
             # lock changes
@@ -2026,9 +2029,11 @@ class History(ModelMT):
             # logger.debug("History states_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
+            # changes of parent are not observed
             if overview['method_name'][0] == 'state_change' and \
                     overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status'] or \
-                    not overview['method_name'][0] == 'state_change':
+                    not overview['method_name'][0] == 'state_change' or \
+                    overview['method_name'][-1] == 'parent':
                 if self.with_prints:
                     print overview['method_name']
                 return
@@ -2071,6 +2076,10 @@ class History(ModelMT):
             # logger.debug("History BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
+            # changes of parent are not observed
+            if overview['method_name'][-1] == 'parent':
+                return
+
             if self.locked:
                 self.count_before += 1
                 if self.with_prints:
@@ -2118,6 +2127,10 @@ class History(ModelMT):
             # logger.debug("History state_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
+            # changes of parent are not observed
+            if overview['method_name'][-1] == 'parent':
+                return
+
             if self.locked:
                 self.count_before -= 1
                 if self.with_prints:
