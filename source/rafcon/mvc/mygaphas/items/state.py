@@ -651,7 +651,6 @@ class StateView(Element):
 
             width_factor = float(new_size[0]) / old_size[0]
             height_factor = float(new_size[1]) / old_size[1]
-            print old_size, new_size, width_factor, height_factor
 
             def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
                 old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
