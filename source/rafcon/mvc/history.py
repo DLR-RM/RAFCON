@@ -112,13 +112,13 @@ class NotificationOverview(dict):
         self.new_overview = new_overview
         self.__overview = self.parent_state_of_notification_source(info)
         dict.__init__(self, self.__overview)
-        self.print_overview()
+        if self.with_prints:
+            self.print_overview()
 
     def __str__(self):
         return self.__description
 
     def __setitem__(self, key, value):
-        print "in setattr"
         if key in ['info', 'model', 'prop_name', 'instance', 'method_name', 'level']:
             dict.__setitem__(self, key, value)
 
@@ -369,7 +369,6 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
         if with_prints:
             print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), meta_dict[
                 'output_data_ports'].keys()
-    # print "XXXXXXXXXXXX", state_model.state.get_path(), meta_dict['output_data_ports'].keys(), state_model.state.output_data_ports.keys()
 
     meta_dict['state'] = copy.deepcopy(state_model.meta)
     if isinstance(state_model, ContainerStateModel):
@@ -427,9 +426,7 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
             print "input: ", elem.data_port.data_port_id, meta_dict['input_data_ports'].keys()
         assert elem.data_port.data_port_id in meta_dict['input_data_ports']
         elem.meta = copy.deepcopy(meta_dict['input_data_ports'][elem.data_port.data_port_id])
-    # print "OOOOOOOOOOOOOOO", state_model.state.get_path(), meta_dict['output_data_ports'].keys(), state_model.state.output_data_ports.keys()
-    for elem in state_model.output_data_ports:
-        print elem.data_port
+
     for elem in state_model.output_data_ports:
         if with_prints:
             print "output: ", elem.data_port.data_port_id, meta_dict['output_data_ports'].keys()
@@ -748,7 +745,8 @@ class Action:
                 # self.before_model.transitions._notify_method_after(state, 'data_flow_change', None, (self.before_model,), {})
 
     def add_core_object_to_state(self, state, core_obj):
-        logger.info("RUN ADD CORE OBJECT FOR {0} {1}".format(state.state_id, core_obj))
+        if self.with_print:
+            logger.info("RUN ADD CORE OBJECT FOR {0} {1}".format(state.state_id, core_obj))
         if isinstance(core_obj, State):
             state.add_state(core_obj)
         elif isinstance(core_obj, Transition):
@@ -934,7 +932,7 @@ class AddObjectAction(Action):
 
         list_name = self.type.replace('add_', '') + 's'
         core_obj = getattr(storage_version_of_state, list_name)[self.added_object_identifier._id]
-        logger.info(str(type(core_obj)) + str(core_obj))
+        # logger.info(str(type(core_obj)) + str(core_obj))
         # undo
         self.remove_core_object_from_state(state, core_obj)
 
@@ -1091,7 +1089,7 @@ class RemoveObjectAction(Action):
                                                                              storage_path=storage_version[4])
         list_name = self.type.replace('remove_', '') + 's'
         core_obj = getattr(storage_version_of_state, list_name)[self.removed_object_identifier._id]
-        logger.info(str(type(core_obj)) + str(core_obj))
+        # logger.info(str(type(core_obj)) + str(core_obj))
         if self.type not in ['remove_transition', 'remove_data_flow']:
             self.add_core_object_to_state(state, core_obj)
 
@@ -1531,11 +1529,11 @@ class History(ModelMT):
     def get_state_element_meta_from_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
         path_elements.pop(0)
-        print path_elements
+        # print path_elements
         act_state_elements_meta = self.tmp_meta_storage
         for path_elem in path_elements:
             act_state_elements_meta = act_state_elements_meta['states'][path_elem]
-        print act_state_elements_meta
+        # print act_state_elements_meta
 
     def recover_specific_version(self, pointer_on_version_to_recover):
         """ Recovers a specific version of the all_time_history element by doing several undos and redos.
@@ -1760,7 +1758,7 @@ class History(ModelMT):
                                                                     state_machine_model=self.state_machine_model,
                                                                     overview=overview)
                     else:
-                        logger.info("un foreseen cause: {0} in remove state element".format(cause))
+                        logger.warning("un foreseen cause: {0} in remove state element".format(cause))
                         assert False
                 else:
                     if self.with_debug_logs:
@@ -1772,7 +1770,7 @@ class History(ModelMT):
                 assert overview['instance'][-1] is overview['model'][-1].state_machine
                 assert False  # should never happen
             else:  # FAILURE
-                logger.warn("History may need update, tried to start observation of new action that is not classifiable "
+                logger.warning("History may need update, tried to start observation of new action that is not classifiable "
                             "\n%s \n%s \n%s \n%s",
                             overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
                 assert False  # should never happen
@@ -1853,7 +1851,7 @@ class History(ModelMT):
                                             overview=overview)
 
         else:  # FAILURE
-            logger.warn("History may need update, tried to start observation of new action that is not classifiable "
+            logger.warning("History may need update, tried to start observation of new action that is not classifiable "
                         "\n%s \n%s \n%s \n%s",
                         overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
             return False
