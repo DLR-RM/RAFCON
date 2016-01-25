@@ -18,7 +18,9 @@ import traceback
 import datetime
 
 from gtkmvc import ModelMT, Observable
-import yaml
+# import yaml
+import json
+from rafcon.utils.json_utils import JSONObjectDecoder, JSONObjectEncoder
 
 from rafcon.utils import log
 
@@ -70,7 +72,8 @@ def get_state_tuple(state, state_m=None):
     :param rafcon.statemachine.states.state.State state: The state that should be stored
     :return: state_tuple tuple
     """
-    state_str = yaml.dump(state)
+    # state_str = yaml.dump(state)
+    state_str = json.dumps(state, cls=JSONObjectEncoder, indent=4, check_circular=False, sort_keys=True)
 
     # print "++++++++++", state
     state_tuples_dict = {}
@@ -282,7 +285,8 @@ def get_state_from_state_tuple(state_tuple):
     # Transitions and data flows are not added, as also states are not added
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
     # validity checks for transitions and data flows would fail
-    state_info = yaml.load(state_tuple[0])
+    # state_info = yaml.load(state_tuple[0])
+    state_info = json.loads(state_tuple[0], cls=JSONObjectDecoder)
     if not isinstance(state_info, tuple):
         state = state_info
     else:
