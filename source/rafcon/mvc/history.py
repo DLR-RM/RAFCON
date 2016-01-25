@@ -95,6 +95,7 @@ def get_state_tuple(state, state_m=None):
 
 
 class NotificationOverview(dict):
+    # TODO generalize and include into utils
 
     def __init__(self, info, with_prints=False):
 
@@ -982,14 +983,19 @@ class AddObjectAction(Action):
 
 
 class CoreObjectIdentifier:
+    # TODO generalize and include into utils
 
-    type_related_list_name_dict = {'InputDataPort': 'input_data_ports', 'OutputDataPort': 'output_data_ports',
-                                   'ScopedVariable': 'scoped_variables', 'DataFlow': 'data_flows',
-                                   'Outcome': 'outcomes', 'Transition': 'transitions', 'State': 'states'}
+    type_related_list_name_dict = {InputDataPort.__name__: 'input_data_ports',
+                                   OutputDataPort.__name__: 'output_data_ports',
+                                   ScopedVariable.__name__: 'scoped_variables',
+                                   DataFlow.__name__: 'data_flows',
+                                   Outcome.__name__: 'outcomes',
+                                   Transition.__name__: 'transitions',
+                                   State.__name__: 'states'}
 
-    def __init__(self, core_obj_cls):
-        assert type(core_obj_cls) in core_object_list or core_obj_cls in core_object_list
-        print core_obj_cls
+    def __init__(self, core_obj_or_cls):
+        assert type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list
+        print core_obj_or_cls
         self._sm_id = None
         self._path = None
         # type can be, object types (of type Transition e.g.) or class
@@ -997,35 +1003,34 @@ class CoreObjectIdentifier:
         self._id = None
         self._list_name = None
 
-        if type(core_obj_cls) in core_object_list:
-            self._type = str(type(core_obj_cls)).split("'")[-2].split('.')[-1]
+        if type(core_obj_or_cls) in core_object_list:
+            self._type = type(core_obj_or_cls).__name__
         else:
             self._type = 'class'
 
         if not self._type == 'class':
             if self._type in ['ExecutionState', 'HierarchyState', 'BarrierConcurrencyState', 'PreemptiveConcurrencyState']:
-                self._path = core_obj_cls.get_path()
-                self._id = core_obj_cls.state_id
-                self._sm_id = core_obj_cls.get_sm_for_state().state_machine_id
+                self._path = core_obj_or_cls.get_path()
+                self._id = core_obj_or_cls.state_id
+                self._sm_id = core_obj_or_cls.get_sm_for_state().state_machine_id
             else:
-                if core_obj_cls.parent:
-                    self._path = core_obj_cls.parent.get_path()
-                    self._sm_id = core_obj_cls.parent.get_sm_for_state().state_machine_id
+                if isinstance(core_obj_or_cls.parent, State):
+                    self._path = core_obj_or_cls.parent.get_path()
+                    self._sm_id = core_obj_or_cls.parent.get_sm_for_state().state_machine_id
                 else:
                     logger.warning("identifier of core object {0} without parent is mostly useless".format(self._type))
 
             if self._type in ['InputDataPort', 'OutputDataPort', 'ScopedVariable']:
-                self._id = core_obj_cls.data_port_id
+                self._id = core_obj_or_cls.data_port_id
                 self._list_name = self.type_related_list_name_dict[self._type]
             elif self._type == 'Transition':
-                print "get transition id of: " + str(core_obj_cls)
-                self._id = core_obj_cls.transition_id
+                self._id = core_obj_or_cls.transition_id
                 self._list_name = self.type_related_list_name_dict[self._type]
             elif self._type == 'DataFlow':
-                self._id = core_obj_cls.data_flow_id
+                self._id = core_obj_or_cls.data_flow_id
                 self._list_name = self.type_related_list_name_dict[self._type]
             elif self._type == 'Outcome':
-                self._id = core_obj_cls.outcome_id
+                self._id = core_obj_or_cls.outcome_id
                 self._list_name = self.type_related_list_name_dict[self._type]
             elif self._type == 'StateMachine':
                 # self.__sm_id = core_obj_cls.state_machine_id
