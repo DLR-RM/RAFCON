@@ -652,8 +652,8 @@ class StateView(Element):
 
             state_abs_pos = calc_abs_pos(state, state.handles()[NW].pos)
 
-            width_factor = new_size[0] / old_size[0]
-            height_factor = new_size[1] / old_size[1]
+            width_factor = float(new_size[0]) / old_size[0]
+            height_factor = float(new_size[1]) / old_size[1]
 
             def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
                 old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
@@ -682,7 +682,7 @@ class StateView(Element):
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
                         handle_set_rel_pos(transition_v, waypoint.pos, new_rel_pos, state_abs_pos)
 
-                for child_state_v in self.child_state_vs:
+                for child_state_v in state.child_state_vs:
                     if not paste:
                         old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, child_state_v, child_state_v.handles()[NW])
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
