@@ -1681,7 +1681,9 @@ class GraphicalEditorController(ExtendedController):
                     to_state = parent_state_m.states[to_state_id]
                     to_pos = to_state.temp['gui']['editor']['income_pos']
             except KeyError:
-                return
+                logger.warning("Transition could not be drawn because outcome-meta-data could not been reached "
+                               "{0}".format(transition_m.transition))
+                continue
 
             if isinstance(transition_m.meta['gui']['editor_opengl']['waypoints'], dict):
                 transition_m.meta['gui']['editor_opengl']['waypoints'] = transition_m.meta['gui']['editor']['waypoints']
