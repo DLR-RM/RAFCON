@@ -1259,8 +1259,8 @@ class DataFlowAction(Action):
 class TransitionAction(Action):
 
     possible_method_names = ['modify_origin', 'from_state', 'from_outcome',
-                             'modify_target', 'to_state', 'to_outcome', 'transition_id']
-    possible_args = ['from_state', 'from_outcome', 'to_state', 'to_key', 'transition_id']
+                             'modify_target', 'to_state', 'to_outcome']
+    possible_args = ['from_state', 'from_outcome', 'to_state', 'to_key']
 
     def __init__(self, parent_path, state_machine_model, overview):
         # Action.__init__(self, parent_path, state_machine_model, overview)

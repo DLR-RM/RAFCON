@@ -1144,9 +1144,9 @@ def test_transition_modify_notification(caplog):
     # state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
     # check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
-    # transition_id(self, transition_id)
-    state_dict['Nested'].transitions[new_trans_id].transition_id += 1
-    check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=4)
+    # transition_id(self, transition_id)  -> no transition_id setter anymore
+    # state_dict['Nested'].transitions[new_trans_id].transition_id += 1
+    # check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
     # reset observer and testbed
     state_dict['Nested'].remove_transition(new_trans_id)

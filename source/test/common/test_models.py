@@ -1245,8 +1245,6 @@ def test_transition_property_changes_history(caplog):
 
     # change to_outcome
 
-    # change transition_id
-
     # modify_transition_from_state
 
     # modify_transition_from_outcome
@@ -1297,12 +1295,11 @@ def test_transition_property_changes_history(caplog):
     # sm_model.history.undo()
     # sm_model.history.redo()
 
-    # transition_id(self, transition_id)
+    # transition_id(self, transition_id) -> no transition_id setter anymore
     # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
     # state_dict['Nested'].transitions[new_trans_id].transition_id += 1
     # sm_model.history.undo()
-    # # TODO
-    # # sm_model.history.redo()
+    # sm_model.history.redo()
 
     # reset observer and testbed
     state_dict['Nested'].remove_transition(new_trans_id)
