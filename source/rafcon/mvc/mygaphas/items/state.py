@@ -651,6 +651,7 @@ class StateView(Element):
 
             width_factor = float(new_size[0]) / old_size[0]
             height_factor = float(new_size[1]) / old_size[1]
+            print old_size, new_size, width_factor, height_factor
 
             def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
                 old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
@@ -664,11 +665,6 @@ class StateView(Element):
                 port_v.handle.pos = new_rel_pos
 
             name_v = state.name_view
-            old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, name_v, name_v.handles()[NW])
-            new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
-            handle_set_rel_pos(name_v, name_v.handles()[NW].pos, new_rel_pos, state_abs_pos,
-                               (name_v.width, name_v.height))
-
             name_v.width *= width_factor
             name_v.height *= height_factor
 
