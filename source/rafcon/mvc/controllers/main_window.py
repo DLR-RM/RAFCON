@@ -89,7 +89,7 @@ class MainWindowController(ExtendedController):
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
         # global variable editor
-        global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_manager_view)
+        global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_editor)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
 
         ######################################################
@@ -116,21 +116,21 @@ class MainWindowController(ExtendedController):
             view['tree_notebook_down'].remove_page(page_num)
 
             network_label = gtk.Label('Network')
-            network_notebook_widget = self.create_notebook_widget("NETWORK",
+            network_notebook_widget = self.create_notebook_widget('NETWORK',
                                                                   view.network_connections_view.get_top_widget(),
                                                                   use_scroller=False,
                                                                   border=constants.BORDER_WIDTH_TEXTVIEW)
             view['tree_notebook_down'].insert_page(network_notebook_widget, network_label, page_num)
         else:
             network_tab = view['network_tab']
-            page_num = view["tree_notebook_down"].page_num(network_tab)
-            view["tree_notebook_down"].remove_page(page_num)
+            page_num = view['tree_notebook_down'].page_num(network_tab)
+            view['tree_notebook_down'].remove_page(page_num)
 
         ######################################################
         # state machine execution history
         ######################################################
         execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model,
-                                                                view.execution_history_view,
+                                                                view.execution_history,
                                                                 state_machine_manager)
         self.add_controller('execution_history_ctrl', execution_history_ctrl)
 
@@ -144,7 +144,7 @@ class MainWindowController(ExtendedController):
                                                 view.logging_view,
                                                 view.get_top_widget(),
                                                 self.shortcut_manager)
-        self.add_controller("menu_bar_controller", menu_bar_controller)
+        self.add_controller('menu_bar_controller', menu_bar_controller)
 
         ######################################################
         # tool bar
@@ -152,16 +152,16 @@ class MainWindowController(ExtendedController):
         tool_bar_controller = ToolBarController(state_machine_manager_model,
                                                 view.tool_bar,
                                                 menu_bar_controller)
-        self.add_controller("tool_bar_controller", tool_bar_controller)
+        self.add_controller('tool_bar_controller', tool_bar_controller)
 
         ######################################################
         # top tool bar
         ######################################################
         top_tool_bar_controller = TopToolBarController(state_machine_manager_model,
                                                        view.top_tool_bar,
-                                                       view["main_window"],
+                                                       view['main_window'],
                                                        menu_bar_controller)
-        self.add_controller("top_tool_bar_controller", top_tool_bar_controller)
+        self.add_controller('top_tool_bar_controller', top_tool_bar_controller)
 
         #view['right_bar_hide_button'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
         #                                                                                   constants.FONT_SIZE_BIG,
@@ -317,60 +317,60 @@ class MainWindowController(ExtendedController):
         self.view['left_v_pane_2'].remove(self.console_child)
         self.view['console_return_button'].show()
 
-    def create_notebook_widget(self, title, widget, use_scroller=True, border=10):
-        title_label = self.create_label_box(title)
-        event_box = gtk.EventBox()
-        vbox = gtk.VBox()
-        vbox.pack_start(title_label, False, True, 0)
-        if use_scroller:
-            scroller = gtk.ScrolledWindow()
-            scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            alig = gtk.Alignment(0., 0., 1., 1.)
-            alig.set_padding(0, 0, border, 0)
-            alig.add(widget)
-            alig.show()
-            scroller.add_with_viewport(alig)
-            vbox.pack_start(scroller, True, True, 0)
-        else:
-            vbox.pack_start(widget, True, True, 0)
-        event_box.add(vbox)
-        event_box.show_all()
-        return event_box
+    # def create_notebook_widget(self, title, widget, use_scroller=True, border=10):
+    #     title_label = self.create_label_box(title)
+    #     event_box = gtk.EventBox()
+    #     vbox = gtk.VBox()
+    #     vbox.pack_start(title_label, False, True, 0)
+    #     if use_scroller:
+    #         scroller = gtk.ScrolledWindow()
+    #         scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    #         alig = gtk.Alignment(0., 0., 1., 1.)
+    #         alig.set_padding(0, 0, border, 0)
+    #         alig.add(widget)
+    #         alig.show()
+    #         scroller.add_with_viewport(alig)
+    #         vbox.pack_start(scroller, True, True, 0)
+    #     else:
+    #         vbox.pack_start(widget, True, True, 0)
+    #     event_box.add(vbox)
+    #     event_box.show_all()
+    #     return event_box
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
         if self.view['button_start_shortcut'].get_active():
-            self.get_controller("menu_bar_controller").on_start_activate(None)
+            self.get_controller('menu_bar_controller').on_start_activate(None)
 
     def on_button_pause_shortcut_toggled(self, widget, event=None):
         if self.view['button_pause_shortcut'].get_active():
-            self.get_controller("menu_bar_controller").on_pause_activate(None)
+            self.get_controller('menu_bar_controller').on_pause_activate(None)
 
     def on_button_stop_shortcut_clicked(self, widget, event=None):
-        self.get_controller("menu_bar_controller").on_stop_activate(None)
+        self.get_controller('menu_bar_controller').on_stop_activate(None)
 
     def on_button_step_mode_shortcut_toggled(self, widget, event=None):
         if self.view['button_step_mode_shortcut'].get_active():
             self.get_controller("menu_bar_controller").on_step_mode_activate(None)
 
     def on_button_step_in_shortcut_clicked(self, widget, event=None):
-        self.get_controller("menu_bar_controller").on_step_into_activate(None)
+        self.get_controller('menu_bar_controller').on_step_into_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_over_shortcut_clicked(self, widget, event=None):
-        self.get_controller("menu_bar_controller").on_step_over_activate(None)
+        self.get_controller('menu_bar_controller').on_step_over_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_out_shortcut_clicked(self, widget, event=None):
-        self.get_controller("menu_bar_controller").on_step_out_activate(None)
+        self.get_controller('menu_bar_controller').on_step_out_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_out_shortcut_clicked(self, widget, event=None):
-        self.get_controller("menu_bar_controller").on_step_out_activate(None)
+        self.get_controller('menu_bar_controller').on_step_out_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
-        self.get_controller("menu_bar_controller").on_backward_step_activate(None)
+        self.get_controller('menu_bar_controller').on_backward_step_activate(None)
         self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_debug_content_change(self, widget, data=None):
