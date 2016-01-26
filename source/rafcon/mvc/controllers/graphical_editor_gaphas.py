@@ -393,7 +393,7 @@ class GraphicalEditorController(ExtendedController):
                     # Check for new transitions, which do not have a TransitionView (typically related to DeciderState)
                     for transition_m in new_state_m.transitions:
                         if not self.canvas.get_view_for_model(transition_m):
-                            self.add_transition_view_for_model(transition_m, model)
+                            self.add_transition_view_for_model(transition_m, new_state_m)
                     # Check for old StateViews (typically DeciderState) and TransitionViews, no longer existing
                     for child_v in self.canvas.get_children(state_v):
                         if isinstance(child_v, StateView):
