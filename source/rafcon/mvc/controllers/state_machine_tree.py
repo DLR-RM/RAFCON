@@ -4,7 +4,7 @@ import gobject
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.history import parent_state_of_notification_source
+from rafcon.mvc.history import NotificationOverview
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -75,7 +75,7 @@ class StateMachineTreeController(ExtendedController):
     @ExtendedController.observe("states", after=True)
     def states_update(self, model, property, info):
         # print info
-        overview = parent_state_of_notification_source(model, info.prop_name, info, "after", False)
+        overview = NotificationOverview(info, False)
 
         if overview['prop_name'][-1] == 'state' and \
                         overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:

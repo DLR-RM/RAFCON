@@ -124,6 +124,7 @@ class ExecutionState(State):
         State.name.fset(self, name)
         self.logger = log.get_logger(self.name)
 
+    # TODO - clean the interface 5 functions for basically 2 thinks -> discussion
     @property
     def script(self):
         """Property for the _script field
@@ -138,7 +139,15 @@ class ExecutionState(State):
             raise TypeError("script must be of type Script")
         self._script = script
 
+    @property
+    def script_text(self):
+        return self._script.script
+
+    @script_text.setter
     @Observable.observed
+    def script_text(self, text):
+        self._script.script = text
+
     def set_script_text(self, new_text):
         """
         Sets the text of the script. This function can be overridden to prevent setting the script under certain

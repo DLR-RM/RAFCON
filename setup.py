@@ -27,7 +27,7 @@ class PyTest(TestCommand):
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = ['-x']
+        self.pytest_args = ['-xs']
 
     def finalize_options(self):
         TestCommand.finalize_options(self)

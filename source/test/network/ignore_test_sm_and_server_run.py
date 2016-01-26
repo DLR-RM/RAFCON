@@ -234,7 +234,7 @@ def test_sm_and_server():
 
     offset = 0
     for i in range(len(test_sequence)):
-        data = unit_test_message_queue.get()
+        data = unit_test_message_queue.get(timeout=10.0)
         # print test_sequence[i]
         # print data
         while data == "99 Bottles of Beer: ------------------------------------":
